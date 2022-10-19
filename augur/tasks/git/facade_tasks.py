@@ -213,21 +213,17 @@ def fill_empty_affiliations_facade_task():
 @celery.task
 def invalidate_caches_facade_task():
     logger = logging.getLogger(invalidate_caches_facade_task.__name__)
-    cfg = FacadeConfig(logger)
 
-    invalidate_caches(cfg)
-    cfg.cursor.close()
-    cfg.db.close()
+    with FacadeSession(logger) as session:
+        invalidate_caches(session)
 
 @celery.task
 def rebuild_unknown_affiliation_and_web_caches_facade_task():
     logger = logging.getLogger(rebuild_unknown_affiliation_and_web_caches_facade_task.__name__)
-    cfg = FacadeConfig(logger)
+    
+    with FacadeSession(logger) as session:
+        rebuild_unknown_affiliation_and_web_caches(session)
 
-    rebuild_unknown_affiliation_and_web_caches(cfg)
-
-    cfg.cursor.close()
-    cfg.db.close()
 
 
 # All done

@@ -367,35 +367,34 @@ def fill_empty_affiliations(session):
 
     session.log_activity('Info','Filling empty affiliations (complete)')
 
-def invalidate_caches(cfg):
+def invalidate_caches(session):
 
 # Invalidate all caches
 
-    cfg.update_status('Invalidating caches')
-    cfg.log_activity('Info','Invalidating caches')
+    session.update_status('Invalidating caches')
+    session.log_activity('Info','Invalidating caches')
 
-    invalidate_cache = "UPDATE repo_groups SET rg_recache = 1"
-    cfg.cursor.execute(invalidate_cache)
-    cfg.db.commit()
+    invalidate_cache = s.sql.text("""UPDATE repo_groups SET rg_recache = 1""")
+    session.execute_sql(invalidate_cache)
 
-    cfg.log_activity('Info','Invalidating caches (complete)')
+    session.log_activity('Info','Invalidating caches (complete)')
 
-def rebuild_unknown_affiliation_and_web_caches(cfg):
+def rebuild_unknown_affiliation_and_web_caches(session):
 
 # When there's a lot of analysis data, calculating display data on the fly gets
 # pretty expensive. Instead, we crunch the data based upon the user's preferred
 # statistics (author or committer) and store them. We also store all records
 # with an (Unknown) affiliation for display to the user.
 
-    cfg.update_status('Caching data for display')
-    cfg.log_activity('Info','Caching unknown affiliations and web data for display')
+    session.update_status('Caching data for display')
+    session.log_activity('Info','Caching unknown affiliations and web data for display')
 
-    report_date = cfg.get_setting('report_date')
-    report_attribution = cfg.get_setting('report_attribution')
+    report_date = session.get_setting('report_date')
+    report_attribution = session.get_setting('report_attribution')
 
     # Clear stale caches
 
-    clear_dm_repo_group_weekly = ("""
+    clear_dm_repo_group_weekly = s.sql.text("""
             DELETE 
                 FROM
                     dm_repo_group_weekly C USING repo_groups P 
@@ -407,10 +406,9 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     # ("DELETE c.* FROM dm_repo_group_weekly c "
     #   "JOIN repo_groups p ON c.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    cfg.cursor.execute(clear_dm_repo_group_weekly)
-    cfg.db.commit()
+    session.execute_sql(clear_dm_repo_group_weekly)
 
-    clear_dm_repo_group_monthly = ("""
+    clear_dm_repo_group_monthly = s.sql.text("""
             DELETE 
                 FROM
                     dm_repo_group_monthly C USING repo_groups P 
@@ -422,10 +420,9 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     # ("DELETE c.* FROM dm_repo_group_monthly c "
     #   "JOIN repo_groups p ON c.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    cfg.cursor.execute(clear_dm_repo_group_monthly)
-    cfg.db.commit()
+    session.execute_sql(clear_dm_repo_group_monthly)
 
-    clear_dm_repo_group_annual = ("""
+    clear_dm_repo_group_annual = s.sql.text("""
             DELETE 
                 FROM
                     dm_repo_group_annual C USING repo_groups P 
@@ -437,10 +434,9 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     # ("DELETE c.* FROM dm_repo_group_annual c "
     #   "JOIN repo_groups p ON c.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    cfg.cursor.execute(clear_dm_repo_group_annual)
-    cfg.db.commit()
+    session.execute_sql(clear_dm_repo_group_annual)
 
-    clear_dm_repo_weekly = ("""
+    clear_dm_repo_weekly = s.sql.text("""
             DELETE 
                 FROM
                     dm_repo_weekly C USING repo r,
@@ -455,10 +451,9 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     #   "JOIN repo r ON c.repo_id = r.repo_id "
     #   "JOIN repo_groups p ON r.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    cfg.cursor.execute(clear_dm_repo_weekly)
-    cfg.db.commit()
+    session.execute_sql(clear_dm_repo_weekly)
 
-    clear_dm_repo_monthly = ("""
+    clear_dm_repo_monthly = s.sql.text("""
             DELETE 
                 FROM
                     dm_repo_monthly C USING repo r,
@@ -473,10 +468,9 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     #   "JOIN repo r ON c.repo_id = r.repo_id "
     #   "JOIN repo_groups p ON r.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    cfg.cursor.execute(clear_dm_repo_monthly)
-    cfg.db.commit()
+    session.execute_sql(clear_dm_repo_monthly)
 
-    clear_dm_repo_annual = ("""
+    clear_dm_repo_annual = s.sql.text("""
             DELETE 
                 FROM
                     dm_repo_annual C USING repo r,
@@ -491,10 +485,9 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     #   "JOIN repo r ON c.repo_id = r.repo_id "
     #   "JOIN repo_groups p ON r.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    cfg.cursor.execute(clear_dm_repo_annual)
-    cfg.db.commit()
+    session.execute_sql(clear_dm_repo_annual)
 
-    clear_unknown_cache = ("""
+    clear_unknown_cache = s.sql.text("""
             DELETE 
                 FROM
                     unknown_cache C USING repo_groups P 
@@ -506,10 +499,9 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
     # ("DELETE c.* FROM unknown_cache c "
     #   "JOIN repo_groups p ON c.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    cfg.cursor.execute(clear_unknown_cache)
-    cfg.db.commit()
+    session.execute_sql(clear_unknown_cache)
 
-    cfg.log_activity('Verbose','Caching unknown authors and committers')
+    session.log_activity('Verbose','Caching unknown authors and committers')
 
     # Cache the unknown authors
 
@@ -521,7 +513,7 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
         SPLIT_PART(a.cmt_author_email,'@',2), 
         SUM(a.cmt_added),
         info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
+        FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), 
         commits a 
         JOIN repo r ON r.repo_id = a.repo_id 
         JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
@@ -529,10 +521,9 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
         AND p.rg_recache = 1 
         GROUP BY r.repo_group_id,a.cmt_author_email, info.a, info.b, info.c
 
-        """)
+        """).bindparams(tool_source=session.tool_source,tool_version=session.tool_version,data_source=session.data_source)
 
-    cfg.cursor.execute(unknown_authors, (cfg.tool_source, cfg.tool_version, cfg.data_source))
-    cfg.db.commit()
+    session.execute_sql(unknown_authors)
 
     # Cache the unknown committers
 
@@ -543,259 +534,247 @@ def rebuild_unknown_affiliation_and_web_caches(cfg):
         SPLIT_PART(a.cmt_committer_email,'@',2), 
         SUM(a.cmt_added),
         info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
+        FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), 
         commits a 
         JOIN repo r ON r.repo_id = a.repo_id 
         JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
         WHERE a.cmt_committer_affiliation = '(Unknown)' 
         AND p.rg_recache = 1 
-        GROUP BY r.repo_group_id,a.cmt_committer_email, info.a, info.b, info.c """)
+        GROUP BY r.repo_group_id,a.cmt_committer_email, info.a, info.b, info.c 
+        """).bindparams(tool_source=session.tool_source,tool_version=session.tool_version,data_source=session.data_source)
 
-    cfg.cursor.execute(unknown_committers, (cfg.tool_source, cfg.tool_version, cfg.data_source))
-    cfg.db.commit()
+    session.execute_sql(unknown_committers)
 
     # Start caching by project
 
-    cfg.log_activity('Verbose','Caching projects')
+    session.log_activity('Verbose','Caching projects')
 
-    cache_projects_by_week = ("""INSERT INTO dm_repo_group_weekly (repo_group_id, email, affiliation, week, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
-        SELECT r.repo_group_id AS repo_group_id, 
-        a.cmt_%s_email AS email, 
-        a.cmt_%s_affiliation AS affiliation, 
-        date_part('week', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS week, 
-        date_part('year', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS year, 
-        SUM(a.cmt_added) AS added, 
-        SUM(a.cmt_removed) AS removed, 
-        SUM(a.cmt_whitespace) AS whitespace, 
-        COUNT(DISTINCT a.cmt_filename) AS files, 
-        COUNT(DISTINCT a.cmt_commit_hash) AS patches,
-        info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
-        commits a 
-        JOIN repo r ON r.repo_id = a.repo_id 
-        JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
-        LEFT JOIN exclude e ON 
-            (a.cmt_author_email = e.email 
-                AND (e.projects_id = r.repo_group_id 
-                    OR e.projects_id = 0)) 
-            OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) 
-                AND (e.projects_id = r.repo_group_id 
-                OR e.projects_id = 0)) 
-        WHERE e.email IS NULL 
-        AND e.domain IS NULL 
-        AND p.rg_recache = 1 
-        GROUP BY week, 
-        year, 
-        affiliation, 
-        a.cmt_%s_email,
-        r.repo_group_id, info.a, info.b, info.c"""
-        % (report_attribution,report_attribution,
-        report_date,report_date,
-        cfg.tool_source, cfg.tool_version, cfg.data_source,
-        report_attribution))
+    cache_projects_by_week = s.sql.text((
+        "INSERT INTO dm_repo_group_weekly (repo_group_id, email, affiliation, week, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
+        "SELECT r.repo_group_id AS repo_group_id," 
+        f"a.cmt_{report_attribution}_email AS email, "
+        f"a.cmt_{report_attribution}_affiliation AS affiliation," 
+        f"date_part('week', TO_TIMESTAMP(a.cmt_{report_date}_date, 'YYYY-MM-DD')) AS week," 
+        f"date_part('year', TO_TIMESTAMP(a.cmt_{report_date}_date, 'YYYY-MM-DD')) AS year, "
+        "SUM(a.cmt_added) AS added, "
+        "SUM(a.cmt_removed) AS removed," 
+        "SUM(a.cmt_whitespace) AS whitespace, "
+        "COUNT(DISTINCT a.cmt_filename) AS files," 
+        "COUNT(DISTINCT a.cmt_commit_hash) AS patches,"
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
+        "commits a "
+        "JOIN repo r ON r.repo_id = a.repo_id "
+        "JOIN repo_groups p ON p.repo_group_id = r.repo_group_id "
+        "LEFT JOIN exclude e ON "
+        "    (a.cmt_author_email = e.email "
+        "        AND (e.projects_id = r.repo_group_id "
+        "            OR e.projects_id = 0)) "
+        "    OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) "
+        "        AND (e.projects_id = r.repo_group_id "
+        "        OR e.projects_id = 0)) "
+        "WHERE e.email IS NULL" 
+        "AND e.domain IS NULL" 
+        "AND p.rg_recache = 1 "
+        "GROUP BY week, "
+        "year, "
+        "affiliation, "
+        f"a.cmt_{report_attribution}_email,"
+        "r.repo_group_id, info.a, info.b, info.c")
+        ).bindparams(tool_source=session.tool_source,tool_version=session.tool_version,data_source=session.data_source)
 
-    cfg.cursor.execute(cache_projects_by_week)
-    cfg.db.commit()
+    session.execute_sql(cache_projects_by_week)
 
-    cache_projects_by_month = ("""INSERT INTO dm_repo_group_monthly (repo_group_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
-        SELECT r.repo_group_id AS repo_group_id, 
-        a.cmt_%s_email AS email, 
-        a.cmt_%s_affiliation AS affiliation, 
-        date_part('month', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS month, 
-        date_part('year', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS year, 
-        SUM(a.cmt_added) AS added, 
-        SUM(a.cmt_removed) AS removed, 
-        SUM(a.cmt_whitespace) AS whitespace, 
-        COUNT(DISTINCT a.cmt_filename) AS files, 
-        COUNT(DISTINCT a.cmt_commit_hash) AS patches,
-        info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
-        commits a 
-        JOIN repo r ON r.repo_id = a.repo_id 
-        JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
-        LEFT JOIN exclude e ON 
-            (a.cmt_author_email = e.email 
-                AND (e.projects_id = r.repo_group_id 
-                    OR e.projects_id = 0)) 
-            OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) 
-                AND (e.projects_id = r.repo_group_id 
-                OR e.projects_id = 0)) 
-        WHERE e.email IS NULL 
-        AND e.domain IS NULL 
-        AND p.rg_recache = 1 
-        GROUP BY month, 
-        year, 
-        affiliation, 
-        a.cmt_%s_email,
-        r.repo_group_id, info.a, info.b, info.c"""
-        % (report_attribution,report_attribution,
-        report_date,report_date,
-        cfg.tool_source, cfg.tool_version, cfg.data_source,
-        report_attribution))
+    cache_projects_by_month = s.sql.text(
+        ("INSERT INTO dm_repo_group_monthly (repo_group_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
+        "SELECT r.repo_group_id AS repo_group_id, "
+        f"a.cmt_{report_attribution}_email AS email, "
+        f"a.cmt_{report_attribution}_affiliation AS affiliation, "
+        f"date_part('month', TO_TIMESTAMP(a.cmt_{report_date}_date, 'YYYY-MM-DD')) AS month, "
+        f"date_part('year', TO_TIMESTAMP(a.cmt_{report_date}_date, 'YYYY-MM-DD')) AS year, "
+        "SUM(a.cmt_added) AS added, "
+        "SUM(a.cmt_removed) AS removed, "
+        "SUM(a.cmt_whitespace) AS whitespace, "
+        "COUNT(DISTINCT a.cmt_filename) AS files, "
+        "COUNT(DISTINCT a.cmt_commit_hash) AS patches,"
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
+        "commits a "
+        "JOIN repo r ON r.repo_id = a.repo_id "
+        "JOIN repo_groups p ON p.repo_group_id = r.repo_group_id "
+        "LEFT JOIN exclude e ON "
+        "    (a.cmt_author_email = e.email "
+        "        AND (e.projects_id = r.repo_group_id "
+        "            OR e.projects_id = 0)) "
+        "    OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) "
+        "        AND (e.projects_id = r.repo_group_id "
+        "        OR e.projects_id = 0)) "
+        "WHERE e.email IS NULL "
+        "AND e.domain IS NULL "
+        "AND p.rg_recache = 1 "
+        "GROUP BY month, "
+        "year, "
+        "affiliation, "
+        f"a.cmt_{report_attribution}_email,"
+        "r.repo_group_id, info.a, info.b, info.c"
+        )).bindparams(tool_source=session.tool_source,tool_version=session.tool_version,data_source=session.data_source)
 
-    cfg.cursor.execute(cache_projects_by_month)
-    cfg.db.commit()
+    session.execute_sql(cache_projects_by_month)
 
-    cache_projects_by_year = ("""INSERT INTO dm_repo_group_annual (repo_group_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
-        SELECT r.repo_group_id AS repo_group_id, 
-        a.cmt_%s_email AS email, 
-        a.cmt_%s_affiliation AS affiliation, 
-        date_part('year', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS year, 
-        SUM(a.cmt_added) AS added, 
-        SUM(a.cmt_removed) AS removed, 
-        SUM(a.cmt_whitespace) AS whitespace, 
-        COUNT(DISTINCT a.cmt_filename) AS files, 
-        COUNT(DISTINCT a.cmt_commit_hash) AS patches,
-        info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
-        commits a 
-        JOIN repo r ON r.repo_id = a.repo_id 
-        JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
-        LEFT JOIN exclude e ON 
-            (a.cmt_author_email = e.email 
-                AND (e.projects_id = r.repo_group_id 
-                    OR e.projects_id = 0)) 
-            OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) 
-                AND (e.projects_id = r.repo_group_id 
-                OR e.projects_id = 0)) 
-        WHERE e.email IS NULL 
-        AND e.domain IS NULL 
-        AND p.rg_recache = 1 
-        GROUP BY year, 
-        affiliation, 
-        a.cmt_%s_email,
-        r.repo_group_id, info.a, info.b, info.c"""
-        % (report_attribution,report_attribution,
-        report_date,
-        cfg.tool_source, cfg.tool_version, cfg.data_source, report_attribution))
+    cache_projects_by_year = s.sql.text((
+        "INSERT INTO dm_repo_group_annual (repo_group_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
+        "SELECT r.repo_group_id AS repo_group_id, "
+        f"a.cmt_{report_attribution}_email AS email, "
+        f"a.cmt_{report_attribution}_affiliation AS affiliation, "
+        f"date_part('year', TO_TIMESTAMP(a.cmt_{report_date}_date, 'YYYY-MM-DD')) AS year, "
+        "SUM(a.cmt_added) AS added, "
+        "SUM(a.cmt_removed) AS removed, "
+        "SUM(a.cmt_whitespace) AS whitespace, "
+        "COUNT(DISTINCT a.cmt_filename) AS files, "
+        "COUNT(DISTINCT a.cmt_commit_hash) AS patches,"
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
+        "commits a "
+        "JOIN repo r ON r.repo_id = a.repo_id "
+        "JOIN repo_groups p ON p.repo_group_id = r.repo_group_id "
+        "LEFT JOIN exclude e ON "
+        "    (a.cmt_author_email = e.email "
+        "        AND (e.projects_id = r.repo_group_id "
+        "            OR e.projects_id = 0)) "
+        "    OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) "
+        "        AND (e.projects_id = r.repo_group_id "
+        "        OR e.projects_id = 0)) "
+        "WHERE e.email IS NULL "
+        "AND e.domain IS NULL "
+        "AND p.rg_recache = 1 "
+        "GROUP BY year, "
+        "affiliation, "
+        f"a.cmt_{report_attribution}_email,"
+        "r.repo_group_id, info.a, info.b, info.c"
 
-    cfg.cursor.execute(cache_projects_by_year)
-    cfg.db.commit()
+        
+        
+        )).bindparams(tool_source=session.tool_source,tool_version=session.tool_version,data_source=session.data_source)
 
+    #cfg.cursor.execute(cache_projects_by_year)
+    #cfg.db.commit()
+
+    session.execute_sql(cache_projects_by_year)
     # Start caching by repo
 
-    cfg.log_activity('Verbose','Caching repos')
+    session.log_activity('Verbose','Caching repos')
 
-    cache_repos_by_week = ("""INSERT INTO dm_repo_weekly (repo_id, email, affiliation, week, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
-        SELECT a.repo_id AS repo_id, 
-        a.cmt_%s_email AS email, 
-        a.cmt_%s_affiliation AS affiliation, 
-        date_part('week', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS week, 
-        date_part('year', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS year, 
-        SUM(a.cmt_added) AS added, 
-        SUM(a.cmt_removed) AS removed, 
-        SUM(a.cmt_whitespace) AS whitespace, 
-        COUNT(DISTINCT a.cmt_filename) AS files, 
-        COUNT(DISTINCT a.cmt_commit_hash) AS patches,
-        info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
-        commits a 
-        JOIN repo r ON r.repo_id = a.repo_id 
-        JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
-        LEFT JOIN exclude e ON 
-            (a.cmt_author_email = e.email 
-                AND (e.projects_id = r.repo_group_id 
-                    OR e.projects_id = 0)) 
-            OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) 
-                AND (e.projects_id = r.repo_group_id 
-                OR e.projects_id = 0)) 
-        WHERE e.email IS NULL 
-        AND e.domain IS NULL 
-        AND p.rg_recache = 1 
-        GROUP BY week, 
-        year, 
-        affiliation, 
-        a.cmt_%s_email,
-        a.repo_id, info.a, info.b, info.c"""
-        % (report_attribution,report_attribution,
-        report_date,report_date,
-        cfg.tool_source, cfg.tool_version, cfg.data_source,
-        report_attribution))
+    cache_repos_by_week = s.sql.text(
+        (
+        "INSERT INTO dm_repo_weekly (repo_id, email, affiliation, week, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
+        "SELECT a.repo_id AS repo_id, "
+        f"a.cmt_{report_attribution}_email AS email, "
+        f"a.cmt_{report_attribution}_affiliation AS affiliation, "
+        f"date_part('week', TO_TIMESTAMP(a.cmt_{report_date}_date, 'YYYY-MM-DD')) AS week, "
+        f"date_part('year', TO_TIMESTAMP(a.cmt_{report_date}_date, 'YYYY-MM-DD')) AS year, "
+        "SUM(a.cmt_added) AS added, "
+        "SUM(a.cmt_removed) AS removed, "
+        "SUM(a.cmt_whitespace) AS whitespace, "
+        "COUNT(DISTINCT a.cmt_filename) AS files, "
+        "COUNT(DISTINCT a.cmt_commit_hash) AS patches,"
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
+        "commits a "
+        "JOIN repo r ON r.repo_id = a.repo_id "
+        "JOIN repo_groups p ON p.repo_group_id = r.repo_group_id "
+        "LEFT JOIN exclude e ON "
+        "    (a.cmt_author_email = e.email "
+        "        AND (e.projects_id = r.repo_group_id "
+        "            OR e.projects_id = 0)) "
+        "    OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) "
+        "        AND (e.projects_id = r.repo_group_id "
+        "        OR e.projects_id = 0)) "
+        "WHERE e.email IS NULL "
+        "AND e.domain IS NULL "
+        "AND p.rg_recache = 1 "
+        "GROUP BY week, "
+        "year, "
+        "affiliation, "
+        f"a.cmt_{report_attribution}_email,"
+        "a.repo_id, info.a, info.b, info.c"
+        )).bindparams(tool_source=session.tool_source,tool_version=session.tool_version,data_source=session.data_source)
 
-    cfg.cursor.execute(cache_repos_by_week)
-    cfg.db.commit()
+    session.execute_sql(cache_repos_by_week)
 
-    cache_repos_by_month = ("""INSERT INTO dm_repo_monthly (repo_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
-        SELECT a.repo_id AS repo_id, 
-        a.cmt_%s_email AS email, 
-        a.cmt_%s_affiliation AS affiliation, 
-        date_part('month', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS month, 
-        date_part('year', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS year, 
-        SUM(a.cmt_added) AS added, 
-        SUM(a.cmt_removed) AS removed, 
-        SUM(a.cmt_whitespace) AS whitespace, 
-        COUNT(DISTINCT a.cmt_filename) AS files, 
-        COUNT(DISTINCT a.cmt_commit_hash) AS patches, 
-        info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
-        commits a 
-        JOIN repo r ON r.repo_id = a.repo_id 
-        JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
-        LEFT JOIN exclude e ON 
-            (a.cmt_author_email = e.email 
-                AND (e.projects_id = r.repo_group_id 
-                    OR e.projects_id = 0)) 
-            OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) 
-                AND (e.projects_id = r.repo_group_id 
-                OR e.projects_id = 0)) 
-        WHERE e.email IS NULL 
-        AND e.domain IS NULL 
-        AND p.rg_recache = 1 
-        GROUP BY month, 
-        year, 
-        affiliation, 
-        a.cmt_%s_email,
-        a.repo_id, info.a, info.b, info.c"""
-        % (report_attribution,report_attribution,
-        report_date,report_date,
-        cfg.tool_source, cfg.tool_version, cfg.data_source,
-        report_attribution))
+    cache_repos_by_month = s.sql.text((
+        "INSERT INTO dm_repo_monthly (repo_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
+        "SELECT a.repo_id AS repo_id, "
+        f"a.cmt_{report_attribution}_email AS email, "
+        f"a.cmt_{report_attribution}_affiliation AS affiliation, "
+        f"date_part('month', TO_TIMESTAMP(a.cmt_{report_date}_date, 'YYYY-MM-DD')) AS month, "
+        f"date_part('year', TO_TIMESTAMP(a.cmt_{report_date}_date, 'YYYY-MM-DD')) AS year, "
+        "SUM(a.cmt_added) AS added, "
+        "SUM(a.cmt_removed) AS removed, "
+        "SUM(a.cmt_whitespace) AS whitespace, "
+        "COUNT(DISTINCT a.cmt_filename) AS files, "
+        "COUNT(DISTINCT a.cmt_commit_hash) AS patches, "
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
+        "commits a "
+        "JOIN repo r ON r.repo_id = a.repo_id "
+        "JOIN repo_groups p ON p.repo_group_id = r.repo_group_id "
+        "LEFT JOIN exclude e ON "
+        "    (a.cmt_author_email = e.email "
+        "        AND (e.projects_id = r.repo_group_id "
+        "            OR e.projects_id = 0)) "
+        "    OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) "
+        "        AND (e.projects_id = r.repo_group_id "
+        "        OR e.projects_id = 0)) "
+        "WHERE e.email IS NULL "
+        "AND e.domain IS NULL "
+        "AND p.rg_recache = 1 "
+        "GROUP BY month, "
+        "year, "
+        "affiliation, "
+        f"a.cmt_{report_attribution}_email,"
+        "a.repo_id, info.a, info.b, info.c"
+        )).bindparams(tool_source=session.tool_source,tool_version=session.tool_version,data_source=session.data_source)
 
-    cfg.cursor.execute(cache_repos_by_month)
-    cfg.db.commit()
+    session.execute_sql(cache_repos_by_month)
 
-    cache_repos_by_year = ("""INSERT INTO dm_repo_annual (repo_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)
-        SELECT a.repo_id AS repo_id, 
-        a.cmt_%s_email AS email, 
-        a.cmt_%s_affiliation AS affiliation, 
-        date_part('year', TO_TIMESTAMP(a.cmt_%s_date, 'YYYY-MM-DD')) AS year, 
-        SUM(a.cmt_added) AS added, 
-        SUM(a.cmt_removed) AS removed, 
-        SUM(a.cmt_whitespace) AS whitespace, 
-        COUNT(DISTINCT a.cmt_filename) AS files, 
-        COUNT(DISTINCT a.cmt_commit_hash) AS patches, 
-        info.a AS tool_source, info.b AS tool_version, info.c AS data_source
-        FROM (VALUES(%s,%s,%s)) info(a,b,c), 
-        commits a 
-        JOIN repo r ON r.repo_id = a.repo_id 
-        JOIN repo_groups p ON p.repo_group_id = r.repo_group_id 
-        LEFT JOIN exclude e ON 
-            (a.cmt_author_email = e.email 
-                AND (e.projects_id = r.repo_group_id 
-                    OR e.projects_id = 0)) 
-            OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) 
-                AND (e.projects_id = r.repo_group_id 
-                OR e.projects_id = 0)) 
-        WHERE e.email IS NULL 
-        AND e.domain IS NULL 
-        AND p.rg_recache = 1 
-        GROUP BY year, 
-        affiliation, 
-        a.cmt_%s_email,
-        a.repo_id, info.a, info.b, info.c"""
-        % (report_attribution,report_attribution,
-        report_date,
-        cfg.tool_source, cfg.tool_version, cfg.data_source,
-        report_attribution))
+    cache_repos_by_year = s.sql.text((
+        "INSERT INTO dm_repo_annual (repo_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
+        "SELECT a.repo_id AS repo_id, "
+        f"a.cmt_{report_attribution}_email AS email, "
+        f"a.cmt_{report_attribution}_affiliation AS affiliation, "
+        f"date_part('year', TO_TIMESTAMP(a.cmt_{report_date}_date, 'YYYY-MM-DD')) AS year, "
+        "SUM(a.cmt_added) AS added, "
+        "SUM(a.cmt_removed) AS removed, "
+        "SUM(a.cmt_whitespace) AS whitespace, "
+        "COUNT(DISTINCT a.cmt_filename) AS files, "
+        "COUNT(DISTINCT a.cmt_commit_hash) AS patches, "
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
+        "commits a "
+        "JOIN repo r ON r.repo_id = a.repo_id "
+        "JOIN repo_groups p ON p.repo_group_id = r.repo_group_id "
+        "LEFT JOIN exclude e ON "
+        "    (a.cmt_author_email = e.email "
+        "        AND (e.projects_id = r.repo_group_id "
+        "            OR e.projects_id = 0)) "
+        "    OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) "
+        "        AND (e.projects_id = r.repo_group_id "
+        "        OR e.projects_id = 0)) "
+        "WHERE e.email IS NULL "
+        "AND e.domain IS NULL "
+        "AND p.rg_recache = 1 "
+        "GROUP BY year, "
+        "affiliation, "
+        f"a.cmt_{report_attribution}_email,"
+        "a.repo_id, info.a, info.b, info.c"
+        )).bindparams(tool_source=session.tool_source,tool_version=session.tool_version,data_source=session.data_source)
 
-    cfg.cursor.execute(cache_repos_by_year)
-    cfg.db.commit()
+    session.execute_sql(cache_repos_by_year)
 
     # Reset cache flags
 
-    reset_recache = "UPDATE repo_groups SET rg_recache = 0"
-    cfg.cursor.execute(reset_recache)
-    cfg.db.commit()
+    reset_recache = s.sql.text("UPDATE repo_groups SET rg_recache = 0")
+    session.execute_sql(reset_recache)
 
-    cfg.log_activity('Info','Caching unknown affiliations and web data for display (complete)')
+    session.log_activity('Info','Caching unknown affiliations and web data for display (complete)')
 

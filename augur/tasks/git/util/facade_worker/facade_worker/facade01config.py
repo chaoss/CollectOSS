@@ -124,6 +124,9 @@ class FacadeSession(GithubTaskSession):
         self.multithreaded = worker_options["multithreaded"]
         self.create_xlsx_summary_files = worker_options["create_xlsx_summary_files"]
 
+        self.tool_source = "Facade"
+        self.data_source = "Git Log"
+        self.tool_version = "1.4.4"
 
         # Get the location of the directory where git repos are stored
         if 'repo_directory' in worker_options:
