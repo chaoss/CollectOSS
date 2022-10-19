@@ -142,31 +142,36 @@ def create_routes(server):
         new_login_name = request.args.get("new_username")
         new_password = request.args.get("new_password")
 
-        print(f"Username: {username}")
-        print(f"password: {password}")
-        print(f"email: {email}")
-        print(f"new_password: {new_password}")
-
-
         if username is None or password is None:
             return jsonify({"status": "Missing argument"}), 400
+
         user = session.query(User).filter(User.login_name == username).first()
-        checkPassword = check_password_hash(user.login_hashword, password)
         if user is None:
             return jsonify({"status": "User does not exist"})
+
+        checkPassword = check_password_hash(user.login_hashword, password)
         if checkPassword == False:
             return jsonify({"status": "Invalid password"}) 
 
+        if email is not None:
+            existing_user = session.query(User).filter(User.email == email).one()
+            if existing_user is not None:
+                return jsonify({"status": "Already an account with this email"})
 
-        if(email is not None and checkPassword is True):
             user.email = email
             session.commit()
             return jsonify({"status": "Email Updated"})
-        if(new_password is not None and checkPassword is True):
+
+        if new_password is not None:
             user.login_hashword = generate_password_hash(new_password)
             session.commit()
             return jsonify({"status": "Password Updated"})
-        if(new_login_name is not None and checkPassword is True):
+
+        if new_login_name is not None:
+            existing_user = session.query(User).filter(User.login_name == new_login_name).one()
+            if existing_user is not None:
+                return jsonify({"status": "Username already taken"})
+
             user.login_name = new_login_name
             session.commit()
             return jsonify({"status": "Username Updated"})
