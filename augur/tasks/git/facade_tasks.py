@@ -267,8 +267,9 @@ def generate_analysis_sequence(logger):
             repo_loc = (f"{session.repo_base_directory}{repo['repo_group_id']}/{repo['repo_path']}{repo['repo_name']}/.git")
             # Grab the parents of HEAD
 
-            parents = subprocess.Popen([f"git --git-dir {repo_loc} log --ignore-missing --pretty=format:'%%H' --since={start_date}"],
-                stdout=subprocess.PIPE, shell=True)
+            parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
+            "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
+            stdout=subprocess.PIPE, shell=True)
 
             parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
 

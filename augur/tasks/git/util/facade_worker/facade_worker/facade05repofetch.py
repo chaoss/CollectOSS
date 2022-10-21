@@ -181,7 +181,7 @@ def git_repo_initialize(session, repo_group_id=None):
 
             session.execute_sql(query)
 
-            session.log_activity('Error',f"Could not clone {git}" % git)
+            session.log_activity('Error',f"Could not clone {git}")
 
     session.log_activity('Info', f"Fetching new repos (complete)")
 
@@ -402,7 +402,7 @@ def git_repo_updates(session):
 
                     session.log_activity('Verbose', f'remote default is: {remotedefault}, and localdefault is {localdefault}.') 
 
-                    cmd_checkout_default =  (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} checkout {remote_default}")
+                    cmd_checkout_default =  (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} checkout {remotedefault}")
 
                     cmd_checkout_default_wait = subprocess.Popen([cmd_checkout_default],shell=True).wait()
 

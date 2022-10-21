@@ -149,7 +149,7 @@ class FacadeSession(GithubTaskSession):
         
         result = self.execute_sql(query).fetchone()
         print(result)
-        return result
+        return result[0]
         
 
     def update_status(self, status):
