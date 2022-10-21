@@ -178,11 +178,12 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 
 	# Read the git log
 
-	git_log = subprocess.Popen([f"git --git-dir {repo_loc} log -p -M {commit} -n1 "
+	git_log = subprocess.Popen(["git --git-dir %s log -p -M %s -n1 "
 		"--pretty=format:'"
 		"author_name: %%an%%nauthor_email: %%ae%%nauthor_date:%%ai%%n"
 		"committer_name: %%cn%%ncommitter_email: %%ce%%ncommitter_date: %%ci%%n"
-		"parents: %%p%%nEndPatch' "], stdout=subprocess.PIPE, shell=True)
+		"parents: %%p%%nEndPatch' "
+		% (repo_loc,commit)], stdout=subprocess.PIPE, shell=True)
 
 	## 
 
