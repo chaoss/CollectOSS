@@ -58,7 +58,7 @@ def git_repo_initialize(session, repo_group_id=None):
         session.log_activity('Info',f"Fetching repos with repo group id: {repo_group_id}")
 
         #query = s.sql.text("""SELECT repo_id,repo_group_id,repo_git FROM repo WHERE repo_status LIKE 'New%'""")
-        #cfg.cursor.execute(query)
+         
         result = session.query(Repo).filter('New' in Repo.repo_status).all()
 
         for repo in result:
@@ -125,7 +125,7 @@ def git_repo_initialize(session, repo_group_id=None):
 
         # Create the prerequisite directories
         return_code = subprocess.Popen([f"mkdir -p {repo_path}"],shell=True).wait()
-#        cfg.log_activity('Info','Return code value when making directors from facade05, line 120: {:d}'.format(return_code))
+#        session.log_activity('Info','Return code value when making directors from facade05, line 120: {:d}'.format(return_code))
 
 
 
@@ -188,7 +188,7 @@ def git_repo_initialize(session, repo_group_id=None):
     
 def check_for_repo_updates(session):
 
-    #cfg = session.cfg
+     
 
 # Check the last time a repo was updated and if it has been longer than the
 # update_frequency, mark its project for updating during the next analysis.
@@ -201,7 +201,7 @@ def check_for_repo_updates(session):
     get_initialized_repos = s.sql.text("""SELECT repo_id FROM repo WHERE repo_status NOT LIKE 'New%' 
         AND repo_status != 'Delete' 
         AND repo_status != 'Analyze' AND repo_status != 'Empty'""")
-    #cfg.cursor.execute(get_initialized_repos)
+     
     repos = session.fetchall_data_from_sql_text(get_initialized_repos)#list(cfg.cursor)
 
     for repo in repos:
@@ -228,7 +228,7 @@ def check_for_repo_updates(session):
             # ("UPDATE repos r JOIN projects p ON p.id = r.projects_id "
             #     "SET status='Update' WHERE "
             #     "r.id=%s and r.status != 'Empty'")
-            #cfg.cursor.execute(mark_repo, (repo[0], ))#['id'], ))
+             
             session.execute_sql(mark_repo)
 
     # Mark the entire project for an update, so that under normal
@@ -247,8 +247,7 @@ def check_for_repo_updates(session):
     #     "r.status != 'Analyze' AND r.status != 'Empty'")
 
     session.insert_or_update_data(update_project_status)
-    # cfg.cursor.execute(update_project_status)
-    # cfg.db.commit()
+
 
     session.log_activity('Info','Checking repos to update (complete)')
 
@@ -274,8 +273,8 @@ def force_repo_analysis(session):
 
     set_to_analyze = s.sql.text("""UPDATE repo SET repo_status='Analyze' WHERE repo_status
         NOT LIKE 'New%' AND repo_status!='Delete' AND repo_status != 'Empty'""")
-    #cfg.cursor.execute(set_to_analyze)
-    #cfg.db.commit()
+     
+     
     session.execute_sql(set_to_analyze)
 
     session.log_activity('Info','Forcing repos to be analyzed (complete)')
@@ -289,7 +288,7 @@ def git_repo_updates(session):
 
     query = s.sql.text("""SELECT repo_id,repo_group_id,repo_git,repo_name,repo_path FROM repo WHERE
         repo_status='Update'""")
-    #cfg.cursor.execute(query)
+     
 
     existing_repos = session.fetchall_data_from_sql_text(query)#list(cfg.cursor)
 
@@ -318,11 +317,11 @@ def git_repo_updates(session):
                 if return_code_remote == 0: 
 
 #                    logremotedefault = ("git -C %s%s/%s%s remote set-head origin -a"
-#                        % (cfg.repo_base_directory,row[1],row[4],row[3]))
+#                        % (session.repo_base_directory,row[1],row[4],row[3]))
 
 #                    return_code_remote_default = subprocess.Popen([logremotedefault],stdout=subprocess.PIPE,shell=True).wait()
 
-#                    cfg.log_activity('Verbose', f'remote default is {logremotedefault}.')
+#                    session.log_activity('Verbose', f'remote default is {logremotedefault}.')
 
                     getremotedefault = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
 
@@ -367,11 +366,11 @@ def git_repo_updates(session):
 #                remotedefault = 'main'
 
 #                logremotedefault = ("git -C %s%s/%s%s remote set-head origin -a"
-#                    % (cfg.repo_base_directory,row[1],row[4],row[3]))
+#                    % (session.repo_base_directory,row[1],row[4],row[3]))
 
 #                return_code_remote = subprocess.Popen([logremotedefault],stdout=subprocess.PIPE,shell=True).wait()
 
-#                cfg.log_activity('Verbose', f'remote default is {logremotedefault}.')
+#                session.log_activity('Verbose', f'remote default is {logremotedefault}.')
 
                 getremotedefault = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
 

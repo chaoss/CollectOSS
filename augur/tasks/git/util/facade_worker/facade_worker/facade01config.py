@@ -86,7 +86,6 @@ class FacadeSession(GithubTaskSession):
 
     Attributes:
         repos_processed (int): git repositories processed
-        cfg (FacadeConfig): Class that supports the config and database functionality from legacy facade.
         limited_run (int): value that determines whether legacy facade is only doing a portion of its full run of commit analysis or not. By default all steps are run but if any options in particular are specified then only those are ran.
         delete_marked_repos (int): toggle that determines whether to delete git cloned git directories when they are marked for deletion
         pull_repos (int): toggles whether to update existing repos in the facade directory
@@ -240,7 +239,6 @@ class FacadeConfig:
         Initializes database when it encounters a database exception
 
     Attributes:
-        cfg (FacadeConfig): Class that supports the config and database functionality from legacy facade.
         repos_processed (int): Counter for how many repos have been analyzed
         cursor (psycopg2.extensions.cursor): database cursor for legacy facade.
         logger (Logger): logger object inherited from the session object

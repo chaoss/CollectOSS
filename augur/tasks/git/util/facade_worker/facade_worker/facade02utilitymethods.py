@@ -48,8 +48,8 @@ def update_repo_log(session, repos_id,status):
 	#log_message = ("INSERT INTO repos_fetch_log (repos_id,status) "
 	#	"VALUES (%s,%s)")
 	try:
-		#cfg.cursor.execute(log_message, (repos_id, status))
-		#cfg.db.commit()
+		 
+		 
 		data = {
 			'repos_id': repos_id,
 			'status': status
@@ -66,8 +66,8 @@ def trim_commit(session, repo_id,commit):
 		WHERE repo_id=:repo_id
 		AND cmt_commit_hash=:hash""").bindparams(repo_id=repo_id,hash=commit)
 
-	#cfg.cursor.execute(remove_commit, (repo_id, commit))
-	#cfg.db.commit()
+	 
+	 
 	session.execute_sql(remove_commit)
 
 	session.log_activity('Debug',f"Trimmed commit: {commit}")
@@ -96,8 +96,8 @@ def trim_author(session, email):
 		WHERE cmt_author_email = :email
 		""").bindparams(email=email)
 
-	#cfg.cursor.execute(trim, (email, ))
-	#cfg.db.commit()
+	 
+	 
 	session.execute_sql(trim)
 
 	trim = s.sql.text("""UPDATE commits

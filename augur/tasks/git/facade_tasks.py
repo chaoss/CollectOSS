@@ -46,7 +46,6 @@ from augur.application.logs import TaskLogConfig
 @celery.task
 def facade_analysis_init_facade_task():
     logger = logging.getLogger(facade_analysis_init_facade_task.__name__)
-    #cfg = FacadeConfig(logger)
     with FacadeSession(logger) as session:
         session.update_status('Running analysis')
         session.log_activity('Info',f"Beginning analysis.")
@@ -60,7 +59,6 @@ def grab_comitter_list_facade_task(repo_id,platform="github"):
 @celery.task
 def trim_commits_facade_task(repo_id):
     logger = logging.getLogger(trim_commits_facade_task.__name__)
-    #cfg = FacadeConfig(logger)
     session = FacadeSession(logger)
 
     def update_analysis_log(repos_id,status):
@@ -71,8 +69,6 @@ def trim_commits_facade_task(repo_id):
             VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
 
         try:
-            #cfg.cursor.execute(log_message, (repos_id,status))
-            #cfg.db.commit()
             session.execute_sql(log_message)
         except:
             pass
@@ -86,12 +82,10 @@ def trim_commits_facade_task(repo_id):
     get_status = s.sql.text("""SELECT working_commit FROM working_commits WHERE repos_id=:repo_id
         """).bindparams(repo_id=repo_id)
 
-    #cfg.cursor.execute(get_status, (repo_id, ))
     try:
-        working_commits = session.fetchall_data_from_sql_text(get_status)#list(cfg.cursor)
+        working_commits = session.fetchall_data_from_sql_text(get_status)
     except:
         working_commits = []
-    #cfg.cursor.fetchone()[1]
 
     # If there's a commit still there, the previous run was interrupted and
     # the commit data may be incomplete. It should be trimmed, just in case.
@@ -108,7 +102,6 @@ def trim_commits_facade_task(repo_id):
 @celery.task
 def trim_commits_post_analysis_facade_task(repo_id,commits):
     logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
-    #cfg = FacadeConfig(logger)
 
     session = FacadeSession(logger)
     def update_analysis_log(repos_id,status):
@@ -119,8 +112,6 @@ def trim_commits_post_analysis_facade_task(repo_id,commits):
             VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
 
         try:
-            #cfg.cursor.execute(log_message, (repos_id,status))
-            #cfg.db.commit()
             session.execute_sql(log_message)
         except:
             pass
@@ -138,7 +129,6 @@ def trim_commits_post_analysis_facade_task(repo_id,commits):
     set_complete = s.sql.text("""UPDATE repo SET repo_status='Complete' WHERE repo_id=:repo_id and repo_status != 'Empty'
         """).bindparams(repo_id=repo_id)
     
-    #cfg.cursor.execute(set_complete, (repo_id, ))
     session.execute_sql(set_complete)
 
     update_analysis_log(repo_id,'Commit trimming complete')
@@ -167,9 +157,8 @@ def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, m
     """
 
     ### Local helper functions ###
-    #create new cfg for celery thread.
+    #create new session for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
-    #cfg = FacadeConfig(logger)
     session = FacadeSession(logger)
 
     def update_analysis_log(repos_id,status):
@@ -180,8 +169,6 @@ def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, m
             VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
 
         try:
-            #cfg.cursor.execute(log_message, (repos_id,status))
-            #cfg.db.commit()
             session.execute_sql(log_message)
         except:
             pass
@@ -226,17 +213,6 @@ def rebuild_unknown_affiliation_and_web_caches_facade_task():
 
 
 
-# All done
-#session.cfg.update_status('Idle')
-#session.cfg.log_activity('Quiet','facade-worker.py completed')
-
-#elapsed_time = time.time() - start_tim
-#print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time))
-#session.cfg.cursor.close()
-#session.cfg.cursor_people.close()
-#session.cfg.db.close()
-#session.cfg.db_people.close()
-
 def generate_analysis_sequence(logger):
     """Run the analysis by looping over all active repos. For each repo, we retrieve
     the list of commits which lead to HEAD. If any are missing from the database,
@@ -251,8 +227,7 @@ def generate_analysis_sequence(logger):
 
     with FacadeSession(logger) as session:
         repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo """)
-        #session.cfg.cursor.execute(repo_list)
-        repos = session.fetchall_data_from_sql_text(repo_list)#list(session.cfg.cursor)
+        repos = session.fetchall_data_from_sql_text(repo_list)
 
         start_date = session.get_setting('start_date')
 
@@ -301,7 +276,7 @@ def generate_analysis_sequence(logger):
             session.log_activity('Debug',f"Commits missing from repo {repo['repo_id']}: {len(missing_commits)}")
             
             if len(missing_commits) > 0:
-                #cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
+                #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
 
                 #Split commits into mostly equal queues so each process starts with a workload and there is no
                 #    overhead to pass into queue from the parent.            

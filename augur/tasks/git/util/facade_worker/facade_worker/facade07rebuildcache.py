@@ -64,7 +64,7 @@ def nuke_affiliations(session):
 
 def fill_empty_affiliations(session):
 
-    #cfg = session.cfg
+     
 
 # When a record is added, it has no affiliation data. Also, when an affiliation
 # mapping is changed via the UI, affiliation data will be set to NULL. This
@@ -87,8 +87,8 @@ def fill_empty_affiliations(session):
             AND ca_active = 1 
             ORDER BY ca_start_date DESC""").bindparams(email=email)
 
-        #cfg.cursor.execute(find_exact_match, (email, ))
-        #cfg.db.commit()
+         
+         
 
         matches = session.fetchall_data_from_sql_text(find_exact_match)#list(cfg.cursor)
 
@@ -112,8 +112,8 @@ def fill_empty_affiliations(session):
                 AND ca_active = 1 
                 ORDER BY ca_start_date DESC""").bindparams(domain=domain)
 
-            #cfg.cursor.execute(find_exact_domain, (domain, ))
-            #cfg.db.commit()
+             
+             
 
             matches = session.fetchall_data_from_sql_text(find_exact_domain)
 
@@ -188,7 +188,7 @@ def fill_empty_affiliations(session):
 
     timefetch = s.sql.text("""SELECT current_timestamp(6) as fetched""")
 
-    affiliations_fetched = session.execute_sql(timefetch).fetchone()[0]#cfg.cursor.fetchone()[0]#['fetched']
+    affiliations_fetched = session.execute_sql(timefetch).fetchone()[0] 
     print(affiliations_fetched)
     # Now find the last time we worked on affiliations, to figure out what's new
 
@@ -197,7 +197,7 @@ def fill_empty_affiliations(session):
     get_changed_affiliations = s.sql.text("""SELECT ca_domain FROM contributor_affiliations""")# WHERE "
         #"ca_last_used >= timestamptz  %s")
 
-    #cfg.cursor.execute(get_changed_affiliations)#, (affiliations_processed, ))
+     
 
     changed_affiliations = session.fetchall_data_from_sql_text(get_changed_affiliations)#list(cfg.cursor)
 
@@ -656,8 +656,8 @@ def rebuild_unknown_affiliation_and_web_caches(session):
         
         )).bindparams(tool_source=session.tool_source,tool_version=session.tool_version,data_source=session.data_source)
 
-    #cfg.cursor.execute(cache_projects_by_year)
-    #cfg.db.commit()
+     
+     
 
     session.execute_sql(cache_projects_by_year)
     # Start caching by repo

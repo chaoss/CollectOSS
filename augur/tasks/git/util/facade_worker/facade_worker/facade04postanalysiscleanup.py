@@ -64,7 +64,7 @@ def git_repo_cleanup(session):
 
 		remove_commits = s.sql.text("""DELETE FROM commits WHERE repo_id=:repo_id
 			""").bindparams(repo_id=row['repo_id'])
-		session.execute_sql(remove_commits)#cfg.cursor.execute(remove_commits, (row['repo_id'], ))
+		session.execute_sql(remove_commits) 
 
 		optimize_table = s.sql.text("""OPTIMIZE TABLE commits""")
 		session.execute_sql(optimize_table)
