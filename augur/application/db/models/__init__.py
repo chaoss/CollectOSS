@@ -98,5 +98,6 @@ from augur.application.db.models.augur_operations import (
     WorkerOauth,
     WorkerSettingsFacade,
     Config,
-    User
+    User,
+    UserRepo
 )

@@ -11,13 +11,15 @@ from flask import request, Response, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.sql import text
 from sqlalchemy.orm import sessionmaker
+from augur.application.db.session import DatabaseSession
+from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.util.repo_load_controller import RepoLoadController
+
 
 from augur.application.db.models import User
-
-# Disable the requirement for SSL by setting env["AUGUR_DEV"] = True
-development = os.getenv("AUGUR_DEV") or False
-
+from augur.application.config import get_development_flag
 logger = logging.getLogger(__name__)
+development = get_development_flag()
 from augur.application.db.engine import create_database_engine
 Session = sessionmaker(bind=create_database_engine())
 
@@ -98,7 +100,7 @@ def create_routes(server):
         if emailCheck is not None:
             return jsonify({"status": "Email already exists"})
         try:
-            user = User(login_name = username, login_hashword = generate_password_hash(password), email = email, first_name = first_name, last_name = last_name, admin=admin, tool_source="User API", tool_version=None, data_source="API")
+            user = User(login_name = username, login_hashword = generate_password_hash(password), email = email, first_name = first_name, last_name = last_name, tool_source="User API", tool_version=None, data_source="API", admin=False)
             session.add(user)
             session.commit()
             return jsonify({"status": "User created"})
@@ -154,3 +156,74 @@ def create_routes(server):
                 user.login_name = new_login_name
                 session.commit()
                 return jsonify({"status": "Username Updated"})
+
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/repos", methods=['GET', 'POST'])
+    def user_repos():
+        if not development and not request.is_secure:
+            return generate_upgrade_request()
+
+        username = request.args.get("username")
+
+        with DatabaseSession(logger) as session:
+    
+            if username is None:
+                return jsonify({"status": "Missing argument"}), 400
+            user = session.query(User).filter(User.login_name == username).first()
+            if user is None:
+                return jsonify({"status": "User does not exist"})
+            
+            repo_load_controller = RepoLoadController(gh_session=session)
+
+            repo_ids = repo_load_controller.get_user_repo_ids(user.user_id)
+
+            return jsonify({"status": "success", "repo_ids": repo_ids})
+
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/add_repo", methods=['GET', 'POST'])
+    def add_user_repo():
+        if not development and not request.is_secure:
+            return generate_upgrade_request()
+
+        username = request.args.get("username")
+        repo = request.args.get("repo_url")
+
+        with GithubTaskSession(logger) as session:
+
+            if username is None:
+                return jsonify({"status": "Missing argument"}), 400
+            user = session.query(User).filter(
+                User.login_name == username).first()
+            if user is None:
+                return jsonify({"status": "User does not exist"})
+
+            repo_load_controller = RepoLoadController(gh_session=session)
+
+            result = repo_load_controller.add_frontend_repo(repo, user.user_id)
+
+            return jsonify(result)
+
+
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/add_org", methods=['GET', 'POST'])
+    def add_user_org():
+        if not development and not request.is_secure:
+            return generate_upgrade_request()
+
+        username = request.args.get("username")
+        org = request.args.get("org_url")
+
+        with GithubTaskSession(logger) as session:
+
+            if username is None:
+                return jsonify({"status": "Missing argument"}), 400
+            user = session.query(User).filter(
+                User.login_name == username).first()
+            if user is None:
+                return jsonify({"status": "User does not exist"})
+
+            repo_load_controller = RepoLoadController(gh_session=session)
+
+            result = repo_load_controller.add_frontend_org(org, user.user_id)
+
+            return jsonify(result)
+
+
+        

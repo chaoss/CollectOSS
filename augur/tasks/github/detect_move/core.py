@@ -22,7 +22,18 @@ def ping_github_for_repo_move(session,repo):
     owner, name = get_owner_repo(repo.repo_git)
     url = f"https://api.github.com/repos/{owner}/{name}"
 
-    response_from_gh = hit_api(session.oauths, url, session.logger)
+    attempts = 0
+    while attempts < 10:
+        response_from_gh = hit_api(session.oauths, url, session.logger)
+
+        if response_from_gh:
+            break
+
+        attempts += 1
+
+    if attempts == 10:
+        session.logger.warning(f"Could not check if repo moved because the api timed out 10 times. Url: {url}")
+        return
 
     #skip if not moved
     #301 moved permanently 

@@ -4,7 +4,8 @@
 
 [![Build Docker images](https://github.com/chaoss/augur/actions/workflows/build_docker.yml/badge.svg)](https://github.com/chaoss/augur/actions/workflows/build_docker.yml)
 
-[![Hits-of-Code](https://hitsofcode.com/github/chaoss/augur?branch=augur-new)](https://hitsofcode.com/github/chaoss/augur/view?branch=augur-new)
+[![Hits-of-Code](https://hitsofcode.com/github/chaoss/augur?branch=main)](https://hitsofcode.com/github/chaoss/augur/view?branch=main)
+
 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
 
@@ -13,19 +14,23 @@
 Augur is a software suite for collecting and measuring structured data
 about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities.
 
-We gather trace data for a group of repositories, normalize
-it into our data model, and provide a variety of metrics about said
-data. The structure of our data model enables us to synthesize data
-across various platforms to provide meaningful context for meaningful
-questions about the way these communities evolve.
+We gather trace data for a group of repositories, normalize it into our data model, and provide a variety of metrics about said data. The structure of our data model enables us to synthesize data across various platforms to provide meaningful context for meaningful questions about the way these communities evolve.
+Augur’s main focus is to measure the overall health and sustainability of open source projects, as these types of projects are system critical for nearly every software organization or company. We do this by gathering data about project repositories and normalizing that into our data model to provide useful metrics about your project’s health. For example, one of our metrics is Burstiness. Burstiness – how are short timeframes of intense activity, followed by a corresponding return to a typical pattern of activity, observed in a project?
+
+This can paint a picture of a project’s focus and gain insight into the potential stability of a project and how its typical cycle of updates occurs. 
 
 We are a [CHAOSS](https://chaoss.community) project, and many of our
-metrics are implementations of the metrics defined by our awesome community. You
-can find more information about [how to get involved on the CHAOSS website](https://chaoss.community/participate/).
+metrics are implementations of the metrics defined by our awesome community. You can find a full list of them [here](https://chaoss.community/metrics/).
+
+For more information on [how to get involved on the CHAOSS website](https://chaoss.community/participate/).
 
 ## Collecting Data
 
+Augur supports Python3.6 through Python3.9 on all platforms. Python3.10 and above do not yet work because of machine learning worker dependencies. On OSX, you can create a Python 3.9 environment this way: `python3.9 -m venv path/to/venv`.
+
 Augur's main focus is to measure the overall health and sustainability of open source projects.
+
+Augur collects more data about open source software projects than any other available software. Augur's main focus is to measure the overall health and sustainability of open source projects.
 One of Augur's core tenets is a desire to openly gather data that people can trust, and then provide useful and well-defined metrics that help give important context to the larger stories being told by that data. We do this in a variety of ways, one of which is doing all our own data collection in house. We currently collect data from a few main sources:
 
 1. Raw Git commit logs (commits, contributors)

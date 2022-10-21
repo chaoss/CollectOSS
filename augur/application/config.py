@@ -1,8 +1,31 @@
 import sqlalchemy as s
 import json
 from typing import List, Any, Optional
+import os
 
 from augur.application.db.models import Config 
+
+
+def get_development_flag_from_config():
+    from augur.application.db.session import DatabaseSession
+    from logging import getLogger
+
+    logger = getLogger(__name__)
+    with DatabaseSession(logger) as session:
+
+        config = AugurConfig(logger, session)
+
+        section = "Augur"
+        setting = "developer"
+
+        return config.get_value(section, setting)
+
+def get_development_flag():
+    return os.getenv("AUGUR_DEV") or get_development_flag_from_config() or False
+
+
+
+
 
 default_config = {
             "Augur": {
@@ -76,7 +99,8 @@ default_config = {
             },
             "Task_Routine": {
                 "prelim_phase": 1,
-                "repo_collect_phase": 1
+                "repo_collect_phase": 1,
+                "machine_learning_phase": 0
             }
         }
 

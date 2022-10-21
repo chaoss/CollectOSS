@@ -1,5 +1,9 @@
 import time
 import logging
+import traceback
+import re
+
+from sqlalchemy.exc import IntegrityError
 
 
 from augur.tasks.init.celery_app import celery_app as celery, engine
@@ -9,7 +13,8 @@ from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
-
+from augur.application.config import get_development_flag
+development = get_development_flag()
 
 @celery.task
 def collect_issues(repo_git: str) -> None:
@@ -139,9 +144,13 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
         issue_natural_keys = ["repo_id", "gh_issue_id"]
         issue_return_columns = ["issue_url", "issue_id"]
         issue_string_columns = ["issue_title", "issue_body"]
-        issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
+        try:
+            issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
+        except IntegrityError as e:
+            logger.error(f"Ran into integrity error:{e} \n Offending data: \n{issue_dicts}")
 
-
+            if development:
+                raise e
         # loop through the issue_return_data so it can find the labels and 
         # assignees that corelate to the issue that was inserted labels 
         issue_label_dicts = []

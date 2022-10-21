@@ -11,6 +11,7 @@ from celery import group, chain, chord, signature
 
 
 from augur.tasks.github import *
+from augur.tasks.data_analysis import *
 from augur.tasks.github.detect_move.tasks import detect_github_repo_move
 from augur.tasks.github.releases.tasks import collect_releases
 from augur.tasks.github.repo_info.tasks import collect_repo_info
@@ -22,8 +23,6 @@ from augur.application.logs import AugurLogger
 from augur.application.db.session import DatabaseSession
 from augur.tasks.init.celery_app import engine
 from logging import Logger
-
-pr_numbers = [70, 106, 170, 190, 192, 208, 213, 215, 216, 218, 223, 224, 226, 230, 237, 238, 240, 241, 248, 249, 250, 252, 253, 254, 255, 256, 257, 261, 268, 270, 273, 277, 281, 283, 288, 291, 303, 306, 309, 310, 311, 323, 324, 325, 334, 335, 338, 343, 346, 348, 350, 353, 355, 356, 357, 359, 360, 365, 369, 375, 381, 382, 388, 405, 408, 409, 410, 414, 418, 419, 420, 421, 422, 424, 425, 431, 433, 438, 445, 450, 454, 455, 456, 457, 460, 463, 468, 469, 470, 474, 475, 476, 477, 478, 479, 480, 481, 482, 484, 485, 486, 487, 488, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 504, 506, 507, 508, 509, 510, 512, 514]
 
 #Predefine phases. For new phases edit this and the config to reflect.
 #The domain of tasks ran should be very explicit.
@@ -66,7 +65,37 @@ def repo_collect_phase(logger):
             collect_releases.si()
         )
 
-DEFINED_COLLECTION_PHASES = [prelim_phase,repo_collect_phase]
+def machine_learning_phase(logger):
+
+    with DatabaseSession(logger) as session:
+        repos = session.query(Repo).all()
+
+        ml_tasks = []
+        clustering_tasks = []
+        discourse_tasks = []
+        insight_tasks = []
+        message_insights_tasks = []
+        pull_request_analysis_tasks = []
+        for repo in repos:
+            clustering_tasks.append(clustering_model.si(repo.repo_git))
+            discourse_tasks.append(discourse_analysis_model.si(repo.repo_git))
+            insight_tasks.append(insight_model.si(repo.repo_git))
+            message_insights_tasks.append(message_insight_model.si(repo.repo_git))
+            pull_request_analysis_tasks.append(pull_request_analysis_model.si(repo.repo_git))   
+
+        ml_tasks.extend(clustering_tasks)
+        ml_tasks.extend(discourse_tasks)
+        ml_tasks.extend(insight_tasks)
+        ml_taks.extend(message_insights_tasks)
+        ml_taks.extend(pull_request_analysis_tasks)
+
+
+        return chain(
+            *ml_tasks
+        )
+
+
+DEFINED_COLLECTION_PHASES = [prelim_phase, repo_collect_phase, machine_learning_phase]
 
 class AugurTaskRoutine:
     """class to keep track of various groups of collection tasks as well as how they relate to one another.
@@ -91,6 +120,9 @@ class AugurTaskRoutine:
         
         if repo_collect_phase.__name__ not in self.disabled_collection_phases:
             self.jobs_dict[repo_collect_phase.__name__] = repo_collect_phase
+
+        if machine_learning_phase.__name__ not in self.disabled_collection_phases:
+            self.jobs_dict[machine_learning_phase.__name__] = machine_learning_phase
 
                 
 

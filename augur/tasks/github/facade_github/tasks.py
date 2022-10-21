@@ -45,7 +45,7 @@ def process_commit_metadata(session,contributorQueue,repo_id):
                 continue
         except Exception as e:
             session.logger.info(
-                f"alias table query failed with error: {e}")
+                f"Successfully retrieved data from github for email: {emailFromCommitData}")
         
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
         try:
@@ -153,24 +153,7 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         except Exception as e:
             session.logger.info(f"Error when trying to create cntrb: {e}")
             continue
-        # Check if the github login exists in the contributors table and add the emails to alias' if it does.
-
-        # Also update the contributor record with commit data if we can.
-        """
-        try:
-            if not resolve_if_login_existing(session,cntrb):
-                try:
-                    #interface.db.execute(
-                    #    interface.contributors_table.insert().values(cntrb))
-                    newContrib = Contributors(**cntrb)
-                    session.add(newContrib)
-                    session.commit()
-                except Exception as e:
-                    session.logger.info(
-                        f"Ran into likely database collision. Assuming contributor exists in database. Error: {e}")
-            else:
-                interface.update_contributor(cntrb)
-        """
+        
         
         #Executes an upsert with sqlalchemy 
         cntrb_natural_keys = ['cntrb_login']
