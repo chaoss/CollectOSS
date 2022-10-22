@@ -116,15 +116,10 @@ def novelty_analysis(df_message, r_id, models_dir, full_train, logger=logging):
     logger.info('Normalized text corpus')
 
     # Load pretrained Doc2Vec model
-    try: 
-        d2v_model = Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
-        doc2vec_vectors = np.array([d2v_model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_message.iterrows()])
-        logger.info('Doc2Vec vectorization done')
-    except Exception as e: 
-        logger.debug(f"Doc2Vec Model Error")
-        stacker = traceback.format_exc()
-        logger.debug(f"\n\n{stacker}\n\n")
-        pass
+    d2v_model = Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
+    doc2vec_vectors = np.array([d2v_model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_message.iterrows()])
+    logger.info('Doc2Vec vectorization done')
+        
 
     # Trains the AE model when worker runs first time
     if full_train:
