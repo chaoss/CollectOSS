@@ -56,7 +56,7 @@ def pull_request_analysis_model(repo_git: str) -> None:
         from augur_data.pull_requests
         INNER JOIN augur_data.pull_request_commits on pull_requests.pull_request_id = pull_request_commits.pull_request_id 
         where pr_created_at > :begin_date 
-        and repo_id = :repo_id 
+        and pull_requests.repo_id = :repo_id 
         and pr_src_state like 'open' 
     """)
 
