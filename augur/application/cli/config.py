@@ -11,7 +11,7 @@ from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.cli import test_connection, test_db_connection 
-from augur.application.cli.inspect_without_import import get_phase_names_without_import
+from augur.util.inspect_without_import import get_phase_names_without_import
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 logger = logging.getLogger(__name__)
@@ -23,22 +23,13 @@ def cli():
     pass
 
 @cli.command('init')
-@click.option('--github_api_key', help="GitHub API key for data collection from the GitHub API", envvar=ENVVAR_PREFIX + 'GITHUB_API_KEY')
-@click.option('--facade_repo_directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
-@click.option('--gitlab_api_key', help="GitLab API key for data collection from the GitLab API", envvar=ENVVAR_PREFIX + 'GITLAB_API_KEY')
+@click.option('--github-api-key', help="GitHub API key for data collection from the GitHub API", envvar=ENVVAR_PREFIX + 'GITHUB_API_KEY')
+@click.option('--facade-repo-directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
+@click.option('--gitlab-api-key', help="GitLab API key for data collection from the GitLab API", envvar=ENVVAR_PREFIX + 'GITLAB_API_KEY')
 @click.option('--redis-conn-string', help="String to connect to redis cache", envvar=ENVVAR_PREFIX + 'REDIS_CONN_STRING')
 @test_connection
 @test_db_connection
 def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_conn_string):
-
-    if not github_api_key:
-        github_api_key = os.getenv(ENVVAR_PREFIX + 'GITHUB_API_KEY')
-
-    if not gitlab_api_key:
-        gitlab_api_key = os.getenv(ENVVAR_PREFIX + 'GITLAB_API_KEY')
-
-    if not facade_repo_directory:
-        facade_repo_directory = os.getenv(ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
 
     if not github_api_key:
 
@@ -50,7 +41,17 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
 
     if not facade_repo_directory:
 
-        facade_repo_directory = str(input("Please enter an existing facade repo directory: "))
+        while True:
+
+            facade_repo_directory = str(input("Please enter an existing facade repo directory: ")).strip()
+
+            if os.path.isdir(facade_repo_directory):
+                break
+            else:
+                print("Invalid directory")
+
+    if facade_repo_directory[-1] != "/":
+        facade_repo_directory += "/"
             
 
     keys = {}
@@ -69,7 +70,9 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
 
         #Add all phases as enabled by default
         for name in phase_names:
-            default_config['Task_Routine'].update({name : 1})
+
+            if name not in default_config['Task_Routine']:
+                default_config['Task_Routine'].update({name : 1})
 
         #print(default_config)
         if redis_conn_string:

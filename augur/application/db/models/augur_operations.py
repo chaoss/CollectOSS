@@ -1,5 +1,5 @@
 # coding: utf-8
-from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean
+from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 from augur.application.db.models.base import Base
@@ -189,3 +189,21 @@ class User(Base):
         UniqueConstraint('text_phone', name='user-unique-phone'),
         {"schema": "augur_operations"}
     )
+
+
+
+class UserRepo(Base):
+    __tablename__ = "user_repos"
+    __table_args__ = (
+        {
+            "schema": "augur_operations"
+        }
+    )
+
+    user_id = Column(
+        ForeignKey("augur_operations.users.user_id"), primary_key=True, nullable=False
+    )
+    repo_id = Column(
+        ForeignKey("augur_data.repo.repo_id"), primary_key=True, nullable=False
+    )
+

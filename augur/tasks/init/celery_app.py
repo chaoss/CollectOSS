@@ -31,12 +31,12 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
 
 git_tasks = ['augur.tasks.git.facade_tasks']
 
-# data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
-#                        'augur.tasks.data_analysis.clustering_worker.tasks',
-#                        'augur.tasks.data_analysis.discourse_analysis.tasks',
-#                        'augur.tasks.data_analysis.pull_request_analysis_worker.tasks.py']
+data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
+                       'augur.tasks.data_analysis.clustering_worker.tasks',
+                       'augur.tasks.data_analysis.discourse_analysis.tasks',
+                       'augur.tasks.data_analysis.pull_request_analysis_worker.tasks']
 
-tasks = start_tasks + github_tasks + git_tasks
+tasks = start_tasks + github_tasks + git_tasks + data_analysis_tasks
 
 redis_db_number, redis_conn_string = get_redis_conn_values()
 
