@@ -20,10 +20,11 @@ class RandomKeyAuth(Auth):
     # Optionally pass the key_format. This is a string that contains a {} so the key can be added and applied to the header in the correct way.
     # For example on github the keys are formatted like "token asdfasfdasf" where asdfasfdasf is the key. So for github 
     # the key_format="token {0}"
-    def __init__(self, list_of_keys: List[str], header_name: str, key_format: Optional[str] = None):
+    def __init__(self, list_of_keys: List[str], header_name: str, logger, key_format: Optional[str] = None):
         self.list_of_keys = list_of_keys
         self.header_name = header_name
         self.key_format = key_format
+        self.logger = logger
 
     def auth_flow(self, request: Request) -> Generator[Request, Response, None]:
 
@@ -44,7 +45,7 @@ class RandomKeyAuth(Auth):
             request.headers[self.header_name] = key_string
 
         else:
-            self.error(f"There are no valid keys to make a request with: {self.list_of_keys}")
+            self.logger.error(f"There are no valid keys to make a request with: {self.list_of_keys}")
 
         # sends the request back with modified headers
         # basically it saves our changes to the request object
