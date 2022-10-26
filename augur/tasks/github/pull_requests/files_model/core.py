@@ -30,7 +30,7 @@ def pull_request_files_model(repo_id,logger):
         owner, name = get_owner_repo(repo.repo_git)
 
         pr_file_rows = []
-
+        self.logger.info(f"Getting pull request files for repo: {repo.repo_git}")
         for index,pr_info in enumerate(pr_numbers):
 
             logger.info(f'Querying files for pull request #{index + 1} of {len(pr_numbers)}')
