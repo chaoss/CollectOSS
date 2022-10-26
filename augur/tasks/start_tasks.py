@@ -15,6 +15,7 @@ from augur.tasks.data_analysis import *
 from augur.tasks.github.detect_move.tasks import detect_github_repo_move
 from augur.tasks.github.releases.tasks import collect_releases
 from augur.tasks.github.repo_info.tasks import collect_repo_info
+from augur.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
 from augur.tasks.git.facade_tasks import *
 # from augur.tasks.data_analysis import *
 from augur.tasks.init.celery_app import celery_app as celery
@@ -56,7 +57,7 @@ def repo_collect_phase(logger):
 
         for repo in repos:
             first_tasks_repo = group(collect_issues.si(repo.repo_git),collect_pull_requests.si(repo.repo_git))
-            second_tasks_repo = group(collect_events.si(repo.repo_git),collect_github_messages.si(repo.repo_git))
+            second_tasks_repo = group(collect_events.si(repo.repo_git),collect_github_messages.si(repo.repo_git),process_pull_request_files.si(repo.repo_git))
 
             repo_chain = chain(first_tasks_repo,second_tasks_repo)
             issue_dependent_tasks.append(repo_chain)
@@ -64,7 +65,7 @@ def repo_collect_phase(logger):
     return group(
             *repo_info_tasks,
             chain(group(*issue_dependent_tasks),process_contributors.si()),
-            facade_commits_model.si(),
+            generate_facade_chain(logger),
             collect_releases.si()
         )
 

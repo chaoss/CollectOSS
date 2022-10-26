@@ -1,5 +1,5 @@
 from augur.tasks.github.util.github_task_session import *
-import asyncio
+from typing import List, Optional, Union, Generator, Tuple
 #from gql import gql, Client
 #from gql.transport.aiohttp import AIOHTTPTransport
 import httpx
@@ -7,7 +7,8 @@ import json
 from random import choice
 import collections
 import time
-
+import traceback
+from augur.tasks.github.util.github_paginator import GithubApiResult
 """
     Should be designed on a per entity basis that has attributes that call 
     defined graphql queries.
@@ -54,10 +55,17 @@ def hit_api_graphql(keyAuth,url,logger,query,variables={}):
             logger.info("httpx.ReadTimeout. Sleeping 10 seconds and trying again...\n")
             time.sleep(10)
             return None
+        except httpx.NetworkError:
+            logger.info(f"Network Error. Sleeping {round(timeout)} seconds and trying again...\n")
+            time.sleep(round(timeout))
+            return None
+        except httpx.ProtocolError:
+            logger.info(f"Protocol Error. Sleeping {round(timeout*1.5)} seconds and trying again...\n")
+            time.sleep(round(timeout*1.5))
+            return None
     
     return response
     
-
 
 #Get data extraction logic for nested nodes in return data.
 
@@ -94,51 +102,82 @@ class GraphQlPageCollection(collections.abc.Sequence):
                     #Store number as most common value github graphql queries by
                     self.marked_records[valueToCheck].add(record['number'])
 
-        
+    def request_graphql_dict(self,variables={},timeout_wait=10):
+        attempts = 0
+        response_data = None
+        success = False
+        while attempts < 10:
+            try:
+                result = hit_api_graphql(self.keyAuth, self.url, self.logger, self.query)#self.hit_api(query,variables=variables)
+            except TimeoutError:
+                self.logger.info(
+                    f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
+                time.sleep(timeout_wait)
+                continue
+            
+            if not result:
+                attempts += 1
+                continue
+
+            try:
+                response_data = result.json
+            except:
+                response_data = json.loads(json.dumps(result.text))
+
+            if type(response_data) == dict:
+                err = process_dict_response(logger, result, response_data)
+
+                if err and err != GithubApiResult.SUCCESS:
+                    attempts += 1
+                    self.logger.info(f"err: {err}")
+                    continue
+                
+                success = True
+                break
+            elif type(response_data) == list:
+                self.logger.warning("Wrong type returned, trying again...")
+                self.logger.info(f"Returned list: {response_data}")
+            elif type(response_data) == str:
+                logger.info(
+                    f"Warning! page_data was string: {response_data}")
+                if "<!DOCTYPE html>" in response_data:
+                    self.logger.info("HTML was returned, trying again...\n")
+                elif len(response_data) == 0:
+                    logger.warning("Empty string, trying again...\n")
+                else:
+                    try:
+                        # Sometimes raw text can be converted to a dict
+                        response_data = json.loads(response_data)
+
+                        err = process_graphql_dict_response(logger,result,response_data)
+
+                        #If we get an error message that's not None
+                        if err and err != GithubApiResult.SUCCESS:
+                            continue
+                        
+                        success = True
+                        break
+                    except:
+                        pass
+            attempts += 1
+
+        if not success:
+            return None
+
+        return response_data
 
     def hit_api(self,query,variables={}):
         return hit_api_graphql(self.keyAuth, self.url, self.logger, query,variables=variables)
     
-    async def async_hit_api(self,client,query,variables={}):
-        self.logger.debug(f"Sending query {query}  to github graphql")
 
-        response = None
+    def extract_paginate_result(self,responseDict):
 
-        try:
-            json_dict = {
-                'query' : query
-            }
+        #err = process_graphql_dict_response(self.logger, responseObject, response)
+        if 'data' not in responseDict:
+            self.logger.error(responseDict)
+            raise KeyError
 
-            #If there are bind variables bind them to the query here.
-            if variables:
-
-                json_dict['variables'] = variables
-                #Get rid of values tuple used to extract results so its not used in actual request.
-                json_dict['variables'].pop("values",None)
-                json_dict['variables'] = json_dict['variables']
-                #print(json_dict['variables'])
-            
-            #print(json.dumps(json_dict))
-            response = await client.post(
-                url=self.url,auth=self.keyAuth,json=json_dict
-                )
-        
-        except TimeoutError:
-            self.logger.info("Request timed out. Sleeping 10 seconds and trying again...\n")
-            time.sleep(10)
-            return None
-        
-        return response
-
-
-    def extract_paginate_result(self,responseObject):
-
-        response = responseObject.json()
-
-        if "errors" in response: 
-            print(response["errors"])
-    
-        result_dict = response['data']
+        result_dict = responseDict['data']
 
         #print(result_dict)
         #extract the core keys that we want from our query
@@ -171,12 +210,14 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
 
         for page in range(items_page):
-            result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
+            #result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
 
             #print(result)
 
-            coreData = self.extract_paginate_result(result)
+            #coreData = self.extract_paginate_result(result)
+            data = self.request_graphql_dict(self.logger, self.query,variables=params)
             #extract the content from the graphql query result
+            coreData = self.extract_paginate_result(data)
 
             content = [data['node'] for data in list(coreData['edges'])]
 
@@ -204,8 +245,9 @@ class GraphQlPageCollection(collections.abc.Sequence):
         }
         params.update(self.bind)
 
-        result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
-        coreData = self.extract_paginate_result(result)
+        #result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
+        data = self.request_graphql_dict(self.logger, self.query,variables=params)
+        coreData = self.extract_paginate_result(data)
 
         totalCount = int(coreData['totalCount'])
 
@@ -218,9 +260,17 @@ class GraphQlPageCollection(collections.abc.Sequence):
         }
         params.update(self.bind)
 
-        result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
-
-        coreData = self.extract_paginate_result(result)
+        #result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
+        data = self.request_graphql_dict(self.logger, self.query,variables=params)
+        try:
+            coreData = self.extract_paginate_result(data)
+        except KeyError as e:
+            self.logger.error("Could not extract paginate result because there was no data returned")
+            self.logger.error(
+                ''.join(traceback.format_exception(None, e, e.__traceback__)))
+            
+            data = self.request_graphql_dict(self.logger, self.query,variables=params)
+            coreData = self.extract_paginate_result(data)
 
 
         if int(coreData['totalCount']) == 0:
@@ -241,70 +291,16 @@ class GraphQlPageCollection(collections.abc.Sequence):
         while coreData['pageInfo']['hasNextPage']:
             params['cursor'] = coreData['pageInfo']['endCursor']
 
-            result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
+            data = self.request_graphql_dict(self.logger, self.query,variables=params)#self.client.execute(self.query,variable_values=params)
 
-            coreData = self.extract_paginate_result(result)
+            coreData = self.extract_paginate_result(data)
 
+            print(coreData)
             if len(coreData['edges']) == 0:
                 return
             
             for data in coreData['edges']:
                 yield data['node']
-
-    #recursive function to paginate an endpoint's pages close to all at once.
-    #Limited by graphql really only supporting cursor pagination as a reasonable option.
-    async def get_next_page(self,gql_session,cursor=None):
-        records = []
-
-        params = {
-            "numRecords" : self.per_page,
-            "cursor"    : cursor
-        }
-        params.update(self.bind)
-
-        result = self.async_hit_api(gql_session, self.query)#gql_session.execute(self.query,variable_values=params)
-        coreData = self.extract_paginate_result(result)
-
-        if coreData['pageInfo']['hasNextPage']:
-            records.extend(self.get_next_page(gql_session=gql_session,cursor=coreData['pageInfo']['endCursor']))
-    
-        records.extend([data['node'] for data in coreData['edges']])
-
-        yield records
-
-        return
-
-
-    async def __aiter__(self):
-        params = {
-            "numRecords" : self.per_page,
-            "cursor"    : None
-        }
-        params.update(self.bind)
-
-        result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
-        coreData = self.extract_paginate_result(result)
-
-        #Check if one page is needed
-        if int(coreData['totalCount']) <= self.per_page:
-            
-            for data in coreData['edges']:
-                yield data['node']
-            
-            return
-        
-        # Using `async with` on the client will start a connection on the transport
-        # and provide a `session` variable to execute queries on this connection
-        async with httpx.AsyncClient() as gql_session:
-
-            data_list = await self.get_next_page(gql_session=gql_session)
-
-            if self.repaginate:
-                self.mark_for_repagination(data_list) 
-
-            yield data_list
-
-            return
 
 
 #use httpx and pass random_key_auth

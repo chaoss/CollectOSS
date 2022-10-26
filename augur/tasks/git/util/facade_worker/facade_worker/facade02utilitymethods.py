@@ -36,100 +36,78 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+import sqlalchemy as s
 from .facade01config import get_database_args_from_env
+from augur.application.db.models.augur_data import *
+#from augur.tasks.git.util.facade_worker.facade
 
-def update_repo_log(cfg, repos_id,status):
+def update_repo_log(session, repos_id,status):
 
 # Log a repo's fetch status
-	cfg.log_activity("Info","{} {}".format(status, repos_id))
-	log_message = ("INSERT INTO repos_fetch_log (repos_id,status) "
-		"VALUES (%s,%s)")
+	session.log_activity("Info",f"{status} {repos_id}")
+	#log_message = ("INSERT INTO repos_fetch_log (repos_id,status) "
+	#	"VALUES (%s,%s)")
 	try:
-		cfg.cursor.execute(log_message, (repos_id, status))
-		cfg.db.commit()
+		 
+		 
+		data = {
+			'repos_id': repos_id,
+			'status': status
+		}
+		session.insert_data(data,t_repos_fetch_log,['repos_id'])
 	except:
 		pass
 
-def trim_commit(cfg, repo_id,commit):
+def trim_commit(session, repo_id,commit):
 
 # Quickly remove a given commit
 
-	remove_commit = ("DELETE FROM commits "
-		"WHERE repo_id=%s "
-		"AND cmt_commit_hash=%s")
+	remove_commit = s.sql.text("""DELETE FROM commits
+		WHERE repo_id=:repo_id
+		AND cmt_commit_hash=:hash""").bindparams(repo_id=repo_id,hash=commit)
 
-	try:
-		cfg.cursor.execute(remove_commit, (repo_id, commit))
-		cfg.db.commit()
-	except:
-		cfg.log_activity('Info','Cursor was closed, making another connection to db')
+	 
+	 
+	session.execute_sql(remove_commit)
 
-		db_credentials = get_database_args_from_env()
+	session.log_activity('Debug',f"Trimmed commit: {commit}")
 
-		db_user = db_credentials["db_user"]
-		db_pass = db_credentials["db_pass"]
-		db_name = db_credentials["db_name"]
-		db_host = db_credentials["db_host"]
-		db_port = db_credentials["db_port"]
-		db_user_people = db_user
-		db_pass_people = db_pass
-		db_name_people = db_name
-		db_host_people = db_host
-		db_port_people = db_port
-
-		db,cursor = cfg.database_connection(
-			db_host,
-			db_user,
-			db_pass,
-			db_name,
-			db_port, False, False)
-
-		db_people,cursor_people = cfg.database_connection(
-			db_host_people,
-			db_user_people,
-			db_pass_people,
-			db_name_people,
-			db_port_people, True, False)
-
-		cfg.cursor.execute(remove_commit, (repo_id, commit))
-		cfg.db.commit()
-
-	cfg.log_activity('Debug','Trimmed commit: %s' % commit)
-
-def store_working_author(cfg, email):
+def store_working_author(session, email):
 
 # Store the working author during affiliation discovery, in case it is
 # interrupted and needs to be trimmed.
 
-	store = ("UPDATE settings "
-		"SET value = %s "
-		"WHERE setting = 'working_author'")
+	store = s.sql.text("""UPDATE settings
+		SET value = :email
+		WHERE setting = 'working_author'
+		""").bindparams(email=email)
 
-	cfg.cursor.execute(store, (email, ))
-	cfg.db.commit()
+	session.execute_sql(store)
 
-	cfg.log_activity('Debug','Stored working author: %s' % email)
+	session.log_activity('Debug',f"Stored working author: {email}")
 
-def trim_author(cfg, email):
+def trim_author(session, email):
 
 # Remove the affiliations associated with an email. Used when an analysis is
 # interrupted during affiliation layering, and the data will be corrupt.
 
-	trim = ("UPDATE commits "
-		"SET cmt_author_affiliation = NULL "
-		"WHERE cmt_author_email = %s")
+	trim = s.sql.text("""UPDATE commits 
+		SET cmt_author_affiliation = NULL 
+		WHERE cmt_author_email = :email
+		""").bindparams(email=email)
 
-	cfg.cursor.execute(trim, (email, ))
-	cfg.db.commit()
+	 
+	 
+	session.execute_sql(trim)
 
-	trim = ("UPDATE commits "
-		"SET cmt_committer_affiliation = NULL "
-		"WHERE cmt_committer_email = %s")
+	trim = s.sql.text("""UPDATE commits
+		SET cmt_committer_affiliation = NULL
+		WHERE cmt_committer_email = :email
+		""").bindparams(email=email)
 
-	cfg.cursor.execute(trim, (email, ))
-	cfg.db.commit()
+	session.execute_sql(trim)
 
-	store_working_author(cfg, 'done')
+	store_working_author(session, 'done')
 
-	cfg.log_activity('Debug','Trimmed working author: %s' % email)
+	session.log_activity('Debug',f"Trimmed working author: {email}")
 
