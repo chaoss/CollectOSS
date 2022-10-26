@@ -51,12 +51,12 @@ def clustering_model(repo_git: str) -> None:
 
         repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
 
-        logger.info(f"Repo id: {repo_id}")
-
         num_clusters = session.config.get_value("Clustering_Task", 'num_clusters')
         max_df = session.config.get_value("Clustering_Task", 'max_df')
         max_features = session.config.get_value("Clustering_Task", 'max_features')
         min_df = session.config.get_value("Clustering_Task", 'min_df')
+
+        logger.info(f"Min df: {min_df}. Max df: {max_df}")
 
     logger.info("If you did not install NLTK libraries when you installed Augur, this will fail. ")
     #nltk.download('all')
