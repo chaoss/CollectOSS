@@ -216,7 +216,7 @@ def clustering_model(repo_git: str) -> None:
     # self.register_task_completion(task, repo_id, 'clustering')
 
 
-def get_tf_idf_matrix(text_list, max_df, max_features, min_df, ngram_range):
+def get_tf_idf_matrix(text_list, max_df, max_features, min_df, ngram_range, logger):
 
     logger.debug("Getting the tf idf matrix from function")
     tfidf_vectorizer = TfidfVectorizer(max_df=max_df, max_features=max_features,
@@ -314,7 +314,7 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
     logger.info(msg_df.head())
 
     tfidf_matrix, features = get_tf_idf_matrix(msg_df['msg_text'], max_df, max_features, min_df,
-                                                    ngram_range)
+                                                    ngram_range, logger)
     msg_df['cluster'] = cluster_and_label(tfidf_matrix, num_clusters)
 
     # LDA - Topic Modeling
