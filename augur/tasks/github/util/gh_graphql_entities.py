@@ -8,7 +8,8 @@ from random import choice
 import collections
 import time
 import traceback
-from augur.tasks.github.util.github_paginator import GithubApiResult
+from augur.tasks.github.util.github_paginator import GithubApiResult, process_dict_response
+
 """
     Should be designed on a per entity basis that has attributes that call 
     defined graphql queries.
@@ -107,8 +108,10 @@ class GraphQlPageCollection(collections.abc.Sequence):
         response_data = None
         success = False
         while attempts < 10:
+            #self.logger.info(f"{attempts}")
             try:
-                result = hit_api_graphql(self.keyAuth, self.url, self.logger, self.query)#self.hit_api(query,variables=variables)
+                result = hit_api_graphql(self.keyAuth, self.url, self.logger, self.query,variables=variables)
+                #self.hit_api(query,variables=variables)
             except TimeoutError:
                 self.logger.info(
                     f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
@@ -120,12 +123,14 @@ class GraphQlPageCollection(collections.abc.Sequence):
                 continue
 
             try:
-                response_data = result.json
+                response_data = result.json()
             except:
                 response_data = json.loads(json.dumps(result.text))
+            
+            #self.logger.info(f"api return: {response_data}")
 
             if type(response_data) == dict:
-                err = process_dict_response(logger, result, response_data)
+                err = process_dict_response(self.logger, result, response_data)
 
                 if err and err != GithubApiResult.SUCCESS:
                     attempts += 1
@@ -148,7 +153,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
                     try:
                         # Sometimes raw text can be converted to a dict
                         response_data = json.loads(response_data)
-
+                        self.logger.info(f"{response_data}")
                         err = process_graphql_dict_response(logger,result,response_data)
 
                         #If we get an error message that's not None
@@ -210,12 +215,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
 
         for page in range(items_page):
-            #result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
-
-            #print(result)
-
-            #coreData = self.extract_paginate_result(result)
-            data = self.request_graphql_dict(self.logger, self.query,variables=params)
+            data = self.request_graphql_dict(variables=params)
             #extract the content from the graphql query result
             coreData = self.extract_paginate_result(data)
 
@@ -246,7 +246,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
         params.update(self.bind)
 
         #result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
-        data = self.request_graphql_dict(self.logger, self.query,variables=params)
+        data = self.request_graphql_dict(variables=params)
         coreData = self.extract_paginate_result(data)
 
         totalCount = int(coreData['totalCount'])
@@ -261,7 +261,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
         params.update(self.bind)
 
         #result = self.hit_api(self.query,variables=params)#self.client.execute(self.query,variable_values=params)
-        data = self.request_graphql_dict(self.logger, self.query,variables=params)
+        #self.logger.info(f"{params}")
+        data = self.request_graphql_dict(variables=params)
         try:
             coreData = self.extract_paginate_result(data)
         except KeyError as e:
@@ -269,7 +270,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
             self.logger.error(
                 ''.join(traceback.format_exception(None, e, e.__traceback__)))
             
-            data = self.request_graphql_dict(self.logger, self.query,variables=params)
+            data = self.request_graphql_dict(variables=params)
             coreData = self.extract_paginate_result(data)
 
 
@@ -291,7 +292,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
         while coreData['pageInfo']['hasNextPage']:
             params['cursor'] = coreData['pageInfo']['endCursor']
 
-            data = self.request_graphql_dict(self.logger, self.query,variables=params)#self.client.execute(self.query,variable_values=params)
+            data = self.request_graphql_dict(variables=params)#self.client.execute(self.query,variable_values=params)
 
             coreData = self.extract_paginate_result(data)
 
