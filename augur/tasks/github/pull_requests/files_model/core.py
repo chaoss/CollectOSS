@@ -30,7 +30,7 @@ def pull_request_files_model(repo_id,logger):
         owner, name = get_owner_repo(repo.repo_git)
 
         pr_file_rows = []
-
+        logger.info(f"Getting pull request files for repo: {repo.repo_git}")
         for index,pr_info in enumerate(pr_numbers):
 
             logger.info(f'Querying files for pull request #{index + 1} of {len(pr_numbers)}')
@@ -70,6 +70,7 @@ def pull_request_files_model(repo_id,logger):
 
             file_collection = GraphQlPageCollection(query, session.oauths, session.logger,bind=params)
 
+
             pr_file_rows += [{
                 'pull_request_id': pr_info['pull_request_id'],
                 'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
@@ -77,7 +78,7 @@ def pull_request_files_model(repo_id,logger):
                 'pr_file_path': pr_file['path'],
                 'data_source': 'GitHub API',
                 'repo_id': repo_id, 
-                } for pr_file in file_collection if 'path' in pr_file]
+                } for pr_file in file_collection if pr_file and 'path' in pr_file]
 
 
 
