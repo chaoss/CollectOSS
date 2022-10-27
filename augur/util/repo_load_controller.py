@@ -177,7 +177,6 @@ class RepoLoadController:
             "repo_id": repo_id
         }
             
-            
         repo_user_unique = ["user_id", "repo_id"]
         return_columns = ["user_id", "repo_id"]
         data = self.session.insert_data(repo_user_data, UserRepo, repo_user_unique, return_columns)
@@ -238,20 +237,10 @@ class RepoLoadController:
 
         # try to get the repo group with this org name
         # if it does not exist create one
-        try:
-            rg = self.session.query(RepoGroup).filter(RepoGroup.rg_name == org_name).one()
-        except s.orm.exc.NoResultFound:
-            rg = RepoGroup(rg_name=org_name, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
-                        tool_source="Loaded by user", tool_version="1.0", data_source="Git")
-            self.session.add(rg)
-            self.session.commit()
-
-        repo_group_id = rg.repo_group_id
-        
         failed_repos = []
         for repo in repos:
 
-            result = self.add_frontend_repo(repo, user_id, repo_group_id)
+            result = self.add_frontend_repo(repo, user_id)
 
             # keep track of all the repos that failed
             if result["status"] != "Repo Added":
