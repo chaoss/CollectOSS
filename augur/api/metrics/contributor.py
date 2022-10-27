@@ -240,13 +240,13 @@ def contributors_new(repo_group_id, repo_id=None, period='day', begin_date=None,
             FROM (
                     SELECT id as id, MIN(created_at) AS created_at, a.repo_id
                     FROM (
-                            (SELECT gh_user_id AS id, MIN(created_at) AS created_at, repo_id
+                            (SELECT reporter_id AS id, MIN(created_at) AS created_at, repo_id
                             FROM issues
                             WHERE repo_id = :repo_id
                                 AND created_at BETWEEN :begin_date AND :end_date
-                                AND gh_user_id IS NOT NULL
+                                AND reporter_id IS NOT NULL
                                 AND pull_request IS NULL
-                            GROUP BY gh_user_id, repo_id)
+                            GROUP BY reporter_id, repo_id)
                             UNION ALL
                             (SELECT cmt_ght_author_id                                AS id,
                                     MIN(TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD')) AS created_at,
@@ -289,13 +289,13 @@ def contributors_new(repo_group_id, repo_id=None, period='day', begin_date=None,
             FROM (
                     SELECT id as id, MIN(created_at) AS created_at, a.repo_id
                     FROM (
-                            (SELECT gh_user_id AS id, MIN(created_at) AS created_at, repo_id
+                            (SELECT reporter_id AS id, MIN(created_at) AS created_at, repo_id
                             FROM issues
                             WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                                 AND created_at BETWEEN :begin_date AND :end_date
-                                AND gh_user_id IS NOT NULL
+                                AND reporter_id IS NOT NULL
                                 AND pull_request IS NULL
-                            GROUP BY gh_user_id, repo_id)
+                            GROUP BY reporter_id, repo_id)
                             UNION ALL
                             (SELECT cmt_ght_author_id                                AS id,
                                     MIN(TO_TIMESTAMP(cmt_author_date, 'YYYY-MM-DD')) AS created_at,
