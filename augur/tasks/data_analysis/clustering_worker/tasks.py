@@ -51,15 +51,15 @@ def clustering_model(repo_git: str) -> None:
 
         repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
 
-        logger.info(f"Repo id: {repo_id}")
-
         num_clusters = session.config.get_value("Clustering_Task", 'num_clusters')
         max_df = session.config.get_value("Clustering_Task", 'max_df')
         max_features = session.config.get_value("Clustering_Task", 'max_features')
         min_df = session.config.get_value("Clustering_Task", 'min_df')
 
-    logger.info("Downloading nltk libraries")
-    nltk.download('all')
+        logger.info(f"Min df: {min_df}. Max df: {max_df}")
+
+    logger.info("If you did not install NLTK libraries when you installed Augur, this will fail. ")
+    #nltk.download('all')
 
     logger.info(f"Getting repo messages for repo_id: {repo_id}")
     get_messages_for_repo_sql = s.sql.text(
@@ -216,7 +216,7 @@ def clustering_model(repo_git: str) -> None:
     # self.register_task_completion(task, repo_id, 'clustering')
 
 
-def get_tf_idf_matrix(text_list, max_df, max_features, min_df, ngram_range):
+def get_tf_idf_matrix(text_list, max_df, max_features, min_df, ngram_range, logger):
 
     logger.debug("Getting the tf idf matrix from function")
     tfidf_vectorizer = TfidfVectorizer(max_df=max_df, max_features=max_features,
@@ -314,7 +314,7 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
     logger.info(msg_df.head())
 
     tfidf_matrix, features = get_tf_idf_matrix(msg_df['msg_text'], max_df, max_features, min_df,
-                                                    ngram_range)
+                                                    ngram_range, logger)
     msg_df['cluster'] = cluster_and_label(tfidf_matrix, num_clusters)
 
     # LDA - Topic Modeling

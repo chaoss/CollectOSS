@@ -87,13 +87,12 @@ def machine_learning_phase(logger):
         message_insights_tasks.append(message_insight_model.si(repo.repo_git))
         pull_request_analysis_tasks.append(pull_request_analysis_model.si(repo.repo_git))   
 
-    ml_tasks.extend(clustering_tasks)
-    ml_tasks.extend(discourse_tasks)
     ml_tasks.extend(insight_tasks)
+    ml_tasks.extend(discourse_tasks)
     ml_tasks.extend(message_insights_tasks)
     ml_tasks.extend(pull_request_analysis_tasks)
+    ml_tasks.extend(clustering_tasks) 
         
-    
     task_chain = chain(*ml_tasks)
 
     return task_chain
