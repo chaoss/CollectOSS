@@ -240,12 +240,17 @@ def insight_model(repo_git: str) -> None:
                     "tool_version": tool_version,
                     "data_source": data_source
                 }
-                result = engine.execute(RepoInsightsRecord.insert().values(record))
+
+                with DatabaseSession(logger) as session:
+                    repo_insight_record_obj = RepoInsightsRecord(**record)
+                    session.add(repo_insight_record_obj)
+                    session.commit()
+
                 logger.info("Primary key inserted into the repo_insights_records table: {}\n".format(
-                    result.inserted_primary_key))
+                    repo_insight_record_obj.ri_id))
 
                 # Send insight to Jonah for slack bot
-                send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean))
+                send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean), logger)
 
                 insight_count += 1
             else:
@@ -280,9 +285,14 @@ def insight_model(repo_git: str) -> None:
                     "tool_version": tool_version,
                     "data_source": data_source
                 }
-                result = engine.execute(RepoInsight.insert().values(data_point))
-                logger.info("Primary key inserted into the repo_insights table: {}\n".format(
-                    result.inserted_primary_key))
+
+                with DatabaseSession(logger) as session:
+                    repo_insight_obj = RepoInsight(**data_point)
+                    session.add(repo_insight_obj)
+                    session.commit()
+
+                logger.info("Primary key inserted into the repo_insights_records table: {}\n".format(repo_insight_obj.ri_id))
+
 
                 logger.info(
                     "Inserted data point for metric: {}, date: {}, value: {}\n".format(metric, ts, tuple._3))
@@ -402,7 +412,7 @@ def confidence_interval_insights(logger):
 
         for key in raw_values.keys():
             if len(raw_values[key]) > 0:
-                mean, lower, upper = confidence_interval(raw_values[key], confidence=confidence)
+                mean, lower, upper = confidence_interval(raw_values[key], logger, confidence=confidence)
                 logger.info("Upper: {}, middle: {}, lower: {}".format(upper, mean, lower))
                 i = 0
                 discovery_index = None
@@ -431,7 +441,7 @@ def confidence_interval_insights(logger):
                     # Check if new insight has a better score than other insights in its place, use result
                     #   to determine if we continue in the insertion process (0 for no insertion, 1 for record
                     #   insertion, 2 for record and insight data points insertion)
-                    instructions = clear_insight(repo_id, score, endpoint['cm_info'], key)
+                    instructions = clear_insight(repo_id, score, endpoint['cm_info'], key, logger)
                     # clear_insight(repo_id, score, endpoint['cm_info'] + ' ({})'.format(key))
 
                     # Use result from clearing function to determine if we need to insert the record
@@ -451,11 +461,16 @@ def confidence_interval_insights(logger):
                             "tool_version": tool_version,
                             "data_source": data_source
                         }
-                        result = engine.execute(RepoInsightsRecord.insert().values(record))
-                        logger.info("Primary key inserted into the repo_insights_records table: {}".format(
-                            result.inserted_primary_key))
+
+                        with DatabaseSession(logger) as session:
+                            repo_insight_obj = RepoInsightsRecord(**record)
+                            session.add(repo_insight_obj)
+                            session.commit()
+
+                        logger.info("Primary key inserted into the repo_insights_records table: {}\n".format(repo_insight_obj.ri_id))
+
                         # Send insight to Jonah for slack bot
-                        send_insight(record, abs(date_filtered_raw_values[discovery_index][key] - mean))
+                        send_insight(record, abs(date_filtered_raw_values[discovery_index][key] - mean), logger)
 
                     # Use result from clearing function to determine if we still need to insert the insight
                     if instructions['insight']:
@@ -478,9 +493,13 @@ def confidence_interval_insights(logger):
                                     "tool_version": tool_version,
                                     "data_source": data_source
                                 }
-                                result = engine.execute(RepoInsight.insert().values(data_point))
+                                with DatabaseSession(logger) as session:
+                                    repo_insight_obj = RepoInsight(**data_point)
+                                    session.add(repo_insight_obj)
+                                    session.commit()
+
                                 logger.info("Primary key inserted into the repo_insights table: " + str(
-                                    result.inserted_primary_key))
+                                    repo_insight_obj.ri_id))
 
                                 logger.info("Inserted data point for endpoint: {}\n".format(endpoint['cm_info']))
                                 j += 1
@@ -494,7 +513,7 @@ def confidence_interval_insights(logger):
             else:
                 logger.info("Key: {} has empty raw_values, should not have key here".format(key))
 
-def send_insight(insight, units_from_mean):
+def send_insight(insight, units_from_mean, logger):
     try:
         repoSQL = s.sql.text("""
             SELECT repo_git, rg_name 
@@ -526,7 +545,7 @@ def send_insight(insight, units_from_mean):
     except Exception as e:
         logger.info("sending insight to jonah failed: {}".format(e))
 
-def clear_insights(repo_id, new_endpoint, new_field):
+def clear_insights(repo_id, new_endpoint, new_field, logger):
 
     logger.info("Deleting all tuples in repo_insights_records table with info: "
                  "repo {} endpoint {} field {}".format(repo_id, new_endpoint, new_field))
@@ -563,7 +582,7 @@ def clear_insights(repo_id, new_endpoint, new_field):
     except Exception as e:
         logger.info("Error occured deleting insight slot: {}".format(e))
 
-def clear_insight(repo_id, new_score, new_metric, new_field):
+def clear_insight(repo_id, new_score, new_metric, new_field, logger):
     logger.info("Checking if insight slots filled...")
 
     # Dict that will be returned that instructs the rest of the worker where the insight insertion is
@@ -660,7 +679,7 @@ def clear_insight(repo_id, new_score, new_metric, new_field):
 
     return insertion_directions
 
-def confidence_interval(data, timeperiod='week', confidence=.95):
+def confidence_interval(data, logger, timeperiod='week', confidence=.95, ):
     """ Method to find high activity issues in the past specified timeperiod """
     a = 1.0 * np.array(data)
     logger.info("np array: {}".format(a))
@@ -671,7 +690,7 @@ def confidence_interval(data, timeperiod='week', confidence=.95):
     logger.info("H: {}".format(h))
     return m, m - h, m + h
 
-def update_metrics(api_host, api_port, tool_source, tool_version):
+def update_metrics(api_host, api_port, tool_source, tool_version, logger):
     logger.info("Preparing to update metrics ...\n\n" +
                  "Hitting endpoint: http://{}:{}/api/unstable/metrics/status ...\n".format(
                      api_host, api_port))
@@ -683,11 +702,11 @@ def update_metrics(api_host, api_port, tool_source, tool_version):
 
     # Duplicate checking ...
     need_insertion = filter_duplicates({'cm_api_endpoint_repo': "endpoint"}, ['chaoss_metric_status'],
-                                            active_metrics)
+                                            active_metrics, logger)
     logger.info("Count of contributors needing insertion: " + str(len(need_insertion)) + "\n")
 
     for metric in need_insertion:
-        tuple = {
+        cms_tuple = {
             "cm_group": metric['group'],
             "cm_source": metric['data_source'],
             "cm_type": metric['metric_type'],
@@ -703,13 +722,16 @@ def update_metrics(api_host, api_port, tool_source, tool_version):
             "tool_version": tool_version,
             "data_source": metric['data_source']
         }
-        # Commit metric insertion to the chaoss metrics table
-        result = engine.execute(ChaossMetricStatus.insert().values(tuple))
-        logger.info("Primary key inserted into the metrics table: " + str(result.inserted_primary_key))
+        with DatabaseSession(logger) as session:
+            cms_tuple = ChaossMetricStatus(**cms_tuple)
+            session.add(cms_tuple)
+            session.commit()
+
+            logger.info("Primary key inserted into the metrics table: {}\n".format(cms_tuple.cms_id))
 
         logger.info("Inserted metric: " + metric['display_name'] + "\n")
 
-def filter_duplicates(cols, tables, og_data):
+def filter_duplicates(cols, tables, og_data, logger):
     need_insertion = []
 
     table_str = tables[0]
