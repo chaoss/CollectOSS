@@ -53,7 +53,7 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
                     a.pull_request_comments) AS total,
                 a.repo_id, repo.repo_name
             FROM (
-                    (SELECT gh_user_id AS id,
+                    (SELECT reporter_id AS id,
                             0          AS commits,
                             COUNT(*)   AS issues,
                             0          AS commit_comments,
@@ -64,9 +64,9 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
                     FROM issues
                     WHERE repo_id = :repo_id
                         AND created_at BETWEEN :begin_date AND :end_date
-                        AND gh_user_id IS NOT NULL
+                        AND reporter_id IS NOT NULL
                         AND pull_request IS NULL
-                    GROUP BY gh_user_id, repo_id)
+                    GROUP BY reporter_id, repo_id)
                     UNION ALL
                     (SELECT cmt_ght_author_id AS id,
                             COUNT(*)          AS commits,
@@ -112,7 +112,7 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
                             issue_message_ref,
                             message
                         WHERE issues.repo_id = :repo_id
-                        AND gh_user_id IS NOT NULL
+                        AND reporter_id IS NOT NULL
                         AND issues.issue_id = issue_message_ref.issue_id
                         AND issue_message_ref.msg_id = message.msg_id
                         AND issues.pull_request IS NULL
@@ -139,7 +139,7 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
                 SUM(a.commits + a.issues + a.commit_comments + a.issue_comments + a.pull_requests +
                     a.pull_request_comments) AS total, a.repo_id, repo_name
             FROM (
-                    (SELECT gh_user_id AS id,
+                    (SELECT reporter_id AS id,
                             repo_id,
                             0          AS commits,
                             COUNT(*)   AS issues,
@@ -150,9 +150,9 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
                     FROM issues
                     WHERE repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                         AND created_at BETWEEN :begin_date AND :end_date
-                        AND gh_user_id IS NOT NULL
+                        AND reporter_id IS NOT NULL
                         AND pull_request IS NULL
-                    GROUP BY gh_user_id, issues.repo_id)
+                    GROUP BY reporter_id, issues.repo_id)
                     UNION ALL
                     (SELECT cmt_ght_author_id AS id,
                             repo_id,
@@ -198,7 +198,7 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
                             issue_message_ref,
                             message
                         WHERE issues.repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
-                        AND gh_user_id IS NOT NULL
+                        AND issues.reporter_id IS NOT NULL
                         AND issues.issue_id = issue_message_ref.issue_id
                         AND issue_message_ref.msg_id = message.msg_id
                         AND issues.pull_request IS NULL
