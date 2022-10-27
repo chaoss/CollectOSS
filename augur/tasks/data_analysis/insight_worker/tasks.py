@@ -246,8 +246,8 @@ def insight_model(repo_git: str) -> None:
                     session.add(repo_insight_record_obj)
                     session.commit()
 
-                logger.info("Primary key inserted into the repo_insights_records table: {}\n".format(
-                    repo_insight_record_obj.ri_id))
+                    logger.info("Primary key inserted into the repo_insights_records table: {}\n".format(
+                        repo_insight_record_obj.ri_id))
 
                 # Send insight to Jonah for slack bot
                 send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean), logger)
