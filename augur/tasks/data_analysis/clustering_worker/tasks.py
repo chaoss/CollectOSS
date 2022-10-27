@@ -229,7 +229,7 @@ def get_tf_idf_matrix(text_list, max_df, max_features, min_df, ngram_range, logg
     return tfidf_matrix, tfidf_vectorizer.get_feature_names()
 
 def cluster_and_label(feature_matrix, num_clusters):
-    kmeans_model = KMeans(n_clusters=num_clusters)
+    kmeans_model = KMeans(n_samples=100,n_clusters=num_clusters)
     kmeans_model.fit(feature_matrix)
     pickle.dump(kmeans_model, open("kmeans_repo_messages", 'wb'))
     return kmeans_model.labels_.tolist()
@@ -355,8 +355,8 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
 
     # key_sequence_words_sql = s.sql.text(
     #                           """
-    # 		SELECT nextval('augur_data.topic_words_topic_words_id_seq'::text)
-    # 		"""
+    #       SELECT nextval('augur_data.topic_words_topic_words_id_seq'::text)
+    #       """
     #                               )
 
     # twid = self.db.execute(key_sequence_words_sql)
