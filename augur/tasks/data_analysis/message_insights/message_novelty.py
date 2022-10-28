@@ -113,7 +113,7 @@ def display_unique(sorted_cosine_similarities):
     return unique_message_list
 '''
 
-def novelty_analysis(df_message, r_id, models_dir, full_train=True, logger=logging):
+def novelty_analysis(df_message, r_id, models_dir, full_train=True):
     # Normlize text corpus
     df_message['cleaned_msg_text'] = df_message['msg_text'].map(lambda x: normalize_corpus(x))
     logger.info('Normalized text corpus')
