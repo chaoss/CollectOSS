@@ -46,7 +46,7 @@ def message_insight_model(repo_git: str) -> None:
         SELECT exists (SELECT 1 FROM augur_data.message_analysis_summary WHERE repo_id = :repo_id LIMIT 1)""")
 
     df_rep = pd.read_sql_query(repo_exists_SQL, create_database_engine(), params={'repo_id': repo_id})
-    # full_train = not(df_rep['exists'].iloc[0])
+    #full_train = not(df_rep['exists'].iloc[0])
     logger.info(f'Full Train: {full_train}')
 
     # Collection and insertion of data happens here
@@ -130,8 +130,7 @@ def message_insight_model(repo_git: str) -> None:
             logger.error('Models storage directory could not be created \n')
 
         logger.info('Starting novelty detection...')
-        threshold, df_message['rec_err'] = novelty_analysis(df_message, repo_id, models_dir, full_train,
-                                                            logger=logger)
+        threshold, df_message['rec_err'] = novelty_analysis(df_message, repo_id, models_dir, full_train)
 
         if not full_train:
             merge_SQL = s.sql.text("""

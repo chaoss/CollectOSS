@@ -110,17 +110,33 @@ def display_unique(sorted_cosine_similarities):
     return unique_message_list
 '''
 
-def novelty_analysis(df_message, r_id, models_dir, full_train, logger=logging):
+def novelty_analysis(df_message, r_id, models_dir, full_train=True):
     # Normlize text corpus
     df_message['cleaned_msg_text'] = df_message['msg_text'].map(lambda x: normalize_corpus(x))
     logger.info('Normalized text corpus')
 
     # Load pretrained Doc2Vec model
     logger.info(f'train path is: {train_path}')
+
+#################
+    # building model ... need tag data 
+
+    df_x = pd.DataFrame(df_message['cleaned_msg_text'])
+    tag_data = [TaggedDocument(str(row['cleaned_msg_text']).split(), [index]) for index, row in df_x.iterrows()]
+    # print(tag_data)
+    model = build_model(max_epochs=100, vec_size=300, alpha=0.01, tag_data=tag_data)
+    doc2vec_vectors = np.array([model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_past.iterrows()])
+#####################
+
+#####################
+
+    dvmodel = build_model(50, 12, 1, tag_data)
+    dvmodel.save(f'{models_dir}/doc2vec.model')
+
     d2v_model = Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
     doc2vec_vectors = np.array([d2v_model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_message.iterrows()])
     logger.info('Doc2Vec vectorization done')
-        
+####################
 
     # Trains the AE model when worker runs first time
     if full_train:
