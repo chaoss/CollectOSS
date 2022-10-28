@@ -18,6 +18,9 @@ from sklearn import utils as skl_utils
 from augur.tasks.data_analysis.message_insights.preprocess_text import \
     normalize_corpus as normalize_corpus
 
+logger = logging.getLogger(message_insight_model.__name__)
+
+
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 
