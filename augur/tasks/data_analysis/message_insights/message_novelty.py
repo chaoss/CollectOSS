@@ -1,9 +1,19 @@
 #SPDX-License-Identifier: MIT
+## Added  imports
+import re
+import unicodedata
+import nltk
+import string
+from nltk.tokenize import word_tokenize 
+from nltk.stem.snowball import SnowballStemmer
+from bs4 import BeautifulSoup
+import matplotlib.pyplot as plt
+from datetime import date
 
+##
 import logging
 import multiprocessing
 import os
-from datetime import date
 import traceback 
 from datetime import datetime, timedelta
 
