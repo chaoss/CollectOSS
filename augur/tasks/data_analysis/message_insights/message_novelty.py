@@ -113,10 +113,10 @@ def display_unique(sorted_cosine_similarities):
 def novelty_analysis(df_message, r_id, models_dir, full_train=True):
     # Normlize text corpus
     df_message['cleaned_msg_text'] = df_message['msg_text'].map(lambda x: normalize_corpus(x))
-    logger.info('Normalized text corpus')
+    #logger.info('Normalized text corpus')
 
     # Load pretrained Doc2Vec model
-    logger.info(f'train path is: {train_path}')
+    #logger.info(f'train path is: {train_path}')
 
 #################
     # building model ... need tag data 
@@ -135,7 +135,7 @@ def novelty_analysis(df_message, r_id, models_dir, full_train=True):
 
     d2v_model = Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
     doc2vec_vectors = np.array([d2v_model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_message.iterrows()])
-    logger.info('Doc2Vec vectorization done')
+    #logger.info('Doc2Vec vectorization done')
 ####################
 
     # Trains the AE model when worker runs first time
@@ -143,14 +143,14 @@ def novelty_analysis(df_message, r_id, models_dir, full_train=True):
     
         # First autoencoder to identify normal data records
         ae1 = autoencoder(250, doc2vec_vectors)
-        logger.info('AE 1 training done')
+        #logger.info('AE 1 training done')
         pred_train = ae1.predict(doc2vec_vectors)
         _rec_error1 = reconstruction(pred_train, doc2vec_vectors)
         _, normal_data = get_normal_data(_rec_error1, doc2vec_vectors)
 
         # Second autoencoder to decide threshold using otsu
         ae = autoencoder(250, normal_data)
-        logger.info('AE 2 training done')
+        #logger.info('AE 2 training done')
         predicted_vectors = ae.predict(doc2vec_vectors)
         rec_error = reconstruction(predicted_vectors, doc2vec_vectors)
         threshold, _ = get_normal_data(rec_error, doc2vec_vectors)
@@ -162,7 +162,7 @@ def novelty_analysis(df_message, r_id, models_dir, full_train=True):
     else:
         threshold = 0
         ae = load_model(f'{models_dir}/{r_id}_uniq.h5')
-        logger.info('Loaded pretrained AE model for repo')
+        #logger.info('Loaded pretrained AE model for repo')
 
         # Fitting on present data
         predicted_vectors_test = ae.predict(doc2vec_vectors)
