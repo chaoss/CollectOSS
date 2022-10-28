@@ -58,7 +58,7 @@ def autoencoder(vec_input, train):
 
     # Compile the Model
     model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mean_squared_error'])
-    model.fit(train, train, epochs = 20)
+    model.fit(train, train, epochs = 60)
     return model
 
 def reconstruction(pred, val):
@@ -155,14 +155,14 @@ def novelty_analysis(df_message, r_id, models_dir, full_train=True):
     if full_train:
     
         # First autoencoder to identify normal data records
-        ae1 = autoencoder(encoder_length, doc2vec_vectors)
+        ae1 = autoencoder(250, doc2vec_vectors)
         #logger.info('AE 1 training done')
         pred_train = ae1.predict(doc2vec_vectors)
         _rec_error1 = reconstruction(pred_train, doc2vec_vectors)
         _, normal_data = get_normal_data(_rec_error1, doc2vec_vectors)
 
         # Second autoencoder to decide threshold using otsu
-        ae = autoencoder(encoder_length, normal_data)
+        ae = autoencoder(250, normal_data)
         #logger.info('AE 2 training done')
         predicted_vectors = ae.predict(doc2vec_vectors)
         rec_error = reconstruction(predicted_vectors, doc2vec_vectors)
