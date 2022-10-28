@@ -148,20 +148,21 @@ def novelty_analysis(df_message, r_id, models_dir, full_train=True):
     d2v_model = Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
     doc2vec_vectors = np.array([d2v_model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_message.iterrows()])
     #logger.info('Doc2Vec vectorization done')
+    encoder_length=len(doc2vec_vectors)
 ####################
 
     # Trains the AE model when worker runs first time
     if full_train:
     
         # First autoencoder to identify normal data records
-        ae1 = autoencoder(250, doc2vec_vectors)
+        ae1 = autoencoder(encoder_length, doc2vec_vectors)
         #logger.info('AE 1 training done')
         pred_train = ae1.predict(doc2vec_vectors)
         _rec_error1 = reconstruction(pred_train, doc2vec_vectors)
         _, normal_data = get_normal_data(_rec_error1, doc2vec_vectors)
 
         # Second autoencoder to decide threshold using otsu
-        ae = autoencoder(250, normal_data)
+        ae = autoencoder(encoder_length, normal_data)
         #logger.info('AE 2 training done')
         predicted_vectors = ae.predict(doc2vec_vectors)
         rec_error = reconstruction(predicted_vectors, doc2vec_vectors)
