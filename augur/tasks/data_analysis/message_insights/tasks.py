@@ -331,7 +331,7 @@ def message_insight_model(repo_git: str) -> None:
 
         logger.info('Data insertion completed\n')
 
-        message_analysis_query = """SELECT period, postive_ratio, negative_ratio, nove_count 
+        message_analysis_query = """SELECT period, postive_ratio, negative_ratio, novel_count 
                                     FROM message_analysis_summary 
                                     WHERE repo_id=:repo_id
                                 """
