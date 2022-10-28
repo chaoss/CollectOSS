@@ -331,12 +331,12 @@ def message_insight_model(repo_git: str) -> None:
 
         logger.info('Data insertion completed\n')
 
-        message_analysis_query = """SELECT period, postive_ratio, negative_ratio, novel_count 
-                                    FROM message_analysis_summary 
-                                    WHERE repo_id=:repo_id
-                                """
+        message_analysis_query = s.sql.text("""
+                                 SELECT period, postive_ratio, negative_ratio, novel_count 
+                                 FROM message_analysis_summary 
+                                 WHERE repo_id=:repo_id""")
 
-        df_past = pd.read_sql_query(message_analysis_query, create_database_engine(), params={"repo_id": repo_id})
+        df_past = pd.read_sql_query(message_analysis_query, create_database_engine(), params={'repo_id': repo_id})
 
         # df_past = get_table_values(cols=['period', 'positive_ratio', 'negative_ratio', 'novel_count'],
         #                                 tables=['message_analysis_summary'],
