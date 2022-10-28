@@ -125,6 +125,16 @@ def novelty_analysis(df_message, r_id, models_dir, full_train=True):
     tag_data = [TaggedDocument(str(row['cleaned_msg_text']).split(), [index]) for index, row in df_x.iterrows()]
     # print(tag_data)
     model = build_model(max_epochs=100, vec_size=300, alpha=0.01, tag_data=tag_data)
+
+    today=datetime.today()
+    timer = today - timedelta(days=45)
+    timerstr = timer.strftime('%Y-%m-%d')
+
+
+    df_past = df_message[df_message['msg_timestamp'].astype(str)< timerstr]
+    df_present = df_message[df_message['msg_timestamp'].astype(str)>= timerstr]
+
+
     doc2vec_vectors = np.array([model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_past.iterrows()])
 #####################
 
