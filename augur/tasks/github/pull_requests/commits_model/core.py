@@ -40,7 +40,7 @@ def pull_request_commits_model(repo_id,logger):
 
         all_data = []
         for page_data in pr_commits:
-            logger.info(f"{page_data['sha']}")
+            logger.info(f"Processing pr commit with hash {page_data['sha']}")
             pr_commit_row = {
                 'pull_request_id': pr_info['pull_request_id'],
                 'pr_cmt_sha': page_data['sha'],
