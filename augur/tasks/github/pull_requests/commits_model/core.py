@@ -18,11 +18,11 @@ def pull_request_commits_model(repo_id,logger):
             SELECT DISTINCT pr_url, pull_requests.pull_request_id
             FROM pull_requests--, pull_request_meta
             WHERE repo_id = :repo_id
-        """).bindparams(repo_id=self.repo_id)
+        """).bindparams(repo_id=repo_id)
     pr_urls = []
     #pd.read_sql(pr_number_sql, self.db, params={})
     session = GithubTaskSession(logger)
-    pr_urls = session.fetchall_data_from_sql_text(pr_number_sql)#session.execute_sql(pr_number_sql).fetchall()
+    pr_urls = session.fetchall_data_from_sql_text(pr_url_sql)#session.execute_sql(pr_number_sql).fetchall()
     
     repo = session.query(Repo).filter(Repo.repo_id == repo_id).one()
 
@@ -39,9 +39,10 @@ def pull_request_commits_model(repo_id,logger):
         pr_commits = GithubPaginator(commits_url, session.oauths, logger)
 
         all_data = []
-        for page_data, page in pr_commits.iter_pages():
+        for page_data in pr_commits:
+            logger.info(f"{page_data['sha']}")
             pr_commit_row = {
-                'pull_request_id': pull_request['pull_request_id'],
+                'pull_request_id': pr_info['pull_request_id'],
                 'pr_cmt_sha': page_data['sha'],
                 'pr_cmt_node_id': page_data['node_id'],
                 'pr_cmt_message': page_data['commit']['message'],
@@ -52,7 +53,7 @@ def pull_request_commits_model(repo_id,logger):
                 'repo_id': repo_id,
             }
 
-            all_data += pr_commit_row
+            all_data.append(pr_commit_row)
         
         if len(all_data) > 0:
             #Execute bulk upsert
