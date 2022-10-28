@@ -345,6 +345,9 @@ def message_insight_model(repo_git: str) -> None:
 
         # Calculate deviation from mean for all metrics
         mean_vals = df_past[['positive_ratio', 'negative_ratio', 'novel_count']].iloc[:-1].mean(axis=0)
+        # Attempted bug fix 10/28/2022
+        df_past.fillna("nan")
+        ##############################
         curr_pos, curr_neg, curr_novel = df_past[['positive_ratio', 'negative_ratio', 'novel_count']].iloc[-1]
         pos_shift = (curr_pos - mean_vals[0]) / mean_vals[0] * 100
         neg_shift = (curr_neg - mean_vals[1]) / mean_vals[1] * 100
