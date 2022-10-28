@@ -38,7 +38,8 @@ def build_model(max_epochs, vec_size, alpha, tag_data):
         model.alpha -= 0.0002
         model.min_alpha = model.alpha
 
-    model.save("doc2vec.model")
+    #Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
+    model.save(os.path.join(train_path,"doc2vec.model"))
     #logger.info("Model Saved")
     return model
 # '''
