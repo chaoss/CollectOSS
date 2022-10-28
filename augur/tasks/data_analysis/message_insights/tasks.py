@@ -336,7 +336,7 @@ def message_insight_model(repo_git: str) -> None:
                                     WHERE repo_id=:repo_id
                                 """
 
-        df_past = pd.read_sql(message_analysis_query, create_database_engine(), params={"repo_id": repo_id})
+        df_past = pd.read_sql_query(message_analysis_query, create_database_engine(), params={"repo_id": repo_id})
 
         # df_past = get_table_values(cols=['period', 'positive_ratio', 'negative_ratio', 'novel_count'],
         #                                 tables=['message_analysis_summary'],
