@@ -32,6 +32,8 @@ def message_insight_model(repo_git: str) -> None:
     tool_version = '0.3.1'
     data_source = 'Non-existent API'
 
+    run_id = int(now.timestamp())+5
+
     with DatabaseSession(logger) as session:
 
         repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
@@ -304,30 +306,26 @@ def message_insight_model(repo_git: str) -> None:
         logger.info('Begin repo wise insights insertion...')
         logger.info(f'{df_senti.shape[0]} data records to be inserted\n')
         for row in df_trend.itertuples():
-            try:
-                msg = {
-                    "repo_id": repo_id,
-                    "worker_run_id": run_id,
-                    "positive_ratio": row.PosR,
-                    "negative_ratio": row.NegR,
-                    "novel_count": row.Novel,
-                    "period": row.Index,
-                    "tool_source": tool_source,
-                    "tool_version": tool_version,
-                    "data_source": data_source
-                }
+            msg = {
+                "repo_id": repo_id,
+                "worker_run_id": run_id,
+                "positive_ratio": row.PosR,
+                "negative_ratio": row.NegR,
+                "novel_count": row.Novel,
+                "period": row.Index,
+                "tool_source": tool_source,
+                "tool_version": tool_version,
+                "data_source": data_source
+            }
 
-                message_analysis_summary_object = MessageAnalysisSummary(**msg)
-                session.add(message_analysis_summary_object)
-                session.commit()
+            message_analysis_summary_object = MessageAnalysisSummary(**msg)
+            session.add(message_analysis_summary_object)
+            session.commit()
 
-                # result = create_database_engine().execute(message_analysis_summary_table.insert().values(msg))
-                logger.info(
-                    f'Primary key inserted into the message_analysis_summary table: {message_analysis_summary_object.msg_summary_id}')
-                # logger.info(f'Inserted data point {results_counter} for insight_period {row.Index}')
-            except Exception as e:
-                logger.error(f'Error occurred while storing datapoint {repr(e)}')
-                break
+            # result = create_database_engine().execute(message_analysis_summary_table.insert().values(msg))
+            logger.info(
+                f'Primary key inserted into the message_analysis_summary table: {message_analysis_summary_object.msg_summary_id}')
+            # logger.info(f'Inserted data point {results_counter} for insight_period {row.Index}')
 
         logger.info('Data insertion completed\n')
 
