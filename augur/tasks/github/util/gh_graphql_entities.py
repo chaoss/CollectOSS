@@ -23,7 +23,7 @@ from augur.tasks.github.util.github_paginator import GithubApiResult, process_di
     PR_reviews, events, messages, pr_commits, pr_files(already done convert it)
 """
 
-def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=10):
+def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=20):
     logger.debug(f"Sending query {query}  to github graphql")
 
     response = None
@@ -167,7 +167,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
             attempts += 1
 
         if not success:
-            return None
+            raise OSError#return None
 
         return response_data
 
@@ -292,7 +292,15 @@ class GraphQlPageCollection(collections.abc.Sequence):
         while coreData['pageInfo']['hasNextPage']:
             params['cursor'] = coreData['pageInfo']['endCursor']
 
-            data = self.request_graphql_dict(variables=params)#self.client.execute(self.query,variable_values=params)
+            try:
+                data = self.request_graphql_dict(variables=params)#self.client.execute(self.query,variable_values=params)
+            except Exception as e:
+                self.logger.error("Could not extract paginate result because there was no data returned")
+                self.logger.error(
+                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
+                
+                self.logger.info(f"Trying again...")
+                data = self.request_graphql_dict(variables=params)
 
             coreData = self.extract_paginate_result(data)
 
