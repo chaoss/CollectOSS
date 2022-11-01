@@ -37,7 +37,7 @@ def cli():
 def add_repos(filename):
     """Add repositories to Augur's database."""   
     from augur.tasks.github.util.github_task_session import GithubTaskSession
-    from augur.application.cli._repo_load_controller import RepoLoadController
+    from augur.util.repo_load_controller import RepoLoadController
 
     with GithubTaskSession(logger) as session:
 
@@ -137,7 +137,7 @@ def add_github_org(organization_name):
     Create new repo groups in Augur's database
     """
     from augur.tasks.github.util.github_task_session import GithubTaskSession
-    from augur.application.cli._repo_load_controller import RepoLoadController
+    from augur.util.repo_load_controller import RepoLoadController
 
     with GithubTaskSession(logger) as session:
 

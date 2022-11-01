@@ -176,12 +176,12 @@ def process_commit_metadata(contributorQueue,repo_id):
             """
             
             #Executes an upsert with sqlalchemy 
-            cntrb_natural_keys = ['cntrb_login']
+            cntrb_natural_keys = ['cntrb_id']
             try:
                 session.insert_data(cntrb,Contributor,cntrb_natural_keys)
             except Exception as e:
                 session.logger.error(f"Could not complete singular contributor insert!!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
-                continue
+                raise e
 
             try:
                 # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey

@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 REPO_ENDPOINT = "https://api.github.com/repos/{}/{}"
-ORG_REPOS_ENDPOINT = "https://api.github.com/orgs/{}/repos"
-DEFAULT_REPO_GROUP_ID = 1
+ORG_REPOS_ENDPOINT = "https://api.github.com/orgs/{}/repos?per_page=100"
+DEFAULT_REPO_GROUP_IDS = [1, 10]
 CLI_USER_ID = 1
 
 
@@ -37,16 +37,10 @@ class RepoLoadController:
             True if repo url is valid and False if not
         """
 
-        result = re.search(r"https:\/\/github\.com\/(.+)\/(.+)$", url)
+        print(self.session.oauths.list_of_keys)
 
-        if not result:
-            return False
 
-        capturing_groups = result.groups()
-
-        owner = capturing_groups[0]
-        repo = capturing_groups[1]
-
+        owner, repo = self.parse_repo_url(url)
         if not owner or not repo:
             return False
 
@@ -89,15 +83,7 @@ class RepoLoadController:
             List of valid repo urls or empty list if invalid org
         """
 
-        result = re.search(r"https:\/\/github\.com\/(.+)$", url)
-
-        if not result:
-            return False
-
-        capturing_groups = result.groups()
-
-        owner = capturing_groups[0]
-
+        owner = self.parse_org_url(url)
         if not owner:
             return False
 
@@ -123,33 +109,11 @@ class RepoLoadController:
                 return []
 
             repos = result.json()
+            # print([repo["name"] for repo in repos])
             repo_urls = [repo["html_url"] for repo in repos]
 
             return repo_urls
 
-
-    # def get_repo_id(self, url: str) -> int:
-    #     """Retrieve repo id of given url from repo table
-
-    #     Note:
-    #         If a repo doesn't exist is table, None is returned
-
-    #     Args:
-    #         url: repo url
-
-    #     Returns
-    #         The repo id or None if repo doesn't exist
-    #     """
-
-    #     query = s.sql.text(f"""SELECT * FROM augur_data.repo WHERE repo_git='{url}';""")
-
-    #     result = self.session.execute_sql(query).fetchall()
-
-    #     if len(result) == 0:
-    #         return None
-
-    #     else:
-    #         return dict(result[0])["repo_id"]
 
     def is_valid_repo_group_id(self, repo_group_id):
         result = self.session.query(RepoGroup).filter(RepoGroup.repo_group_id == repo_group_id).one()
@@ -165,6 +129,9 @@ class RepoLoadController:
         Args:
             url: repo url
             repo_group_id: group to assign repo to
+
+        Note:
+            If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
         """
 
         if not self.is_valid_repo_group_id(repo_group_id):
@@ -179,8 +146,6 @@ class RepoLoadController:
             "data_source": "Git"
         }
 
-    
-
         repo_unique = ["repo_git"]
         return_columns = ["repo_id"]
         result = self.session.insert_data(repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
@@ -188,6 +153,14 @@ class RepoLoadController:
         if not result:
             return None
 
+        if repo_group_id not in DEFAULT_REPO_GROUP_IDS:
+            # update the repo group id 
+            repo = self.session.query(Repo).filter(Repo.repo_git == url).one()
+
+            if not repo.repo_group_id == repo_group_id:
+                repo.repo_group_id = repo_group_id
+                self.session.commit()
+        
         return result[0]["repo_id"]
 
 
@@ -204,7 +177,6 @@ class RepoLoadController:
             "repo_id": repo_id
         }
             
-            
         repo_user_unique = ["user_id", "repo_id"]
         return_columns = ["user_id", "repo_id"]
         data = self.session.insert_data(repo_user_data, UserRepo, repo_user_unique, return_columns)
@@ -214,18 +186,25 @@ class RepoLoadController:
 
         return False
 
-    def add_frontend_repo(self, url: List[str], user_id: int):
+    def add_frontend_repo(self, url: List[str], user_id: int, repo_group_id: int = None):
         """Add list of repos to a users repos.
 
         Args:
             urls: list of repo urls
             user_id: id of user_id from users table
+            repo_group_id: repo_group_id to add the repo to
+
+        Note:
+            If no repo_group_id is passed the repo will be added to a default repo_group
         """
 
         if not self.is_valid_repo(url):
             return {"status": "Invalid repo", "repo_url": url}
 
-        repo_id = self.add_repo_row(url, DEFAULT_REPO_GROUP_ID, "Frontend")
+        if not repo_group_id:
+            repo_group_id = DEFAULT_REPO_GROUP_IDS[0]
+
+        repo_id = self.add_repo_row(url, repo_group_id, "Frontend")
 
         if not repo_id:
             return {"status": "Repo insertion failed", "repo_url": url}
@@ -248,17 +227,24 @@ class RepoLoadController:
         """
 
         repos = self.retrieve_org_repos(url)
-
+       
         if not repos:
             return {"status": "Invalid org", "org_url": url}
         
+        org_name = self.parse_org_url(url)
+        if not org_name:
+            return {"status": "Invalid org", "org_url": url}
+
+        # try to get the repo group with this org name
+        # if it does not exist create one
         failed_repos = []
         for repo in repos:
 
             result = self.add_frontend_repo(repo, user_id)
 
+            # keep track of all the repos that failed
             if result["status"] != "Repo Added":
-                failed_count += 1
+                failed_repos.append(repo)
 
         failed_count = len(failed_repos)
         if failed_count > 0:
@@ -304,6 +290,12 @@ class RepoLoadController:
                 f"No organization with name {org_name} could be found")
             return
 
+        # check if the repo group already exists
+        rg = self.session.query(RepoGroup).filter(RepoGroup.rg_name == org_name).first()
+        if rg:
+            print(f"{rg.rg_name} is already a repo group")
+            return
+
         print(f'Organization "{org_name}" found')
 
         rg = RepoGroup(rg_name=org_name, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
@@ -340,4 +332,46 @@ class RepoLoadController:
         repo_ids = [dict(row)["repo_id"] for row in result]
 
         return repo_ids
+
+
+
+    def parse_repo_url(self, url):
+
+        if url.endswith(".github") or url.endswith(".github.io"):
+        
+            result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
+        else:
+
+            result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _]+)(.git)?\/?$", url)
+
+        if not result:
+            return None, None
+
+        capturing_groups = result.groups()
+
+        try:
+            owner = capturing_groups[0]
+            repo = capturing_groups[1]
+
+            return owner, repo
+        except IndexError:
+            return None, None
+
+    def parse_org_url(self, url):
+
+        result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/?$", url)
+
+        if not result:
+            return None
+
+        capturing_groups = result.groups()
+
+        try:
+            owner = capturing_groups[0]
+            return owner
+        except IndexError:
+            return None
+
+        
+
 

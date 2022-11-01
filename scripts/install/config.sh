@@ -149,10 +149,10 @@ function create_config(){
     
     #special case for docker entrypoint
     if [ $target = "docker" ]; then
-      cmd=( augur config init --github_api_key $github_api_key --gitlab_api_key $gitlab_api_key --facade_repo_directory $facade_repo_directory --redis-conn-string $redis_conn_string )
+      cmd=( augur config init --github-api-key $github_api_key --gitlab-api-key $gitlab_api_key --facade-repo-directory $facade_repo_directory --redis-conn-string $redis_conn_string )
       echo "init with redis $redis_conn_string"
     else
-      cmd=( augur config init --github_api_key $github_api_key --gitlab_api_key $gitlab_api_key --facade_repo_directory $facade_repo_directory )
+      cmd=( augur config init --github-api-key $github_api_key --gitlab-api-key $gitlab_api_key --facade-repo-directory $facade_repo_directory )
     fi
 
 

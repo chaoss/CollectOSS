@@ -19,17 +19,17 @@ def httpx_client():
         yield client
 
 @pytest.fixture
-def key_handler(session):
+def key_handler(test_db_session):
     
     redis.flushdb()
 
-    yield GithubApiKeyHandler(session)
+    yield GithubApiKeyHandler(test_db_session)
 
-def test_get_config_key(key_handler, engine):
+def test_get_config_key(key_handler, test_db_engine):
 
     try:
         data = {"github_api_key": "asdfdfkey"}
-        with engine.connect() as connection:
+        with test_db_engine.connect() as connection:
 
             query = text("""INSERT INTO "augur_operations"."config" ("id", "section_name", "setting_name", "value", "type") VALUES (3, 'Keys', 'github_api_key', :github_api_key, 'str');""")
 
@@ -40,17 +40,17 @@ def test_get_config_key(key_handler, engine):
         assert config_key == data["github_api_key"]
     
     finally:
-        with engine.connect() as connection:
+        with test_db_engine.connect() as connection:
             connection.execute("""DELETE FROM augur_operations.config""")
 
-def test_get_config_key_with_none_specified(key_handler, engine):
+def test_get_config_key_with_none_specified(key_handler, test_db_engine):
 
     config_key = key_handler.get_config_key()
 
     assert config_key == None
 
 
-def test_get_api_keys_from_database(key_handler, engine):
+def test_get_api_keys_from_database(key_handler, test_db_engine):
 
     # to make sure that it doensn't add the config key twice, if the config key is also in the worker_oauth table
     key_handler.config_key = "asdfdfkey"
@@ -58,7 +58,7 @@ def test_get_api_keys_from_database(key_handler, engine):
     try:
         keys = ["asdfdfkey", "jloire", "zdfdr", "asdrxer"]
         data = [{"api_key": key} for key in keys]
-        with engine.connect() as connection:
+        with test_db_engine.connect() as connection:
 
             for value in data:
 
@@ -75,7 +75,7 @@ def test_get_api_keys_from_database(key_handler, engine):
             assert key in keys
 
     finally:
-        with engine.connect() as connection:
+        with test_db_engine.connect() as connection:
             connection.execute("""DELETE FROM augur_operations.worker_oauth""")
 
 api_key_list = ["asdfdfkey", "jloire", "zdfdr", "asdrxer"]
@@ -85,7 +85,7 @@ def test_is_bad_api_key(key_handler, httpx_client, api_key):
     assert key_handler.is_bad_api_key(httpx_client, api_key) == True
 
 
-def test_get_api_keys(key_handler, engine):
+def test_get_api_keys(key_handler, test_db_engine):
 
     # to make sure that it doensn't add the config key twice, if the config key is also in the worker_oauth table
     # we could use get_config_key, but that would make the test unreliable
@@ -95,7 +95,7 @@ def test_get_api_keys(key_handler, engine):
     try:
         keys = ["asdfdfkey", "jloire", "zdfdr", "asdrxer"]
         data = [{"api_key": key} for key in keys]
-        with engine.connect() as connection:
+        with test_db_engine.connect() as connection:
 
             for value in data:
 
@@ -109,5 +109,5 @@ def test_get_api_keys(key_handler, engine):
         assert len(db_keys) == 0
 
     finally:
-        with engine.connect() as connection:
+        with test_db_engine.connect() as connection:
             connection.execute("""DELETE FROM augur_operations.worker_oauth""")

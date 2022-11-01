@@ -13,10 +13,10 @@ from sqlalchemy.sql import text
 from sqlalchemy.orm import sessionmaker
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.application.cli._repo_load_controller import RepoLoadController
+from augur.util.repo_load_controller import RepoLoadController
 
 
-from augur.application.db.models import User
+from augur.application.db.models import User, UserRepo
 from augur.application.config import get_development_flag
 logger = logging.getLogger(__name__)
 development = get_development_flag()
@@ -116,14 +116,20 @@ def create_routes(server):
         username = request.args.get("username")
         if username is None:
             return jsonify({"status": "Missing argument"}), 400
+
         user = session.query(User).filter(User.login_name == username).first()
+       
         if user is None:
             return jsonify({"status": "User does not exist"})
-        else:
-            session.delete(user)
-            session.commit()
-            return jsonify({"status": "User deleted"}), 200
-    
+
+        user_repos = session.query(UserRepo).filter(UserRepo.user_id == user.user_id).all()
+        for repo in user_repos:
+            session.delete(repo)
+
+        session.delete(user)
+        session.commit()
+        return jsonify({"status": "User deleted"}), 200
+
     @server.app.route(f"/{AUGUR_API_VERSION}/user/update", methods=['POST'])
     def update_user():
         if not development and not request.is_secure:
@@ -135,27 +141,42 @@ def create_routes(server):
         email = request.args.get("email")
         new_login_name = request.args.get("new_username")
         new_password = request.args.get("new_password")
-        if username is None:
+
+        if username is None or password is None:
             return jsonify({"status": "Missing argument"}), 400
+
         user = session.query(User).filter(User.login_name == username).first()
-        checkPassword = check_password_hash(user.login_hashword, password)
         if user is None:
             return jsonify({"status": "User does not exist"})
+
+        checkPassword = check_password_hash(user.login_hashword, password)
         if checkPassword == False:
             return jsonify({"status": "Invalid password"}) 
-        if user:
-            if(email is not None and checkPassword is True):
-                user.email = email
-                session.commit()
-                return jsonify({"status": "Email Updated"})
-            if(new_password is not None and checkPassword is True):
-                user.login_hashword = generate_password_hash(new_password)
-                session.commit()
-                return jsonify({"status": "Password Updated"})
-            if(new_login_name is not None and checkPassword is True):
-                user.login_name = new_login_name
-                session.commit()
-                return jsonify({"status": "Username Updated"})
+
+        if email is not None:
+            existing_user = session.query(User).filter(User.email == email).one()
+            if existing_user is not None:
+                return jsonify({"status": "Already an account with this email"})
+
+            user.email = email
+            session.commit()
+            return jsonify({"status": "Email Updated"})
+
+        if new_password is not None:
+            user.login_hashword = generate_password_hash(new_password)
+            session.commit()
+            return jsonify({"status": "Password Updated"})
+
+        if new_login_name is not None:
+            existing_user = session.query(User).filter(User.login_name == new_login_name).one()
+            if existing_user is not None:
+                return jsonify({"status": "Username already taken"})
+
+            user.login_name = new_login_name
+            session.commit()
+            return jsonify({"status": "Username Updated"})
+
+        return jsonify({"status": "Missing argument"}), 400
 
     @server.app.route(f"/{AUGUR_API_VERSION}/user/repos", methods=['GET', 'POST'])
     def user_repos():
