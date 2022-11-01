@@ -32,7 +32,7 @@ def message_insight_model(repo_git: str) -> None:
     tool_version = '0.3.1'
     data_source = 'Non-existent API'
 
-    run_id = int(datetime.now())+5
+    run_id = int(datetime.datetime.now())+5
 
     with DatabaseSession(logger) as session:
 
