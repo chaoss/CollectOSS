@@ -5,7 +5,7 @@ List of Regularly Used Data Tables In Augur
 
     **Commits** - This is where a record for every file in every commit in every repository in an Augur instance is kept. 
         
-        * * Worker * : Facade worker collects, and also stores platform user information in the commits table. 
+        * Worker: Facade worker collects, and also stores platform user information in the commits table. 
                 
                 .. image:: images/commits.png
                    :width: 200
@@ -21,7 +21,7 @@ List of Regularly Used Data Tables In Augur
 
     **Contributor_repo** - Storage of a snowball sample of all the repositories anyone in your schema has accessed on GitHub. So, for example, if you wanted to know all the repositories that people on your project contributed to, this would be the table. 
         
-        * * Contributor_breadth_worker * populates this table
+        * *Contributor_breadth_worker* populates this table
         * Population of this table happens last, and can take a long time. 
 
                 .. image:: images/contributor_repo.png
