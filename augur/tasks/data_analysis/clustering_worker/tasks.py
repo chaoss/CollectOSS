@@ -229,7 +229,7 @@ def get_tf_idf_matrix(text_list, max_df, max_features, min_df, ngram_range, logg
     return tfidf_matrix, tfidf_vectorizer.get_feature_names()
 
 def cluster_and_label(feature_matrix, num_clusters):
-    kmeans_model = KMeans(n_samples=100,n_clusters=num_clusters)
+    kmeans_model = KMeans(n_clusters=num_clusters)
     kmeans_model.fit(feature_matrix)
     pickle.dump(kmeans_model, open("kmeans_repo_messages", 'wb'))
     return kmeans_model.labels_.tolist()
