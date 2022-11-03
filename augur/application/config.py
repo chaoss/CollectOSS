@@ -88,8 +88,6 @@ default_config = {
             },
             "Insight_Task": {
                 # TODO: How to store metrics in database config?
-                "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
-                           "reviews": "pull_requests", "contributors-new": "new_contributors"},
                 "confidence_interval": 95,
                 "contamination": 0.1,
                 "switch": 1,
