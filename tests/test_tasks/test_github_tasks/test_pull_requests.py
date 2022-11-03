@@ -272,7 +272,7 @@ def test_insert_pr_contributors(github_api_key_headers, session, pr_number):
             for row_tuple in result:
                 row = dict(row_tuple)
 
-                assert row["cntrb_id"] in unique_contributors
+                assert row["cntrb_login"] in unique_contributors
 
     finally:
 
@@ -313,7 +313,14 @@ def test_insert_prs(github_api_key_headers, session, repo):
 
                         # insert the cntrb_id and cntrb_login into the contributors table so the contributor is present. 
                         # This is so we don't get a foreign key error on the cntrb_id when we insert the prs
-                        query = text("""INSERT INTO "augur_data"."contributors" ("cntrb_login", "cntrb_email", "cntrb_full_name", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "cntrb_last_used", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "gl_web_url", "gl_avatar_url", "gl_state", "gl_username", "gl_full_name", "gl_id", "tool_source", "tool_version", "data_source", "data_collection_date", "cntrb_id") VALUES (:cntrb_login, 'kannayoshihiro@gmail.com', 'KANNA Yoshihiro', 'UTMC', '2009-04-17 12:43:58', NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 'kannayoshihiro@gmail.com', '2021-01-28 21:56:10-06', 74832, :gh_login, 'https://api.github.com/users/nan', 'https://github.com/nan', 'MDQ6VXNlcjc0ODMy', 'https://avatars.githubusercontent.com/u/74832?v=4', '', 'https://api.github.com/users/nan/followers', 'https://api.github.com/users/nan/following{/other_user}', 'https://api.github.com/users/nan/gists{/gist_id}', 'https://api.github.com/users/nan/starred{/owner}{/repo}', 'https://api.github.com/users/nan/subscriptions', 'https://api.github.com/users/nan/orgs', 'https://api.github.com/users/nan/repos', 'https://api.github.com/users/nan/events{/privacy}', 'https://api.github.com/users/nan/received_events', 'User', 'false', NULL, NULL, NULL, NULL, NULL, NULL, 'GitHub API Worker', '1.0.0', 'GitHub API', '2021-10-28 15:23:46', :cntrb_id);""")
+                        query = text("""INSERT INTO "augur_data"."contributors" ("cntrb_login", "cntrb_email", "cntrb_full_name", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "cntrb_last_used", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "gl_web_url", "gl_avatar_url", "gl_state", "gl_username", "gl_full_name", "gl_id", "tool_source", "tool_version", "data_source", "data_collection_date", "cntrb_id") VALUES (:cntrb_login, 'kannayoshihiro@gmail.com', 'KANNA Yoshihiro', 'UTMC', '2009-04-17 12:43:58', NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 'kannayoshihiro@gmail.com', '2021-01-28 21:56:10-06', 74832, :gh_login, 'https://api.github.com/users/nan', 'https://github.com/nan', 'MDQ6VXNlcjc0ODMy', 'https://avatars.githubusercontent.com/u/74832?v=4', '', 'https://api.github.com/users/nan/followers', 'https://api.github.com/users/nan/following{/other_user}', 'https://api.github.com/users/nan/gists{/gist_id}', 'https://api.github.com/users/nan/starred{/owner}{/repo}', 'https://api.github.com/users/nan/subscriptions', 'https://api.github.com/users/nan/orgs', 'https://api.github.com/users/nan/repos', 'https://api.github.com/users/nan/events{/privacy}', 'https://api.github.com/users/nan/received_events', 'User', 'false', NULL, NULL, NULL, NULL, NULL, NULL, 'GitHub API Worker', '1.0.0', 'GitHub API', '2021-10-28 15:23:46', :cntrb_id);
+
+                        DELETE FROM "augur_data"."repo";
+                        DELETE FROM "augur_data"."repo_groups";
+                        INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
+                        
+                        INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_status", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "repo_archived_date_collected", "repo_archived", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 1, 'https://github.com/chaoss/augur', NULL, NULL, '2022-08-15 21:08:07', 'New', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI', '1.0', 'Git', '2022-08-15 21:08:07');
+                        """)
 
                         connection.execute(query, **contributor)
 
@@ -348,6 +355,9 @@ def test_insert_prs(github_api_key_headers, session, repo):
          with session.engine.connect() as connection:
 
             connection.execute(f"DELETE FROM augur_data.pull_requests;")
+            connection.execute("""DELETE FROM "augur_data"."repo";
+                                DELETE FROM "augur_data"."repo_groups";
+                                """)
             connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
 
 

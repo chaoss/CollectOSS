@@ -26,6 +26,9 @@ from augur.application.db.session import DatabaseSession
 from augur.tasks.init.celery_app import engine
 from logging import Logger
 
+CELERY_GROUP_TYPE = type(group())
+CELERY_CHAIN_TYPE = type(chain())
+
 #Predefine phases. For new phases edit this and the config to reflect.
 #The domain of tasks ran should be very explicit.
 def prelim_phase(logger):
@@ -73,29 +76,28 @@ def machine_learning_phase(logger):
     with DatabaseSession(logger) as session:
         repos = session.query(Repo).all()
 
-        ml_tasks = []
-        clustering_tasks = []
-        discourse_tasks = []
-        insight_tasks = []
-        message_insights_tasks = []
-        pull_request_analysis_tasks = []
-        for repo in repos:
-            clustering_tasks.append(clustering_model.si(repo.repo_git))
-            discourse_tasks.append(discourse_analysis_model.si(repo.repo_git))
-            insight_tasks.append(insight_model.si(repo.repo_git))
-            message_insights_tasks.append(message_insight_model.si(repo.repo_git))
-            pull_request_analysis_tasks.append(pull_request_analysis_model.si(repo.repo_git))   
+    ml_tasks = []
+    clustering_tasks = []
+    discourse_tasks = []
+    insight_tasks = []
+    message_insights_tasks = []
+    pull_request_analysis_tasks = []
+    for repo in repos:
+        clustering_tasks.append(clustering_model.si(repo.repo_git))
+        discourse_tasks.append(discourse_analysis_model.si(repo.repo_git))
+        insight_tasks.append(insight_model.si(repo.repo_git))
+        message_insights_tasks.append(message_insight_model.si(repo.repo_git))
+        pull_request_analysis_tasks.append(pull_request_analysis_model.si(repo.repo_git))   
 
-        ml_tasks.extend(clustering_tasks)
-        ml_tasks.extend(discourse_tasks)
-        ml_tasks.extend(insight_tasks)
-        ml_taks.extend(message_insights_tasks)
-        ml_taks.extend(pull_request_analysis_tasks)
+    ml_tasks.extend(insight_tasks)
+    ml_tasks.extend(discourse_tasks)
+    ml_tasks.extend(message_insights_tasks)
+    ml_tasks.extend(pull_request_analysis_tasks)
+    ml_tasks.extend(clustering_tasks) 
+        
+    task_chain = chain(*ml_tasks)
 
-
-        return chain(
-            *ml_tasks
-        )
+    return task_chain
 
 
 DEFINED_COLLECTION_PHASES = [prelim_phase, repo_collect_phase, machine_learning_phase]
@@ -156,22 +158,30 @@ class AugurTaskRoutine:
         """
         self.logger.info("Starting augur collection")
 
-        self.logger.info(f"Enabled phases: {self.jobs_dict.keys()}")
+        self.logger.info(f"Enabled phases: {list(self.jobs_dict.keys())}")
         augur_collection_list = []
         for phaseName, job in self.jobs_dict.items():
             self.logger.info(f"Starting phase {phaseName}")
             #Call the function stored in the dict to return the object to call apply_async on
-            phaseResult = job(self.logger).apply_async()
-            with allow_join_result():
-                try:
-                    phaseResult.join()
-                except Exception as e:
-                    #Log full traceback if a phase fails.
-                    self.logger.error(
-                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
-                    self.logger.error(
-                        f"Phase {phaseName} has failed during augur collection. Error: {e}")
-                    raise e
+
+            try:
+                tasks = job(self.logger)
+                phaseResult = tasks.apply_async() 
+
+                # if the job is a group of tasks then join the group
+                if isinstance(tasks, CELERY_GROUP_TYPE): 
+                    with allow_join_result():
+                        phaseResult.join()
+
+            except Exception as e:
+                #Log full traceback if a phase fails.
+                self.logger.error(
+                ''.join(traceback.format_exception(None, e, e.__traceback__)))
+                self.logger.error(
+                    f"Phase {phaseName} has failed during augur collection. Error: {e}")
+                raise e
+
+
             #self.logger.info(f"Result of {phaseName} phase: {phaseResult.status}")
 
 
