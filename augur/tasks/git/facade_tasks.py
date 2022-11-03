@@ -42,6 +42,112 @@ from augur.tasks.github.util.github_task_session import *
 
 from augur.application.logs import TaskLogConfig
 
+#Predefine facade collection with tasks
+@celery.task
+def facade_analysis_init_facade_task():
+    logger = logging.getLogger(facade_analysis_init_facade_task.__name__)
+    with FacadeSession(logger) as session:
+        session.update_status('Running analysis')
+        session.log_activity('Info',f"Beginning analysis.")
+
+@celery.task
+def grab_comitter_list_facade_task(repo_id,platform="github"):
+    logger = logging.getLogger(grab_comitter_list_facade_task.__name__)
+
+    grab_committer_list(GithubTaskSession(logger), repo_id,platform)
+
+@celery.task
+def trim_commits_facade_task(repo_id):
+    logger = logging.getLogger(trim_commits_facade_task.__name__)
+    session = FacadeSession(logger)
+
+    def update_analysis_log(repos_id,status):
+
+    # Log a repo's analysis status
+
+        log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
+            VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
+
+        try:
+            session.execute_sql(log_message)
+        except:
+            pass
+
+
+
+    session.inc_repos_processed()
+    update_analysis_log(repo_id,"Beginning analysis.")
+    # First we check to see if the previous analysis didn't complete
+
+    get_status = s.sql.text("""SELECT working_commit FROM working_commits WHERE repos_id=:repo_id
+        """).bindparams(repo_id=repo_id)
+
+    try:
+        working_commits = session.fetchall_data_from_sql_text(get_status)
+    except:
+        working_commits = []
+
+    # If there's a commit still there, the previous run was interrupted and
+    # the commit data may be incomplete. It should be trimmed, just in case.
+    for commit in working_commits:
+        trim_commit(session, repo_id,commit['working_commit'])
+
+        # Remove the working commit.
+        remove_commit = s.sql.text("""DELETE FROM working_commits
+            WHERE repos_id = :repo_id AND 
+            working_commit = :commit""").bindparams(repo_id=repo_id,commit=commit['working_commit'])
+        session.execute_sql(remove_commit)
+        session.log_activity('Debug',f"Removed working commit: {commit['working_commit']}")
+
+@celery.task
+def trim_commits_post_analysis_facade_task(repo_id,commits):
+    logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
+
+    session = FacadeSession(logger)
+    def update_analysis_log(repos_id,status):
+
+        # Log a repo's analysis status
+
+        log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
+            VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
+
+        try:
+            session.execute_sql(log_message)
+        except:
+            pass
+    
+
+    update_analysis_log(repo_id,'Data collection complete')
+
+    update_analysis_log(repo_id,'Beginning to trim commits')
+
+    session.log_activity('Debug',f"Commits to be trimmed from repo {repo_id}: {len(commits)}")
+    
+    for commit in commits:
+        trim_commit(session,repo_id,commit)
+    
+    set_complete = s.sql.text("""UPDATE repo SET repo_status='Complete' WHERE repo_id=:repo_id and repo_status != 'Empty'
+        """).bindparams(repo_id=repo_id)
+    
+    session.execute_sql(set_complete)
+
+    update_analysis_log(repo_id,'Commit trimming complete')
+
+    update_analysis_log(repo_id,'Complete')
+
+@celery.task
+def facade_analysis_end_facade_task():
+    logger = logging.getLogger(facade_analysis_end_facade_task.__name__)
+    FacadeSession(logger).log_activity('Info','Running analysis (complete)')
+
+
+
+@celery.task
+def facade_start_contrib_analysis_task():
+    logger = logging.getLogger(facade_start_contrib_analysis_task.__name__)
+    session = FacadeSession(logger)
+    session.update_status('Updating Contributors')
+    session.log_activity('Info', 'Updating Contributors with commits')
 
 
 #enable celery multithreading
@@ -49,21 +155,65 @@ from augur.application.logs import TaskLogConfig
 def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, multithreaded: bool)-> None:
     """Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
     """
-    #create new cfg for celery thread.
+
+    ### Local helper functions ###
+    #create new session for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
-    cfg = FacadeConfig(logger)
+    session = FacadeSession(logger)
+
+    def update_analysis_log(repos_id,status):
+
+        # Log a repo's analysis status
+
+        log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
+            VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
+
+        try:
+            session.execute_sql(log_message)
+        except:
+            pass
+    
+    
+    # Start the main analysis
+
+    update_analysis_log(repo_id,'Collecting data')
+
+
 
     for analyzeCommit in queue:    
 
-        analyze_commit(cfg, repo_id, repo_location, analyzeCommit, multithreaded)
+        analyze_commit(session, repo_id, repo_location, analyzeCommit)
+
+@celery.task
+def nuke_affiliations_facade_task():
+    logger = logging.getLogger(nuke_affiliations_facade_task.__name__)
+    session = FacadeSession(logger)
+
+    nuke_affiliations(session)
+
+@celery.task
+def fill_empty_affiliations_facade_task():
+    logger = logging.getLogger(fill_empty_affiliations_facade_task.__name__)
+    with FacadeSession(logger) as session:
+        fill_empty_affiliations(session)
+
+@celery.task
+def invalidate_caches_facade_task():
+    logger = logging.getLogger(invalidate_caches_facade_task.__name__)
+
+    with FacadeSession(logger) as session:
+        invalidate_caches(session)
+
+@celery.task
+def rebuild_unknown_affiliation_and_web_caches_facade_task():
+    logger = logging.getLogger(rebuild_unknown_affiliation_and_web_caches_facade_task.__name__)
+    
+    with FacadeSession(logger) as session:
+        rebuild_unknown_affiliation_and_web_caches(session)
 
 
-# if platform.python_implementation() == 'PyPy':
-#   import pymysql
-# else:
-#   import MySQLdb
 
-def analysis(cfg: FacadeConfig, multithreaded: bool, session: bool=None, processes: int=6)-> None:
+def generate_analysis_sequence(logger):
     """Run the analysis by looping over all active repos. For each repo, we retrieve
     the list of commits which lead to HEAD. If any are missing from the database,
     they are filled in. Then we check to see if any commits in the database are
@@ -73,282 +223,100 @@ def analysis(cfg: FacadeConfig, multithreaded: bool, session: bool=None, process
     is interrupted (possibly leading to partial data in the database for the
     commit being analyzed at the time) we can recover.
     """
-### Local helper functions ###
+    analysis_sequence = []
 
-    def update_analysis_log(repos_id,status):
+    with FacadeSession(logger) as session:
+        repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo """)
+        repos = session.fetchall_data_from_sql_text(repo_list)
 
-    # Log a repo's analysis status
+        start_date = session.get_setting('start_date')
 
-        log_message = ("INSERT INTO analysis_log (repos_id,status) "
-            "VALUES (%s,%s)")
+        analysis_sequence.append(facade_analysis_init_facade_task.si())
+        for repo in repos:
+            analysis_sequence.append(grab_comitter_list_facade_task.si(repo['repo_id']))
 
-        try:
-            cfg.cursor.execute(log_message, (repos_id,status))
-            cfg.db.commit()
-        except:
-            pass
-
-### The real function starts here ###
-
-    cfg.update_status('Running analysis')
-    cfg.log_activity('Info',f"Beginning analysis.")
-
-    start_date = cfg.get_setting('start_date')
-
-    repo_list = "SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Analyze'"
-    cfg.cursor.execute(repo_list)
-    repos = list(cfg.cursor)
+            analysis_sequence.append(trim_commits_facade_task.si(repo['repo_id']))
 
 
-    for repo in repos:
+            #Get the huge list of commits to process.
+            repo_loc = (f"{session.repo_base_directory}{repo['repo_group_id']}/{repo['repo_path']}{repo['repo_name']}/.git")
+            # Grab the parents of HEAD
 
-        
-        #Add committers for repo if session
-        if session != None:
-            grab_committer_list(session,repo[0])
-
-        update_analysis_log(repo[0],"Beginning analysis.")
-        cfg.log_activity('Verbose','Analyzing repo: %s (%s)' % (repo[0],repo[3]))
-
-        cfg.inc_repos_processed()
-
-        # First we check to see if the previous analysis didn't complete
-
-        get_status = ("SELECT working_commit FROM working_commits WHERE repos_id=%s")
-
-        cfg.cursor.execute(get_status, (repo[0], ))
-        try:
-            working_commits = list(cfg.cursor)
-        except:
-            working_commits = []
-        #cfg.cursor.fetchone()[1]
-
-        # If there's a commit still there, the previous run was interrupted and
-        # the commit data may be incomplete. It should be trimmed, just in case.
-        for commit in working_commits:
-            trim_commit(cfg, repo[0],commit[0])
-
-            # Remove the working commit.
-            remove_commit = ("DELETE FROM working_commits "
-                "WHERE repos_id = %s AND working_commit = %s")
-            cfg.cursor.execute(remove_commit, (repo[0],commit[0]))
-            cfg.db.commit()
-
-            cfg.log_activity('Debug','Removed working commit: %s' % commit[0])
-
-        # Start the main analysis
-
-        update_analysis_log(repo[0],'Collecting data')
-
-        repo_loc = ('%s%s/%s%s/.git' % (cfg.repo_base_directory,
-            repo[1], repo[2],
-            repo[3]))
-        # Grab the parents of HEAD
-
-        parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
+            parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
             "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
             stdout=subprocess.PIPE, shell=True)
 
-        parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
+            parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
 
-        # If there are no commits in the range, we still get a blank entry in
-        # the set. Remove it, as it messes with the calculations
+            # If there are no commits in the range, we still get a blank entry in
+            # the set. Remove it, as it messes with the calculations
 
-        if '' in parent_commits:
-            parent_commits.remove('')
+            if '' in parent_commits:
+                parent_commits.remove('')
 
-        # Grab the existing commits from the database
+            # Grab the existing commits from the database
 
-        existing_commits = set()
+            existing_commits = set()
 
-        find_existing = ("SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=%s")
+            find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
+                """).bindparams(repo_id=repo['repo_id'])
 
-        cfg.cursor.execute(find_existing, (repo[0], ))
+            #session.cfg.cursor.execute(find_existing, (repo[0], ))
 
-        try:
-            for commit in list(cfg.cursor):
-                existing_commits.add(commit[0])
-        except:
-            cfg.log_activity('Info', 'list(cfg.cursor) returned an error')
+            try:
+                for commit in session.fetchall_data_from_sql_text(find_existing):#list(session.cfg.cursor):
+                    existing_commits.add(commit['cmt_commit_hash'])
+            except:
+                session.log_activity('Info', 'list(cfg.cursor) returned an error')
 
-        # Find missing commits and add them
+            # Find missing commits and add them
 
-        missing_commits = parent_commits - existing_commits
+            missing_commits = parent_commits - existing_commits
 
-        cfg.log_activity('Debug','Commits missing from repo %s: %s' %
-            (repo[0],len(missing_commits)))
-
-        ## TODO: Verify if the multithreaded approach here is optimal for postgresql
-
-        if len(missing_commits) > 0:
-
+            session.log_activity('Debug',f"Commits missing from repo {repo['repo_id']}: {len(missing_commits)}")
             
+            if len(missing_commits) > 0:
+                #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
 
-            #cfg.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
+                #Split commits into mostly equal queues so each process starts with a workload and there is no
+                #    overhead to pass into queue from the parent.            
+                #Each task generates their own cfg as celery cannot serialize this data
+                contrib_jobs = create_grouped_task_load(repo['repo_id'],repo_loc,True,dataList=list(missing_commits),task=analyze_commits_in_parallel)
+                analysis_sequence.append(contrib_jobs)
             
-            #Split commits into mostly equal queues so each process starts with a workload and there is no
-            #    overhead to pass into queue from the parent.            
-            #Each task generates their own cfg as celery cannot serialize this data
-            contrib_jobs = create_grouped_task_load(repo[0],repo_loc,multithreaded,processes=processes,dataList=missing_commits,task=analyze_commits_in_parallel)
+            # Find commits which are out of the analysis range
 
-            print(contrib_jobs)
-
-            group_result = contrib_jobs.apply_async()
-            #Context manager needed for joining back to parent process properly.
-            with allow_join_result():
-                group_result.join()
-                
-            
-        elif len(missing_commits) > 0:
-            for commit in missing_commits:
-                analyze_commit(cfg, repo[0], repo_loc, commit, multithreaded)
-
-
-        update_analysis_log(repo[0],'Data collection complete')
-
-        update_analysis_log(repo[0],'Beginning to trim commits')
-
-        # Find commits which are out of the analysis range
-
-        trimmed_commits = existing_commits - parent_commits
-
-        cfg.log_activity('Debug','Commits to be trimmed from repo %s: %s' %
-            (repo[0],len(trimmed_commits)))
-
-        for commit in trimmed_commits:
-
-            trim_commit(cfg, repo[0],commit)
-
-        set_complete = "UPDATE repo SET repo_status='Complete' WHERE repo_id=%s and repo_status != 'Empty'"
-        try:
-            cfg.cursor.execute(set_complete, (repo[0], ))
-        except:
-            pass
-
-        update_analysis_log(repo[0],'Commit trimming complete')
-
-        update_analysis_log(repo[0],'Complete')
-
-    cfg.log_activity('Info','Running analysis (complete)')
-
-
-def facade_init(session: FacadeSession)-> None:
-    """Meant to replicate calling facade from the command line. Calls facade in a particular configuration that can be overridden in the database config.
-    """
+            trimmed_commits = existing_commits - parent_commits
+            analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo['repo_id'],list(trimmed_commits)))
+        
+        analysis_sequence.append(facade_analysis_end_facade_task.si())
     
-    opts,args = getopt.getopt(sys.argv[1:],'hdpcuUaAmnfIrx')
-    for opt in opts:
-        if opt[0] == '-h':
-            print("\nfacade-worker.py does everything by default except invalidating caches\n"
-                    "and forcing updates, unless invoked with one of the following options.\n"
-                    "In those cases, it will only do what you have selected.\n\n"
-                    "Options:\n"
-                    "   -d  Delete marked repos\n"
-                    "   -c  Run 'git clone' on new repos\n"
-                    "   -u  Check if any repos should be marked for updating\n"
-                    "   -U  Force all repos to be marked for updating\n"
-                    "   -p  Run 'git pull' on repos\n"
-                    "   -a  Analyze git repos\n"
-                    "   -A  Force all repos to be analyzed\n"
-                    "   -m  Disable multithreaded mode (but why?)\n"
-                    "   -n  Nuke stored affiliations (if mappings modified by hand)\n"
-                    "   -f  Fill empty affiliations\n"
-                    "   -I  Invalidate caches\n"
-                    "   -r  Rebuild unknown affiliation and web caches\n"
-                    "   -x  Create Excel summary files\n\n")
-            sys.exit(0)
+    return analysis_sequence
 
-        elif opt[0] == '-d':
-            delete_marked_repos = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: delete marked repos.')
 
-        elif opt[0] == '-c':
-            clone_repos = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: clone new repos.')
 
-        elif opt[0] == '-u':
-            check_updates = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: checking for repo updates')
-
-        elif opt[0] == '-U':
-            force_updates = 1
-            session.cfg.log_activity('Info','Option set: forcing repo updates')
-
-        elif opt[0] == '-p':
-            pull_repos = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: update repos.')
-
-        elif opt[0] == '-a':
-            run_analysis = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: running analysis.')
-
-        elif opt[0] == '-A':
-            force_analysis = 1
-            run_analysis = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: forcing analysis.')
-
-        elif opt[0] == '-m':
-            multithreaded = 0
-            session.cfg.log_activity('Info','Option set: disabling multithreading.')
-
-        elif opt[0] == '-n':
-            nuke_stored_affiliations = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: nuking all affiliations')
-
-        elif opt[0] == '-f':
-            fix_affiliations = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: fixing affiliations.')
-
-        elif opt[0] == '-I':
-            force_invalidate_caches = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: Invalidate caches.')
-
-        elif opt[0] == '-r':
-            rebuild_caches = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: rebuilding caches.')
-
-        elif opt[0] == '-x':
-            create_xlsx_summary_files = 1
-            limited_run = 1
-            session.cfg.log_activity('Info','Option set: creating Excel summary files.')
-
+def generate_contributor_sequence(logger):
     
-    # Get the location of the directory where git repos are stored
-    repo_base_directory = session.cfg.repo_base_directory
+    contributor_sequence = []
+    with FacadeSession(logger) as session:
+        
+        #contributor_sequence.append(facade_start_contrib_analysis_task.si())
+        query = s.sql.text("""SELECT repo_id FROM repo""")
 
-    # Determine if it's safe to start the script
-    current_status = session.cfg.get_setting('utility_status')
+        all_repos = session.fetchall_data_from_sql_text(query)
+        #pdb.set_trace()
+        #breakpoint()
+        for repo in all_repos:
+            contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
 
-    if current_status != 'Idle':
-        session.cfg.log_activity('Error','Something is already running, aborting maintenance '
-            'and analysis.\nIt is unsafe to continue.')
-        # sys.exit(1)
-
-    if len(repo_base_directory) == 0:
-        session.cfg.log_activity('Error','No base directory. It is unsafe to continue.')
-        session.cfg.update_status('Failed: No base directory')
-        sys.exit(1)
-
-    # Begin working
+    return chain(facade_start_contrib_analysis_task.si(),group(contributor_sequence))
 
 
-#TODO: turn this into a dynamic chain with the various platform resolution tasks in a list.
-@celery.task
-def facade_commits_model(github_contrib_resolition: bool=True)-> None:
-    """The main facade task loop. Goes through and executes all collection options specified in the facade config
-    """
 
-    logger = logging.getLogger(facade_commits_model.__name__)
+
+def generate_facade_chain(logger):
+    #raise NotImplemented
+
     with FacadeSession(logger) as session:
         
         # Figure out what we need to do
@@ -371,86 +339,44 @@ def facade_commits_model(github_contrib_resolition: bool=True)-> None:
         create_xlsx_summary_files = session.create_xlsx_summary_files
         multithreaded = session.multithreaded
 
-        facade_init(session)
-
-        start_time = time.time()
-        session.cfg.log_activity('Quiet','Running facade-worker')
+        facade_sequence = []
 
         if not limited_run or (limited_run and delete_marked_repos):
-            git_repo_cleanup(session.cfg)
+            git_repo_cleanup(session)
 
         if not limited_run or (limited_run and clone_repos):
-            git_repo_initialize(session.cfg)
+            git_repo_initialize(session)
 
         if not limited_run or (limited_run and check_updates):
             check_for_repo_updates(session)
 
         if force_updates:
-            force_repo_updates(session.cfg)
+            force_repo_updates(session)#facade_sequence.append(force_repo_updates_facade_task.si())
 
         if not limited_run or (limited_run and pull_repos):
-            git_repo_updates(session.cfg)
+            git_repo_updates(session)#facade_sequence.append(git_repo_updates_facade_task.si())
 
         if force_analysis:
-            force_repo_analysis(session.cfg)
+            force_repo_analysis(session)#facade_sequence.append(force_repo_analysis_facade_task.si())
 
-        
-        #Give analysis the github interface so that it can make API calls
-        #if not limited_run or (limited_run and run_analysis):
-        analysis(session.cfg, multithreaded, session=session)
-        
-        if github_contrib_resolition:
-            ### moved up by spg on 12/1/2021
-            #Interface with the contributor worker and inserts relevant data by repo
-            session.cfg.update_status('Updating Contributors')
-            session.cfg.log_activity('Info', 'Updating Contributors with commits')
-            query = ("SELECT repo_id FROM repo");
+        #Generate commit analysis task order.
+        facade_sequence.extend(generate_analysis_sequence(logger))
 
-            session.cfg.cursor.execute(query)
-
-            all_repos = list(session.cfg.cursor)
-
-            #pdb.set_trace()
-            #breakpoint()
-            for repo in all_repos:
-                session.logger.info(f"Processing repo {repo}")
-                insert_facade_contributors(session,repo[0],multithreaded=multithreaded)
-
-
-        ### end moved up
+        #Generate contributor analysis task group.
+        facade_sequence.append(generate_contributor_sequence(logger))
 
         if nuke_stored_affiliations:
-            nuke_affiliations(session.cfg)
+            facade_sequence.append(nuke_affiliations_facade_task.si())#nuke_affiliations(session.cfg)
 
-        session.logger.info(session.cfg)
+        #session.logger.info(session.cfg)
         if not limited_run or (limited_run and fix_affiliations):
-            fill_empty_affiliations(session)
+            facade_sequence.append(fill_empty_affiliations_facade_task.si())#fill_empty_affiliations(session)
 
         if force_invalidate_caches:
-            invalidate_caches(session.cfg)
+            facade_sequence.append(invalidate_caches_facade_task.si())#invalidate_caches(session.cfg)
 
         if not limited_run or (limited_run and rebuild_caches):
-            rebuild_unknown_affiliation_and_web_caches(session.cfg)
-
-        if not limited_run or (limited_run and create_xlsx_summary_files):
-
-            session.cfg.log_activity('Info','Creating summary Excel files')
-
-            # from excel_generators import *
-
-            session.cfg.log_activity('Info','Creating summary Excel files (complete)')
-
-
-        # All done
-        session.cfg.update_status('Idle')
-        session.cfg.log_activity('Quiet','facade-worker.py completed')
+            facade_sequence.append(rebuild_unknown_affiliation_and_web_caches_facade_task.si())#rebuild_unknown_affiliation_and_web_caches(session.cfg)
         
-        elapsed_time = time.time() - start_time
-
-        print('\nCompleted in %s\n' % timedelta(seconds=int(elapsed_time)))
-
-        session.cfg.cursor.close()
-        #session.cfg.cursor_people.close()
-        session.cfg.db.close()
-        #session.cfg.db_people.close()
+        return chain(*facade_sequence)
 

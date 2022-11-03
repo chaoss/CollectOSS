@@ -37,12 +37,10 @@ import getopt
 import xlsxwriter
 import configparser
 import traceback 
+import sqlalchemy as s
 from sqlalchemy.exc import IntegrityError
 
-from .facade01config import get_database_args_from_env
-
-
-def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
+def analyze_commit(session, repo_id, repo_loc, commit):
 
 # This function analyzes a given commit, counting the additions, removals, and
 # whitespace changes. It collects all of the metadata about the commit, and
@@ -73,7 +71,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	# Sometimes people mix up their name and email in their git settings
 
 		if name.find('@') >= 0 and email.find('@') == -1:
-			cfg.log_activity('Debug','Found swapped email/name: %s/%s' % (email,name))
+			session.logger.debug(f"Found swapped email/name: {email}/{name}")
 			return email,name
 		else:
 			return name,email
@@ -84,7 +82,7 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	# matching. This extra info is not used, so we discard it.
 
 		if email.count('@') > 1:
-			cfg.log_activity('Debug','Found extra @: %s' % email)
+			session.logger.debug(f"Found extra @: {email}")
 			return email[:email.find('@',email.find('@')+1)]
 		else:
 			return email
@@ -92,76 +90,18 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	def discover_alias(email):
 
 	# Match aliases with their canonical email
-		fetch_canonical = ("SELECT canonical_email "
-			"FROM contributors_aliases "
-			"WHERE alias_email=%s "
-			"AND cntrb_active = 1")
+		fetch_canonical = s.sql.text("""SELECT canonical_email
+			FROM contributors_aliases
+			WHERE alias_email=:alias_email 
+			AND cntrb_active = 1""").bindparams(alias_email=email)
 
-		cursor_people_local.execute(fetch_canonical, (email, ))
-		db_people_local.commit()
-
-		canonical = list(cursor_people_local)
+		canonical = session.fetchall_data_from_sql_text(fetch_canonical)#list(cursor_people_local)
 
 		if canonical:
 			for email in canonical:
-				return email[0]
+				return email['canonical_email']
 		else:
 			return email
-
-	def update_contributors(author_em, committer_em, auth_nm, cmtr_nm): 
-
-		#Check if an email already exists in the database for either the committer or the author 
-		#There is a committer and an author on each commit, but only one record in the contributor table (ideally)
-		# For each email address. So, for each email address, we need to check if it exists in the contributor
-		# Table. 
-
-		## Refactor Facade for Contributors here: Note that we need to map to some kind of alias as defined by Gabe. 
-		## Sean Goggins, February 5, 2021
-		## %TODO
-		def contributor_exists(some_email):
-
-			#SQL String to insert values into the contributors table
-			some_email = some_email.replace("'","")
-			email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source FROM contributors WHERE cntrb_email = '{}'""".format(some_email))
-
-			cursor_local.execute(email_check)
-
-			if cursor_local.fetchone() is not None: 
-				db_local.commit()
-				emails_to_add = some_email
-				return True
-			else: 
-				return False
-		#SQL to update the contributors table 
-		cntrb = ("INSERT INTO contributors "
-			"(cntrb_email,cntrb_canonical,cntrb_full_name,tool_source, tool_version, data_source) "
-			"VALUES (%s,%s,%s,'FacadeAugur','1.2.4','git_repository')")
-
-		## Logic block for updating contributors. 
-		if contributor_exists(author_em): 
-			cfg.log_activity('Info', 'Author contributor record already exists: {}'.format(author_em))
-		else: 
-			# add a contributor record for the author
-			try:
-				cursor_local.execute(cntrb, (author_em, discover_alias(author_em), str(auth_nm)))
-				db_local.commit()
-			except IntegrityError:
-				pass
-
-			cfg.log_activity('Info','Stored author contributor with email: {}'.format(author_em))
-
-		if  contributor_exists(committer_em): 
-			cfg.log_activity('Info', 'Author contributor record already exists: {}'.format(committer_em))
-		else: 
-			#add a contributor record for the committer 
-			try:
-				cursor_local.execute(cntrb, (committer_em, discover_alias(committer_em), str(cmtr_nm)))
-				db_local.commit()
-			except IntegrityError:
-				pass
-
-			cfg.log_activity('Info','Stored committer contributor with email: {}'.format(committer_em))
-				
 
 	def store_commit(repos_id,commit,filename,
 		author_name,author_email,author_date,author_timestamp,
@@ -178,46 +118,49 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 		author_email = strip_extra_amp(author_email)
 		committer_email = strip_extra_amp(committer_email)
 
-		store = ("""INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
+		commit_record = {
+			'repo_id' : repos_id,
+			'commit' : str(commit),
+			'filename' : filename,
+			'author_name' : str(author_name),
+			'author_email_raw' : author_email,
+			'author_email' : discover_alias(author_email),
+			'author_date' : author_date,
+			'author_timestamp' : author_timestamp,
+			'committer_name' : committer_name,
+			'committer_email_raw' : committer_email,
+			'committer_email' : discover_alias(committer_email),
+			'committer_date' : committer_date,
+			'committer_timestamp' : committer_timestamp,
+			'added' : added,
+			'removed' : removed,
+			'whitespace' : whitespace,
+			'committer_date' : committer_date,
+			'tool_source' : "Facade",
+			'tool_version' : "0.42",
+			'data_source' : "git"
+		}
+
+		#TODO: replace with a postgres on conflict do nothing. - IM 10/11/22
+		store = s.sql.text("""INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
 			cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,cmt_author_timestamp,
 			cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,cmt_committer_timestamp,
 			cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source)
-			VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""")
+			VALUES (:repo_id,:commit,:filename,:author_name,:author_email_raw,:author_email,:author_date,:author_timestamp,
+			:committer_name,:committer_email_raw,:committer_email,:committer_date,:committer_timestamp,
+			:added,:removed,:whitespace,:committer_date,:tool_source,:tool_version,:data_source)
+			""").bindparams(**commit_record)
 
 		try:
-			cursor_local.execute(store, (
-				repos_id,str(commit),filename,
-				str(author_name),author_email,discover_alias(author_email),author_date,author_timestamp,
-				committer_name,committer_email,discover_alias(committer_email),committer_date,committer_timestamp,
-				added,removed,whitespace,committer_date,cfg.tool_source,cfg.tool_version,cfg.data_source,))
-
-			db_local.commit()
-		except:
+			session.execute_sql(store)
+		except Exception as e:
 		
-			cfg.log_activity('Info',"""Timezone error caught, inspect values: INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
-			cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,cmt_author_timestamp,
-			cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,cmt_committer_timestamp,
-			cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source)
-			VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""".format(
-				repos_id,str(commit),filename,
-				str(author_name),author_email,discover_alias(author_email),author_date,author_timestamp,
-				committer_name,committer_email,discover_alias(committer_email),committer_date,committer_timestamp,
-				added,removed,whitespace,committer_date,cfg.tool_source,cfg.tool_version,cfg.data_source))
+			session.logger.error(f"Ran into issue when trying to insert commit with values: \n {commit_record} \n Error: {e}")
+			raise e
 
 
-		cfg.log_activity('Debug','Stored commit: %s' % commit)
+		session.log_activity('Debug',f"Stored commit: {commit}")
 
-		# Check if email already exists in db
-#		email_check = ("""SELECT cntrb_email, tool_source, tool_version, data_source
-#			FROM contributors WHERE cntrb_email = {augur_email} OR cntrb_email = {committer_email}}""")
-		
-		## Commented out so as to not update contributors
-		## sean: 11/6/2019
-		## Goal: Address with the contributors model worker
-		# try: 
-		# 	update_contributors(author_email, committer_email, author_name, committer_name) 
-		# except Exception: #print(e) 
-		# 	cfg.log_activity('Info', str(traceback.print_exc()))
 
 ### The real function starts here ###
 
@@ -227,42 +170,6 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 	added = 0
 	removed = 0
 	whitespace = 0
-	
-	db_credentials = get_database_args_from_env()
-
-	db_user = db_credentials["db_user"]
-	db_pass = db_credentials["db_pass"]
-	db_name = db_credentials["db_name"]
-	db_host = db_credentials["db_host"]
-	db_port = db_credentials["db_port"]
-	db_user_people = db_user
-	db_pass_people = db_pass
-	db_name_people = db_name
-	db_host_people = db_host
-	db_port_people = db_port
-
-	# Set up new threadsafe database connections if multithreading. Otherwise
-	# use the gloabl database connections so we don't incur a performance
-	# penalty.
-
-	#if multithreaded:
-	db_local,cursor_local = cfg.database_connection(
-		db_host,
-		db_user,
-		db_pass,
-		db_name,
-		db_port, False, True)
-#
-	db_people_local,cursor_people_local = cfg.database_connection(
-		db_host_people,
-		db_user_people,
-		db_pass_people,
-		db_name_people,
-		db_port_people, True, True)
-#
-
-	#db_people_local = cfg.db_people
-	#cursor_people_local = cfg.cursor_people
 
 	# Go get the contributors (committers) for this repo here: 
 	# curl https://api.github.com/repos/chaoss/augur/contributors
@@ -282,13 +189,15 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 	# Stash the commit we're going to analyze so we can back it out if something
 	# goes wrong later.
-	store_working_commit = ("INSERT INTO working_commits "
-		"(repos_id,working_commit) VALUES (%s,%s)")
+	store_working_commit = s.sql.text("""INSERT INTO working_commits
+		(repos_id,working_commit) VALUES (:repo_id,:commit)
+		""").bindparams(repo_id=repo_id,commit=commit)
 
-	cursor_local.execute(store_working_commit, (repo_id,commit))
-	db_local.commit()
+	#cursor_local.execute(store_working_commit, (repo_id,commit))
+	#db_local.commit()
+	session.execute_sql(store_working_commit)
 
-	cfg.log_activity('Debug','Stored working commit and analyzing : %s' % commit)
+	session.log_activity('Debug',f"Stored working commit and analyzing : {commit}")
 
 	for line in git_log.stdout.read().decode("utf-8",errors="ignore").split(os.linesep):
 		if len(line) > 0:
@@ -426,20 +335,12 @@ def analyze_commit(cfg, repo_id, repo_loc, commit, multithreaded):
 
 	# Remove the working commit.
 	try: 
-		remove_commit = ("DELETE FROM working_commits "
-			"WHERE repos_id = %s AND working_commit = %s")
-		cursor_local.execute(remove_commit, (repo_id,commit))
-		db_local.commit()
+		remove_commit = s.sql.text("""DELETE FROM working_commits 
+			WHERE repos_id = :repo_id AND working_commit = :hash
+			""").bindparams(repo_id=repo_id,hash=commit)
+		session.execute_sql(remove_commit)
 
-		cfg.log_activity('Debug','Completed and removed working commit: %s' % commit)
+		session.log_activity('Debug',f"Completed and removed working commit: {commit}")
 	except:
-		cfg.log_activity('Info', 'Working Commit: %s' % commit)
+		session.log_activity('Info', f"Working Commit: {commit}")
 	# If multithreading, clean up the local database
-
-	if multithreaded:
-		cursor_local.close()
-		cursor_people_local.close()
-		db_local.close()
-		db_people_local.close()
-
-#### Facade main functions ####
