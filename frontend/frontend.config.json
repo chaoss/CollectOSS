@@ -1,0 +1,13 @@
+{
+    "Frontend": {
+        "host": "augur.chaoss.io",
+        "port": 5000
+    },
+    "Server": {
+        "cache_expire": "3600",
+        "host": "augur.chaoss.io",
+        "port": 5000,
+        "workers": 6,
+        "timeout": 6000
+    }
+}
