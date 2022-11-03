@@ -2,14 +2,17 @@ import pytest
 import httpx
 import random
 import time
+import logging
 
 from augur.tasks.util.random_key_auth import RandomKeyAuth
+
+logger = logging.getLogger(__name__)
 
 def test_if_header_is_set():
 
     key = "asubasdfobhaosf"
     
-    key_auth = RandomKeyAuth([key], "Authorization")
+    key_auth = RandomKeyAuth([key], "Authorization", logger)
 
     with httpx.Client() as client:
 
@@ -22,7 +25,7 @@ def test_token_formatting():
     key = "asubasdfobhaosf"
     key_format = "proprietary key {0}"
     
-    key_auth = RandomKeyAuth([key], "Special_Key", key_format)
+    key_auth = RandomKeyAuth([key], "Special_Key", logger, key_format)
 
     with httpx.Client() as client:
 
@@ -35,7 +38,7 @@ def test_token_header():
     key = "asubasdfobhaosf"
     header = "werid_header"
     
-    key_auth = RandomKeyAuth([key], header)
+    key_auth = RandomKeyAuth([key], header, logger)
 
     with httpx.Client() as client:
 
@@ -54,7 +57,7 @@ def test_if_headers_are_random():
     keys = [str(x) for x in range(0, key_count)]
     key_counts = [0 for key in keys]
 
-    key_auth = RandomKeyAuth(keys, "Authorization", "token {0}")
+    key_auth = RandomKeyAuth(keys, "Authorization", logger, "token {0}")
 
     success = False
     with httpx.Client() as client:
