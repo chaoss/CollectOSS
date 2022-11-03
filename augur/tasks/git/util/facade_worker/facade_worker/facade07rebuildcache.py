@@ -222,7 +222,7 @@ def fill_empty_affiliations(session):
     update_affiliations_date = s.sql.text("""UPDATE settings SET value=:affiliations
         WHERE setting = 'affiliations_processed'""").bindparams(affiliations=affiliations_fetched)
 
-    session.execute_sql(update_affliliations_date)
+    session.execute_sql(update_affiliations_date)
 
     # On to the aliases, now
 
