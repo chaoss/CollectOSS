@@ -100,6 +100,7 @@ test-data:
 
 test:
 	# @ pytest tests/test_tasks/test_github_tasks/
+	@ python3 tests/test_routes/runner.py
 	@ pytest tests/test_tasks/test_task_utlities/
 	@ pytest tests/test_applicaton/
 

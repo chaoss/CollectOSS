@@ -315,7 +315,7 @@ def contributors_new(repo_group_id, repo_id=None, period='day', begin_date=None,
                                 and commit_comment_ref.msg_id = message.msg_id
                             group by id, commits.repo_id)
                             UNION ALL
-                            (SELECT issue_events.cntrb_id AS id, MIN(issue_events.created_at) AS created_at, repo_id
+                            (SELECT issue_events.cntrb_id AS id, MIN(issue_events.created_at) AS created_at, issue_events.repo_id
                             FROM issue_events, issues
                             WHERE issues.repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                                 AND issues.issue_id = issue_events.issue_id
@@ -323,7 +323,7 @@ def contributors_new(repo_group_id, repo_id=None, period='day', begin_date=None,
                                 AND issue_events.created_at BETWEEN :begin_date AND :end_date
                                 AND issue_events.cntrb_id IS NOT NULL
                                 AND action = 'closed'
-                            GROUP BY issue_events.cntrb_id, repo_id)
+                            GROUP BY issue_events.cntrb_id, issue_events.repo_id)
                         ) a
                     GROUP BY a.id, a.repo_id) b, repo
             WHERE repo.repo_id = b.repo_id
