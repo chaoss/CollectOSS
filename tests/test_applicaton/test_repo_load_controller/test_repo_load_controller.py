@@ -4,7 +4,7 @@ import uuid
 import sqlalchemy as s
 
 
-from augur.util.repo_load_controller import RepoLoadController, ORG_REPOS_ENDPOINT, DEFAULT_REPO_GROUP_IDS
+from augur.util.repo_load_controller import RepoLoadController, ORG_REPOS_ENDPOINT, DEFAULT_REPO_GROUP_IDS, CLI_USER_ID
 
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.application.db.session import DatabaseSession
@@ -78,8 +78,9 @@ def add_keys_to_test_db(test_db_engine):
         row = session.query(Config).filter(Config.section_name==section_name, Config.setting_name==setting_name).one()
 
     with DatabaseSession(logger, test_db_engine) as test_session:
-       test_session.add(row)
-       test_session.commit()
+        new_row = Config(section_name=section_name, setting_name=setting_name, value=row.value, type="str")
+        test_session.add(new_row)
+        test_session.commit()
 
 
 ######## Helper Functions to get insert statements #################
@@ -102,7 +103,7 @@ def get_user_insert_statement(user_id):
 def get_repos(connection, where_string=None):
 
     query_list = []
-    query_list.append("""SELECT * FROM "augur_data"."repo""")
+    query_list.append('SELECT * FROM "augur_data"."repo"')
 
     if where_string:
         if where_string.endswith(";"):
@@ -188,7 +189,7 @@ def test_add_repo_row(test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            result = get_repos(connection, where_string="""WHERE "repo_git"={}""".format(data["repo_url"]))
+            result = get_repos(connection, where_string=f"WHERE repo_git='{data['repo_url']}'")
             assert result is not None
             assert len(result) > 0
 
@@ -224,7 +225,7 @@ def test_add_repo_row_with_updates(test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            result = get_repos(connection, where_string="""WHERE "repo_git"={}""".format(data["repo_url"]))
+            result = get_repos(connection, where_string=f"WHERE repo_git='{data['repo_url']}'")
             assert result is not None
             assert len(result) == 1
 
@@ -283,7 +284,7 @@ def test_add_frontend_repos_with_duplicates(test_db_engine):
 
             url = "https://github.com/operate-first/operate-first-twitter"
 
-            data = {"user_id": 2, "repo_group_id": 5}
+            data = {"user_id": 2, "repo_group_id": DEFAULT_REPO_GROUP_IDS[0]}
 
             query_statements = []
             query_statements.append(clear_tables_statement)
@@ -355,7 +356,7 @@ def test_add_frontend_org_with_invalid_org(test_db_engine):
 
     try:
 
-        data = {"user_id": 2, "repo_group_id": 5, "org_name": "chaosssss"}
+        data = {"user_id": 2, "repo_group_id": DEFAULT_REPO_GROUP_IDS[0], "org_name": "chaosssss"}
 
         with test_db_engine.connect() as connection:
 
@@ -369,7 +370,7 @@ def test_add_frontend_org_with_invalid_org(test_db_engine):
         add_keys_to_test_db(test_db_engine)
         with GithubTaskSession(logger, test_db_engine) as session:
 
-            url = f"https://github.com/{data["org_name"]}/"
+            url = f"https://github.com/{data['org_name']}/"
             controller = RepoLoadController(session).add_frontend_org(url, data["user_id"])
 
         with test_db_engine.connect() as connection:
@@ -391,7 +392,7 @@ def test_add_frontend_org_with_valid_org(test_db_engine):
     try:
         with test_db_engine.connect() as connection:
 
-            data = {"user_id": 2, "repo_group_id": 5, "org_name": "chaoss"}
+            data = {"user_id": 2, "repo_group_id": DEFAULT_REPO_GROUP_IDS[0], "org_name": "chaoss"}
 
             query_statements = []
             query_statements.append(clear_tables_statement)
@@ -406,7 +407,7 @@ def test_add_frontend_org_with_valid_org(test_db_engine):
             url = "https://github.com/{}/".format(data["org_name"])
             RepoLoadController(session).add_frontend_org(url, data["user_id"])
 
-            repo_count = get_org_repo_count(org_name, session)
+            repo_count = get_org_repo_count(data["org_name"], session)
 
         with test_db_engine.connect() as connection:
 
@@ -414,7 +415,7 @@ def test_add_frontend_org_with_valid_org(test_db_engine):
             assert result is not None
             assert len(result) == repo_count
 
-            result = get_user_repos(connection)
+            user_repo_result = get_user_repos(connection)
             assert user_repo_result is not None
             assert len(user_repo_result) == repo_count
             
@@ -448,7 +449,7 @@ def test_add_cli_org_with_valid_org(test_db_engine):
 
             RepoLoadController(session).add_cli_org(data["org_name"])
 
-            repo_count = get_org_repo_count(org_name, session)
+            repo_count = get_org_repo_count(data["org_name"], session)
 
         with test_db_engine.connect() as connection:
 
@@ -456,7 +457,7 @@ def test_add_cli_org_with_valid_org(test_db_engine):
             assert result is not None
             assert len(result) == repo_count
 
-            result = get_user_repos(connection)
+            user_repo_result = get_user_repos(connection)
             assert user_repo_result is not None
             assert len(user_repo_result) == repo_count
 
@@ -474,7 +475,7 @@ def test_add_cli_repos_with_duplicates(test_db_engine):
         with test_db_engine.connect() as connection:
 
             data = {"user_id": CLI_USER_ID, "repo_group_id": 5, "org_name": "operate-first", "repo_name": "operate-first-twitter"}
-            url = f"https://github.com/{org_name}/{repo_name}"
+            url = f"https://github.com/{data['org_name']}/{data['repo_name']}"
 
             query_statements = []
             query_statements.append(clear_tables_statement)

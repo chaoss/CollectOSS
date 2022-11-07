@@ -99,8 +99,9 @@ test-data:
 	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data@sha256:71da12114bf28584a9a64ede2fac0cbc8dffc8e2f4a2c61231206e2f82201c2f
 
 test:
-	@ pytest tests/test_tasks/test_github_tasks/
+	# @ pytest tests/test_tasks/test_github_tasks/
 	@ pytest tests/test_tasks/test_task_utlities/
+	@ pytest tests/test_applicaton/
 
 
 test-application:

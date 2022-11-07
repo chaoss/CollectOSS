@@ -73,8 +73,6 @@ class GithubApiKeyHandler():
         redis_keys = list(self.redis_key_list)
 
         if redis_keys:
-            print(f"Getting api keys from cache length is {len(redis_keys)}")
-            print(f"Keys are: {redis_keys}")
             return redis_keys
 
         keys = self.get_api_keys_from_database()
@@ -124,8 +122,6 @@ class GithubApiKeyHandler():
         headers = {'Authorization': f'token {oauth_key}'}
 
         data = client.request(method="GET", url=url, headers=headers, timeout=180).json()
-
-        print(data)
 
         try:
             if data["message"] == "Bad credentials":

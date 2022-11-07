@@ -116,18 +116,20 @@ class RedisList(MutableSequence):
         if items_before:
             redis.lpush(self.redis_list_key, *items_before)
 
-    def contains(self, value: Any):
-        """Determiens whether the paramater value is in the list
+    # def contains(self, value: Any):
+    #     """Determiens whether the paramater value is in the list
 
-        Args:
-            value: item that is searched for in the list
+    #     Args:
+    #         value: item that is searched for in the list
 
-        Returns:
-            True if item in the list. False if it is not
-        """
+    #     Returns:
+    #         True if item in the list. False if it is not
+    #     """
+    #     print(value)
+    #     print(type(value))
 
-        if redis.lpos(self.redis_list_key, value) is None:
-            return False
+    #     if redis.lpos(name=self.redis_list_key, value=str(value)) is None:
+    #         return False
 
         return True
 
