@@ -285,7 +285,7 @@ def insert_facade_contributors(repo_id):
 
         session.logger.debug("DEBUG: Got through the new_contribs")
     
-    with GithubTaskSession(logger) as session:
+    with FacadeSession(logger) as session:
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
         resolve_email_to_cntrb_id_sql = s.sql.text("""
