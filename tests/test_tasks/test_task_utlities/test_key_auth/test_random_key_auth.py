@@ -16,7 +16,7 @@ def test_if_header_is_set():
 
     with httpx.Client() as client:
 
-            response = client.request(method="GET", url="https://www.google.com/", auth=key_auth)
+            response = client.request(method="GET", url="https://www.google.com/", auth=key_auth, timeout=180)
 
             assert key == response.request.headers["Authorization"]
 
@@ -29,7 +29,7 @@ def test_token_formatting():
 
     with httpx.Client() as client:
 
-            response = client.request(method="GET", url="https://www.google.com/", auth=key_auth)
+            response = client.request(method="GET", url="https://www.google.com/", auth=key_auth, timeout=180)
 
             assert key_format.format(key) == response.request.headers["Special_Key"]
 
@@ -42,7 +42,7 @@ def test_token_header():
 
     with httpx.Client() as client:
 
-            response = client.request(method="GET", url="https://www.google.com/", auth=key_auth)
+            response = client.request(method="GET", url="https://www.google.com/", auth=key_auth, timeout=180)
 
             assert key == response.request.headers[header]
 
@@ -69,7 +69,7 @@ def test_if_headers_are_random():
 
                 url = random.choice(urls)
 
-                response = client.request(method="GET", url=url, auth=key_auth)
+                response = client.request(method="GET", url=url, auth=key_auth, timeout=180)
 
                 key = int(response._request.headers["Authorization"].split(" ")[1])
 
