@@ -101,7 +101,7 @@ test-data:
 test:
 	# @ pytest tests/test_tasks/test_github_tasks/
 	@ python3 tests/start_server.py
-	@ pytest tests/test_tasks/test_task_utlities/ tests/test_applicaton/ tests/test_routes/test_api_functionality
+	@ pytest tests/test_tasks/test_task_utlities/ tests/test_applicaton/ tests/test_routes/test_api_functionality tests/test_metrics
 	@ python3 tests/stop_server.py
 
 
