@@ -68,7 +68,7 @@ def query_github_contributors(session, entry_info, repo_id):
             r = hit_api(session.oauths, cntrb_url, session.logger)
             contributor = r.json()
 
-            session.logger.info("Contributor: " + contributor + " \n")
+            session.logger.info(f"Contributor: {contributor} \n")
             company = None
             location = None
             email = None
@@ -124,7 +124,7 @@ def query_github_contributors(session, entry_info, repo_id):
 
             cntrb_natural_keys = ['cntrb_id']
             #insert cntrb to table.
-            session.logger.info("Contributor: " + cntrb + " \n")
+            session.logger.info(f"Contributor:  {cntrb}  \n")
             session.insert_data(cntrb,Contributor,cntrb_natural_keys)
             
         except Exception as e:

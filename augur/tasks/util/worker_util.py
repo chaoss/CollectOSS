@@ -46,6 +46,28 @@ def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
     return [dict(y) for y in set(tuple(x.items()) for x in data)]
 
 
+def remove_duplicate_naturals(data, natural_keys):
+    #Removes duplicate records with the same natural values only.
+
+    new_data = []
+    unique_values = []
+
+    for record in data:
+
+        #Get the unique part of the data.
+        unique_part = {}
+        for key in natural_keys:
+            unique_part[key] = record[key]
+        
+        if unique_part not in unique_values:
+            unique_values.append(unique_part)
+            new_data.append(record)
+    
+    print(new_data)
+    return new_data
+
+
+
 # def create_server(app, worker=None):
 #     """ Consists of AUGWOP endpoints for the broker to communicate to this worker
 #     Can post a new task to be added to the workers queue
