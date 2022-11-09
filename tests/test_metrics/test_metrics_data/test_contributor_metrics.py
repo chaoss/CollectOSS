@@ -5,6 +5,9 @@ import pandas as pd
 
 from augur.api.metrics.contributor import *
 
+df_type = type(pd.DataFrame())
+
+
 def test_contributors():
     # repo group
     assert contributors(20).iloc[0]['total'] > 0

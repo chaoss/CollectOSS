@@ -73,8 +73,6 @@ class GithubApiKeyHandler():
         redis_keys = list(self.redis_key_list)
 
         if redis_keys:
-            print(f"Getting api keys from cache length is {len(redis_keys)}")
-            print(f"Keys are: {redis_keys}")
             return redis_keys
 
         keys = self.get_api_keys_from_database()
@@ -83,7 +81,6 @@ class GithubApiKeyHandler():
             keys += [self.config_key]
 
         if len(keys) == 0:
-            print("Found 0 keys")
             return []
 
         valid_keys = []
@@ -91,11 +88,8 @@ class GithubApiKeyHandler():
 
             for key in keys:
 
-                print(key)
-
                 # removes key if it returns "Bad Credentials"
                 if self.is_bad_api_key(client, key) is False:
-                    print("key i")
                     valid_keys.append(key)
 
         # just in case the mulitprocessing adds extra values to the list.
@@ -124,8 +118,6 @@ class GithubApiKeyHandler():
         headers = {'Authorization': f'token {oauth_key}'}
 
         data = client.request(method="GET", url=url, headers=headers, timeout=180).json()
-
-        print(data)
 
         try:
             if data["message"] == "Bad credentials":

@@ -37,9 +37,6 @@ class RepoLoadController:
             True if repo url is valid and False if not
         """
 
-        print(self.session.oauths.list_of_keys)
-
-
         owner, repo = self.parse_repo_url(url)
         if not owner or not repo:
             return False

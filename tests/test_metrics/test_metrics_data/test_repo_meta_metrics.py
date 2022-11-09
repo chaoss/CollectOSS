@@ -4,6 +4,7 @@ import pytest
 import pandas as pd
 
 from augur.api.metrics.repo_meta import *
+from augur.api.metrics.contributor import lines_changed_by_author
 
 
 def test_code_changes():

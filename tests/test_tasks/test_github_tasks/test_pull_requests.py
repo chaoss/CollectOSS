@@ -210,7 +210,7 @@ def test_extract_data_from_pr_list(github_api_key_headers):
 
 
 @pytest.mark.parametrize("pr_number", [1, 2, 3, 4, 5, 6, 7, 26])
-def test_insert_pr_contributors(github_api_key_headers, session, pr_number):
+def test_insert_pr_contributors(github_api_key_headers, test_db_session, pr_number):
 
     try:
 
@@ -260,9 +260,9 @@ def test_insert_pr_contributors(github_api_key_headers, session, pr_number):
                 unique_contributors.append(cntrb["login"])
         
 
-        insert_pr_contributors(contributors_to_pass_to_insert, session, "Insert contrbibutors test")
+        insert_pr_contributors(contributors_to_pass_to_insert, test_db_session, "Insert contrbibutors test")
 
-        with session.engine.connect() as connection:
+        with test_db_session.engine.connect() as connection:
 
             result = connection.execute(f"SELECT * FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
 
@@ -276,7 +276,7 @@ def test_insert_pr_contributors(github_api_key_headers, session, pr_number):
 
     finally:
 
-         with session.engine.connect() as connection:
+         with test_db_session.engine.connect() as connection:
 
                 connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
 
@@ -284,7 +284,7 @@ repos = []
 repos.append({"owner": "chaoss", "repo": "augur"})
 repos.append({"owner": "operate-first", "repo": "blueprint"})
 @pytest.mark.parametrize("repo", repos)
-def test_insert_prs(github_api_key_headers, session, repo):
+def test_insert_prs(github_api_key_headers, test_db_session, repo):
 
     url = f"https://api.github.com/repos/{repo['owner']}/{repo['repo']}/pulls?state=all&direction=asc"
 
@@ -309,7 +309,7 @@ def test_insert_prs(github_api_key_headers, session, repo):
                 # ensure we don't try to insert same contributor twice
                 if pr["user"]["login"] not in contributors_inserted:
 
-                    with session.engine.connect() as connection:
+                    with test_db_session.engine.connect() as connection:
 
                         # insert the cntrb_id and cntrb_login into the contributors table so the contributor is present. 
                         # This is so we don't get a foreign key error on the cntrb_id when we insert the prs
@@ -333,9 +333,9 @@ def test_insert_prs(github_api_key_headers, session, repo):
                 )
                
 
-            return_data = insert_prs(prs_insert, session, "Insert contrbibutors test")
+            return_data = insert_prs(prs_insert, test_db_session, "Insert contrbibutors test")
 
-            with session.engine.connect() as connection:
+            with test_db_session.engine.connect() as connection:
 
                 result = connection.execute(f"SELECT * FROM augur_data.pull_requests;").fetchall()
 
@@ -352,7 +352,7 @@ def test_insert_prs(github_api_key_headers, session, repo):
 
     finally:
 
-         with session.engine.connect() as connection:
+         with test_db_session.engine.connect() as connection:
 
             connection.execute(f"DELETE FROM augur_data.pull_requests;")
             connection.execute("""DELETE FROM "augur_data"."repo";

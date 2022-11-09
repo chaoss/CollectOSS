@@ -44,7 +44,7 @@ def test_db_session(test_db_engine):
 
 @pytest.fixture
 def test_db_config(test_db_session):
-    return AugurConfig(logger, session)
+    return AugurConfig(logger, test_db_session)
 
 
 # @pytest.fixture(scope="session")
