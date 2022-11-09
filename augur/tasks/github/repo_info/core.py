@@ -277,13 +277,13 @@ def repo_info_model(session, repo_orm_obj):
 			open_issues,pull_requests_enabled,wiki_enabled,pages_enabled,fork_count,
 			default_branch,watchers_count,UUID,license,stars_count,
 			committers_count,issue_contributors_count,changelog_file, contributing_file, license_file, code_of_conduct_file, security_issue_file,
-            status, keywords, commit_count, issues_count, pull_request_count, pull_requests_open, pull_requests_closed, pull_requests_merged,
+            security_audit_file, status, keywords, commit_count, issues_count, pull_request_count, pull_requests_open, pull_requests_closed, pull_requests_merged,
             tool_source, tool_version, data_source)
 			VALUES (:repo_id,:last_updated,:issues_enabled,
 			:open_issues,:pull_requests_enabled,:wiki_enabled,:pages_enabled,:fork_count,
 			:default_branch,:watchers_count,:UUID,:license,:stars_count,
 			:committers_count,:issue_contributors_count,:changelog_file, :contributing_file, :license_file, :code_of_conduct_file, :security_issue_file,
-            :status, :keywords, :commit_count, :issues_count, :pull_request_count, :pull_requests_open, :pull_requests_closed, :pull_requests_merged,
+            :security_audit_file,:status, :keywords, :commit_count, :issues_count, :pull_request_count, :pull_requests_open, :pull_requests_closed, :pull_requests_merged,
             :tool_source, :tool_version, :data_source)
 			""").bindparams(**rep_inf)
 
