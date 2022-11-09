@@ -291,6 +291,7 @@ def generate_analysis_sequence(logger):
         
         analysis_sequence.append(facade_analysis_end_facade_task.si())
     
+    print(f"Analysis sequence: {analysis_sequence}")
     return analysis_sequence
 
 

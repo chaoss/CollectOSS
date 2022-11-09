@@ -304,7 +304,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
             coreData = self.extract_paginate_result(data)
 
-            print(coreData)
+            #print(coreData)
             if len(coreData['edges']) == 0:
                 return
             
