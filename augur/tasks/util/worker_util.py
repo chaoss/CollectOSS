@@ -63,7 +63,7 @@ def remove_duplicate_naturals(data, natural_keys):
             unique_values.append(unique_part)
             new_data.append(record)
     
-    print(new_data)
+    #print(new_data)
     return new_data
 
 

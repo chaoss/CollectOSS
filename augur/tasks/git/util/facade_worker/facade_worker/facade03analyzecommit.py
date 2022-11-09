@@ -123,7 +123,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 		placeholder_date = "1970-01-01 00:00:15 -0500"
 
 
-		session.logger.info(f"Timestamp: {author_timestamp}")
+		#session.logger.info(f"Timestamp: {author_timestamp}")
 		commit_record = {
 			'repo_id' : repos_id,
 			'commit' : str(commit),
