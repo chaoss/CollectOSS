@@ -8,9 +8,9 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-target=${1-prod}
 
-scripts/install/backend.sh $target
+scripts/install/backend.sh
+scripts/install/workers.sh
 
 echo
 echo "Checking database version..."
