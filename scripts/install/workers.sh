@@ -5,7 +5,6 @@ echo "Installing workers and their dependencies..."
 echo "**********************************"
 echo
 
-target=$1
 
 for WORKER in $(ls -d augur/tasks/data_analysis/*/)
 do
@@ -29,11 +28,7 @@ do
       cd $WORKER
       rm -rf build/*;
       rm -rf dist/*;
-      if [[ $target == *"prod"* ]]; then
-          pip install .
-      else
-          pip install -e .[dev]
-      fi
+      pip install .
       cd ../../../../
     fi
 
