@@ -25,12 +25,3 @@ def test_data_analysis_dependency_installs():
     process = subprocess.run(command.split(" "), stdout=FNULL, stderr=subprocess.STDOUT)
 
     assert process.returncode == 0
-
-
-
-# def test_make_install():
-
-#     FNULL = open(os.devnull, "w")
-#     process = subprocess.run(["make", "install-dev"])
-
-#     assert process.returncode == 0
