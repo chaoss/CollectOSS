@@ -13,5 +13,8 @@ scripts/install/backend.sh
 scripts/install/workers.sh
 
 echo
-echo "Checking database version..."
+echo
+echo
+echo "Database history shown below if current is not head please run augur db upgrade-db-version"
+echo 
 augur db check-for-upgrade
