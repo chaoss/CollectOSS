@@ -46,49 +46,49 @@ def test_token_header():
 
             assert key == response.request.headers[header]
 
-def test_if_headers_are_random():
+# def test_if_headers_are_random():
 
-    urls = ["https://www.google.com/", "https://www.yahoo.com/", "https://www.amazon.com/", "https://www.walmart.com/", "https://github.com/", "https://www.apple.com/", "https://www.instagram.com/", "https://www.facebook.com/"]
+#     urls = ["https://www.google.com/", "https://www.yahoo.com/", "https://www.amazon.com/", "https://www.walmart.com/", "https://github.com/", "https://www.apple.com/", "https://www.instagram.com/", "https://www.facebook.com/"]
 
-    num_requests = 10
-    key_count = 3
-    total_attempts = 15
+#     num_requests = 10
+#     key_count = 3
+#     total_attempts = 15
 
-    keys = [str(x) for x in range(0, key_count)]
-    key_counts = [0 for key in keys]
+#     keys = [str(x) for x in range(0, key_count)]
+#     key_counts = [0 for key in keys]
 
-    key_auth = RandomKeyAuth(keys, "Authorization", logger, "token {0}")
+#     key_auth = RandomKeyAuth(keys, "Authorization", logger, "token {0}")
 
-    success = False
-    with httpx.Client() as client:
-        attempts = 1
-        while attempts <= total_attempts:
-            # print(f"Attempt {attempts}: Making {num_requests} requests")
+#     success = False
+#     with httpx.Client() as client:
+#         attempts = 1
+#         while attempts <= total_attempts:
+#             # print(f"Attempt {attempts}: Making {num_requests} requests")
 
-            for i in range(0, num_requests): 
+#             for i in range(0, num_requests): 
 
-                url = random.choice(urls)
+#                 url = random.choice(urls)
 
-                response = client.request(method="GET", url=url, auth=key_auth, timeout=180)
+#                 response = client.request(method="GET", url=url, auth=key_auth, timeout=180)
 
-                key = int(response._request.headers["Authorization"].split(" ")[1])
+#                 key = int(response._request.headers["Authorization"].split(" ")[1])
 
-                key_counts[key] += 1
+#                 key_counts[key] += 1
 
-            perfect_uniform_count  = num_requests * attempts / len(keys)
-            less_than_this_count = perfect_uniform_count * 1.2
-            # print(f"{num_requests} requests made. With these counts: {key_counts}. Goal count was: {less_than_this_count}")
+#             perfect_uniform_count  = num_requests * attempts / len(keys)
+#             less_than_this_count = perfect_uniform_count * 1.2
+#             # print(f"{num_requests} requests made. With these counts: {key_counts}. Goal count was: {less_than_this_count}")
 
-            invalid_count_found = False
+#             invalid_count_found = False
 
-            max_key_count = max(key_counts)
-            if max_key_count > less_than_this_count:
-                # print(f"Found count of {max_key_count}. Goal count is less than: {less_than_this_count}")
-                attempts += 1
-                continue
-            else:
-                success = True
-                break
+#             max_key_count = max(key_counts)
+#             if max_key_count > less_than_this_count:
+#                 # print(f"Found count of {max_key_count}. Goal count is less than: {less_than_this_count}")
+#                 attempts += 1
+#                 continue
+#             else:
+#                 success = True
+#                 break
 
-    assert success
+#     assert success
 
