@@ -266,10 +266,28 @@ def repo_info_model(session, repo_orm_obj):
         'pull_request_count': data['pr_count']['totalCount'] if data['pr_count'] else None,
         'pull_requests_open': data['pr_open']['totalCount'] if data['pr_open'] else None,
         'pull_requests_closed': data['pr_closed']['totalCount'] if data['pr_closed'] else None,
-        'pull_requests_merged': data['pr_merged']['totalCount'] if data['pr_merged'] else None
+        'pull_requests_merged': data['pr_merged']['totalCount'] if data['pr_merged'] else None,
+        'tool_source': 'Repo_info Model',
+        'tool_version': '0.42',
+        'data_source': "Github"
     }
 
-    result = session.insert_data(rep_inf,RepoInfo,['repo_info_id']) #result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
+    #result = session.insert_data(rep_inf,RepoInfo,['repo_info_id']) #result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
+    insert_statement = s.sql.text("""INSERT INTO repo_info (repo_id,last_updated,issues_enabled,
+			open_issues,pull_requests_enabled,wiki_enabled,pages_enabled,fork_count,
+			default_branch,watchers_count,UUID,license,stars_count,
+			committers_count,issue_contributors_count,changelog_file, contributing_file, license_file, code_of_conduct_file, security_issue_file,
+            status, keywords, commit_count, issues_count, pull_request_count, pull_requests_open, pull_requests_closed, pull_requests_merged,
+            tool_source, tool_version, data_source)
+			VALUES (:repo_id,:last_updated,:issues_enabled,
+			:open_issues,:pull_requests_enabled,:wiki_enabled,:pages_enabled,:fork_count,
+			:default_branch,:watchers_count,:UUID,:license,:stars_count,
+			:committers_count,:issue_contributors_count,:changelog_file, :contributing_file, :license_file, :code_of_conduct_file, :security_issue_file,
+            :status, :keywords, :commit_count, :issues_count, :pull_request_count, :pull_requests_open, :pull_requests_closed, :pull_requests_merged,
+            :tool_source, :tool_version, :data_source)
+			""").bindparams(**rep_inf)
+
+    session.execute_sql(insert_statement)
 
     # Note that the addition of information about where a repository may be forked from, and whether a repository is archived, updates the `repo` table, not the `repo_info` table.
     forked = is_forked(session, owner, repo)

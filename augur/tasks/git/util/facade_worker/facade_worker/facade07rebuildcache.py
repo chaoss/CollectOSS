@@ -252,7 +252,7 @@ def fill_empty_affiliations(session):
 
         session.insert_or_update_data(set_author_to_null)
 
-        set_committer_to_null = ("""UPDATE commits SET cmt_committer_affiliation = NULL 
+        set_committer_to_null = s.sql.text("""UPDATE commits SET cmt_committer_affiliation = NULL 
             WHERE cmt_committer_raw_email LIKE CONCAT('%%',:alias_email)""").bindparams(alias_email=changed_alias['alias_email'])
 
         session.insert_or_update_data(set_committer_to_null)
