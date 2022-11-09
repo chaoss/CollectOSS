@@ -6,22 +6,14 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-target=${1-prod}
+echo
+echo "*****INSTALLING AUGUR*****"
+echo
 
-if [[ $target == *"dev"* ]]; then
-  echo
-  echo "*****INSTALLING FOR DEVELOPMENT*****"
-  echo
-else
-  echo
-  echo "*****INSTALLING FOR PRODUCTION*****"
-  echo
-fi
-
-scripts/install/backend.sh $target 2>&1 | tee logs/backend-install.log
+scripts/install/backend.sh 2>&1 | tee logs/backend-install.log
 echo "Done!"
 
-scripts/install/workers.sh $target 2>&1 | tee logs/workers-install.log
+scripts/install/workers.sh 2>&1 | tee logs/workers-install.log
 echo "Done!"
 
 scripts/install/nltk_dictionaries.sh
@@ -84,7 +76,7 @@ augur db create-schema
 echo "Schema successfully created!"
 
 
-scripts/install/config.sh $target
+scripts/install/config.sh install
 # scripts/install/api_key.sh
 
 augur db check-pgpass
