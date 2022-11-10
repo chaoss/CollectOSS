@@ -15,25 +15,23 @@ default:
 	@ echo "Testing Commands:"
 	@ echo "    test-data                       Start the testing dataset Docker database"
 	@ echo "    test                            Runs all tests"
-	@ echo "    test-application                Runs all application unit tests (including metrics)"
-	@ echo "    test-workers                    Run all worker unit tests"
-	@ echo "    test-metric-routes              Run all metrics API tests"
+	@ echo "    test-api                        Run all API tests"
 	@ echo
 	@ echo "Documentation Commands:"
 	@ echo "    docs                            Generates the documentation"
 	@ echo "    docs-view                       Generates the documentation, then opens it for local viewing"
 
+# @ echo "    test-application                Runs all application unit tests (including metrics)"
+# @ echo "    test-workers                    Run all worker unit tests"
+
 
 #
 #  Installation
 #
-.PHONY: install install-dev
+.PHONY: install
 .PHONY: install-spdx install-spdx-sudo install-augur-sbom
 .PHONY: clean rebuild
 install:
-	@ ./scripts/install/install.sh prod
-
-install-dev:
 	@ ./scripts/install/install.sh dev
 
 install-spdx:
@@ -49,11 +47,7 @@ clean:
 	@ scripts/control/clean.sh
 
 rebuild:
-	@ scripts/control/rebuild.sh prod
-
-rebuild-dev:
-	@ scripts/control/rebuild-backend.sh dev
-
+	@ scripts/control/rebuild.sh dev
 
 #
 #  Development
@@ -101,7 +95,7 @@ test-data:
 test:
 	# @ pytest tests/test_tasks/test_github_tasks/
 	@ python3 tests/start_server.py
-	@ pytest tests/test_metrics/test_metrics_functionality/ tests/test_routes/test_api_functionality/ tests/test_tasks/test_task_utlities/ tests/test_applicaton/ 
+	@ pytest tests/test_metrics/test_metrics_functionality/ tests/test_routes/test_api_functionality/ tests/test_tasks/ tests/test_applicaton/ 
 	@ python3 tests/stop_server.py
 
 test-api:

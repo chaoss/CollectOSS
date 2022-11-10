@@ -14,6 +14,8 @@ from augur.tasks.github.util.github_paginator import hit_api
 
 logger = logging.getLogger(__name__)
 
+VALID_ORG = "boto"
+
 
 ######## Helper Functions to Get Delete statements #################
 
@@ -392,7 +394,7 @@ def test_add_frontend_org_with_valid_org(test_db_engine):
     try:
         with test_db_engine.connect() as connection:
 
-            data = {"user_id": 2, "repo_group_id": DEFAULT_REPO_GROUP_IDS[0], "org_name": "chaoss"}
+            data = {"user_id": 2, "repo_group_id": DEFAULT_REPO_GROUP_IDS[0], "org_name": VALID_ORG}
 
             query_statements = []
             query_statements.append(clear_tables_statement)
@@ -432,7 +434,7 @@ def test_add_cli_org_with_valid_org(test_db_engine):
     try:
         with test_db_engine.connect() as connection:
 
-            data = {"user_id": CLI_USER_ID, "repo_group_id": 5, "org_name": "chaoss"}
+            data = {"user_id": CLI_USER_ID, "repo_group_id": 5, "org_name": VALID_ORG}
 
             query_statements = []
             query_statements.append(clear_tables_statement)
