@@ -172,7 +172,7 @@ def fill_empty_affiliations(session):
 
         if canonical:
             for email in canonical:
-                return email[0]
+                return email['canonical_email']
         else:
             return email
 
