@@ -5,4 +5,10 @@ echo "Installing backend dependencies..."
 echo "**********************************"
 echo
 
-pip install .
+target=$1
+
+if [[ $target == *"prod"* ]]; then
+    pip install .
+else
+    pip install -e .[dev]
+fi

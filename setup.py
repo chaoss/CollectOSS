@@ -77,17 +77,21 @@ setup(
         "eventlet==0.33.1", 
         "flower==1.2.0",
         "tornado==6.1", # added because it sometimes errors when tornado is not 6.1 even though nothing we install depends on it
-        "pylint==2.15.5",
-        "tox==3.24.4", # 3.25.1
-        "pytest==6.2.5", # 7.1.2
-        "toml >= 0.10.2", # 0.10.2
-        "ipdb==0.13.9", # 0.13.9
-        "sphinx==4.2.0", # 5.1.1
-        "sphinx_rtd_theme==1.0.0", # 1.0.0
-        "sphinxcontrib-openapi==0.7.0", # 0.7.0
-        "sphinxcontrib-redoc==1.6.0", # 1.6.0
-        "docutils==0.17.1" # 0.19
+        "pylint==2.15.5"
     ],
+    extras_require={
+        "dev": [
+            "tox==3.24.4", # 3.25.1
+            "pytest==6.2.5", # 7.1.2
+            "toml >= 0.10.2", # 0.10.2
+            "ipdb==0.13.9", # 0.13.9
+            "sphinx==4.2.0", # 5.1.1
+            "sphinx_rtd_theme==1.0.0", # 1.0.0
+            "sphinxcontrib-openapi==0.7.0", # 0.7.0
+            "sphinxcontrib-redoc==1.6.0", # 1.6.0
+            "docutils==0.17.1" # 0.19
+        ]
+    },
     entry_points={
         "console_scripts": [
             "augur=augur.application.cli._multicommand:run"
