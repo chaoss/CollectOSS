@@ -247,7 +247,6 @@ def repo_info_model(session, repo_orm_obj):
         'fork_count': data['forkCount'] if 'forkCount' in data else None,
         'default_branch': data['defaultBranchRef']['name'] if data['defaultBranchRef'] else None,
         'watchers_count': data['watchers']['totalCount'] if data['watchers'] else None,
-        'UUID': None,
         'license': data['licenseInfo']['name'] if data['licenseInfo'] else None,
         'stars_count': data['stargazers']['totalCount'] if data['stargazers'] else None,
         'committers_count': committers_count,
@@ -275,15 +274,15 @@ def repo_info_model(session, repo_orm_obj):
     #result = session.insert_data(rep_inf,RepoInfo,['repo_info_id']) #result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
     insert_statement = s.sql.text("""INSERT INTO repo_info (repo_id,last_updated,issues_enabled,
 			open_issues,pull_requests_enabled,wiki_enabled,pages_enabled,fork_count,
-			default_branch,watchers_count,UUID,license,stars_count,
+			default_branch,watchers_count,license,stars_count,
 			committers_count,issue_contributors_count,changelog_file, contributing_file, license_file, code_of_conduct_file, security_issue_file,
-            security_audit_file, status, keywords, commit_count, issues_count, pull_request_count, pull_requests_open, pull_requests_closed, pull_requests_merged,
+            security_audit_file, status, keywords, commit_count, issues_count, issues_closed, pull_request_count, pull_requests_open, pull_requests_closed, pull_requests_merged,
             tool_source, tool_version, data_source)
 			VALUES (:repo_id,:last_updated,:issues_enabled,
 			:open_issues,:pull_requests_enabled,:wiki_enabled,:pages_enabled,:fork_count,
-			:default_branch,:watchers_count,:UUID,:license,:stars_count,
+			:default_branch,:watchers_count,:license,:stars_count,
 			:committers_count,:issue_contributors_count,:changelog_file, :contributing_file, :license_file, :code_of_conduct_file, :security_issue_file,
-            :security_audit_file,:status, :keywords, :commit_count, :issues_count, :pull_request_count, :pull_requests_open, :pull_requests_closed, :pull_requests_merged,
+            :security_audit_file,:status, :keywords, :commit_count, :issues_count,:issues_closed, :pull_request_count, :pull_requests_open, :pull_requests_closed, :pull_requests_merged,
             :tool_source, :tool_version, :data_source)
 			""").bindparams(**rep_inf)
 

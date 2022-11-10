@@ -111,10 +111,8 @@ def trim_commits_post_analysis_facade_task(repo_id,commits):
         log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
             VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
 
-        try:
-            session.execute_sql(log_message)
-        except:
-            pass
+        
+        session.execute_sql(log_message)
     
 
     update_analysis_log(repo_id,'Data collection complete')

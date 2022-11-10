@@ -167,7 +167,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
             attempts += 1
 
         if not success:
-            raise OSError#return None
+            return None
 
         return response_data
 
