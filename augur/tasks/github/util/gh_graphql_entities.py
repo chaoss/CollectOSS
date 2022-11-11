@@ -23,7 +23,7 @@ from augur.tasks.github.util.github_paginator import GithubApiResult, process_di
     PR_reviews, events, messages, pr_commits, pr_files(already done convert it)
 """
 
-def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=20):
+def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=40):
     logger.debug(f"Sending query {query}  to github graphql")
 
     response = None
