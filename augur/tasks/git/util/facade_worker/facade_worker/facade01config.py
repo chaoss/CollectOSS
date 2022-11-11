@@ -40,6 +40,7 @@ import logging
 from urllib.parse import urlparse
 import sqlalchemy as s
 from sqlalchemy.exc import OperationalError
+from psycopg2.errors import DeadlockDetected
 
 from augur.tasks.github.util.github_task_session import *
 from augur.application.logs import AugurLogger
