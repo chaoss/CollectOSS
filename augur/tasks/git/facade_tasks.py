@@ -332,7 +332,7 @@ def generate_contributor_sequence(logger):
         for repo in all_repos:
             contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
 
-    return chain(facade_start_contrib_analysis_task.si(),group(contributor_sequence))
+    return chain(facade_start_contrib_analysis_task.si(),group(contributor_sequence).link_error(facade_error_handler.s()))
 
 
 
