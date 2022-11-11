@@ -302,7 +302,6 @@ def generate_analysis_sequence(logger):
 
                 #Split commits into mostly equal queues so each process starts with a workload and there is no
                 #    overhead to pass into queue from the parent.            
-                #Each task generates their own cfg as celery cannot serialize this data
                 contrib_jobs = create_grouped_task_load(repo['repo_id'],repo_loc,True,dataList=list(missing_commits),task=analyze_commits_in_parallel)
                 contrib_jobs.link_error(facade_error_handler.s())
                 analysis_sequence.append(contrib_jobs)
