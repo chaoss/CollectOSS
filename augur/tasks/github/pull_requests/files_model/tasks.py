@@ -14,4 +14,4 @@ def process_pull_request_files(repo_git: str) -> None:
             pull_request_files_model(repo.repo_id, logger)
         except Exception as e:
             logger.error(f"Could not complete pull_request_files_model!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
-            raise e
+            #raise e
