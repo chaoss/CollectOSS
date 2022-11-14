@@ -320,7 +320,7 @@ def fill_empty_affiliations(session):
 
     for null_author in null_authors:
 
-        email = null_author['cmt_author_email']
+        email = null_author['email']
 
         store_working_author(session, email)
 
@@ -342,7 +342,7 @@ def fill_empty_affiliations(session):
 
     for null_committer in null_committers:
 
-        email = null_committer['cmt_committer_email']
+        email = null_committer['email']
 
         store_working_author(session, email)
 
