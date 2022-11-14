@@ -70,11 +70,14 @@ class DatabaseSession(s.orm.Session):
         self.close()
     
     def execute_sql(self, sql_text):
-
+        return_data = {}
         with self.engine.connect():
             connection = self.engine.connect()
 
-            return connection.execute(sql_text)
+            
+            return_data = connection.execute(sql_text)
+        
+        return return_data
 
     def fetchall_data_from_sql_text(self,sql_text):
         result = self.execute_sql(sql_text).fetchall()
