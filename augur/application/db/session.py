@@ -71,10 +71,7 @@ class DatabaseSession(s.orm.Session):
     
     def execute_sql(self, sql_text):
         return_data = {}
-        with self.engine.connect():
-            connection = self.engine.connect()
-
-            
+        with self.engine.connect() as connection:
             return_data = connection.execute(sql_text)
         
         return return_data
