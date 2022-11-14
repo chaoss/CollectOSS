@@ -35,30 +35,36 @@ def pull_request_commits_model(repo_id,logger):
 
         commits_url = pr_info['pr_url'] + '/commits?state=all'
 
-        #Paginate through the pr commits
-        pr_commits = GithubPaginator(commits_url, session.oauths, logger)
+        try:
+            #Paginate through the pr commits
+            pr_commits = GithubPaginator(commits_url, session.oauths, logger)
 
-        all_data = []
-        for page_data in pr_commits:
-            logger.info(f"Processing pr commit with hash {page_data['sha']}")
-            pr_commit_row = {
-                'pull_request_id': pr_info['pull_request_id'],
-                'pr_cmt_sha': page_data['sha'],
-                'pr_cmt_node_id': page_data['node_id'],
-                'pr_cmt_message': page_data['commit']['message'],
-                # 'pr_cmt_comments_url': pr_commit['comments_url'],
-                'tool_source': 'pull_request_commits_model',
-                'tool_version': '0.41',
-                'data_source': 'GitHub API',
-                'repo_id': repo_id,
-            }
+            all_data = []
+            for page_data in pr_commits:
+                logger.info(f"Processing pr commit with hash {page_data['sha']}")
+                pr_commit_row = {
+                    'pull_request_id': pr_info['pull_request_id'],
+                    'pr_cmt_sha': page_data['sha'],
+                    'pr_cmt_node_id': page_data['node_id'],
+                    'pr_cmt_message': page_data['commit']['message'],
+                    # 'pr_cmt_comments_url': pr_commit['comments_url'],
+                    'tool_source': 'pull_request_commits_model',
+                    'tool_version': '0.41',
+                    'data_source': 'GitHub API',
+                    'repo_id': repo_id,
+                }
 
-            all_data.append(pr_commit_row)
+                all_data.append(pr_commit_row)
         
-        if len(all_data) > 0:
-            #Execute bulk upsert
-            pr_commits_natural_keys = [	"pull_request_id", "repo_id", "pr_cmt_sha"]
-            session.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
+            if len(all_data) > 0:
+                #Execute bulk upsert
+                pr_commits_natural_keys = [	"pull_request_id", "repo_id", "pr_cmt_sha"]
+                session.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
+            
+        except Exception as e:
+            logger.error(f"Ran into error with pull request #{index + 1} in repo {repo_id}")
+            logger.error(
+            ''.join(traceback.format_exception(None, e, e.__traceback__)))
 
 
 
