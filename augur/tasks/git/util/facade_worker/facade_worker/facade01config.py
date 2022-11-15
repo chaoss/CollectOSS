@@ -37,6 +37,7 @@ import configparser
 import psycopg2
 import json
 import logging
+import random
 from urllib.parse import urlparse
 import sqlalchemy as s
 from sqlalchemy.exc import OperationalError
