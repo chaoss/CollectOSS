@@ -505,7 +505,7 @@ def rebuild_unknown_affiliation_and_web_caches(session):
 
     # Cache the unknown authors
 
-    unknown_authors = ("""
+    unknown_authors = s.sql.text("""
         INSERT INTO unknown_cache (type, repo_group_id, email, domain, added, tool_source, tool_version, data_source)
         SELECT 'author', 
         r.repo_group_id, 
@@ -527,7 +527,7 @@ def rebuild_unknown_affiliation_and_web_caches(session):
 
     # Cache the unknown committers
 
-    unknown_committers = ("""INSERT INTO unknown_cache (type, repo_group_id, email, domain, added, tool_source, tool_version, data_source)
+    unknown_committers = s.sql.text("""INSERT INTO unknown_cache (type, repo_group_id, email, domain, added, tool_source, tool_version, data_source)
         SELECT 'committer', 
         r.repo_group_id, 
         a.cmt_committer_email, 
