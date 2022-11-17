@@ -586,7 +586,7 @@ def rebuild_unknown_affiliation_and_web_caches(session):
     session.execute_sql(cache_projects_by_week)
 
     cache_projects_by_month = s.sql.text(
-        ("INSERT INTO dm_repo_group_monthly (repo_group_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
+        ("INSERT INTO dm_repo_group_monthly (repo_group_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source) "
         "SELECT r.repo_group_id AS repo_group_id, "
         f"a.cmt_{report_attribution}_email AS email, "
         f"a.cmt_{report_attribution}_affiliation AS affiliation, "
@@ -597,7 +597,7 @@ def rebuild_unknown_affiliation_and_web_caches(session):
         "SUM(a.cmt_whitespace) AS whitespace, "
         "COUNT(DISTINCT a.cmt_filename) AS files, "
         "COUNT(DISTINCT a.cmt_commit_hash) AS patches,"
-        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source "
         "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
         "commits a "
         "JOIN repo r ON r.repo_id = a.repo_id "
@@ -622,7 +622,7 @@ def rebuild_unknown_affiliation_and_web_caches(session):
     session.execute_sql(cache_projects_by_month)
 
     cache_projects_by_year = s.sql.text((
-        "INSERT INTO dm_repo_group_annual (repo_group_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
+        "INSERT INTO dm_repo_group_annual (repo_group_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source) "
         "SELECT r.repo_group_id AS repo_group_id, "
         f"a.cmt_{report_attribution}_email AS email, "
         f"a.cmt_{report_attribution}_affiliation AS affiliation, "
@@ -632,7 +632,7 @@ def rebuild_unknown_affiliation_and_web_caches(session):
         "SUM(a.cmt_whitespace) AS whitespace, "
         "COUNT(DISTINCT a.cmt_filename) AS files, "
         "COUNT(DISTINCT a.cmt_commit_hash) AS patches,"
-        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source "
         "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
         "commits a "
         "JOIN repo r ON r.repo_id = a.repo_id "
@@ -666,7 +666,7 @@ def rebuild_unknown_affiliation_and_web_caches(session):
 
     cache_repos_by_week = s.sql.text(
         (
-        "INSERT INTO dm_repo_weekly (repo_id, email, affiliation, week, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
+        "INSERT INTO dm_repo_weekly (repo_id, email, affiliation, week, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source) "
         "SELECT a.repo_id AS repo_id, "
         f"a.cmt_{report_attribution}_email AS email, "
         f"a.cmt_{report_attribution}_affiliation AS affiliation, "
@@ -677,7 +677,7 @@ def rebuild_unknown_affiliation_and_web_caches(session):
         "SUM(a.cmt_whitespace) AS whitespace, "
         "COUNT(DISTINCT a.cmt_filename) AS files, "
         "COUNT(DISTINCT a.cmt_commit_hash) AS patches,"
-        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source "
         "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
         "commits a "
         "JOIN repo r ON r.repo_id = a.repo_id "
@@ -713,7 +713,7 @@ def rebuild_unknown_affiliation_and_web_caches(session):
         "SUM(a.cmt_whitespace) AS whitespace, "
         "COUNT(DISTINCT a.cmt_filename) AS files, "
         "COUNT(DISTINCT a.cmt_commit_hash) AS patches, "
-        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source "
         "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
         "commits a "
         "JOIN repo r ON r.repo_id = a.repo_id "
@@ -748,7 +748,7 @@ def rebuild_unknown_affiliation_and_web_caches(session):
         "SUM(a.cmt_whitespace) AS whitespace, "
         "COUNT(DISTINCT a.cmt_filename) AS files, "
         "COUNT(DISTINCT a.cmt_commit_hash) AS patches, "
-        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source "
         "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
         "commits a "
         "JOIN repo r ON r.repo_id = a.repo_id "
