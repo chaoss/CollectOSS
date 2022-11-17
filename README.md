@@ -1,61 +1,28 @@
-# Augur NEW Release v0.42.0
+### Team reflection:
+* https://docs.google.com/document/d/1wJIKuDrpYS1JgvB8m3qCE8xPP6noEOwAixIEhFqs_Vk/edit?usp=sharing
 
-[![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+### Test Stubs (mock-ups of how our components will look on the website):
 
-[![Build Docker images](https://github.com/chaoss/augur/actions/workflows/build_docker.yml/badge.svg)](https://github.com/chaoss/augur/actions/workflows/build_docker.yml)
+Insights Health Component:
+![image](https://user-images.githubusercontent.com/44609877/202551005-2a8f146d-4d56-4f85-ba4e-b10951a30b76.png)
 
-[![Hits-of-Code](https://hitsofcode.com/github/chaoss/augur?branch=main)](https://hitsofcode.com/github/chaoss/augur/view?branch=main)
+Adding Filter to Repos Page:
+![image](https://user-images.githubusercontent.com/44609877/202551175-64b4d186-ce4e-4b39-a299-781954a32b76.png)
 
+Trending Page:
+![image](https://user-images.githubusercontent.com/44609877/202551203-39f9c2d1-a091-42f6-80aa-823282024c51.png)
 
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
+Sort By Number of Repos in Group:
+![image](https://user-images.githubusercontent.com/44609877/202551226-2ecdc604-8391-4be3-8362-25ebe3a00356.png)
 
-## What is Augur?
+### Design Description:
+* Display and Sort by Number of Repos on Groups Page: https://github.com/CadenHicks/Group_1_Semester_Project/issues/7
 
-Augur is a software suite for collecting and measuring structured data
-about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities.
+* Add Filter Functionality to Table on Repos Page: https://github.com/CadenHicks/Group_1_Semester_Project/issues/5
 
-We gather trace data for a group of repositories, normalize it into our data model, and provide a variety of metrics about said data. The structure of our data model enables us to synthesize data across various platforms to provide meaningful context for meaningful questions about the way these communities evolve.
-Augur’s main focus is to measure the overall health and sustainability of open source projects, as these types of projects are system critical for nearly every software organization or company. We do this by gathering data about project repositories and normalizing that into our data model to provide useful metrics about your project’s health. For example, one of our metrics is Burstiness. Burstiness – how are short timeframes of intense activity, followed by a corresponding return to a typical pattern of activity, observed in a project?
+* Add Project Health Description to Repos Page: https://github.com/CadenHicks/Group_1_Semester_Project/issues/4
 
-This can paint a picture of a project’s focus and gain insight into the potential stability of a project and how its typical cycle of updates occurs. 
+* Add Project Health Description to Insights Page: https://github.com/CadenHicks/Group_1_Semester_Project/issues/3
 
-We are a [CHAOSS](https://chaoss.community) project, and many of our
-metrics are implementations of the metrics defined by our awesome community. You can find a full list of them [here](https://chaoss.community/metrics/).
+* Adding Trending Tab: https://github.com/CadenHicks/Group_1_Semester_Project/issues/1
 
-For more information on [how to get involved on the CHAOSS website](https://chaoss.community/participate/).
-
-## Collecting Data
-
-Augur supports Python3.6 through Python3.9 on all platforms. Python3.10 and above do not yet work because of machine learning worker dependencies. On OSX, you can create a Python 3.9 environment this way: `python3.9 -m venv path/to/venv`.
-
-Augur's main focus is to measure the overall health and sustainability of open source projects.
-
-Augur collects more data about open source software projects than any other available software. Augur's main focus is to measure the overall health and sustainability of open source projects.
-One of Augur's core tenets is a desire to openly gather data that people can trust, and then provide useful and well-defined metrics that help give important context to the larger stories being told by that data. We do this in a variety of ways, one of which is doing all our own data collection in house. We currently collect data from a few main sources:
-
-1. Raw Git commit logs (commits, contributors)
-2. GitHub's API (issues, pull requests, contributors, releases, repository metadata)
-3. The Linux Foundation's [Core Infrastructure Initiative](https://www.coreinfrastructure.org/) API (repository metadata)
-4. [Succinct Code Counter](https://github.com/boyter/scc), a blazingly fast Sloc, Cloc, and Code tool that also performs COCOMO calculations
-
-This data is collected by dedicated data collection workers controlled by Augur, each of which is responsible for querying some subset of these data sources. We are also hard at work building workers for new data sources. If you have an idea for a new one, [please tell us](https://github.com/chaoss/augur/issues/new?template=feature_request.md) - we'd love your input!
-
-
-## Getting Started
-
-If you're interested in collecting data with our tool, the Augur team has worked hard to develop a detailed guide to get started with our project which can be found [in our documentation](https://oss-augur.readthedocs.io/en/main/getting-started/toc.html).
-
-If you're looking to contribute to Augur's code, you can find installation instructions, development guides, architecture references (coming soon), best practices and more in our [developer documentation](https://oss-augur.readthedocs.io/en/main/development-guide/toc.html). Please know that while it's still rather sparse right now,
-but we are actively adding to it all the time. If you get stuck, please feel free to [ask for help](https://github.com/chaoss/augur/issues/new)!
-
-## Contributing
-
-To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md). Augur is a welcoming community that is open to all, regardless if you're working on your 1000th contribution to open source or your 1st. We strongly believe that much of what makes open source so great is the incredible communities it brings together, so we invite you to join us!
-
-## License, Copyright, and Funding
-
-Copyright © 2112 University of Nebraska at Omaha, University of Missouri and the CHAOSS Project.
-
-Augur is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the [LICENSE](LICENSE) file for more details.
-
-This work has been funded through the Alfred P. Sloan Foundation, Mozilla, The Reynolds Journalism Institute, contributions from VMWare, Red Hat Software, Grace Hopper's Open Source Day, GitHub, Microsoft, Twitter, Adobe, the Gluster Project, Open Source Summit (NA/Europe), and the Linux Foundation Compliance Summit. Significant design contributors include Kate Stewart, Dawn Foster, Duane O'Brien, Remy Decausemaker, others omitted due to the  memory limitations of project maintainers, and 15 Google Summer of Code Students.

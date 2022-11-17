@@ -1,7 +1,7 @@
 List of Regularly Used Data Tables In Augur
 ===========================================
 
-** This is a list of data tables in augur that are regularly used and the various workers attached to them. **
+**This is a list of data tables in augur that are regularly used and the various workers attached to them.**
 
     * Commits - This is where a record for every file in every commit in every repository in an Augur instance is kept. 
         
