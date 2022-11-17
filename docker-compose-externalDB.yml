@@ -1,0 +1,37 @@
+#SPDX-License-Identifier: MIT
+version: '3'
+services:
+  redis:
+    image: "redis:alpine"
+    ports:
+     - 6379:6379
+
+
+  augur:
+    image: augurlabs/augur-new:latest
+    build:
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    volumes:
+      - facade:/augur/facade
+    restart: unless-stopped
+    ports:
+      - 5002:5000
+    extra_hosts:
+      - "host.docker.internal:host-gateway" #Be able to ping services on the local machine
+    environment:
+      - "AUGUR_DB=${AUGUR_DB}"
+      - "AUGUR_DB_SCHEMA_BUILD=0"
+      - "AUGUR_GITHUB_API_KEY=${AUGUR_GITHUB_API_KEY}"
+      - "AUGUR_GITLAB_API_KEY=${AUGUR_GITLAB_API_KEY}"
+      - "AUGUR_GITHUB_USERNAME=${AUGUR_GITHUB_USERNAME}"
+      - "AUGUR_GITLAB_USERNAME=${AUGUR_GITLAB_USERNAME}"
+      - REDIS_CONN_STRING=redis://redis:6379
+    depends_on:
+      - redis
+  
+volumes:
+  facade:
+    driver: local
+
+

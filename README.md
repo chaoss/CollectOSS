@@ -25,3 +25,4 @@ Sort By Number of Repos in Group:
 * Add Project Health Description to Insights Page: https://github.com/CadenHicks/Group_1_Semester_Project/issues/3
 
 * Adding Trending Tab: https://github.com/CadenHicks/Group_1_Semester_Project/issues/1
+
