@@ -561,7 +561,7 @@ def rebuild_unknown_affiliation_and_web_caches(session):
         "SUM(a.cmt_whitespace) AS whitespace, "
         "COUNT(DISTINCT a.cmt_filename) AS files," 
         "COUNT(DISTINCT a.cmt_commit_hash) AS patches,"
-        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source"
+        "info.a AS tool_source, info.b AS tool_version, info.c AS data_source "
         "FROM (VALUES(:tool_source,:tool_version,:data_source)) info(a,b,c), "
         "commits a "
         "JOIN repo r ON r.repo_id = a.repo_id "
@@ -573,13 +573,13 @@ def rebuild_unknown_affiliation_and_web_caches(session):
         "    OR (a.cmt_author_email LIKE CONCAT('%%',e.domain) "
         "        AND (e.projects_id = r.repo_group_id "
         "        OR e.projects_id = 0)) "
-        "WHERE e.email IS NULL" 
-        "AND e.domain IS NULL" 
+        "WHERE e.email IS NULL " 
+        "AND e.domain IS NULL " 
         "AND p.rg_recache = 1 "
         "GROUP BY week, "
         "year, "
         "affiliation, "
-        f"a.cmt_{report_attribution}_email,"
+        f"a.cmt_{report_attribution}_email, "
         "r.repo_group_id, info.a, info.b, info.c")
         ).bindparams(tool_source=session.tool_source,tool_version=session.tool_version,data_source=session.data_source)
 
