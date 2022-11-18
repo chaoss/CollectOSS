@@ -4,6 +4,7 @@ from augur.tasks.data_analysis.discourse_analysis.tasks import discourse_analysi
 from augur.tasks.data_analysis.insight_worker.tasks import insight_model
 from augur.tasks.data_analysis.message_insights.tasks import message_insight_model
 from augur.tasks.data_analysis.pull_request_analysis_worker.tasks import pull_request_analysis_model
+from augur.application.db.session import DatabaseSession
 
 def machine_learning_phase(logger):
 
