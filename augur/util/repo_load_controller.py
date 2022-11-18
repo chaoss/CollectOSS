@@ -106,7 +106,7 @@ class RepoLoadController:
                 return []
 
             repos = result.json()
-            # print([repo["name"] for repo in repos])
+            print([repo["name"] for repo in repos])
             repo_urls = [repo["html_url"] for repo in repos]
 
             return repo_urls
@@ -281,7 +281,7 @@ class RepoLoadController:
 
         url = f"https://github.com/{org_name}"
         repos = self.retrieve_org_repos(url)
-
+        
         if not repos:
             print(
                 f"No organization with name {org_name} could be found")
