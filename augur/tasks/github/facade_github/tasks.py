@@ -12,6 +12,7 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 from augur.tasks.github.facade_github.core import *
 from augur.tasks.util.worker_util import create_grouped_task_load
 from celery.result import allow_join_result
+from augur.application.db.util import execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 
 
@@ -35,7 +36,8 @@ def process_commit_metadata(session,contributorQueue,repo_id):
             """
 
 
-            alias_table_data = session.query(ContributorsAlias).filter_by(alias_email=email).all()
+            query = session.query(ContributorsAlias).filter_by(alias_email=email)
+            alias_table_data = execute_session_query(query, 'all')
             if len(alias_table_data) >= 1:
                 # Move on if email resolved
 
@@ -50,7 +52,8 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
         try:
             
-            unresolved_query_result = session.query(UnresolvedCommitEmail).filter_by(name=name).all()
+            query = session.query(UnresolvedCommitEmail).filter_by(name=name)
+            unresolved_query_result = execute_session_query(query, 'all')
 
             if len(unresolved_query_result) >= 1:
 
@@ -65,7 +68,8 @@ def process_commit_metadata(session,contributorQueue,repo_id):
     
         #Check the contributors table for a login for the given name
         try:
-            contributors_with_matching_name = session.query(Contributor).filter_by(cntrb_full_name=name).one()
+            query = session.query(Contributor).filter_by(cntrb_full_name=name)
+            contributors_with_matching_name = execute_session_query(query, 'one')
 
             login = contributors_with_matching_name.gh_login
 

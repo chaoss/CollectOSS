@@ -10,6 +10,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, DiscourseInsight
 from augur.application.db.engine import create_database_engine
+from augur.application.db.util import execute_session_query
 
 #import os, sys, time, requests, json
 # from sklearn.model_selection import train_test_split
@@ -41,7 +42,8 @@ def discourse_analysis_model(repo_git: str) -> None:
 
     with DatabaseSession(logger) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_id = execute_session_query(query, 'one').repo_id
 
     get_messages_for_repo_sql = s.sql.text("""
                 (SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, i.issue_id thread_id,m.msg_text,i.issue_title thread_title,m.msg_id

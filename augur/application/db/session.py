@@ -12,7 +12,6 @@ from typing import Optional, List, Union
 from psycopg2.errors import DeadlockDetected
 
 # from augur.tasks.util.random_key_auth import RandomKeyAuth
-from augur.application.db.engine import create_database_engine
 from augur.application.config import AugurConfig
 from augur.application.db.models import Platform
 from augur.tasks.util.worker_util import remove_duplicate_dicts, remove_duplicate_naturals
@@ -59,6 +58,7 @@ class DatabaseSession(s.orm.Session):
 
         self.engine = engine
         if self.engine is None:
+            from augur.application.db.engine import create_database_engine
             self.engine = create_database_engine()
 
         super().__init__(self.engine)

@@ -23,6 +23,8 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, RepoClusterMessage, RepoTopic, TopicWord
 from augur.application.db.engine import create_database_engine
+from augur.application.db.util import execute_session_query
+
 
 MODEL_FILE_NAME = "kmeans_repo_messages"
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
@@ -49,7 +51,8 @@ def clustering_model(repo_git: str) -> None:
 
     with DatabaseSession(logger) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_id = execute_session_query(query, 'one').repo_id
 
         num_clusters = session.config.get_value("Clustering_Task", 'num_clusters')
         max_df = session.config.get_value("Clustering_Task", 'max_df')

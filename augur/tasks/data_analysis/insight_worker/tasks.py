@@ -17,6 +17,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, ChaossMetricStatus, RepoInsight, RepoInsightsRecord
 from augur.application.db.engine import create_database_engine
+from augur.application.db.util import execute_session_query
 
 warnings.filterwarnings('ignore')
 
@@ -39,7 +40,8 @@ def insight_model(repo_git: str) -> None:
 
     with DatabaseSession(logger) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_id = execute_session_query(query, 'one').repo_id
 
         anomaly_days = session.config.get_value('Insight_Task', 'anomaly_days')
         training_days = session.config.get_value('Insight_Task', 'training_days')

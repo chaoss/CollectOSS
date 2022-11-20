@@ -10,6 +10,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Contributor, Issue, Config
 from augur.tasks.github.util.github_paginator import hit_api
+from augur.application.db.util import execute_session_query
 
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,8 @@ def add_keys_to_test_db(test_db_engine):
     section_name = "Keys"
     setting_name = "github_api_key"
     with DatabaseSession(logger) as session:
-        row = session.query(Config).filter(Config.section_name==section_name, Config.setting_name==setting_name).one()
+        query = session.query(Config).filter(Config.section_name==section_name, Config.setting_name==setting_name)
+        row = execute_session_query(query, 'one')
 
     with DatabaseSession(logger, test_db_engine) as test_session:
         new_row = Config(section_name=section_name, setting_name=setting_name, value=row.value, type="str")

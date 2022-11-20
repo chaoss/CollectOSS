@@ -10,6 +10,7 @@ from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection, hit_api_graphql
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
+from augur.application.db.util import execute_session_query
 
 def pull_request_files_model(repo_id,logger):
 
@@ -25,7 +26,8 @@ def pull_request_files_model(repo_id,logger):
         result = session.execute_sql(pr_number_sql).fetchall()
         pr_numbers = [dict(zip(row.keys(), row)) for row in result]
 
-        repo = session.query(Repo).filter(Repo.repo_id == repo_id).one()
+        query = session.query(Repo).filter(Repo.repo_id == repo_id)
+        repo = execute_session_query(query, 'one')
     
         owner, name = get_owner_repo(repo.repo_git)
 
