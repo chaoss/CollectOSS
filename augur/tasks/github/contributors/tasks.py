@@ -8,6 +8,7 @@ from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.util.worker_util import wait_child_tasks
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
+from augur.application.db.util import execute_session_query
 
 
 @celery.task
@@ -21,7 +22,8 @@ def process_contributors():
 
     with GithubTaskSession(logger, engine) as session:
 
-        contributors = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at is None, Contributor.cntrb_last_used is None).all()
+        query = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at is None, Contributor.cntrb_last_used is None)
+        contributors = execute_session_query(query, 'all')
 
         contributors_len = len(contributors)
 

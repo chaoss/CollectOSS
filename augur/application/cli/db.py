@@ -78,6 +78,7 @@ def get_repo_groups():
             connection,
         )
     print(df)
+    engine.dispose()
 
     return df
 
@@ -127,6 +128,8 @@ def add_repo_groups(filename):
                         f"Repo group with ID {row[1]} for repo group {row[1]} already exists, skipping..."
                     )
 
+    engine.dispose()
+
 
 @cli.command("add-github-org")
 @click.argument("organization_name")
@@ -157,7 +160,11 @@ def get_db_version():
     engine = create_database_engine()
     with engine.connect() as connection:
 
-        return int(connection.execute(db_version_sql).fetchone()[2])
+        result = int(connection.execute(db_version_sql).fetchone()[2])
+
+    engine.dispose()
+    return result
+
 
 
 @cli.command("print-db-version")
@@ -241,6 +248,8 @@ def update_api_key(api_key):
         connection.execute(update_api_key_sql, api_key=api_key)
         logger.info(f"Updated Augur API key to: {api_key}")
 
+    engine.dispose()
+
 
 @cli.command("get-api-key")
 @test_connection
@@ -258,6 +267,8 @@ def get_api_key():
             print(connection.execute(get_api_key_sql).fetchone()[0])
     except TypeError:
         print("No Augur API key found.")
+
+    engine.dispose()
 
 
 @cli.command(

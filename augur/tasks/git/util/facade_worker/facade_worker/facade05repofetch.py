@@ -39,6 +39,7 @@ import configparser
 import sqlalchemy as s
 from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author  
 from augur.application.db.models.augur_data import *
+from augur.application.db.util import execute_session_query
 
 def git_repo_initialize(session, repo_group_id=None):
 
@@ -59,7 +60,8 @@ def git_repo_initialize(session, repo_group_id=None):
 
         #query = s.sql.text("""SELECT repo_id,repo_group_id,repo_git FROM repo WHERE repo_status LIKE 'New%'""")
          
-        result = session.query(Repo).filter('New' in Repo.repo_status).all()
+        query = session.query(Repo).filter('New' in Repo.repo_status)
+        result = execute_session_query(query, 'all')
 
         for repo in result:
             repo_dict = repo.__dict__
