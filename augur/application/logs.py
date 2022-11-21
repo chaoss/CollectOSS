@@ -86,6 +86,9 @@ def get_log_config():
 
     query = session.query(Config).filter_by(section_name="Logging")
     section_data = execute_session_query(query, 'all')
+
+    session.close()
+    engine.dispose()
         
     section_dict = {}
     for setting in section_data:

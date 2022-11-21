@@ -58,8 +58,13 @@ class DatabaseSession(s.orm.Session):
         self.config = AugurConfig(logger=logger, session=self)
 
         self.engine = engine
+        self.engine_created = False
+
         if self.engine is None:
             from augur.application.db.engine import create_database_engine
+
+            self.engine_created = True
+
             self.engine = create_database_engine()
 
         super().__init__(self.engine)
@@ -68,6 +73,10 @@ class DatabaseSession(s.orm.Session):
         return self
 
     def __exit__(self, exception_type, exception_value, exception_traceback):
+
+        if self.engine_created:
+            self.engine.dispose()
+        
         self.close()
     
     def execute_sql(self, sql_text):

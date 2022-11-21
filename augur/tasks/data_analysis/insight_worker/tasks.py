@@ -563,7 +563,9 @@ def clear_insights(repo_id, new_endpoint, new_field, logger):
     try:
         engine = create_database_engine()
         result = engine.execute(deleteSQL)
+        engine.dispose()
     except Exception as e:
+        engine.dispose()
         logger.info("Error occured deleting insight slot: {}".format(e))
 
     # Delete all insights
@@ -581,7 +583,9 @@ def clear_insights(repo_id, new_endpoint, new_field, logger):
     try:
         engine = create_database_engine()
         result = engine.execute(deleteSQL)
+        engine.dispose()
     except Exception as e:
+        engine.dispose()
         logger.info("Error occured deleting insight slot: {}".format(e))
 
 def clear_insight(repo_id, new_score, new_metric, new_field, logger):
@@ -623,7 +627,9 @@ def clear_insight(repo_id, new_score, new_metric, new_field, logger):
                 try:
                     engine = create_database_engine()
                     result = engineexecute(deleteSQL)
+                    engine.dispose()
                 except Exception as e:
+                    engine.dispose()
                     logger.info("Error occured deleting insight slot: {}".format(e))
     else:
         insertion_directions['record'] = True
@@ -676,7 +682,9 @@ def clear_insight(repo_id, new_score, new_metric, new_field, logger):
         try:
             engine = create_database_engine()
             result = engine.execute(deleteSQL)
+            engine.dispose()
         except Exception as e:
+            engine.dispose()
             logger.info("Error occured deleting insight slot: {}".format(e))
 
     return insertion_directions

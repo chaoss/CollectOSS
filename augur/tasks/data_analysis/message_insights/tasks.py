@@ -449,4 +449,7 @@ def get_max_id(table, column, logger, default=25150):
         max_id = default
         logger.warning("Could not find max id for {} column in the {} table... " +
             "using default set to: {}\n".format(column, table, max_id))
+
+    db.dispose()
+
     return max_id
