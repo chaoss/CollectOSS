@@ -1,4 +1,4 @@
-# Augur NEW Release v0.42.0
+# Augur NEW Release v0.42.4
 
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
