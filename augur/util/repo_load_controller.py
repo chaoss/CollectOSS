@@ -10,6 +10,7 @@ from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, UserRepo, RepoGroup
+from augur.application.db.util import execute_session_query
 
 
 logger = logging.getLogger(__name__)
@@ -113,7 +114,8 @@ class RepoLoadController:
 
 
     def is_valid_repo_group_id(self, repo_group_id):
-        result = self.session.query(RepoGroup).filter(RepoGroup.repo_group_id == repo_group_id).one()
+        query = self.session.query(RepoGroup).filter(RepoGroup.repo_group_id == repo_group_id)
+        result = execute_session_query(query, 'one')
 
         if result and result.repo_group_id == repo_group_id:
             return True
@@ -152,7 +154,8 @@ class RepoLoadController:
 
         if repo_group_id not in DEFAULT_REPO_GROUP_IDS:
             # update the repo group id 
-            repo = self.session.query(Repo).filter(Repo.repo_git == url).one()
+            query = self.session.query(Repo).filter(Repo.repo_git == url)
+            repo = execute_session_query(query, 'one')
 
             if not repo.repo_group_id == repo_group_id:
                 repo.repo_group_id = repo_group_id
@@ -288,7 +291,8 @@ class RepoLoadController:
             return
 
         # check if the repo group already exists
-        rg = self.session.query(RepoGroup).filter(RepoGroup.rg_name == org_name).first()
+        query = self.session.query(RepoGroup).filter(RepoGroup.rg_name == org_name)
+        rg = execute_session_query(query, 'first')
         if rg:
             print(f"{rg.rg_name} is already a repo group")
             return

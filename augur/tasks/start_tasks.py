@@ -26,6 +26,7 @@ from celery.result import allow_join_result
 from augur.application.logs import AugurLogger
 from augur.application.db.session import DatabaseSession
 from augur.tasks.init.celery_app import engine
+from augur.application.db.util import execute_session_query
 from logging import Logger
 
 CELERY_GROUP_TYPE = type(group())
@@ -38,7 +39,8 @@ def prelim_phase(logger):
     tasks_with_repo_domain = []
 
     with DatabaseSession(logger) as session:
-        repos = session.query(Repo).all()
+        query = session.query(Repo)
+        repos = execute_session_query(query, 'all')
 
         for repo in repos:
             tasks_with_repo_domain.append(detect_github_repo_move.si(repo.repo_git))
@@ -54,7 +56,8 @@ def repo_collect_phase(logger):
     repo_info_tasks = []
     #A chain is needed for each repo.
     with DatabaseSession(logger) as session:
-        repos = session.query(Repo).all()
+        query = session.query(Repo)
+        repos = execute_session_query(query, 'all')
         #Just use list comprehension for simple group
         repo_info_tasks = [collect_repo_info.si(repo.repo_git) for repo in repos]
 

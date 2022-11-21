@@ -5,11 +5,14 @@ from augur.tasks.data_analysis.insight_worker.tasks import insight_model
 from augur.tasks.data_analysis.message_insights.tasks import message_insight_model
 from augur.tasks.data_analysis.pull_request_analysis_worker.tasks import pull_request_analysis_model
 from augur.application.db.session import DatabaseSession
+from augur.application.db.util import execute_session_query
+
 
 def machine_learning_phase(logger):
 
     with DatabaseSession(logger) as session:
-        repos = session.query(Repo).all()
+        query = session.query(Repo)
+        repos = execute_session_query(query, 'all')
 
     ml_tasks = []
     clustering_tasks = []

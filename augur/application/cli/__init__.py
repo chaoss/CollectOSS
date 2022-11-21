@@ -32,6 +32,7 @@ def test_db_connection(function_db_connection):
         usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
         try:
             engine.connect()
+            engine.dispose()
             return ctx.invoke(function_db_connection, *args, **kwargs)
         except OperationalError as e:
 
@@ -65,6 +66,7 @@ def test_db_connection(function_db_connection):
             if incorrect_values:
                 print(f"\n\n{usage} command setup failed\nERROR: connecting to database\nHINT: The {incorrect_values} may be incorrectly specified in {location}\n")
                 
+            engine.dispose()
             sys.exit()
         
     return update_wrapper(new_func, function_db_connection)

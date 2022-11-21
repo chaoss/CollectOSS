@@ -9,6 +9,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
+from augur.application.db.util import execute_session_query
 
 platform_id = 1
 
@@ -21,7 +22,8 @@ def collect_events(repo_git: str):
         # define GithubTaskSession to handle insertions, and store oauth keys 
     with GithubTaskSession(logger) as session:
 
-        repo_obj = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_obj = execute_session_query(query, 'one')
         repo_id = repo_obj.repo_id
 
         owner, repo = get_owner_repo(repo_git)
@@ -102,7 +104,8 @@ def process_events(events, task_name, repo_id, logger):
                 pr_url = event_mapping_data["pull_request"]["url"]
 
                 try:
-                    related_pr = session.query(PullRequest).filter(PullRequest.pr_url == pr_url).one()
+                    query = session.query(PullRequest).filter(PullRequest.pr_url == pr_url)
+                    related_pr = execute_session_query(query, 'one')
                 except s.orm.exc.NoResultFound:
                     logger.info(f"{task_name}: Could not find related pr")
                     logger.info(f"{task_name}: We were searching for: {pr_url}")
@@ -119,7 +122,8 @@ def process_events(events, task_name, repo_id, logger):
                 issue_url = event_mapping_data["url"]
 
                 try:
-                    related_issue = session.query(Issue).filter(Issue.issue_url == issue_url).one()
+                    query = session.query(Issue).filter(Issue.issue_url == issue_url)
+                    related_issue = execute_session_query(query, 'one')
                 except s.orm.exc.NoResultFound:
                     logger.info(f"{task_name}: Could not find related pr")
                     logger.info(
