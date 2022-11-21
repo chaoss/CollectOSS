@@ -124,23 +124,38 @@ def get_user_repos(connection):
     return connection.execute(s.text("""SELECT * FROM "augur_operations"."user_repos";""")).fetchall()
 
 
-######## Helper Functions to get repos in an org #################
 
 def get_org_repos(org_name, session):
 
+
+    page_num = 1
     attempts = 0
     while attempts < 10:
-        result = hit_api(session.oauths, ORG_REPOS_ENDPOINT.format(org_name), logger)
 
-        # if result is None try again
-        if not result:
-            attempts += 1
+        all_data = []
+        response = hit_api(session.oauths, ORG_REPOS_ENDPOINT.format(org_name) + f"&page={page_num}", logger)
+
+        if not response:
+            attempts +=1
             continue
 
-        response = result.json()
+        all_data.extend(response.json())
 
-        if response:
-            return response
+        while 'next' in response.links.keys():
+
+            page_num += 1
+            next_page = response.links['next']['url']
+
+            response = hit_api(session.oauths, ORG_REPOS_ENDPOINT.format(org_name) + f"&page={page_num}", logger)
+
+            if not response:
+                attempts +=1
+                continue
+
+            all_data.extend(response.json())
+
+
+        return all_data
 
     return None
 

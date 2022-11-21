@@ -7,9 +7,11 @@ from typing import List, Any, Dict
 
 
 from augur.tasks.github.util.github_paginator import hit_api
+from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, UserRepo, RepoGroup
+
 
 
 logger = logging.getLogger(__name__)
@@ -89,27 +91,20 @@ class RepoLoadController:
             owner = owner[:-1]
 
         url = ORG_REPOS_ENDPOINT.format(owner)
+    
+        repos = []
+        with GithubTaskSession(logger) as session:
+        
+            for page_data, page in GithubPaginator(url, session.oauths, logger).iter_pages():
 
-        attempts = 0
-        while attempts < 10:
-            result = hit_api(self.session.oauths, url, logger)
+                if page_data is None:
+                    break
 
-            # if result is None try again
-            if not result:
-                attempts += 1
-                continue
+                repos.extend(page_data)
 
-            data = result.json()
+        repo_urls = [repo["html_url"] for repo in repos]
 
-            # if there are no repos return []
-            if not data or isinstance(data, dict):
-                return []
-
-            repos = result.json()
-            print([repo["name"] for repo in repos])
-            repo_urls = [repo["html_url"] for repo in repos]
-
-            return repo_urls
+        return repo_urls
 
 
     def is_valid_repo_group_id(self, repo_group_id):
