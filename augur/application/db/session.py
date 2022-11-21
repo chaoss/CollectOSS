@@ -15,6 +15,7 @@ from psycopg2.errors import DeadlockDetected
 from augur.application.config import AugurConfig
 from augur.application.db.models import Platform
 from augur.tasks.util.worker_util import remove_duplicate_dicts, remove_duplicate_naturals
+from augur.application.db.util import get_connection
 
 
 def remove_null_characters_from_string(string):
@@ -70,9 +71,10 @@ class DatabaseSession(s.orm.Session):
         self.close()
     
     def execute_sql(self, sql_text):
-        return_data = {}
-        with self.engine.connect() as connection:
-            return_data = connection.execute(sql_text)
+
+        connection = get_connection(self.engine)
+        return_data = connection.execute(sql_text)
+        connection.close()
         
         return return_data
 
@@ -151,14 +153,16 @@ class DatabaseSession(s.orm.Session):
         sleep_time_list = list(range(1,11))
         deadlock_detected = False
 
+
+        connection = get_connection(self.engine)
+
         # if there is no data to return then it executes the insert then returns nothing
         if not return_columns:
 
             while attempts < 10:
                 try:
-                    with self.engine.connect() as connection:
-                        connection.execute(stmnt)
-                        break
+                    connection.execute(stmnt)
+                    break
                 except s.exc.OperationalError as e:
                     # print(str(e).split("Process")[1].split(";")[0])
                     if isinstance(e.orig, DeadlockDetected):
@@ -170,6 +174,7 @@ class DatabaseSession(s.orm.Session):
                         attempts += 1
                         continue
                     
+                    connection.close()
                     raise e
 
             else:
@@ -185,9 +190,8 @@ class DatabaseSession(s.orm.Session):
         # othewise it gets the requested return columns and returns them as a list of dicts
         while attempts < 10:
             try:
-                with self.engine.connect() as connection:
-                    return_data_tuples = connection.execute(stmnt).fetchall()
-                    break
+                return_data_tuples = connection.execute(stmnt).fetchall()
+                break
             except s.exc.OperationalError as e:
                 if isinstance(e.orig, DeadlockDetected):
                     sleep_time = random.choice(sleep_time_list)
@@ -197,11 +201,15 @@ class DatabaseSession(s.orm.Session):
                     attempts += 1
                     continue   
 
+                connection.close()
                 raise e
 
         else:
             self.logger.error("Unable to insert and return data in 10 attempts")
+            connection.close()
             return None
+
+        connection.close()
 
         if deadlock_detected is True:
             self.logger.error("Made it through even though Deadlock was detected")
