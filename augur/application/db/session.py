@@ -15,7 +15,7 @@ from psycopg2.errors import DeadlockDetected
 from augur.application.config import AugurConfig
 from augur.application.db.models import Platform
 from augur.tasks.util.worker_util import remove_duplicate_dicts, remove_duplicate_naturals
-from augur.application.db.util import get_connection
+from augur.application.db.engine import EngineConnection
 
 
 def remove_null_characters_from_string(string):
@@ -81,15 +81,17 @@ class DatabaseSession(s.orm.Session):
     
     def execute_sql(self, sql_text):
 
-        connection = get_connection(self.engine)
-        return_data = connection.execute(sql_text)
-        connection.close()
-        
-        return return_data
+        with EngineConnection(self.engine) as connection:
+            return_data = connection.execute(sql_text)  
+
+            return return_data
 
     def fetchall_data_from_sql_text(self,sql_text):
-        result = self.execute_sql(sql_text).fetchall()
-        return [dict(zip(row.keys(), row)) for row in result]
+
+        with EngineConnection(self.engine) as connection:
+
+            result = connection.execute(sql_text)  .fetchall()
+            return [dict(zip(row.keys(), row)) for row in result]
 
     def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
 
@@ -163,15 +165,14 @@ class DatabaseSession(s.orm.Session):
         deadlock_detected = False
 
 
-        connection = get_connection(self.engine)
-
         # if there is no data to return then it executes the insert then returns nothing
         if not return_columns:
 
             while attempts < 10:
                 try:
-                    connection.execute(stmnt)
-                    break
+                    with EngineConnection(self.engine) as connection:
+                        connection.execute(stmnt)
+                        break
                 except s.exc.OperationalError as e:
                     # print(str(e).split("Process")[1].split(";")[0])
                     if isinstance(e.orig, DeadlockDetected):
@@ -183,7 +184,6 @@ class DatabaseSession(s.orm.Session):
                         attempts += 1
                         continue
                     
-                    connection.close()
                     raise e
 
             else:
@@ -199,8 +199,9 @@ class DatabaseSession(s.orm.Session):
         # othewise it gets the requested return columns and returns them as a list of dicts
         while attempts < 10:
             try:
-                return_data_tuples = connection.execute(stmnt).fetchall()
-                break
+                with EngineConnection(self.engine) as connection:
+                    return_data_tuples = connection.execute(stmnt).fetchall()
+                    break
             except s.exc.OperationalError as e:
                 if isinstance(e.orig, DeadlockDetected):
                     sleep_time = random.choice(sleep_time_list)
@@ -210,15 +211,11 @@ class DatabaseSession(s.orm.Session):
                     attempts += 1
                     continue   
 
-                connection.close()
                 raise e
 
         else:
             self.logger.error("Unable to insert and return data in 10 attempts")
-            connection.close()
             return None
-
-        connection.close()
 
         if deadlock_detected is True:
             self.logger.error("Made it through even though Deadlock was detected")

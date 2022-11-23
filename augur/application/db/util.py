@@ -37,12 +37,6 @@ def execute_session_query(query, query_type="all"):
     return catch_operational_error(func)
 
 
-def get_connection(engine):
-
-    func = engine.connect
-
-    return catch_operational_error(func)
-
 
 
 
