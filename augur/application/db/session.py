@@ -14,8 +14,12 @@ from psycopg2.errors import DeadlockDetected
 # from augur.tasks.util.random_key_auth import RandomKeyAuth
 from augur.application.config import AugurConfig
 from augur.application.db.models import Platform
+<<<<<<< HEAD
 from augur.tasks.util.worker_util import remove_duplicate_dicts, remove_duplicate_naturals
 from augur.application.db.engine import EngineConnection
+=======
+from augur.tasks.util.worker_util import remove_duplicate_dicts, remove_duplicates_by_uniques
+>>>>>>> augur-new-session
 
 
 def remove_null_characters_from_string(string):
@@ -116,8 +120,7 @@ class DatabaseSession(s.orm.Session):
 
         # remove any duplicate data 
         # this only counts something as a duplicate if every field is the same
-        data = remove_duplicate_dicts(data)
-        data = remove_duplicate_naturals(data,natural_keys)
+        data = remove_duplicates_by_uniques(data, natural_keys)
 
         # remove null data from string fields
         if string_fields and isinstance(string_fields, list):
@@ -186,6 +189,16 @@ class DatabaseSession(s.orm.Session):
                     
                     raise e
 
+                except Exception as e:
+                    if(len(data) == 1):
+                        raise e
+                    else:
+                        first_half = data[:len(A)//2]
+                        second_half = data[len(A)//2:]
+
+                        self.insert_data(first_half, natural_keys, return_columns, string_fields, on_conflict_update)
+                        self.insert_data(second_half, natural_keys, return_columns, string_fields, on_conflict_update)
+
             else:
                 self.logger.error("Unable to insert data in 10 attempts")
                 return None
@@ -212,6 +225,16 @@ class DatabaseSession(s.orm.Session):
                     continue   
 
                 raise e
+
+            except Exception as e:
+                if(len(data) == 1):
+                    raise e
+                else:
+                    first_half = data[:len(A)//2]
+                    second_half = data[len(A)//2:]
+
+                    self.insert_data(first_half, natural_keys, return_columns, string_fields, on_conflict_update)
+                    self.insert_data(second_half, natural_keys, return_columns, string_fields, on_conflict_update)
 
         else:
             self.logger.error("Unable to insert and return data in 10 attempts")

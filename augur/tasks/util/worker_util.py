@@ -42,8 +42,34 @@ def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
 
     Returns:
         list of unique dicts
+
+    Note:
+        The dicts must be perfectly the same meaning the field and data must be exactly the same to be removed
     """
     return [dict(y) for y in set(tuple(x.items()) for x in data)]
+
+def remove_duplicates_by_uniques(data, uniques):
+
+    unique_values = {}
+
+    unique_data = []
+    for x in data:
+
+        # creates a key out of the uniques
+        key = "_".join([str(x[unique]) for unique in uniques])
+
+        # if a KeyError does not occur then a dict with those values has already been processed
+        # if a KeyError occurs a dict with those values has not been found yet
+        try:
+            unique_values[key]
+            continue
+        except KeyError:
+            unique_values[key] = 1
+            unique_data.append(x)
+
+    return unique_data
+
+
 
 
 def remove_duplicate_naturals(data, natural_keys):
