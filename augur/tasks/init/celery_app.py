@@ -37,10 +37,12 @@ data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
                        'augur.tasks.data_analysis.discourse_analysis.tasks',
                        'augur.tasks.data_analysis.pull_request_analysis_worker.tasks']
 
+materialized_view_tasks = ['augur.tasks.db.refresh_materialized_views']
+
 if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
-    tasks = start_tasks + github_tasks + git_tasks + data_analysis_tasks
+    tasks = start_tasks + github_tasks + git_tasks + materialized_view_tasks + data_analysis_tasks
 else:
-    tasks = start_tasks + github_tasks + git_tasks
+    tasks = start_tasks + github_tasks + git_tasks + materialized_view_tasks
 
 redis_db_number, redis_conn_string = get_redis_conn_values()
 

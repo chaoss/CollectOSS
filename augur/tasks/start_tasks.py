@@ -20,6 +20,7 @@ from augur.tasks.github.repo_info.tasks import collect_repo_info
 from augur.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
 from augur.tasks.git.facade_tasks import *
+from augur.tasks.db.refresh_materialized_views import *
 # from augur.tasks.data_analysis import *
 from augur.tasks.init.celery_app import celery_app as celery
 from celery.result import allow_join_result
@@ -68,13 +69,15 @@ def repo_collect_phase(logger):
 
             repo_chain = chain(first_tasks_repo,second_tasks_repo)
             issue_dependent_tasks.append(repo_chain)
-    
-    return group(
+
+        repo_task_group = group(
             *repo_info_tasks,
             chain(group(*issue_dependent_tasks),process_contributors.si()),
             generate_facade_chain(logger),
             collect_releases.si()
         )
+    
+    return chain(repo_task_group, refresh_materialized_views.si())
 
 
 DEFINED_COLLECTION_PHASES = [prelim_phase, repo_collect_phase]
@@ -165,5 +168,8 @@ def start_task():
     augur_collection = AugurTaskRoutine(collection_phases=enabled_phases)
 
     augur_collection.start_data_collection()
+
+
+
 
 
