@@ -8,6 +8,7 @@ from augur.util.repo_load_controller import RepoLoadController, ORG_REPOS_ENDPOI
 
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.application.db.session import DatabaseSession
+from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.application.db.models import Contributor, Issue, Config
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.application.db.util import execute_session_query
@@ -15,7 +16,7 @@ from augur.application.db.util import execute_session_query
 
 logger = logging.getLogger(__name__)
 
-VALID_ORG = "boto"
+VALID_ORG = {"org": "CDCgov", "repo_count": 235}
 
 
 ######## Helper Functions to Get Delete statements #################
@@ -126,38 +127,23 @@ def get_user_repos(connection):
     return connection.execute(s.text("""SELECT * FROM "augur_operations"."user_repos";""")).fetchall()
 
 
+######## Helper Functions to get repos in an org #################
 
 def get_org_repos(org_name, session):
 
-
-    page_num = 1
     attempts = 0
     while attempts < 10:
+        result = hit_api(session.oauths, ORG_REPOS_ENDPOINT.format(org_name), logger)
 
-        all_data = []
-        response = hit_api(session.oauths, ORG_REPOS_ENDPOINT.format(org_name) + f"&page={page_num}", logger)
-
-        if not response:
-            attempts +=1
+        # if result is None try again
+        if not result:
+            attempts += 1
             continue
 
-        all_data.extend(response.json())
+        response = result.json()
 
-        while 'next' in response.links.keys():
-
-            page_num += 1
-            next_page = response.links['next']['url']
-
-            response = hit_api(session.oauths, ORG_REPOS_ENDPOINT.format(org_name) + f"&page={page_num}", logger)
-
-            if not response:
-                attempts +=1
-                continue
-
-            all_data.extend(response.json())
-
-
-        return all_data
+        if response:
+            return response
 
     return None
 
@@ -411,7 +397,7 @@ def test_add_frontend_org_with_valid_org(test_db_engine):
     try:
         with test_db_engine.connect() as connection:
 
-            data = {"user_id": 2, "repo_group_id": DEFAULT_REPO_GROUP_IDS[0], "org_name": VALID_ORG}
+            data = {"user_id": 2, "repo_group_id": DEFAULT_REPO_GROUP_IDS[0], "org_name": VALID_ORG["org"]}
 
             query_statements = []
             query_statements.append(clear_tables_statement)
@@ -426,17 +412,15 @@ def test_add_frontend_org_with_valid_org(test_db_engine):
             url = "https://github.com/{}/".format(data["org_name"])
             RepoLoadController(session).add_frontend_org(url, data["user_id"])
 
-            repo_count = get_org_repo_count(data["org_name"], session)
-
         with test_db_engine.connect() as connection:
 
             result = get_repos(connection)
             assert result is not None
-            assert len(result) == repo_count
+            assert len(result) == VALID_ORG["repo_count"]
 
             user_repo_result = get_user_repos(connection)
             assert user_repo_result is not None
-            assert len(user_repo_result) == repo_count
+            assert len(user_repo_result) == VALID_ORG["repo_count"]
             
     finally:
         with test_db_engine.connect() as connection:
@@ -451,7 +435,7 @@ def test_add_cli_org_with_valid_org(test_db_engine):
     try:
         with test_db_engine.connect() as connection:
 
-            data = {"user_id": CLI_USER_ID, "repo_group_id": 5, "org_name": VALID_ORG}
+            data = {"user_id": CLI_USER_ID, "repo_group_id": 5, "org_name": VALID_ORG["org"]}
 
             query_statements = []
             query_statements.append(clear_tables_statement)
@@ -468,17 +452,15 @@ def test_add_cli_org_with_valid_org(test_db_engine):
 
             RepoLoadController(session).add_cli_org(data["org_name"])
 
-            repo_count = get_org_repo_count(data["org_name"], session)
-
         with test_db_engine.connect() as connection:
 
             result = get_repos(connection)
             assert result is not None
-            assert len(result) == repo_count
+            assert len(result) == VALID_ORG["repo_count"]
 
             user_repo_result = get_user_repos(connection)
             assert user_repo_result is not None
-            assert len(user_repo_result) == repo_count
+            assert len(user_repo_result) == VALID_ORG["repo_count"]
 
     finally:
         with test_db_engine.connect() as connection:
