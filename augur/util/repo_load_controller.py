@@ -181,7 +181,7 @@ class RepoLoadController:
 
         return False
 
-    def add_frontend_repo(self, url: List[str], user_id: int, repo_group_id: int = None):
+    def add_frontend_repo(self, url: List[str], user_id: int, repo_group_id: int = None, valid_repo=False):
         """Add list of repos to a users repos.
 
         Args:
@@ -193,7 +193,8 @@ class RepoLoadController:
             If no repo_group_id is passed the repo will be added to a default repo_group
         """
 
-        if not self.is_valid_repo(url):
+        if not valid_repo and not self.is_valid_repo(url):
+            self.session.logger.info(f"Invalid repo: {url}")
             return {"status": "Invalid repo", "repo_url": url}
 
         if not repo_group_id:
@@ -235,7 +236,7 @@ class RepoLoadController:
         failed_repos = []
         for repo in repos:
 
-            result = self.add_frontend_repo(repo, user_id)
+            result = self.add_frontend_repo(repo, user_id, valid_repo=True)
 
             # keep track of all the repos that failed
             if result["status"] != "Repo Added":
@@ -248,7 +249,7 @@ class RepoLoadController:
 
         return {"status": "Org repos added", "org_url": url}
 
-    def add_cli_repo(self, repo_data: Dict[str, Any]):
+    def add_cli_repo(self, repo_data: Dict[str, Any], valid_repo=False):
         """Add list of repos to specified repo_groups
 
         Args:
@@ -258,7 +259,7 @@ class RepoLoadController:
         url = repo_data["url"]
         repo_group_id = repo_data["repo_group_id"]
 
-        if self.is_valid_repo(url):
+        if valid_repo or self.is_valid_repo(url):
 
             # if the repo doesn't exist it adds it
             # if the repo does exist it updates the repo_group_id
@@ -304,7 +305,7 @@ class RepoLoadController:
         for repo_url in repos:
             logger.info(
                 f"Adding {repo_url}")
-            self.add_cli_repo({"url": repo_url, "repo_group_id": repo_group_id})
+            self.add_cli_repo({"url": repo_url, "repo_group_id": repo_group_id}, valid_repo=True)
 
 
     def get_user_repo_ids(self, user_id: int) -> List[int]:
@@ -338,7 +339,7 @@ class RepoLoadController:
             result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
         else:
 
-            result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _]+)(.git)?\/?$", url)
+            result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
 
         if not result:
             return None, None

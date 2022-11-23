@@ -16,7 +16,7 @@ from augur.application.db.util import execute_session_query
 
 logger = logging.getLogger(__name__)
 
-VALID_ORG = {"org": "CDCgov", "repo_count": 235}
+VALID_ORG = {"org": "CDCgov", "repo_count": 236}
 
 
 ######## Helper Functions to Get Delete statements #################
@@ -151,6 +151,17 @@ def get_org_repo_count(org_name, session):
 
     repos = get_org_repos(org_name, session)
     return len(repos)
+
+
+def test_parse_repo_url():
+
+    with GithubTaskSession(logger) as session:
+
+        controller = RepoLoadController(session)
+
+        assert controller.parse_repo_url("asfsf") == (None, None)
+        assert controller.parse_repo_url("https://github.com/CDCgov/cdcgov.github.io") == ("CDCgov", "cdcgov.github.io")
+        assert controller.parse_repo_url("https://github.com/CDCgov/tn93.js") == ("CDCgov", "tn93.js")
 
 
 def test_is_valid_repo():
