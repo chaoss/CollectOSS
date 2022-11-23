@@ -184,6 +184,9 @@ def create_features_for_structured_prediction(df, text_data_column_name, group_b
             word_count += row['tfidf_features']['num_words']
             character_count += row['tfidf_features']['num_characters']
 
+        if sentence_count == 0 or word_count == 0: or character_count == 0:
+            continue
+
         X_cur = []
         if label_available: y_cur = []
         for ind, row in group.iterrows():
