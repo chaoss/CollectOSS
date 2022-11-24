@@ -184,17 +184,25 @@ def create_features_for_structured_prediction(df, text_data_column_name, group_b
             word_count += row['tfidf_features']['num_words']
             character_count += row['tfidf_features']['num_characters']
 
-        if sentence_count == 0 or word_count == 0 or character_count == 0:
-            continue
+        #if sentence_count == 0 or word_count == 0 or character_count == 0:
+            #continue
 
         X_cur = []
         if label_available: y_cur = []
         for ind, row in group.iterrows():
-            row['tfidf_features']['normalized_num_sentences'] = row['tfidf_features'][
-                                                                    'num_sentences'] / sentence_count  # added
-            row['tfidf_features']['normalized_num_words'] = row['tfidf_features']['num_words'] / word_count  # added
-            row['tfidf_features']['normalized_num_characters'] = row['tfidf_features'][
-                                                                     'num_characters'] / character_count  # added
+            if sentence_count == 0 or word_count == 0 or character_count == 0:
+
+                row['tfidf_features']['normalized_num_sentences'] = 0
+                row['tfidf_features']['normalized_num_words'] = 0
+                row['tfidf_features']['normalized_num_characters'] = 0
+                
+            else: 
+
+                row['tfidf_features']['normalized_num_sentences'] = row['tfidf_features'][
+                                                                        'num_sentences'] / sentence_count  # added
+                row['tfidf_features']['normalized_num_words'] = row['tfidf_features']['num_words'] / word_count  # added
+                row['tfidf_features']['normalized_num_characters'] = row['tfidf_features'][
+                                                                         'num_characters'] / character_count  # added
             # print(row)
             X_cur.append(row['tfidf_features'])
             if label_available: y_cur.append(row['majority_type'])
