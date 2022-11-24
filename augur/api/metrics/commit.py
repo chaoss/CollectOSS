@@ -310,7 +310,9 @@ def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
 
         results = pd.read_sql(total_commits_SQL, engine,
                             params={'year': year, 'repo_id': repo_id})
-
+    if not results.iloc[0]['sum']:
+        return pd.DataFrame()
+    
     total_commits = int(results.iloc[0]['sum'])
     threshold_commits = round(threshold * total_commits)
 

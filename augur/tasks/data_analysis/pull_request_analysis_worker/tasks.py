@@ -12,6 +12,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, PullRequestAnalysis
 from augur.application.db.engine import create_database_engine
+from augur.application.db.util import execute_session_query
 
 # from sklearn.metrics import (confusion_matrix, f1_score, precision_score, recall_score)
 # from sklearn.preprocessing import LabelEncoder, MinMaxScaler
@@ -32,7 +33,8 @@ def pull_request_analysis_model(repo_git: str) -> None:
 
     with DatabaseSession(logger) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_id = execute_session_query(query, 'one').repo_id
 
         senti_models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", session.config.get_value("Message_Insights", 'models_dir'))
 
@@ -56,7 +58,7 @@ def pull_request_analysis_model(repo_git: str) -> None:
         from augur_data.pull_requests
         INNER JOIN augur_data.pull_request_commits on pull_requests.pull_request_id = pull_request_commits.pull_request_id 
         where pr_created_at > :begin_date 
-        and repo_id = :repo_id 
+        and pull_requests.repo_id = :repo_id 
         and pr_src_state like 'open' 
     """)
 

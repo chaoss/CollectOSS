@@ -2,13 +2,13 @@ import sqlalchemy as s
 import json
 from typing import List, Any, Optional
 import os
-
 from augur.application.db.models import Config 
-
+from augur.application.db.util import execute_session_query
 
 def get_development_flag_from_config():
-    from augur.application.db.session import DatabaseSession
+    
     from logging import getLogger
+    from augur.application.db.session import DatabaseSession
 
     logger = getLogger(__name__)
     with DatabaseSession(logger) as session:
@@ -22,8 +22,6 @@ def get_development_flag_from_config():
 
 def get_development_flag():
     return os.getenv("AUGUR_DEV") or get_development_flag_from_config() or False
-
-
 
 
 
@@ -88,8 +86,6 @@ default_config = {
             },
             "Insight_Task": {
                 # TODO: How to store metrics in database config?
-                "metrics": {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
-                           "reviews": "pull_requests", "contributors-new": "new_contributors"},
                 "confidence_interval": 95,
                 "contamination": 0.1,
                 "switch": 1,
@@ -153,7 +149,8 @@ class AugurConfig():
         Returns:
             The section data as a dict
         """
-        section_data = self.session.query(Config).filter_by(section_name=section_name).all()
+        query = self.session.query(Config).filter_by(section_name=section_name)
+        section_data = execute_session_query(query, 'all')
         
         section_dict = {}
         for setting in section_data:
@@ -180,8 +177,8 @@ class AugurConfig():
             The value from config if found, and None otherwise
         """
         try:
-            config_setting = self.session.query(Config).filter(Config.section_name == section_name, Config.setting_name == setting_name).one()
-            # config_setting = Config.query.filter_by(section_name=section_name, setting_name=setting_name).one()
+            query = self.session.query(Config).filter(Config.section_name == section_name, Config.setting_name == setting_name)
+            config_setting = execute_session_query(query, 'one')
         except s.orm.exc.NoResultFound:
             return None
 
@@ -199,7 +196,8 @@ class AugurConfig():
             The config from the database
         """
         # get all the sections in the config table
-        section_names = self.session.query(Config.section_name).all()
+        query = self.session.query(Config.section_name)
+        section_names = execute_session_query(query, 'all')
 
         config = {}
         # loop through and get the data for each section
@@ -227,7 +225,8 @@ class AugurConfig():
         Returns:
             True if the config is empty, and False if it is not
         """
-        return self.session.query(Config).first() is None
+        query = self.session.query(Config)
+        return execute_session_query(query, 'first') is None
 
     def is_section_in_config(self, section_name: str) -> bool:
         """Determine if a section is in the config.
@@ -238,7 +237,8 @@ class AugurConfig():
         Returns:
             True if section is in the config, and False if it is not
         """
-        return self.session.query(Config).filter(Config.section_name == section_name).first() is not None
+        query = self.session.query(Config).filter(Config.section_name == section_name)
+        return execute_session_query(query, 'first') is not None
 
 
     def add_or_update_settings(self, settings: List[dict]):

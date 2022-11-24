@@ -1,4 +1,4 @@
-# Augur NEW Release v0.42.0
+# Augur NEW Release v0.42.4
 
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
@@ -10,7 +10,7 @@
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
 
 ## NEW BETA RELEASE ALERT!
-Augur released a beta of its new version, which is built from the augur-new branch, here: https://github.com/chaoss/augur/releases/tag/v0.42.0
+Augur released a beta of its new version, which is built from the augur-new branch, here: https://github.com/chaoss/augur/releases/tag/v0.42.4
 - The augur-new branch is a stable version of our new architecture, which features:
   - Dramatic improvement in the speed of large scale (10,000+ repos). All data is obtained for 10k+ repos within a week
   - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard

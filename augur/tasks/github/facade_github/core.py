@@ -65,9 +65,12 @@ def query_github_contributors(session, entry_info, repo_id):
 
             
             session.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
-            r = hit_api(session.oauths, cntrb_url, session.logger)
-            contributor = r.json()
+            #r = hit_api(session.oauths, cntrb_url, session.logger)
+            #contributor = r.json()
 
+            contributor = request_dict_from_endpoint(session, cntrb_url)
+
+            #session.logger.info(f"Contributor: {contributor} \n")
             company = None
             location = None
             email = None
@@ -120,24 +123,10 @@ def query_github_contributors(session, entry_info, repo_id):
                 #"tool_version": session.tool_version,
                 #"data_source": session.data_source
             }
-            #dup check
-            #TODO: add additional fields to check if needed.
-            #existingMatchingContributors = self.db.execute(
-            #    s.sql.select(
-            #        [self.contributors_table.c.gh_node_id]
-            #    ).where(
-            #        self.contributors_table.c.gh_node_id==cntrb["gh_node_id"]
-            #    )
-            #).fetchall()
 
-            #stmnt = select(Contributors.gh_node_id).where(Contributors.gh_node_id == cntrb["gh_node_id"])
-            existingMatchingContributors = session.query(Contributor).filter_by(gh_node_id=cntrb["gh_node_id"]).all() #session.execute(stmnt)
-
-            if len(existingMatchingContributors) > 0:
-                break #if contributor already exists in table
-
-            cntrb_natural_keys = ['cntrb_login']
+            cntrb_natural_keys = ['cntrb_id']
             #insert cntrb to table.
+            #session.logger.info(f"Contributor:  {cntrb}  \n")
             session.insert_data(cntrb,Contributor,cntrb_natural_keys)
             
         except Exception as e:
