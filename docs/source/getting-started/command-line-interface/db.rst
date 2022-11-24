@@ -63,7 +63,7 @@ The ``.csv`` file must have the following format:
 
 .. code::
 
-  <repo_group_id>,<git_repo_url> 
+  <git_repo_url>,<repo_group_id>, 
   ...
 
 where ``<repo_group_id>`` is an **existing** repository group ID, and ``<git_repo_url>`` is the url to the repository's Git repository, e.g. ``https://github.com/chaoss/augur.git``. 
