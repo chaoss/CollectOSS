@@ -88,11 +88,11 @@ def pull_request_analysis_model(repo_git: str) -> None:
     messages_SQL = s.sql.text("""
             select message.msg_id, msg_timestamp,  msg_text, message.cntrb_id from augur_data.message
             left outer join augur_data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
-            left outer join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id where repo_id = :repo_id
+            left outer join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id where pull_request_message_ref.repo_id = :repo_id
             UNION
             select message.msg_id, msg_timestamp, msg_text, message.cntrb_id from augur_data.message
             left outer join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
-            left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id where repo_id = :repo_id""")
+            left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id where issue_message_ref.repo_id = :repo_id""")
 
     df_message = pd.read_sql_query(messages_SQL, create_database_engine(), params={'repo_id': repo_id})
 
