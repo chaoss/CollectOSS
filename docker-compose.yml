@@ -18,7 +18,7 @@ services:
 
 
   augur:
-    image: augurlabs/augur-new:latest
+    image: augur-new:latest
     build:
       context: .
       dockerfile: ./docker/backend/Dockerfile

@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from augur.application.db.models import Config 
 from augur.application.config import convert_type_of_value
+from augur.application.db.util import execute_session_query
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -83,7 +84,11 @@ def get_log_config():
     engine = create_database_engine()
     session = Session(engine)
 
-    section_data = session.query(Config).filter_by(section_name="Logging").all()
+    query = session.query(Config).filter_by(section_name="Logging")
+    section_data = execute_session_query(query, 'all')
+
+    session.close()
+    engine.dispose()
         
     section_dict = {}
     for setting in section_data:

@@ -23,7 +23,7 @@ def create_full_routes(routes):
     return full_routes
     
 @pytest.fixture
-def engine():
+def test_db_engine():
 
     # creates database engine the normal way and then gets the database string
     db_string = get_database_string()
@@ -35,16 +35,16 @@ def engine():
     yield s.create_engine(testing_db_string)
 
 @pytest.fixture
-def session(engine):
-    session = DatabaseSession(logger, engine)
+def test_db_session(test_db_engine):
+    session = DatabaseSession(logger, test_db_engine)
 
     yield session
 
     session.close()
 
 @pytest.fixture
-def config(session):
-    return AugurConfig(logger, session)
+def test_db_config(test_db_session):
+    return AugurConfig(logger, test_db_session)
 
 
 # @pytest.fixture(scope="session")

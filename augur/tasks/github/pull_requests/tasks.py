@@ -10,6 +10,8 @@ from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, PullRequestMessageRef, Contributor, Repo
+from augur.application.db.util import execute_session_query
+
 
 platform_id = 1
 
@@ -221,7 +223,8 @@ def pull_request_review_comments(repo_git: str) -> None:
         pr_review_comments = GithubPaginator(url, session.oauths, logger)
 
         # get repo_id
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_id = execute_session_query(query, 'one').repo_id
 
 
         tool_source = "Pr review comment task"
@@ -310,7 +313,8 @@ def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
 
     with GithubTaskSession(logger, engine) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_id = execute_session_query(query, 'one').repo_id
 
         # define GithubTaskSession to handle insertions, and store oauth keys 
 

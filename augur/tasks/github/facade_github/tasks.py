@@ -12,6 +12,7 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 from augur.tasks.github.facade_github.core import *
 from augur.tasks.util.worker_util import create_grouped_task_load
 from celery.result import allow_join_result
+from augur.application.db.util import execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 
 
@@ -35,7 +36,8 @@ def process_commit_metadata(session,contributorQueue,repo_id):
             """
 
 
-            alias_table_data = session.query(ContributorsAlias).filter_by(alias_email=email).all()
+            query = session.query(ContributorsAlias).filter_by(alias_email=email)
+            alias_table_data = execute_session_query(query, 'all')
             if len(alias_table_data) >= 1:
                 # Move on if email resolved
 
@@ -50,7 +52,8 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
         try:
             
-            unresolved_query_result = session.query(UnresolvedCommitEmail).filter_by(name=name).all()
+            query = session.query(UnresolvedCommitEmail).filter_by(name=name)
+            unresolved_query_result = execute_session_query(query, 'all')
 
             if len(unresolved_query_result) >= 1:
 
@@ -65,7 +68,8 @@ def process_commit_metadata(session,contributorQueue,repo_id):
     
         #Check the contributors table for a login for the given name
         try:
-            contributors_with_matching_name = session.query(Contributor).filter_by(cntrb_full_name=name).one()
+            query = session.query(Contributor).filter_by(cntrb_full_name=name)
+            contributors_with_matching_name = execute_session_query(query, 'one')
 
             login = contributors_with_matching_name.gh_login
 
@@ -205,23 +209,17 @@ def link_commits_to_contributor(session,contributorQueue):
         session.logger.debug(
             f"These are the emails and cntrb_id's  returned: {cntrb}")
 
-        with session.engine.connect() as engine:
+        query = s.sql.text("""
+                UPDATE commits 
+                SET cmt_ght_author_id=:cntrb_id
+                WHERE cmt_committer_email=:cntrb_email
+                OR cmt_author_raw_email=:cntrb_email
+                OR cmt_author_email=:cntrb_email
+                OR cmt_committer_raw_email=:cntrb_email
+        """).bindparams(cntrb_id=cntrb["cntrb_id"],cntrb_email=cntrb["email"])
 
-            data = {
-                "cntrb_email": cntrb["email"],
-                "cntrb_id": cntrb["cntrb_id"]
-            }
-
-            query = s.sql.text("""
-                    UPDATE commits 
-                    SET cmt_ght_author_id=:cntrb_id
-                    WHERE cmt_committer_email=:cntrb_email
-                    OR cmt_author_raw_email=:cntrb_email
-                    OR cmt_author_email=:cntrb_email
-                    OR cmt_committer_raw_email=:cntrb_email
-            """)
-
-            engine.execute(query, **data)            
+        #engine.execute(query, **data)
+        session.insert_or_update_data(query)          
         
     
     return
@@ -291,7 +289,7 @@ def insert_facade_contributors(repo_id):
 
         session.logger.debug("DEBUG: Got through the new_contribs")
     
-    with GithubTaskSession(logger) as session:
+    with FacadeSession(logger) as session:
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
         resolve_email_to_cntrb_id_sql = s.sql.text("""
