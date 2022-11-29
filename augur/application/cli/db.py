@@ -35,7 +35,13 @@ def cli():
 @test_connection
 @test_db_connection
 def add_repos(filename):
-    """Add repositories to Augur's database."""   
+    """Add repositories to Augur's database. 
+
+    The .csv file format should be repo_url,group_id
+
+    NOTE: The Group ID must already exist in the REPO_Groups Table.
+
+    If you want to add an entire GitHub organization, refer to the command: augur db add-github-org"""   
     from augur.tasks.github.util.github_task_session import GithubTaskSession
     from augur.util.repo_load_controller import RepoLoadController
 
