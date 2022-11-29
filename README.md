@@ -1,4 +1,4 @@
-# Augur NEW Release v0.42.7
+# Augur NEW Release v0.43.0
 
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
@@ -10,15 +10,17 @@
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
 
 ## NEW RELEASE ALERT!
-Augur released a beta of its new version, which is built from the augur-new branch, here: https://github.com/chaoss/augur/releases/tag/v0.42.4
-- The augur-new branch is a stable version of our new architecture, which features:
+[If you want to jump right in, updated docker build/compose and bare metal installation instructions are available here](docs/new-install.md)
+
+Augur a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.43.0
+- The `main` branch is a stable version of our new architecture, which features:
   - Dramatic improvement in the speed of large scale (10,000+ repos). All data is obtained for 10k+ repos within a week
   - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard
   - Materialized views to increase the snappiness of API’s and Frontends on large scale data
   - Changes to primary keys, which now employ a UUID strategy that ensures unique keys across all Augur instances
   - Support for https://github.com/chaoss/sandiego-rh dashboards (view a sample here: https://eightknot.osci.io/). (beautification coming soon!)
   - Data collection completeness assurance enabled by a structured, relational data set that is easily compared with platform API Endpoints
-- The next release of the new version will include a hosted version of Augur where anyone can create an account and add repos “they care about”. If the hosted instance already has a requested organization or repository it will be added to a user’s view. If its a new repository or organization, the user will be notified that collection will take (time required for the scale of repositories added). (edited) 
+- The next release of the new version will include a hosted version of Augur where anyone can create an account and add repos “they care about”. If the hosted instance already has a requested organization or repository it will be added to a user’s view. If its a new repository or organization, the user will be notified that collection will take (time required for the scale of repositories added). 
 
 ## What is Augur?
 
