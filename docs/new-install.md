@@ -24,6 +24,7 @@
 11. When data collection is complete you will see only a single task running in your flower Dashboard.
 12. You can stop augur with `augur backend stop`, followed by `augur backend kill`. We recommend waiting 5 minutes between commands so Augur can shutdown more gently. There is no issue with data integrity if you issue them seconds apart, its just that stopping is nicer than killing. 
 13. If you wish to run the frontend, create a file called `frontend/frontend.config.json following this structure, with relevant values`: (Default port is 5000. This can be changed in the `augur_operations.config` table.). Then run `npm install` and `npm run build` in the frontend directory. `npm run serve will make a development server (usually on your local machine)` version of the frontend available. If you wish to run Augur's frontend through nginx, you can follow these instructions here: https://oss-augur.readthedocs.io/en/augur-new/deployment/nginx-configuration.html?highlight=nginx#nginx and here: https://oss-augur.readthedocs.io/en/augur-new/deployment/nginx-configuration.html?highlight=nginx#site-configuration 
+NOTE: `"host": "your resolvable server"`
     ```json
     {
         "Frontend": {
