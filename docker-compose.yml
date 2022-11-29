@@ -1,15 +1,48 @@
 #SPDX-License-Identifier: MIT
 version: '3'
 services:
-  backend:
-    image: augurlabs/augur:backend
+  augur-db:
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      - "POSTGRES_DB=augur"
+      - "POSTGRES_USER=${AUGUR_DB_USER:-augur}"
+      - "POSTGRES_PASSWORD=${AUGUR_DB_PASSWORD:-augur}"
+    ports:
+      - "127.0.0.1:${AUGUR_DB_PORT:-5432}:5432"
+
+  redis:
+    image: "redis:alpine"
+    ports:
+     - 6379:6379
+
+
+  augur:
+    image: augur-new:latest
     build:
       context: .
-      dockerfile: ./util/docker/backend/Dockerfile
-    # volumes:
-    #   - ./path/to/your/repo_groups.csv:/repo_groups.csv
-    #   - ./path/to/your/repos.csv:/repos.csv
+      dockerfile: ./docker/backend/Dockerfile
+    volumes:
+      - facade:/augur/facade
     restart: unless-stopped
     ports:
-      - 5000:5000
-    env_file: docker_env.txt
+      - 5002:5000
+    extra_hosts:
+      - "host.docker.internal:host-gateway" #Be able to ping services on the local machine
+    environment:
+      - "AUGUR_DB=postgresql+psycopg2://${AUGUR_DB_USER:-augur}:${AUGUR_DB_PASSWORD:-augur}@augur-db:5432/augur"
+      - "AUGUR_DB_SCHEMA_BUILD=1"
+      - "AUGUR_GITHUB_API_KEY=${AUGUR_GITHUB_API_KEY}"
+      - "AUGUR_GITLAB_API_KEY=${AUGUR_GITLAB_API_KEY}"
+      - "AUGUR_GITHUB_USERNAME=${AUGUR_GITHUB_USERNAME}"
+      - "AUGUR_GITLAB_USERNAME=${AUGUR_GITLAB_USERNAME}"
+      - REDIS_CONN_STRING=redis://redis:6379
+    depends_on:
+      - augur-db
+      - redis
+  
+volumes:
+  facade:
+    driver: local
+
+

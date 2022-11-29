@@ -15,25 +15,23 @@ default:
 	@ echo "Testing Commands:"
 	@ echo "    test-data                       Start the testing dataset Docker database"
 	@ echo "    test                            Runs all tests"
-	@ echo "    test-application                Runs all application unit tests (including metrics)"
-	@ echo "    test-workers                    Run all worker unit tests"
-	@ echo "    test-metric-routes              Run all metrics API tests"
+	@ echo "    test-api                        Run all API tests"
 	@ echo
 	@ echo "Documentation Commands:"
 	@ echo "    docs                            Generates the documentation"
 	@ echo "    docs-view                       Generates the documentation, then opens it for local viewing"
 
+# @ echo "    test-application                Runs all application unit tests (including metrics)"
+# @ echo "    test-workers                    Run all worker unit tests"
+
 
 #
 #  Installation
 #
-.PHONY: install install-dev
+.PHONY: install
 .PHONY: install-spdx install-spdx-sudo install-augur-sbom
 .PHONY: clean rebuild
 install:
-	@ ./scripts/install/install.sh prod
-
-install-dev:
 	@ ./scripts/install/install.sh dev
 
 install-spdx:
@@ -49,11 +47,7 @@ clean:
 	@ scripts/control/clean.sh
 
 rebuild:
-	@ scripts/control/rebuild.sh prod
-
-rebuild-dev:
-	@ scripts/control/rebuild-backend.sh dev
-
+	@ scripts/control/rebuild.sh dev
 
 #
 #  Development
@@ -76,6 +70,18 @@ db:
 	@ docker run -p 5434:5432 --name augur_database augurlabs/augur:database
 
 
+lint:
+	@ pylint augur
+lint-count:
+	@ pylint augur | wc -l
+lint-docs:
+	@ pylint augur | grep docstring
+lint-docs-missing:
+	@ pylint augur | grep docstring | wc -l
+
+lint-github-tasks-count:
+	@ pylint augur | grep augur/tasks/github/ | wc -l
+
 #
 # Testing
 #
@@ -86,25 +92,32 @@ test-data:
 	@ - docker rm augur_test_data
 	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data@sha256:71da12114bf28584a9a64ede2fac0cbc8dffc8e2f4a2c61231206e2f82201c2f
 
-test: test-application test-metric-routes test-workers
+test:
+	# @ pytest tests/test_tasks/test_github_tasks/
+	@ python3 tests/start_server.py
+	@ pytest tests/test_metrics/test_metrics_functionality/ tests/test_routes/test_api_functionality/ tests/test_tasks/ tests/test_applicaton/ 
+	@ python3 tests/stop_server.py
 
-test-application:
-	@ bash -c 'tox -e py-application'
+test-api:
+	@ python3 tests/start_server.py
+	@ pytest tests/test_metrics/test_metrics_functionality/ tests/test_routes/test_api_functionality/
+	@ python3 tests/stop_server.py
+	
+
+
+# test-application:
+# 	@ bash -c 'tox -e py-application'
 
 #Worker's tests need a database from docker
 #To use the docker daemon you need to be root so sudo is needed.
-test-workers:
-	@ bash -c 'sudo tox -e py-workers'
+# test-workers:
+# 	@ bash -c 'sudo tox -e py-workers'
 
-test-metric-routes:
-	@ bash -c 'tox -e py-metric-routes'
+# test-metric-routes:
+# 	@ bash -c 'tox -e py-metric-routes'
 
-test-python-versions:
-	@ bash -c 'tox -e ALL'
-
-
-
-
+# test-python-versions:
+# 	@ bash -c 'tox -e ALL'
 
 
 #

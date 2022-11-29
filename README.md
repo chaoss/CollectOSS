@@ -1,4 +1,4 @@
-# Augur
+# Augur NEW Release v0.43.0
 
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
@@ -9,22 +9,25 @@
 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
 
-## NEW BETA RELEASE ALERT!
-Augur released a beta of its new version, which is built from the augur-new branch, here: https://github.com/chaoss/augur/releases/tag/v0.42.6
-- The augur-new branch is a stable version of our new architecture, which features:
+## NEW RELEASE ALERT!
+[If you want to jump right in, updated docker build/compose and bare metal installation instructions are available here](docs/new-install.md)
+
+Augur a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.43.0
+- The `main` branch is a stable version of our new architecture, which features:
   - Dramatic improvement in the speed of large scale (10,000+ repos). All data is obtained for 10k+ repos within a week
   - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard
   - Materialized views to increase the snappiness of API’s and Frontends on large scale data
   - Changes to primary keys, which now employ a UUID strategy that ensures unique keys across all Augur instances
   - Support for https://github.com/chaoss/sandiego-rh dashboards (view a sample here: https://eightknot.osci.io/). (beautification coming soon!)
   - Data collection completeness assurance enabled by a structured, relational data set that is easily compared with platform API Endpoints
-- The next release of the new version will include a hosted version of Augur where anyone can create an account and add repos “they care about”. If the hosted instance already has a requested organization or repository it will be added to a user’s view. If its a new repository or organization, the user will be notified that collection will take (time required for the scale of repositories added). (edited) 
+- The next release of the new version will include a hosted version of Augur where anyone can create an account and add repos “they care about”. If the hosted instance already has a requested organization or repository it will be added to a user’s view. If its a new repository or organization, the user will be notified that collection will take (time required for the scale of repositories added). 
 
 ## What is Augur?
 
 Augur is a software suite for collecting and measuring structured data
 about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities.
 
+We gather trace data for a group of repositories, normalize it into our data model, and provide a variety of metrics about said data. The structure of our data model enables us to synthesize data across various platforms to provide meaningful context for meaningful questions about the way these communities evolve.
 Augur’s main focus is to measure the overall health and sustainability of open source projects, as these types of projects are system critical for nearly every software organization or company. We do this by gathering data about project repositories and normalizing that into our data model to provide useful metrics about your project’s health. For example, one of our metrics is Burstiness. Burstiness – how are short timeframes of intense activity, followed by a corresponding return to a typical pattern of activity, observed in a project?
 
 This can paint a picture of a project’s focus and gain insight into the potential stability of a project and how its typical cycle of updates occurs. 
@@ -35,6 +38,10 @@ metrics are implementations of the metrics defined by our awesome community. You
 For more information on [how to get involved on the CHAOSS website](https://chaoss.community/participate/).
 
 ## Collecting Data
+
+Augur supports Python3.6 through Python3.9 on all platforms. Python3.10 and above do not yet work because of machine learning worker dependencies. On OSX, you can create a Python 3.9 environment this way: `python3.9 -m venv path/to/venv`.
+
+Augur's main focus is to measure the overall health and sustainability of open source projects.
 
 Augur collects more data about open source software projects than any other available software. Augur's main focus is to measure the overall health and sustainability of open source projects.
 One of Augur's core tenets is a desire to openly gather data that people can trust, and then provide useful and well-defined metrics that help give important context to the larger stories being told by that data. We do this in a variety of ways, one of which is doing all our own data collection in house. We currently collect data from a few main sources:
@@ -60,7 +67,7 @@ To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.
 
 ## License, Copyright, and Funding
 
-Copyright © 2022 University of Nebraska at Omaha, University of Missouri and the CHAOSS Project.
+Copyright © 2112 University of Nebraska at Omaha, University of Missouri and the CHAOSS Project.
 
 Augur is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the [LICENSE](LICENSE) file for more details.
 
