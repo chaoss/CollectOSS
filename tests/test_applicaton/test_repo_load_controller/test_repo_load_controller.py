@@ -179,6 +179,7 @@ def test_is_valid_repo():
         assert controller.is_valid_repo("https://github.com/chaoss/augur") is True
         assert controller.is_valid_repo("https://github.com/chaoss/augur/") is True
         assert controller.is_valid_repo("https://github.com/chaoss/augur.git") is True
+        assert controller.is_valid_repo("https://github.com/chaoss/wg-value/") is True
 
 
 def test_add_repo_row(test_db_engine):
