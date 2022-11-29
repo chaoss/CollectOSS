@@ -1,4 +1,8 @@
-#SPDX-License-Identifier: MIT
+import uuid
 
-import os
-ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+instance_id = uuid.uuid4().hex
+
+
+
+
+

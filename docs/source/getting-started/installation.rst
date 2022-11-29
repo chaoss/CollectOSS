@@ -23,6 +23,8 @@ Required:
 -  `GitLab Access Token <https://gitlab.com/profile/personal_access_tokens>`__
 -  `Python 3.6 - 3.8 <https://www.python.org/downloads/>`__
 
+
+  
 **Python 3.9 is not yet supported because TensorFlow, which we use in our machine learning workers, does not yet support Python 3.9.**
 
 Our REST API & data collection workers write in Python 3.6. We query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository, so GitLab and GitHub access tokens are **required** for data collection.
@@ -36,8 +38,13 @@ Once you've installed Go, follow the appropriate steps for your system to instal
 
 -  Install gcc OpenMP Support: ``sudo apt-get install libgomp1`` -- Ubuntu 
 
-The ``message_insights_worker`` uses a system-level package called OpenMP. You will need this installed at the system level for that worker to work. 
+The ``message_insights_worker`` uses a system-level package called OpenMP. You will need this installed at the system level for that worker to work.
 
+Caching System (Redis)
+----------------
+* `Linux Installation <https://redis.io/docs/getting-started/installation/install-redis-on-linux/>`__
+* `Mac Installation <https://redis.io/docs/getting-started/installation/install-redis-on-mac-os/>`__
+* `Windows Installation <https://redis.io/docs/getting-started/installation/install-redis-on-windows/>`__
 
 Frontend
 ---------
@@ -150,15 +157,20 @@ your installation of Python 3: on most systems, this is ``python3``, but yours m
     # to activate the environment
     $ source $HOME/.virtualenvs/augur_env/bin/activate
 
-3. Run the install script. This script will:
+3. Set AUGUR_DB environment variable with a postgres database connection string (if you have not setup a database yet, refer to :ref:`database setup<Creating a Database>`) Note: Three terminals will be needed to collect data for augur, and AUGUR_DB needs to be set for 2 out of the 3. If you don't want to add it to both terminals you can add it permanently in your .bashrc file if running bash, or .zshrc file if in running zsh. 
+
+.. code-block:: bash
+
+    # set postgres database connection string to AUGUR_DB environment variable
+    # replace <> variables with actual values
+    $ export AUGUR_DB=postgresql+psycopg2://<user>:<password>@<host>:<port>/<database_name>
+
+4. Run the install script. This script will:
 
 - Install Augur’s Python library and application server
-- Install Augur's data collection workers
-- Prompt you for configuration settings, including your database credentials
-- Generate a configuration file using your provided settings
 - Install Augur's schema in the configured database
-- Optionally, install Augur’s frontend and its dependencies
-- Generate and output an Augur API key
+- Prompt you for GitHub and GitLab keys
+- Add GitHub and GitLab keys to config table in the database
 
 .. note::
 

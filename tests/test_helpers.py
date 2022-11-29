@@ -1,14 +1,32 @@
 import pytest
 import os
 import json
-import pandas as pd
-import tempfile
-from queue import Queue
-from workers.util import read_config
-from workers.worker_base import Worker
-from workers.worker_git_integration import WorkerGitInterfaceable
-from augur.config import AugurConfig, default_config
-from augur import ROOT_AUGUR_DIRECTORY
+import sqlalchemy as s
+from augur.application.db.session import DatabaseSession
+
+TEST_DB_STRING = "postgresql+psycopg2://augur:mcguire18@chaoss.tv:5432/augur-test"
+
+@pytest.fixture
+def db_session():
+    engine = s.create_engine(TEST_DB_STRING)
+
+    @event.listens_for(engine, "connect", insert=True)
+    def set_search_path(dbapi_connection, connection_record):
+        existing_autocommit = dbapi_connection.autocommit
+        dbapi_connection.autocommit = True
+        cursor = dbapi_connection.cursor()
+        cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
+        cursor.close()
+        dbapi_connection.autocommit = existing_autocommit
+    
+    logger = logging.getLogger(__name__)
+    session = DatabaseSession(logger,engine=engine)
+
+    yield session
+
+    session.close()
+
+"""
 
 temp_dir = os.path.join(os.getcwd(), "util")
 config_path = os.path.join(temp_dir, "test.config.json")
@@ -62,3 +80,4 @@ def test_discover_config_file_env_no_exception():
 
 
 
+"""
