@@ -189,8 +189,8 @@ class DatabaseSession(s.orm.Session):
                     if(len(data) == 1):
                         raise e
                     else:
-                        first_half = data[:len(A)//2]
-                        second_half = data[len(A)//2:]
+                        first_half = data[:len(data)//2]
+                        second_half = data[len(data)//2:]
 
                         self.insert_data(first_half, natural_keys, return_columns, string_fields, on_conflict_update)
                         self.insert_data(second_half, natural_keys, return_columns, string_fields, on_conflict_update)
@@ -226,8 +226,8 @@ class DatabaseSession(s.orm.Session):
                 if(len(data) == 1):
                     raise e
                 else:
-                    first_half = data[:len(A)//2]
-                    second_half = data[len(A)//2:]
+                    first_half = data[:len(data)//2]
+                    second_half = data[len(data)//2:]
 
                     self.insert_data(first_half, natural_keys, return_columns, string_fields, on_conflict_update)
                     self.insert_data(second_half, natural_keys, return_columns, string_fields, on_conflict_update)
