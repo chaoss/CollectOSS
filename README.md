@@ -10,7 +10,6 @@
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
 
 ## NEW RELEASE ALERT!
-
 [If you want to jump right in, updated docker build/compose and bare metal installation instructions are available here](docs/new-install.md)
 
 Augur a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.43.0
