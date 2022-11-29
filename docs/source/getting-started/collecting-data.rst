@@ -1,12 +1,29 @@
 Collecting data
 ===============
 
-Now that you’ve installed Augur’s application server, it’s time to configure your data collection workers. If you just want to run Augur using the one repository in the default database, and default worker settings, all you need to do is this:
+Now that you’ve installed Augur’s application server, it’s time to configure your data collection workers. If you just want to run Augur using the one repository in the default database, and default worker settings, all you need to do is start the redis server in one terminal, the celery worker in another terminal, and the augur application in the other terminal. (Don't forget that the AUGUR_DB needs to be set in the 2nd and 3rd terminal windows, or set permanently)
 
 .. code-block:: bash
 
+    # Terminal Window 1
+
+   # Starts the redis server 
+    redis-server
+
+.. code-block:: bash
+
+    # Terminal Window 2
+
+   # Start celery worker so it can accept tasks 
+   celery -A augur.tasks.init.celery_app.celery_app worker --loglevel=info
+
+
+.. code-block:: bash
+
+    # Terminal Window 3
+
    # To Start Augur: 
-   (nohup augur backend start >logs/run.log 2>logs/run.err &)
+   (nohup augur backend start)
 
    # To Stop Augur: 
    augur backend stop

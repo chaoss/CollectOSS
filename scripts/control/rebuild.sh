@@ -8,12 +8,13 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-target=${1-prod}
 
-scripts/install/backend.sh $target
-scripts/install/workers.sh $target
-scripts/install/frontend.sh
+scripts/install/backend.sh
+scripts/install/workers.sh
 
 echo
-echo "Checking database version..."
+echo
+echo
+echo "Database history shown below if current is not head please run augur db upgrade-db-version"
+echo 
 augur db check-for-upgrade
