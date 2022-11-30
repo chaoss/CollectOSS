@@ -5144,3 +5144,28 @@ paths:
             type: object
       tags:
         - visualizations
+  /complexity/project_lines: 
+    get: 
+      description: 'Returns project line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total number of lines in the project repository.' 
+      operationId: Total Lines (repo)
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 25540'
+                  type: integer
+                repo_git:
+                  description: 'Example: https://github.com/chaoss/augur'
+                  type: string
+                repo_name:
+                  description: 'Example: augur'
+                  type: string
+                total_lines:
+                  description: 'Example: 274734'
+                  type: integer
+            type: array
+      tags:
+      - complexity
