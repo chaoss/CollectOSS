@@ -29,4 +29,4 @@ Note: this was merged into `augur-new` to verify that the endpoint stubs are wor
 
 ## Team reflection
 
-TODO
+For this sprint we focused on setting up issues for all of the metrics and created code stubs for each endpoint and tests to make sure the endpoints were working correctly. We were not able to begin working on the SQL queries for the endpoints because we did not have a database with data in `repo_labor` until 11/17. Going forward we are going to construct the SQL queries and then begin working on the API endpoints. 
