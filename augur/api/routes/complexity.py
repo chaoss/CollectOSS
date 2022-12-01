@@ -137,14 +137,14 @@ def create_routes(server):
     def get_project_blank_lines():
         blank_lines_sql = s.sql.text("""
         SELECT
-            e.repo_id,
-            augur_data.repo.repo_git,
-            augur_data.repo.repo_name,
-            e.blank_lines,
-            e.avg_blank_lines
-        FROM
-            augur_data.repo,
-            (SELECT 
+    e.repo_id,
+    augur_data.repo.repo_git,
+    augur_data.repo.repo_name,
+    e.blank_lines,
+    e.avg_blank_lines
+    FROM
+    augur_data.repo,
+    (SELECT 
             d.repo_id,
             SUM(d.blank_lines) AS blank_lines,
             AVG(d.blank_lines)::int AS avg_blank_lines
@@ -165,17 +165,7 @@ def create_routes(server):
                     AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
         GROUP BY d.repo_id) e
     WHERE augur_data.repo.repo_id = e.repo_id
-    ORDER BY e.repo_id
-                            MAX ( data_collection_date ) AS last_collected
-                        FROM 
-                            augur_data.repo_labor
-                        GROUP BY augur_data.repo_labor.repo_id) recent 
-                WHERE
-                    augur_data.repo_labor.repo_id = recent.repo_id
-                    AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
-                GROUP BY d.repo_id) e
-            WHERE augur_data.repo.repo_id = e.repo_id
-            ORDER BY e.repo_id""")
+    ORDER BY e.repo_id""")
         results = pd.read_sql(blank_lines_sql,  server.engine)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
