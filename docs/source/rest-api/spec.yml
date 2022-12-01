@@ -5247,8 +5247,8 @@ paths:
                 comment_lines:
                   description: 'Example: 5066'
                   type: integer
-		            avg_comment_lines:
-		              description: 'Example: 345'
+                avg_comment_lines:
+                  description: 'Example: 345'
                   type: integer
             type: array
       tags:
