@@ -29,7 +29,7 @@ def create_routes(server):
                     augur_data.repo,
                 (SELECT 
                         d.repo_id,
-                        count(*) AS files
+                        count(*) AS files                        
                     FROM
                         (SELECT
                                 augur_data.repo_labor.repo_id
@@ -61,12 +61,14 @@ def create_routes(server):
                     e.repo_id,
                     augur_data.repo.repo_git,
                     augur_data.repo.repo_name,
-                    e.total_lines
+                    e.total_lines,
+                    e.average_lines
                 FROM
                     augur_data.repo,
                 (SELECT 
                         d.repo_id,
-                        SUM(d.total_lines) AS total_lines
+                        SUM(d.total_lines) AS total_lines,
+                        AVG(d.total_lines)::INT AS average_lines
                     FROM
                         (SELECT
                                 augur_data.repo_labor.repo_id,
