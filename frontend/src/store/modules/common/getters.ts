@@ -77,6 +77,12 @@ export default {
     console.log(items)
     return items
   },
+  repoCountInGroup: (state:any) => (rg_id:number) => {
+    return state.cache.getRepos.filter((repo: any) => repo.repo_group_id === rg_id).length;
+  },
+  // repos.filter((repo: any) => {
+  //   return repo.rg_name === group.rg_name;
+  // })
   sortedRepoGroups: (state:any) => (col:string, ascending: boolean) => {
     console.log(state.cache)
     const items = [...state.cache.getRepoGroups].sort((a,b) => {
