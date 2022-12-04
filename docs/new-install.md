@@ -1,4 +1,18 @@
 ## Augur Setup
+
+## General Pre-Requisites
+### Frontend (Optional)
+1. Install NodeJS (Optional if only running the backend)
+2. Install NPM (Optional if only running the backend)
+3. Install vue.js (Optional if only running the backend)
+4. Install vue-cli (Optional if only running the backend)
+
+### Backend (Ubuntu instructions, use Linux Distro Appropriate Package Manager Otherwise)
+1. Obtain a GitHub Access Token: https://github.com/settings/tokens
+2. Obtain a GitLab Access Token: https://gitlab.com/-/profile/personal_access_tokens
+3. Python3 needs to be installed, and typically is by default on most systems. 
+
+
 ### Docker
 1. Make sure docker, and docker-compose are both installed
 2. Modify the `environment.txt` file in the root of the repository to include your GitHub and GitLab API keys.
@@ -10,7 +24,6 @@
    `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. 
 ### Regular Installation
 0. Follow the installation instructions for the database here: https://oss-augur.readthedocs.io/en/main/quick-start.html#postgresql-installation
-0. 
 1. Clone Augur, or clone your fork of Augur if you wish to make contributions
 2. Install `redis-server` at the operating system level
 3. Make sure you have `Go` version is 1.19.3. If you don't know how to install `Go`, instructions are provided during the installation process.
