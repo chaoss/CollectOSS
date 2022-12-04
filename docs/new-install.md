@@ -2,8 +2,9 @@
 
 ## General Pre-Requisites
 ### Frontend (Optional)
-1. Install NodeJS (Optional if only running the backend)
-2. Install NPM (Optional if only running the backend)
+1. Install NodeJS (Optional if only running the backend) `sudo apt update` and `sudo apt install nodejs`
+2. Install NPM (Optional if only running the backend) `sudo apt install npm` 
+3. Install nvm (node version manager: recommended) `sudo apt install curl` and `curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash`
 3. Install vue.js (Optional if only running the backend)
 4. Install vue-cli (Optional if only running the backend)
 
@@ -13,13 +14,11 @@
 3. Python3 needs to be installed, and typically is by default on most systems. 
 4. There are some Git configuration parameters that help when you are cloning repos over time, and a platform prompts you for credentials when it finds a repo is deleted:
 ```bash 
-git config --global diff.renames true
-git config --global diff.renameLimit 200000
-git config --global credential.helper cache
-git config --global credential.helper 'cache --timeout=9999999999999'
+    git config --global diff.renames true
+    git config --global diff.renameLimit 200000
+    git config --global credential.helper cache
+    git config --global credential.helper 'cache --timeout=9999999999999'
 ```
-
-
 ### Docker
 1. Make sure docker, and docker-compose are both installed
 2. Modify the `environment.txt` file in the root of the repository to include your GitHub and GitLab API keys.
@@ -29,6 +28,7 @@ git config --global credential.helper 'cache --timeout=9999999999999'
 4. `sudo docker build -t augur-new -f docker/backend/Dockerfile .`
 5. `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to run the database in a Docker Container or 
    `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. 
+
 ### Regular Installation
 0. Follow the installation instructions for the database here: https://oss-augur.readthedocs.io/en/main/quick-start.html#postgresql-installation
 1. Clone Augur, or clone your fork of Augur if you wish to make contributions
