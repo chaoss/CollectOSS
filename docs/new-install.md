@@ -11,6 +11,13 @@
 1. Obtain a GitHub Access Token: https://github.com/settings/tokens
 2. Obtain a GitLab Access Token: https://gitlab.com/-/profile/personal_access_tokens
 3. Python3 needs to be installed, and typically is by default on most systems. 
+4. There are some Git configuration parameters that help when you are cloning repos over time, and a platform prompts you for credentials when it finds a repo is deleted:
+```bash 
+git config --global diff.renames true
+git config --global diff.renameLimit 200000
+git config --global credential.helper cache
+git config --global credential.helper 'cache --timeout=9999999999999'
+```
 
 
 ### Docker
