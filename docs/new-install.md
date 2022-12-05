@@ -48,7 +48,7 @@
 0. Follow the installation instructions for the database here: https://oss-augur.readthedocs.io/en/main/quick-start.html#postgresql-installation
 1. Clone Augur, or clone your fork of Augur if you wish to make contributions
 2. Install `redis-server` at the operating system level `sudo apt install redis-server`
-3. Make sure you have `Go` version is 1.19.3. If you don't know how to install `Go`, instructions are provided during the installation process.
+3. Make sure you have `Go` version is 1.19.3. If you don't know how to install `Go`, instructions are provided during the installation process. After following the instructions, you will need to add Go to your path for this session: `export PATH=$PATH:/usr/local/go/bin`. You should also add this to your shell's profile script.
 4. Create a Python Virtual Environment `python3 -m venv ~/virtual-env-directory` (use `python3.9 -m venv` if on Ubuntu 22.04, as it defaults to python 3.10, which will not compile the machine learning workers.)
 5. Activate your Python Virtual Environment `source ~/virtual-env-directory/bin/activate`
 6. From the root of the Augur Directory, type `make install`
