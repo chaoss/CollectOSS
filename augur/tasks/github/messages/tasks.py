@@ -9,6 +9,8 @@ from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
+from augur.application.db.util import execute_session_query
+
 
 
 platform_id = 1
@@ -106,7 +108,8 @@ def process_messages(messages, task_name, repo_id, logger):
             if is_issue_message(message["html_url"]):
 
                 try:
-                    related_issue = session.query(Issue).filter(Issue.issue_url == message["issue_url"]).one()
+                    query = session.query(Issue).filter(Issue.issue_url == message["issue_url"])
+                    related_issue = execute_session_query(query, 'one')
                     related_pr_of_issue_found = True
 
                 except s.orm.exc.NoResultFound:
@@ -131,7 +134,8 @@ def process_messages(messages, task_name, repo_id, logger):
             else:
 
                 try:
-                    related_pr = session.query(PullRequest).filter(PullRequest.pr_issue_url == message["issue_url"]).one()
+                    query = session.query(PullRequest).filter(PullRequest.pr_issue_url == message["issue_url"])
+                    related_pr = execute_session_query(query, 'one')
                     related_pr_of_issue_found = True
 
                 except s.orm.exc.NoResultFound:

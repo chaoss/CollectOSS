@@ -23,6 +23,8 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, RepoClusterMessage, RepoTopic, TopicWord
 from augur.application.db.engine import create_database_engine
+from augur.application.db.util import execute_session_query
+
 
 MODEL_FILE_NAME = "kmeans_repo_messages"
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
@@ -32,6 +34,8 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 def clustering_model(repo_git: str) -> None:
 
     logger = logging.getLogger(clustering_model.__name__)
+
+    logger.info(f"Starting clustering analysis for {repo_git}")
 
     ngram_range = (1, 4)
     clustering_by_content = True
@@ -47,15 +51,20 @@ def clustering_model(repo_git: str) -> None:
 
     with DatabaseSession(logger) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_id = execute_session_query(query, 'one').repo_id
 
         num_clusters = session.config.get_value("Clustering_Task", 'num_clusters')
         max_df = session.config.get_value("Clustering_Task", 'max_df')
         max_features = session.config.get_value("Clustering_Task", 'max_features')
         min_df = session.config.get_value("Clustering_Task", 'min_df')
 
-    nltk.download('all')
+        logger.info(f"Min df: {min_df}. Max df: {max_df}")
 
+    logger.info("If you did not install NLTK libraries when you installed Augur, this will fail. ")
+    #nltk.download('all')
+
+    logger.info(f"Getting repo messages for repo_id: {repo_id}")
     get_messages_for_repo_sql = s.sql.text(
         """
             SELECT
@@ -102,6 +111,7 @@ def clustering_model(repo_git: str) -> None:
     # result = db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
     msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, create_database_engine(), params={"repo_id": repo_id})
     logger.info(msg_df_cur_repo.head())
+    logger.debug(f"Repo message df size: {len(msg_df_cur_repo.index)}")
 
     # check if dumped pickle file exists, if exists no need to train the model
     if not os.path.exists(MODEL_FILE_NAME):
@@ -113,6 +123,7 @@ def clustering_model(repo_git: str) -> None:
         # if the model is more than month old, retrain it.
         logger.debug(f'model age is: {model_age}')
         if model_age > 2000000:
+            logger.info("clustering model to old. Retraining the model.........")
             train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source)
         else:
             logger.info("using pre-trained clustering model....")
@@ -208,8 +219,9 @@ def clustering_model(repo_git: str) -> None:
     # self.register_task_completion(task, repo_id, 'clustering')
 
 
-def get_tf_idf_matrix(text_list, max_df, max_features, min_df, ngram_range):
+def get_tf_idf_matrix(text_list, max_df, max_features, min_df, ngram_range, logger):
 
+    logger.debug("Getting the tf idf matrix from function")
     tfidf_vectorizer = TfidfVectorizer(max_df=max_df, max_features=max_features,
                                        min_df=min_df, stop_words='english',
                                        use_idf=True, tokenizer=preprocess_and_tokenize,
@@ -289,23 +301,27 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
     msg_df_all = pd.read_sql(get_messages_sql, create_database_engine(), params={})
 
     # select only highly active repos
+    logger.debug("Selecting highly active repos")
     msg_df_all = msg_df_all.groupby("repo_id").filter(lambda x: len(x) > 500)
 
     # combining all the messages in a repository to form a single doc
+    logger.debug("Combining messages in repo to form single doc")
     msg_df = msg_df_all.groupby('repo_id')['msg_text'].apply(','.join)
     msg_df = msg_df.reset_index()
 
-    # dataframe summarizing total message count in a repository
+    # dataframe summarizing total message count in a repositoryde
+    logger.debug("Summarizing total message count in a repo")
     message_desc_df = msg_df_all[["repo_id", "repo_git", "repo_name", "msg_id"]].groupby(
         ["repo_id", "repo_git", "repo_name"]).agg('count').reset_index()
     message_desc_df.columns = ["repo_id", "repo_git", "repo_name", "message_count"]
     logger.info(msg_df.head())
 
     tfidf_matrix, features = get_tf_idf_matrix(msg_df['msg_text'], max_df, max_features, min_df,
-                                                    ngram_range)
+                                                    ngram_range, logger)
     msg_df['cluster'] = cluster_and_label(tfidf_matrix, num_clusters)
 
     # LDA - Topic Modeling
+    logger.debug("Calling CountVectorizer in train model function")
     count_vectorizer = CountVectorizer(max_df=max_df, max_features=max_features, min_df=min_df,
                                        stop_words="english", tokenizer=preprocess_and_tokenize)
 
@@ -315,6 +331,7 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
     pickle.dump(count_transformer.vocabulary_, open("vocabulary_count", 'wb'))
     feature_names = count_vectorizer.get_feature_names()
 
+    logger.debug("Calling LDA")
     lda_model = LDA(n_components=num_topics)
     lda_model.fit(count_matrix)
     # each component in lda_model.components_ represents probability distribution over words in that topic
@@ -333,7 +350,7 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
     # Another Good Site: https://towardsdatascience.com/an-introduction-to-clustering-algorithms-in-python-123438574097
     # https://machinelearningmastery.com/clustering-algorithms-with-python/
 
-    logging.info("Topic List Created: {}".format(topic_list))
+    logging.info(f"Topic List Created: {topic_list}")
     pickle.dump(lda_model, open("lda_model", 'wb'))
     logging.info("pickle dump")
 
@@ -341,8 +358,8 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
 
     # key_sequence_words_sql = s.sql.text(
     #                           """
-    # 		SELECT nextval('augur_data.topic_words_topic_words_id_seq'::text)
-    # 		"""
+    #       SELECT nextval('augur_data.topic_words_topic_words_id_seq'::text)
+    #       """
     #                               )
 
     # twid = self.db.execute(key_sequence_words_sql)

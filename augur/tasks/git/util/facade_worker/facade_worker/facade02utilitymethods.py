@@ -48,14 +48,13 @@ def update_repo_log(session, repos_id,status):
 	#log_message = ("INSERT INTO repos_fetch_log (repos_id,status) "
 	#	"VALUES (%s,%s)")
 	try:
-		 
-		 
-		data = {
-			'repos_id': repos_id,
-			'status': status
-		}
-		session.insert_data(data,t_repos_fetch_log,['repos_id'])
-	except:
+		log_message = s.sql.text("""INSERT INTO repos_fetch_log (repos_id,status) 
+            VALUES (:repo_id,:repo_status)""").bindparams(repo_id=repos_id,repo_status=status)
+
+		#session.insert_data(data,t_repos_fetch_log,['repos_id','status'])
+		session.execute_sql(log_message)
+	except Exception as e:
+		session.logger.error(f"Ran into error in update_repo_log: {e}")
 		pass
 
 def trim_commit(session, repo_id,commit):

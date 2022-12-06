@@ -1,10 +1,21 @@
 #SPDX-License-Identifier: MIT
+## Added  imports
+import re
+import unicodedata
+import nltk
+import string
+from nltk.tokenize import word_tokenize 
+from nltk.stem.snowball import SnowballStemmer
+from bs4 import BeautifulSoup
+import matplotlib.pyplot as plt
+from datetime import date
 
+##
 import logging
 import multiprocessing
 import os
-from datetime import date
 import traceback 
+from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
@@ -37,8 +48,9 @@ def build_model(max_epochs, vec_size, alpha, tag_data):
         model.alpha -= 0.0002
         model.min_alpha = model.alpha
 
-    model.save("doc2vec.model")
-    self.logger.info("Model Saved")
+    #Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
+    model.save(os.path.join(train_path,"doc2vec.model"))
+    #logger.info("Model Saved")
     return model
 # '''
 
@@ -55,8 +67,8 @@ def autoencoder(vec_input, train):
     model = Model(inputs = input_dim, outputs = decoded2)
 
     # Compile the Model
-    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mean_squared_error'])
-    model.fit(train, train, epochs = 20)
+    model.compile(optimizer="Adam", loss="mean_squared_error", metrics=["mean_squared_error"])
+    model.fit(train, train, epochs = 60)
     return model
 
 def reconstruction(pred, val):
@@ -110,35 +122,58 @@ def display_unique(sorted_cosine_similarities):
     return unique_message_list
 '''
 
-def novelty_analysis(df_message, r_id, models_dir, full_train, logger=logging):
+def novelty_analysis(df_message, r_id, models_dir, full_train=True):
     # Normlize text corpus
     df_message['cleaned_msg_text'] = df_message['msg_text'].map(lambda x: normalize_corpus(x))
-    logger.info('Normalized text corpus')
+    #logger.info('Normalized text corpus')
 
     # Load pretrained Doc2Vec model
-    try: 
-        d2v_model = Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
-        doc2vec_vectors = np.array([d2v_model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_message.iterrows()])
-        logger.info('Doc2Vec vectorization done')
-    except Exception as e: 
-        logger.debug(f"Doc2Vec Model Error")
-        stacker = traceback.format_exc()
-        logger.debug(f"\n\n{stacker}\n\n")
-        pass
+    #logger.info(f'train path is: {train_path}')
+
+#################
+    # building model ... need tag data 
+
+    df_x = pd.DataFrame(df_message['cleaned_msg_text'])
+    tag_data = [TaggedDocument(str(row['cleaned_msg_text']).split(), [index]) for index, row in df_x.iterrows()]
+    # print(tag_data)
+    model = build_model(max_epochs=100, vec_size=300, alpha=0.01, tag_data=tag_data)
+
+    today=datetime.today()
+    timer = today - timedelta(days=45)
+    timerstr = timer.strftime('%Y-%m-%d')
+
+
+    df_past = df_message[df_message['msg_timestamp'].astype(str)< timerstr]
+    df_present = df_message[df_message['msg_timestamp'].astype(str)>= timerstr]
+
+
+    doc2vec_vectors = np.array([model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_past.iterrows()])
+#####################
+
+#####################
+
+    dvmodel = build_model(max_epochs=100, vec_size=300, alpha=0.01, tag_data=tag_data)
+    dvmodel.save(f'{models_dir}/doc2vec.model')
+
+    d2v_model = Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
+    doc2vec_vectors = np.array([d2v_model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_message.iterrows()])
+    #logger.info('Doc2Vec vectorization done')
+    encoder_length=len(doc2vec_vectors)
+####################
 
     # Trains the AE model when worker runs first time
     if full_train:
     
         # First autoencoder to identify normal data records
-        ae1 = autoencoder(250, doc2vec_vectors)
-        logger.info('AE 1 training done')
+        ae1 = autoencoder(300, doc2vec_vectors)
+        #logger.info('AE 1 training done')
         pred_train = ae1.predict(doc2vec_vectors)
         _rec_error1 = reconstruction(pred_train, doc2vec_vectors)
         _, normal_data = get_normal_data(_rec_error1, doc2vec_vectors)
 
         # Second autoencoder to decide threshold using otsu
-        ae = autoencoder(250, normal_data)
-        logger.info('AE 2 training done')
+        ae = autoencoder(300, normal_data)
+        #logger.info('AE 2 training done')
         predicted_vectors = ae.predict(doc2vec_vectors)
         rec_error = reconstruction(predicted_vectors, doc2vec_vectors)
         threshold, _ = get_normal_data(rec_error, doc2vec_vectors)
@@ -150,7 +185,7 @@ def novelty_analysis(df_message, r_id, models_dir, full_train, logger=logging):
     else:
         threshold = 0
         ae = load_model(f'{models_dir}/{r_id}_uniq.h5')
-        logger.info('Loaded pretrained AE model for repo')
+        #logger.info('Loaded pretrained AE model for repo')
 
         # Fitting on present data
         predicted_vectors_test = ae.predict(doc2vec_vectors)

@@ -118,6 +118,12 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 		author_email = strip_extra_amp(author_email)
 		committer_email = strip_extra_amp(committer_email)
 
+		#replace incomprehensible dates with epoch.
+		#2021-10-11 11:57:46 -0500
+		placeholder_date = "1970-01-01 00:00:15 -0500"
+
+
+		#session.logger.info(f"Timestamp: {author_timestamp}")
 		commit_record = {
 			'repo_id' : repos_id,
 			'commit' : str(commit),
@@ -126,16 +132,16 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 			'author_email_raw' : author_email,
 			'author_email' : discover_alias(author_email),
 			'author_date' : author_date,
-			'author_timestamp' : author_timestamp,
+			'author_timestamp' : author_timestamp if len(author_timestamp.replace(" ", "")) != 0 else placeholder_date,
 			'committer_name' : committer_name,
 			'committer_email_raw' : committer_email,
 			'committer_email' : discover_alias(committer_email),
-			'committer_date' : committer_date,
-			'committer_timestamp' : committer_timestamp,
+			'committer_date' : committer_date if len(committer_date.replace(" ", "")) != 0 else placeholder_date,
+			'committer_timestamp' : committer_timestamp if len(committer_timestamp.replace(" ","")) != 0 else placeholder_date,
 			'added' : added,
 			'removed' : removed,
 			'whitespace' : whitespace,
-			'committer_date' : committer_date,
+			'committer_date' : committer_date if len(committer_date.replace(" ","")) != 0 else placeholder_date,
 			'tool_source' : "Facade",
 			'tool_version' : "0.42",
 			'data_source' : "git"

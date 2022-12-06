@@ -345,7 +345,7 @@ class GithubPaginator(collections.abc.Sequence):
         Returns
             The response object from hitting the url and the data on the page
         """
-        timeout = 5.0
+        timeout = 30
         timeout_count = 0
         num_attempts = 1
         while num_attempts <= 10:
@@ -357,7 +357,7 @@ class GithubPaginator(collections.abc.Sequence):
                     self.logger.error(f"Request timed out 10 times for {url}")
                     return None, None, GithubApiResult.TIMEOUT
 
-                timeout = timeout * 1.2
+                timeout = timeout * 1.1
                 num_attempts += 1
                 continue
             

@@ -36,7 +36,7 @@ RUN set -x \
 RUN ./scripts/docker/install-go.sh
 # RUN ./scripts/install/workers.sh 
 
-RUN mkdir -p repos/ logs/ facade/
+RUN mkdir -p repos/ logs/ /augur/facade/
 
 COPY ./docker/backend/entrypoint.sh /
 RUN chmod +x /entrypoint.sh
