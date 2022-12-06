@@ -39,18 +39,18 @@ def test_redis_list_length(redis_list, data):
     assert redis.llen(redis_list.redis_list_key)  == len(data)
 
 
-def test_redis_list_contains(redis_list):
+# def test_redis_list_contains(redis_list):
 
-    insert_values = [i for i in range(2, 10, 2)]
+#     insert_values = [i for i in range(2, 10, 2)]
 
-    redis.rpush(redis_list.redis_list_key, *insert_values)
+#     redis.rpush(redis_list.redis_list_key, *insert_values)
 
-    for item in insert_values:
-        assert redis_list.contains(item) == True
+#     for item in insert_values:
+#         assert redis_list.contains(item) == True
 
-    assert redis_list.contains(5) == False
-    assert redis_list.contains(1000) == False
-    assert redis_list.contains(50) == False
+#     assert redis_list.contains(5) == False
+#     assert redis_list.contains(1000) == False
+#     assert redis_list.contains(50) == False
 
 
 extend_data_1 = [i for i in range(2, 10, 2)]

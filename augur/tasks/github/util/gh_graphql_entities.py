@@ -23,7 +23,7 @@ from augur.tasks.github.util.github_paginator import GithubApiResult, process_di
     PR_reviews, events, messages, pr_commits, pr_files(already done convert it)
 """
 
-def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=20):
+def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=40):
     logger.debug(f"Sending query {query}  to github graphql")
 
     response = None
@@ -66,7 +66,76 @@ def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=20):
             return None
     
     return response
-    
+
+def request_graphql_dict(session,url,query,variables={},timeout_wait=10):
+    attempts = 0
+    response_data = None
+    success = False
+    while attempts < 10:
+        #self.logger.info(f"{attempts}")
+        try:
+            result = hit_api_graphql(session.oauths, url, session.logger, query,variables=variables)
+            #self.hit_api(query,variables=variables)
+        except TimeoutError:
+            session.logger.info(
+                f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
+            time.sleep(timeout_wait)
+            continue
+        
+        if not result:
+            attempts += 1
+            continue
+
+        try:
+            response_data = result.json()
+        except:
+            response_data = json.loads(json.dumps(result.text))
+        
+        #self.logger.info(f"api return: {response_data}")
+
+        if type(response_data) == dict:
+            err = process_dict_response(session.logger, result, response_data)
+
+            if err and err != GithubApiResult.SUCCESS:
+                attempts += 1
+                session.logger.info(f"err: {err}")
+                continue
+            
+            success = True
+            break
+        elif type(response_data) == list:
+            session.logger.warning("Wrong type returned, trying again...")
+            session.logger.info(f"Returned list: {response_data}")
+        elif type(response_data) == str:
+            logger.info(
+                f"Warning! page_data was string: {response_data}")
+            if "<!DOCTYPE html>" in response_data:
+                session.logger.info("HTML was returned, trying again...\n")
+            elif len(response_data) == 0:
+                logger.warning("Empty string, trying again...\n")
+            else:
+                try:
+                    # Sometimes raw text can be converted to a dict
+                    response_data = json.loads(response_data)
+                    session.logger.info(f"{response_data}")
+                    err = process_graphql_dict_response(logger,result,response_data)
+
+                    #If we get an error message that's not None
+                    if err and err != GithubApiResult.SUCCESS:
+                        continue
+                    
+                    success = True
+                    break
+                except:
+                    pass
+        attempts += 1
+
+    if not success:
+        return None
+
+    return response_data
+
+
 
 #Get data extraction logic for nested nodes in return data.
 
@@ -167,7 +236,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
             attempts += 1
 
         if not success:
-            raise OSError#return None
+            return None
 
         return response_data
 
@@ -177,6 +246,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
     def extract_paginate_result(self,responseDict):
 
+        if not responseDict:
+            raise TimeoutError("No data received from endpoint.")
         #err = process_graphql_dict_response(self.logger, responseObject, response)
         if 'data' not in responseDict:
             self.logger.error(responseDict)
@@ -304,7 +375,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
             coreData = self.extract_paginate_result(data)
 
-            print(coreData)
+            #print(coreData)
             if len(coreData['edges']) == 0:
                 return
             
