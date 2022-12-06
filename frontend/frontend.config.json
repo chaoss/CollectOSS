@@ -1,6 +1,6 @@
 {
     "Frontend": {
-        "host": "ebay.chaoss.io",
+        "host": "augur.chaoss.io",
         "port": 5000,
         "ssl": false
     }
