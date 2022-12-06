@@ -17,6 +17,7 @@ from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api, p
 # Debugger
 import traceback
 from augur.tasks.github.util.github_paginator import GithubApiResult
+from augur.application.db.util import execute_session_query
 
 ##TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
 
@@ -122,7 +123,8 @@ def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
 
     #stmnt = s.select(Repo.repo_path, Repo.repo_name).where(Repo.repo_id == repo_id)
 
-    result = session.query(Repo).filter_by(repo_id=repo_id).one()
+    query = session.query(Repo).filter_by(repo_id=repo_id)
+    result = execute_session_query(query, 'one')
 
     if result.repo_path is None or result.repo_name is None:
         raise KeyError
@@ -165,7 +167,8 @@ def insert_alias(session, contributor, email):
     # Same principle as enrich_cntrb_id method.
 
     
-    contributor_table_data = session.query(Contributor).filter_by(gh_user_id=contributor["gh_user_id"]).all()
+    query = session.query(Contributor).filter_by(gh_user_id=contributor["gh_user_id"])
+    contributor_table_data = execute_session_query(query, 'all')
     # self.logger.info(f"Contributor query: {contributor_table_data}")
 
     # Handle potential failures
@@ -409,7 +412,8 @@ def create_endpoint_from_repo_id(session, repo_id):
         WHERE repo_id = :repo_id_bind
     """
     #ORM syntax of above statement
-    result = session.query(Repo).filter_by(repo_id=repo_id).one()
+    query = session.query(Repo).filter_by(repo_id=repo_id)
+    result = execute_session_query(query, 'one')
 
     url = result.repo_git
     session.logger.info(f"Url: {url}")

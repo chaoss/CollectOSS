@@ -42,6 +42,25 @@ from augur.tasks.github.util.github_task_session import *
 
 from augur.application.logs import TaskLogConfig
 
+#define an error callback for chains in facade collection so facade doesn't make the program crash
+#if it does.
+@celery.task
+def facade_error_handler(request,exc,traceback):
+    logger = logging.getLogger(facade_error_handler.__name__)
+
+    logger.error(f"Task {request.id} raised exception: {exc}! \n {traceback}")
+
+    print(f"chain: {request.chain}")
+    #Make sure any further execution of tasks dependent on this one stops.
+    try:
+        #Replace the tasks queued ahead of this one in a chain with None.
+        request.chain = None
+    except AttributeError:
+        pass #Task is not part of a chain. Normal so don't log.
+    except Exception as e:
+        logger.error(f"Could not mutate request chain! \n Error: {e}")
+
+
 #Predefine facade collection with tasks
 @celery.task
 def facade_analysis_init_facade_task():
@@ -54,7 +73,11 @@ def facade_analysis_init_facade_task():
 def grab_comitter_list_facade_task(repo_id,platform="github"):
     logger = logging.getLogger(grab_comitter_list_facade_task.__name__)
 
-    grab_committer_list(GithubTaskSession(logger), repo_id,platform)
+    try:
+        grab_committer_list(GithubTaskSession(logger), repo_id,platform)
+    except Exception as e:
+        logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        
 
 @celery.task
 def trim_commits_facade_task(repo_id):
@@ -111,10 +134,8 @@ def trim_commits_post_analysis_facade_task(repo_id,commits):
         log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
             VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
 
-        try:
-            session.execute_sql(log_message)
-        except:
-            pass
+        
+        session.execute_sql(log_message)
     
 
     update_analysis_log(repo_id,'Data collection complete')
@@ -231,11 +252,12 @@ def generate_analysis_sequence(logger):
 
         start_date = session.get_setting('start_date')
 
-        analysis_sequence.append(facade_analysis_init_facade_task.si())
+        analysis_sequence.append(facade_analysis_init_facade_task.si().on_error(facade_error_handler.s()))
         for repo in repos:
-            analysis_sequence.append(grab_comitter_list_facade_task.si(repo['repo_id']))
+            session.logger.info(f"Generating sequence for repo {repo['repo_id']}")
+            analysis_sequence.append(grab_comitter_list_facade_task.si(repo['repo_id']).on_error(facade_error_handler.s()))
 
-            analysis_sequence.append(trim_commits_facade_task.si(repo['repo_id']))
+            analysis_sequence.append(trim_commits_facade_task.si(repo['repo_id']).on_error(facade_error_handler.s()))
 
 
             #Get the huge list of commits to process.
@@ -280,17 +302,18 @@ def generate_analysis_sequence(logger):
 
                 #Split commits into mostly equal queues so each process starts with a workload and there is no
                 #    overhead to pass into queue from the parent.            
-                #Each task generates their own cfg as celery cannot serialize this data
                 contrib_jobs = create_grouped_task_load(repo['repo_id'],repo_loc,True,dataList=list(missing_commits),task=analyze_commits_in_parallel)
+                contrib_jobs.link_error(facade_error_handler.s())
                 analysis_sequence.append(contrib_jobs)
             
             # Find commits which are out of the analysis range
 
             trimmed_commits = existing_commits - parent_commits
-            analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo['repo_id'],list(trimmed_commits)))
+            analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo['repo_id'],list(trimmed_commits)).on_error(facade_error_handler.s()))
         
-        analysis_sequence.append(facade_analysis_end_facade_task.si())
+        analysis_sequence.append(facade_analysis_end_facade_task.si().on_error(facade_error_handler.s()))
     
+    #print(f"Analysis sequence: {analysis_sequence}")
     return analysis_sequence
 
 
@@ -309,7 +332,9 @@ def generate_contributor_sequence(logger):
         for repo in all_repos:
             contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
 
-    return chain(facade_start_contrib_analysis_task.si(),group(contributor_sequence))
+    contrib_group = group(contributor_sequence)
+    contrib_group.link_error(facade_error_handler.s())
+    return chain(facade_start_contrib_analysis_task.si(),)
 
 
 
@@ -366,17 +391,17 @@ def generate_facade_chain(logger):
         facade_sequence.append(generate_contributor_sequence(logger))
 
         if nuke_stored_affiliations:
-            facade_sequence.append(nuke_affiliations_facade_task.si())#nuke_affiliations(session.cfg)
+            facade_sequence.append(nuke_affiliations_facade_task.si().on_error(facade_error_handler.s()))#nuke_affiliations(session.cfg)
 
         #session.logger.info(session.cfg)
         if not limited_run or (limited_run and fix_affiliations):
-            facade_sequence.append(fill_empty_affiliations_facade_task.si())#fill_empty_affiliations(session)
+            facade_sequence.append(fill_empty_affiliations_facade_task.si().on_error(facade_error_handler.s()))#fill_empty_affiliations(session)
 
         if force_invalidate_caches:
-            facade_sequence.append(invalidate_caches_facade_task.si())#invalidate_caches(session.cfg)
+            facade_sequence.append(invalidate_caches_facade_task.si().on_error(facade_error_handler.s()))#invalidate_caches(session.cfg)
 
         if not limited_run or (limited_run and rebuild_caches):
-            facade_sequence.append(rebuild_unknown_affiliation_and_web_caches_facade_task.si())#rebuild_unknown_affiliation_and_web_caches(session.cfg)
+            facade_sequence.append(rebuild_unknown_affiliation_and_web_caches_facade_task.si().on_error(facade_error_handler.s()))#rebuild_unknown_affiliation_and_web_caches(session.cfg)
         
         return chain(*facade_sequence)
 

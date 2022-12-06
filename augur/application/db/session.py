@@ -12,10 +12,10 @@ from typing import Optional, List, Union
 from psycopg2.errors import DeadlockDetected
 
 # from augur.tasks.util.random_key_auth import RandomKeyAuth
-from augur.application.db.engine import create_database_engine
 from augur.application.config import AugurConfig
 from augur.application.db.models import Platform
-from augur.tasks.util.worker_util import remove_duplicate_dicts
+from augur.application.db.engine import EngineConnection
+from augur.tasks.util.worker_util import remove_duplicate_dicts, remove_duplicates_by_uniques
 
 
 def remove_null_characters_from_string(string):
@@ -58,7 +58,13 @@ class DatabaseSession(s.orm.Session):
         self.config = AugurConfig(logger=logger, session=self)
 
         self.engine = engine
+        self.engine_created = False
+
         if self.engine is None:
+            from augur.application.db.engine import create_database_engine
+
+            self.engine_created = True
+
             self.engine = create_database_engine()
 
         super().__init__(self.engine)
@@ -67,18 +73,25 @@ class DatabaseSession(s.orm.Session):
         return self
 
     def __exit__(self, exception_type, exception_value, exception_traceback):
+
+        if self.engine_created:
+            self.engine.dispose()
+        
         self.close()
     
     def execute_sql(self, sql_text):
 
-        with self.engine.connect():
-            connection = self.engine.connect()
+        with EngineConnection(self.engine) as connection:
+            return_data = connection.execute(sql_text)  
 
-            return connection.execute(sql_text)
+            return return_data
 
     def fetchall_data_from_sql_text(self,sql_text):
-        result = self.execute_sql(sql_text).fetchall()
-        return [dict(zip(row.keys(), row)) for row in result]
+
+        with EngineConnection(self.engine) as connection:
+
+            result = connection.execute(sql_text)  .fetchall()
+            return [dict(zip(row.keys(), row)) for row in result]
 
     def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
 
@@ -103,7 +116,7 @@ class DatabaseSession(s.orm.Session):
 
         # remove any duplicate data 
         # this only counts something as a duplicate if every field is the same
-        data = remove_duplicate_dicts(data)
+        data = remove_duplicates_by_uniques(data, natural_keys)
 
         # remove null data from string fields
         if string_fields and isinstance(string_fields, list):
@@ -150,12 +163,13 @@ class DatabaseSession(s.orm.Session):
         sleep_time_list = list(range(1,11))
         deadlock_detected = False
 
+
         # if there is no data to return then it executes the insert then returns nothing
         if not return_columns:
 
             while attempts < 10:
                 try:
-                    with self.engine.connect() as connection:
+                    with EngineConnection(self.engine) as connection:
                         connection.execute(stmnt)
                         break
                 except s.exc.OperationalError as e:
@@ -171,6 +185,16 @@ class DatabaseSession(s.orm.Session):
                     
                     raise e
 
+                except Exception as e:
+                    if(len(data) == 1):
+                        raise e
+                    else:
+                        first_half = data[:len(data)//2]
+                        second_half = data[len(data)//2:]
+
+                        self.insert_data(first_half, natural_keys, return_columns, string_fields, on_conflict_update)
+                        self.insert_data(second_half, natural_keys, return_columns, string_fields, on_conflict_update)
+
             else:
                 self.logger.error("Unable to insert data in 10 attempts")
                 return None
@@ -184,7 +208,7 @@ class DatabaseSession(s.orm.Session):
         # othewise it gets the requested return columns and returns them as a list of dicts
         while attempts < 10:
             try:
-                with self.engine.connect() as connection:
+                with EngineConnection(self.engine) as connection:
                     return_data_tuples = connection.execute(stmnt).fetchall()
                     break
             except s.exc.OperationalError as e:
@@ -197,6 +221,16 @@ class DatabaseSession(s.orm.Session):
                     continue   
 
                 raise e
+
+            except Exception as e:
+                if(len(data) == 1):
+                    raise e
+                else:
+                    first_half = data[:len(data)//2]
+                    second_half = data[len(data)//2:]
+
+                    self.insert_data(first_half, natural_keys, return_columns, string_fields, on_conflict_update)
+                    self.insert_data(second_half, natural_keys, return_columns, string_fields, on_conflict_update)
 
         else:
             self.logger.error("Unable to insert and return data in 10 attempts")

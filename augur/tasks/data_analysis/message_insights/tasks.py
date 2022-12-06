@@ -15,6 +15,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, MessageAnalysis, MessageAnalysisSummary
 from augur.application.db.engine import create_database_engine
+from augur.application.db.util import execute_session_query
 
 #SPDX-License-Identifier: MIT
 
@@ -32,9 +33,13 @@ def message_insight_model(repo_git: str) -> None:
     tool_version = '0.3.1'
     data_source = 'Non-existent API'
 
+    now = datetime.datetime.utcnow()
+    run_id = int(now.timestamp())+5
+
     with DatabaseSession(logger) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_id = execute_session_query(query, 'one').repo_id
 
         models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", session.config.get_value("Message_Insights", 'models_dir'))
         insight_days = session.config.get_value("Message_Insights", 'insight_days')
@@ -46,7 +51,7 @@ def message_insight_model(repo_git: str) -> None:
         SELECT exists (SELECT 1 FROM augur_data.message_analysis_summary WHERE repo_id = :repo_id LIMIT 1)""")
 
     df_rep = pd.read_sql_query(repo_exists_SQL, create_database_engine(), params={'repo_id': repo_id})
-    # full_train = not(df_rep['exists'].iloc[0])
+    #full_train = not(df_rep['exists'].iloc[0])
     logger.info(f'Full Train: {full_train}')
 
     # Collection and insertion of data happens here
@@ -130,8 +135,7 @@ def message_insight_model(repo_git: str) -> None:
             logger.error('Models storage directory could not be created \n')
 
         logger.info('Starting novelty detection...')
-        threshold, df_message['rec_err'] = novelty_analysis(df_message, repo_id, models_dir, full_train,
-                                                            logger=logger)
+        threshold, df_message['rec_err'] = novelty_analysis(df_message, repo_id, models_dir, full_train)
 
         if not full_train:
             merge_SQL = s.sql.text("""
@@ -305,39 +309,35 @@ def message_insight_model(repo_git: str) -> None:
         logger.info('Begin repo wise insights insertion...')
         logger.info(f'{df_senti.shape[0]} data records to be inserted\n')
         for row in df_trend.itertuples():
-            try:
-                msg = {
-                    "repo_id": repo_id,
-                    "worker_run_id": run_id,
-                    "positive_ratio": row.PosR,
-                    "negative_ratio": row.NegR,
-                    "novel_count": row.Novel,
-                    "period": row.Index,
-                    "tool_source": tool_source,
-                    "tool_version": tool_version,
-                    "data_source": data_source
-                }
+            msg = {
+                "repo_id": repo_id,
+                "worker_run_id": run_id,
+                "positive_ratio": row.PosR,
+                "negative_ratio": row.NegR,
+                "novel_count": row.Novel,
+                "period": row.Index,
+                "tool_source": tool_source,
+                "tool_version": tool_version,
+                "data_source": data_source
+            }
 
-                message_analysis_summary_object = MessageAnalysisSummary(**msg)
-                session.add(message_analysis_summary_object)
-                session.commit()
+            message_analysis_summary_object = MessageAnalysisSummary(**msg)
+            session.add(message_analysis_summary_object)
+            session.commit()
 
-                # result = create_database_engine().execute(message_analysis_summary_table.insert().values(msg))
-                logger.info(
-                    f'Primary key inserted into the message_analysis_summary table: {message_analysis_summary_object.msg_summary_id}')
-                # logger.info(f'Inserted data point {results_counter} for insight_period {row.Index}')
-            except Exception as e:
-                logger.error(f'Error occurred while storing datapoint {repr(e)}')
-                break
+            # result = create_database_engine().execute(message_analysis_summary_table.insert().values(msg))
+            logger.info(
+                f'Primary key inserted into the message_analysis_summary table: {message_analysis_summary_object.msg_summary_id}')
+            # logger.info(f'Inserted data point {results_counter} for insight_period {row.Index}')
 
         logger.info('Data insertion completed\n')
 
-        message_analysis_query = """SELECT period, postive_ratio, negative_ratio, nove_count 
-                                    FROM message_analysis_summary 
-                                    WHERE repo_id=:repo_id
-                                """
+        message_analysis_query = s.sql.text("""
+                                 SELECT period, positive_ratio, negative_ratio, novel_count 
+                                 FROM message_analysis_summary 
+                                 WHERE repo_id=:repo_id""")
 
-        df_past = pd.read_sql(message_analysis_query, create_database_engine(), params={"repo_id": repo_id})
+        df_past = pd.read_sql_query(message_analysis_query, create_database_engine(), params={'repo_id': repo_id})
 
         # df_past = get_table_values(cols=['period', 'positive_ratio', 'negative_ratio', 'novel_count'],
         #                                 tables=['message_analysis_summary'],
@@ -346,6 +346,9 @@ def message_insight_model(repo_git: str) -> None:
 
         # Calculate deviation from mean for all metrics
         mean_vals = df_past[['positive_ratio', 'negative_ratio', 'novel_count']].iloc[:-1].mean(axis=0)
+        # Attempted bug fix 10/28/2022
+        df_past.fillna("nan")
+        ##############################
         curr_pos, curr_neg, curr_novel = df_past[['positive_ratio', 'negative_ratio', 'novel_count']].iloc[-1]
         pos_shift = (curr_pos - mean_vals[0]) / mean_vals[0] * 100
         neg_shift = (curr_neg - mean_vals[1]) / mean_vals[1] * 100
@@ -446,4 +449,7 @@ def get_max_id(table, column, logger, default=25150):
         max_id = default
         logger.warning("Could not find max id for {} column in the {} table... " +
             "using default set to: {}\n".format(column, table, max_id))
+
+    db.dispose()
+
     return max_id

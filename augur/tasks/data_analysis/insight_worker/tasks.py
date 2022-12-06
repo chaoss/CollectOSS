@@ -17,8 +17,11 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, ChaossMetricStatus, RepoInsight, RepoInsightsRecord
 from augur.application.db.engine import create_database_engine
+from augur.application.db.util import execute_session_query
 
 warnings.filterwarnings('ignore')
+
+engine = create_database_engine()
 
 @celery.task
 def insight_model(repo_git: str) -> None:
@@ -32,15 +35,18 @@ def insight_model(repo_git: str) -> None:
     tool_version = '1.0.0'
     data_source = 'Augur API'
 
+    metrics = {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
+                "reviews": "pull_requests", "contributors-new": "new_contributors"}
+
     with DatabaseSession(logger) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_id = execute_session_query(query, 'one').repo_id
 
         anomaly_days = session.config.get_value('Insight_Task', 'anomaly_days')
         training_days = session.config.get_value('Insight_Task', 'training_days')
         contamination = session.config.get_value('Insight_Task', 'contamination')
         confidence = session.config.get_value('Insight_Task', 'confidence_interval') / 100
-        metrics = session.config.get_value('Insight_Task', 'metrics')
         api_host = session.config.get_value('Server', 'host')
         api_port = session.config.get_value('Server', 'port')
 
@@ -92,7 +98,7 @@ def insight_model(repo_git: str) -> None:
     """ Deletion of old insights """
 
     # Delete previous insights not in the anomaly_days param
-    min_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
+    min_date = datetime.datetime.now() - datetime.timedelta(days=anomaly_days)
     logger.info("MIN DATE: {}\n".format(min_date))
     logger.info("Deleting out of date records ...\n")
     delete_record_SQL = s.sql.text("""
@@ -103,7 +109,7 @@ def insight_model(repo_git: str) -> None:
                 repo_id = :repo_id
                 AND ri_date < :min_date
     """)
-    result = self.db.execute(delete_record_SQL, repo_id=repo_id, min_date=min_date)
+    result = engine.execute(delete_record_SQL, repo_id=repo_id, min_date=min_date)
 
     logger.info("Deleting out of date data points ...\n")
     delete_points_SQL = s.sql.text("""
@@ -123,15 +129,17 @@ def insight_model(repo_git: str) -> None:
             WHERE repo_insights.ri_metric = to_delete.ri_metric
             AND repo_insights.ri_field = to_delete.ri_field
     """)
-    result = self.db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
+    result = engine.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
 
     # get table values to check for dupes later on
-    insight_table_values = self.get_table_values(['*'], ['repo_insights_records'],
-                                                 where_clause="WHERE repo_id = {}".format(repo_id))
+
+
+    table_values_sql = s.sql.text("""SELECT * FROM repo_insights_records WHERE repo_id={}""".format(repo_id))
+    insight_table_values = pd.read_sql(table_values_sql, engine, params={})
 
     to_model_columns = df.columns[0:len(metrics) + 1]
 
-    model = IsolationForest(n_estimators=100, max_samples='auto', contamination=float(self.contamination), \
+    model = IsolationForest(n_estimators=100, max_samples='auto', contamination=float(contamination), \
                             max_features=1.0, bootstrap=False, n_jobs=-1, random_state=32, verbose=0)
     model.fit(df[to_model_columns])
 
@@ -172,7 +180,7 @@ def insight_model(repo_git: str) -> None:
         anomaly_df = classify_anomalies(anomaly_df, metric)
 
         # Filter the anomaly_df by days we want to detect anomalies
-        begin_detection_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
+        begin_detection_date = datetime.datetime.now() - datetime.timedelta(days=anomaly_days)
         detection_tuples = anomaly_df.index > begin_detection_date
         anomaly_df = anomaly_df.loc[detection_tuples]
 
@@ -230,17 +238,21 @@ def insight_model(repo_git: str) -> None:
                     'ri_date': ts,
                     'ri_score': next_recent_anomaly.iloc[0]['score'],
                     'ri_detection_method': 'Isolation Forest',
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source
+                    "tool_source": tool_source,
+                    "tool_version": tool_version,
+                    "data_source": data_source
                 }
-                result = self.db.execute(self.repo_insights_records_table.insert().values(record))
-                logger.info("Primary key inserted into the repo_insights_records table: {}\n".format(
-                    result.inserted_primary_key))
-                self.results_counter += 1
+
+                with DatabaseSession(logger) as session:
+                    repo_insight_record_obj = RepoInsightsRecord(**record)
+                    session.add(repo_insight_record_obj)
+                    session.commit()
+
+                    logger.info("Primary key inserted into the repo_insights_records table: {}\n".format(
+                        repo_insight_record_obj.ri_id))
 
                 # Send insight to Jonah for slack bot
-                self.send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean))
+                send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean), logger)
 
                 insight_count += 1
             else:
@@ -271,13 +283,18 @@ def insight_model(repo_git: str) -> None:
                     'ri_fresh': 0 if date64 < most_recent_anomaly_date else 1,
                     'ri_score': most_recent_anomaly.iloc[0]['score'],
                     'ri_detection_method': 'Isolation Forest',
-                    "tool_source": self.tool_source,
-                    "tool_version": self.tool_version,
-                    "data_source": self.data_source
+                    "tool_source": tool_source,
+                    "tool_version": tool_version,
+                    "data_source": data_source
                 }
-                result = self.db.execute(self.repo_insights_table.insert().values(data_point))
-                logger.info("Primary key inserted into the repo_insights table: {}\n".format(
-                    result.inserted_primary_key))
+
+                with DatabaseSession(logger) as session:
+                    repo_insight_obj = RepoInsight(**data_point)
+                    session.add(repo_insight_obj)
+                    session.commit()
+
+                logger.info("Primary key inserted into the repo_insights_records table: {}\n".format(repo_insight_obj.ri_id))
+
 
                 logger.info(
                     "Inserted data point for metric: {}, date: {}, value: {}\n".format(metric, ts, tuple._3))
@@ -312,10 +329,10 @@ def confidence_interval_insights(logger):
     # If we are discovering insights for a group vs repo, the base url will change
     if 'repo_group_id' in entry_info and 'repo_id' not in entry_info:
         base_url = 'http://{}:{}/api/unstable/repo-groups/{}/'.format(
-            self.config['api_host'], self.config['api_port'], entry_info['repo_group_id'])
+            api_host, api_port, entry_info['repo_group_id'])
     else:
         base_url = 'http://{}:{}/api/unstable/repo-groups/9999/repos/{}/'.format(
-            self.config['api_host'], self.config['api_port'], repo_id)
+            api_host, api_port, repo_id)
 
     # Hit and discover insights for every endpoint we care about
     for endpoint in endpoints:
@@ -373,7 +390,7 @@ def confidence_interval_insights(logger):
         date_found = False
         x = 0
 
-        begin_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
+        begin_date = datetime.datetime.now() - datetime.timedelta(days=anomaly_days)
         for dict in date_filtered_data:
             dict_date = datetime.datetime.strptime(dict['date'],
                                                    '%Y-%m-%dT%H:%M:%S.%fZ')  # 2018-08-20T00:00:00.000Z
@@ -381,7 +398,7 @@ def confidence_interval_insights(logger):
                 date_found = True
                 date_found_index = x
                 logger.info(
-                    "raw values within {} days ago date found: {}, {}".format(self.anomaly_days, dict['date'],
+                    "raw values within {} days ago date found: {}, {}".format(anomaly_days, dict['date'],
                                                                               begin_date))
             x += 1
             for key in unique_keys:
@@ -397,7 +414,7 @@ def confidence_interval_insights(logger):
 
         for key in raw_values.keys():
             if len(raw_values[key]) > 0:
-                mean, lower, upper = self.confidence_interval(raw_values[key], confidence=self.confidence)
+                mean, lower, upper = confidence_interval(raw_values[key], logger, confidence=confidence)
                 logger.info("Upper: {}, middle: {}, lower: {}".format(upper, mean, lower))
                 i = 0
                 discovery_index = None
@@ -426,8 +443,8 @@ def confidence_interval_insights(logger):
                     # Check if new insight has a better score than other insights in its place, use result
                     #   to determine if we continue in the insertion process (0 for no insertion, 1 for record
                     #   insertion, 2 for record and insight data points insertion)
-                    instructions = self.clear_insight(repo_id, score, endpoint['cm_info'], key)
-                    # self.clear_insight(repo_id, score, endpoint['cm_info'] + ' ({})'.format(key))
+                    instructions = clear_insight(repo_id, score, endpoint['cm_info'], key, logger)
+                    # clear_insight(repo_id, score, endpoint['cm_info'] + ' ({})'.format(key))
 
                     # Use result from clearing function to determine if we need to insert the record
                     if instructions['record']:
@@ -441,17 +458,21 @@ def confidence_interval_insights(logger):
                             'ri_date': date_filtered_raw_values[discovery_index]['date'],
                             # date_filtered_raw_values[j]['date'],
                             'ri_score': score,
-                            'ri_detection_method': '{} confidence interval'.format(self.confidence),
-                            "tool_source": self.tool_source,
-                            "tool_version": self.tool_version,
-                            "data_source": self.data_source
+                            'ri_detection_method': '{} confidence interval'.format(confidence),
+                            "tool_source": tool_source,
+                            "tool_version": tool_version,
+                            "data_source": data_source
                         }
-                        result = self.db.execute(self.repo_insights_records_table.insert().values(record))
-                        logger.info("Primary key inserted into the repo_insights_records table: {}".format(
-                            result.inserted_primary_key))
-                        self.results_counter += 1
+
+                        with DatabaseSession(logger) as session:
+                            repo_insight_obj = RepoInsightsRecord(**record)
+                            session.add(repo_insight_obj)
+                            session.commit()
+
+                        logger.info("Primary key inserted into the repo_insights_records table: {}\n".format(repo_insight_obj.ri_id))
+
                         # Send insight to Jonah for slack bot
-                        self.send_insight(record, abs(date_filtered_raw_values[discovery_index][key] - mean))
+                        send_insight(record, abs(date_filtered_raw_values[discovery_index][key] - mean), logger)
 
                     # Use result from clearing function to determine if we still need to insert the insight
                     if instructions['insight']:
@@ -469,14 +490,18 @@ def confidence_interval_insights(logger):
                                     'ri_date': tuple['date'],  # date_filtered_raw_values[j]['date'],
                                     'ri_fresh': 0 if j < discovery_index else 1,
                                     'ri_score': score,
-                                    'ri_detection_method': '{} confidence interval'.format(self.confidence),
-                                    "tool_source": self.tool_source,
-                                    "tool_version": self.tool_version,
-                                    "data_source": self.data_source
+                                    'ri_detection_method': '{} confidence interval'.format(confidence),
+                                    "tool_source": tool_source,
+                                    "tool_version": tool_version,
+                                    "data_source": data_source
                                 }
-                                result = self.db.execute(self.repo_insights_table.insert().values(data_point))
+                                with DatabaseSession(logger) as session:
+                                    repo_insight_obj = RepoInsight(**data_point)
+                                    session.add(repo_insight_obj)
+                                    session.commit()
+
                                 logger.info("Primary key inserted into the repo_insights table: " + str(
-                                    result.inserted_primary_key))
+                                    repo_insight_obj.ri_id))
 
                                 logger.info("Inserted data point for endpoint: {}\n".format(endpoint['cm_info']))
                                 j += 1
@@ -490,7 +515,7 @@ def confidence_interval_insights(logger):
             else:
                 logger.info("Key: {} has empty raw_values, should not have key here".format(key))
 
-def send_insight(insight, units_from_mean):
+def send_insight(insight, units_from_mean, logger):
     try:
         repoSQL = s.sql.text("""
             SELECT repo_git, rg_name 
@@ -500,11 +525,11 @@ def send_insight(insight, units_from_mean):
 
         repo = pd.read_sql(repoSQL, create_database_engine(), params={}).iloc[0]
 
-        begin_date = datetime.datetime.now() - datetime.timedelta(days=self.anomaly_days)
+        begin_date = datetime.datetime.now() - datetime.timedelta(days=anomaly_days)
         dict_date = insight['ri_date'].strftime("%Y-%m-%d %H:%M:%S")
-        if insight['ri_date'] > begin_date and self.send_insights:
+        if insight['ri_date'] > begin_date and send_insights:
             logger.info(
-                "Insight less than {} days ago date found: {}\n\nSending to Jonah...".format(self.anomaly_days,
+                "Insight less than {} days ago date found: {}\n\nSending to Jonah...".format(anomaly_days,
                                                                                              insight))
             to_send = {
                 'insight': True,
@@ -522,7 +547,7 @@ def send_insight(insight, units_from_mean):
     except Exception as e:
         logger.info("sending insight to jonah failed: {}".format(e))
 
-def clear_insights(repo_id, new_endpoint, new_field):
+def clear_insights(repo_id, new_endpoint, new_field, logger):
 
     logger.info("Deleting all tuples in repo_insights_records table with info: "
                  "repo {} endpoint {} field {}".format(repo_id, new_endpoint, new_field))
@@ -538,7 +563,9 @@ def clear_insights(repo_id, new_endpoint, new_field):
     try:
         engine = create_database_engine()
         result = engine.execute(deleteSQL)
+        engine.dispose()
     except Exception as e:
+        engine.dispose()
         logger.info("Error occured deleting insight slot: {}".format(e))
 
     # Delete all insights
@@ -556,10 +583,12 @@ def clear_insights(repo_id, new_endpoint, new_field):
     try:
         engine = create_database_engine()
         result = engine.execute(deleteSQL)
+        engine.dispose()
     except Exception as e:
+        engine.dispose()
         logger.info("Error occured deleting insight slot: {}".format(e))
 
-def clear_insight(repo_id, new_score, new_metric, new_field):
+def clear_insight(repo_id, new_score, new_metric, new_field, logger):
     logger.info("Checking if insight slots filled...")
 
     # Dict that will be returned that instructs the rest of the worker where the insight insertion is
@@ -579,7 +608,7 @@ def clear_insight(repo_id, new_score, new_metric, new_field):
     logger.info("recordsql: {}, \n{}".format(recordSQL, rec))
     # If new score is higher, continue with deletion
     if len(rec) > 0:
-        if new_score > rec[0]['ri_score'] or self.refresh:
+        if new_score > rec[0]['ri_score'] or refresh:
             insertion_directions['record'] = True
             for record in rec:
                 logger.info(
@@ -598,7 +627,9 @@ def clear_insight(repo_id, new_score, new_metric, new_field):
                 try:
                     engine = create_database_engine()
                     result = engineexecute(deleteSQL)
+                    engine.dispose()
                 except Exception as e:
+                    engine.dispose()
                     logger.info("Error occured deleting insight slot: {}".format(e))
     else:
         insertion_directions['record'] = True
@@ -624,7 +655,7 @@ def clear_insight(repo_id, new_score, new_metric, new_field):
             "{}, {}, {}, {}".format(insight['ri_metric'], new_metric, insight['ri_score'], num_insights_per_repo))
         if (insight[
                 'ri_score'] < new_score and num_insights >= num_insights_per_repo) or num_insights > num_insights_per_repo or (
-                insight['ri_metric'] == new_metric and self.refresh):
+                insight['ri_metric'] == new_metric and refresh):
             num_insights -= 1
             to_delete.append(insight)
             logger.info("condition met, new len: {}, insight score: {}, new_score: {}".format(num_insights,
@@ -651,12 +682,14 @@ def clear_insight(repo_id, new_score, new_metric, new_field):
         try:
             engine = create_database_engine()
             result = engine.execute(deleteSQL)
+            engine.dispose()
         except Exception as e:
+            engine.dispose()
             logger.info("Error occured deleting insight slot: {}".format(e))
 
     return insertion_directions
 
-def confidence_interval(data, timeperiod='week', confidence=.95):
+def confidence_interval(data, logger, timeperiod='week', confidence=.95, ):
     """ Method to find high activity issues in the past specified timeperiod """
     a = 1.0 * np.array(data)
     logger.info("np array: {}".format(a))
@@ -667,7 +700,7 @@ def confidence_interval(data, timeperiod='week', confidence=.95):
     logger.info("H: {}".format(h))
     return m, m - h, m + h
 
-def update_metrics(api_host, api_port, tool_source, tool_version):
+def update_metrics(api_host, api_port, tool_source, tool_version, logger):
     logger.info("Preparing to update metrics ...\n\n" +
                  "Hitting endpoint: http://{}:{}/api/unstable/metrics/status ...\n".format(
                      api_host, api_port))
@@ -679,11 +712,11 @@ def update_metrics(api_host, api_port, tool_source, tool_version):
 
     # Duplicate checking ...
     need_insertion = filter_duplicates({'cm_api_endpoint_repo': "endpoint"}, ['chaoss_metric_status'],
-                                            active_metrics)
+                                            active_metrics, logger)
     logger.info("Count of contributors needing insertion: " + str(len(need_insertion)) + "\n")
 
     for metric in need_insertion:
-        tuple = {
+        cms_tuple = {
             "cm_group": metric['group'],
             "cm_source": metric['data_source'],
             "cm_type": metric['metric_type'],
@@ -699,14 +732,16 @@ def update_metrics(api_host, api_port, tool_source, tool_version):
             "tool_version": tool_version,
             "data_source": metric['data_source']
         }
-        # Commit metric insertion to the chaoss metrics table
-        result = self.db.execute(self.chaoss_metric_status_table.insert().values(tuple))
-        logger.info("Primary key inserted into the metrics table: " + str(result.inserted_primary_key))
-        self.results_counter += 1
+        with DatabaseSession(logger) as session:
+            cms_tuple = ChaossMetricStatus(**cms_tuple)
+            session.add(cms_tuple)
+            session.commit()
+
+            logger.info("Primary key inserted into the metrics table: {}\n".format(cms_tuple.cms_id))
 
         logger.info("Inserted metric: " + metric['display_name'] + "\n")
 
-def filter_duplicates(cols, tables, og_data):
+def filter_duplicates(cols, tables, og_data, logger):
     need_insertion = []
 
     table_str = tables[0]

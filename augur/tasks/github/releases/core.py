@@ -10,7 +10,9 @@ from sqlalchemy.ext.automap import automap_base
 from augur.tasks.github.util.github_task_session import *
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.github.util.gh_graphql_entities import hit_api_graphql
+from augur.tasks.github.util.gh_graphql_entities import hit_api_graphql, request_graphql_dict
+from augur.application.db.util import execute_session_query
+
 
 def get_release_inf(session, repo_id, release, tag_only):
     if not tag_only:
@@ -68,7 +70,8 @@ def insert_release(session, repo_id, owner, release, tag_only = False):
 
     # Get current table values
     session.logger.info('Getting release table values\n')
-    release_id_data = session.query(Release.release_id).filter(Release.repo_id == repo_id).all()#pd.read_sql(release_id_data_sql, self.db, params={'repo_id': repo_id})
+    query = session.query(Release.release_id).filter(Release.repo_id == repo_id)
+    release_id_data = execute_session_query(query, 'all')#pd.read_sql(release_id_data_sql, self.db, params={'repo_id': repo_id})
     release_id_data = [str(r_id).strip() for r_id in release_id_data]#release_id_data.apply(lambda x: x.str.strip())
 
     # Put all data together in format of the table
@@ -156,16 +159,7 @@ def fetch_data(session, github_url, repo_id, tag_only = False):
 
     # Hit the graphql endpoint
     session.logger.info("Hitting endpoint: {} ...\n".format(url))
-    r = hit_api_graphql(session.oauths, url, session.logger, query)
-
-    data = {}
-    try:
-        data = r.json()
-    except:
-        data = json.loads(json.dumps(r.text))
-
-    if 'errors' in data:
-        raise Exception(f"Graphql returned error response! {data['errors']}")#session.logger.info("Error!: {}".format(data['errors']))
+    data = request_graphql_dict(session, url, query)
 
     if 'data' in data:
         data = data['data']['repository']

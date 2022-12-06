@@ -59,4 +59,4 @@ if [[ ! -d logs ]]; then
     mkdir logs
 fi
 
-command -v go >/dev/null 2>&1 || { echo >&2 "We require 'go' to run Scorecard project to get data, Please install GO first....Aborting. Please issue the command: wget -c https://go.dev/dl/go1.19.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local "; exit 1; }
+command -v go >/dev/null 2>&1 || { echo >&2 "We require 'go' to run Scorecard project to get data, Please install GO first....Aborting. Please issue the command: wget -c https://go.dev/dl/go1.19.3.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local"; exit 1; }

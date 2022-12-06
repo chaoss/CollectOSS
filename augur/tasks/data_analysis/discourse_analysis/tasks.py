@@ -10,6 +10,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, DiscourseInsight
 from augur.application.db.engine import create_database_engine
+from augur.application.db.util import execute_session_query
 
 #import os, sys, time, requests, json
 # from sklearn.model_selection import train_test_split
@@ -28,6 +29,8 @@ from augur.application.db.engine import create_database_engine
 
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
 
+DISCOURSE_ANALYSIS_DIR = "augur/tasks/data_analysis/discourse_analysis/"
+
 @celery.task
 def discourse_analysis_model(repo_git: str) -> None:
 
@@ -39,7 +42,8 @@ def discourse_analysis_model(repo_git: str) -> None:
 
     with DatabaseSession(logger) as session:
 
-        repo_id = session.query(Repo).filter(Repo.repo_git == repo_git).one().repo_id
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_id = execute_session_query(query, 'one').repo_id
 
     get_messages_for_repo_sql = s.sql.text("""
                 (SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, i.issue_id thread_id,m.msg_text,i.issue_title thread_title,m.msg_id
@@ -64,19 +68,23 @@ def discourse_analysis_model(repo_git: str) -> None:
     msg_df_cur_repo = msg_df_cur_repo.sort_values(by=['thread_id']).reset_index(drop=True)
     logger.info(msg_df_cur_repo.head())
 
-    with open("trained_crf_model", 'rb') as model_file:
+    with open(DISCOURSE_ANALYSIS_DIR + "trained_crf_model", 'rb') as model_file:
         crf_model = pickle.load(model_file)
 
-    with open("word_to_emotion_map", 'rb') as emotion_map_file:
+    with open(DISCOURSE_ANALYSIS_DIR + "word_to_emotion_map", 'rb') as emotion_map_file:
         word_to_emotion_map = pickle.load(emotion_map_file)
 
-    with open("tfidf_transformer", 'rb') as tfidf_transformer_file:
+    with open(DISCOURSE_ANALYSIS_DIR + "tfidf_transformer", 'rb') as tfidf_transformer_file:
         tfidf_transformer = pickle.load(tfidf_transformer_file)
 
-    X_git = create_features_for_structured_prediction(msg_df_cur_repo, 'msg_text', 'thread_id', False,
-                                                           tfidf_transformer)
+    logger.debug(f"msg_df_cur_repo before len: {len(msg_df_cur_repo)}")
+    X_git, msg_df_cur_repo = create_features_for_structured_prediction(msg_df_cur_repo, 'msg_text', 'thread_id', logger, False, tfidf_transformer)
+    logger.debug(f"msg_df_cur_repo after len: {len(msg_df_cur_repo)}")
+    logger.debug(f"X_git len: {len(X_git)}")
     y_pred_git = crf_model.predict(X_git)
+    logger.debug(f"y_pred_git len: {len(y_pred_git)}")
     y_pred_git_flat = [label for group in y_pred_git for label in group]
+    logger.debug(f"y_pred_git_flat len: {len(y_pred_git_flat)}")
     msg_df_cur_repo['discourse_act'] = y_pred_git_flat
 
     with DatabaseSession(logger) as session:
@@ -94,16 +102,17 @@ def discourse_analysis_model(repo_git: str) -> None:
 
     logger.info("prediction: " + str(y_pred_git_flat))
 
-def count_emotions(text):
 
-    with open("word_to_emotion_map", 'rb') as emotion_map_file:
+def count_emotions(tokens, logger):
+
+    with open(DISCOURSE_ANALYSIS_DIR + "word_to_emotion_map", 'rb') as emotion_map_file:
         word_to_emotion_map = pickle.load(emotion_map_file)
     count_dict = {}
     emotion_labels = ['anger', 'anticipation', 'disgust', 'fear', 'joy', 'negative', 'positive', 'sadness',
                       'surprise', 'trust']
     for label in emotion_labels:
         count_dict[label] = 0
-    tokens = nltk.word_tokenize(text)
+
     tokens = [token for token in tokens if len(token) > 1]
     stems = [stemmer.stem(t) for t in tokens]
     for stem in stems:
@@ -113,29 +122,39 @@ def count_emotions(text):
                 count_dict[emotion] += 1
     return count_dict
 
+
 def preprocess_text(text):
     text = re.sub('<[^<]+?>', '',
                   text.strip().lower().replace("\n", "").replace("\t", "").replace('/', ""))  # removing tags
     text = ''.join(c for c in text if not c.isdigit())  # removing digits
     return text
 
-def create_features_for_structured_prediction(df, text_data_column_name, group_by_column_name,
+def create_features_for_structured_prediction(df, text_data_column_name, group_by_column_name, logger,
                                               label_available=True, tfidf_transformer=None):
 
     list_feature_dict = []
+    invalid_text_indexes = []
     for text in df[text_data_column_name]:
         feature_dict = tfidf_transformer.transform([text]).todok()
         feature_dict_n = {}
         for key, value in feature_dict.items():
             feature_dict_n[str(key)] = value
 
+        try:
+            tokens = nltk.word_tokenize(text)
+        except IndexError as e:
+            logger.debug(f"Failed to tokenize: {text}. skipping...")
+
+            df = df.drop(df[df[text_data_column_name] == text].index)
+            invalid_text_indexes.extend(df.index[df[text_data_column_name] == text].tolist())
+            continue
+
         text = preprocess_text(text)
         # new features
-        emotion_count_dict = count_emotions(text)
+        emotion_count_dict = count_emotions(tokens, logger)
         # end emotion features
         feature_dict_n.update(emotion_count_dict)
 
-        tokens = nltk.word_tokenize(text)
         tags = nltk.pos_tag(tokens)
         counts = Counter(tag for word, tag in tags)
         pos_count_dict = dict(counts)
@@ -168,16 +187,15 @@ def create_features_for_structured_prediction(df, text_data_column_name, group_b
         X_cur = []
         if label_available: y_cur = []
         for ind, row in group.iterrows():
-            row['tfidf_features']['normalized_num_sentences'] = row['tfidf_features'][
-                                                                    'num_sentences'] / sentence_count  # added
-            row['tfidf_features']['normalized_num_words'] = row['tfidf_features']['num_words'] / word_count  # added
-            row['tfidf_features']['normalized_num_characters'] = row['tfidf_features'][
-                                                                     'num_characters'] / character_count  # added
+
+            row['tfidf_features']['normalized_num_sentences'] = row['tfidf_features']['num_sentences'] / sentence_count if sentence_count != 0 else 0
+            row['tfidf_features']['normalized_num_words'] = row['tfidf_features']['num_words'] / word_count  if word_count != 0 else 0
+            row['tfidf_features']['normalized_num_characters'] = row['tfidf_features']['num_characters'] / character_count  if character_count != 0 else 0
             # print(row)
             X_cur.append(row['tfidf_features'])
             if label_available: y_cur.append(row['majority_type'])
         X_all.append(X_cur)
         if label_available: y_all.append(y_cur)
     if label_available: return X_all, y_all
-    return X_all
+    return X_all, df
 
