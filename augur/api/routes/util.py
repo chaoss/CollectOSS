@@ -39,7 +39,8 @@ def create_routes(server):
                 repo.repo_git AS url,
                 repo.repo_status,
                 a.commits_all_time,
-                b.issues_all_time ,
+                b.issues_all_time,
+                c.pull_requests_all_time,
                 rg_name,
                 repo.repo_group_id
             FROM
@@ -51,6 +52,9 @@ def create_routes(server):
                 (select * from api_get_all_repos_issues) b
                 on
                 repo.repo_id = b.repo_id
+                left outer join 
+                (select * from api_get_all_repo_prs) c 
+                on repo.repo_id=c.repo_id 
                 JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
             order by repo_name
         """)
@@ -77,7 +81,8 @@ def create_routes(server):
                 repo.repo_git AS url,
                 repo.repo_status,
                 a.commits_all_time,
-                b.issues_all_time
+                b.issues_all_time,
+                c.pull_requests_all_time
             FROM
                 repo
                 left outer join
@@ -87,6 +92,9 @@ def create_routes(server):
                 (select repo_id, count ( issues.issue_id) as issues_all_time from issues where issues.pull_request IS NULL group by repo_id) b
                 on
                 repo.repo_id = b.repo_id
+                left outer join 
+                (select * from api_get_all_repo_prs) c 
+                on repo.repo_id=c.repo_id                 
                 JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
             WHERE
                 repo_groups.repo_group_id = :repo_group_id
