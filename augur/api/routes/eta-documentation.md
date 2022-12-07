@@ -52,7 +52,7 @@ Overall, the project is going well for our group. Our only challenge is the our 
 
 You can hit our enpoints at this link: http://eta.osshealth.io:5180/api/unstable/complexity/project_files or other corresponding links. This should display and empty array of json, `[]`, as long as Augur is running at that point (if it is not, start augur on the server).
 
-Also, using each of the links above in the "Code Added" section, paste only the SQL into in a posgres client and run it on an Augur database with `repo_labor` data, and the will work with the output.
+Also, using each of the links above in the "Code Added" section, paste only the SQL into in a posgres client and run it on an Augur database with `repo_labor` data, and you will so the output.
 
 ## Team reflection
 
