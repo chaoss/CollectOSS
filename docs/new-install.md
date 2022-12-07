@@ -1,4 +1,39 @@
 ## Augur Setup
+
+## General Pre-Requisites
+### Frontend (Optional)
+1. Install NodeJS (Optional if only running the backend) `sudo apt update` and `sudo apt install nodejs`
+2. Install NPM (Optional if only running the backend) `sudo apt install npm` 
+3. Install nvm (node version manager: recommended) `sudo apt install curl` and `curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash`
+3. Install vue.js (Optional if only running the backend) 
+4. Install vue-cli (Optional if only running the backend)
+
+### Backend (Ubuntu instructions, use Linux Distro Appropriate Package Manager Otherwise)
+1. Obtain a GitHub Access Token: https://github.com/settings/tokens
+2. Obtain a GitLab Access Token: https://gitlab.com/-/profile/personal_access_tokens
+3. Python3 needs to be installed, and typically is by default on most systems. 
+4. There are some Git configuration parameters that help when you are cloning repos over time, and a platform prompts you for credentials when it finds a repo is deleted:
+```bash 
+    git config --global diff.renames true
+    git config --global diff.renameLimit 200000
+    git config --global credential.helper cache
+    git config --global credential.helper 'cache --timeout=9999999999999'
+```
+5. Make sure all of your core libraries are installed at the operating system level. Often, these days, they are by default, and its important to make sure: 
+```bash
+    sudo apt update
+    sudo apt upgrade
+    sudo apt install software-properties-common
+    sudo apt install python3-dev
+    sudo apt install postgresql postgresql-contrib postgresql-client
+    sudo apt install build-essential
+```
+6. If you are running on Ubuntu 22.x right now, you will need to install python 3.9
+  - `sudo add-apt-repository ppa:deadsnakes/ppa`
+  - `sudo apt install python3.9`
+  - `sudo apt install python3.9-distutils`
+7. Install pip: `sudo apt install python3-pip` and `sudo apt install python3.9-venv`
+
 ### Docker
 1. Make sure docker, and docker-compose are both installed
 2. Modify the `environment.txt` file in the root of the repository to include your GitHub and GitLab API keys.
@@ -8,13 +43,13 @@
 4. `sudo docker build -t augur-new -f docker/backend/Dockerfile .`
 5. `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to run the database in a Docker Container or 
    `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. 
+
 ### Regular Installation
 0. Follow the installation instructions for the database here: https://oss-augur.readthedocs.io/en/main/quick-start.html#postgresql-installation
-0. 
 1. Clone Augur, or clone your fork of Augur if you wish to make contributions
-2. Install `redis-server` at the operating system level
-3. Make sure you have `Go` version is 1.19.3. If you don't know how to install `Go`, instructions are provided during the installation process.
-4. Create a Python Virtual Environment `python3 -m venv ~/virtual-env-directory`
+2. Install `redis-server` at the operating system level `sudo apt install redis-server`
+3. Make sure you have `Go` version is 1.19.3. If you don't know how to install `Go`, instructions are provided during the installation process. After following the instructions, you will need to add Go to your path for this session: `export PATH=$PATH:/usr/local/go/bin`. You should also add this to your shell's profile script.
+4. Create a Python Virtual Environment `python3 -m venv ~/virtual-env-directory` (use `python3.9 -m venv` if on Ubuntu 22.04, as it defaults to python 3.10, which will not compile the machine learning workers.)
 5. Activate your Python Virtual Environment `source ~/virtual-env-directory/bin/activate`
 6. From the root of the Augur Directory, type `make install`
 7. You will be prompted to provide your GitHub username and password, your GitLab username and password, and the postgresql database where you want to have the Augur Schema built. You will also be prompted to provide a directory where repositories will be clone into. 
