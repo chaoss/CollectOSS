@@ -1,6 +1,10 @@
 ## Augur Setup
 
 ## General Pre-Requisites
+### Fork and Clone Augur
+1. Fork https://github.com/chaoss/augur 
+2. Clone your fork. We recommend creating a `github` directory in your user's base directory. 
+
 ### Frontend (Optional)
 1. Install NodeJS (Optional if only running the backend) `sudo apt update` and `sudo apt install nodejs`
 2. Install NPM (Optional if only running the backend) `sudo apt install npm` 

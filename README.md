@@ -1,4 +1,4 @@
-# Augur NEW Release v0.43.3
+# Augur NEW Release v0.43.5
 [![first-timers-only](https://img.shields.io/badge/first--timers--only-friendly-blue.svg?style=flat-square)](https://www.firsttimersonly.com/) We follow the [First Timers Only](https://www.firsttimersonly.com/) philosophy of tagging issues for first timers only, and walking one newcomer through the resolution process weekly. [You can find these issues tagged with "first timers only" on our issues list.](https://github.com/chaoss/augur/labels/first-timers-only).
 
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme) [![Build Docker images](https://github.com/chaoss/augur/actions/workflows/build_docker.yml/badge.svg)](https://github.com/chaoss/augur/actions/workflows/build_docker.yml) [![Hits-of-Code](https://hitsofcode.com/github/chaoss/augur?branch=main)](https://hitsofcode.com/github/chaoss/augur/view?branch=main) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
@@ -6,7 +6,7 @@
 ## NEW RELEASE ALERT!
 [If you want to jump right in, updated docker build/compose and bare metal installation instructions are available here](docs/new-install.md)
 
-Augur is now releasing a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.43.3
+Augur is now releasing a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.43.5
 - The `main` branch is a stable version of our new architecture, which features:
   - Dramatic improvement in the speed of large scale data collection (10,000+ repos). All data is obtained for 10k+ repos within a week
   - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard
