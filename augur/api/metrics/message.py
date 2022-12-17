@@ -49,7 +49,7 @@ def repo_messages(repo_group_id, repo_id=None, period='day', begin_date=None, en
                 AND
                 augur_data.repo.repo_id = :repo_id 
                 AND 
-                message_date BETWEEN :begin_date AND :end_date
+                message.msg_timestamp BETWEEN :begin_date AND :end_date
             GROUP BY
                 message_date,
                 repo_name 
@@ -80,7 +80,7 @@ def repo_messages(repo_group_id, repo_id=None, period='day', begin_date=None, en
                 AND
                 augur_data.repo_groups.repo_group_id = :repo_group_id 
                 AND 
-                message_date BETWEEN :begin_date AND :end_date
+                message.msg_timestamp BETWEEN :begin_date AND :end_date
             GROUP BY
                 message_date,
                 rg_name 
