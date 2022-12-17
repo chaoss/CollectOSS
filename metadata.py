@@ -9,4 +9,4 @@ __version__ = "0.43.5"
 __release__ = "v0.43.5 (Festivus!)"
 
 __license__ = "MIT"
-__copyright__ = "University of Missouri, University of Nebraska-Omaha, CHAOSS, & Augurlabs 2022"
+__copyright__ = "University of Missouri, University of Nebraska-Omaha, CHAOSS, Brian Warner & Augurlabs 2023"
