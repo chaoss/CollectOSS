@@ -63,8 +63,7 @@ def repo_messages(repo_group_id, repo_id=None, period='day', begin_date=None, en
         results = pd.read_sql(repomessagesSQL, engine, params={'repo_id': repo_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
     else: 
-        --repo_group_id sql 
-        
+
         repomessagesSQL = s.sql.text("""
 
             SELECT
