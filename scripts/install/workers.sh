@@ -39,7 +39,7 @@ do
 
 done
 
-if [ -f "/usr/local/bin/go" ] || [ -f "/usr/bin/go" ] || [ -f "/snap/bin/go" ]; then
+if [ -f "/usr/local/go/bin/go" ] || [ -f "/usr/local/bin/go" ] || [ -f "/usr/bin/go" ] || [ -f "/snap/bin/go" ]; then
   echo "found go!"
 else
   echo "Installing go!"
