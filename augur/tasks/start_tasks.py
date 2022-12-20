@@ -135,25 +135,12 @@ class AugurTaskRoutine:
         augur_collection_sequence = []
         for phaseName, job in self.jobs_dict.items():
             self.logger.info(f"Queuing phase {phaseName}")
-            #Call the function stored in the dict to return the object to call apply_async on
-            #try:
-            #    tasks = job(self.logger)
-            #    phaseResult = tasks.apply_async() 
-
-                # if the job is a group of tasks then join the group
-            #    if isinstance(tasks, CELERY_GROUP_TYPE): 
-            #        with allow_join_result():
-            #            phaseResult.join()
-
-            #except Exception as e:
-            #    #Log full traceback if a phase fails.
-            #    self.logger.error(
-            #    ''.join(traceback.format_exception(None, e, e.__traceback__)))
-            #    self.logger.error(
-            #        f"Phase {phaseName} has failed during augur collection. Error: {e}")
-            #    raise e
+            
+            #Add the phase to the sequence in order as a celery task.
+            #The preliminary task creates the larger task chain 
             augur_collection_sequence.append(job.si())
         
+        #Link all phases in a chain and send to celery
         augur_collection_chain = chain(*augur_collection_sequence)
         augur_collection_chain.apply_async()
 
