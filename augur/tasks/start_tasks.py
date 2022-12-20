@@ -51,7 +51,7 @@ def prelim_phase():
 
     #preliminary_task_list = [detect_github_repo_move.si()]
     preliminary_tasks = group(*tasks_with_repo_domain)
-    return preliminary_tasks
+    preliminary_tasks.apply_async()
 
 @celery.task
 def repo_collect_phase():
@@ -83,7 +83,7 @@ def repo_collect_phase():
             collect_releases.si()
         )
     
-    return chain(repo_task_group, refresh_materialized_views.si())
+    chain(repo_task_group, refresh_materialized_views.si()).apply_async()
 
 
 DEFINED_COLLECTION_PHASES = [prelim_phase, repo_collect_phase]

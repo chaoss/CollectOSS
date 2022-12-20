@@ -40,4 +40,4 @@ def machine_learning_phase():
         
     task_chain = chain(*ml_tasks)
 
-    return task_chain
+    task_chain.apply_async()
