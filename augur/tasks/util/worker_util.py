@@ -56,7 +56,7 @@ def remove_duplicates_by_uniques(data, uniques):
 
     #Deal with null data being passed. 
     if not uniques:
-        return unique_data
+        return data
 
     for x in data:
 
