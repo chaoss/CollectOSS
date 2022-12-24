@@ -16,7 +16,8 @@ from augur.tasks.init import get_redis_conn_values
 
 logger = logging.getLogger(__name__)
 
-start_tasks = ['augur.tasks.start_tasks']
+start_tasks = ['augur.tasks.start_tasks',
+                'augur.tasks.data_analysis']
 
 github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.issues.tasks',

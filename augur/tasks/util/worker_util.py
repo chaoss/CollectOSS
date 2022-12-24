@@ -53,6 +53,11 @@ def remove_duplicates_by_uniques(data, uniques):
     unique_values = {}
 
     unique_data = []
+
+    #Deal with null data being passed. 
+    if not uniques:
+        return data
+
     for x in data:
 
         # creates a key out of the uniques
