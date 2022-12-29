@@ -121,6 +121,10 @@ def trim_commits_facade_task(repo_id):
             working_commit = :commit""").bindparams(repo_id=repo_id,commit=commit['working_commit'])
         session.execute_sql(remove_commit)
         session.log_activity('Debug',f"Removed working commit: {commit['working_commit']}")
+    
+    # Start the main analysis
+
+    update_analysis_log(repo_id,'Collecting data')
 
 @celery.task
 def trim_commits_post_analysis_facade_task(repo_id,commits):
@@ -177,27 +181,9 @@ def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, m
     """Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
     """
 
-    ### Local helper functions ###
     #create new session for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
     session = FacadeSession(logger)
-
-    def update_analysis_log(repos_id,status):
-
-        # Log a repo's analysis status
-
-        log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
-            VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
-
-        try:
-            session.execute_sql(log_message)
-        except:
-            pass
-    
-    
-    # Start the main analysis
-
-    update_analysis_log(repo_id,'Collecting data')
 
 
 
