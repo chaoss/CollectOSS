@@ -16,9 +16,17 @@ from augur.application.db.util import execute_session_query
 
 def get_release_inf(session, repo_id, release, tag_only):
     if not tag_only:
-        name = "" if release['author']['name'] is None else release['author']['name']
-        company = "" if release['author']['company'] is None else release['author']['company']
-        author = name + '_' + company
+
+        if release['author'] is None:
+            author = 'No Author Available.'
+            name = "N/A"
+            company = "N/A"
+        else:
+            name = "" if release['author']['name'] is None else release['author']['name']
+            company = "" if release['author']['company'] is None else release['author']['company']
+            author = name + '_' + company
+
+
         release_inf = {
             'release_id': release['id'],
             'repo_id': repo_id,
