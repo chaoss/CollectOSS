@@ -10,7 +10,6 @@ from augur.application.db.util import execute_session_query
 from celery import group, chain, chord, signature
 from augur.tasks.init.celery_app import celery_app as celery
 
-@celery.task
 def machine_learning_phase():
 
     logger = logging.getLogger(machine_learning_phase.__name__)
@@ -40,4 +39,5 @@ def machine_learning_phase():
         
     task_chain = chain(*ml_tasks)
 
-    task_chain.apply_async()
+    #task_chain.apply_async()
+    return task_chain

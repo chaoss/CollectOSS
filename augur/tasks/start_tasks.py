@@ -35,7 +35,6 @@ CELERY_CHAIN_TYPE = type(chain())
 
 #Predefine phases. For new phases edit this and the config to reflect.
 #The domain of tasks ran should be very explicit.
-#@celery.task
 def prelim_phase():
 
     logger = logging.getLogger(prelim_phase.__name__)
@@ -54,7 +53,6 @@ def prelim_phase():
     #preliminary_tasks.apply_async()
     return preliminary_tasks
 
-#@celery.task
 def repo_collect_phase():
     logger = logging.getLogger(repo_collect_phase.__name__)
 
