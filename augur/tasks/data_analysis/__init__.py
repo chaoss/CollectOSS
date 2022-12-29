@@ -9,6 +9,7 @@ from augur.application.db.models import Repo
 from augur.application.db.util import execute_session_query
 from celery import group, chain, chord, signature
 from augur.tasks.init.celery_app import celery_app as celery
+import logging 
 
 @celery.task
 def machine_learning_phase():
