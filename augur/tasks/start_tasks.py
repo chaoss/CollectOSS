@@ -74,7 +74,7 @@ def repo_collect_phase():
             second_tasks_repo = group(collect_events.si(repo.repo_git),
                 collect_github_messages.si(repo.repo_git),process_pull_request_files.si(repo.repo_git), process_pull_request_commits.si(repo.repo_git))
 
-            repo_chain = chain(grab_comitters.si(repo.repo_id),first_tasks_repo,second_tasks_repo)
+            repo_chain = chain(first_tasks_repo,second_tasks_repo)
             issue_dependent_tasks.append(repo_chain)
 
         repo_task_group = group(

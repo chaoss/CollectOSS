@@ -244,8 +244,8 @@ def generate_analysis_sequence(logger):
         analysis_sequence.append(facade_analysis_init_facade_task.si().on_error(facade_error_handler.s()))
         for repo in repos:
             session.logger.info(f"Generating sequence for repo {repo['repo_id']}")
-            #analysis_sequence.append(grab_comitter_list_facade_task.si(repo['repo_id']).on_error(facade_error_handler.s()))
-
+            analysis_sequence.append(grab_comitters.si(repo['repo_id']).on_error(facade_error_handler.s()))
+            #grab_comitters.si(repo.repo_id),
             analysis_sequence.append(trim_commits_facade_task.si(repo['repo_id']))
 
 
