@@ -70,8 +70,8 @@ def facade_analysis_init_facade_task():
         session.log_activity('Info',f"Beginning analysis.")
 
 @celery.task
-def grab_comitter_list_facade_task(repo_id,platform="github"):
-    logger = logging.getLogger(grab_comitter_list_facade_task.__name__)
+def grab_comitters(repo_id,platform="github"):
+    logger = logging.getLogger(grab_comitters.__name__)
 
     try:
         grab_committer_list(GithubTaskSession(logger), repo_id,platform)
@@ -255,7 +255,7 @@ def generate_analysis_sequence(logger):
         analysis_sequence.append(facade_analysis_init_facade_task.si().on_error(facade_error_handler.s()))
         for repo in repos:
             session.logger.info(f"Generating sequence for repo {repo['repo_id']}")
-            analysis_sequence.append(grab_comitter_list_facade_task.si(repo['repo_id']).on_error(facade_error_handler.s()))
+            #analysis_sequence.append(grab_comitter_list_facade_task.si(repo['repo_id']).on_error(facade_error_handler.s()))
 
             analysis_sequence.append(trim_commits_facade_task.si(repo['repo_id']).on_error(facade_error_handler.s()))
 
