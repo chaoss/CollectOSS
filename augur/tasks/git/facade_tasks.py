@@ -125,6 +125,7 @@ def trim_commits_facade_task(repo_id):
     # Start the main analysis
 
     update_analysis_log(repo_id,'Collecting data')
+    logger.info(f"Got past repo {repo_id}")
 
 @celery.task
 def trim_commits_post_analysis_facade_task(repo_id,commits):
@@ -185,11 +186,13 @@ def analyze_commits_in_parallel(queue: list, repo_id: int, repo_location: str, m
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
     session = FacadeSession(logger)
 
-
+    logger.info(f"Got to analysis!")
 
     for analyzeCommit in queue:    
 
         analyze_commit(session, repo_id, repo_location, analyzeCommit)
+    
+    logger.info("Analysis complete")
 
 @celery.task
 def nuke_affiliations_facade_task():
@@ -243,7 +246,7 @@ def generate_analysis_sequence(logger):
             session.logger.info(f"Generating sequence for repo {repo['repo_id']}")
             #analysis_sequence.append(grab_comitter_list_facade_task.si(repo['repo_id']).on_error(facade_error_handler.s()))
 
-            analysis_sequence.append(trim_commits_facade_task.si(repo['repo_id']).on_error(facade_error_handler.s()))
+            analysis_sequence.append(trim_commits_facade_task.si(repo['repo_id']))
 
 
             #Get the huge list of commits to process.
@@ -295,7 +298,7 @@ def generate_analysis_sequence(logger):
             # Find commits which are out of the analysis range
 
             trimmed_commits = existing_commits - parent_commits
-            analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo['repo_id'],list(trimmed_commits)).on_error(facade_error_handler.s()))
+            analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo['repo_id'],list(trimmed_commits)))
         
         analysis_sequence.append(facade_analysis_end_facade_task.si().on_error(facade_error_handler.s()))
     
@@ -320,7 +323,7 @@ def generate_contributor_sequence(logger):
 
     contrib_group = group(contributor_sequence)
     contrib_group.link_error(facade_error_handler.s())
-    return chain(facade_start_contrib_analysis_task.si(),)
+    return contrib_group#chain(facade_start_contrib_analysis_task.si(), contrib_group)
 
 
 
@@ -374,7 +377,7 @@ def generate_facade_chain(logger):
         facade_sequence.extend(generate_analysis_sequence(logger))
 
         #Generate contributor analysis task group.
-        facade_sequence.append(generate_contributor_sequence(logger))
+        #facade_sequence.append(generate_contributor_sequence(logger))
 
         if nuke_stored_affiliations:
             facade_sequence.append(nuke_affiliations_facade_task.si().on_error(facade_error_handler.s()))#nuke_affiliations(session.cfg)
