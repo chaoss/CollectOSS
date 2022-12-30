@@ -35,7 +35,6 @@ CELERY_CHAIN_TYPE = type(chain())
 
 #Predefine phases. For new phases edit this and the config to reflect.
 #The domain of tasks ran should be very explicit.
-@celery.task
 def prelim_phase():
 
     logger = logging.getLogger(prelim_phase.__name__)
@@ -51,9 +50,9 @@ def prelim_phase():
 
     #preliminary_task_list = [detect_github_repo_move.si()]
     preliminary_tasks = group(*tasks_with_repo_domain)
-    preliminary_tasks.apply_async()
+    #preliminary_tasks.apply_async()
+    return preliminary_tasks
 
-@celery.task
 def repo_collect_phase():
     logger = logging.getLogger(repo_collect_phase.__name__)
 
@@ -83,7 +82,7 @@ def repo_collect_phase():
             collect_releases.si()
         )
     
-    chain(repo_task_group, refresh_materialized_views.si()).apply_async()
+    return chain(repo_task_group, refresh_materialized_views.si())
 
 
 DEFINED_COLLECTION_PHASES = [prelim_phase, repo_collect_phase]
@@ -138,7 +137,7 @@ class AugurTaskRoutine:
             
             #Add the phase to the sequence in order as a celery task.
             #The preliminary task creates the larger task chain 
-            augur_collection_sequence.append(job.si())
+            augur_collection_sequence.append(job())
         
         #Link all phases in a chain and send to celery
         augur_collection_chain = chain(*augur_collection_sequence)
