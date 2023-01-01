@@ -1,7 +1,0 @@
-{
-    "Frontend": {
-        "host": "ebay.chaoss.io",
-        "port": 5000,
-        "ssl": false
-    }
-}
