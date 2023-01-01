@@ -5312,3 +5312,91 @@ paths:
             type: array
       tags:
       - complexity
+  /repo-groups/:repo_group_id/repo-messages:
+    get:
+      description: 'The number of messages exchanged for a repository group over a specified period.'
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url: 
+      operationId: Repository Messages (Repo Group)
+      parameters:
+      - description: Repository Group ID
+        in: path
+        name: repo_group_id
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                message_date:
+                  description: 'Example: 2010-09-28T19:07:15.000Z'
+                  type: string
+                count:
+                  description: 'Example: 0 days 22:39:44.000000000'
+                  type: string
+                repo_name:
+                  description: 'Example: prototype-ujs'
+                  type: string
+            type: array
+      tags:
+      - evolution
+  /repos/:repo_id/repo-messages:
+    get:
+      description: 'The number of messages exchanged for a repository over a specified period.'
+      externalDocs:
+        description: CHAOSS Metric Definition
+        url:
+      operationId: Repo Messages (Repo)
+      parameters:
+      - description: Repository ID.
+        in: path
+        name: repo_id
+        schema:
+          type: string
+        type: string
+      - description: 'Beginning date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: begin_date
+        schema:
+          type: string
+        type: string
+      - description: 'Ending date specification. E.g. values: 2018, 2018-05, 2019-05-01'
+        in: path
+        name: end_date
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                message_date:
+                  description: 'Example: 2010-09-28T19:07:15.000Z'
+                  type: string
+                count:
+                  description: 'Example: 0 days 22:39:44.000000000'
+                  type: string
+                repo_name:
+                  description: 'Example: prototype-ujs'
+                  type: string
+            type: array
+      tags:
+      - evolution
