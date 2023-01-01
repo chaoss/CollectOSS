@@ -19,7 +19,7 @@ def catch_operational_error(func):
 
         attempts += 1
 
-    raise Exeption("Unable to Resolve Operational Error")
+    raise Exception("Unable to Resolve Operational Error")
 
 
 def execute_session_query(query, query_type="all"):

@@ -6,7 +6,7 @@ import json
 import os
 from enum import Enum
 
-from celery.result import AsyncResult
+#from celery.result import AsyncResult
 from celery import signature
 from celery import group, chain, chord, signature
 
@@ -35,7 +35,9 @@ CELERY_CHAIN_TYPE = type(chain())
 
 #Predefine phases. For new phases edit this and the config to reflect.
 #The domain of tasks ran should be very explicit.
-def prelim_phase(logger):
+def prelim_phase():
+
+    logger = logging.getLogger(prelim_phase.__name__)
 
     tasks_with_repo_domain = []
 
@@ -48,9 +50,12 @@ def prelim_phase(logger):
 
     #preliminary_task_list = [detect_github_repo_move.si()]
     preliminary_tasks = group(*tasks_with_repo_domain)
+    #preliminary_tasks.apply_async()
     return preliminary_tasks
 
-def repo_collect_phase(logger):
+def repo_collect_phase():
+    logger = logging.getLogger(repo_collect_phase.__name__)
+
     #Here the term issues also includes prs. This list is a bunch of chains that run in parallel to process issue data.
     issue_dependent_tasks = []
     #repo_info should run in a group
@@ -125,29 +130,18 @@ class AugurTaskRoutine:
 
         self.logger.info(f"Enabled phases: {list(self.jobs_dict.keys())}")
         augur_collection_list = []
+
+        augur_collection_sequence = []
         for phaseName, job in self.jobs_dict.items():
-            self.logger.info(f"Starting phase {phaseName}")
-            #Call the function stored in the dict to return the object to call apply_async on
-
-            try:
-                tasks = job(self.logger)
-                phaseResult = tasks.apply_async() 
-
-                # if the job is a group of tasks then join the group
-                if isinstance(tasks, CELERY_GROUP_TYPE): 
-                    with allow_join_result():
-                        phaseResult.join()
-
-            except Exception as e:
-                #Log full traceback if a phase fails.
-                self.logger.error(
-                ''.join(traceback.format_exception(None, e, e.__traceback__)))
-                self.logger.error(
-                    f"Phase {phaseName} has failed during augur collection. Error: {e}")
-                raise e
-
-
-            #self.logger.info(f"Result of {phaseName} phase: {phaseResult.status}")
+            self.logger.info(f"Queuing phase {phaseName}")
+            
+            #Add the phase to the sequence in order as a celery task.
+            #The preliminary task creates the larger task chain 
+            augur_collection_sequence.append(job())
+        
+        #Link all phases in a chain and send to celery
+        augur_collection_chain = chain(*augur_collection_sequence)
+        augur_collection_chain.apply_async()
 
 
 @celery.task
@@ -168,6 +162,7 @@ def start_task():
     augur_collection = AugurTaskRoutine(collection_phases=enabled_phases)
 
     augur_collection.start_data_collection()
+
 
 
 
