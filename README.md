@@ -1,13 +1,12 @@
-# Augur NEW Release v0.43.7
+# Augur NEW Release v0.43.8
 [![first-timers-only](https://img.shields.io/badge/first--timers--only-friendly-blue.svg?style=flat-square)](https://www.firsttimersonly.com/) We follow the [First Timers Only](https://www.firsttimersonly.com/) philosophy of tagging issues for first timers only, and walking one newcomer through the resolution process weekly. [You can find these issues tagged with "first timers only" on our issues list.](https://github.com/chaoss/augur/labels/first-timers-only).
 
+[![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme) [![Build Docker images](https://github.com/chaoss/augur/actions/workflows/build_docker.yml/badge.svg)](https://github.com/chaoss/augur/actions/workflows/build_docker.yml) [![Hits-of-Code](https://hitsofcode.com/github/chaoss/augur?branch=main)](https://hitsofcode.com/github/chaoss/augur/view?branch=main) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
 
-### Design Description:
-* Display and Sort by Number of Repos on Groups Page: https://github.com/CadenHicks/Group_1_Semester_Project/issues/7
+## NEW RELEASE ALERT!
+[If you want to jump right in, updated docker build/compose and bare metal installation instructions are available here](docs/new-install.md)
 
-* Add Filter Functionality to Table on Repos Page: https://github.com/CadenHicks/Group_1_Semester_Project/issues/5
-
-Augur is now releasing a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.43.7
+Augur is now releasing a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.43.8
 - The `main` branch is a stable version of our new architecture, which features:
   - Dramatic improvement in the speed of large scale data collection (10,000+ repos). All data is obtained for 10k+ repos within a week
   - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard
@@ -17,11 +16,10 @@ Augur is now releasing a dramatically improved new version to the main branch. I
   - Data collection completeness assurance enabled by a structured, relational data set that is easily compared with platform API Endpoints
 - The next release of the new version will include a hosted version of Augur where anyone can create an account and add repos “they care about”. If the hosted instance already has a requested organization or repository it will be added to a user’s view. If its a new repository or organization, the user will be notified that collection will take (time required for the scale of repositories added). 
 
-* Add Project Health Description to Repos Page: https://github.com/CadenHicks/Group_1_Semester_Project/issues/4
+## What is Augur?
 
-* Add Project Health Description to Insights Page: https://github.com/CadenHicks/Group_1_Semester_Project/issues/3
-
-* Adding Trending Tab: https://github.com/CadenHicks/Group_1_Semester_Project/issues/1
+Augur is a software suite for collecting and measuring structured data
+about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities.
 
 We gather trace data for a group of repositories, normalize it into our data model, and provide a variety of metrics about said data. The structure of our data model enables us to synthesize data across various platforms to provide meaningful context for meaningful questions about the way these communities evolve.
 Augur’s main focus is to measure the overall health and sustainability of open source projects, as these types of projects are system critical for nearly every software organization or company. We do this by gathering data about project repositories and normalizing that into our data model to provide useful metrics about your project’s health. For example, one of our metrics is Burstiness. Burstiness – how are short timeframes of intense activity, followed by a corresponding return to a typical pattern of activity, observed in a project?
