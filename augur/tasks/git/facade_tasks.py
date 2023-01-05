@@ -377,7 +377,7 @@ def generate_facade_chain(logger):
         facade_sequence.extend(generate_analysis_sequence(logger))
 
         #Generate contributor analysis task group.
-        #facade_sequence.append(generate_contributor_sequence(logger))
+        facade_sequence.append(generate_contributor_sequence(logger))
 
         if nuke_stored_affiliations:
             facade_sequence.append(nuke_affiliations_facade_task.si().on_error(facade_error_handler.s()))#nuke_affiliations(session.cfg)

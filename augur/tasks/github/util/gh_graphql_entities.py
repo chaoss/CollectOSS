@@ -341,8 +341,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
             self.logger.error(
                 ''.join(traceback.format_exception(None, e, e.__traceback__)))
             
-            data = self.request_graphql_dict(variables=params)
-            coreData = self.extract_paginate_result(data)
+            self.logger.info(f"Graphql paramters: {params}")
+            return
 
 
         if int(coreData['totalCount']) == 0:

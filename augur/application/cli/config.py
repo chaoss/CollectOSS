@@ -27,9 +27,10 @@ def cli():
 @click.option('--facade-repo-directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
 @click.option('--gitlab-api-key', help="GitLab API key for data collection from the GitLab API", envvar=ENVVAR_PREFIX + 'GITLAB_API_KEY')
 @click.option('--redis-conn-string', help="String to connect to redis cache", envvar=ENVVAR_PREFIX + 'REDIS_CONN_STRING')
+@click.option('--rabbitmq-conn-string', help="String to connect to rabbitmq broker", envvar=ENVVAR_PREFIX + 'RABBITMQ_CONN_STRING')
 @test_connection
 @test_db_connection
-def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_conn_string):
+def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_conn_string, rabbitmq_conn_string):
 
     if not github_api_key:
 
@@ -88,6 +89,9 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
                 pass
 
             default_config["Redis"]["connection_string"] = redis_conn_string
+
+        if rabbitmq_conn_string:
+            default_config["RabbitMQ"]["connection_string"] = rabbitmq_conn_string
 
         default_config["Keys"] = keys
 

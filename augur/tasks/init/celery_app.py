@@ -12,7 +12,7 @@ from sqlalchemy import create_engine, event
 from augur.application.logs import TaskLogConfig
 from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import get_database_string
-from augur.tasks.init import get_redis_conn_values
+from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ else:
 redis_db_number, redis_conn_string = get_redis_conn_values()
 
 # initialize the celery app
-BROKER_URL = f'{redis_conn_string}{redis_db_number}'
+BROKER_URL = get_rabbitmq_conn_string()#f'{redis_conn_string}{redis_db_number}'
 BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 
 celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)
@@ -62,7 +62,7 @@ celery_app.conf.task_routes = {
 celery_app.conf.task_track_started = True
 
 #ignore task results by default
-celery_app.conf.task_ignore_result = True
+##celery_app.conf.task_ignore_result = True
 
 # store task erros even if the task result is ignored
 celery_app.conf.task_store_errors_even_if_ignored = True

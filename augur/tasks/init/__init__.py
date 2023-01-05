@@ -18,3 +18,13 @@ def get_redis_conn_values():
         redis_conn_string += "/"
 
     return redis_db_number, redis_conn_string
+
+def get_rabbitmq_conn_string():
+    logger = logging.getLogger(__name__)
+
+    with DatabaseSession(logger) as session:
+        config = AugurConfig(logger, session)
+    
+    rabbbitmq_conn_string = config.get_value("RabbitMQ", "connection_string")
+
+    return rabbbitmq_conn_string
