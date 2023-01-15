@@ -18,7 +18,7 @@ $ cd augur/
 $ git remote add upstream https://github.com/chaoss/augur.git
 ```
 
-2. Follow the [development installation instructions](https://oss-augur.readthedocs.io/en/main/development-guide/installation.html).
+2. Follow the [development installation instructions](https://github.com/chaoss/augur/blob/main/docs/new-install.md).
 
 3. Create a new branch
 ```bash

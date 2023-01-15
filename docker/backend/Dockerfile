@@ -10,6 +10,7 @@ RUN set -x \
     && apt-get update \
     && apt-get -y install --no-install-recommends \
         git \
+        bash \
         curl \
         gcc \
         python3-pip \
