@@ -16,14 +16,7 @@
 1. Obtain a GitHub Access Token: https://github.com/settings/tokens
 2. Obtain a GitLab Access Token: https://gitlab.com/-/profile/personal_access_tokens
 3. Python3 needs to be installed, and typically is by default on most systems. 
-4. There are some Git configuration parameters that help when you are cloning repos over time, and a platform prompts you for credentials when it finds a repo is deleted:
-```bash 
-    git config --global diff.renames true
-    git config --global diff.renameLimit 200000
-    git config --global credential.helper cache
-    git config --global credential.helper 'cache --timeout=9999999999999'
-```
-5. Make sure all of your core libraries are installed at the operating system level. Often, these days, they are by default, and its important to make sure: 
+4. Make sure all of your core libraries are installed at the operating system level. Often, these days, they are by default, and its important to make sure: 
 ```bash
     sudo apt update
     sudo apt upgrade
@@ -32,11 +25,11 @@
     sudo apt install postgresql postgresql-contrib postgresql-client
     sudo apt install build-essential
 ```
-6. If you are running on Ubuntu 22.x right now, you will need to install python 3.9
+5. If you are running on Ubuntu 22.x right now, you will need to install python 3.9
   - `sudo add-apt-repository ppa:deadsnakes/ppa`
   - `sudo apt install python3.9`
   - `sudo apt install python3.9-distutils`
-7. Install pip: `sudo apt install python3-pip` and `sudo apt install python3.9-venv`
+6. Install pip: `sudo apt install python3-pip` and `sudo apt install python3.9-venv`
 
 ### Docker
 1. Make sure docker, and docker-compose are both installed
@@ -52,6 +45,10 @@
 0. Follow the installation instructions for the database here: https://oss-augur.readthedocs.io/en/main/quick-start.html#postgresql-installation
 1. Clone Augur, or clone your fork of Augur if you wish to make contributions
 2. Install `redis-server` at the operating system level `sudo apt install redis-server`
+3. Install rabbitmq. Instructions for installing rabbitmq can be found here: https://www.rabbitmq.com/download.html
+
+NOTE: To set up the rabbitmq instance and get it working see the quick-start section before running make install
+
 3. Make sure you have `Go` version is 1.19.3. If you don't know how to install `Go`, instructions are provided during the installation process. After following the instructions, you will need to add Go to your path for this session: `export PATH=$PATH:/usr/local/go/bin`. You should also add this to your shell's profile script.
 4. Create a Python Virtual Environment `python3 -m venv ~/virtual-env-directory` (use `python3.9 -m venv` if on Ubuntu 22.04, as it defaults to python 3.10, which will not compile the machine learning workers.)
 5. Activate your Python Virtual Environment `source ~/virtual-env-directory/bin/activate`

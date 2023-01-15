@@ -6,7 +6,7 @@ from augur.application.db.util import execute_session_query
 
 
 @celery.task
-def detect_github_repo_move(repo_git_identifiers : str) -> None:
+def detect_github_repo_move(repo_git_identifiers : [str]) -> None:
     logger = logging.getLogger(detect_github_repo_move.__name__)
 
     logger.info(f"Starting repo_move operation with {repo_git_identifiers}")

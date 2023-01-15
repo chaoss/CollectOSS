@@ -35,6 +35,7 @@ CELERY_CHAIN_TYPE = type(chain())
 
 #Predefine phases. For new phases edit this and the config to reflect.
 #The domain of tasks ran should be very explicit.
+@celery.task
 def prelim_phase():
 
     logger = logging.getLogger(prelim_phase.__name__)
@@ -44,8 +45,12 @@ def prelim_phase():
         repos = execute_session_query(query, 'all')
         repo_git_list = [repo.repo_git for repo in repos]
 
-        return create_grouped_task_load(dataList=repo_git_list,task=detect_github_repo_move)
+        result = create_grouped_task_load(dataList=repo_git_list,task=detect_github_repo_move).apply_async()
+        
+        with allow_join_result():
+            return result.get()
 
+@celery.task
 def repo_collect_phase():
     logger = logging.getLogger(repo_collect_phase.__name__)
 
@@ -57,25 +62,38 @@ def repo_collect_phase():
     with DatabaseSession(logger) as session:
         query = session.query(Repo)
         repos = execute_session_query(query, 'all')
-        #Just use list comprehension for simple group
-        repo_info_tasks = [collect_repo_info.si(repo.repo_git) for repo in repos]
 
-        for repo in repos:
-            first_tasks_repo = group(collect_issues.si(repo.repo_git),collect_pull_requests.si(repo.repo_git))
-            second_tasks_repo = group(collect_events.si(repo.repo_git),
-                collect_github_messages.si(repo.repo_git),process_pull_request_files.si(repo.repo_git), process_pull_request_commits.si(repo.repo_git))
 
-            repo_chain = chain(first_tasks_repo,second_tasks_repo)
-            issue_dependent_tasks.append(repo_chain)
+        all_repo_git_identifiers = [repo.repo_git for repo in repos]
+
+        #Pool the tasks for collecting repo info. 
+        repo_info_tasks = create_grouped_task_load(dataList=all_repo_git_identifiers, task=collect_repo_info).tasks
+
+        #pool the repo collection jobs that should be ran first and have deps. 
+        primary_repo_jobs = group(
+            *create_grouped_task_load(dataList=all_repo_git_identifiers, task=collect_issues).tasks,
+            *create_grouped_task_load(dataList=all_repo_git_identifiers, task=collect_pull_requests).tasks
+        )
+
+        secondary_repo_jobs = group(
+            *create_grouped_task_load(dataList=all_repo_git_identifiers, task=collect_events).tasks,
+            *create_grouped_task_load(dataList=all_repo_git_identifiers,task=collect_github_messages).tasks,
+            *create_grouped_task_load(dataList=all_repo_git_identifiers, task=process_pull_request_files).tasks,
+            *create_grouped_task_load(dataList=all_repo_git_identifiers, task=process_pull_request_commits).tasks
+        )
+        
 
         repo_task_group = group(
             *repo_info_tasks,
-            chain(group(*issue_dependent_tasks),process_contributors.si()),
+            chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
             generate_facade_chain(logger),
             collect_releases.si()
         )
     
-    return chain(repo_task_group, refresh_materialized_views.si())
+    result = chain(repo_task_group, refresh_materialized_views.si()).apply_async()
+    
+    with allow_join_result():
+        return result.get()
 
 
 DEFINED_COLLECTION_PHASES = [prelim_phase, repo_collect_phase]
@@ -130,7 +148,7 @@ class AugurTaskRoutine:
             
             #Add the phase to the sequence in order as a celery task.
             #The preliminary task creates the larger task chain 
-            augur_collection_sequence.append(job())
+            augur_collection_sequence.append(job.si())
         
         #Link all phases in a chain and send to celery
         augur_collection_chain = chain(*augur_collection_sequence)

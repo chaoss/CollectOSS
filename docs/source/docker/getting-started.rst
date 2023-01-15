@@ -61,17 +61,15 @@ Now that you've got your external database credentials (if you are using one) an
 
 Your database credentials and other environment variables used at runtime are stored in a file when running manually and are taken from the active bash session when using docker-compose.
 
-You can provide your own ``docker_env.txt`` to pull from. The file should have the below format and set all the variables to some value.
+You can provide your own ``.env`` file to pull from. The file should have the below format and set all the variables to some value.
 
   .. code:: 
 
-    AUGUR_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxx
-    AUGUR_GITHUB_USERNAME=ExampleUser
-    AUGUR_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxx
-    AUGUR_GITLAB_USERNAME=ExampleUser
-    AUGUR_DB=postgresql://xxxx:xxxxxxxx@yourhost:5432/yourdb
-    REDIS_CONN_STRING=redis://yourhost:6379
-    AUGUR_DB_SCHEMA_BUILD=0
+    AUGUR_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx 
+    AUGUR_GITHUB_USERNAME=usernameGithub
+    AUGUR_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
+    AUGUR_GITLAB_USERNAME=usernameGitlab
+    AUGUR_DB=yourDBString
 
 
 Now that you've created your config file or are ready to generate it yourself, you're ready to `get going <quick-start.html>`_ .

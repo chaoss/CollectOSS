@@ -184,7 +184,7 @@ def releases_model(session, repo_git, repo_id):
         session.logger.info(f"Ran into problem when fetching data for repo {repo_git}: {e}")
         return
 
-    session.logger.info("repository value is: {}\n".format(data))
+    #session.logger.info("repository value is: {}\n".format(data))
     if 'releases' in data:
         if 'edges' in data['releases'] and data['releases']['edges']:
             for n in data['releases']['edges']:
