@@ -1,0 +1,52 @@
+<h1>Authorize App</h1>
+
+<p>{{ app.name }} is requesting access to your account.</p>
+<p>Authorizing this application will grant it access to the following:</p>
+<ul>
+    <li>Username</li>
+    <li>Your repo groups</li>
+    <li>Information collected by Augur, both public and private:</li>
+    <li>
+        <ul>
+            <li>Issues</li>
+            <li>Pull requests</li>
+            <li>Comments</li>
+            <li>Commit logs</li>
+        </ul>
+    </li>
+</ul>
+
+<p>By continuing, you authorize this access, and will be redirected to the following link:</p>
+<p>{{ app.redirect_url }}</p>
+<strong>Make sure you trust the application and this link before proceeding.</strong>
+
+<form id="authorize_form" action="{{ app.redirect_url }}" method="POST">
+    <input type="hidden" id="code" name="code">
+    <input type="hidden" id="state" name="state" value="{{ state }}">
+    <br>
+    <div class="btn" style="background-color: var(--color-accent); padding: 0; margin: 0;">
+        <button id="sigbtn" class="btn btn-outline-dark" style="color: white;" type="submit" name="signin">Authorize</button>
+    </div>
+</form>
+
+<script type="text/javascript">
+    function submit_form() {
+        input = document.getElementById("code");
+        fetch('{{ url_for("user_authorize") }}')
+            .then((response) => response.json())
+            .then((data) => {
+                try {
+                    var url = "{{ app.redirect_url }}?code=" + data.code {% if state %} + "&state={{ state }}"{% endif %};
+                    window.location.replace(url)
+                } catch (error) {
+                    console.error(error);
+                }
+            });
+    }
+
+    form = document.getElementById("authorize_form");
+    form.addEventListener("submit", (event) => {
+        submit_form()
+        event.preventDefault();
+    });
+</script>

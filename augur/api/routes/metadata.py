@@ -12,7 +12,7 @@ from boto3.dynamodb.conditions import Key, Attr
 import os
 import requests
 
-AUGUR_API_VERSION = 'api/unstable'
+from augur.api.routes import AUGUR_API_VERSION
 
 def create_routes(server):
 

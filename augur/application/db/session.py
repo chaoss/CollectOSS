@@ -5,7 +5,6 @@ import sys
 import random
 import logging
 import json
-import httpx
 import sqlalchemy as s
 
 from typing import Optional, List, Union
@@ -202,7 +201,7 @@ class DatabaseSession(s.orm.Session):
             if deadlock_detected is True:
                 self.logger.error("Made it through even though Deadlock was detected")
                     
-            return None
+            return "success"
         
 
         # othewise it gets the requested return columns and returns them as a list of dicts

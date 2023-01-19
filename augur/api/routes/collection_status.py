@@ -4,7 +4,7 @@ import pandas as pd
 import json
 from flask import Response
 
-AUGUR_API_VERSION = 'api/unstable'
+from augur.api.routes import AUGUR_API_VERSION
 
 
 def create_routes(server):

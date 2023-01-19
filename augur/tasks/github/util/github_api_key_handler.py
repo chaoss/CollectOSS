@@ -1,4 +1,5 @@
 import httpx
+import time
 
 from typing import Optional, List
 
@@ -75,8 +76,16 @@ class GithubApiKeyHandler():
         if redis_keys:
             return redis_keys
 
-        keys = self.get_api_keys_from_database()
-    
+        attempts = 0
+        while attempts < 3:
+
+            try:
+                keys = self.get_api_keys_from_database()
+                break
+            except:
+                time.sleep(5)
+                attempts += 1
+
         if self.config_key is not None:
             keys += [self.config_key]
 
@@ -91,6 +100,8 @@ class GithubApiKeyHandler():
                 # removes key if it returns "Bad Credentials"
                 if self.is_bad_api_key(client, key) is False:
                     valid_keys.append(key)
+                else:
+                    print(f"WARNING: The key '{key}' is not a valid key. Hint: If valid in past it may have expired")
 
         # just in case the mulitprocessing adds extra values to the list.
         # we are clearing it before we push the values we got

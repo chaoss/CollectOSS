@@ -12,7 +12,7 @@ from flask import request, Response
 from augur.api.util import metric_metadata
 import json
 
-AUGUR_API_VERSION = 'api/unstable'
+from augur.api.routes import AUGUR_API_VERSION
 
 logger = logging.getLogger(__name__)
 

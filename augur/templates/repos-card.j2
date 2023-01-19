@@ -1,0 +1,30 @@
+{% if repos %}
+    <div class="container-fluid mt-4">
+        <div class="row justify-content-center">
+            {% for repo in repos %}
+            <div class="row row-cols-1 col-auto g-3">
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body" style="color: black;">
+                            <a href="{{ url_for('repo_repo_view', id=repo.repo_id) }}"><h5 class="card-title">{{ repo.repo_name }}</h5></a>
+                            <p class="card-text">Repository Status: {{ repo.repo_status }}</p>
+                            <p class="card-text">All Time Commits: {{ repo.commits_all_time|int }}</p>
+                            <p class="card-text">All Time Issues: {{ repo.issues_all_time|int }}</p>
+                        </div>
+                        <div class="card-footer">
+                            <small class="text-muted">Repository ID: {{ repo.repo_id }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% elif query_key %}
+    <h1>Your search did not match any repositories</h1>
+{% elif current_user.is_authenticated %}
+<h1>No Repos Tracked</h1>
+<p>Add repos to your personal tracker in your <a href="{{ url_for('user_settings') }}">profile page</a></p>
+{% else %}
+    <h1>Unable to load repository information</h1>
+{% endif %}

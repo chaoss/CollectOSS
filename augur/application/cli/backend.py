@@ -35,7 +35,6 @@ def cli():
 @cli.command("start")
 @click.option("--disable-collection", is_flag=True, default=False, help="Turns off data collection workers")
 @click.option("--development", is_flag=True, default=False, help="Enable development mode, implies --disable-collection")
-@click.option("--development", is_flag=True, default=False, help="Enable development mode, implies --disable-collection")
 @click.option('--port')
 @test_connection
 @test_db_connection
@@ -53,7 +52,6 @@ def start(disable_collection, development, port):
         raise e
     
     if development:
-        disable_collection = True
         os.environ["AUGUR_DEV"] = "1"
         logger.info("Starting in development mode")
 
@@ -92,7 +90,10 @@ def start(disable_collection, development, port):
             start_task.si().apply_async()
 
             celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
-            celery_beat_process = subprocess.Popen(celery_command.split(" "))       
+            celery_beat_process = subprocess.Popen(celery_command.split(" "))    
+
+        else:
+            logger.info("Collection disabled")   
     
     try:
         server.wait()

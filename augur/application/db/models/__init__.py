@@ -99,5 +99,11 @@ from augur.application.db.models.augur_operations import (
     WorkerSettingsFacade,
     Config,
     User,
-    UserRepo
+    UserRepo,
+    UserGroup,
+    UserSessionToken,
+    ClientApplication,
+    Subscription,
+    SubscriptionType,
+    RefreshToken
 )

@@ -179,6 +179,11 @@ class AugurConfig():
         Returns:
             The value from config if found, and None otherwise
         """
+
+        # TODO temporary until added to the DB schema
+        if section_name == "frontend" and setting_name == "pagination_offset":
+            return 25
+
         try:
             query = self.session.query(Config).filter(Config.section_name == section_name, Config.setting_name == setting_name)
             config_setting = execute_session_query(query, 'one')

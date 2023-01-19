@@ -13,6 +13,8 @@ import importlib
 
 from typing import Optional, List, Any, Tuple
 
+from pathlib import Path
+
 from flask import Flask, request, Response, redirect
 from flask_cors import CORS
 import pandas as pd
@@ -24,7 +26,7 @@ from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from metadata import __version__ as augur_code_version
 
-AUGUR_API_VERSION = 'api/unstable'
+from augur.api.routes import AUGUR_API_VERSION
 
 
 
@@ -58,7 +60,10 @@ class Server():
 
     def create_app(self):
         """Define the flask app and configure the routes."""
-        self.app = Flask(__name__)
+        template_dir = str(Path(__file__).parent.parent / "templates")
+        static_dir = str(Path(__file__).parent.parent / "static")
+
+        self.app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
         self.logger.debug("Created Flask app")
 
         # defines the api version on the flask app, 
@@ -125,6 +130,11 @@ class Server():
             # each file that contains routes must contain a create_routes function
             # and this line is calling that function and passing the flask app,
             # so that the routes in the files can be added to the flask app
+            module.create_routes(self)
+        
+        for route_file in ["augur_view", "routes", "api"]:
+            module = importlib.import_module('.' + route_file, 'augur.api.view')
+
             module.create_routes(self)
 
     

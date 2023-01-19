@@ -14,8 +14,8 @@ def catch_operational_error(func):
             time.sleep(240)
         try:
             return func()
-        except OperationalError:
-            pass
+        except OperationalError as e:
+            print(f"ERROR: {e}")
 
         attempts += 1
 

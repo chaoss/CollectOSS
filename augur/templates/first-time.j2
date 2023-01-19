@@ -1,0 +1,211 @@
+{# https://www.bootdey.com/snippets/view/dark-profile-settings #}
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <link href="{{ url_for('static', filename='css/first_time.css') }}" rel="stylesheet">
+</head>
+<body>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <div class="container">
+        <div class="row">
+            {# Start sidebar #}
+            <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 col-12 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="sidebar">
+                            <div class="sidebar-top">
+                                <div class="brand-logo">
+                                    <img src="{{ url_for('static', filename='img/augur_logo.png')}}" alt="Augur Logo">
+                                </div>
+                            </div>
+                            <div class="about">
+                                <h1 class="mb-2 text-primary">First Time Setup</h1>
+                                <p>Take a moment to create or update the configuration for your instance.</p>
+                                <br>
+                                <p>Default values are shown. When you are done updating, click the restart button to save the settings and bring the primary server up.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted">
+                        {% if version %}
+                        Version: {{ version.major }}-{{ version.minor }}-{{ version.series }}
+                        {% else %}
+                        Version: Unspecified
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {# Start form body #}
+            <div class="col-xl-9 col-lg-9 col-md-12 col-sm-12 col-12 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <form id="settings-form">
+                            {% for section in sections %}
+                            <div class="row mb-3">
+                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                    <h6 class="mb-3 text-primary">{{ section.title }}</h6>
+                                </div>
+                                {% for setting in section.settings %}
+                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                                    <div class="form-group">
+                                        <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
+                                        <input type="text" class="form-control" id="{{ setting.id }}" placeholder="{{ setting.value }}">
+                                        <div class="form-text mb-1">{{ setting.description }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                            <div class="row mb-3">
+                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                    <h6 class="mb-3 text-primary">Gunicorn Settings</h6>
+                                </div>
+                                <div class="d-flex">
+                                    <div class="input-group editor-container">
+                                        <div id="gunicorn-settings" class="form-control" aria-label="gunicorn config input">{{ gunicorn_placeholder }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" id="submit" name="submit" class="btn btn-primary">Restart</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="error-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="modal-text"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="loading-modal" class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered spinner-container">
+            <svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+                <circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+            </svg>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.7.1/ace.js" integrity="sha512-FKkEO4RZEQjFmU1hoUYdx6HJLdpHpNzgWspgnQCxx7OOkDVz4kiGJxR97yWc5bzjwcCpJC/CRCiQzuoGYAChhQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{{ url_for('static', filename='js/sleep.js') }}"></script>
+    <script>
+    var loadingModal = new bootstrap.Modal(document.getElementById('loading-modal'));
+
+    // set up the code editor
+    var editor = ace.edit("gunicorn-settings");
+    editor.setTheme("ace/theme/one_dark");
+    editor.session.setMode("ace/mode/python");
+    editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        showPrintMargin: false
+    });
+
+    function submit_form(event) {
+        // Stop the form from submitting so we can execute a request instead
+        event.preventDefault();
+
+        // Convert the form into a dictionary
+
+        /* For some reason this didn't work here, so I did it another way
+        const formData = new FormData(event.target);
+        const formProperties = Object.fromEntries(formData);
+        */
+
+        var elements = event.target.querySelectorAll('input');
+        var config = new Object();
+
+        elements.forEach((element) => {
+            if(element.value != "") {
+                config[element.id] = element.value;
+            }
+        });
+
+        // Submit the gunicorn configuration to the server
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "{{ url_for('update_gunicorn') }}", true);
+        xhr.setRequestHeader('Content-Type', 'text/plain');
+        xhr.send(editor.getValue());
+
+        // Submit the form dictionary to the server
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "{{ url_for('update_config') }}", true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify(config));
+
+        // Check the response
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == XMLHttpRequest.DONE) {
+                if(xhr.status != 200) {
+                    if(xhr.status) {
+                        // The first time setup server returned an error
+                        displayError(xhr.responseText);
+                    } else {
+                        // The first time setup server did not respond
+                        displayError("The first time setup server is unreachable");
+                    }
+                } else {
+                    // Display a loading indicator while starting up the production server
+                    loadingModal.show();
+                    waitToReload(xhr.responseText);
+                }
+            }
+        }
+    }
+
+    async function waitToReload(new_url) {
+        // Shut down the temp server and wait for primary to initialize
+        fetch("{{ url_for('shutdown') }}").then(async () => {
+            // The response from the config endpoint is the new approot
+            let count = 5;
+            while(--count >= 0) {
+                try {
+                    await sleep(1000);
+                    fetch(window.location + new_url).then(() => {
+                        window.location.replace(new_url);
+                    });
+                } catch(e) {
+                    // do nothing for now
+                }
+            }
+            displayError("Timeout reached waiting for production server");
+        });
+    }
+
+    // Pop up a modal window with the error text displayed
+    function displayError(error) {
+        loadingModal.hide();
+        var text = document.getElementById("modal-text");
+        text.innerHTML = error;
+        var errorModal = new bootstrap.Modal(document.getElementById('error-modal'))
+        errorModal.show();
+    }
+
+    // Have the settings-form call submit_form when submitted
+    const loginForm = document.getElementById("settings-form");
+    loginForm.addEventListener("submit", submit_form);
+</script>
+</body>
+</html>

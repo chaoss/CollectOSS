@@ -21,9 +21,23 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
+import logging
+
 from augur.application.db.models.base import Base
+from augur.application import requires_db_session
 
 metadata = Base.metadata
+
+logger = logging.getLogger(__name__)
+
+def get_session():
+    global session
+
+    if "session" not in globals():
+        from augur.application.db.session import DatabaseSession
+        session = DatabaseSession(logger)
+
+    return session
 
 
 t_analysis_log = Table(
@@ -813,8 +827,15 @@ class Repo(Base):
     )
 
     repo_group = relationship("RepoGroup")
+    user_repo = relationship("UserRepo")
 
+    @staticmethod
+    def get_by_id(repo_id):
 
+        local_session = get_session()
+
+        return local_session.query(Repo).filter(Repo.repo_id == repo_id).first()
+        
 class RepoTestCoverage(Base):
     __tablename__ = "repo_test_coverage"
     __table_args__ = {"schema": "augur_data"}

@@ -11,7 +11,7 @@ from augur.api.metrics.insight import top_insights
 # from augur.api.server import transform
 from augur.api.server import server
 
-AUGUR_API_VERSION = 'api/unstable'
+from augur.api.routes import AUGUR_API_VERSION
 
 def create_routes(server):
 

@@ -17,7 +17,7 @@ import json
 import os 
 import traceback 
 
-AUGUR_API_VERSION = 'api/unstable'
+from augur.api.routes import AUGUR_API_VERSION
 
 logger = logging.getLogger(__name__)
 

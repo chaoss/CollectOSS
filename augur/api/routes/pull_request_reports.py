@@ -23,7 +23,7 @@ from bokeh.transform import dodge, factor_cmap, transform
 
 warnings.filterwarnings('ignore')
 
-AUGUR_API_VERSION = 'api/unstable'
+from augur.api.routes import AUGUR_API_VERSION
 
 def create_routes(server):
     def pull_request_data_collection(repo_id, start_date, end_date):

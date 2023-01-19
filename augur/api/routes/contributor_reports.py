@@ -18,7 +18,7 @@ from bokeh.palettes import Colorblind
 from bokeh.layouts import gridplot
 from bokeh.transform import cumsum
 
-AUGUR_API_VERSION = 'api/unstable'
+from augur.api.routes import AUGUR_API_VERSION
 
 warnings.filterwarnings('ignore')
 
