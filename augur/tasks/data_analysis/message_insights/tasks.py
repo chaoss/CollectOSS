@@ -14,7 +14,7 @@ from augur.tasks.data_analysis.message_insights.message_sentiment import get_sen
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, MessageAnalysis, MessageAnalysisSummary
-from augur.application.db.engine import create_database_engine
+from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
 
 #SPDX-License-Identifier: MIT
@@ -50,7 +50,8 @@ def message_insight_model(repo_git: str) -> None:
     repo_exists_SQL = s.sql.text("""
         SELECT exists (SELECT 1 FROM augur_data.message_analysis_summary WHERE repo_id = :repo_id LIMIT 1)""")
 
-    df_rep = pd.read_sql_query(repo_exists_SQL, create_database_engine(), params={'repo_id': repo_id})
+    with DatabaseEngine(connection_pool_size=1) as engine:
+        df_rep = pd.read_sql_query(repo_exists_SQL, engine, params={'repo_id': repo_id})
     #full_train = not(df_rep['exists'].iloc[0])
     logger.info(f'Full Train: {full_train}')
 
@@ -75,7 +76,9 @@ def message_insight_model(repo_git: str) -> None:
             where message.repo_id = :repo_id
             """)
 
-        df_past = pd.read_sql_query(past_SQL, create_database_engine(), params={'repo_id': repo_id})
+        with DatabaseEngine(connection_pool_size=1) as engine:
+            df_past = pd.read_sql_query(past_SQL, engine, params={'repo_id': repo_id})
+
         df_past['msg_timestamp'] = pd.to_datetime(df_past['msg_timestamp'])
         df_past = df_past.sort_values(by='msg_timestamp')
         logger.debug(f'{df_past} is df_past')
@@ -114,7 +117,8 @@ def message_insight_model(repo_git: str) -> None:
             left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
             where message.repo_id = :repo_id""")
 
-    df_message = pd.read_sql_query(join_SQL, create_database_engine(), params={'repo_id': repo_id, 'begin_date': begin_date})
+    with DatabaseEngine(connection_pool_size=1) as engine:
+        df_message = pd.read_sql_query(join_SQL, engine, params={'repo_id': repo_id, 'begin_date': begin_date})
 
     logger.info(f'Messages dataframe dim: {df_message.shape}')
     logger.info(f'Value 1: {df_message.shape[0]}')
@@ -149,7 +153,8 @@ def message_insight_model(repo_git: str) -> None:
             left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
             where issue_message_ref.repo_id = :repo_id""")
 
-            df_past = pd.read_sql_query(merge_SQL, create_database_engine(), params={'repo_id': repo_id})
+            with DatabaseEngine(connection_pool_size=1) as engine:
+                df_past = pd.read_sql_query(merge_SQL, engine, params={'repo_id': repo_id})
             df_past = df_past.loc[df_past['novelty_flag'] == 0]
             rec_errors = df_past['reconstruction_error'].tolist()
             threshold = threshold_otsu(np.array(rec_errors))
@@ -337,7 +342,8 @@ def message_insight_model(repo_git: str) -> None:
                                  FROM message_analysis_summary 
                                  WHERE repo_id=:repo_id""")
 
-        df_past = pd.read_sql_query(message_analysis_query, create_database_engine(), params={'repo_id': repo_id})
+        with DatabaseEngine(connection_pool_size=1) as engine:
+            df_past = pd.read_sql_query(message_analysis_query, engine, params={'repo_id': repo_id})
 
         # df_past = get_table_values(cols=['period', 'positive_ratio', 'negative_ratio', 'novel_count'],
         #                                 tables=['message_analysis_summary'],
@@ -406,7 +412,9 @@ def send_insight(repo_id, insights, logger):
             WHERE repo_id = {}
         """.format(repo_id))
 
-        repo = pd.read_sql(repoSQL, create_database_engine(), params={}).iloc[0]
+        with DatabaseEngine(connection_pool_size=1) as engine:
+            repo = pd.read_sql(repoSQL, engine, params={}).iloc[0]
+
         to_send = {
             'message_insight': True,
             'repo_git': repo['repo_git'],
@@ -440,8 +448,8 @@ def get_max_id(table, column, logger, default=25150):
         SELECT max({0}.{1}) AS {1}
         FROM {0}
     """.format(table, column))
-    db = create_database_engine()
-    rs = pd.read_sql(max_id_sql, db, params={})
+    with DatabaseEngine(connection_pool_size=1) as engine:
+        rs = pd.read_sql(max_id_sql, engine, params={})
     if rs.iloc[0][column] is not None:
         max_id = int(rs.iloc[0][column]) + 1
         logger.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
@@ -449,7 +457,5 @@ def get_max_id(table, column, logger, default=25150):
         max_id = default
         logger.warning("Could not find max id for {} column in the {} table... " +
             "using default set to: {}\n".format(column, table, max_id))
-
-    db.dispose()
 
     return max_id

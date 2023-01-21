@@ -10,11 +10,11 @@ import click
 import logging
 from werkzeug.security import generate_password_hash
 from augur.application.db.models import User
-from augur.application.db.engine import create_database_engine
+from augur.application.db.engine import DatabaseEngine
 from sqlalchemy.orm import sessionmaker
 
 
-engine = create_database_engine()
+engine = DatabaseEngine().engine
 Session = sessionmaker(bind=engine)
 
 logger = logging.getLogger(__name__)

@@ -29,8 +29,8 @@ from augur.tasks.init.redis_connection import redis_connection as redis
 
 logger = logging.getLogger(__name__)
 development = get_development_flag()
-from augur.application.db.engine import create_database_engine
-Session = sessionmaker(bind=create_database_engine())
+from augur.application.db.engine import DatabaseEngine
+Session = sessionmaker(bind=DatabaseEngine().engine)
 
 from augur.api.routes import AUGUR_API_VERSION
 
@@ -78,14 +78,17 @@ def create_routes(server):
         if not development and not request.is_secure:
             return generate_upgrade_request()
 
-        session = Session()
+        
         username = request.args.get("username")
         password = request.args.get("password")
         if username is None or password is None:
             # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
             return jsonify({"status": "Missing argument"}), 400
 
+        session = Session()
         user = session.query(User).filter(User.login_name == username).first()
+        session.close()
+
         if user is None:
             return jsonify({"status": "Invalid username"})
 
@@ -243,15 +246,18 @@ def create_routes(server):
         if email is not None:
             existing_user = session.query(User).filter(User.email == email).one()
             if existing_user is not None:
+                session = Session()
                 return jsonify({"status": "Already an account with this email"})
 
             current_user.email = email
             session.commit()
+            session = Session()
             return jsonify({"status": "Email Updated"})
 
         if new_password is not None:
             current_user.login_hashword = generate_password_hash(new_password)
             session.commit()
+            session = Session()
             return jsonify({"status": "Password Updated"})
 
         if new_login_name is not None:
@@ -261,6 +267,7 @@ def create_routes(server):
 
             current_user.login_name = new_login_name
             session.commit()
+            session = Session()
             return jsonify({"status": "Username Updated"})
 
         return jsonify({"status": "Missing argument"}), 400

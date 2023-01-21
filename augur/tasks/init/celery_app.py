@@ -140,9 +140,9 @@ def init_worker(**kwargs):
 
     global engine
 
-    from augur.application.db.engine import create_database_engine
+    from augur.application.db.engine import DatabaseEngine
 
-    engine = create_database_engine()
+    engine = DatabaseEngine().engine
 
 
 @worker_process_shutdown.connect

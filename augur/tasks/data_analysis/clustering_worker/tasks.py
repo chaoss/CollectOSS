@@ -22,7 +22,7 @@ from collections import Counter
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, RepoClusterMessage, RepoTopic, TopicWord
-from augur.application.db.engine import create_database_engine
+from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
 
 
@@ -109,7 +109,8 @@ def clustering_model(repo_git: str) -> None:
             """
     )
     # result = db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
-    msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, create_database_engine(), params={"repo_id": repo_id})
+    with DatabaseEngine(connection_pool_size=1) as engine:
+        msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, engine, params={"repo_id": repo_id})
     logger.info(msg_df_cur_repo.head())
     logger.debug(f"Repo message df size: {len(msg_df_cur_repo.index)}")
 
@@ -298,7 +299,8 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
         AND prmr.msg_id=m.msg_id
         """
     )
-    msg_df_all = pd.read_sql(get_messages_sql, create_database_engine(), params={})
+    with DatabaseEngine(connection_pool_size=1) as engine:
+        msg_df_all = pd.read_sql(get_messages_sql, engine, params={})
 
     # select only highly active repos
     logger.debug("Selecting highly active repos")

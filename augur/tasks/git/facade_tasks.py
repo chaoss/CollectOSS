@@ -193,6 +193,9 @@ def trim_commits_post_analysis_facade_task(repo_ids):
 
             #encode the repo_id with the commit.
             commits_with_repo_tuple = [(commit,repo_id) for commit in list(missing_commits)]
+
+            #1/21/2023: SPG things list needs to be initialized based on error
+            all_missing_commits = []
             #Get all missing commits into one large list to split into task pools
             all_missing_commits.extend(commits_with_repo_tuple)
         

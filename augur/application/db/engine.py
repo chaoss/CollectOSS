@@ -5,6 +5,8 @@ import sys
 import logging
 import inspect
 from sqlalchemy import create_engine, event
+from sqlalchemy.engine.base import Engine
+from sqlalchemy.pool import NullPool
 from augur.application.logs import initialize_stream_handler
 from augur.application.db.util import catch_operational_error
 
@@ -47,36 +49,64 @@ def get_database_string() -> str:
 
     return db_conn_string
 
+class DatabaseEngine():
 
-def create_database_engine():  
-    """Create sqlalchemy database engine 
+    def __init__(self, connection_pool_size=5):
 
-    Note:
-        A new database engine is created each time the function is called
+        self._engine = self.create_database_engine(connection_pool_size)
 
-    Returns:
-        sqlalchemy database engine
-    """ 
 
-    # curframe = inspect.currentframe()
-    # calframe = inspect.getouterframes(curframe, 2)
-    # print('file name:', calframe[1][1])
-    # print('function name:', calframe[1][3])
+    def __enter__(self):
+        return self._engine
 
-    db_conn_string = get_database_string()
 
-    engine = create_engine(db_conn_string)
+    def __exit__(self, exception_type, exception_value, exception_traceback):
 
-    @event.listens_for(engine, "connect", insert=True)
-    def set_search_path(dbapi_connection, connection_record):
-        existing_autocommit = dbapi_connection.autocommit
-        dbapi_connection.autocommit = True
-        cursor = dbapi_connection.cursor()
-        cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
-        cursor.close()
-        dbapi_connection.autocommit = existing_autocommit
+        self._engine.dispose()
 
-    return engine
+    def dispose(self):
+        self._engine.dispose()
+
+    @property
+    def engine(self):
+        return self._engine
+
+
+    def create_database_engine(self, connection_pool_size):  
+        """Create sqlalchemy database engine 
+
+        Note:
+            A new database engine is created each time the function is called
+
+        Returns:
+            sqlalchemy database engine
+        """ 
+
+        # curframe = inspect.currentframe()
+        # calframe = inspect.getouterframes(curframe, 2)
+        # print('file name:', calframe[1][1])
+        # print('function name:', calframe[1][3])
+
+        db_conn_string = get_database_string()
+
+        if connection_pool_size == 1:
+            engine = create_engine(db_conn_string, poolclass=NullPool)
+
+        elif connection_pool_size < 0:
+            raise Exception(f"Invalid Pool Size: {connection_pool_size}")
+        else:
+            engine = create_engine(db_conn_string, pool_size=connection_pool_size)
+
+        @event.listens_for(engine, "connect", insert=True)
+        def set_search_path(dbapi_connection, connection_record):
+            existing_autocommit = dbapi_connection.autocommit
+            dbapi_connection.autocommit = True
+            cursor = dbapi_connection.cursor()
+            cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
+            cursor.close()
+            dbapi_connection.autocommit = existing_autocommit
+
+        return engine
 
 
 class EngineConnection():

@@ -60,11 +60,11 @@ class DatabaseSession(s.orm.Session):
         self.engine_created = False
 
         if self.engine is None:
-            from augur.application.db.engine import create_database_engine
+            from augur.application.db.engine import DatabaseEngine
 
             self.engine_created = True
 
-            self.engine = create_database_engine()
+            self.engine = DatabaseEngine().engine
 
         super().__init__(self.engine)
 
@@ -76,6 +76,9 @@ class DatabaseSession(s.orm.Session):
         if self.engine_created:
             self.engine.dispose()
         
+        self.close()
+
+    def __del__(self):
         self.close()
     
     def execute_sql(self, sql_text):

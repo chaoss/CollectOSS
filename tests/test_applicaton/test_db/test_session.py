@@ -10,8 +10,7 @@ logger = logging.getLogger(__name__)
 not_provided_cntrb_id = '00000000-0000-0000-0000-000000000000'
 nan_cntrb_id = '01000000-0000-0000-0000-000000000000'
 
-
-
+# TODO: Add test that does not pass an engine to the Session
 
 def test_execute_sql(test_db_engine):
 
@@ -247,3 +246,28 @@ def test_insert_issue_data_with_invalid_strings(test_db_engine):
                                 DELETE FROM "augur_data"."repo";
                                 DELETE FROM "augur_data"."repo_groups";
                                 """)
+
+
+def test_session_without_passing_engine():
+
+    # with DatabaseSession(logger) as session:
+
+    session = DatabaseSession(logger)
+
+    assert session is not None
+    assert session.engine is not None
+
+    with session.engine.connect() as connection:
+
+        # insert the cntrb_id and cntrb_login into the contributors table so the contributor is present. 
+        # This is so we don't get a foreign key error on the cntrb_id when we insert the prs
+        query = s.sql.text("""SELECT * FROM repo""")
+
+        result = connection.execute(query)
+        data = result.fetchall()
+
+        assert result is not None
+        assert data is not None
+        assert isinstance(data, list)
+
+

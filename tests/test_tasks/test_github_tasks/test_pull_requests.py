@@ -9,8 +9,6 @@ from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Config 
 from augur.tasks.util.AugurUUID import GithubUUID
 from augur.application.db.data_parse import extract_needed_contributor_data
-from augur.application.db.engine import create_database_engine
-from augur.application.db.util import execute_session_query
 
 logger = logging.getLogger(__name__)
 not_provided_cntrb_id = '00000000-0000-0000-0000-000000000000'
@@ -21,8 +19,7 @@ def github_api_key_headers():
 
     with DatabaseSession(logger) as session:
 
-        query = session.query(Config).filter(Config.section_name == "Keys", Config.setting_name == "github_api_key")
-        api_key = execute_session_query(query, 'one').value
+        api_key = session.query(Config).filter(Config.section_name == "Keys", Config.setting_name == "github_api_key").one().value
 
         headers = {"Authorization": f'token {api_key}'}
 
