@@ -93,6 +93,7 @@ def create_routes(server):
         if checkPassword == False:
             return jsonify({"status": "Invalid password"})
 
+
         login_user(user)
 
         return jsonify({"status": "Validated"})
@@ -436,7 +437,7 @@ def create_routes(server):
 
         return jsonify({"status": "success", "group_names": result[0]})
 
-    @server.app.route(f"/{AUGUR_API_VERSION}/user/groups/repos/ids", methods=['GET', 'POST'])
+    @server.app.route(f"/{AUGUR_API_VERSION}/user/groups/repos/", methods=['GET', 'POST'])
     @login_required
     def get_user_groups_and_repos():
         """Get a list of user groups and their repos
@@ -450,17 +451,44 @@ def create_routes(server):
         if not development and not request.is_secure:
             return generate_upgrade_request()
 
-        result = current_user.get_groups()
-        if not result[0]:
-            return result[1]
+        columns = request.args.get("columns")
+        if not columns:
+            return {"status": "Missing argument columns"}
 
-        groups = result[0]
+        # split list by , and remove whitespaces from edges
+        
+        valid_columns = []
+        columns =  columns.split(",")
+        for column in columns:
+
+            if column.isspace() or column == "":
+                continue
+
+            valid_columns.append(column.strip())
+
+        print(valid_columns)
+
+
         data = []
+        groups = current_user.groups
         for group in groups:
 
-            repo_ids = [repo.repo_id for repo in group.repos]
-            data.append({group.name : repo_ids})
-        
+            repos = [repo.repo for repo in group.repos]
+
+            group_repo_dicts = []
+            for repo in repos:
+
+                repo_dict = {}
+                for column in valid_columns:
+                    try:
+                        repo_dict[column] = getattr(repo, column)
+                    except AttributeError:
+                        return {"status": f"'{column}' is not a valid repo column"}
+
+                group_repo_dicts.append(repo_dict)
+
+            group_data = {"repos": group_repo_dicts, "favorited": group.favorited}
+            data.append({group.name: group_data})
 
         return jsonify({"status": "success", "data": data})
 
