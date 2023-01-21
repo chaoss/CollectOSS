@@ -78,7 +78,7 @@ setup(
         "flower==1.2.0",
         "tornado==6.1", # added because it sometimes errors when tornado is not 6.1 even though nothing we install depends on it
         "pylint==2.15.5",
-        "dnspython==2.2.1"
+        "dnspython==2.2.1",
         'Werkzeug~=2.0.0',
         "pylint==2.15.5"
     ],
