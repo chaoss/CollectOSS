@@ -22,20 +22,23 @@ def collect_github_messages(repo_git_identifiers: [str]) -> None:
     logger = logging.getLogger(collect_github_messages.__name__)
     
     for repo_git in repo_git_identifiers:
-        with GithubTaskSession(logger, engine) as session:
-        
-            repo_id = session.query(Repo).filter(
-                Repo.repo_git == repo_git).one().repo_id
-    
-        owner, repo = get_owner_repo(repo_git)
-        message_data = retrieve_all_pr_and_issue_messages(repo_git, logger)
-    
-        if message_data:
-        
-            process_messages(message_data, f"{owner}/{repo}: Message task", repo_id, logger)
-    
-        else:
-            logger.info(f"{owner}/{repo} has no messages")
+        try:
+            with GithubTaskSession(logger, engine) as session:
+            
+                repo_id = session.query(Repo).filter(
+                    Repo.repo_git == repo_git).one().repo_id
+
+            owner, repo = get_owner_repo(repo_git)
+            message_data = retrieve_all_pr_and_issue_messages(repo_git, logger)
+
+            if message_data:
+            
+                process_messages(message_data, f"{owner}/{repo}: Message task", repo_id, logger)
+
+            else:
+                logger.info(f"{owner}/{repo} has no messages")
+        except Exception as e:
+            logger.error(f"Could not collect github messages for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
 def retrieve_all_pr_and_issue_messages(repo_git: str, logger) -> None:

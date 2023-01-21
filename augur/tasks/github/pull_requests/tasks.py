@@ -1,6 +1,6 @@
 import time
 import logging
-
+import traceback
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery, engine
@@ -22,18 +22,22 @@ def collect_pull_requests(repo_git_identifiers: [str]) -> None:
     logger = logging.getLogger(collect_pull_requests.__name__)
     
     for repo_git in repo_git_identifiers:
-        with GithubTaskSession(logger, engine) as session:
-        
-            repo_id = session.query(Repo).filter(
-                Repo.repo_git == repo_git).one().repo_id
-    
-        owner, repo = get_owner_repo(repo_git)
-        pr_data = retrieve_all_pr_data(repo_git, logger)
-    
-        if pr_data:
-            process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger)
-        else:
-            logger.info(f"{owner}/{repo} has no pull requests")
+        try:
+
+            with GithubTaskSession(logger, engine) as session:
+            
+                repo_id = session.query(Repo).filter(
+                    Repo.repo_git == repo_git).one().repo_id
+
+            owner, repo = get_owner_repo(repo_git)
+            pr_data = retrieve_all_pr_data(repo_git, logger)
+
+            if pr_data:
+                process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger)
+            else:
+                logger.info(f"{owner}/{repo} has no pull requests")
+        except Exception as e:
+            logger.error(f"Could not collect pull requests for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
     
     
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers

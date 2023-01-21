@@ -14,7 +14,10 @@ def detect_github_repo_move(repo_git_identifiers : [str]) -> None:
         #Ping each repo with the given repo_git to make sure
         #that they are still in place. 
         for repo_git in repo_git_identifiers:
-            query = session.query(Repo).filter(Repo.repo_git == repo_git)
-            repo = execute_session_query(query, 'one')
-            logger.info(f"Pinging repo: {repo_git}")
-            ping_github_for_repo_move(session, repo)
+            try:
+                query = session.query(Repo).filter(Repo.repo_git == repo_git)
+                repo = execute_session_query(query, 'one')
+                logger.info(f"Pinging repo: {repo_git}")
+                ping_github_for_repo_move(session, repo)
+            except Exception as e:
+                logger.error(f"Could not check repo source for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")

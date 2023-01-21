@@ -21,27 +21,31 @@ def collect_events(repo_git_identifiers: [str]):
     
 
     for repo_git in repo_git_identifiers:
-        # define GithubTaskSession to handle insertions, and store oauth keys 
-        with GithubTaskSession(logger) as session:
-        
-            query = session.query(Repo).filter(Repo.repo_git == repo_git)
-            repo_obj = execute_session_query(query, 'one')
-            repo_id = repo_obj.repo_id
-    
-            owner, repo = get_owner_repo(repo_git)
-    
-            logger.info(f"Collecting Github events for {owner}/{repo}")
-    
-            url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
-    
-        event_data = retrieve_all_event_data(repo_git, logger)
-    
-        if event_data:
-        
-            process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger)
-    
-        else:
-            logger.info(f"{owner}/{repo} has no events")
+
+        try:
+            # define GithubTaskSession to handle insertions, and store oauth keys 
+            with GithubTaskSession(logger) as session:
+            
+                query = session.query(Repo).filter(Repo.repo_git == repo_git)
+                repo_obj = execute_session_query(query, 'one')
+                repo_id = repo_obj.repo_id
+
+                owner, repo = get_owner_repo(repo_git)
+
+                logger.info(f"Collecting Github events for {owner}/{repo}")
+
+                url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
+
+            event_data = retrieve_all_event_data(repo_git, logger)
+
+            if event_data:
+            
+                process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger)
+
+            else:
+                logger.info(f"{owner}/{repo} has no events")
+        except Exception as e:
+            logger.error(f"Could not collect events for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
 def retrieve_all_event_data(repo_git: str, logger):

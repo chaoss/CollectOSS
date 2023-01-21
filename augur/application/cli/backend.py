@@ -117,6 +117,11 @@ def start(disable_collection, development, port):
 
         try:
             clear_redis_caches()
+            connection_string = ""
+            with DatabaseSession(logger) as session:
+                connection_string = session.config.get_section("RabbitMQ")['connection_string']
+
+            clear_rabbitmq_messages(connection_string)
             
         except RedisConnectionError:
             pass
@@ -127,18 +132,32 @@ def stop():
     """
     Sends SIGTERM to all Augur server & worker processes
     """
-    _broadcast_signal_to_processes(given_logger=logging.getLogger("augur.cli"))
+    logger = logging.getLogger("augur.cli")
+    _broadcast_signal_to_processes(given_logger=logger)
 
     clear_redis_caches()
+    connection_string = ""
+    with DatabaseSession(logger) as session:
+        connection_string = session.config.get_section("RabbitMQ")['connection_string']
+
+    clear_rabbitmq_messages(connection_string)
 
 @cli.command('kill')
 def kill():
     """
     Sends SIGKILL to all Augur server & worker processes
     """
-    _broadcast_signal_to_processes(broadcast_signal=signal.SIGKILL, given_logger=logging.getLogger("augur.cli"))
+    logger = logging.getLogger("augur.cli")
+    _broadcast_signal_to_processes(broadcast_signal=signal.SIGKILL, given_logger=logger)
 
     clear_redis_caches()
+
+    connection_string = ""
+    with DatabaseSession(logger) as session:
+        connection_string = session.config.get_section("RabbitMQ")['connection_string']
+
+    clear_rabbitmq_messages(connection_string)
+
 
 def clear_redis_caches():
     """Clears the redis databases that celery and redis use."""
@@ -147,6 +166,14 @@ def clear_redis_caches():
     celery_purge_command = "celery -A augur.tasks.init.celery_app.celery_app purge -f"
     subprocess.call(celery_purge_command.split(" "))
     redis_connection.flushdb()
+
+def clear_rabbitmq_messages(connection_string):
+    virtual_host_string = connection_string.split("/")[-1]
+
+    logger.info("Clearing all messages from celery queue in rabbitmq")
+    rabbitmq_purge_command = f"sudo rabbitmqctl purge_queue celery -p {virtual_host_string}"
+    subprocess.call(rabbitmq_purge_command.split(" "))
+
 
 @cli.command('export-env')
 def export_env(config):
