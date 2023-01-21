@@ -19,6 +19,7 @@ from augur.tasks.github.releases.tasks import collect_releases
 from augur.tasks.github.repo_info.tasks import collect_repo_info
 from augur.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
+from augur.tasks.github.traffic.tasks import collect_github_repo_clones_data
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.db.refresh_materialized_views import *
 # from augur.tasks.data_analysis import *
@@ -69,7 +70,7 @@ def repo_collect_phase():
         repo_info_tasks = [collect_repo_info.si(repo.repo_git) for repo in repos]
 
         for repo in repos:
-            first_tasks_repo = group(collect_issues.si(repo.repo_git),collect_pull_requests.si(repo.repo_git))
+            first_tasks_repo = group(collect_issues.si(repo.repo_git),collect_pull_requests.si(repo.repo_git),collect_github_repo_clones_data.si(repo.repo_git))
             second_tasks_repo = group(collect_events.si(repo.repo_git),
                 collect_github_messages.si(repo.repo_git),process_pull_request_files.si(repo.repo_git), process_pull_request_commits.si(repo.repo_git))
 

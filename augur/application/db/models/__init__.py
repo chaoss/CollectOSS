@@ -63,6 +63,7 @@ from augur.application.db.models.augur_data import (
     PullRequestTeam,
     PullRequestRepo,
     PullRequestReviewMessageRef,
+    RepoClone,
 )
 
 from augur.application.db.models.spdx import (

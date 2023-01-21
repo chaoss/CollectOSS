@@ -503,11 +503,19 @@ def extract_needed_contributor_data(contributor, tool_source, tool_version, data
 
     return contributor
 
+def extract_needed_clone_history_data(clone_history_data:List[dict], repo_id:int):
 
+    if len(clone_history_data) == 0:
+        return []
 
+    clone_data_dicts = []
+    for clone in clone_history_data:
+        clone_data_dict = {
+            'repo_id': repo_id,
+            'clone_data_timestamp': clone['timestamp'],
+            'count_clones': clone['count'],
+            'unique_clones': clone['uniques']
+        }
+        clone_data_dicts.append(clone_data_dict)
 
-
-                
-
-
-
+    return clone_data_dicts

@@ -29,7 +29,8 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.repo_info.tasks',
                 'augur.tasks.github.detect_move.tasks',
                 'augur.tasks.github.pull_requests.files_model.tasks',
-                'augur.tasks.github.pull_requests.commits_model.tasks']
+                'augur.tasks.github.pull_requests.commits_model.tasks',
+                'augur.tasks.github.traffic.tasks']
 
 git_tasks = ['augur.tasks.git.facade_tasks']
 

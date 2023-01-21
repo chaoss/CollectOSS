@@ -3163,3 +3163,31 @@ class PullRequestReviewMessageRef(Base):
     msg = relationship("Message")
     pr_review = relationship("PullRequestReview")
     repo = relationship("Repo")
+
+
+class RepoClone(Base):
+    __tablename__ = "repo_clones_data"
+    __table_args__ = {"schema": "augur_data"}
+
+    repo_clone_data_id = Column(
+        BigInteger,
+        primary_key=True,
+        server_default=text(
+            "nextval('augur_data.repo_clones_data_id_seq'::regclass)"
+        ),
+    )
+    repo_id = Column(
+        ForeignKey(
+            "augur_data.repo.repo_id",
+            ondelete="RESTRICT",
+            onupdate="CASCADE",
+            deferrable=True,
+            initially="DEFERRED",
+        ),
+        nullable=False,
+    )
+    unique_clones = Column(BigInteger)
+    count_clones = Column(BigInteger)
+    clone_data_timestamp = Column(TIMESTAMP(precision=6))
+
+    repo = relationship("Repo")
