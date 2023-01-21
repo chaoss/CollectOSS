@@ -196,6 +196,7 @@ def trim_commits_post_analysis_facade_task(repo_ids):
 
             #1/21/2023: SPG things list needs to be initialized based on error
             all_missing_commits = []
+            
             #Get all missing commits into one large list to split into task pools
             all_missing_commits.extend(commits_with_repo_tuple)
         
@@ -206,6 +207,7 @@ def trim_commits_post_analysis_facade_task(repo_ids):
         update_analysis_log(repo_id,'Data collection complete')
 
         update_analysis_log(repo_id,'Beginning to trim commits')
+
 
         session.log_activity('Debug',f"Commits to be trimmed from repo {repo_id}: {len(trimmed_commits)}")
 
@@ -253,7 +255,6 @@ def analyze_commits_in_parallel(repo_ids, multithreaded: bool)-> None:
 
     for repo_id in repo_ids:
         session.logger.info(f"Generating sequence for repo {repo_id}")
-        
 
         query = session.query(Repo).filter(Repo.repo_id == repo_id)
         repo = execute_session_query(query, 'one')
@@ -316,7 +317,6 @@ def analyze_commits_in_parallel(repo_ids, multithreaded: bool)-> None:
 
             query = session.query(Repo).filter(Repo.repo_id == repo_id)
             repo = execute_session_query(query,'one')
-
 
             repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")    
 

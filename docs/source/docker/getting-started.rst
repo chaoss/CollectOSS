@@ -13,7 +13,6 @@ Augur provides several Docker images designed to get you started with our softwa
    The frontend is very out of date and will likely not work. It is still available, but it is in the process of being replaced with an entirely new frontend so the old frontend is not being actively fixed.
 
 - ``augurlabs/augur:database``, an empty PostgreSQL database with the Augur schema installed
-- ``augurlabs/augur:test_data``, a PostgreSQL database loaded with the data used in our testing environment
 
 If you're not familiar with Docker, their `starting guide <https://www.docker.com/resources/what-container>`_ is a great resource.
 
@@ -23,7 +22,7 @@ If you are less familiar with Docker, or experience issues you cannot resolve at
 
 Credentials
 ------------
-Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. Alternatively, you can also set up the database within a docker container either manually or through the script but this is not recommended.
+Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. Alternatively, you can also set up the database within a docker container either manually or through docker-compose.
 
 .. note::
 

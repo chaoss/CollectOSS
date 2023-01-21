@@ -52,13 +52,6 @@ To run Augur **with** the database container:
 
     docker-compose -f docker-compose.yml -f database-compose.yml up
 
-If you want to use the ``test_data`` image with the data preloaded, change the ``image`` line of ``database-compose.yml`` to:
-
-.. code::
-
-    image: augurlabs/augur:test_data
-
-Or you can set it dynamically in the .env file.
 
 Stopping the containers
 -------------------------
