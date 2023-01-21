@@ -312,8 +312,10 @@ def analyze_commits_in_parallel(repo_ids, multithreaded: bool)-> None:
         for count, commitTuple in enumerate(queue):
 
             #Log progress when another quarter of the queue has been processed
-            if (count + 1) % int(len(queue) / 4) == 0:
-                logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
+            #Checking for Modulo of Zero first.
+            if int(len(queue)/4)!=0: 
+                if (count + 1) % int(len(queue) / 4) == 0:
+                    logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
 
             query = session.query(Repo).filter(Repo.repo_id == repo_id)
             repo = execute_session_query(query,'one')
