@@ -54,7 +54,15 @@ def get_release_inf(session, repo_id, release, tag_only):
                 email = '_' + release['target']['tagger']['email']
             else:
                 email = "noemail"
-            author = name + email
+
+            if name=None or email=None: 
+                if name=None: 
+                    name="nobody"
+                if email=None: 
+                    email="noemail"
+                author = name + email
+            else: 
+                author = name + email
             if 'date' in release['target']['tagger']:
                 date = release['target']['tagger']['date']
             else:
