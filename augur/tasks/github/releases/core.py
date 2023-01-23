@@ -61,7 +61,7 @@ def get_release_inf(session, repo_id, release, tag_only):
             else:
                 date = ""
         else:
-            author = ""
+            author = "nobody"
             date = ""
         release_inf = {
             'release_id': release['id'],
