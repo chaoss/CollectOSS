@@ -2,6 +2,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.releases.core import *
 from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.util import execute_session_query
+import traceback
 
 @celery.task
 def collect_releases():
@@ -12,4 +13,7 @@ def collect_releases():
         repos = execute_session_query(query, 'all')
 
         for repo in repos:
-            releases_model(session, repo.repo_git, repo.repo_id)
+            try:
+                releases_model(session, repo.repo_git, repo.repo_id)
+            except Exception as e:
+                logger.error(f"Could not collect releases for {repo.repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
