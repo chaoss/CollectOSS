@@ -7,14 +7,12 @@ from augur.application.db.util import execute_session_query
 
 
 @celery.task
-def process_dependency_metrics(repo_git_identifiers):
+def process_dependency_metrics(repo_git):
     #raise NotImplementedError
 
     logger = logging.getLogger(process_dependency_metrics.__name__)
 
-    session = DatabaseSession(logger)
-
-    for repo_git in repo_git_identifiers:
+    with DatabaseSession(logger) as session:
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         repo = execute_session_query(query,'one')
 

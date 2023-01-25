@@ -17,7 +17,7 @@ from augur.application.db.util import execute_session_query
 platform_id = 1
 
 
-@celery.task
+@celery.task()
 def collect_pull_requests(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_pull_requests.__name__)

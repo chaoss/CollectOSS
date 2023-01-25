@@ -18,7 +18,7 @@ from augur.application.config import get_development_flag
 from augur.application.db.util import execute_session_query
 development = get_development_flag()
 
-@celery.task
+@celery.task()
 def collect_issues(repo_git : str) -> None:
 
     logger = logging.getLogger(collect_issues.__name__)
@@ -43,6 +43,7 @@ def collect_issues(repo_git : str) -> None:
                 logger.info(f"{owner}/{repo} has no issues")
         except Exception as e:
             logger.error(f"Could not collect issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+
 
 
 def retrieve_all_issue_data(repo_git, logger) -> None:

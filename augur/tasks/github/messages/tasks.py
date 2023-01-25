@@ -17,7 +17,7 @@ from augur.application.db.util import execute_session_query
 platform_id = 1
 
 
-@celery.task
+@celery.task()
 def collect_github_messages(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_github_messages.__name__)
@@ -40,6 +40,7 @@ def collect_github_messages(repo_git: str) -> None:
                 logger.info(f"{owner}/{repo} has no messages")
         except Exception as e:
             logger.error(f"Could not collect github messages for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+
 
 
 def retrieve_all_pr_and_issue_messages(repo_git: str, logger) -> None:

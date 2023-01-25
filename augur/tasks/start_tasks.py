@@ -37,25 +37,48 @@ from augur.tasks.util.redis_list import RedisList
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
 
+"""
+@celery.task(bind=True)
+def collection_task_wrapper(self,*args,**kwargs):
+    task = kwargs.pop('task')
+
+    task(*args,**kwargs)
+
+    return self.request.id
+"""
+
+@celery.task
+def task_success(repo_git):
+    logger = logging.getLogger(successResult.__name__)
+    
+    # set status to Finished in db
+    # set collection date in db
+
+@celery.task
+def task_failed(request,exc,traceback):
+    logger = logging.getLogger(task_failed.__name__)
+    
+    # set status to Error in db
+    # log traceback to error file
+
+
 #Predefine phases. For new phases edit this and the config to reflect.
 #The domain of tasks ran should be very explicit.
-@celery.task
-def prelim_phase():
+def prelim_phase(repo_git):
 
     logger = logging.getLogger(prelim_phase.__name__)
-    
+    job = None
     with DatabaseSession(logger) as session:
-        query = session.query(Repo)
-        repos = execute_session_query(query, 'all')
-        repo_git_list = [repo.repo_git for repo in repos]
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_obj = execute_session_query(query, 'one')
 
-        result = create_grouped_task_load(dataList=repo_git_list,task=detect_github_repo_move).apply_async()
-        
-        with allow_join_result():
-            return result.get()
+        #TODO: if repo has moved mark it as pending. 
+        job = detect_github_repo_move.si(repo_obj.repo_git)
 
-@celery.task
-def repo_collect_phase():
+    return job
+
+
+def repo_collect_phase(repo_git):
     logger = logging.getLogger(repo_collect_phase.__name__)
 
     #Here the term issues also includes prs. This list is a bunch of chains that run in parallel to process issue data.
@@ -67,81 +90,32 @@ def repo_collect_phase():
 
     #A chain is needed for each repo.
     with DatabaseSession(logger) as session:
-        query = session.query(Repo)
-        repos = execute_session_query(query, 'all')
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_obj = execute_session_query(query, 'one')
+        repo_git = repo_obj.repo_git
 
+        repo_info_task = collect_repo_info.si(repo_git)#collection_task_wrapper(self)
 
-        all_repo_git_identifiers = [repo.repo_git for repo in repos]
-        #Cluster each repo in groups of 80.
-        np_clustered_array = np.array_split(all_repo_git_identifiers,math.ceil(len(all_repo_git_identifiers)/80))
-
-        first_pass = np_clustered_array.pop(0).tolist()
-
-        logger.info(f"Scheduling groups of {len(first_pass)}")
-        #Pool the tasks for collecting repo info. 
-        repo_info_tasks = create_grouped_task_load(dataList=first_pass, task=collect_repo_info).tasks
-
-        #pool the repo collection jobs that should be ran first and have deps. 
         primary_repo_jobs = group(
-            *create_grouped_task_load(dataList=first_pass, task=collect_issues).tasks,
-            *create_grouped_task_load(dataList=first_pass, task=collect_pull_requests).tasks
+            collect_issues.si(repo_git),
+            collect_pull_requests.si(repo_git)
         )
 
         secondary_repo_jobs = group(
-            *create_grouped_task_load(dataList=first_pass, task=collect_events).tasks,
-            *create_grouped_task_load(dataList=first_pass,task=collect_github_messages).tasks,
-            *create_grouped_task_load(dataList=first_pass, task=process_pull_request_files).tasks,
-            *create_grouped_task_load(dataList=first_pass, task=process_pull_request_commits).tasks
+            collect_events.si(repo_git),#*create_grouped_task_load(dataList=first_pass, task=collect_events).tasks,
+            collect_github_messages.si(repo_git),#*create_grouped_task_load(dataList=first_pass,task=collect_github_messages).tasks,
+            process_pull_request_files.si(repo_git),#*create_grouped_task_load(dataList=first_pass, task=process_pull_request_files).tasks,
+            process_pull_request_commits.si(repo_git)#*create_grouped_task_load(dataList=first_pass, task=process_pull_request_commits).tasks
         )
-        
 
         repo_task_group = group(
-            *repo_info_tasks,
+            repo_info_task,
             chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
-            chain(generate_facade_chain(logger,first_pass),create_grouped_task_load(dataList=first_pass,task=process_dependency_metrics)),
+            chain(generate_facade_chain(logger,repo_git),process_dependency_metrics.si(repo_git)),
             collect_releases.si()
         )
-    
-    result = chain(repo_task_group, refresh_materialized_views.si()).apply_async()
-    
-    with allow_join_result():
-        result.wait()
 
-    if len(np_clustered_array) == 0:
-        return
-    
-
-    for cluster in np_clustered_array:
-        additionalPass = cluster.tolist()
-        #Pool the tasks for collecting repo info. 
-        repo_info_tasks = create_grouped_task_load(dataList=additionalPass, task=collect_repo_info).tasks
-
-        #pool the repo collection jobs that should be ran first and have deps. 
-        primary_repo_jobs = group(
-            *create_grouped_task_load(dataList=additionalPass, task=collect_issues).tasks,
-            *create_grouped_task_load(dataList=additionalPass, task=collect_pull_requests).tasks
-        )
-
-        secondary_repo_jobs = group(
-            *create_grouped_task_load(dataList=additionalPass, task=collect_events).tasks,
-            *create_grouped_task_load(dataList=additionalPass,task=collect_github_messages).tasks,
-            *create_grouped_task_load(dataList=additionalPass, task=process_pull_request_files).tasks,
-            *create_grouped_task_load(dataList=additionalPass, task=process_pull_request_commits).tasks
-        )
-        
-        repo_task_group = group(
-            *repo_info_tasks,
-            chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
-            generate_facade_chain(logger,additionalPass),
-            *create_grouped_task_load(dataList=additionalPass,task=process_dependency_metrics).tasks
-        )
-
-        result = chain(repo_task_group, refresh_materialized_views.si()).apply_async()
-    
-        with allow_join_result():
-            result.wait()
-
-    return 
+        return repo_task_group
 
 
 DEFINED_COLLECTION_PHASES = [prelim_phase, repo_collect_phase]
@@ -223,51 +197,21 @@ def start_task():
     augur_collection.start_data_collection()
 """
 
-task_list_name = "augur_task_ids"
-
-#Wrap each task in a bind celery task to return its id
-@celery.task()
-def collection_task_wrapper(self,*args,**kwargs):
-    task = kwargs.pop('task')
-
-    task(*args,**kwargs)
-
-    return self.request.id
-
-
-@celery.task
-def task_success(successResult):
-    logger = logging.getLogger(successResult.__name__)
-
-    # remove the task id from Redis
-    task_id_list = RedisList(task_list_name)
-    try:
-        task_id_list.remove(successResult)
-    except Exception as e:
-        logger.error(f"Could not remove id {successResult} from redis. Error: {e}")
-    
-    # set status to Finished in db
-    # set collection date in db
-
-
-@celery.task
-def task_failed(request,exc,traceback):
-    logger = logging.getLogger(task_failed.__name__)
-
-    # remove the task id from Redis
-    task_id_list = RedisList(task_list_name)
-    try:
-        task_id_list.remove(successResult)
-    except Exception as e:
-        logger.error(f"Could not remove id {successResult} from redis. Error: {e}")
-    
-    # set status to Error in db
-    # log traceback to error file
 
 
 @celery.task
 def augur_collection_monitor():           
-    raise NotImplementedError
+    logger = logging.getLogger(augur_collection_monitor.__name__)
+
+    #Get phase options from the config
+    with DatabaseSession(logger, engine) as session:
+        config = AugurConfig(logger, session)
+        phase_options = config.get_section("Task_Routine")
+
+    #Get list of enabled phases 
+    enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
+    enabled_phases = [phase for phase in DEFINED_COLLECTION_PHASES if phase.__name__ in enabled_phase_names]
+    
     # calculate current active repos
     # calcuate the number of repos we would like to add to the queue
 
