@@ -173,25 +173,26 @@ def create_routes(server):
         if request.args.get("grant_type") != "refresh_token":
             return jsonify({"status": "Invalid grant type"})
 
-        session = Session()
-        refresh_token = session.query(RefreshToken).filter(RefreshToken.id == refresh_token_str).first()
-        if not refresh_token:
-            return jsonify({"status": "Invalid refresh token"})
+        with DatabaseSession(logger) as session:
 
-        if refresh_token.user_session.application == application:
-            return jsonify({"status": "Applications do not match"})
+            refresh_token = session.query(RefreshToken).filter(RefreshToken.id == refresh_token_str).first()
+            if not refresh_token:
+                return jsonify({"status": "Invalid refresh token"})
 
-        user_session = refresh_token.user_session
-        user = user_session.user
+            if refresh_token.user_session.application == application:
+                return jsonify({"status": "Applications do not match"})
 
-        new_user_session = UserSessionToken.create(session, user.user_id, user_session.application.id)
-        new_refresh_token = RefreshToken.create(session, new_user_session.token)
-        
-        session.delete(refresh_token)
-        session.delete(user_session)
-        session.commit()
+            user_session = refresh_token.user_session
+            user = user_session.user
 
-        return jsonify({"status": "Validated", "refresh_token": new_refresh_token.id, "access_token": new_user_session.token, "expires": 86400})
+            new_user_session_token = UserSessionToken.create(session, user.user_id, user_session.application.id).token
+            new_refresh_token_id = RefreshToken.create(session, new_user_session_token).id
+            
+            session.delete(refresh_token)
+            session.delete(user_session)
+            session.commit()
+
+        return jsonify({"status": "Validated", "refresh_token": new_refresh_token_id, "access_token": new_user_session_token, "expires": 86400})
 
     
     @server.app.route(f"/{AUGUR_API_VERSION}/user/query", methods=['POST'])
