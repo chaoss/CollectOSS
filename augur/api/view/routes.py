@@ -252,7 +252,9 @@ def create_routes(server):
         if reports is None:
             return render_message("Report Definitions Missing", "You requested a report for a repo on this instance, but a definition for the report layout was not found.")
 
-        repo = Repo.get_by_id(id)
+        with DatabaseSession(logger) as db_session:
+
+            repo = Repo.get_by_id(db_session, id)
 
         return render_module("repo-info", reports=reports.keys(), images=reports, title="Repo", repo=repo, repo_id=id)
 
