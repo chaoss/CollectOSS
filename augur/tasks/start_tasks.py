@@ -32,6 +32,7 @@ from augur.application.db.session import DatabaseSession
 from augur.tasks.init.celery_app import engine
 from augur.application.db.util import execute_session_query
 from logging import Logger
+from augur.tasks.util.redis_list import RedisList
 
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
@@ -201,7 +202,7 @@ class AugurTaskRoutine:
         augur_collection_chain = chain(*augur_collection_sequence)
         augur_collection_chain.apply_async()
 
-
+"""
 @celery.task
 def start_task():
 
@@ -220,8 +221,64 @@ def start_task():
     augur_collection = AugurTaskRoutine(collection_phases=enabled_phases)
 
     augur_collection.start_data_collection()
+"""
+
+task_list_name = "augur_task_ids"
+
+#Wrap each task in a bind celery task to return its id
+@celery.task()
+def collection_task_wrapper(self,*args,**kwargs):
+    task = kwargs.pop('task')
+
+    task(*args,**kwargs)
+
+    return self.request.id
 
 
+@celery.task
+def task_success(successResult):
+    logger = logging.getLogger(successResult.__name__)
+
+    # remove the task id from Redis
+    task_id_list = RedisList(task_list_name)
+    try:
+        task_id_list.remove(successResult)
+    except Exception as e:
+        logger.error(f"Could not remove id {successResult} from redis. Error: {e}")
+    
+    # set status to Finished in db
+    # set collection date in db
+
+
+@celery.task
+def task_failed(request,exc,traceback):
+    logger = logging.getLogger(task_failed.__name__)
+
+    # remove the task id from Redis
+    task_id_list = RedisList(task_list_name)
+    try:
+        task_id_list.remove(successResult)
+    except Exception as e:
+        logger.error(f"Could not remove id {successResult} from redis. Error: {e}")
+    
+    # set status to Error in db
+    # log traceback to error file
+
+
+@celery.task
+def augur_collection_monitor():           
+    raise NotImplementedError
+    # calculate current active repos
+    # calcuate the number of repos we would like to add to the queue
+
+    # get repos with these requirements
+        # haven't been collected or not collected in awhile
+        # don't have a status of Error or Collecting
+
+    # loop through repos
+        # create chain
+        # start task
+        # set status in db to Collecting
 
 
 

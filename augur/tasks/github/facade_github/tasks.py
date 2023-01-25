@@ -225,7 +225,7 @@ def link_commits_to_contributor(session,contributorQueue):
 
 # Update the contributors table from the data facade has gathered.
 @celery.task
-def insert_facade_contributors(repo_id_list):
+def insert_facade_contributors(repo_id):
     logger = logging.getLogger(insert_facade_contributors.__name__)
 
     with GithubTaskSession(logger, engine) as session:
@@ -234,107 +234,103 @@ def insert_facade_contributors(repo_id_list):
         # Get all of the commit data's emails and names from the commit table that do not appear
         # in the contributors table or the contributors_aliases table.
 
-        for repo_id in repo_id_list:
+        session.logger.info(
+        "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
+        new_contrib_sql = s.sql.text("""
+                SELECT DISTINCT
+                    commits.cmt_author_name AS NAME,
+                    commits.cmt_commit_hash AS hash,
+                    commits.cmt_author_raw_email AS email_raw,
+                    'not_unresolved' as resolution_status
+                FROM
+                    commits
+                WHERE
+                    commits.repo_id = :repo_id
+                    AND (NOT EXISTS ( SELECT contributors.cntrb_canonical FROM contributors WHERE contributors.cntrb_canonical = commits.cmt_author_raw_email )
+                    or NOT EXISTS ( SELECT contributors_aliases.alias_email from contributors_aliases where contributors_aliases.alias_email = commits.cmt_author_raw_email)
+                    AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name ))
+                GROUP BY
+                    commits.cmt_author_name,
+                    commits.cmt_commit_hash,
+                    commits.cmt_author_raw_email
+                UNION
+                SELECT DISTINCT
+                    commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
+                    commits.cmt_commit_hash AS hash,
+                    commits.cmt_author_raw_email AS email_raw,
+                    'unresolved' as resolution_status
+                FROM
+                    commits
+                WHERE
+                    commits.repo_id = :repo_id
+                    AND EXISTS ( SELECT unresolved_commit_emails.email FROM unresolved_commit_emails WHERE unresolved_commit_emails.email = commits.cmt_author_raw_email )
+                    AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name )
+                GROUP BY
+                    commits.cmt_author_name,
+                    commits.cmt_commit_hash,
+                    commits.cmt_author_raw_email
+                ORDER BY
+                hash
+        """).bindparams(repo_id=repo_id)
 
-            session.logger.info(
-            "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
-            new_contrib_sql = s.sql.text("""
-                    SELECT DISTINCT
-                        commits.cmt_author_name AS NAME,
-                        commits.cmt_commit_hash AS hash,
-                        commits.cmt_author_raw_email AS email_raw,
-                        'not_unresolved' as resolution_status
-                    FROM
-                        commits
-                    WHERE
-                        commits.repo_id = :repo_id
-                        AND (NOT EXISTS ( SELECT contributors.cntrb_canonical FROM contributors WHERE contributors.cntrb_canonical = commits.cmt_author_raw_email )
-                        or NOT EXISTS ( SELECT contributors_aliases.alias_email from contributors_aliases where contributors_aliases.alias_email = commits.cmt_author_raw_email)
-                        AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name ))
-                    GROUP BY
-                        commits.cmt_author_name,
-                        commits.cmt_commit_hash,
-                        commits.cmt_author_raw_email
-                    UNION
-                    SELECT DISTINCT
-                        commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
-                        commits.cmt_commit_hash AS hash,
-                        commits.cmt_author_raw_email AS email_raw,
-                        'unresolved' as resolution_status
-                    FROM
-                        commits
-                    WHERE
-                        commits.repo_id = :repo_id
-                        AND EXISTS ( SELECT unresolved_commit_emails.email FROM unresolved_commit_emails WHERE unresolved_commit_emails.email = commits.cmt_author_raw_email )
-                        AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name )
-                    GROUP BY
-                        commits.cmt_author_name,
-                        commits.cmt_commit_hash,
-                        commits.cmt_author_raw_email
-                    ORDER BY
-                    hash
-            """).bindparams(repo_id=repo_id)
+        #Execute statement with session.
+        result = session.execute_sql(new_contrib_sql).fetchall()
+        new_contribs = [dict(zip(row.keys(), row)) for row in result]
 
-            #Execute statement with session.
-            result = session.execute_sql(new_contrib_sql).fetchall()
-            new_contribs = [dict(zip(row.keys(), row)) for row in result]
+        #print(new_contribs)
 
-            #print(new_contribs)
-
-            #json.loads(pd.read_sql(new_contrib_sql, self.db, params={
-            #             'repo_id': repo_id}).to_json(orient="records"))
+        #json.loads(pd.read_sql(new_contrib_sql, self.db, params={
+        #             'repo_id': repo_id}).to_json(orient="records"))
 
 
 
-            process_commit_metadata(session,list(new_contribs),repo_id)
+        process_commit_metadata(session,list(new_contribs),repo_id)
 
-            session.logger.debug("DEBUG: Got through the new_contribs")
+        session.logger.debug("DEBUG: Got through the new_contribs")
     
 
     with FacadeSession(logger) as session:
+        # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
+        # i.e., if a contributor already exists, we use it!
+        resolve_email_to_cntrb_id_sql = s.sql.text("""
+            SELECT DISTINCT
+                cntrb_id,
+                contributors.cntrb_login AS login,
+                contributors.cntrb_canonical AS email,
+                commits.cmt_author_raw_email
+            FROM
+                contributors,
+                commits
+            WHERE
+                contributors.cntrb_canonical = commits.cmt_author_raw_email
+                AND commits.repo_id = :repo_id
+            UNION
+            SELECT DISTINCT
+                contributors_aliases.cntrb_id,
+                                contributors.cntrb_login as login, 
+                contributors_aliases.alias_email AS email,
+                commits.cmt_author_raw_email
+            FROM
+                                contributors,
+                contributors_aliases,
+                commits
+            WHERE
+                contributors_aliases.alias_email = commits.cmt_author_raw_email
+                                AND contributors.cntrb_id = contributors_aliases.cntrb_id
+                AND commits.repo_id = :repo_id
+        """).bindparams(repo_id=repo_id)
 
-        for repo_id in repo_id_list:
-            # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
-            # i.e., if a contributor already exists, we use it!
-            resolve_email_to_cntrb_id_sql = s.sql.text("""
-                SELECT DISTINCT
-                    cntrb_id,
-                    contributors.cntrb_login AS login,
-                    contributors.cntrb_canonical AS email,
-                    commits.cmt_author_raw_email
-                FROM
-                    contributors,
-                    commits
-                WHERE
-                    contributors.cntrb_canonical = commits.cmt_author_raw_email
-                    AND commits.repo_id = :repo_id
-                UNION
-                SELECT DISTINCT
-                    contributors_aliases.cntrb_id,
-                                    contributors.cntrb_login as login, 
-                    contributors_aliases.alias_email AS email,
-                    commits.cmt_author_raw_email
-                FROM
-                                    contributors,
-                    contributors_aliases,
-                    commits
-                WHERE
-                    contributors_aliases.alias_email = commits.cmt_author_raw_email
-                                    AND contributors.cntrb_id = contributors_aliases.cntrb_id
-                    AND commits.repo_id = :repo_id
-            """).bindparams(repo_id=repo_id)
-    
-            #self.logger.info("DEBUG: got passed the sql statement declaration")
-            # Get a list of dicts that contain the emails and cntrb_id's of commits that appear in the contributor's table.
-            #existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
-            #                                    'repo_id': repo_id}).to_json(orient="records"))
-    
-            result = session.execute_sql(resolve_email_to_cntrb_id_sql).fetchall()
-            existing_cntrb_emails = [dict(zip(row.keys(), row)) for row in result]
-    
-            print(existing_cntrb_emails)
-            link_commits_to_contributor(session,list(existing_cntrb_emails))
-    
-            session.logger.info("Done with inserting and updating facade contributors")
+        #self.logger.info("DEBUG: got passed the sql statement declaration")
+        # Get a list of dicts that contain the emails and cntrb_id's of commits that appear in the contributor's table.
+        #existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
+        #                                    'repo_id': repo_id}).to_json(orient="records"))
+
+        result = session.execute_sql(resolve_email_to_cntrb_id_sql).fetchall()
+        existing_cntrb_emails = [dict(zip(row.keys(), row)) for row in result]
+
+        print(existing_cntrb_emails)
+        link_commits_to_contributor(session,list(existing_cntrb_emails))
+
+        session.logger.info("Done with inserting and updating facade contributors")
     return
 

@@ -70,18 +70,18 @@ def facade_analysis_init_facade_task():
         session.log_activity('Info',f"Beginning analysis.")
 
 @celery.task
-def grab_comitters(repo_id_list,platform="github"):
+def grab_comitters(repo_id,platform="github"):
     logger = logging.getLogger(grab_comitters.__name__)
 
-    for repo_id in repo_id_list:
-        try:
-            grab_committer_list(GithubTaskSession(logger, engine), repo_id,platform)
-        except Exception as e:
-            logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+
+    try:
+        grab_committer_list(GithubTaskSession(logger, engine), repo_id,platform)
+    except Exception as e:
+        logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
 @celery.task
-def trim_commits_facade_task(repo_id_list):
+def trim_commits_facade_task(repo_id):
     logger = logging.getLogger(trim_commits_facade_task.__name__)
     session = FacadeSession(logger)
 
@@ -97,39 +97,38 @@ def trim_commits_facade_task(repo_id_list):
         except:
             pass
 
-    for repo_id in repo_id_list:
 
-        session.inc_repos_processed()
-        update_analysis_log(repo_id,"Beginning analysis.")
-        # First we check to see if the previous analysis didn't complete
+    session.inc_repos_processed()
+    update_analysis_log(repo_id,"Beginning analysis.")
+    # First we check to see if the previous analysis didn't complete
 
-        get_status = s.sql.text("""SELECT working_commit FROM working_commits WHERE repos_id=:repo_id
-            """).bindparams(repo_id=repo_id)
+    get_status = s.sql.text("""SELECT working_commit FROM working_commits WHERE repos_id=:repo_id
+        """).bindparams(repo_id=repo_id)
 
-        try:
-            working_commits = session.fetchall_data_from_sql_text(get_status)
-        except:
-            working_commits = []
+    try:
+        working_commits = session.fetchall_data_from_sql_text(get_status)
+    except:
+        working_commits = []
 
-        # If there's a commit still there, the previous run was interrupted and
-        # the commit data may be incomplete. It should be trimmed, just in case.
-        for commit in working_commits:
-            trim_commit(session, repo_id,commit['working_commit'])
+    # If there's a commit still there, the previous run was interrupted and
+    # the commit data may be incomplete. It should be trimmed, just in case.
+    for commit in working_commits:
+        trim_commit(session, repo_id,commit['working_commit'])
 
-            # Remove the working commit.
-            remove_commit = s.sql.text("""DELETE FROM working_commits
-                WHERE repos_id = :repo_id AND 
-                working_commit = :commit""").bindparams(repo_id=repo_id,commit=commit['working_commit'])
-            session.execute_sql(remove_commit)
-            session.log_activity('Debug',f"Removed working commit: {commit['working_commit']}")
+        # Remove the working commit.
+        remove_commit = s.sql.text("""DELETE FROM working_commits
+            WHERE repos_id = :repo_id AND 
+            working_commit = :commit""").bindparams(repo_id=repo_id,commit=commit['working_commit'])
+        session.execute_sql(remove_commit)
+        session.log_activity('Debug',f"Removed working commit: {commit['working_commit']}")
 
-        # Start the main analysis
+    # Start the main analysis
 
-        update_analysis_log(repo_id,'Collecting data')
-        logger.info(f"Got past repo {repo_id}")
+    update_analysis_log(repo_id,'Collecting data')
+    logger.info(f"Got past repo {repo_id}")
 
 @celery.task
-def trim_commits_post_analysis_facade_task(repo_ids):
+def trim_commits_post_analysis_facade_task(repo_id):
     logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
     
 
@@ -145,72 +144,71 @@ def trim_commits_post_analysis_facade_task(repo_ids):
         
         session.execute_sql(log_message)
     
-    for repo_id in repo_ids:
-        session.logger.info(f"Generating sequence for repo {repo_id}")
+    session.logger.info(f"Generating sequence for repo {repo_id}")
 
-        query = session.query(Repo).filter(Repo.repo_id == repo_id)
-        repo = execute_session_query(query, 'one')
+    query = session.query(Repo).filter(Repo.repo_id == repo_id)
+    repo = execute_session_query(query, 'one')
 
-        #Get the huge list of commits to process.
-        repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")
-        # Grab the parents of HEAD
+    #Get the huge list of commits to process.
+    repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")
+    # Grab the parents of HEAD
 
-        parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
-        "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
-        stdout=subprocess.PIPE, shell=True)
+    parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
+    "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
+    stdout=subprocess.PIPE, shell=True)
 
-        parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
+    parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
 
-        # If there are no commits in the range, we still get a blank entry in
-        # the set. Remove it, as it messes with the calculations
+    # If there are no commits in the range, we still get a blank entry in
+    # the set. Remove it, as it messes with the calculations
 
-        if '' in parent_commits:
-            parent_commits.remove('')
+    if '' in parent_commits:
+        parent_commits.remove('')
 
-        # Grab the existing commits from the database
+    # Grab the existing commits from the database
 
-        existing_commits = set()
+    existing_commits = set()
 
-        find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
-            """).bindparams(repo_id=repo_id)
+    find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
+        """).bindparams(repo_id=repo_id)
 
-        #session.cfg.cursor.execute(find_existing, (repo[0], ))
+    #session.cfg.cursor.execute(find_existing, (repo[0], ))
 
-        try:
-            for commit in session.fetchall_data_from_sql_text(find_existing):#list(session.cfg.cursor):
-                existing_commits.add(commit['cmt_commit_hash'])
-        except:
-            session.log_activity('Info', 'list(cfg.cursor) returned an error')
+    try:
+        for commit in session.fetchall_data_from_sql_text(find_existing):#list(session.cfg.cursor):
+            existing_commits.add(commit['cmt_commit_hash'])
+    except:
+        session.log_activity('Info', 'list(cfg.cursor) returned an error')
 
-        # Find missing commits and add them
+    # Find missing commits and add them
 
-        missing_commits = parent_commits - existing_commits
+    missing_commits = parent_commits - existing_commits
 
-        session.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
-        
-        # Find commits which are out of the analysis range
-
-        trimmed_commits = existing_commits - parent_commits
-
-        update_analysis_log(repo_id,'Data collection complete')
-
-        update_analysis_log(repo_id,'Beginning to trim commits')
-
-        session.log_activity('Debug',f"Commits to be trimmed from repo {repo_id}: {len(trimmed_commits)}")
-
+    session.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
     
+    # Find commits which are out of the analysis range
+
+    trimmed_commits = existing_commits - parent_commits
+
+    update_analysis_log(repo_id,'Data collection complete')
+
+    update_analysis_log(repo_id,'Beginning to trim commits')
+
+    session.log_activity('Debug',f"Commits to be trimmed from repo {repo_id}: {len(trimmed_commits)}")
+
+
+
+    for commit in trimmed_commits:
+        trim_commit(session,repo_id,commit)
     
-        for commit in trimmed_commits:
-            trim_commit(session,repo_id,commit)
-        
-        set_complete = s.sql.text("""UPDATE repo SET repo_status='Complete' WHERE repo_id=:repo_id and repo_status != 'Empty'
-            """).bindparams(repo_id=repo_id)
+    set_complete = s.sql.text("""UPDATE repo SET repo_status='Complete' WHERE repo_id=:repo_id and repo_status != 'Empty'
+        """).bindparams(repo_id=repo_id)
 
-        session.execute_sql(set_complete)
+    session.execute_sql(set_complete)
 
-        update_analysis_log(repo_id,'Commit trimming complete')
+    update_analysis_log(repo_id,'Commit trimming complete')
 
-        update_analysis_log(repo_id,'Complete')
+    update_analysis_log(repo_id,'Complete')
     
 
 
@@ -231,7 +229,7 @@ def facade_start_contrib_analysis_task():
 
 #enable celery multithreading
 @celery.task
-def analyze_commits_in_parallel(repo_ids, multithreaded: bool)-> None:
+def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
     """Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
     """
 
@@ -241,82 +239,81 @@ def analyze_commits_in_parallel(repo_ids, multithreaded: bool)-> None:
     session = FacadeSession(logger)
     start_date = session.get_setting('start_date')
 
-    for repo_id in repo_ids:
-        session.logger.info(f"Generating sequence for repo {repo_id}")
-        
+    session.logger.info(f"Generating sequence for repo {repo_id}")
+    
+    query = session.query(Repo).filter(Repo.repo_id == repo_id)
+    repo = execute_session_query(query, 'one')
+
+    #Get the huge list of commits to process.
+    repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")
+    # Grab the parents of HEAD
+
+    parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
+    "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
+    stdout=subprocess.PIPE, shell=True)
+
+    parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
+
+    # If there are no commits in the range, we still get a blank entry in
+    # the set. Remove it, as it messes with the calculations
+
+    if '' in parent_commits:
+        parent_commits.remove('')
+
+    # Grab the existing commits from the database
+
+    existing_commits = set()
+
+    find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
+        """).bindparams(repo_id=repo_id)
+
+    #session.cfg.cursor.execute(find_existing, (repo[0], ))
+
+    try:
+        for commit in session.fetchall_data_from_sql_text(find_existing):#list(session.cfg.cursor):
+            existing_commits.add(commit['cmt_commit_hash'])
+    except:
+        session.log_activity('Info', 'list(cfg.cursor) returned an error')
+
+    # Find missing commits and add them
+
+    missing_commits = parent_commits - existing_commits
+
+    session.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
+    
+    queue = []
+    if len(missing_commits) > 0:
+        #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
+
+        #encode the repo_id with the commit.
+        commits = [commit for commit in list(missing_commits)]
+        #Get all missing commits into one large list to split into task pools
+        queue.extend(commits)
+    else:
+        return
+
+    logger.info(f"Got to analysis!")
+    
+    for count, commitTuple in enumerate(queue):
+        quarterQueue = int(len(queue) / 4)
+
+        if quarterQueue == 0:
+            quarterQueue = 1 # prevent division by zero with integer math
+
+        #Log progress when another quarter of the queue has been processed
+        if (count + 1) % quarterQueue == 0:
+            logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
+
         query = session.query(Repo).filter(Repo.repo_id == repo_id)
-        repo = execute_session_query(query, 'one')
+        repo = execute_session_query(query,'one')
 
-        #Get the huge list of commits to process.
-        repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")
-        # Grab the parents of HEAD
+    logger.info(f"Got to analysis!")
+    
+    for count, commitTuple in enumerate(queue):
 
-        parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
-        "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
-        stdout=subprocess.PIPE, shell=True)
+        repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")    
 
-        parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
-
-        # If there are no commits in the range, we still get a blank entry in
-        # the set. Remove it, as it messes with the calculations
-
-        if '' in parent_commits:
-            parent_commits.remove('')
-
-        # Grab the existing commits from the database
-
-        existing_commits = set()
-
-        find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
-            """).bindparams(repo_id=repo_id)
-
-        #session.cfg.cursor.execute(find_existing, (repo[0], ))
-
-        try:
-            for commit in session.fetchall_data_from_sql_text(find_existing):#list(session.cfg.cursor):
-                existing_commits.add(commit['cmt_commit_hash'])
-        except:
-            session.log_activity('Info', 'list(cfg.cursor) returned an error')
-
-        # Find missing commits and add them
-
-        missing_commits = parent_commits - existing_commits
-
-        session.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
-        
-        queue = []
-        if len(missing_commits) > 0:
-            #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
-
-            #encode the repo_id with the commit.
-            commits = [commit for commit in list(missing_commits)]
-            #Get all missing commits into one large list to split into task pools
-            queue.extend(commits)
-        else:
-            return
-
-        logger.info(f"Got to analysis!")
-        
-        for count, commitTuple in enumerate(queue):
-            quarterQueue = int(len(queue) / 4)
-
-            if quarterQueue == 0:
-                quarterQueue = 1 # prevent division by zero with integer math
-
-            #Log progress when another quarter of the queue has been processed
-            if (count + 1) % quarterQueue == 0:
-                logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
-
-            query = session.query(Repo).filter(Repo.repo_id == repo_id)
-            repo = execute_session_query(query,'one')
-
-        logger.info(f"Got to analysis!")
-        
-        for count, commitTuple in enumerate(queue):
-
-            repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")    
-
-            analyze_commit(session, repo_id, repo_loc, commitTuple)
+        analyze_commit(session, repo_id, repo_loc, commitTuple)
 
     logger.info("Analysis complete")
     return
@@ -350,49 +347,49 @@ def rebuild_unknown_affiliation_and_web_caches_facade_task():
         rebuild_unknown_affiliation_and_web_caches(session)
 
 @celery.task
-def force_repo_analysis_facade_task(repo_git_identifiers):
+def force_repo_analysis_facade_task(repo_git):
     logger = logging.getLogger(force_repo_analysis_facade_task.__name__)
 
     with FacadeSession(logger) as session:
-        force_repo_analysis(session, repo_git_identifiers)
+        force_repo_analysis(session,repo_git)
 
 @celery.task
-def git_repo_cleanup_facade_task(repo_git_identifiers):
+def git_repo_cleanup_facade_task(repo_git):
     logger = logging.getLogger(git_repo_cleanup_facade_task.__name__)
 
     with FacadeSession(logger) as session:
-        git_repo_cleanup(session, repo_git_identifiers)
+        git_repo_cleanup(session, repo_git)
 
 @celery.task
-def git_repo_initialize_facade_task(repo_git_identifiers):
+def git_repo_initialize_facade_task(repo_git):
     logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
 
     with FacadeSession(logger) as session:
-        git_repo_initialize(session, repo_git_identifiers)
+        git_repo_initialize(session, repo_git)
 
 @celery.task
-def check_for_repo_updates_facade_task(repo_git_identifiers):
+def check_for_repo_updates_facade_task(repo_git):
     logger = logging.getLogger(check_for_repo_updates_facade_task.__name__)
 
     with FacadeSession(logger) as session:
-        check_for_repo_updates(session, repo_git_identifiers)
+        check_for_repo_updates(session, repo_git)
 
 @celery.task
-def force_repo_updates_facade_task(repo_git_identifiers):
+def force_repo_updates_facade_task(repo_git):
     logger = logging.getLogger(force_repo_updates_facade_task.__name__)
 
     with FacadeSession(logger) as session:
-        force_repo_updates(session, repo_git_identifiers)
+        force_repo_updates(session, repo_git)
 
 @celery.task
-def git_repo_updates_facade_task(repo_git_identifiers):
+def git_repo_updates_facade_task(repo_git):
     logger = logging.getLogger(git_repo_updates_facade_task.__name__)
 
     with FacadeSession(logger) as session:
-        git_repo_updates(session, repo_git_identifiers)
+        git_repo_updates(session, repo_git)
 
 
-def generate_analysis_sequence(logger,repo_git_identifiers):
+def generate_analysis_sequence(logger,repo_git):
     """Run the analysis by looping over all active repos. For each repo, we retrieve
     the list of commits which lead to HEAD. If any are missing from the database,
     they are filled in. Then we check to see if any commits in the database are
@@ -409,12 +406,14 @@ def generate_analysis_sequence(logger,repo_git_identifiers):
 
     with FacadeSession(logger) as session:
         repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
-        WHERE repo_git IN :values""").bindparams(values=tuple(repo_git_identifiers))
+        WHERE repo_git=:value""").bindparams(value=repo_git)
         repos = session.fetchall_data_from_sql_text(repo_list)
 
         start_date = session.get_setting('start_date')
 
         repo_ids = [repo['repo_id'] for repo in repos]
+
+        repo_id = repo_ids.pop(0)
 
         #determine amount of celery tasks to run at once in each grouped task load
         concurrentTasks = int((-1 * (15/(len(repo_ids)+1))) + 15)
@@ -422,13 +421,13 @@ def generate_analysis_sequence(logger,repo_git_identifiers):
 
         analysis_sequence.append(facade_analysis_init_facade_task.si())
 
-        analysis_sequence.append(create_grouped_task_load(dataList=repo_ids,task=grab_comitters,processes=concurrentTasks))
+        analysis_sequence.append(grab_comitters.si(repo_id))
 
-        analysis_sequence.append(create_grouped_task_load(dataList=repo_ids,task=trim_commits_facade_task,processes=concurrentTasks))
+        analysis_sequence.append(trim_commits_facade_task.si(repo_id))
 
-        analysis_sequence.append(create_grouped_task_load(True,dataList=repo_ids,task=analyze_commits_in_parallel,processes=concurrentTasks))
+        analysis_sequence.append(analyze_commits_in_parallel.si(repo_id,True))
 
-        analysis_sequence.append(create_grouped_task_load(dataList=repo_ids,task=trim_commits_post_analysis_facade_task,processes=concurrentTasks))
+        analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_id))
 
         
         analysis_sequence.append(facade_analysis_end_facade_task.si())
@@ -438,31 +437,34 @@ def generate_analysis_sequence(logger,repo_git_identifiers):
 
 
 
-def generate_contributor_sequence(logger,repo_git_identifiers):
+def generate_contributor_sequence(logger,repo_git):
     
     contributor_sequence = []
-    all_repo_ids = []
+    #all_repo_ids = []
+    repo_id = None
     with FacadeSession(logger) as session:
         
         #contributor_sequence.append(facade_start_contrib_analysis_task.si())
         query = s.sql.text("""SELECT repo_id FROM repo
-        WHERE repo_git IN :values""").bindparams(values=tuple(repo_git_identifiers))
+        WHERE repo_git=:value""").bindparams(value=repo_git)
 
-        all_repos = session.fetchall_data_from_sql_text(query)
+        repo = execute_session_query(query,'one')#all_repos = session.fetchall_data_from_sql_text(query)
+        repo_id = repo.repo_id
         #pdb.set_trace()
         #breakpoint()
         #for repo in all_repos:
         #    contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
-        all_repo_ids = [repo['repo_id'] for repo in all_repos]
+        #all_repo_ids = [repo['repo_id'] for repo in all_repos]
 
-    contrib_group = create_grouped_task_load(dataList=all_repo_ids,task=insert_facade_contributors)#group(contributor_sequence)
-    contrib_group.link_error(facade_error_handler.s())
-    return contrib_group#chain(facade_start_contrib_analysis_task.si(), contrib_group)
+    #contrib_group = create_grouped_task_load(dataList=all_repo_ids,task=insert_facade_contributors)#group(contributor_sequence)
+    #contrib_group.link_error(facade_error_handler.s())
+    #return contrib_group#chain(facade_start_contrib_analysis_task.si(), contrib_group)
+    return insert_facade_contributors.si(repo_id)
 
 
 
 
-def generate_facade_chain(logger,repo_git_identifiers):
+def generate_facade_chain(logger,repo_git):
     #raise NotImplemented
 
     logger.info("Generating facade sequence")
@@ -491,28 +493,28 @@ def generate_facade_chain(logger,repo_git_identifiers):
         facade_sequence = []
 
         if not limited_run or (limited_run and delete_marked_repos):
-            facade_sequence.append(git_repo_cleanup_facade_task.si(repo_git_identifiers))#git_repo_cleanup(session,repo_git_identifiers)
+            facade_sequence.append(git_repo_cleanup_facade_task.si(repo_git))#git_repo_cleanup(session,repo_git_identifiers)
 
         if not limited_run or (limited_run and clone_repos):
-            facade_sequence.append(git_repo_initialize_facade_task.si(repo_git_identifiers))#git_repo_initialize(session,repo_git_identifiers)
+            facade_sequence.append(git_repo_initialize_facade_task.si(repo_git))#git_repo_initialize(session,repo_git_identifiers)
 
         if not limited_run or (limited_run and check_updates):
-            facade_sequence.append(check_for_repo_updates_facade_task.si(repo_git_identifiers))#check_for_repo_updates(session,repo_git_identifiers)
+            facade_sequence.append(check_for_repo_updates_facade_task.si(repo_git))#check_for_repo_updates(session,repo_git_identifiers)
 
         if force_updates:
-            facade_sequence.append(force_repo_updates_facade_task.si(repo_git_identifiers))
+            facade_sequence.append(force_repo_updates_facade_task.si(repo_git))
 
         if not limited_run or (limited_run and pull_repos):
-            facade_sequence.append(git_repo_updates_facade_task.si(repo_git_identifiers))
+            facade_sequence.append(git_repo_updates_facade_task.si(repo_git))
 
         if force_analysis:
-            facade_sequence.append(force_repo_analysis_facade_task.si(repo_git_identifiers))
+            facade_sequence.append(force_repo_analysis_facade_task.si(repo_git))
 
         #Generate commit analysis task order.
-        facade_sequence.extend(generate_analysis_sequence(logger,repo_git_identifiers))
+        facade_sequence.extend(generate_analysis_sequence(logger,repo_git))
 
         #Generate contributor analysis task group.
-        facade_sequence.append(generate_contributor_sequence(logger,repo_git_identifiers))
+        facade_sequence.append(generate_contributor_sequence(logger,repo_git))
 
         if nuke_stored_affiliations:
             facade_sequence.append(nuke_affiliations_facade_task.si().on_error(facade_error_handler.s()))#nuke_affiliations(session.cfg)
