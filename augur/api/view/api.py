@@ -1,6 +1,7 @@
 from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash
 from flask_login import current_user, login_required
 from augur.application.db.models import Repo
+from augur.application.db.session import DatabaseSession
 # from augur.util.repo_load_controller import parse_org_url, parse_repo_url
 from .utils import *
 
@@ -88,8 +89,10 @@ def create_routes(server):
 
         repo = int(repo)
 
+        with DatabaseSession(logger) as session:
+            result = current_user.remove_repo(session, group, repo)[0]
 
-        if current_user.remove_repo(group, repo)[0]:
+        if result:
             flash(f"Successfully removed repo {repo} from group {group}")
         else:
             flash("An error occurred removing repo from group")
