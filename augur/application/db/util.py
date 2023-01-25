@@ -6,6 +6,7 @@ import time
 def catch_operational_error(func):
 
     attempts = 0
+    error = None
     while attempts < 4:
 
         # do the sleep here instead of instead of in the exception 
@@ -16,10 +17,11 @@ def catch_operational_error(func):
             return func()
         except OperationalError as e:
             print(f"ERROR: {e}")
+            error = str(e)
 
         attempts += 1
 
-    raise Exception("Unable to Resolve Operational Error")
+    raise Exception(error)
 
 
 def execute_session_query(query, query_type="all"):

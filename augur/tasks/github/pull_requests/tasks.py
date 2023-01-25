@@ -7,6 +7,7 @@ from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.application.db.session import DatabaseSession
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, PullRequestMessageRef, Contributor, Repo
@@ -20,25 +21,25 @@ platform_id = 1
 def collect_pull_requests(repo_git_identifiers: [str]) -> None:
 
     logger = logging.getLogger(collect_pull_requests.__name__)
-    
-    for repo_git in repo_git_identifiers:
-        try:
 
-            with GithubTaskSession(logger, engine) as session:
-            
+    with DatabaseSession(logger, engine) as session:
+
+        for repo_git in repo_git_identifiers:
+            try:
+
                 repo_id = session.query(Repo).filter(
-                    Repo.repo_git == repo_git).one().repo_id
+                Repo.repo_git == repo_git).one().repo_id
 
-            owner, repo = get_owner_repo(repo_git)
-            pr_data = retrieve_all_pr_data(repo_git, logger)
+                owner, repo = get_owner_repo(repo_git)
+                pr_data = retrieve_all_pr_data(repo_git, logger)
 
-            if pr_data:
-                process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger)
-            else:
-                logger.info(f"{owner}/{repo} has no pull requests")
-        except Exception as e:
-            logger.error(f"Could not collect pull requests for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
-    
+                if pr_data:
+                    process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger)
+                else:
+                    logger.info(f"{owner}/{repo} has no pull requests")
+            except Exception as e:
+                logger.error(f"Could not collect pull requests for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        
     
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
@@ -85,7 +86,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
 
     pr_dicts, pr_mapping_data, pr_numbers, contributors = extract_data_from_pr_list(pull_requests, repo_id, tool_source, tool_version, data_source)
 
-    with GithubTaskSession(logger, engine) as session:
+    with DatabaseSession(logger, engine) as session:
 
         # remove duplicate contributors before inserting
         contributors = remove_duplicate_dicts(contributors)

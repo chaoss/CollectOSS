@@ -6,9 +6,13 @@ from pathlib import Path
 import shutil
 
 from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
 
 logger = logging.getLogger(__name__)
 with DatabaseSession(logger) as session:
+
+    augur_config = AugurConfig(logger, session)
+    
         
     # ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -21,21 +25,21 @@ with DatabaseSession(logger) as session:
     reload = True
 
     # set the log location for gunicorn    
-    logs_directory = session.config.get_value('Logging', 'logs_directory')
+    logs_directory = augur_config.get_value('Logging', 'logs_directory')
     accesslog = f"{logs_directory}/gunicorn.log"
     errorlog = f"{logs_directory}/gunicorn.log"
 
-    ssl_bool = session.config.get_value('Server', 'ssl')
+    ssl_bool = augur_config.get_value('Server', 'ssl')
 
     if ssl_bool is True: 
 
-        workers = int(session.config.get_value('Server', 'workers'))
-        bind = '%s:%s' % (session.config.get_value("Server", "host"), session.config.get_value("Server", "port"))
-        timeout = int(session.config.get_value('Server', 'timeout'))
-        certfile = str(session.config.get_value('Server', 'ssl_cert_file'))
-        keyfile = str(session.config.get_value('Server', 'ssl_key_file'))
+        workers = int(augur_config.get_value('Server', 'workers'))
+        bind = '%s:%s' % (augur_config.get_value("Server", "host"), augur_config.get_value("Server", "port"))
+        timeout = int(augur_config.get_value('Server', 'timeout'))
+        certfile = str(augur_config.get_value('Server', 'ssl_cert_file'))
+        keyfile = str(augur_config.get_value('Server', 'ssl_key_file'))
         
     else: 
-        workers = int(session.config.get_value('Server', 'workers'))
-        bind = '%s:%s' % (session.config.get_value("Server", "host"), session.config.get_value("Server", "port"))
-        timeout = int(session.config.get_value('Server', 'timeout'))
+        workers = int(augur_config.get_value('Server', 'workers'))
+        bind = '%s:%s' % (augur_config.get_value("Server", "host"), augur_config.get_value("Server", "port"))
+        timeout = int(augur_config.get_value('Server', 'timeout'))

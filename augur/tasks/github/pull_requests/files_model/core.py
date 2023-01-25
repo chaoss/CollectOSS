@@ -22,7 +22,9 @@ def pull_request_files_model(repo_id,logger):
         """).bindparams(repo_id=repo_id)
         pr_numbers = []
         #pd.read_sql(pr_number_sql, self.db, params={})
-        session = GithubTaskSession(logger)
+
+        # TODO: Is this session ever closed?
+        session = GithubTaskSession(logger, engine)
         result = session.execute_sql(pr_number_sql).fetchall()
         pr_numbers = [dict(zip(row.keys(), row)) for row in result]
 

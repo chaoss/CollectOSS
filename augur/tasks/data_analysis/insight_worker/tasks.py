@@ -13,8 +13,9 @@ import datetime
 from sklearn.ensemble import IsolationForest
 import warnings
 
-from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, ChaossMetricStatus, RepoInsight, RepoInsightsRecord
 from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
@@ -37,17 +38,19 @@ def insight_model(repo_git: str) -> None:
     metrics = {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
                 "reviews": "pull_requests", "contributors-new": "new_contributors"}
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
+
+        config = AugurConfig(logger, session)
 
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id
 
-        anomaly_days = session.config.get_value('Insight_Task', 'anomaly_days')
-        training_days = session.config.get_value('Insight_Task', 'training_days')
-        contamination = session.config.get_value('Insight_Task', 'contamination')
-        confidence = session.config.get_value('Insight_Task', 'confidence_interval') / 100
-        api_host = session.config.get_value('Server', 'host')
-        api_port = session.config.get_value('Server', 'port')
+        anomaly_days = config.get_value('Insight_Task', 'anomaly_days')
+        training_days = config.get_value('Insight_Task', 'training_days')
+        contamination = config.get_value('Insight_Task', 'contamination')
+        confidence = config.get_value('Insight_Task', 'confidence_interval') / 100
+        api_host = config.get_value('Server', 'host')
+        api_port = config.get_value('Server', 'port')
 
     logger.info("Discovering insights for repo {}\n".format(repo_git))
 
@@ -242,7 +245,7 @@ def insight_model(repo_git: str) -> None:
                     "data_source": data_source
                 }
 
-                with DatabaseSession(logger) as session:
+                with DatabaseSession(logger, engine) as session:
                     repo_insight_record_obj = RepoInsightsRecord(**record)
                     session.add(repo_insight_record_obj)
                     session.commit()
@@ -287,7 +290,7 @@ def insight_model(repo_git: str) -> None:
                     "data_source": data_source
                 }
 
-                with DatabaseSession(logger) as session:
+                with DatabaseSession(logger, engine) as session:
                     repo_insight_obj = RepoInsight(**data_point)
                     session.add(repo_insight_obj)
                     session.commit()
@@ -464,7 +467,7 @@ def confidence_interval_insights(logger):
                             "data_source": data_source
                         }
 
-                        with DatabaseSession(logger) as session:
+                        with DatabaseSession(logger, engine) as session:
                             repo_insight_obj = RepoInsightsRecord(**record)
                             session.add(repo_insight_obj)
                             session.commit()
@@ -495,7 +498,7 @@ def confidence_interval_insights(logger):
                                     "tool_version": tool_version,
                                     "data_source": data_source
                                 }
-                                with DatabaseSession(logger) as session:
+                                with DatabaseSession(logger, engine) as session:
                                     repo_insight_obj = RepoInsight(**data_point)
                                     session.add(repo_insight_obj)
                                     session.commit()
@@ -727,7 +730,7 @@ def update_metrics(api_host, api_port, tool_source, tool_version, logger):
             "tool_version": tool_version,
             "data_source": metric['data_source']
         }
-        with DatabaseSession(logger) as session:
+        with DatabaseSession(logger, engine) as session:
             cms_tuple = ChaossMetricStatus(**cms_tuple)
             session.add(cms_tuple)
             session.commit()

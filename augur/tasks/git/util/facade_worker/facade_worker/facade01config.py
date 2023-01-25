@@ -45,6 +45,7 @@ from psycopg2.errors import DeadlockDetected
 
 from augur.tasks.github.util.github_task_session import *
 from augur.application.logs import AugurLogger
+from augur.application.config import AugurConfig
 from logging import Logger
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,12 @@ logger = logging.getLogger(__name__)
 def get_database_args_from_env():
 
     db_str = os.getenv("AUGUR_DB")
-    db_json_file_location = os.getcwd() + "/db.config.json"
+    try:
+        db_json_file_location = os.getcwd() + "/db.config.json"
+    except FileNotFoundError:
+        logger.error("\n\nPlease run augur commands in the root directory\n\n")
+        sys.exit()
+
     db_json_exists = os.path.exists(db_json_file_location)
 
     if not db_str and not db_json_exists:
@@ -109,7 +115,8 @@ class FacadeSession(GithubTaskSession):
         self.repos_processed = 0
         super().__init__(logger=logger)
         # Figure out what we need to do
-        worker_options = self.config.get_section("Facade")
+        
+        worker_options = AugurConfig(logger, self).get_section("Facade")
 
         self.limited_run = worker_options["limited_run"]
         self.delete_marked_repos = worker_options["delete_marked_repos"]
@@ -284,7 +291,7 @@ class FacadeConfig:
         #worker_options = read_config("Workers", "facade_worker", None, None)
 
         with DatabaseSession(logger) as session:
-            config = session.config
+            config = AugurConfig(logger, session)
             worker_options = config.get_section("Facade")
 
         if 'repo_directory' in worker_options:

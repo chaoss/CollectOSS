@@ -224,7 +224,7 @@ def insert_pr_labels(labels: List[dict], logger: logging.Logger) -> None:
         labels: list of labels to insert
         logger: handles logging
     """
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
 
         # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
         pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
@@ -241,7 +241,7 @@ def insert_pr_assignees(assignees: List[dict], logger: logging.Logger) -> None:
         assignees: list of assignees to insert
         logger: handles logging
     """
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
 
         # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
         pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
@@ -258,7 +258,7 @@ def insert_pr_reviewers(reviewers: List[dict], logger: logging.Logger) -> None:
         reviewers: list of reviewers to insert
         logger: handles logging
     """
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
 
         # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
         pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
@@ -275,7 +275,7 @@ def insert_pr_metadata(metadata: List[dict], logger: logging.Logger) -> None:
         metadata: list of metadata to insert
         logger: handles logging
     """
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
 
         # inserting pr metadata
         # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.

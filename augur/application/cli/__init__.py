@@ -19,7 +19,8 @@ def test_connection(function_internet_connection):
             #try to ping google's dns server
             socket.create_connection(("8.8.8.8",53))
             return ctx.invoke(function_internet_connection, *args, **kwargs)
-        except OSError:
+        except OSError as e:
+            print(e)
             print(f"\n\n{usage} command setup failed\nYou are not connect to the internet. Please connect to the internet to run Augur\n")
             sys.exit()        
         

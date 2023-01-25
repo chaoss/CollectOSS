@@ -24,6 +24,7 @@ from beaker.cache import CacheManager, Cache
 
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
+from augur.application.config import AugurConfig
 from metadata import __version__ as augur_code_version
 
 from augur.api.routes import AUGUR_API_VERSION
@@ -48,9 +49,7 @@ class Server():
         """Initialize the Server class."""
 
         self.logger = AugurLogger("server").get_logger()
-        self.session = DatabaseSession(self.logger)
-        self.config = self.session.config
-        self.engine = self.session.engine
+
 
         self.cache_manager = self.create_cache_manager()
         self.server_cache = self.get_server_cache()
@@ -436,9 +435,12 @@ class Server():
             server cache
         """
 
-        expire = int(self.config.get_value('Server', 'cache_expire'))
-        server_cache = self.cache_manager.get_cache('server', expire=expire)
-        server_cache.clear()
+        with DatabaseSession(self.logger) as session:
+            config = AugurConfig(self.logger, session)
+
+            expire = int(config.get_value('Server', 'cache_expire'))
+            server_cache = self.cache_manager.get_cache('server', expire=expire)
+            server_cache.clear()
 
         return server_cache
 

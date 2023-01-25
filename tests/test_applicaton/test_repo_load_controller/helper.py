@@ -7,6 +7,8 @@ from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Config
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.application.db.util import execute_session_query
+from werkzeug.security import generate_password_hash
+
 
 logger = logging.getLogger(__name__)
 
@@ -101,16 +103,16 @@ def get_repo_group_insert_statement(rg_id):
 
     return """INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES ({}, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');""".format(rg_id)
 
-def get_user_insert_statement(user_id, username="bil", email="default@gmail.com"):
+def get_user_insert_statement(user_id, username="bil", email="default@gmail.com", password="pass"):
 
-    return """INSERT INTO "augur_operations"."users" ("user_id", "login_name", "login_hashword", "email", "first_name", "last_name", "admin") VALUES ({}, '{}', 'pass', '{}', 'bill', 'bob', false);""".format(user_id, username, email)
+    return """INSERT INTO "augur_operations"."users" ("user_id", "login_name", "login_hashword", "email", "first_name", "last_name", "admin") VALUES ({}, '{}', '{}', '{}', 'bill', 'bob', false);""".format(user_id, username, generate_password_hash(password), email)
 
 def get_user_group_insert_statement(user_id, group_name, group_id=None):
 
     if group_id:
         return """INSERT INTO "augur_operations"."user_groups" ("group_id", "user_id", "name") VALUES ({}, {}, '{}');""".format(group_id, user_id, group_name)
 
-    return """INSERT INTO "augur_operations"."user_groups" (user_id", "name") VALUES (1, 'default');""".format(user_id, group_name)
+    return """INSERT INTO "augur_operations"."user_groups" ("user_id", "name") VALUES ({}, '{}');""".format(user_id, group_name)
 
 
 ######## Helper Functions to get retrieve data from tables #################

@@ -2,10 +2,12 @@ from datetime import datetime
 import logging
 import requests
 import json
+import traceback
 from augur.application.db.data_parse import *
 from augur.application.db.models import *
 from augur.application.db.session import DatabaseSession
 from augur.tasks.init.celery_app import engine
+from augur.application.config import AugurConfig
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
 
@@ -56,7 +58,8 @@ def deps_model(session, repo_id):
     result = session.execute_sql(repo_path_sql)
     
     relative_repo_path = result.fetchone()[1]
-    absolute_repo_path = session.config.get_section("Facade")['repo_directory'] + relative_repo_path
+    config = AugurConfig(session.logger, session)
+    absolute_repo_path = config.get_section("Facade")['repo_directory'] + relative_repo_path
 
     try:
         generate_deps_data(session,repo_id, absolute_repo_path)

@@ -227,9 +227,8 @@ def link_commits_to_contributor(session,contributorQueue):
 @celery.task
 def insert_facade_contributors(repo_id_list):
     logger = logging.getLogger(insert_facade_contributors.__name__)
-    #session = GithubTaskSession(logger)
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine) as session:
         
 
         # Get all of the commit data's emails and names from the commit table that do not appear
@@ -338,5 +337,4 @@ def insert_facade_contributors(repo_id_list):
     
             session.logger.info("Done with inserting and updating facade contributors")
     return
-
 

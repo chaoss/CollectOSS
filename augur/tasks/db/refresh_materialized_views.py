@@ -4,7 +4,7 @@ import sqlalchemy as s
 from celery import signature
 from celery import group, chain, chord, signature
 
-from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.session import DatabaseSession
 
 
@@ -25,6 +25,6 @@ def refresh_materialized_views():
                 REFRESH MATERIALIZED VIEW augur_data.explorer_libyear_summary with data;
     """)
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
 
         session.execute_sql(refresh_view_query)

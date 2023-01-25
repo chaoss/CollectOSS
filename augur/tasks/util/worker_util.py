@@ -4,7 +4,6 @@ from flask import Flask, Response, jsonify, request
 #import gunicorn.app.base
 import numpy as np
 from celery import group
-from augur.application.logs import AugurLogger
 from celery.result import AsyncResult
 from celery.result import allow_join_result
 

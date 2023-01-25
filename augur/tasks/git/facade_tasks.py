@@ -29,7 +29,7 @@ from augur.tasks.github.facade_github.tasks import *
 
 from augur.tasks.util.worker_util import create_grouped_task_load
 
-from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import celery_app as celery, engine
 
 
 from augur.application.db import data_parse
@@ -75,7 +75,7 @@ def grab_comitters(repo_id_list,platform="github"):
 
     for repo_id in repo_id_list:
         try:
-            grab_committer_list(GithubTaskSession(logger), repo_id,platform)
+            grab_committer_list(GithubTaskSession(logger, engine), repo_id,platform)
         except Exception as e:
             logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
@@ -188,18 +188,6 @@ def trim_commits_post_analysis_facade_task(repo_ids):
 
         session.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
         
-        if len(missing_commits) > 0:
-            #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
-
-            #encode the repo_id with the commit.
-            commits_with_repo_tuple = [(commit,repo_id) for commit in list(missing_commits)]
-
-            #1/21/2023: SPG things list needs to be initialized based on error
-            all_missing_commits = []
-            
-            #Get all missing commits into one large list to split into task pools
-            all_missing_commits.extend(commits_with_repo_tuple)
-        
         # Find commits which are out of the analysis range
 
         trimmed_commits = existing_commits - parent_commits
@@ -207,7 +195,6 @@ def trim_commits_post_analysis_facade_task(repo_ids):
         update_analysis_log(repo_id,'Data collection complete')
 
         update_analysis_log(repo_id,'Beginning to trim commits')
-
 
         session.log_activity('Debug',f"Commits to be trimmed from repo {repo_id}: {len(trimmed_commits)}")
 
@@ -250,12 +237,13 @@ def analyze_commits_in_parallel(repo_ids, multithreaded: bool)-> None:
 
     #create new session for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
+    # TODO: Is this session ever closed?
     session = FacadeSession(logger)
     start_date = session.get_setting('start_date')
 
     for repo_id in repo_ids:
         session.logger.info(f"Generating sequence for repo {repo_id}")
-
+        
         query = session.query(Repo).filter(Repo.repo_id == repo_id)
         repo = execute_session_query(query, 'one')
 
@@ -310,15 +298,21 @@ def analyze_commits_in_parallel(repo_ids, multithreaded: bool)-> None:
         logger.info(f"Got to analysis!")
         
         for count, commitTuple in enumerate(queue):
+            quarterQueue = int(len(queue) / 4)
+
+            if quarterQueue == 0:
+                quarterQueue = 1 # prevent division by zero with integer math
 
             #Log progress when another quarter of the queue has been processed
-            #Checking for Modulo of Zero first.
-            if int(len(queue)/4)!=0: 
-                if (count + 1) % int(len(queue) / 4) == 0:
-                    logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
+            if (count + 1) % quarterQueue == 0:
+                logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
 
             query = session.query(Repo).filter(Repo.repo_id == repo_id)
             repo = execute_session_query(query,'one')
+
+        logger.info(f"Got to analysis!")
+        
+        for count, commitTuple in enumerate(queue):
 
             repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")    
 
@@ -330,6 +324,7 @@ def analyze_commits_in_parallel(repo_ids, multithreaded: bool)-> None:
 @celery.task
 def nuke_affiliations_facade_task():
     logger = logging.getLogger(nuke_affiliations_facade_task.__name__)
+    # TODO: Is this session ever closed?
     session = FacadeSession(logger)
 
     nuke_affiliations(session)
@@ -354,6 +349,47 @@ def rebuild_unknown_affiliation_and_web_caches_facade_task():
     with FacadeSession(logger) as session:
         rebuild_unknown_affiliation_and_web_caches(session)
 
+@celery.task
+def force_repo_analysis_facade_task(repo_git_identifiers):
+    logger = logging.getLogger(force_repo_analysis_facade_task.__name__)
+
+    with FacadeSession(logger) as session:
+        force_repo_analysis(session, repo_git_identifiers)
+
+@celery.task
+def git_repo_cleanup_facade_task(repo_git_identifiers):
+    logger = logging.getLogger(git_repo_cleanup_facade_task.__name__)
+
+    with FacadeSession(logger) as session:
+        git_repo_cleanup(session, repo_git_identifiers)
+
+@celery.task
+def git_repo_initialize_facade_task(repo_git_identifiers):
+    logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
+
+    with FacadeSession(logger) as session:
+        git_repo_initialize(session, repo_git_identifiers)
+
+@celery.task
+def check_for_repo_updates_facade_task(repo_git_identifiers):
+    logger = logging.getLogger(check_for_repo_updates_facade_task.__name__)
+
+    with FacadeSession(logger) as session:
+        check_for_repo_updates(session, repo_git_identifiers)
+
+@celery.task
+def force_repo_updates_facade_task(repo_git_identifiers):
+    logger = logging.getLogger(force_repo_updates_facade_task.__name__)
+
+    with FacadeSession(logger) as session:
+        force_repo_updates(session, repo_git_identifiers)
+
+@celery.task
+def git_repo_updates_facade_task(repo_git_identifiers):
+    logger = logging.getLogger(git_repo_updates_facade_task.__name__)
+
+    with FacadeSession(logger) as session:
+        git_repo_updates(session, repo_git_identifiers)
 
 
 def generate_analysis_sequence(logger,repo_git_identifiers):
@@ -455,22 +491,22 @@ def generate_facade_chain(logger,repo_git_identifiers):
         facade_sequence = []
 
         if not limited_run or (limited_run and delete_marked_repos):
-            git_repo_cleanup(session,repo_git_identifiers)
+            facade_sequence.append(git_repo_cleanup_facade_task.si(repo_git_identifiers))#git_repo_cleanup(session,repo_git_identifiers)
 
         if not limited_run or (limited_run and clone_repos):
-            git_repo_initialize(session,repo_git_identifiers)
+            facade_sequence.append(git_repo_initialize_facade_task.si(repo_git_identifiers))#git_repo_initialize(session,repo_git_identifiers)
 
         if not limited_run or (limited_run and check_updates):
-            check_for_repo_updates(session,repo_git_identifiers)
+            facade_sequence.append(check_for_repo_updates_facade_task.si(repo_git_identifiers))#check_for_repo_updates(session,repo_git_identifiers)
 
         if force_updates:
-            force_repo_updates(session,repo_git_identifiers)#facade_sequence.append(force_repo_updates_facade_task.si())
+            facade_sequence.append(force_repo_updates_facade_task.si(repo_git_identifiers))
 
         if not limited_run or (limited_run and pull_repos):
-            git_repo_updates(session,repo_git_identifiers)#facade_sequence.append(git_repo_updates_facade_task.si())
+            facade_sequence.append(git_repo_updates_facade_task.si(repo_git_identifiers))
 
         if force_analysis:
-            force_repo_analysis(session,repo_git_identifiers)#facade_sequence.append(force_repo_analysis_facade_task.si())
+            facade_sequence.append(force_repo_analysis_facade_task.si(repo_git_identifiers))
 
         #Generate commit analysis task order.
         facade_sequence.extend(generate_analysis_sequence(logger,repo_git_identifiers))

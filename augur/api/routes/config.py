@@ -12,6 +12,7 @@ import sqlalchemy as s
 # Disable the requirement for SSL by setting env["AUGUR_DEV"] = True
 from augur.application.config import get_development_flag
 from augur.application.db.models import Config
+from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ def create_routes(server):
 
         with DatabaseSession(logger) as session:
             
-            config_dict = session.config.load_config()
+            config_dict = AugurConfig(logger, session).config.load_config()
 
         return jsonify(config_dict), 200
 

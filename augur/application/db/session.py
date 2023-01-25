@@ -5,14 +5,14 @@ import sys
 import random
 import logging
 import json
-import sqlalchemy as s
+from sqlalchemy.orm import Session
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.exc import OperationalError
 
 from typing import Optional, List, Union
 from psycopg2.errors import DeadlockDetected
 
 # from augur.tasks.util.random_key_auth import RandomKeyAuth
-from augur.application.config import AugurConfig
-from augur.application.db.models import Platform
 from augur.application.db.engine import EngineConnection
 from augur.tasks.util.worker_util import remove_duplicate_dicts, remove_duplicates_by_uniques
 
@@ -49,13 +49,11 @@ def remove_null_characters_from_list_of_dicts(data_list, fields):
     return data_list
 
 
-class DatabaseSession(s.orm.Session):
+class DatabaseSession(Session):
 
     def __init__(self, logger, engine=None):
     
         self.logger = logger
-        self.config = AugurConfig(logger=logger, session=self)
-
         self.engine = engine
         self.engine_created = False
 
@@ -135,7 +133,7 @@ class DatabaseSession(s.orm.Session):
         # that returns cols specificed in returning_args
         # and inserts the data specified in data
         # NOTE: if return_columns does not have an values this still works
-        stmnt = s.dialects.postgresql.insert(table).returning(*returning_args).values(data)
+        stmnt = postgresql.insert(table).returning(*returning_args).values(data)
 
 
         if on_conflict_update:
@@ -159,7 +157,7 @@ class DatabaseSession(s.orm.Session):
             )
 
 
-        # print(str(stmnt.compile(dialect=s.dialects.postgresql.dialect())))
+        # print(str(stmnt.compile(dialect=postgresql.dialect())))
         attempts = 0
         # creates list from 1 to 10
         sleep_time_list = list(range(1,11))
@@ -174,7 +172,7 @@ class DatabaseSession(s.orm.Session):
                     with EngineConnection(self.engine) as connection:
                         connection.execute(stmnt)
                         break
-                except s.exc.OperationalError as e:
+                except OperationalError as e:
                     # print(str(e).split("Process")[1].split(";")[0])
                     if isinstance(e.orig, DeadlockDetected):
                         deadlock_detected = True
@@ -213,7 +211,7 @@ class DatabaseSession(s.orm.Session):
                 with EngineConnection(self.engine) as connection:
                     return_data_tuples = connection.execute(stmnt).fetchall()
                     break
-            except s.exc.OperationalError as e:
+            except OperationalError as e:
                 if isinstance(e.orig, DeadlockDetected):
                     sleep_time = random.choice(sleep_time_list)
                     self.logger.debug(f"Deadlock detected on {table.__table__} table...trying again in {round(sleep_time)} seconds: transaction size: {len(data)}")

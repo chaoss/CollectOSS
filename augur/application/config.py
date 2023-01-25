@@ -18,7 +18,9 @@ def get_development_flag_from_config():
         section = "Augur"
         setting = "developer"
 
-        return config.get_value(section, setting)
+        flag = config.get_value(section, setting)
+
+    return flag
 
 def get_development_flag():
     return os.getenv("AUGUR_DEV") or get_development_flag_from_config() or False

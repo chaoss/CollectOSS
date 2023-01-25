@@ -8,6 +8,7 @@ import logging
 
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
+from augur.application.config import AugurConfig
 
 logger = AugurLogger("augur").get_logger()
 
@@ -220,7 +221,7 @@ def create_routes(server):
 
         with DatabaseSession(logger) as session:
 
-            response = {'port': session.config.get_value('Server', 'port')}
+            response = {'port': AugurConfig(logger, session).get_value('Server', 'port')}
             return Response(response=json.dumps(response),
                             status=200,
                             mimetype="application/json")

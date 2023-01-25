@@ -13,8 +13,6 @@ from augur.application.config import AugurConfig
 
 logger = logging.getLogger(__name__)
 
-with DatabaseSession(logger) as db_session:
-    config = AugurConfig(logger, db_session)
 
 # ROUTES -----------------------------------------------------------------------
 
@@ -71,8 +69,12 @@ def create_routes(server):
                 rev = True
         
         direction = "DESC" if rev else "ASC"
-        
-        pagination_offset = config.get_value("frontend", "pagination_offset")
+
+        with DatabaseSession(logger) as db_session:
+            config = AugurConfig(logger, db_session)
+    
+            pagination_offset = config.get_value("frontend", "pagination_offset")
+
         
         if current_user.is_authenticated:
             data = current_user.get_repos(page = page, sort = sorting, direction = direction)[0]
@@ -153,26 +155,28 @@ def create_routes(server):
                 if username is None:
                     raise LoginException("A login issue occurred")
 
-                user = User.get_user(username)
-                if not user and register is None:
-                    raise LoginException("Invalid login credentials")
-                
-                # register a user
-                if register is not None:
-                    if user:
-                        raise LoginException("User already exists")
-                    
-                    email = request.form.get('email')
-                    first_name = request.form.get('first_name')
-                    last_name = request.form.get('last_name')
-                    admin = request.form.get('admin') or False
+                with DatabaseSession(logger) as db_session:
+                    user = User.get_user(db_session, username)
 
-                    result = User.create_user(username, password, email, first_name, last_name, admin)
-                    if not result[0]:
-                        raise LoginException("An error occurred registering your account")
-                    else:
-                        user = User.get_user(username)
-                        flash(result[1]["status"])
+                    if not user and register is None:
+                        raise LoginException("Invalid login credentials")
+                    
+                    # register a user
+                    if register is not None:
+                        if user:
+                            raise LoginException("User already exists")
+                        
+                        email = request.form.get('email')
+                        first_name = request.form.get('first_name')
+                        last_name = request.form.get('last_name')
+                        admin = request.form.get('admin') or False
+
+                        result = User.create_user(db_session, username, password, email, first_name, last_name, admin)
+                        if not result[0]:
+                            raise LoginException("An error occurred registering your account")
+                        else:
+                            user = User.get_user(username)
+                            flash(result[1]["status"])
 
                 # Log the user in if the password is valid
                 if user.validate(password) and login_user(user, remember = remember):
@@ -285,7 +289,10 @@ def create_routes(server):
                 rev = True
                 params["direction"] = "DESC"
 
-        pagination_offset = config.get_value("frontend", "pagination_offset")
+        with DatabaseSession(logger) as db_session:
+            config = AugurConfig(logger, db_session)
+
+            pagination_offset = config.get_value("frontend", "pagination_offset")
 
         data = current_user.get_group_repos(group, **params)[0]
         page_count = (current_user.get_group_repo_count(group)[0]) or 0

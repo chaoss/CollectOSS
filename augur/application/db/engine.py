@@ -7,12 +7,8 @@ import inspect
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.pool import NullPool
-from augur.application.logs import initialize_stream_handler
 from augur.application.db.util import catch_operational_error
 
-
-logger = logging.getLogger("engine")
-initialize_stream_handler(logger, logging.ERROR)
 
 def get_database_string() -> str:
     """Get database string from env or file
@@ -29,13 +25,18 @@ def get_database_string() -> str:
 
     augur_db_environment_var = os.getenv("AUGUR_DB")
 
-    current_dir = os.getcwd()
+    try:
+        current_dir = os.getcwd()
+    except FileNotFoundError:
+        print("\n\nPlease run augur commands in the root directory\n\n")
+        sys.exit()
+
     db_json_file_location = current_dir + "/db.config.json"
     db_json_exists = os.path.exists(db_json_file_location)
 
     if not augur_db_environment_var and not db_json_exists:
 
-        logger.error("ERROR no way to get connection to the database. \n\t\t\t\t\t\t    There is no db.config.json and the AUGUR_DB environment variable is not set\n\t\t\t\t\t\t    Please run make install or set the AUGUR_DB environment then run make install")
+        print("ERROR no way to get connection to the database. \n\t\t\t\t\t\t    There is no db.config.json and the AUGUR_DB environment variable is not set\n\t\t\t\t\t\t    Please run make install or set the AUGUR_DB environment then run make install")
         sys.exit()
 
     if augur_db_environment_var:

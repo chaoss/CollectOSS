@@ -10,6 +10,7 @@ import logging
 from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
+from augur.application.config import AugurConfig
 from augur.application.cli import test_connection, test_db_connection 
 from augur.util.inspect_without_import import get_phase_names_without_import
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
@@ -62,11 +63,10 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
 
     with DatabaseSession(logger) as session:
 
-        config = session.config
+        config = AugurConfig(logger, session)
 
         default_config = config.default_config
 
-        print(f"Dir {os.getcwd()}")
         phase_names = get_phase_names_without_import()
 
         #Add all phases as enabled by default
@@ -109,7 +109,7 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
 def load_config(file):
 
     with DatabaseSession(logger) as session:
-        config = session.config
+        config = AugurConfig(logger, session)
 
         print("WARNING: This will override your current config")
         response = str(input("Would you like to continue: [y/N]: ")).lower()
@@ -132,7 +132,7 @@ def load_config(file):
 def add_section(section_name, file):
 
     with DatabaseSession(logger) as session:
-        config = session.config
+        config = AugurConfig(logger, session)
 
         if config.is_section_in_config(section_name):
 
@@ -161,7 +161,7 @@ def add_section(section_name, file):
 def config_set(section, setting, value, data_type):
 
     with DatabaseSession(logger) as session:
-        config = session.config
+        config = AugurConfig(logger, session)
 
         if data_type not in config.accepted_types:
             print(f"Error invalid type for config. Please use one of these types: {config.accepted_types}")
@@ -185,7 +185,7 @@ def config_set(section, setting, value, data_type):
 def config_get(section, setting):
 
     with DatabaseSession(logger) as session:
-        config = session.config
+        config = AugurConfig(logger, session)
 
         if setting:
             config_value = config.get_value(section_name=section, setting_name=setting)
@@ -215,7 +215,7 @@ def config_get(section, setting):
 def clear_config():
 
     with DatabaseSession(logger) as session:
-        config = session.config
+        config = AugurConfig(logger, session)
 
         if not config.empty():
 

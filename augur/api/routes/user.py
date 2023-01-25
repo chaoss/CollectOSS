@@ -101,6 +101,7 @@ def create_routes(server):
 
         return jsonify({"status": "Validated"})
 
+
     @server.app.route(f"/{AUGUR_API_VERSION}/user/logout", methods=['POST'])
     @login_required
     def logout_user_func():
@@ -447,13 +448,7 @@ def create_routes(server):
     @server.app.route(f"/{AUGUR_API_VERSION}/user/groups/repos/", methods=['GET', 'POST'])
     @login_required
     def get_user_groups_and_repos():
-        """Get a list of user groups and their repos
-
-        Returns
-        -------
-        list
-            A list with this strucutre : [{"<group_name>": <list_of_repos}, ...]
-        """
+        """Get a list of user groups and their repos"""
 
         if not development and not request.is_secure:
             return generate_upgrade_request()
@@ -463,7 +458,7 @@ def create_routes(server):
             return {"status": "Missing argument columns"}
 
         # split list by , and remove whitespaces from edges
-        
+
         valid_columns = []
         columns =  columns.split(",")
         for column in columns:
@@ -542,3 +537,4 @@ def create_routes(server):
         group_names = [group.name for group in groups]
 
         return jsonify({"status": "success", "group_names": group_names})
+        
