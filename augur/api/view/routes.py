@@ -216,9 +216,11 @@ def create_routes(server):
 
         if not client_id or response_type != "code":
             return render_message("Invalid Request", "Something went wrong. You may need to return to the previous application and make the request again.")
+
+        with DatabaseSession(logger) as session:
         
-        # TODO get application from client id
-        client = ClientApplication.get_by_id(client_id)            
+            # TODO get application from client id
+            client = ClientApplication.get_by_id(session, client_id)            
         
         return render_module("authorization", app = client, state = state)
 

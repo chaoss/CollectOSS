@@ -139,22 +139,20 @@ def create_routes(server):
         if not username:
             return jsonify({"status": "Invalid authorization code"})
 
-        user = User.get_user(username)
-        if not user:
-            return jsonify({"status": "Invalid user"})
-
-        seconds_to_expire = 86400
-
         with DatabaseSession(logger) as session:
+
+            user = User.get_user(session, username)
+            if not user:
+                return jsonify({"status": "Invalid user"})
+
+            seconds_to_expire = 86400
 
             existing_session = session.query(UserSessionToken).filter(UserSessionToken.user_id == user.user_id, UserSessionToken.application_id == application.id).first()
             if existing_session:
                 existing_session.delete_refresh_tokens(session)
 
-            
-
-        user_session_token = UserSessionToken.create(user.user_id, application.id, seconds_to_expire).token
-        refresh_token = RefreshToken.create(user_session_token)
+            user_session_token = UserSessionToken.create(session, user.user_id, application.id, seconds_to_expire).token
+            refresh_token = RefreshToken.create(session, user_session_token)
 
         response = jsonify({"status": "Validated", "username": username, "access_token": user_session_token, "refresh_token" : refresh_token.id, "token_type": "Bearer", "expires": seconds_to_expire})
         response.headers["Cache-Control"] = "no-store"
@@ -183,8 +181,8 @@ def create_routes(server):
         user_session = refresh_token.user_session
         user = user_session.user
 
-        new_user_session = UserSessionToken.create(user.user_id, user_session.application.id)
-        new_refresh_token = RefreshToken.create(new_user_session.token)
+        new_user_session = UserSessionToken.create(session, user.user_id, user_session.application.id)
+        new_refresh_token = RefreshToken.create(session, new_user_session.token)
         
         session.delete(refresh_token)
         session.delete(user_session)
