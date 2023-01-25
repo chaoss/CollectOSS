@@ -157,8 +157,8 @@ def create_routes(server):
             user_session_token = UserSessionToken.create(session, user.user_id, application.id, seconds_to_expire).token
             refresh_token = RefreshToken.create(session, user_session_token)
 
-        response = jsonify({"status": "Validated", "username": username, "access_token": user_session_token, "refresh_token" : refresh_token.id, "token_type": "Bearer", "expires": seconds_to_expire})
-        response.headers["Cache-Control"] = "no-store"
+            response = jsonify({"status": "Validated", "username": username, "access_token": user_session_token, "refresh_token" : refresh_token.id, "token_type": "Bearer", "expires": seconds_to_expire})
+            response.headers["Cache-Control"] = "no-store"
 
         return response
     
