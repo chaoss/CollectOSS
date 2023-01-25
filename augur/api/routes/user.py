@@ -151,6 +151,9 @@ def create_routes(server):
             if existing_session:
                 existing_session.delete_refresh_tokens(session)
 
+                session.delete(existing_session)
+                session.commit()
+
             user_session_token = UserSessionToken.create(session, user.user_id, application.id, seconds_to_expire).token
             refresh_token = RefreshToken.create(session, user_session_token)
 
