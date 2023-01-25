@@ -64,6 +64,7 @@ def create_routes(server):
 
         user = User.get_user(db_session, user_id)
         groups = user.groups
+<<<<<<< 8knot_fixes
         tokens = user.tokens
         applications = user.applications
         for application in applications:
@@ -72,6 +73,10 @@ def create_routes(server):
             repos = group.repos
         for token in tokens:
             application = token.application
+=======
+        for group in groups:
+            repos = group.repos
+>>>>>>> dev
 
         if not user:
             return None
