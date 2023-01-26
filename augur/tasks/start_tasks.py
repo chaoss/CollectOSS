@@ -29,10 +29,10 @@ from celery.result import allow_join_result
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
-from augur.tasks.init.celery_app import engine
 from augur.application.db.util import execute_session_query
 from logging import Logger
 from augur.tasks.util.redis_list import RedisList
+from augur.application.db.models import CollectionStatus, Repo
 
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
@@ -49,10 +49,20 @@ def collection_task_wrapper(self,*args,**kwargs):
 
 @celery.task
 def task_success(repo_git):
-    logger = logging.getLogger(successResult.__name__)
-    
-    # set status to Finished in db
-    # set collection date in db
+    logger = logging.getLogger(task_success.__name__)
+
+    with DatabaseSession(logger, engine) as session:
+
+        repo = Repo.get_by_repo_git(session, repo_git)
+        if not repo:
+            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
+
+        collection_status = repo.collection_status
+
+        collection_status.status = "Success"
+        collection_status.data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        session.commit()
 
 @celery.task
 def task_failed(request,exc,traceback):

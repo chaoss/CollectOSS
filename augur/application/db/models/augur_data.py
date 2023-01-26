@@ -845,11 +845,17 @@ class Repo(Base):
 
     repo_group = relationship("RepoGroup")
     user_repo = relationship("UserRepo")
+    collection_status = relationship("CollectionStatus")
 
     @staticmethod
     def get_by_id(session, repo_id):
 
         return session.query(Repo).filter(Repo.repo_id == repo_id).first()
+
+    @staticmethod
+    def get_by_repo_git(session, repo_git):
+
+        return session.query(Repo).filter(Repo.repo_git == repo_git).first()
 
     @staticmethod
     def is_valid_github_repo(session, url: str) -> bool:
