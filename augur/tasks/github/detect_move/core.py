@@ -79,7 +79,7 @@ def ping_github_for_repo_move(session,repo):
     statusQuery = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
 
     collectionRecord = execute_session_query(statusQuery,'one')
-    collectionRecord.status = CollectionState.PENDING
+    collectionRecord.status = CollectionState.PENDING.value
     session.commit()
 
     raise Exception("ERROR: Repo has moved! Marked repo as pending and stopped collection")

@@ -69,7 +69,7 @@ def task_success(repo_git):
 
         collection_status = repo.collection_status
 
-        collection_status.status = CollectionState.SUCCESS
+        collection_status.status = CollectionState.SUCCESS.value
         collection_status.data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         session.commit()
@@ -93,7 +93,7 @@ def task_failed(request,exc,traceback):
         except Exception as e:
             logger.error(f"Could not mutate request chain! \n Error: {e}")
         
-        if collectionRecord.status == CollectionState.COLLECTING:
+        if collectionRecord.status == CollectionState.COLLECTING.value:
             # set status to Error in db
             collectionRecord.status = CollectionStatus.ERROR
             session.commit()
@@ -234,7 +234,7 @@ class AugurTaskRoutine:
 
             #set status in database to collecting
             repoStatus = repo.collection_status
-            repoStatus.status = CollectionState.COLLECTING
+            repoStatus.status = CollectionState.COLLECTING.value
             self.session.commit()
 
 """
@@ -279,11 +279,11 @@ def augur_collection_monitor():
         enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
         enabled_phases = [phase for phase in DEFINED_COLLECTION_PHASES if phase.__name__ in enabled_phase_names]
         
-        active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.COLLECTING).all())
+        active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.COLLECTING.value).all())
 
         cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
-        not_erroed = CollectionStatus.status != str(CollectionState.ERROR)
-        not_collecting = CollectionStatus.status != str(CollectionState.COLLECTING)
+        not_erroed = CollectionStatus.status != str(CollectionState.ERROR.value)
+        not_collecting = CollectionStatus.status != str(CollectionState.COLLECTING.value)
         never_collected = CollectionStatus.data_last_collected == None
         old_collection = CollectionStatus.data_last_collected <= cutoff_date
 

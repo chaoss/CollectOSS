@@ -98,7 +98,7 @@ def start(disable_collection, development, port):
 
             session.execute(
                 update(CollectionStatus)
-                .where(CollectionStatus.status == CollectionState.COLLECTING)
+                .where(CollectionStatus.status == CollectionState.COLLECTING.value)
                 .values(status="Pending")
             )
 
