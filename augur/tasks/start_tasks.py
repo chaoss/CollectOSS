@@ -225,9 +225,9 @@ class AugurTaskRoutine:
                 
                 #Add the phase to the sequence in order as a celery task.
                 #The preliminary task creates the larger task chain 
-                augur_collection_sequence.append(job.si(repo_git))
+                augur_collection_sequence.append(job(repo_git))
 
-            augur_collection_sequence.append(task_success(repo_git))
+            augur_collection_sequence.append(task_success.si(repo_git))
             #Link all phases in a chain and send to celery
             augur_collection_chain = chain(*augur_collection_sequence)
             augur_collection_chain.apply_async(link_error=task_failed.s())

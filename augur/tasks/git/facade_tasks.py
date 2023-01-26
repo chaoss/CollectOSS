@@ -448,8 +448,9 @@ def generate_contributor_sequence(logger,repo_git):
         query = s.sql.text("""SELECT repo_id FROM repo
         WHERE repo_git=:value""").bindparams(value=repo_git)
 
-        repo = execute_session_query(query,'one')#all_repos = session.fetchall_data_from_sql_text(query)
-        repo_id = repo.repo_id
+        repo = session.execute_sql(query).fetchone()
+        session.logger.info(f"repo: {repo}")
+        repo_id = repo[0]
         #pdb.set_trace()
         #breakpoint()
         #for repo in all_repos:
