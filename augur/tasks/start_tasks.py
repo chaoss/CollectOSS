@@ -31,11 +31,20 @@ from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
 from augur.application.db.util import execute_session_query
 from logging import Logger
+from enum import Enum
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.models import CollectionStatus, Repo
 
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
+
+
+# class syntax
+class CollectionState(Enum):
+    SUCCESS = "Success"
+    PENDING = "Pending"
+    ERROR = "Error"
+    COLLECTING = "Collecting"
 
 """
 @celery.task(bind=True)
@@ -59,7 +68,7 @@ def task_success(repo_git):
 
         collection_status = repo.collection_status
 
-        collection_status.status = "Success"
+        collection_status.status = CollectionState.SUCCESS
         collection_status.data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         session.commit()
@@ -215,24 +224,28 @@ def augur_collection_monitor():
 
     #Get phase options from the config
     with DatabaseSession(logger, engine) as session:
+
+        max_repo_count = 500
+
         config = AugurConfig(logger, session)
         phase_options = config.get_section("Task_Routine")
 
-    #Get list of enabled phases 
-    enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
-    enabled_phases = [phase for phase in DEFINED_COLLECTION_PHASES if phase.__name__ in enabled_phase_names]
-    
-    # calculate current active repos
-    # calcuate the number of repos we would like to add to the queue
+        #Get list of enabled phases 
+        enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
+        enabled_phases = [phase for phase in DEFINED_COLLECTION_PHASES if phase.__name__ in enabled_phase_names]
+        
+        active_repos = len(session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.COLLECTING).all())
 
-    # get repos with these requirements
-        # haven't been collected or not collected in awhile
-        # don't have a status of Error or Collecting
+        # get repos with these requirements
+            # haven't been collected or not collected in awhile
+            # don't have a status of Error or Collecting
+        # TODO: add filter to check for repos that haven't been collected in ahile
+        session.query(CollectionStatus).filter(CollectionStatus.status != CollectionState.ERROR, CollectionStatus.status != CollectionState.COLLECTING, CollectionStatus.data_last_collected == None)
 
-    # loop through repos
-        # create chain
-        # start task
-        # set status in db to Collecting
+        # loop through repos
+            # create chain
+            # start task
+            # set status in db to Collecting
 
 
 
