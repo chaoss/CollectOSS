@@ -173,14 +173,18 @@ class AugurTaskRoutine:
     Attributes:
         logger (Logger): Get logger from AugurLogger
         jobs_dict (dict): Dict of data collection phases to run
+        repos (List[int]): List of repo_ids to run collection on.
         collection_phases (List[str]): List of phases to run in augur collection.
+        session: Database session to use
     """
-    def __init__(self,collection_phases: List[str]=[]):
+    def __init__(self,session,repos: List[int]=[],collection_phases: List[str]=[]):
         self.logger = AugurLogger("data_collection_jobs").get_logger()
         #self.session = TaskSession(self.logger)
         self.jobs_dict = {}
         self.collection_phases = collection_phases
         #self.disabled_collection_tasks = disabled_collection_tasks
+        self.repos = repos
+        self.session = session
 
         #Assemble default phases
         #These will then be able to be overridden through the config.
@@ -207,17 +211,27 @@ class AugurTaskRoutine:
         self.logger.info(f"Enabled phases: {list(self.jobs_dict.keys())}")
         augur_collection_list = []
 
-        augur_collection_sequence = []
-        for phaseName, job in self.jobs_dict.items():
-            self.logger.info(f"Queuing phase {phaseName}")
-            
-            #Add the phase to the sequence in order as a celery task.
-            #The preliminary task creates the larger task chain 
-            augur_collection_sequence.append(job.si())
         
-        #Link all phases in a chain and send to celery
-        augur_collection_chain = chain(*augur_collection_sequence)
-        augur_collection_chain.apply_async()
+        
+        for repo_id in self.repos:
+            repo_git = self.session.query(Repo).filter( Repo.repo_id == repo_id).one().repo_git
+            augur_collection_sequence = []
+
+            for phaseName, job in self.jobs_dict.items():
+                self.logger.info(f"Queuing phase {phaseName} for repo {repo_git}")
+                
+                #Add the phase to the sequence in order as a celery task.
+                #The preliminary task creates the larger task chain 
+                augur_collection_sequence.append(job.si(repo_git))
+        
+            #Link all phases in a chain and send to celery
+            augur_collection_chain = chain(*augur_collection_sequence)
+            augur_collection_chain.apply_async()
+
+            #set status in database to collecting
+            repoStatus = self.session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id).one()
+            repoStatus.status = CollectionState.COLLECTING
+            session.commit()
 
 """
 @celery.task
@@ -264,12 +278,14 @@ def augur_collection_monitor():
             # haven't been collected or not collected in awhile
             # don't have a status of Error or Collecting
         # TODO: add filter to check for repos that haven't been collected in ahile
-        session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.PENDING, CollectionStatus.data_last_collected == None)
+        query = session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.PENDING, CollectionStatus.data_last_collected == None)
+        
 
-        # loop through repos
-            # create chain
-            # start task
-            # set status in db to Collecting
+        repoStatusObjs = query.limit(max_repo_count - active_repos).all()
+
+        repo_ids = [repo.repo_id for repo in repoStatusObjs]
+
+        augur_collection = AugurTaskRoutine(session,repos=repo_ids,collection_phases=enabled_phases)
 
 
 
