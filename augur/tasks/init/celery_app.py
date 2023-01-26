@@ -115,15 +115,15 @@ def setup_periodic_tasks(sender, **kwargs):
     Returns
         The tasks so that they are grouped by the module they are defined in
     """
-    from augur.tasks.start_tasks import start_task
+    from augur.tasks.start_tasks import augur_collection_monitor
 
     with DatabaseSession(logger) as session:
 
         config = AugurConfig(logger, session)
 
         collection_interval = config.get_value('Tasks', 'collection_interval')
-        logger.info(f"Scheduling collection every {collection_interval/60/60} hours")
-        sender.add_periodic_task(collection_interval, start_task.s())
+        logger.info(f"Scheduling collection every {collection_interval/60} minutes")
+        sender.add_periodic_task(collection_interval, augur_collection_monitor.s())
 
 
 @after_setup_logger.connect

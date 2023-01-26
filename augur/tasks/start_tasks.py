@@ -10,6 +10,7 @@ import numpy as np
 #from celery.result import AsyncResult
 from celery import signature
 from celery import group, chain, chord, signature
+from sqlalchemy import or_, and_
 
 
 from augur.tasks.github import *
@@ -260,10 +261,13 @@ def start_task():
 def augur_collection_monitor():           
     logger = logging.getLogger(augur_collection_monitor.__name__)
 
+    logger.info("Checking for repos to collect")
+
     #Get phase options from the config
     with DatabaseSession(logger, engine) as session:
 
         max_repo_count = 500
+        days = 30
 
         config = AugurConfig(logger, session)
         phase_options = config.get_section("Task_Routine")
@@ -272,21 +276,22 @@ def augur_collection_monitor():
         enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
         enabled_phases = [phase for phase in DEFINED_COLLECTION_PHASES if phase.__name__ in enabled_phase_names]
         
-        active_repos = len(session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.COLLECTING).all())
+        active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.COLLECTING).all())
 
-        # get repos with these requirements
-            # haven't been collected or not collected in awhile
-            # don't have a status of Error or Collecting
-        # TODO: add filter to check for repos that haven't been collected in ahile
-        query = session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.PENDING, CollectionStatus.data_last_collected == None)
-        
+        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
+        not_erroed = CollectionStatus.status != str(CollectionState.ERROR)
+        not_collecting = CollectionStatus.status != str(CollectionState.COLLECTING)
+        never_collected = CollectionStatus.data_last_collected == None
+        old_collection = CollectionStatus.data_last_collected <= cutoff_date
 
-        repoStatusObjs = query.limit(max_repo_count - active_repos).all()
+        limit = max_repo_count-active_repo_count
 
-        repo_ids = [repo.repo_id for repo in repoStatusObjs]
+        repo_status_list = session.query(CollectionStatus).filter(and_(not_erroed, not_collecting, or_(never_collected, old_collection))).limit(limit).all()
+
+        repo_ids = [repo.repo_id for repo in repo_status_list]
 
         augur_collection = AugurTaskRoutine(session,repos=repo_ids,collection_phases=enabled_phases)
-
+        augur_collection.start_data_collection()
 
 
 
