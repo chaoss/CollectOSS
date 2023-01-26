@@ -5,6 +5,7 @@ from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.util import parse_json_response
 import logging
+from enum import Enum
 from augur.application.db.util import execute_session_query
 
 class CollectionState(Enum):
