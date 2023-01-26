@@ -914,3 +914,17 @@ class RefreshToken(Base):
 
         return refresh_token
 
+
+class CollectionStatus(Base):
+    __tablename__ = "collection_status"
+    __table_args__ = (
+        {"schema": "augur_operations"}
+    )
+
+    repo_id = Column(ForeignKey("augur_data.repo.repo_id", name="collection_status_repo_id_fk"), primary_key=True)
+    data_last_collected = Column(TIMESTAMP)
+    event_last_collected = Column(TIMESTAMP)
+    status = Column(String, nullable=False, server_default=text("'Pending'"))
+    task_id = Column(String)
+
+    repo = relationship("Repo")
