@@ -5,8 +5,15 @@ from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.util import parse_json_response
 import logging
+from enum import Enum
 from augur.application.db.util import execute_session_query
-from augur.tasks.start_tasks import CollectionState
+
+class CollectionState(Enum):
+    SUCCESS = "Success"
+    PENDING = "Pending"
+    ERROR = "Error"
+    COLLECTING = "Collecting"
+
 
 def extract_owner_and_repo_from_endpoint(session,url):
     response_from_gh = hit_api(session.oauths, url, session.logger)
