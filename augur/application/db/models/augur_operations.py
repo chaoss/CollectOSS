@@ -839,9 +839,6 @@ class UserSessionToken(Base):
             session.delete(token)
         session.commit()
 
-        session.delete(self)
-        session.commit()
-
 class ClientApplication(Base):
     __tablename__ = "client_applications"
     __table_args__ = (
