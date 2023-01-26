@@ -5,6 +5,8 @@ from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.util import parse_json_response
 import logging
+from augur.application.db.util import execute_session_query
+from augur.tasks.start_tasks import CollectionState
 
 def extract_owner_and_repo_from_endpoint(session,url):
     response_from_gh = hit_api(session.oauths, url, session.logger)
@@ -66,3 +68,13 @@ def ping_github_for_repo_move(session,repo):
     result = session.insert_data(current_repo_dict, Repo, ['repo_id'])
 
     session.logger.info(f"Updated repo for {owner}/{name}\n")
+
+    statusQuery = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
+
+    collectionRecord = execute_session_query(statusQuery,'one')
+    collectionRecord.status = CollectionState.PENDING
+    session.commit()
+
+    raise Exception("ERROR: Repo has moved! Marked repo as pending and stopped collection")
+
+    

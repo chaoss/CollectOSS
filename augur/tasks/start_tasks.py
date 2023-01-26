@@ -77,8 +77,30 @@ def task_success(repo_git):
 def task_failed(request,exc,traceback):
     logger = logging.getLogger(task_failed.__name__)
     
-    # set status to Error in db
-    # log traceback to error file
+    with DatabaseSession(logger,engine) as session:
+        query = session.query(CollectionStatus).filter(CollectionStatus.task_id == request.id)
+
+        collectionRecord = execute_session_query(query,'one')
+
+        print(f"chain: {request.chain}")
+        #Make sure any further execution of tasks dependent on this one stops.
+        try:
+            #Replace the tasks queued ahead of this one in a chain with None.
+            request.chain = None
+        except AttributeError:
+            pass #Task is not part of a chain. Normal so don't log.
+        except Exception as e:
+            logger.error(f"Could not mutate request chain! \n Error: {e}")
+        
+        if collectionRecord.status == CollectionState.COLLECTING:
+            # set status to Error in db
+            collectionRecord.status = CollectionStatus.ERROR
+            session.commit()
+
+            # log traceback to error file
+            session.logger.error(f"Task {request.id} raised exception: {exc}\n{traceback}")
+    
+    
 
 
 #Predefine phases. For new phases edit this and the config to reflect.
@@ -93,6 +115,8 @@ def prelim_phase(repo_git):
 
         #TODO: if repo has moved mark it as pending. 
         job = detect_github_repo_move.si(repo_obj.repo_git)
+
+        
 
     return job
 
@@ -240,7 +264,7 @@ def augur_collection_monitor():
             # haven't been collected or not collected in awhile
             # don't have a status of Error or Collecting
         # TODO: add filter to check for repos that haven't been collected in ahile
-        session.query(CollectionStatus).filter(CollectionStatus.status != CollectionState.ERROR, CollectionStatus.status != CollectionState.COLLECTING, CollectionStatus.data_last_collected == None)
+        session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.PENDING, CollectionStatus.data_last_collected == None)
 
         # loop through repos
             # create chain
