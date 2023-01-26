@@ -215,9 +215,11 @@ class AugurTaskRoutine:
         
         
         for repo_id in self.repos:
-            repo_git = self.session.query(Repo).filter( Repo.repo_id == repo_id).one().repo_git
-            augur_collection_sequence = []
 
+            repo = self.session.query(Repo).filter(Repo.repo_id == repo_id).one()
+            repo_git = repo.repo_git
+
+            augur_collection_sequence = []
             for phaseName, job in self.jobs_dict.items():
                 self.logger.info(f"Queuing phase {phaseName} for repo {repo_git}")
                 
@@ -231,9 +233,9 @@ class AugurTaskRoutine:
             augur_collection_chain.apply_async(link_error=task_failed.s())
 
             #set status in database to collecting
-            repoStatus = self.session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id).one()
+            repoStatus = repo.collection_status
             repoStatus.status = CollectionState.COLLECTING
-            session.commit()
+            self.session.commit()
 
 """
 @celery.task
