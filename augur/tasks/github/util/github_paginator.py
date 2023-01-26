@@ -123,6 +123,16 @@ def process_dict_response(logger: logging.Logger, response: httpx.Response, page
     if errors:
         for error in errors:
             if "API rate limit exceeded for user" in error['message']:
+                current_epoch = int(time.time())
+                epoch_when_key_resets = int(response.headers["X-RateLimit-Reset"])
+                key_reset_time =  epoch_when_key_resets - current_epoch
+                
+                if key_reset_time < 0:
+                    logger.error(f"Key reset time was less than 0 setting it to 0.\nThe current epoch is {current_epoch} and the epoch that the key resets at is {epoch_when_key_resets}")
+                    key_reset_time = 0
+                    
+                logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
+                time.sleep(key_reset_time)
                 return GithubApiResult.RATE_LIMIT_EXCEEDED
 
     return GithubApiResult.NEW_RESULT
