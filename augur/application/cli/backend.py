@@ -15,12 +15,13 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 from celery import chain, signature, group
 import uuid
 import traceback
+from sqlalchemy import update
 
 
 from augur import instance_id
-from augur.tasks.start_tasks import start_task
+from augur.tasks.start_tasks import augur_collection_monitor, CollectionState
 from augur.tasks.init.redis_connection import redis_connection 
-from augur.application.db.models import Repo
+from augur.application.db.models import Repo, CollectionStatus
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
@@ -93,7 +94,15 @@ def start(disable_collection, development, port):
         cpu_worker_process = subprocess.Popen(cpu_worker.split(" "))
         time.sleep(5)
 
-        start_task.si().apply_async()
+        with DatabaseSession(logger) as session:
+
+            session.execute(
+                update(CollectionStatus)
+                .where(CollectionStatus.status == CollectionState.COLLECTING)
+                .values(status="Pending")
+            )
+
+        augur_collection_monitor.si().apply_async()
 
         celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
         celery_beat_process = subprocess.Popen(celery_command.split(" "))    
