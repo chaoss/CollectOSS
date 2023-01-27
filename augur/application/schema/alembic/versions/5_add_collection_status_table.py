@@ -8,6 +8,8 @@ Create Date: 2023-01-26 08:30:05.524959
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql import text
+
 
 # revision identifiers, used by Alembic.
 revision = '5'
@@ -28,6 +30,15 @@ def upgrade():
     sa.PrimaryKeyConstraint('repo_id'),
     schema='augur_operations'
     )
+
+    # add collection status for any existing repos
+    conn = op.get_bind()
+    repos = conn.execute(text("""SELECT repo_id from repo""")).fetchall()
+
+    for repo in repos:
+        repo_id = repo[0]
+        conn.execute(text(f"""INSERT INTO "augur_operations"."collection_status" ("repo_id") VALUES ({repo_id});"""))
+
     # ### end Alembic commands ###
 
 

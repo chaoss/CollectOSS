@@ -730,6 +730,8 @@ class UserRepo(Base):
 
         result = UserRepo.insert(session, repo_id, group_id)
 
+        CollectionStatus.create(session, repo_id)
+
         if not result:
             return False, {"status": "repo_user insertion failed", "repo_url": url}
 
@@ -928,3 +930,12 @@ class CollectionStatus(Base):
     task_id = Column(String)
 
     repo = relationship("Repo")
+
+    @staticmethod
+    def create(session, repo_id):
+
+        status = CollectionStatus(repo_id=repo_id)
+        session.add(status)
+        session.commit()
+
+        return status
