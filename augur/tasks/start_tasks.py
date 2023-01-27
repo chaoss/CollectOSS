@@ -156,7 +156,6 @@ def repo_collect_phase(repo_git):
             repo_info_task,
             chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
             chain(generate_facade_chain(logger,repo_git),process_dependency_metrics.si(repo_git)),
-            collect_releases.si()
         )
 
         return repo_task_group
@@ -237,26 +236,18 @@ class AugurTaskRoutine:
             repoStatus.status = CollectionState.COLLECTING.value
             self.session.commit()
 
-"""
 @celery.task
-def start_task():
+def non_repo_domain_tasks():
+    logger = logging.getLogger(non_repo_domain_tasks.__name__)
 
-    logger = logging.getLogger(start_task.__name__)
+    logger.info("Executing non-repo domain tasks")
 
-    #Get phase options from the config
-    with DatabaseSession(logger, engine) as session:
-        config = AugurConfig(logger, session)
-        phase_options = config.get_section("Task_Routine")
+    tasks = group(
+        generate_non_repo_domain_facade_tasks(logger),
+        collect_releases.si()
+    )
 
-    #Get list of enabled phases 
-    enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
-    enabled_phases = [phase for phase in DEFINED_COLLECTION_PHASES if phase.__name__ in enabled_phase_names]
-
-    #print(f"disabled: {disabled_phases}")
-    augur_collection = AugurTaskRoutine(collection_phases=enabled_phases)
-
-    augur_collection.start_data_collection()
-"""
+    tasks.apply_async()
 
 
 

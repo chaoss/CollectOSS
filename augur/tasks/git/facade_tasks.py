@@ -321,10 +321,10 @@ def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
 @celery.task
 def nuke_affiliations_facade_task():
     logger = logging.getLogger(nuke_affiliations_facade_task.__name__)
-    # TODO: Is this session ever closed?
-    session = FacadeSession(logger)
 
-    nuke_affiliations(session)
+    with FacadeSession(logger) as session:
+
+        nuke_affiliations(session)
 
 @celery.task
 def fill_empty_affiliations_facade_task():
@@ -517,6 +517,36 @@ def generate_facade_chain(logger,repo_git):
         #Generate contributor analysis task group.
         facade_sequence.append(generate_contributor_sequence(logger,repo_git))
 
+        
+        logger.info(f"Facade sequence: {facade_sequence}")
+        return chain(*facade_sequence)
+
+def generate_non_repo_domain_facade_tasks(logger):
+    logger.info("Generating facade sequence")
+    with FacadeSession(logger) as session:
+        
+        # Figure out what we need to do
+        limited_run = session.limited_run
+        delete_marked_repos = session.delete_marked_repos
+        pull_repos = session.pull_repos
+        clone_repos = session.clone_repos
+        check_updates = session.check_updates
+        force_updates = session.force_updates
+        run_analysis = session.run_analysis
+        force_analysis = session.force_analysis
+        nuke_stored_affiliations = session.nuke_stored_affiliations
+        fix_affiliations = session.fix_affiliations
+        force_invalidate_caches = session.force_invalidate_caches
+        rebuild_caches = session.rebuild_caches
+        #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
+            # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
+            #   'update_frequency')) else 0
+        force_invalidate_caches = session.force_invalidate_caches
+        create_xlsx_summary_files = session.create_xlsx_summary_files
+        multithreaded = session.multithreaded
+
+        facade_sequence = []
+
         if nuke_stored_affiliations:
             facade_sequence.append(nuke_affiliations_facade_task.si().on_error(facade_error_handler.s()))#nuke_affiliations(session.cfg)
 
@@ -530,6 +560,4 @@ def generate_facade_chain(logger,repo_git):
         if not limited_run or (limited_run and rebuild_caches):
             facade_sequence.append(rebuild_unknown_affiliation_and_web_caches_facade_task.si().on_error(facade_error_handler.s()))#rebuild_unknown_affiliation_and_web_caches(session.cfg)
         
-        logger.info(f"Facade sequence: {facade_sequence}")
         return chain(*facade_sequence)
-
