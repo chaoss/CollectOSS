@@ -95,13 +95,9 @@ def start(disable_collection, development, port):
         time.sleep(5)
 
         with DatabaseSession(logger) as session:
-
-            session.execute(
-                update(CollectionStatus)
-                .where(CollectionStatus.status == CollectionState.COLLECTING.value)
-                .values(status="Pending")
-            )
-
+            session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.COLLECTING.value).update({CollectionStatus.status: "Pending"})
+            session.commit()
+          
         augur_collection_monitor.si().apply_async()
 
         celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"

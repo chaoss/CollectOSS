@@ -59,7 +59,20 @@ def create_routes(server):
 
     @login_manager.user_loader
     def load_user(user_id):
-        user = User.get_user(user_id)
+
+        db_session = DatabaseSession(logger)
+
+        user = User.get_user(db_session, user_id)
+        groups = user.groups
+        tokens = user.tokens
+        applications = user.applications
+        for application in applications:
+            sessions = application.sessions
+        for group in groups:
+            repos = group.repos
+        for token in tokens:
+            application = token.application
+        db_session.expunge(user)
 
         if not user:
             return None

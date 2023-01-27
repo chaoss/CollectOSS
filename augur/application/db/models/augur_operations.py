@@ -930,7 +930,7 @@ class CollectionStatus(Base):
     status = Column(String, nullable=False, server_default=text("'Pending'"))
     task_id = Column(String)
 
-    repo = relationship("Repo")
+    repo = relationship("Repo", back_populates="collection_status")
 
     @staticmethod
     def insert(session, repo_id):

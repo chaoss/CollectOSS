@@ -61,13 +61,15 @@ def collection_task_wrapper(self,*args,**kwargs):
 def task_success(repo_git):
     logger = logging.getLogger(task_success.__name__)
 
+    logger.info(f"Repo '{repo_git}' succeeded")
+
     with DatabaseSession(logger, engine) as session:
 
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
             raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
 
-        collection_status = repo.collection_status
+        collection_status = repo.collection_status[0]
 
         collection_status.status = CollectionState.SUCCESS.value
         collection_status.data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -229,10 +231,13 @@ class AugurTaskRoutine:
             augur_collection_sequence.append(task_success.si(repo_git))
             #Link all phases in a chain and send to celery
             augur_collection_chain = chain(*augur_collection_sequence)
-            augur_collection_chain.apply_async(link_error=task_failed.s())
+            task_id = augur_collection_chain.apply_async(link_error=task_failed.s()).task_id
+
+            self.logger.info(f"Setting repo_id {repo_id} to collecting")
 
             #set status in database to collecting
-            repoStatus = repo.collection_status
+            repoStatus = repo.collection_status[0]
+            repoStatus.task_id = task_id
             repoStatus.status = CollectionState.COLLECTING.value
             self.session.commit()
 
@@ -283,6 +288,8 @@ def augur_collection_monitor():
         repo_status_list = session.query(CollectionStatus).filter(and_(not_erroed, not_collecting, or_(never_collected, old_collection))).limit(limit).all()
 
         repo_ids = [repo.repo_id for repo in repo_status_list]
+
+        logger.info(f"Starting collection on {len(repo_ids)} repos")
 
         augur_collection = AugurTaskRoutine(session,repos=repo_ids,collection_phases=enabled_phases)
         augur_collection.start_data_collection()

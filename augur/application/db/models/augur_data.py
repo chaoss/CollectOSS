@@ -845,7 +845,7 @@ class Repo(Base):
 
     repo_group = relationship("RepoGroup")
     user_repo = relationship("UserRepo")
-    collection_status = relationship("CollectionStatus")
+    collection_status = relationship("CollectionStatus", back_populates="repo")
 
     @staticmethod
     def get_by_id(session, repo_id):
