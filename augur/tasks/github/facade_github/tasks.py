@@ -210,10 +210,9 @@ def link_commits_to_contributor(session,contributorQueue):
         query = s.sql.text("""
                 UPDATE commits 
                 SET cmt_ght_author_id=:cntrb_id
-                WHERE cmt_committer_email=:cntrb_email
-                OR cmt_author_raw_email=:cntrb_email
+                WHERE 
+                cmt_author_raw_email=:cntrb_email
                 OR cmt_author_email=:cntrb_email
-                OR cmt_committer_raw_email=:cntrb_email
         """).bindparams(cntrb_id=cntrb["cntrb_id"],cntrb_email=cntrb["email"])
 
         #engine.execute(query, **data)
