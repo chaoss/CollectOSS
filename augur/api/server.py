@@ -49,7 +49,9 @@ class Server():
         """Initialize the Server class."""
 
         self.logger = AugurLogger("server").get_logger()
-
+        self.session = DatabaseSession(self.logger)
+        self.config = AugurConfig(self.logger, self.session)
+        self.engine = self.session.engine
 
         self.cache_manager = self.create_cache_manager()
         self.server_cache = self.get_server_cache()
@@ -435,12 +437,9 @@ class Server():
             server cache
         """
 
-        with DatabaseSession(self.logger) as session:
-            config = AugurConfig(self.logger, session)
-
-            expire = int(config.get_value('Server', 'cache_expire'))
-            server_cache = self.cache_manager.get_cache('server', expire=expire)
-            server_cache.clear()
+        expire = int(self.config.get_value('Server', 'cache_expire'))
+        server_cache = self.cache_manager.get_cache('server', expire=expire)
+        server_cache.clear()
 
         return server_cache
 
