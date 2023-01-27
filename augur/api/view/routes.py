@@ -171,11 +171,11 @@ def create_routes(server):
                         last_name = request.form.get('last_name')
                         admin = request.form.get('admin') or False
 
-                        result = User.create_user(db_session, username, password, email, first_name, last_name, admin)
+                        result = User.create_user(username, password, email, first_name, last_name, admin)
                         if not result[0]:
                             raise LoginException("An error occurred registering your account")
                         else:
-                            user = User.get_user(username)
+                            user = User.get_user(db_session, username)
                             flash(result[1]["status"])
 
                 # Log the user in if the password is valid
@@ -216,9 +216,11 @@ def create_routes(server):
 
         if not client_id or response_type != "code":
             return render_message("Invalid Request", "Something went wrong. You may need to return to the previous application and make the request again.")
+
+        with DatabaseSession(logger) as session:
         
-        # TODO get application from client id
-        client = ClientApplication.get_by_id(client_id)            
+            # TODO get application from client id
+            client = ClientApplication.get_by_id(session, client_id)            
         
         return render_module("authorization", app = client, state = state)
 
@@ -252,7 +254,9 @@ def create_routes(server):
         if reports is None:
             return render_message("Report Definitions Missing", "You requested a report for a repo on this instance, but a definition for the report layout was not found.")
 
-        repo = Repo.get_by_id(id)
+        with DatabaseSession(logger) as db_session:
+
+            repo = Repo.get_by_id(db_session, id)
 
         return render_module("repo-info", reports=reports.keys(), images=reports, title="Repo", repo=repo, repo_id=id)
 

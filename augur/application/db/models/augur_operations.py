@@ -322,7 +322,7 @@ class User(Base):
                 session.add(user)
                 session.commit()
 
-                result = user.add_group(session, "default")
+                result = user.add_group("default")
                 if not result[0] and result[1]["status"] != "Group already exists":
                     return False, {"status": "Failed to add default group for the user"}
 
@@ -411,7 +411,9 @@ class User(Base):
 
     def add_repo(self, group_name, repo_url):
 
-        with DatabaseSession(logger) as session:
+        from augur.tasks.github.util.github_task_session import GithubTaskSession
+
+        with GithubTaskSession(logger) as session:
             result = UserRepo.add(session, repo_url, self.user_id, group_name)
 
         return result
@@ -425,7 +427,9 @@ class User(Base):
 
     def add_org(self, group_name, org_url):
 
-        with DatabaseSession(logger) as session:
+        from augur.tasks.github.util.github_task_session import GithubTaskSession
+
+        with GithubTaskSession(logger) as session:
             result = UserRepo.add_org_repos(session, org_url, self.user_id, group_name)
 
         return result
@@ -836,9 +840,6 @@ class UserSessionToken(Base):
         refresh_tokens = self.refresh_tokens
         for token in refresh_tokens:
             session.delete(token)
-        session.commit()
-
-        session.delete(self)
         session.commit()
 
 class ClientApplication(Base):
