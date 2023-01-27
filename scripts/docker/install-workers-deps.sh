@@ -10,4 +10,7 @@ do
 done
 
 # install nltk
-/opt/venv/bin/python -m nltk.downloader all
+# taken from ./scripts/install/nltk_dictionaries.sh
+for i in stopwords punkt popular universal_tagset ; do
+	/opt/venv/bin/python -m nltk.downloader $i
+done
