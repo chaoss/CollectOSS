@@ -8,7 +8,7 @@ import base64
 from typing import List, Any, Dict
 
 from augur.application.db.engine import DatabaseEngine
-from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User
+from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User, CollectionStatus
 from augur.application.db.models.augur_operations import retrieve_org_repos
 from augur.application.db.util import execute_session_query
 
@@ -94,6 +94,8 @@ class RepoLoadController:
                 return {"status": f"Invalid repo group id specified for {url}, skipping."}
 
             UserRepo.insert(self.session, repo_id)
+
+            CollectionStatus.insert(self.session, repo_id)
 
     def add_cli_org(self, org_name):
         """Add list of orgs and their repos to specified repo_groups

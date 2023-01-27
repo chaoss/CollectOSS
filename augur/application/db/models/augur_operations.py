@@ -729,11 +729,12 @@ class UserRepo(Base):
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
         result = UserRepo.insert(session, repo_id, group_id)
-
-        CollectionStatus.create(session, repo_id)
-
         if not result:
             return False, {"status": "repo_user insertion failed", "repo_url": url}
+
+        status = CollectionStatus.insert(session, repo_id)
+        if not status:
+            return False, {"status": "Failed to create status for repo", "repo_url": url}
 
         return True, {"status": "Repo Added", "repo_url": url}
 
@@ -932,10 +933,11 @@ class CollectionStatus(Base):
     repo = relationship("Repo")
 
     @staticmethod
-    def create(session, repo_id):
+    def insert(session, repo_id):
 
-        status = CollectionStatus(repo_id=repo_id)
-        session.add(status)
-        session.commit()
+        collection_status_unique = ["repo_id"]
+        result = session.insert_data({"repo_id": repo_id}, CollectionStatus, collection_status_unique, on_conflict_update=False)
+        if not result:
+            return False
 
-        return status
+        return True
