@@ -275,7 +275,7 @@ def augur_collection_monitor():
     #Get phase options from the config
     with DatabaseSession(logger, engine) as session:
 
-        max_repo_count = 500
+        max_repo_count = 1000
         days = 30
 
         config = AugurConfig(logger, session)
