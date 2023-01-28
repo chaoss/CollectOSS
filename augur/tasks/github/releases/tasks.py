@@ -5,15 +5,16 @@ from augur.application.db.util import execute_session_query
 import traceback
 
 @celery.task
-def collect_releases():
+def collect_releases(repo_git):
 
     logger = logging.getLogger(collect_releases.__name__)
     with GithubTaskSession(logger, engine) as session:
-        query = session.query(Repo)
-        repos = execute_session_query(query, 'all')
 
-        for repo in repos:
-            try:
-                releases_model(session, repo.repo_git, repo.repo_id)
-            except Exception as e:
-                logger.error(f"Could not collect releases for {repo.repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_obj = execute_session_query(query, 'one')
+        repo_id = repo_obj.repo_id
+
+        try:
+            releases_model(session, repo_git, repo_id)
+        except Exception as e:
+            logger.error(f"Could not collect releases for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
