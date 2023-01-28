@@ -73,6 +73,7 @@ def task_success(repo_git):
 
         collection_status.status = CollectionState.SUCCESS.value
         collection_status.data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        collection_status.task_id = None
 
         session.commit()
 
