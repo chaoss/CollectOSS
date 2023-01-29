@@ -63,6 +63,7 @@ class DatabaseSession(Session):
             self.engine_created = True
 
             self.engine = DatabaseEngine().engine
+            logger.info("ENGINE CREATE: Created engine in session")
 
         super().__init__(self.engine)
 
