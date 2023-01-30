@@ -248,6 +248,10 @@ class AugurTaskRoutine:
 
 @celery.task
 def non_repo_domain_tasks():
+
+    from augur.tasks.init.celery_app import engine
+
+
     logger = logging.getLogger(non_repo_domain_tasks.__name__)
 
     logger.info("Executing non-repo domain tasks")
