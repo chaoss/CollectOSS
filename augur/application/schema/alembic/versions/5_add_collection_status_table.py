@@ -39,6 +39,13 @@ def upgrade():
         repo_id = repo[0]
         conn.execute(text(f"""INSERT INTO "augur_operations"."collection_status" ("repo_id") VALUES ({repo_id});"""))
 
+    conn.execute(text("""
+        UPDATE augur_operations.config
+        SET value = '600'
+        WHERE section_name = 'Tasks'
+        AND setting_name = 'collection_interval';
+    """))
+
     # ### end Alembic commands ###
 
 
