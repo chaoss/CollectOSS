@@ -13,7 +13,7 @@ import datetime
 from sklearn.ensemble import IsolationForest
 import warnings
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, ChaossMetricStatus, RepoInsight, RepoInsightsRecord
@@ -25,6 +25,8 @@ warnings.filterwarnings('ignore')
 
 @celery.task
 def insight_model(repo_git: str) -> None:
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(insight_model.__name__)
 
@@ -98,46 +100,45 @@ def insight_model(repo_git: str) -> None:
         return
 
     """ Deletion of old insights """
-    with DatabaseEngine(connection_pool_size=1) as engine:
-        # Delete previous insights not in the anomaly_days param
-        min_date = datetime.datetime.now() - datetime.timedelta(days=anomaly_days)
-        logger.info("MIN DATE: {}\n".format(min_date))
-        logger.info("Deleting out of date records ...\n")
-        delete_record_SQL = s.sql.text("""
-            DELETE 
-                FROM
-                    repo_insights_records
-                WHERE
-                    repo_id = :repo_id
+    # Delete previous insights not in the anomaly_days param
+    min_date = datetime.datetime.now() - datetime.timedelta(days=anomaly_days)
+    logger.info("MIN DATE: {}\n".format(min_date))
+    logger.info("Deleting out of date records ...\n")
+    delete_record_SQL = s.sql.text("""
+        DELETE 
+            FROM
+                repo_insights_records
+            WHERE
+                repo_id = :repo_id
+                AND ri_date < :min_date
+    """)
+    result = engine.execute(delete_record_SQL, repo_id=repo_id, min_date=min_date)
+
+    logger.info("Deleting out of date data points ...\n")
+    delete_points_SQL = s.sql.text("""
+        DELETE 
+            FROM
+                repo_insights
+            USING (
+                SELECT ri_metric, ri_field 
+                FROM (
+                    SELECT * 
+                    FROM repo_insights
+                    WHERE ri_fresh = TRUE
+                    AND repo_id = :repo_id
                     AND ri_date < :min_date
-        """)
-        result = engine.execute(delete_record_SQL, repo_id=repo_id, min_date=min_date)
+                ) old_insights
+            ) to_delete
+            WHERE repo_insights.ri_metric = to_delete.ri_metric
+            AND repo_insights.ri_field = to_delete.ri_field
+    """)
+    result = engine.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
 
-        logger.info("Deleting out of date data points ...\n")
-        delete_points_SQL = s.sql.text("""
-            DELETE 
-                FROM
-                    repo_insights
-                USING (
-                    SELECT ri_metric, ri_field 
-                    FROM (
-                        SELECT * 
-                        FROM repo_insights
-                        WHERE ri_fresh = TRUE
-                        AND repo_id = :repo_id
-                        AND ri_date < :min_date
-                    ) old_insights
-                ) to_delete
-                WHERE repo_insights.ri_metric = to_delete.ri_metric
-                AND repo_insights.ri_field = to_delete.ri_field
-        """)
-        result = engine.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
-
-        # get table values to check for dupes later on
+    # get table values to check for dupes later on
 
 
-        table_values_sql = s.sql.text("""SELECT * FROM repo_insights_records WHERE repo_id={}""".format(repo_id))
-        insight_table_values = pd.read_sql(table_values_sql, engine, params={})
+    table_values_sql = s.sql.text("""SELECT * FROM repo_insights_records WHERE repo_id={}""".format(repo_id))
+    insight_table_values = pd.read_sql(table_values_sql, engine, params={})
 
     to_model_columns = df.columns[0:len(metrics) + 1]
 
@@ -307,6 +308,8 @@ def insight_model(repo_git: str) -> None:
 def confidence_interval_insights(logger):
     """ Anomaly detection method based on confidence intervals
     """
+
+    from augur.tasks.init.celery_app import engine
 
     # Update table of endpoints before we query them all
     logger.info("Discovering insights for task with entry info: {}".format(entry_info))
@@ -699,6 +702,9 @@ def confidence_interval(data, logger, timeperiod='week', confidence=.95, ):
     return m, m - h, m + h
 
 def update_metrics(api_host, api_port, tool_source, tool_version, logger):
+
+    from augur.tasks.init.celery_app import engine
+
     logger.info("Preparing to update metrics ...\n\n" +
                  "Hitting endpoint: http://{}:{}/api/unstable/metrics/status ...\n".format(
                      api_host, api_port))

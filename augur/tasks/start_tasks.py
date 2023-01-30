@@ -25,7 +25,7 @@ from augur.tasks.git.dependency_tasks.tasks import process_dependency_metrics
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.db.refresh_materialized_views import *
 # from augur.tasks.data_analysis import *
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from celery.result import allow_join_result
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
@@ -59,6 +59,9 @@ def collection_task_wrapper(self,*args,**kwargs):
 
 @celery.task
 def task_success(repo_git):
+
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(task_success.__name__)
 
     logger.info(f"Repo '{repo_git}' succeeded")
@@ -79,6 +82,9 @@ def task_success(repo_git):
 
 @celery.task
 def task_failed(request,exc,traceback):
+
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(task_failed.__name__)
     
     with DatabaseSession(logger,engine) as session:
@@ -267,7 +273,10 @@ def start_task():
 
 
 @celery.task
-def augur_collection_monitor():           
+def augur_collection_monitor():     
+
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(augur_collection_monitor.__name__)
 
     logger.info("Checking for repos to collect")

@@ -2,7 +2,7 @@ import time
 import logging
 import traceback
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
@@ -16,6 +16,8 @@ platform_id = 1
 
 @celery.task()
 def collect_events(repo_git: str):
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(collect_events.__name__)
     
@@ -46,6 +48,8 @@ def collect_events(repo_git: str):
 
 
 def retrieve_all_event_data(repo_git: str, logger):
+
+    from augur.tasks.init.celery_app import engine
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -78,6 +82,8 @@ def retrieve_all_event_data(repo_git: str, logger):
     return all_data        
 
 def process_events(events, task_name, repo_id, logger):
+
+    from augur.tasks.init.celery_app import engine
     
     tool_source = "Github events task"
     tool_version = "2.0"
