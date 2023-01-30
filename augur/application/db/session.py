@@ -51,7 +51,7 @@ def remove_null_characters_from_list_of_dicts(data_list, fields):
 
 class DatabaseSession(Session):
 
-    def __init__(self, logger, engine=None):
+    def __init__(self, logger, engine=None, from_msg=None):
     
         self.logger = logger
         self.engine = engine
@@ -63,6 +63,10 @@ class DatabaseSession(Session):
             self.engine_created = True
 
             self.engine = DatabaseEngine().engine
+            if from_msg:
+                logger.debug(f"ENGINE CREATE: {from_msg}")
+            else:
+                logger.debug(f"ENGINE CREATE")
 
         super().__init__(self.engine)
 

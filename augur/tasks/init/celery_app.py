@@ -11,6 +11,7 @@ from sqlalchemy import create_engine, event
 
 from augur.application.logs import TaskLogConfig
 from augur.application.db.session import DatabaseSession
+from augur.application.db.engine import DatabaseEngine
 from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
@@ -129,10 +130,10 @@ def setup_periodic_tasks(sender, **kwargs):
         The tasks so that they are grouped by the module they are defined in
     """
     from augur.tasks.start_tasks import augur_collection_monitor
+    from augur.tasks.start_tasks import non_repo_domain_tasks
 
-    create_collection_status(logger)
     
-    with DatabaseSession(logger) as session:
+    with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
 
         config = AugurConfig(logger, session)
 
@@ -184,7 +185,7 @@ def init_eventlet_worker(**kwargs):
 
     from augur.application.db.engine import DatabaseEngine
 
-    engine = DatabaseEngine().engine
+    engine = DatabaseEngine(pool_size=40, max_overflow=50, pool_timeout=60).engine
     logger.info(f"Creating database engine for worker. Engine: {id(engine)}")
 
 @eventlet_pool_postshutdown.connect

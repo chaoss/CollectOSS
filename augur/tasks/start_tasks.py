@@ -30,6 +30,7 @@ from celery.result import allow_join_result
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
+from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
 from logging import Logger
 from enum import Enum
@@ -119,7 +120,7 @@ def prelim_phase(repo_git):
 
     logger = logging.getLogger(prelim_phase.__name__)
     job = None
-    with DatabaseSession(logger) as session:
+    with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_obj = execute_session_query(query, 'one')
 
@@ -141,7 +142,7 @@ def repo_collect_phase(repo_git):
     np_clustered_array = []
 
     #A chain is needed for each repo.
-    with DatabaseSession(logger) as session:
+    with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_obj = execute_session_query(query, 'one')
         repo_git = repo_obj.repo_git
