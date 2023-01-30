@@ -123,7 +123,6 @@ def prelim_phase(repo_git):
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_obj = execute_session_query(query, 'one')
 
-        #TODO: if repo has moved mark it as pending. 
         job = detect_github_repo_move.si(repo_obj.repo_git)
 
         
@@ -171,9 +170,7 @@ def repo_collect_phase(repo_git):
         return repo_task_group
 
 
-DEFINED_COLLECTION_PHASES = [prelim_phase, repo_collect_phase]
-if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
-    DEFINED_COLLECTION_PHASES.append(machine_learning_phase)
+DEFINED_PHASES_PER_REPO = [prelim_phase, repo_collect_phase]
 
 
 class AugurTaskRoutine:
@@ -255,8 +252,27 @@ def non_repo_domain_tasks():
 
     logger.info("Executing non-repo domain tasks")
 
-    tasks = group(
-        generate_non_repo_domain_facade_tasks(logger)
+    enabled_phase_names = []
+    with DatabaseSession(logger, engine) as session:
+
+        max_repo_count = 500
+        days = 30
+
+        config = AugurConfig(logger, session)
+        phase_options = config.get_section("Task_Routine")
+
+        #Get list of enabled phases 
+        enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
+
+    enabled_tasks = []
+
+    enabled_tasks.extend(generate_non_repo_domain_facade_tasks(logger))
+
+    if machine_learning_phase.__name__ in enabled_phase_names:
+        enabled_tasks.append(machine_learning_phase.si())
+
+    tasks = chain(
+        *enabled_tasks
     )
 
     tasks.apply_async()
@@ -283,7 +299,7 @@ def augur_collection_monitor():
 
         #Get list of enabled phases 
         enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
-        enabled_phases = [phase for phase in DEFINED_COLLECTION_PHASES if phase.__name__ in enabled_phase_names]
+        enabled_phases = [phase for phase in DEFINED_PHASES_PER_REPO if phase.__name__ in enabled_phase_names]
         
         active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.COLLECTING.value).all())
 

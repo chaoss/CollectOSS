@@ -612,4 +612,4 @@ def generate_non_repo_domain_facade_tasks(logger):
         if not limited_run or (limited_run and rebuild_caches):
             facade_sequence.append(rebuild_unknown_affiliation_and_web_caches_facade_task.si().on_error(facade_error_handler.s()))#rebuild_unknown_affiliation_and_web_caches(session.cfg)
         
-        return chain(*facade_sequence)
+        return facade_sequence
