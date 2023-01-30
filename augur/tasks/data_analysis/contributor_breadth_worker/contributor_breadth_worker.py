@@ -3,7 +3,7 @@ import logging, json
 import pandas as pd
 import sqlalchemy as s
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.application.db.models import ContributorRepo
@@ -25,6 +25,8 @@ from augur.application.db.engine import DatabaseEngine
 @celery.task
 def contributor_breadth_model() -> None:
 
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(contributor_breadth_model.__name__)
 
     tool_source = 'Contributor Breadth Worker'
@@ -43,8 +45,8 @@ def contributor_breadth_model() -> None:
         WHERE gh_login IS NOT NULL
     """)
 
-    with DatabaseEngine(connection_pool_size=1) as engine:
-        current_cntrb_logins = json.loads(pd.read_sql(cntrb_login_query, engine, params={}).to_json(orient="records"))
+    
+    current_cntrb_logins = json.loads(pd.read_sql(cntrb_login_query, engine, params={}).to_json(orient="records"))
 
     ## We need a list of all contributors so we can iterate through them to gather events
     ## We need a list of event ids to avoid insertion of duplicate events. We ignore the event

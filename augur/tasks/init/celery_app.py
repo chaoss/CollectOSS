@@ -1,5 +1,5 @@
 """Defines the Celery app."""
-from celery.signals import worker_process_init, worker_process_shutdown
+from celery.signals import worker_process_init, worker_process_shutdown, eventlet_pool_started, eventlet_pool_preshutdown, eventlet_pool_postshutdown
 import logging
 from typing import List, Dict
 import os
@@ -160,4 +160,23 @@ def shutdown_worker(**kwargs):
     if engine:
         logger.info('Closing database connectionn for worker')
         engine.dispose()
+
+
+@eventlet_pool_started.connect
+def init_eventlet_worker(**kwargs):
+
+    global engine
+
+    from augur.application.db.engine import DatabaseEngine
+
+    engine = DatabaseEngine().engine
+    logger.info(f"Creating database engine for worker. Engine: {id(engine)}")
+
+@eventlet_pool_postshutdown.connect
+def shutdown_eventlet_worker(**kwargs):
+    global engine
+    if engine:
+        logger.info(f'Closing database connectionn for worker. Engine {id(engine)}')
+        engine.dispose()
+
 

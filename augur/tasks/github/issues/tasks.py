@@ -6,7 +6,7 @@ import re
 from sqlalchemy.exc import IntegrityError
 
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
@@ -21,9 +21,11 @@ development = get_development_flag()
 @celery.task()
 def collect_issues(repo_git : str) -> None:
 
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(collect_issues.__name__)
     
-    with DatabaseSession(logger, engine) as session:
+    with GithubTaskSession(logger, engine) as session:
 
         try:
         
@@ -47,6 +49,8 @@ def collect_issues(repo_git : str) -> None:
 
 
 def retrieve_all_issue_data(repo_git, logger) -> None:
+
+    from augur.tasks.init.celery_app import engine
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -85,6 +89,8 @@ def retrieve_all_issue_data(repo_git, logger) -> None:
     return all_data
     
 def process_issues(issues, task_name, repo_id, logger) -> None:
+
+    from augur.tasks.init.celery_app import engine
     
     # get repo_id or have it passed
     tool_source = "Issue Task"

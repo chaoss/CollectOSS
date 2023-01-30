@@ -8,7 +8,7 @@ import sqlalchemy as s
 
 from augur.tasks.data_analysis.message_insights.message_sentiment import get_senti_score
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, PullRequestAnalysis
@@ -23,6 +23,8 @@ ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.d
 
 @celery.task
 def pull_request_analysis_model(repo_git: str) -> None:
+
+    from augur.tasks.init.celery_app import engine 
 
     logger = logging.getLogger(pull_request_analysis_model.__name__)
 
@@ -65,8 +67,7 @@ def pull_request_analysis_model(repo_git: str) -> None:
         and pr_src_state like 'open' 
     """)
 
-    with DatabaseEngine(connection_pool_size=1) as engine:
-        df_pr = pd.read_sql_query(pr_SQL, engine, params={'begin_date': begin_date, 'repo_id': repo_id})
+    df_pr = pd.read_sql_query(pr_SQL, engine, params={'begin_date': begin_date, 'repo_id': repo_id})
 
     logger.info(f'PR Dataframe dim: {df_pr.shape}\n')
 
@@ -98,16 +99,14 @@ def pull_request_analysis_model(repo_git: str) -> None:
             left outer join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
             left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id where issue_message_ref.repo_id = :repo_id""")
 
-    with DatabaseEngine(connection_pool_size=1) as engine:
-        df_message = pd.read_sql_query(messages_SQL, engine, params={'repo_id': repo_id})
+    df_message = pd.read_sql_query(messages_SQL, engine, params={'repo_id': repo_id})
 
     logger.info(f'Mapping messages to PR, find comment & participants counts')
 
     # Map PR to its corresponding messages
     
-    with DatabaseEngine(connection_pool_size=1) as engine:
-        pr_ref_sql = s.sql.text("select * from augur_data.pull_request_message_ref")
-        df_pr_ref = pd.read_sql_query(pr_ref_sql, engine)
+    pr_ref_sql = s.sql.text("select * from augur_data.pull_request_message_ref")
+    df_pr_ref = pd.read_sql_query(pr_ref_sql, engine)
     df_merge = pd.merge(df_pr, df_pr_ref, on='pull_request_id', how='left')
     df_merge = pd.merge(df_merge, df_message, on='msg_id', how='left')
     df_merge = df_merge.dropna(subset=['msg_id'], axis=0)
@@ -156,12 +155,11 @@ def pull_request_analysis_model(repo_git: str) -> None:
     logger.info(f'Fetching repo statistics')
 
     # Get repo info
-    with DatabaseEngine(connection_pool_size=1) as engine:
-        repo_sql = s.sql.text("""
-                SELECT repo_id, pull_requests_merged, pull_request_count,watchers_count, last_updated FROM 
-                augur_data.repo_info where repo_id = :repo_id
-                """)
-        df_repo = pd.read_sql_query(repo_sql, engine, params={'repo_id': repo_id})
+    repo_sql = s.sql.text("""
+            SELECT repo_id, pull_requests_merged, pull_request_count,watchers_count, last_updated FROM 
+            augur_data.repo_info where repo_id = :repo_id
+            """)
+    df_repo = pd.read_sql_query(repo_sql, engine, params={'repo_id': repo_id})
 
     df_repo = df_repo.loc[df_repo.groupby('repo_id').last_updated.idxmax(), :]
     df_repo = df_repo.drop(['last_updated'], axis=1)
