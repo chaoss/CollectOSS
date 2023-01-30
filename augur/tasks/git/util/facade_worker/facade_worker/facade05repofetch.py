@@ -297,7 +297,7 @@ def git_repo_updates(session,repo_git):
 
     #query = s.sql.text("""SELECT repo_id,repo_group_id,repo_git,repo_name,repo_path FROM repo WHERE
     #    repo_status='Update'""")
-    query = query = session.query(Repo).filter(
+    query = session.query(Repo).filter(
 		Repo.repo_git == repo_git,Repo.repo_status == 'Update')
     result = execute_session_query(query, 'all')
 

@@ -14,6 +14,7 @@ from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
+from augur.application.db.models import CollectionStatus
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,18 @@ def split_tasks_into_groups(augur_tasks: List[str]) -> Dict[str, List[str]]:
     
     return grouped_tasks
 
+def create_collection_status(logger):
+
+    with DatabaseSession(logger) as session:
+        query = s.sql.text("""
+        SELECT repo_id FROM repo where repo_id NOT IN (SELECT repo_id FROM augur_operations.collection_status)
+        """)
+
+        repos = session.execute_sql(query).fetchall()
+
+        for repo in repos:
+            CollectionStatus.insert(session,repo[0])
+
 
 @celery_app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
@@ -117,6 +130,8 @@ def setup_periodic_tasks(sender, **kwargs):
     """
     from augur.tasks.start_tasks import augur_collection_monitor
 
+    create_collection_status(logger)
+    
     with DatabaseSession(logger) as session:
 
         config = AugurConfig(logger, session)
