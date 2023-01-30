@@ -53,8 +53,6 @@ class DatabaseSession(Session):
 
     def __init__(self, logger, engine=None):
     
-        logger.info(f"Engine passed to session: {engine}")
-
         self.logger = logger
         self.engine = engine
         self.engine_created = False
@@ -65,7 +63,6 @@ class DatabaseSession(Session):
             self.engine_created = True
 
             self.engine = DatabaseEngine().engine
-            logger.info("ENGINE CREATE: Created engine in session")
 
         super().__init__(self.engine)
 
