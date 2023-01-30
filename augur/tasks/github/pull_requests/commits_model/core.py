@@ -4,7 +4,6 @@ import traceback
 import sqlalchemy as s
 from augur.application.db.data_parse import *
 from augur.application.db.session import DatabaseSession
-from augur.tasks.init.celery_app import engine
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.application.db.models import *
@@ -13,6 +12,8 @@ from augur.application.db.util import execute_session_query
 
 
 def pull_request_commits_model(repo_id,logger):
+
+    from augur.tasks.init.celery_app import engine
     
     # query existing PRs and the respective url we will append the commits url to
     pr_url_sql = s.sql.text("""
