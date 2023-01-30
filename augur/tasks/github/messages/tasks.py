@@ -1,6 +1,7 @@
 import time
 import logging
 
+import traceback
 
 from augur.tasks.init.celery_app import celery_app as celery, engine
 from augur.application.db.data_parse import *

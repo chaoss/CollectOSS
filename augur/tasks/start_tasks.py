@@ -73,6 +73,7 @@ def task_success(repo_git):
 
         collection_status.status = CollectionState.SUCCESS.value
         collection_status.data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        collection_status.task_id = None
 
         session.commit()
 
@@ -158,6 +159,7 @@ def repo_collect_phase(repo_git):
             repo_info_task,
             chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
             chain(generate_facade_chain(logger,repo_git),process_dependency_metrics.si(repo_git)),
+            collect_releases.si(repo_git)
         )
 
         return repo_task_group
@@ -248,8 +250,7 @@ def non_repo_domain_tasks():
     logger.info("Executing non-repo domain tasks")
 
     tasks = group(
-        generate_non_repo_domain_facade_tasks(logger),
-        collect_releases.si()
+        generate_non_repo_domain_facade_tasks(logger)
     )
 
     tasks.apply_async()

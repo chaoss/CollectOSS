@@ -22,6 +22,8 @@ def collect_pull_requests(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
+    logger.info(f"Celery engine: {engine}")
+
     with DatabaseSession(logger, engine) as session:
 
     
