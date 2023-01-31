@@ -103,17 +103,7 @@ def split_tasks_into_groups(augur_tasks: List[str]) -> Dict[str, List[str]]:
     
     return grouped_tasks
 
-def create_collection_status(logger):
 
-    with DatabaseSession(logger) as session:
-        query = s.sql.text("""
-        SELECT repo_id FROM repo where repo_id NOT IN (SELECT repo_id FROM augur_operations.collection_status)
-        """)
-
-        repos = session.execute_sql(query).fetchall()
-
-        for repo in repos:
-            CollectionStatus.insert(session,repo[0])
 
 
 @celery_app.on_after_finalize.connect
@@ -131,7 +121,6 @@ def setup_periodic_tasks(sender, **kwargs):
     """
     from augur.tasks.start_tasks import augur_collection_monitor
     from augur.tasks.start_tasks import non_repo_domain_tasks
-
     
     with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
 
@@ -140,12 +129,6 @@ def setup_periodic_tasks(sender, **kwargs):
         collection_interval = config.get_value('Tasks', 'collection_interval')
         logger.info(f"Scheduling collection every {collection_interval/60} minutes")
         sender.add_periodic_task(collection_interval, augur_collection_monitor.s())
-
-        #Do longer tasks less often
-        non_domain_collection_interval = collection_interval * 5
-        logger.info(f"Scheduling non-repo-domain collection every {non_domain_collection_interval/60} minutes")
-        sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks().s)
-
 
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
