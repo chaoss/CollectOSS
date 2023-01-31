@@ -115,7 +115,7 @@ def start(disable_collection, development, port):
         logger.info("Collection disabled")   
     
     try:
-        server.wait()
+        worker_1_process.wait()
     except KeyboardInterrupt:
         
         if server:
