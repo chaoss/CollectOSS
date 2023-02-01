@@ -63,6 +63,9 @@ def create_routes(server):
         db_session = DatabaseSession(logger)
 
         user = User.get_user(db_session, user_id)
+        if not user:
+            return None
+
         groups = user.groups
         tokens = user.tokens
         applications = user.applications
@@ -74,8 +77,6 @@ def create_routes(server):
             application = token.application
         db_session.expunge(user)
 
-        if not user:
-            return None
 
         # The flask_login library sets a unique session["_id"]
         # when login_user() is called successfully
