@@ -19,7 +19,7 @@ from collections import OrderedDict
 from textblob import TextBlob
 from collections import Counter
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, RepoClusterMessage, RepoTopic, TopicWord
@@ -33,6 +33,8 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 
 @celery.task
 def clustering_model(repo_git: str) -> None:
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(clustering_model.__name__)
 

@@ -111,9 +111,11 @@ class FacadeSession(GithubTaskSession):
         create_xlsx_summary_files (int): toggles whether to create excel summary files
     """
     def __init__(self,logger: Logger):
+
+        from augur.tasks.init.celery_app import engine
         #self.cfg = FacadeConfig(logger)
         self.repos_processed = 0
-        super().__init__(logger=logger)
+        super().__init__(logger=logger, engine=engine)
         # Figure out what we need to do
         
         worker_options = AugurConfig(logger, self).get_section("Facade")

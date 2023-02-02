@@ -10,9 +10,11 @@ from augur.application.db.util import execute_session_query
 def process_dependency_metrics(repo_git_identifiers):
     #raise NotImplementedError
 
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(process_dependency_metrics.__name__)
 
-    session = DatabaseSession(logger)
+    session = DatabaseSession(logger, engine)
 
     for repo_git in repo_git_identifiers:
         query = session.query(Repo).filter(Repo.repo_git == repo_git)

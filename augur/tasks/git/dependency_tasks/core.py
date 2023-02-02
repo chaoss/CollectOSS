@@ -6,7 +6,6 @@ import traceback
 from augur.application.db.data_parse import *
 from augur.application.db.models import *
 from augur.application.db.session import DatabaseSession
-from augur.tasks.init.celery_app import engine
 from augur.application.config import AugurConfig
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
@@ -16,6 +15,7 @@ def generate_deps_data(session, repo_id, path):
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
+        
         session.logger.info('Searching for deps in repo')
         session.logger.info(f'Repo ID: {repo_id}, Path: {path}')
 

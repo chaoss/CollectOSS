@@ -52,9 +52,14 @@ def get_database_string() -> str:
 
 class DatabaseEngine():
 
-    def __init__(self, connection_pool_size=5):
+    def __init__(self, **kwargs):
 
-        self._engine = self.create_database_engine(connection_pool_size)
+        pool_size = kwargs.get("connection_pool_size")
+        if pool_size:
+            del kwargs["connection_pool_size"]
+            kwargs["pool_size"] = pool_size
+
+        self._engine = self.create_database_engine(**kwargs)
 
 
     def __enter__(self):
@@ -73,7 +78,7 @@ class DatabaseEngine():
         return self._engine
 
 
-    def create_database_engine(self, connection_pool_size):  
+    def create_database_engine(self, **kwargs):  
         """Create sqlalchemy database engine 
 
         Note:
@@ -90,13 +95,7 @@ class DatabaseEngine():
 
         db_conn_string = get_database_string()
 
-        if connection_pool_size == 1:
-            engine = create_engine(db_conn_string, poolclass=NullPool)
-
-        elif connection_pool_size < 0:
-            raise Exception(f"Invalid Pool Size: {connection_pool_size}")
-        else:
-            engine = create_engine(db_conn_string, pool_size=connection_pool_size)
+        engine = create_engine(db_conn_string, **kwargs)
 
         @event.listens_for(engine, "connect", insert=True)
         def set_search_path(dbapi_connection, connection_record):

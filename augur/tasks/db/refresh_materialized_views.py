@@ -4,12 +4,14 @@ import sqlalchemy as s
 from celery import signature
 from celery import group, chain, chord, signature
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 
 
 @celery.task
 def refresh_materialized_views():
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(refresh_materialized_views.__name__)
 

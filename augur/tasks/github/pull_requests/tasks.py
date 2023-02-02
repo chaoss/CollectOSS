@@ -3,7 +3,7 @@ import logging
 import traceback
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
@@ -19,6 +19,10 @@ platform_id = 1
 
 @celery.task
 def collect_pull_requests(repo_git_identifiers: [str]) -> None:
+
+    from augur.tasks.init.celery_app import engine
+
+    print(f"Eventlet engine id: {id(engine)}")
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
@@ -44,6 +48,10 @@ def collect_pull_requests(repo_git_identifiers: [str]) -> None:
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
 def retrieve_all_pr_data(repo_git: str, logger) -> None:
+
+    from augur.tasks.init.celery_app import engine
+
+    print(f"Eventlet engine id: {id(engine)}")
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -79,6 +87,8 @@ def retrieve_all_pr_data(repo_git: str, logger) -> None:
 
     
 def process_pull_requests(pull_requests, task_name, repo_id, logger):
+
+    from augur.tasks.init.celery_app import engine
 
     tool_source = "Pr Task"
     tool_version = "2.0"
@@ -214,6 +224,8 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
 
 @celery.task
 def pull_request_review_comments(repo_git: str) -> None:
+    
+    from augur.tasks.init.celery_app import engine
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -307,6 +319,8 @@ def pull_request_review_comments(repo_git: str) -> None:
 # do this task after others because we need to add the multi threading like we did it before
 @celery.task
 def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(pull_request_reviews.__name__)
 

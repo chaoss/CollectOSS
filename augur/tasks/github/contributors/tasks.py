@@ -2,7 +2,7 @@ import time
 import logging
 
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
@@ -13,6 +13,8 @@ from augur.application.db.util import execute_session_query
 
 @celery.task
 def process_contributors():
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(process_contributors.__name__)
 

@@ -1,12 +1,14 @@
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.repo_info.core import *
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.util import execute_session_query
 import traceback
 
 @celery.task
 def collect_repo_info(repo_git_identifiers: [str]):
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(collect_repo_info.__name__)
 

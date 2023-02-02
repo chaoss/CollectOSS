@@ -1,8 +1,9 @@
 import time
 import logging
 
+import traceback
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
@@ -19,6 +20,8 @@ platform_id = 1
 
 @celery.task
 def collect_github_messages(repo_git_identifiers: [str]) -> None:
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(collect_github_messages.__name__)
 
@@ -44,6 +47,8 @@ def collect_github_messages(repo_git_identifiers: [str]) -> None:
 
 
 def retrieve_all_pr_and_issue_messages(repo_git: str, logger) -> None:
+
+    from augur.tasks.init.celery_app import engine
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -84,6 +89,8 @@ def retrieve_all_pr_and_issue_messages(repo_git: str, logger) -> None:
     
 
 def process_messages(messages, task_name, repo_id, logger):
+
+    from augur.tasks.init.celery_app import engine
 
     tool_source = "Pr comment task"
     tool_version = "2.0"

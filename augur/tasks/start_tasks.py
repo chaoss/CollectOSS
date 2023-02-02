@@ -24,12 +24,12 @@ from augur.tasks.git.dependency_tasks.tasks import process_dependency_metrics
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.db.refresh_materialized_views import *
 # from augur.tasks.data_analysis import *
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from celery.result import allow_join_result
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
-from augur.tasks.init.celery_app import engine
+from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
 from logging import Logger
 
@@ -42,8 +42,8 @@ CELERY_CHAIN_TYPE = type(chain())
 def prelim_phase():
 
     logger = logging.getLogger(prelim_phase.__name__)
-    
-    with DatabaseSession(logger) as session:
+    job = None
+    with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
         query = session.query(Repo)
         repos = execute_session_query(query, 'all')
         repo_git_list = [repo.repo_git for repo in repos]
@@ -65,10 +65,9 @@ def repo_collect_phase():
     np_clustered_array = []
 
     #A chain is needed for each repo.
-    with DatabaseSession(logger) as session:
+    with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
         query = session.query(Repo)
         repos = execute_session_query(query, 'all')
-
 
         all_repo_git_identifiers = [repo.repo_git for repo in repos]
         #Cluster each repo in groups of 80.
@@ -204,6 +203,8 @@ class AugurTaskRoutine:
 
 @celery.task
 def start_task():
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(start_task.__name__)
 

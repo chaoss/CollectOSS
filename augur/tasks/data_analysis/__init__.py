@@ -14,10 +14,11 @@ def machine_learning_phase():
     from augur.tasks.data_analysis.message_insights.tasks import message_insight_model
     from augur.tasks.data_analysis.pull_request_analysis_worker.tasks import pull_request_analysis_model
 
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(machine_learning_phase.__name__)
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
         query = session.query(Repo)
         repos = execute_session_query(query, 'all')
 

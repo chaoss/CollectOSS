@@ -1,12 +1,16 @@
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.detect_move.core import *
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.util import execute_session_query
+import traceback
 
 
 
-@celery.task
-def detect_github_repo_move(repo_git_identifiers : [str]) -> None:
+@celery.task()
+def detect_github_repo_move(repo_git_identifiers : str) -> None:
+
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(detect_github_repo_move.__name__)
 
     logger.info(f"Starting repo_move operation with {repo_git_identifiers}")

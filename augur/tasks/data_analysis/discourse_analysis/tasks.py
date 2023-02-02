@@ -6,7 +6,7 @@ import re
 import nltk
 from collections import Counter
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, DiscourseInsight
 from augur.application.db.engine import DatabaseEngine
@@ -33,6 +33,8 @@ DISCOURSE_ANALYSIS_DIR = "augur/tasks/data_analysis/discourse_analysis/"
 
 @celery.task
 def discourse_analysis_model(repo_git: str) -> None:
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(discourse_analysis_model.__name__)
 
@@ -64,8 +66,7 @@ def discourse_analysis_model(repo_git: str) -> None:
             """)
 
     # result = db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
-    with DatabaseEngine(connection_pool_size=1) as engine:
-        msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, engine, params={"repo_id": repo_id})
+    msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, engine, params={"repo_id": repo_id})
     msg_df_cur_repo = msg_df_cur_repo.sort_values(by=['thread_id']).reset_index(drop=True)
     logger.info(msg_df_cur_repo.head())
 
