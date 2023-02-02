@@ -59,7 +59,7 @@ celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tas
 
 # define the queues that tasks will be put in (by default tasks are put in celery queue)
 celery_app.conf.task_routes = {
-    'augur.tasks.git.facade_tasks.*': {'queue': 'cpu'}
+    'augur.tasks.start_tasks.*': {'queue': 'scheduling'}
 }
 
 #Setting to be able to see more detailed states of running tasks
@@ -137,6 +137,8 @@ def setup_periodic_tasks(sender, **kwargs):
 
         config = AugurConfig(logger, session)
 
+        print(augur_collection_monitor)
+
         collection_interval = config.get_value('Tasks', 'collection_interval')
         logger.info(f"Scheduling collection every {collection_interval/60} minutes")
         sender.add_periodic_task(collection_interval, augur_collection_monitor.s())
@@ -144,7 +146,7 @@ def setup_periodic_tasks(sender, **kwargs):
         #Do longer tasks less often
         non_domain_collection_interval = collection_interval * 5
         logger.info(f"Scheduling non-repo-domain collection every {non_domain_collection_interval/60} minutes")
-        sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks().s)
+        sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks.s())
 
 
 @after_setup_logger.connect
@@ -186,7 +188,7 @@ def init_eventlet_worker(**kwargs):
     from augur.application.db.engine import DatabaseEngine
 
     engine = DatabaseEngine(pool_size=40, max_overflow=50, pool_timeout=60).engine
-    logger.info(f"Creating database engine for worker. Engine: {id(engine)}")
+    logger.info(f"Creating database engine for eventlet worker. Engine: {id(engine)}")
 
 @eventlet_pool_postshutdown.connect
 def shutdown_eventlet_worker(**kwargs):
