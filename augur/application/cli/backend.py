@@ -26,9 +26,24 @@ from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.cli import test_connection, test_db_connection 
+import sqlalchemy as s
 
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
+
+
+def create_collection_status(logger):
+
+    with DatabaseSession(logger) as session:
+        query = s.sql.text("""
+        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.collection_status)
+        """)
+
+        repos = session.execute_sql(query).fetchall()
+
+        for repo in repos:
+            CollectionStatus.insert(session,repo[0])
+
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
@@ -93,6 +108,8 @@ def start(disable_collection, development, port):
 
         cpu_worker_process = subprocess.Popen(cpu_worker.split(" "))
         time.sleep(5)
+
+        create_collection_status(logger)
 
         with DatabaseSession(logger) as session:
             collection_status_list = session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.COLLECTING.value)
