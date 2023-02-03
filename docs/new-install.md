@@ -100,7 +100,30 @@ If your setup of rabbitmq is successful your broker url should look like this:
 
 **During Augur installation, you will be prompted for this broker_url**
 
+##  Proxying Augur through Nginx
+Assumes nginx is installed. 
 
+Then you create a file for the server you want Augur to run under in the location of your `sites-enabled` directory for nginx (In this example, Augur is running on port 5038: 
+
+```
+server {
+        listen 80;
+        server_name  zoo.chaoss.tv;
+
+        location /api/unstable/ {
+                proxy_pass http://zoo.chaoss.tv:5038;
+                proxy_set_header Host $host;
+        }
+
+	location / {
+		proxy_pass http://127.0.0.1:5038;
+	}
+
+        error_log /var/log/nginx/augurview.osshealth.error.log;
+        access_log /var/log/nginx/augurview.osshealth.access.log;
+
+}
+```
 
 ## Installing and Configuring Augur!
 Create a Python Virtual Environment `python3 -m venv ~/virtual-env-directory` 
