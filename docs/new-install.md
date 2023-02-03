@@ -96,7 +96,7 @@ NOTE: it is important to have a static hostname when using rabbitmq as it uses h
 
 If your setup of rabbitmq is successful your broker url should look like this:
 
-**`broker_url = 'amqp://augur:password123@localhost:5672/augur_vhost'`**
+**broker_url = `amqp://augur:password123@localhost:5672/augur_vhost`**
 
 **During Augur installation, you will be prompted for this broker_url**
 
