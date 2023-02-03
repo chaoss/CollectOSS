@@ -138,7 +138,9 @@ When data collection is complete you will see only a single task running in your
 ## Accessing Repo Addition and Visualization Front End
 Your Augur intance will now be available at http://hostname.io:port_number
 
-For example: http://chaoss.tv:5038
+For example: http://chaoss.tv:5038 
+
+Note: Augur will run on port 5000 by default (you probably need to change that in augur_operations.config for OSX)
 
 ## Stopping your Augur Instance
 You can stop augur with `augur backend stop`, followed by `augur backend kill`. We recommend waiting 5 minutes between commands so Augur can shutdown more gently. There is no issue with data integrity if you issue them seconds apart, its just that stopping is nicer than killing. 
