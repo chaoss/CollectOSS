@@ -135,6 +135,11 @@ Start Augur: `(nohup augur backend start &)`
 
 When data collection is complete you will see only a single task running in your flower Dashboard.
 
+## Accessing Repo Addition and Visualization Front End
+Your Augur intance will now be available at http://hostname.io:port_number
+
+For example: http://chaoss.tv:5038
+
 ## Stopping your Augur Instance
 You can stop augur with `augur backend stop`, followed by `augur backend kill`. We recommend waiting 5 minutes between commands so Augur can shutdown more gently. There is no issue with data integrity if you issue them seconds apart, its just that stopping is nicer than killing. 
 
