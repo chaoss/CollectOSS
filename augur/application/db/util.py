@@ -7,12 +7,16 @@ def catch_operational_error(func):
 
     attempts = 0
     error = None
+    timeout = 240
+
     while attempts < 4:
 
         # do the sleep here instead of instead of in the exception 
         # so it doesn't sleep after the last failed time
         if attempts > 0:
-            time.sleep(240)
+            #Do a 30% exponential backoff
+            time.sleep(timeout)
+            timeout = int(timeout * 1.3)
         try:
             return func()
         except OperationalError as e:
