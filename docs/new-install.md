@@ -86,9 +86,9 @@ exit
 ## Rabbitmq Broker Configuration
 You have to setup a specific user, and broker host for your augur instance. You can accomplish this by running the below commands:
 ```shell
-sudo rabbitmqctl add_user augur password123
-sudo rabbitmqctl add_vhost augur_vhost
-sudo rabbitmqctl set_user_tags augur augurTag
+sudo rabbitmqctl add_user augur password123 ||
+sudo rabbitmqctl add_vhost augur_vhost &&
+sudo rabbitmqctl set_user_tags augur augurTag &&
 sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
 ```
 
