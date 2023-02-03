@@ -43,7 +43,7 @@ from .facade02utilitymethods import update_repo_log, trim_commit, store_working_
 # else:
 #   import MySQLdb
 
-def nuke_affiliations(session):
+def nuke_affiliations(session, repo_id_list):
 
 # Delete all stored affiliations in the database. Normally when you
 # add/remove/change affiliation data via the web UI, any potentially affected
@@ -56,7 +56,8 @@ def nuke_affiliations(session):
     session.log_activity('Info','Nuking affiliations')
 
     nuke = s.sql.text("""UPDATE commits SET cmt_author_affiliation = NULL,
-            cmt_committer_affiliation = NULL""")
+            cmt_committer_affiliation = NULL
+            WHERE repo_id IN :values""").bindparams(values=tuple(repo_id_list))
 
     session.execute_sql(nuke)
 
