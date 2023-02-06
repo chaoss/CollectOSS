@@ -9,9 +9,7 @@ import pandas as pd
 from augur.api.util import register_metric
 import uuid 
 
-from augur.application.db.engine import DatabaseEngine
-
-engine = DatabaseEngine(connection_pool_size=1).engine
+from ..server import engine
 
 @register_metric()
 def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):

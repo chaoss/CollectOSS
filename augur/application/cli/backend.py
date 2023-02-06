@@ -70,16 +70,14 @@ def start(disable_collection, development, port):
         
     db_session.invalidate()
 
-    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} --preload augur.api.server:app"
+    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app"
     server = subprocess.Popen(gunicorn_command.split(" "))
 
     time.sleep(3)
     logger.info('Gunicorn webserver started...')
     logger.info(f'Augur is running at: http://127.0.0.1:{port}')
 
-    worker_1_process = None
-    cpu_worker_process = None
-    celery_beat_process = None
+    worker_process = None
     if not disable_collection:
 
         if os.path.exists("celerybeat-schedule.db"):
@@ -110,10 +108,6 @@ def start(disable_collection, development, port):
         if worker_process:
             logger.info("Shutting down celery process")
             worker_process.terminate()
-
-        if celery_beat_process:
-            logger.info("Shutting down celery beat process")
-            celery_beat_process.terminate()
 
         try:
             clear_redis_caches()
