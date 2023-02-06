@@ -67,6 +67,23 @@ Contributors
 - `Ivana Atanasova <https://github.com/ivanayov/>`_
 - `Georg J.P. Link <https://github.com/GeorgLink/>`_
 
+GSoC 2022 participants
+-----------------------
+- `Kaxada <https://github.com/kaxada>`_
+- `Mabel F <https://github.com/mabelbot>`_
+- `Priya Srivastava <https://github.com/Priya730>`_
+- `Ramya Kappagantu <https://github.com/RamyaKappagantu>`_
+- `Yash Prakash <https://gist.github.com/yash-yp>`_
+
+GSoC 2021 participants
+-----------------------
+- `Dhruv Sachdev <https://github.com/Dhruv-Sachdev1313>`_
+- `Rashmi K A <https://github.com/Rashmi-K-A>`_
+- `Yash Prakash <https://github.com/yash2002109/>`_
+- `Anuj Lamoria <https://github.com/anujlamoria/>`_
+- `Yeming Gu <https://github.com/gymgym1212/>`_
+- `Ritik Malik <https://gist.github.com/ritik-malik>`_
+
 GSoC 2020 participants
 -----------------------
 - `Akshara P <https://github.com/aksh555/>`_
