@@ -78,7 +78,7 @@ def repo_collect_phase():
         logger.info(f"Scheduling groups of {len(first_pass)}")
         #Pool the tasks for collecting repo info. 
         repo_info_tasks = create_grouped_task_load(dataList=first_pass, task=collect_repo_info).tasks
-
+        
         #pool the repo collection jobs that should be ran first and have deps. 
         primary_repo_jobs = group(
             *create_grouped_task_load(dataList=first_pass, task=collect_issues).tasks,
@@ -91,7 +91,6 @@ def repo_collect_phase():
             *create_grouped_task_load(dataList=first_pass, task=process_pull_request_files).tasks,
             *create_grouped_task_load(dataList=first_pass, task=process_pull_request_commits).tasks
         )
-        
 
         repo_task_group = group(
             *repo_info_tasks,
