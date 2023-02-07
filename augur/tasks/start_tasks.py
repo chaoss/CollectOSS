@@ -59,13 +59,13 @@ def collection_task_wrapper(self,*args,**kwargs):
 """
 
 @celery.task
-def task_success(repo_git):
+def core_task_success(repo_git):
 
     from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(task_success.__name__)
+    logger = logging.getLogger(core_task_success.__name__)
 
-    logger.info(f"Repo '{repo_git}' succeeded")
+    logger.info(f"Repo '{repo_git}' succeeded through core collection")
 
     with DatabaseSession(logger, engine) as session:
 
@@ -78,6 +78,32 @@ def task_success(repo_git):
         collection_status.core_status = CollectionState.SUCCESS.value
         collection_status.core_data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         collection_status.core_task_id = None
+
+        #TODO: remove when secondary tasks are changed to start elsewhere. 
+        collection_status.secondary_status = CollectionState.SUCCESS.value
+
+        session.commit()
+
+@celery.task
+def secondary_task_success(repo_git):
+
+    from augur.tasks.init.celery_app import engine
+
+    logger = logging.getLogger(secondary_task_success.__name__)
+
+    logger.info(f"Repo '{repo_git}' succeeded through secondary collection")
+
+    with DatabaseSession(logger, engine) as session:
+
+        repo = Repo.get_by_repo_git(session, repo_git)
+        if not repo:
+            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
+
+        collection_status = repo.collection_status[0]
+
+        collection_status.secondary_status = CollectionState.SUCCESS.value
+        collection_status.secondary_data_last_collected	 = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        collection_status.secondary_task_id = None
 
         session.commit()
 
@@ -228,7 +254,7 @@ class AugurTaskRoutine:
                 #The preliminary task creates the larger task chain 
                 augur_collection_sequence.append(job(repo_git))
 
-            #augur_collection_sequence.append(task_success.si(repo_git))
+            #augur_collection_sequence.append(core_task_success.si(repo_git))
             #Link all phases in a chain and send to celery
             augur_collection_chain = chain(*augur_collection_sequence)
             task_id = augur_collection_chain.apply_async(link_error=task_failed.s()).task_id
@@ -298,9 +324,23 @@ def augur_collection_monitor():
 
         #Get list of enabled phases 
         enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
-        enabled_phases = [phase for phase in coreCollection if phase.__name__ in enabled_phase_names]
+        #enabled_phases = [phase for phase in coreCollection if phase.__name__ in enabled_phase_names]
+
+        enabled_phases = []
+
+        #Primary jobs
+        if prelim_phase.__name__ in enabled_phase_names:
+            enabled_phases.append(prelim_phase)
+        
+        if primary_repo_collect_phase.__name__ in enabled_phase_names:
+            enabled_phases.append(primary_repo_collect_phase)
+
         #task success is scheduled no matter what the config says.
-        enabled_phases.append(task_success)
+        enabled_phases.append(core_task_success)
+
+        if secondary_repo_collect_phase.__name__ in enabled_phase_names:
+            enabled_phases.append(secondary_repo_collect_phase)
+            enabled_phases.append(secondary_task_success)
         
         active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
 
@@ -327,8 +367,9 @@ def augur_collection_monitor():
 
             #set status in database to collecting
             repoStatus = repo.collection_status[0]
-            repoStatus.task_id = task_id
-            repoStatus.status = CollectionState.COLLECTING.value
+            repoStatus.core_task_id = task_id
+            repoStatus.secondary_task_id = task_id
+            repoStatus.core_status = CollectionState.COLLECTING.value
             self.session.commit()
 
 
