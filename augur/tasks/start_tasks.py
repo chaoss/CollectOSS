@@ -119,20 +119,12 @@ def task_failed(request,exc,traceback):
 def prelim_phase(repo_git):
 
     logger = logging.getLogger(prelim_phase.__name__)
-    job = None
-    with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
 
-        job = detect_github_repo_move.si(repo_obj.repo_git)
-
-        
-
-    return job
+    return detect_github_repo_move.si(repo_git)
 
 
-def repo_collect_phase(repo_git):
-    logger = logging.getLogger(repo_collect_phase.__name__)
+def primary_repo_collect_phase(repo_git):
+    logger = logging.getLogger(primary_repo_collect_phase.__name__)
 
     #Here the term issues also includes prs. This list is a bunch of chains that run in parallel to process issue data.
     issue_dependent_tasks = []
@@ -142,36 +134,38 @@ def repo_collect_phase(repo_git):
     np_clustered_array = []
 
     #A chain is needed for each repo.
-    with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_git = repo_obj.repo_git
+    repo_info_task = collect_repo_info.si(repo_git)#collection_task_wrapper(self)
 
-        repo_info_task = collect_repo_info.si(repo_git)#collection_task_wrapper(self)
+    primary_repo_jobs = group(
+        collect_issues.si(repo_git),
+        collect_pull_requests.si(repo_git)
+    )
 
-        primary_repo_jobs = group(
-            collect_issues.si(repo_git),
-            collect_pull_requests.si(repo_git)
-        )
+    secondary_repo_jobs = group(
+        collect_events.si(repo_git),#*create_grouped_task_load(dataList=first_pass, task=collect_events).tasks,
+        collect_github_messages.si(repo_git),#*create_grouped_task_load(dataList=first_pass,task=collect_github_messages).tasks,
+    )
 
-        secondary_repo_jobs = group(
-            collect_events.si(repo_git),#*create_grouped_task_load(dataList=first_pass, task=collect_events).tasks,
-            collect_github_messages.si(repo_git),#*create_grouped_task_load(dataList=first_pass,task=collect_github_messages).tasks,
-            process_pull_request_files.si(repo_git),#*create_grouped_task_load(dataList=first_pass, task=process_pull_request_files).tasks,
-            process_pull_request_commits.si(repo_git)#*create_grouped_task_load(dataList=first_pass, task=process_pull_request_commits).tasks
-        )
+    repo_task_group = group(
+        repo_info_task,
+        chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
+        generate_facade_chain(logger,repo_git),
+        collect_releases.si(repo_git)
+    )
 
-        repo_task_group = group(
-            repo_info_task,
-            chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
-            chain(generate_facade_chain(logger,repo_git),process_dependency_metrics.si(repo_git)),
-            collect_releases.si(repo_git)
-        )
-
-        return repo_task_group
+    return repo_task_group
 
 
-DEFINED_PHASES_PER_REPO = [prelim_phase, repo_collect_phase]
+def secondary_repo_collect_phase(repo_git):
+    logger = logging.getLogger(secondary_repo_collect_phase.__name__)
+
+    repo_task_group = group(
+        process_pull_request_files.si(repo_git),
+        process_pull_request_commits.si(repo_git),
+        process_dependency_metrics.si(repo_git)
+    )
+
+    return repo_task_group
 
 
 class AugurTaskRoutine:
@@ -181,11 +175,11 @@ class AugurTaskRoutine:
     Attributes:
         logger (Logger): Get logger from AugurLogger
         jobs_dict (dict): Dict of data collection phases to run
-        repos (List[int]): List of repo_ids to run collection on.
+        repos (List[str]): List of repo_ids to run collection on.
         collection_phases (List[str]): List of phases to run in augur collection.
         session: Database session to use
     """
-    def __init__(self,session,repos: List[int]=[],collection_phases: List[str]=[]):
+    def __init__(self,session,repos: List[str]=[],collection_phases: List[str]=[]):
         self.logger = AugurLogger("data_collection_jobs").get_logger()
         #self.session = TaskSession(self.logger)
         self.jobs_dict = {}
@@ -221,10 +215,10 @@ class AugurTaskRoutine:
 
         
         
-        for repo_id in self.repos:
+        for repo_git in self.repos:
 
-            repo = self.session.query(Repo).filter(Repo.repo_id == repo_id).one()
-            repo_git = repo.repo_git
+            repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
+            repo_id = repo.repo_id
 
             augur_collection_sequence = []
             for phaseName, job in self.jobs_dict.items():
@@ -234,18 +228,15 @@ class AugurTaskRoutine:
                 #The preliminary task creates the larger task chain 
                 augur_collection_sequence.append(job(repo_git))
 
-            augur_collection_sequence.append(task_success.si(repo_git))
+            #augur_collection_sequence.append(task_success.si(repo_git))
             #Link all phases in a chain and send to celery
             augur_collection_chain = chain(*augur_collection_sequence)
             task_id = augur_collection_chain.apply_async(link_error=task_failed.s()).task_id
 
-            self.logger.info(f"Setting repo_id {repo_id} to collecting")
+            self.logger.info(f"Setting repo_id {repo_id} to collecting for repo: {repo_git}")
 
-            #set status in database to collecting
-            repoStatus = repo.collection_status[0]
-            repoStatus.task_id = task_id
-            repoStatus.status = CollectionState.COLLECTING.value
-            self.session.commit()
+            #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
+            yield repo_git, task_id
 
 @celery.task
 def non_repo_domain_tasks():
@@ -277,7 +268,8 @@ def non_repo_domain_tasks():
         enabled_tasks.append(machine_learning_phase.si())
 
     tasks = chain(
-        *enabled_tasks
+        *enabled_tasks,
+        refresh_materialized_views.si()
     )
 
     tasks.apply_async()
@@ -293,6 +285,8 @@ def augur_collection_monitor():
 
     logger.info("Checking for repos to collect")
 
+    coreCollection = [prelim_phase, primary_repo_collect_phase]
+
     #Get phase options from the config
     with DatabaseSession(logger, engine) as session:
 
@@ -304,7 +298,9 @@ def augur_collection_monitor():
 
         #Get list of enabled phases 
         enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
-        enabled_phases = [phase for phase in DEFINED_PHASES_PER_REPO if phase.__name__ in enabled_phase_names]
+        enabled_phases = [phase for phase in coreCollection if phase.__name__ in enabled_phase_names]
+        #task success is scheduled no matter what the config says.
+        enabled_phases.append(task_success)
         
         active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.COLLECTING.value).all())
 
@@ -318,12 +314,22 @@ def augur_collection_monitor():
 
         repo_status_list = session.query(CollectionStatus).filter(and_(not_erroed, not_collecting, or_(never_collected, old_collection))).limit(limit).all()
 
-        repo_ids = [repo.repo_id for repo in repo_status_list]
+        repo_git_identifiers = [repo.repo_git for repo in repo_status_list]
 
         logger.info(f"Starting collection on {len(repo_ids)} repos")
 
-        augur_collection = AugurTaskRoutine(session,repos=repo_ids,collection_phases=enabled_phases)
-        augur_collection.start_data_collection()
+        augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=enabled_phases)
+
+        #Start data collection and update the collectionStatus with the task_ids
+        for repo_git, task_id in augur_collection.start_data_collection():
+            
+            repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+
+            #set status in database to collecting
+            repoStatus = repo.collection_status[0]
+            repoStatus.task_id = task_id
+            repoStatus.status = CollectionState.COLLECTING.value
+            self.session.commit()
 
 
 

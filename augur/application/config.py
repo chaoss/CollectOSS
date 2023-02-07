@@ -100,7 +100,7 @@ default_config = {
             },
             "Task_Routine": {
                 "prelim_phase": 1,
-                "repo_collect_phase": 1,
+                "primary_repo_collect_phase": 1,
                 "machine_learning_phase": 0
             }
         }
