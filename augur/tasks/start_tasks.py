@@ -256,6 +256,7 @@ class AugurTaskRoutine:
 
             #augur_collection_sequence.append(core_task_success.si(repo_git))
             #Link all phases in a chain and send to celery
+            print(augur_collection_sequence)
             augur_collection_chain = chain(*augur_collection_sequence)
             task_id = augur_collection_chain.apply_async(link_error=task_failed.s()).task_id
 
@@ -336,11 +337,18 @@ def augur_collection_monitor():
             enabled_phases.append(primary_repo_collect_phase)
 
         #task success is scheduled no matter what the config says.
-        enabled_phases.append(core_task_success)
+        def core_task_success_phase(repo_git):
+            return core_task_success.si(repo_git)
+        
+        enabled_phases.append(core_task_success_phase)
 
         if secondary_repo_collect_phase.__name__ in enabled_phase_names:
             enabled_phases.append(secondary_repo_collect_phase)
-            enabled_phases.append(secondary_task_success)
+
+            def secondary_task_success_phase(repo_git):
+                return secondary_task_success.si(repo_git)
+
+            enabled_phases.append(secondary_task_success_phase)
         
         active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
 
@@ -354,9 +362,15 @@ def augur_collection_monitor():
 
         repo_status_list = session.query(CollectionStatus).filter(and_(not_erroed, not_collecting, or_(never_collected, old_collection))).limit(limit).all()
 
-        repo_git_identifiers = [repo.repo_git for repo in repo_status_list]
+        repo_ids = [repo.repo_id for repo in repo_status_list]
+
+        repo_git_result = session.query(Repo).filter(Repo.repo_id.in_(tuple(repo_ids))).all()
+
+        repo_git_identifiers = [repo.repo_git for repo in repo_git_result]
 
         logger.info(f"Starting collection on {len(repo_ids)} repos")
+
+        logger.info(f"Collection starting for: {tuple(repo_git_identifiers)}")
 
         augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=enabled_phases)
 
@@ -370,7 +384,7 @@ def augur_collection_monitor():
             repoStatus.core_task_id = task_id
             repoStatus.secondary_task_id = task_id
             repoStatus.core_status = CollectionState.COLLECTING.value
-            self.session.commit()
+            session.commit()
 
 
 

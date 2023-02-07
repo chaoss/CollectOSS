@@ -113,7 +113,8 @@ def start(disable_collection, development, port):
         create_collection_status(logger)
 
         with DatabaseSession(logger) as session:
-            collection_status_list = session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.COLLECTING.value)
+            collection_status_list = session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value
+                or CollectionStatus.secondary_status == CollectionState.COLLECTING.value)
 
             for status in collection_status_list:
                 repo = status.repo
@@ -121,7 +122,8 @@ def start(disable_collection, development, port):
                 repo.repo_path = None
                 repo.repo_status = "New"
             
-            collection_status_list.update({CollectionStatus.status: "Pending"})
+            collection_status_list.update({CollectionStatus.core_status: "Pending"})
+            collection_status_list.update({CollectionStatus.secondary_status: "Pending"})
             session.commit()
           
         augur_collection_monitor.si().apply_async()
