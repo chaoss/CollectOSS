@@ -75,9 +75,9 @@ def task_success(repo_git):
 
         collection_status = repo.collection_status[0]
 
-        collection_status.status = CollectionState.SUCCESS.value
-        collection_status.data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        collection_status.task_id = None
+        collection_status.core_status = CollectionState.SUCCESS.value
+        collection_status.core_data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        collection_status.core_task_id = None
 
         session.commit()
 
@@ -89,7 +89,7 @@ def task_failed(request,exc,traceback):
     logger = logging.getLogger(task_failed.__name__)
     
     with DatabaseSession(logger,engine) as session:
-        query = session.query(CollectionStatus).filter(CollectionStatus.task_id == request.id)
+        query = session.query(CollectionStatus).filter(CollectionStatus.core_task_id == request.id)
 
         collectionRecord = execute_session_query(query,'one')
 
@@ -103,9 +103,9 @@ def task_failed(request,exc,traceback):
         except Exception as e:
             logger.error(f"Could not mutate request chain! \n Error: {e}")
         
-        if collectionRecord.status == CollectionState.COLLECTING.value:
+        if collectionRecord.core_status == CollectionState.COLLECTING.value:
             # set status to Error in db
-            collectionRecord.status = CollectionStatus.ERROR
+            collectionRecord.core_status = CollectionStatus.ERROR
             session.commit()
 
             # log traceback to error file
@@ -243,8 +243,8 @@ class AugurTaskRoutine:
 
             #set status in database to collecting
             repoStatus = repo.collection_status[0]
-            repoStatus.task_id = task_id
-            repoStatus.status = CollectionState.COLLECTING.value
+            repoStatus.core_task_id = task_id
+            repoStatus.core_status = CollectionState.COLLECTING.value
             self.session.commit()
 
 @celery.task
@@ -306,13 +306,13 @@ def augur_collection_monitor():
         enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
         enabled_phases = [phase for phase in DEFINED_PHASES_PER_REPO if phase.__name__ in enabled_phase_names]
         
-        active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.status == CollectionState.COLLECTING.value).all())
+        active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
 
         cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
-        not_erroed = CollectionStatus.status != str(CollectionState.ERROR.value)
-        not_collecting = CollectionStatus.status != str(CollectionState.COLLECTING.value)
-        never_collected = CollectionStatus.data_last_collected == None
-        old_collection = CollectionStatus.data_last_collected <= cutoff_date
+        not_erroed = CollectionStatus.core_status != str(CollectionState.ERROR.value)
+        not_collecting = CollectionStatus.core_status != str(CollectionState.COLLECTING.value)
+        never_collected = CollectionStatus.core_data_last_collected == None
+        old_collection = CollectionStatus.core_data_last_collected <= cutoff_date
 
         limit = max_repo_count-active_repo_count
 

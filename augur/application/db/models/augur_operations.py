@@ -925,10 +925,13 @@ class CollectionStatus(Base):
     )
 
     repo_id = Column(ForeignKey("augur_data.repo.repo_id", name="collection_status_repo_id_fk"), primary_key=True)
-    data_last_collected = Column(TIMESTAMP)
+    core_data_last_collected = Column(TIMESTAMP)
+    core_status = Column(String, nullable=False, server_default=text("'Pending'"))
+    core_task_id = Column(String)
+    secondary_status = Column(String, nullable=False, server_default=text("'Pending'"))
+    secondary_data_last_collected = Column(TIMESTAMP)
+    secondary_task_id = Column(String)
     event_last_collected = Column(TIMESTAMP)
-    status = Column(String, nullable=False, server_default=text("'Pending'"))
-    task_id = Column(String)
 
     repo = relationship("Repo", back_populates="collection_status")
 
