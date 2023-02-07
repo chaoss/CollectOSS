@@ -80,7 +80,7 @@ def core_task_success(repo_git):
         collection_status.core_task_id = None
 
         #TODO: remove when secondary tasks are changed to start elsewhere. 
-        collection_status.secondary_status = CollectionState.SUCCESS.value
+        collection_status.secondary_status = CollectionState.COLLECTING.value
 
         session.commit()
 
