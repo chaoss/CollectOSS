@@ -8,9 +8,7 @@ import sqlalchemy as s
 import pandas as pd
 from augur.api.util import register_metric
 
-from augur.application.db.engine import DatabaseEngine
-
-engine = DatabaseEngine(connection_pool_size=1).engine
+from ..server import engine
 
 @register_metric()
 def committers(repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):

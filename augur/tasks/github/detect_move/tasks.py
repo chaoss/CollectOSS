@@ -2,6 +2,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.detect_move.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.util import execute_session_query
+import traceback
 
 
 

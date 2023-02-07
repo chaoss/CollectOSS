@@ -25,6 +25,10 @@ def collect_issues(repo_git : str) -> None:
 
     print(f"Eventlet engine id: {id(engine)}")
 
+    from augur.tasks.init.celery_app import engine
+
+    print(f"Eventlet engine id: {id(engine)}")
+
     logger = logging.getLogger(collect_issues.__name__)
     
     with GithubTaskSession(logger, engine) as session:

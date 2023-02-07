@@ -86,15 +86,15 @@ def start(disable_collection, development, port):
         
     db_session.invalidate()
 
-    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} --preload augur.api.server:app"
+    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app"
     server = subprocess.Popen(gunicorn_command.split(" "))
 
     time.sleep(3)
     logger.info('Gunicorn webserver started...')
     logger.info(f'Augur is running at: http://127.0.0.1:{port}')
 
+    scheduling_worker_process = None
     worker_1_process = None
-    cpu_worker_process = None
     celery_beat_process = None
     if not disable_collection:
 
@@ -102,11 +102,12 @@ def start(disable_collection, development, port):
             logger.info("Deleting old task schedule")
             os.remove("celerybeat-schedule.db")
 
-        worker_1 = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-        cpu_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
+        scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+        worker_1 = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
+        
+        scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
         worker_1_process = subprocess.Popen(worker_1.split(" "))
 
-        cpu_worker_process = subprocess.Popen(cpu_worker.split(" "))
         time.sleep(5)
 
         create_collection_status(logger)
@@ -143,9 +144,9 @@ def start(disable_collection, development, port):
             logger.info("Shutting down celery process")
             worker_1_process.terminate()
 
-        if cpu_worker_process:
+        if scheduling_worker_process:
             logger.info("Shutting down celery process")
-            cpu_worker_process.terminate()
+            scheduling_worker_process.terminate()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")

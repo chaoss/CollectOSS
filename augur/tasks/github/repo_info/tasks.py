@@ -10,6 +10,8 @@ def collect_repo_info(repo_git: str):
 
     from augur.tasks.init.celery_app import engine
 
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(collect_repo_info.__name__)
 
     with GithubTaskSession(logger, engine) as session:

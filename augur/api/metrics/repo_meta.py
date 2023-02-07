@@ -10,9 +10,7 @@ import math
 import logging
 
 from augur.api.util import register_metric
-
-from augur.application.db.engine import DatabaseEngine
-engine = DatabaseEngine(connection_pool_size=1).engine
+from ..server import engine
 
 logger = logging.getLogger("augur")
 
@@ -800,8 +798,8 @@ calendar year (a new repo in that year), show all commits for that year (total f
             LIMIT 10
         """)
     
-        results = pd.read_sql(cdRgNewrepRankedCommitsSQL, engine, params={ "repo_group_id": repo_group_id,
-        "repo_id": repo_id, "calendar_year": calendar_year})
+    results = pd.read_sql(cdRgNewrepRankedCommitsSQL, engine, params={ "repo_group_id": repo_group_id,
+    "repo_id": repo_id, "calendar_year": calendar_year})
     return results
 
 @register_metric()
@@ -897,8 +895,8 @@ def annual_lines_of_code_count_ranked_by_repo_in_repo_group(repo_group_id, repo_
 
     
 
-        results = pd.read_sql(cdRgTpRankedCommitsSQL, engine, params={ "repo_group_id": repo_group_id,
-            "repo_id": repo_id})
+    results = pd.read_sql(cdRgTpRankedCommitsSQL, engine, params={ "repo_group_id": repo_group_id,
+        "repo_id": repo_id})
     return results
 
 @register_metric()
@@ -951,7 +949,7 @@ def lines_of_code_commit_counts_by_calendar_year_grouped(repo_url, calendar_year
         """)
 
     
-        results = pd.read_sql(cdRepTpIntervalLocCommitsSQL, engine, params={"repourl": '%{}%'.format(repo_url), 'calendar_year': calendar_year})
+    results = pd.read_sql(cdRepTpIntervalLocCommitsSQL, engine, params={"repourl": '%{}%'.format(repo_url), 'calendar_year': calendar_year})
     return results
 
 @register_metric()

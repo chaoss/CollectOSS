@@ -322,7 +322,7 @@ class User(Base):
                 session.add(user)
                 session.commit()
 
-                result = user.add_group(session, "default")
+                result = user.add_group("default")
                 if not result[0] and result[1]["status"] != "Group already exists":
                     return False, {"status": "Failed to add default group for the user"}
 

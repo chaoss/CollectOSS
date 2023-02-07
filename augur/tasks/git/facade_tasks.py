@@ -346,9 +346,8 @@ def nuke_affiliations_facade_task():
     from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(nuke_affiliations_facade_task.__name__)
-
+    
     with FacadeSession(logger) as session:
-
         nuke_affiliations(session)
 
 @celery.task
@@ -599,17 +598,17 @@ def generate_non_repo_domain_facade_tasks(logger):
 
         facade_sequence = []
 
-        if nuke_stored_affiliations:
+        if nuke_stored_affiliations and firstRun:
             facade_sequence.append(nuke_affiliations_facade_task.si().on_error(facade_error_handler.s()))#nuke_affiliations(session.cfg)
 
         #session.logger.info(session.cfg)
-        if not limited_run or (limited_run and fix_affiliations):
+        if not limited_run or (limited_run and fix_affiliations) and firstRun:
             facade_sequence.append(fill_empty_affiliations_facade_task.si().on_error(facade_error_handler.s()))#fill_empty_affiliations(session)
 
-        if force_invalidate_caches:
+        if force_invalidate_caches and firstRun:
             facade_sequence.append(invalidate_caches_facade_task.si().on_error(facade_error_handler.s()))#invalidate_caches(session.cfg)
 
-        if not limited_run or (limited_run and rebuild_caches):
+        if not limited_run or (limited_run and rebuild_caches) and firstRun:
             facade_sequence.append(rebuild_unknown_affiliation_and_web_caches_facade_task.si().on_error(facade_error_handler.s()))#rebuild_unknown_affiliation_and_web_caches(session.cfg)
         
         return facade_sequence

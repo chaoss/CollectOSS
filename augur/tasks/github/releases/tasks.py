@@ -9,6 +9,8 @@ def collect_releases(repo_git):
 
     from augur.tasks.init.celery_app import engine
 
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(collect_releases.__name__)
     with GithubTaskSession(logger, engine) as session:
 

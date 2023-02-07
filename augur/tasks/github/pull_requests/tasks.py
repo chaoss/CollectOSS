@@ -24,6 +24,10 @@ def collect_pull_requests(repo_git: str) -> None:
 
     print(f"Eventlet engine id: {id(engine)}")
 
+    from augur.tasks.init.celery_app import engine
+
+    print(f"Eventlet engine id: {id(engine)}")
+
     logger = logging.getLogger(collect_pull_requests.__name__)
 
     logger.info(f"Celery engine: {engine}")

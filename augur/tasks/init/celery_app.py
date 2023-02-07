@@ -157,8 +157,7 @@ def init_worker(**kwargs):
 
     from augur.application.db.engine import DatabaseEngine
 
-    engine = DatabaseEngine().engine
-    logger.info(f"Creating database engine for worker. Engine: {engine}")
+    engine = DatabaseEngine(pool_size=10, max_overflow=20, pool_timeout=240).engine
 
 
 @worker_process_shutdown.connect
@@ -166,24 +165,6 @@ def shutdown_worker(**kwargs):
     global engine
     if engine:
         logger.info('Closing database connectionn for worker')
-        engine.dispose()
-
-
-@eventlet_pool_started.connect
-def init_eventlet_worker(**kwargs):
-
-    global engine
-
-    from augur.application.db.engine import DatabaseEngine
-
-    engine = DatabaseEngine(pool_size=40, max_overflow=50, pool_timeout=60).engine
-    logger.info(f"Creating database engine for eventlet worker. Engine: {id(engine)}")
-
-@eventlet_pool_postshutdown.connect
-def shutdown_eventlet_worker(**kwargs):
-    global engine
-    if engine:
-        logger.info(f'Closing database connectionn for worker. Engine {id(engine)}')
         engine.dispose()
 
 

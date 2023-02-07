@@ -23,6 +23,8 @@ def collect_github_messages(repo_git: str) -> None:
 
     from augur.tasks.init.celery_app import engine
 
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(collect_github_messages.__name__)
 
     with DatabaseSession(logger, engine) as session:

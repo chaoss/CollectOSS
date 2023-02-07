@@ -19,6 +19,8 @@ def collect_events(repo_git: str):
 
     from augur.tasks.init.celery_app import engine
 
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(collect_events.__name__)
     
     with DatabaseSession(logger, engine) as session:

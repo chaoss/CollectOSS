@@ -568,7 +568,7 @@ def clear_insights(repo_id, new_endpoint, new_field, logger):
                 AND ri_field = '{}'
     """.format(repo_id, new_endpoint, new_field)
     try:
-        with DatabaseEngine(connection_pool_size=1) as engine:
+        with DatabaseEngine(1) as engine:
             result = engine.execute(deleteSQL)
     except Exception as e:
         logger.info("Error occured deleting insight slot: {}".format(e))
