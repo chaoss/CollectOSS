@@ -59,7 +59,10 @@ celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tas
 
 # define the queues that tasks will be put in (by default tasks are put in celery queue)
 celery_app.conf.task_routes = {
-    'augur.tasks.start_tasks.*': {'queue': 'scheduling'}
+    'augur.tasks.start_tasks.*': {'queue': 'scheduling'},
+    'augur.tasks.github.pull_requests.commits_model.tasks.py': {'queue': 'secondary'},
+    'augur.tasks.github.pull_requests.files_model.tasks.py': {'queue': 'secondary'},
+    'augur.tasks.git.dependency_tasks.tasks.py': {'queue': 'secondary'}
 }
 
 #Setting to be able to see more detailed states of running tasks

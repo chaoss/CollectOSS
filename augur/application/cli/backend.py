@@ -94,7 +94,8 @@ def start(disable_collection, development, port):
     logger.info(f'Augur is running at: http://127.0.0.1:{port}')
 
     scheduling_worker_process = None
-    worker_1_process = None
+    core_worker_process = None
+    secondary_worker_process = None
     celery_beat_process = None
     if not disable_collection:
 
@@ -103,10 +104,12 @@ def start(disable_collection, development, port):
             os.remove("celerybeat-schedule.db")
 
         scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-        worker_1 = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h"
+        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=14 -n core:{uuid.uuid4().hex}@%h"
+        secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=5 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
         
         scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
-        worker_1_process = subprocess.Popen(worker_1.split(" "))
+        core_worker_process = subprocess.Popen(core_worker.split(" "))
+        secondary_worker_process = subprocess.Popen(secondary_worker.split(" "))
 
         time.sleep(5)
 
@@ -135,20 +138,24 @@ def start(disable_collection, development, port):
         logger.info("Collection disabled")   
     
     try:
-        worker_1_process.wait()
+        core_worker_process.wait()
     except KeyboardInterrupt:
         
         if server:
             logger.info("Shutting down server")
             server.terminate()
 
-        if worker_1_process:
-            logger.info("Shutting down celery process")
-            worker_1_process.terminate()
+        if core_worker_process:
+            logger.info("Shutting down celery process: core")
+            core_worker_process.terminate()
 
         if scheduling_worker_process:
-            logger.info("Shutting down celery process")
+            logger.info("Shutting down celery process: scheduling")
             scheduling_worker_process.terminate()
+
+        if secondary_worker_process:
+            logger.info("Shutting down celery process: secondary")
+            secondary_worker_process.terminate()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
