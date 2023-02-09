@@ -49,6 +49,19 @@ def upgrade():
         AND setting_name = 'collection_interval';
     """))
 
+    # if the database has the old repo_collect phase then add delete it and add these rows otherwise just let the rows be added in the config during making install
+    result = conn.execute(text("""SELECT * FROM augur_operations.config WHERE section_name='Task_Routine' and setting_name='repo_collect_phase';""")).fetchall()
+    if result:
+        print(result[0])
+        print(dict(result[0]))
+        value = dict(result[0])["value"]
+
+        conn.execute(text(f"""DELETE FROM augur_operations.config where section_name='Task_Routine' and setting_name='repo_collect_phase';
+            INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES ('Task_Routine', 'secondary_repo_collect_phase', '{value}', 'int');
+            INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES ('Task_Routine', 'primary_repo_collect_phase', '{value}', 'int');
+            """))
+
+
     # ### end Alembic commands ###
 
 
