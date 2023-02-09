@@ -5,7 +5,6 @@ from celery import group, chain, chord, signature
 from augur.tasks.init.celery_app import celery_app as celery
 import logging 
 
-@celery.task
 def machine_learning_phase():
     from augur.tasks.data_analysis.clustering_worker.tasks import clustering_model
     from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
@@ -41,9 +40,4 @@ def machine_learning_phase():
     ml_tasks.extend(pull_request_analysis_tasks)
     ml_tasks.extend(clustering_tasks) 
         
-    task_chain = chain(*ml_tasks)
-
-    result = task_chain.apply_async()
-    with allow_join_result():
-        return result.get()
-    #return task_chain
+    return ml_tasks

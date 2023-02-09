@@ -292,7 +292,7 @@ def non_repo_domain_tasks():
     enabled_tasks.extend(generate_non_repo_domain_facade_tasks(logger))
 
     if machine_learning_phase.__name__ in enabled_phase_names:
-        enabled_tasks.append(machine_learning_phase.si())
+        enabled_tasks.extend(machine_learning_phase())
 
     tasks = chain(
         *enabled_tasks,
