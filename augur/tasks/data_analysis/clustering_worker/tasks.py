@@ -32,7 +32,7 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 
 
 @celery.task
-def clutering_task():
+def clustering_task():
 
     logger = logging.getLogger(clustering_model.__name__)
     from augur.tasks.init.celery_app import engine
