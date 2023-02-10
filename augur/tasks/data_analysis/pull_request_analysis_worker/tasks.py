@@ -22,11 +22,23 @@ from augur.application.db.util import execute_session_query
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 @celery.task
-def pull_request_analysis_model(repo_git: str) -> None:
+def pull_request_analysis_task():
 
-    from augur.tasks.init.celery_app import engine 
+    logger = logging.getLogger(pull_request_analysis_task.__name__)
+    from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(pull_request_analysis_model.__name__)
+    with DatabaseSession(logger, engine) as session:
+        query = session.query(Repo)
+        repos = execute_session_query(query, 'all')
+    
+
+    for repo in repos:
+        pull_request_analysis_model(repo.repo_git, logger, engine)
+
+
+
+def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
+
 
     tool_source = 'Pull Request Analysis Worker'
     tool_version = '0.0.0'

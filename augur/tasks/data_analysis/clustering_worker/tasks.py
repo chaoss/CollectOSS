@@ -32,11 +32,21 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 
 
 @celery.task
-def clustering_model(repo_git: str) -> None:
-
-    from augur.tasks.init.celery_app import engine
+def clutering_task():
 
     logger = logging.getLogger(clustering_model.__name__)
+    from augur.tasks.init.celery_app import engine
+
+    with DatabaseSession(logger, engine) as session:
+        query = session.query(Repo)
+        repos = execute_session_query(query, 'all')
+    
+
+    for repo in repos:
+        clustering_model(repo.repo_git, logger, engine)
+
+
+def clustering_model(repo_git: str,logger,engine) -> None:
 
     logger.info(f"Starting clustering analysis for {repo_git}")
 

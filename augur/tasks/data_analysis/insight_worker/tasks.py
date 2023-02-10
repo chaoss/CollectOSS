@@ -24,12 +24,21 @@ warnings.filterwarnings('ignore')
 
 
 @celery.task
-def insight_model(repo_git: str) -> None:
+def insight_task():
 
+    logger = logging.getLogger(insight_task.__name__)
     from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(insight_model.__name__)
+    with DatabaseSession(logger, engine) as session:
+        query = session.query(Repo)
+        repos = execute_session_query(query, 'all')
+    
 
+    for repo in repos:
+        insight_model(repo.repo_git, logger, engine)
+
+
+def insight_model(repo_git: str,logger,engine) -> None:
     refresh = True
     send_insights = True
 

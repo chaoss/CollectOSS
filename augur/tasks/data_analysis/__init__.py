@@ -17,27 +17,11 @@ def machine_learning_phase():
 
     logger = logging.getLogger(machine_learning_phase.__name__)
 
-    with DatabaseSession(logger, engine) as session:
-        query = session.query(Repo)
-        repos = execute_session_query(query, 'all')
-
     ml_tasks = []
-    clustering_tasks = []
-    discourse_tasks = []
-    insight_tasks = []
-    message_insights_tasks = []
-    pull_request_analysis_tasks = []
-    for repo in repos:
-        clustering_tasks.append(clustering_model.si(repo.repo_git))
-        discourse_tasks.append(discourse_analysis_model.si(repo.repo_git))
-        insight_tasks.append(insight_model.si(repo.repo_git))
-        message_insights_tasks.append(message_insight_model.si(repo.repo_git))
-        pull_request_analysis_tasks.append(pull_request_analysis_model.si(repo.repo_git))   
-
-    ml_tasks.extend(insight_tasks)
-    ml_tasks.extend(discourse_tasks)
-    ml_tasks.extend(message_insights_tasks)
-    ml_tasks.extend(pull_request_analysis_tasks)
-    ml_tasks.extend(clustering_tasks) 
+    ml_tasks.append(clutering_task.si())
+    ml_tasks.append(discourse_analysis_task.si())
+    ml_tasks.append(insight_task.si())
+    ml_tasks.append(message_insight_task.si())
+    ml_tasks.append(pull_request_analysis_task.si()) 
         
     return ml_tasks

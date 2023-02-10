@@ -32,11 +32,21 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 DISCOURSE_ANALYSIS_DIR = "augur/tasks/data_analysis/discourse_analysis/"
 
 @celery.task
-def discourse_analysis_model(repo_git: str) -> None:
+def discourse_analysis_task():
 
+    logger = logging.getLogger(discourse_analysis_task.__name__)
     from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(discourse_analysis_model.__name__)
+    with DatabaseSession(logger, engine) as session:
+        query = session.query(Repo)
+        repos = execute_session_query(query, 'all')
+    
+
+    for repo in repos:
+        discourse_analysis_model(repo.repo_git, logger, engine)
+
+
+def discourse_analysis_model(repo_git: str,logger,engine) -> None:
 
     tool_source = 'Discourse Worker'
     tool_version = '0.1.0'
