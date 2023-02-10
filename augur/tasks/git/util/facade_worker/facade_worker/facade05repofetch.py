@@ -193,6 +193,8 @@ def git_repo_initialize(session, repo_git,repo_group_id=None):
 
             session.log_activity('Error',f"Could not clone {git}")
 
+            raise Exception(f"Could not clone {git}")
+
     session.log_activity('Info', f"Fetching new repos (complete)")
 
     
