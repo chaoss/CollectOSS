@@ -253,7 +253,7 @@ def check_for_repo_updates(session,repo_git):
         AND repo.repo_status='Update'
         AND repo.repo_status != 'Analyze' 
         AND repo.repo_status != 'Empty')
-        AND repo.repo_git IN :values""").bindparams(values=tuple(repo_git_identifiers))
+        AND repo.repo_git = :value""").bindparams(values=repo_git)
 
     # ("UPDATE repos r LEFT JOIN repos s ON r.projects_id=s.projects_id "
     #     "SET r.status='Update' WHERE s.status='Update' AND "
