@@ -164,7 +164,7 @@ def git_repo_initialize(session, repo_git,repo_group_id=None):
             # circumstances caches are rebuilt only once per waiting period.
 
             update_project_status = s.sql.text("""UPDATE repo SET repo_status='Update' WHERE 
-                repo_group_id=:repo_group_id AND repo_status != 'Empty'""").bindparams(repo_group_id=row['repo_group_id'])
+                repo_group_id=:repo_group_id AND repo_status != 'Empty' AND repo_id=:repo_id""").bindparams(repo_group_id=row['repo_group_id'], repo_id=row["repo_id"])
             session.execute_sql(update_project_status)
 
             # Since we just cloned the new repo, set it straight to analyze.
