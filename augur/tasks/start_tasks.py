@@ -173,7 +173,7 @@ def primary_repo_collect_phase(repo_git):
     )
 
     repo_task_group = group(
-        repo_info_task,
+        #repo_info_task,
         chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
         generate_facade_chain(logger,repo_git),
         collect_releases.si(repo_git)
