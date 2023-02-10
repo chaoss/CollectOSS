@@ -185,9 +185,9 @@ def clustering_model(repo_git: str,logger,engine) -> None:
         session.add(repo_cluster_messages_obj)
         session.commit()
 
-    # result = db.execute(repo_cluster_messages_table.insert().values(record))
-    logging.info(
-        "Primary key inserted into the repo_cluster_messages table: {}".format(repo_cluster_messages_obj.msg_cluster_id))
+        # result = db.execute(repo_cluster_messages_table.insert().values(record))
+        logging.info(
+            "Primary key inserted into the repo_cluster_messages table: {}".format(repo_cluster_messages_obj.msg_cluster_id))
     try:
         logger.debug('pickling')
         lda_model = pickle.load(open("lda_model", "rb"))
