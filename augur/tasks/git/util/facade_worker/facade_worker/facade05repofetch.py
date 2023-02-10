@@ -198,9 +198,7 @@ def git_repo_initialize(session, repo_git,repo_group_id=None):
     session.log_activity('Info', f"Fetching new repos (complete)")
 
     
-def check_for_repo_updates(session,repo_git_identifiers):
-
-     
+def check_for_repo_updates(session,repo_git):
 
 # Check the last time a repo was updated and if it has been longer than the
 # update_frequency, mark its project for updating during the next analysis.
@@ -213,13 +211,12 @@ def check_for_repo_updates(session,repo_git_identifiers):
     get_initialized_repos = s.sql.text("""SELECT repo_id FROM repo WHERE repo_status NOT LIKE 'New%' 
         AND repo_status != 'Delete' 
         AND repo_status != 'Analyze' AND repo_status != 'Empty'
-        AND repo_git IN :values""").bindparams(values=tuple(repo_git_identifiers))
+        AND repo_git = :value""").bindparams(value=repo_git)
     
-    repos = session.fetchall_data_from_sql_text(get_initialized_repos)#list(cfg.cursor)
+    #repos = session.fetchall_data_from_sql_text(get_initialized_repos)#list(cfg.cursor)
+    repo = session.execute_sql(get_initialized_repos).fetchone()
 
-
-
-    for repo in repos:
+    if repo:
 
         # Figure out which repos have been updated within the waiting period
 
