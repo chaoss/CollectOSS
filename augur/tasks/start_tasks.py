@@ -337,18 +337,18 @@ def augur_collection_monitor():
             enabled_phases.append(primary_repo_collect_phase)
 
         #task success is scheduled no matter what the config says.
-        def core_task_success_phase(repo_git):
+        def core_task_success_gen(repo_git):
             return core_task_success.si(repo_git)
         
-        enabled_phases.append(core_task_success_phase)
+        enabled_phases.append(core_task_success_gen)
 
         if secondary_repo_collect_phase.__name__ in enabled_phase_names:
             enabled_phases.append(secondary_repo_collect_phase)
 
-            def secondary_task_success_phase(repo_git):
+            def secondary_task_success_gen(repo_git):
                 return secondary_task_success.si(repo_git)
 
-            enabled_phases.append(secondary_task_success_phase)
+            enabled_phases.append(secondary_task_success_gen)
         
         active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
 
