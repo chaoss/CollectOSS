@@ -310,7 +310,7 @@ def git_repo_updates(session,repo_git):
     except IndexError:
         raise Exception(f"Repo git: {repo_git} does not exist or the status is not 'Update'")
         
-    if not row["repo_path"] or not row["repo_name"]:
+    if row["repo_path"] is None or row["repo_name"] is None:
         raise Exception(f"The repo path or repo name is NULL for repo_id: {row['repo_id']}")
         
     session.log_activity('Verbose',f"Attempting to update {row['repo_git']}")#['git'])
