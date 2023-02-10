@@ -88,14 +88,14 @@ class DatabaseSession(Session):
         with EngineConnection(self.engine) as connection:
             return_data = connection.execute(sql_text)  
 
-            return return_data
+        return return_data
 
     def fetchall_data_from_sql_text(self,sql_text):
 
         with EngineConnection(self.engine) as connection:
 
             result = connection.execute(sql_text)  .fetchall()
-            return [dict(zip(row.keys(), row)) for row in result]
+        return [dict(zip(row.keys(), row)) for row in result]
 
     def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
 

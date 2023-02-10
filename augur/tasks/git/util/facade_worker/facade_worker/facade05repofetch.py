@@ -130,10 +130,6 @@ def git_repo_initialize(session, repo_git,repo_group_id=None):
 
         # Create the prerequisite directories
         return_code = subprocess.Popen([f"mkdir -p {repo_path}"],shell=True).wait()
-#        session.log_activity('Info','Return code value when making directors from facade05, line 120: {:d}'.format(return_code))
-
-
-
         # Make sure it's ok to proceed
         if return_code != 0:
             print("COULD NOT CREATE REPO DIRECTORY")
@@ -188,7 +184,7 @@ def git_repo_initialize(session, repo_git,repo_group_id=None):
 
             session.log_activity('Error',f"Could not clone {git}")
 
-    session.log_activity('Info', f"Fetching new repos (complete)")
+    session.log_activity('Info', f"Fetching new repo (complete)")
 
     
 def check_for_repo_updates(session,repo_git_identifiers):

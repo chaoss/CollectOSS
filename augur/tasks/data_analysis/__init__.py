@@ -23,6 +23,6 @@ def machine_learning_phase():
     ml_tasks.append(insight_task.si())
     ml_tasks.append(message_insight_task.si())
     ml_tasks.append(pull_request_analysis_task.si()) 
-    ml_tasks.append(contributor_breadth_worker.si())
+    ml_tasks.append(contributor_breadth_model.si())
         
     return ml_tasks
