@@ -168,12 +168,12 @@ def user_login():
                 last_name = request.form.get('last_name')
                 admin = request.form.get('admin') or False
 
-                        result = User.create_user(username, password, email, first_name, last_name, admin)
-                        if not result[0]:
-                            raise LoginException("An error occurred registering your account")
-                        else:
-                            user = User.get_user(db_session, username)
-                            flash(result[1]["status"])
+                result = User.create_user(username, password, email, first_name, last_name, admin)
+                if not result[0]:
+                    raise LoginException("An error occurred registering your account")
+                else:
+                    user = User.get_user(db_session, username)
+                    flash(result[1]["status"])
 
             # Log the user in if the password is valid
             if user.validate(password) and login_user(user, remember = remember):
