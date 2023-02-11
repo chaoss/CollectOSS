@@ -223,7 +223,7 @@ class FacadeSession(GithubTaskSession):
                 if isinstance(e.orig, DeadlockDetected):
                     deadlock_detected = True
                     sleep_time = random.choice(sleep_time_list)
-                    self.logger.debug(f"Deadlock detected on query {query}...trying again in {round(sleep_time)} seconds: transaction size: {len(data)}")
+                    self.logger.debug(f"Deadlock detected on query {query}...trying again in {round(sleep_time)} seconds")
                     time.sleep(sleep_time)
 
                     attempts += 1
