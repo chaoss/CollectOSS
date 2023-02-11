@@ -23,6 +23,7 @@ def test_parse_github_repo_url():
         assert Repo.parse_github_repo_url("https://github.com/chaoss/augur") == ("chaoss", "augur")
         assert Repo.parse_github_repo_url("https://github.com/chaoss/augur/") == ("chaoss", "augur")
         assert Repo.parse_github_repo_url("https://github.com/chaoss/augur.git") == ("chaoss", "augur")
+        assert Repo.parse_github_repo_url("https://github.com/chaoss/.github") == ("chaoss", ".github")
 
 def test_parse_github_org_url():
 

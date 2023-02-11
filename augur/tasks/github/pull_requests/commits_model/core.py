@@ -24,23 +24,23 @@ def pull_request_commits_model(repo_id,logger):
     pr_urls = []
     #pd.read_sql(pr_number_sql, self.db, params={})
 
-    # TODO: Is this session ever closed?
-    session = GithubTaskSession(logger, engine)
-    pr_urls = session.fetchall_data_from_sql_text(pr_url_sql)#session.execute_sql(pr_number_sql).fetchall()
-    
-    query = session.query(Repo).filter(Repo.repo_id == repo_id)
-    repo = execute_session_query(query, 'one')
+    with DatabaseSession(logger, engine) as session:
+        pr_urls = session.fetchall_data_from_sql_text(pr_url_sql)#session.execute_sql(pr_number_sql).fetchall()
+        
+        query = session.query(Repo).filter(Repo.repo_id == repo_id)
+        repo = execute_session_query(query, 'one')
 
     owner, name = get_owner_repo(repo.repo_git)
 
     logger.info(f"Getting pull request commits for repo: {repo.repo_git}")
-    
-    for index,pr_info in enumerate(pr_urls):
-        logger.info(f'Querying commits for pull request #{index + 1} of {len(pr_urls)}')
 
-        commits_url = pr_info['pr_url'] + '/commits?state=all'
+    with GithubTaskSession(logger, engine) as session:
+        
+        for index,pr_info in enumerate(pr_urls):
+            logger.info(f'Querying commits for pull request #{index + 1} of {len(pr_urls)}')
 
-        try:
+            commits_url = pr_info['pr_url'] + '/commits?state=all'
+
             #Paginate through the pr commits
             pr_commits = GithubPaginator(commits_url, session.oauths, logger)
 
@@ -65,11 +65,8 @@ def pull_request_commits_model(repo_id,logger):
                 #Execute bulk upsert
                 pr_commits_natural_keys = [	"pull_request_id", "repo_id", "pr_cmt_sha"]
                 session.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
-            
-        except Exception as e:
-            logger.error(f"Ran into error with pull request #{index + 1} in repo {repo_id}")
-            logger.error(
-            ''.join(traceback.format_exception(None, e, e.__traceback__)))
+                
+
 
 
 
