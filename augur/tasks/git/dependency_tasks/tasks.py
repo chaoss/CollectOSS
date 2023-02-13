@@ -14,8 +14,6 @@ def process_dependency_metrics(repo_git):
 
     logger = logging.getLogger(process_dependency_metrics.__name__)
 
-    session = DatabaseSession(logger, engine)
-
     with DatabaseSession(logger, engine) as session:
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         repo = execute_session_query(query,'one')
