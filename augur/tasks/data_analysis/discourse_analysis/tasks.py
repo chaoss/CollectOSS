@@ -28,8 +28,8 @@ from augur.application.db.util import execute_session_query
 # from os import path
 
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
-
-DISCOURSE_ANALYSIS_DIR = "augur/tasks/data_analysis/discourse_analysis/"
+ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+DISCOURSE_ANALYSIS_DIR = f"{ROOT_AUGUR_DIRECTORY}/tasks/data_analysis/discourse_analysis/"
 
 @celery.task
 def discourse_analysis_task():
