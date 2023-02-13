@@ -147,7 +147,7 @@ def trim_commits_post_analysis_facade_task(repo_id):
     logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
     
 
-    with FacadeSession as session:
+    with FacadeSession(logger) as session:
         start_date = session.get_setting('start_date')
         def update_analysis_log(repos_id,status):
 
