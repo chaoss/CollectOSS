@@ -46,6 +46,40 @@ Caching System (Redis)
 * `Mac Installation <https://redis.io/docs/getting-started/installation/install-redis-on-mac-os/>`__
 * `Windows Installation <https://redis.io/docs/getting-started/installation/install-redis-on-windows/>`__
 
+Message Broker (RabbitMQ)
+----------------
+* `Linux Installation <https://www.rabbitmq.com/download.html>`__
+* `Mac Installation <https://www.rabbitmq.com/install-homebrew.html>`__
+* `Windows Installation <https://www.rabbitmq.com/install-windows.html>`__
+
+After installation, you must also set up your rabbitmq instance by running the below commands:
+
+.. code-block:: bash
+
+	sudo rabbitmqctl add_user augur password123
+
+	sudo rabbitmqctl add_vhost augur_vhost
+
+	sudo rabbitmqctl set_user_tags augur augurTag
+
+	sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
+
+.. note::
+	it is important to have a static hostname when using rabbitmq as it uses hostname
+	to communicate with nodes.
+
+Then, start rabbitmq server with 
+.. code-block:: bash
+
+    sudo systemctl start rabbitmq.service
+
+
+If your setup of rabbitmq is successful your broker url should look like this:
+
+broker_url = 'amqp://augur:password123@localhost:5672/augur_vhost'
+
+During installation you will be prompted for this broker url.
+
 Frontend
 ---------
 If you're interested in using our visualizations, you can optionally install the frontend dependencies:

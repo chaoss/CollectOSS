@@ -100,8 +100,8 @@ def grab_repo_info_from_graphql_endpoint(session,query):
     return data
     
 
-def repo_info_model(session, repo_orm_obj):
-    session.logger.info("Beginning filling the repo_info model for repo: " + repo_orm_obj.repo_git + "\n")
+def repo_info_model(session, repo_orm_obj, logger):
+    logger.info("Beginning filling the repo_info model for repo: " + repo_orm_obj.repo_git + "\n")
 
     owner, repo = get_owner_repo(repo_orm_obj.repo_git)
 
@@ -220,7 +220,7 @@ def repo_info_model(session, repo_orm_obj):
     try:
         data = grab_repo_info_from_graphql_endpoint(session, query)
     except Exception as e:
-        session.logger.error(f"Could not grab info for repo {repo_orm_obj.repo_id}")
+        logger.error(f"Could not grab info for repo {repo_orm_obj.repo_id}")
         raise e
         return
 
@@ -235,7 +235,7 @@ def repo_info_model(session, repo_orm_obj):
     committers_count = query_committers_count(session, owner, repo)
 
     # Put all data together in format of the table
-    session.logger.info(f'Inserting repo info for repo with id:{repo_orm_obj.repo_id}, owner:{owner}, name:{repo}\n')
+    logger.info(f'Inserting repo info for repo with id:{repo_orm_obj.repo_id}, owner:{owner}, name:{repo}\n')
     rep_inf = {
         'repo_id': repo_orm_obj.repo_id,
         'last_updated': data['updatedAt'] if 'updatedAt' in data else None,
@@ -298,22 +298,9 @@ def repo_info_model(session, repo_orm_obj):
     else:
         archived = 0
 
-    current_repo_dict = repo_orm_obj.__dict__
+    update_repo_data = s.sql.text("""UPDATE repo SET forked_from=:forked, repo_archived=:archived, repo_archived_date_collected=:archived_date_collected WHERE repo_id=:repo_id""").bindparams(forked=forked, archived=archived, archived_date_collected=archived_date_collected, repo_id=repo_orm_obj.repo_id)
+    session.execute_sql(update_repo_data)
 
-    #delete irrelevant sqlalchemy metadata
-    del current_repo_dict['_sa_instance_state']
-
-    rep_additional_data = {
-        'forked_from': forked,
-        'repo_archived': archived,
-        'repo_archived_date_collected': archived_date_collected
-    }
-
-    current_repo_dict.update(rep_additional_data)
-    result = session.insert_data(current_repo_dict, Repo, ['repo_id'])
-    #result = self.db.execute(self.repo_table.update().where(
-    #    self.repo_table.c.repo_id==repo_id).values(rep_additional_data))
-
-    session.logger.info(f"Inserted info for {owner}/{repo}\n")
+    logger.info(f"Inserted info for {owner}/{repo}\n")
 
 

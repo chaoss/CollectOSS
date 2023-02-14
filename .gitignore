@@ -7,6 +7,8 @@ augur_export_env.sh
 .DS_Store
 *.config.json
 !docker.config.json
+config.yml
+reports.yml
 
 
 node_modules/

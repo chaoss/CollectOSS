@@ -1,12 +1,13 @@
 import time
 import logging
-
+import traceback
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.application.db.session import DatabaseSession
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, PullRequestMessageRef, Contributor, Repo
@@ -16,41 +17,53 @@ from augur.application.db.util import execute_session_query
 platform_id = 1
 
 
-@celery.task
+@celery.task()
 def collect_pull_requests(repo_git: str) -> None:
+
+    from augur.tasks.init.celery_app import engine
+
+    print(f"Eventlet engine id: {id(engine)}")
+
+    from augur.tasks.init.celery_app import engine
+
+    print(f"Eventlet engine id: {id(engine)}")
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
+    logger.info(f"Celery engine: {engine}")
+
     with GithubTaskSession(logger, engine) as session:
 
-        repo_id = session.query(Repo).filter(
+        try:
+
+            repo_id = session.query(Repo).filter(
             Repo.repo_git == repo_git).one().repo_id
 
-    owner, repo = get_owner_repo(repo_git)
-    pr_data = retrieve_all_pr_data(repo_git, logger)
+            owner, repo = get_owner_repo(repo_git)
+            pr_data = retrieve_all_pr_data(repo_git, logger, session.oauths)
 
-    if pr_data:
-        process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger)
-    else:
-        logger.info(f"{owner}/{repo} has no pull requests")
-    
+            if pr_data:
+                process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger, session)
+            else:
+                logger.info(f"{owner}/{repo} has no pull requests")
+        except Exception as e:
+            logger.error(f"Could not collect pull requests for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        
     
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
-def retrieve_all_pr_data(repo_git: str, logger) -> None:
+def retrieve_all_pr_data(repo_git: str, logger, key_auth) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
     # define GithubTaskSession to handle insertions, and store oauth keys 
-    with GithubTaskSession(logger, engine) as session:
+    owner, repo = get_owner_repo(repo_git)
 
-        owner, repo = get_owner_repo(repo_git)
+    logger.info(f"Collecting pull requests for {owner}/{repo}")
 
-        logger.info(f"Collecting pull requests for {owner}/{repo}")
-
-        url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc"
-        # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
-        prs = GithubPaginator(url, session.oauths, logger)
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc"
+    # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
+    prs = GithubPaginator(url, key_auth, logger)
 
     all_data = []
     num_pages = prs.get_num_pages()
@@ -72,7 +85,9 @@ def retrieve_all_pr_data(repo_git: str, logger) -> None:
     return all_data
 
     
-def process_pull_requests(pull_requests, task_name, repo_id, logger):
+def process_pull_requests(pull_requests, task_name, repo_id, logger, session):
+
+    from augur.tasks.init.celery_app import engine
 
     tool_source = "Pr Task"
     tool_version = "2.0"
@@ -80,7 +95,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
 
     pr_dicts, pr_mapping_data, pr_numbers, contributors = extract_data_from_pr_list(pull_requests, repo_id, tool_source, tool_version, data_source)
 
-    with GithubTaskSession(logger, engine) as session:
+    with DatabaseSession(logger, engine) as session:
 
         # remove duplicate contributors before inserting
         contributors = remove_duplicate_dicts(contributors)
@@ -208,6 +223,8 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
 
 @celery.task
 def pull_request_review_comments(repo_git: str) -> None:
+    
+    from augur.tasks.init.celery_app import engine
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -301,6 +318,8 @@ def pull_request_review_comments(repo_git: str) -> None:
 # do this task after others because we need to add the multi threading like we did it before
 @celery.task
 def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(pull_request_reviews.__name__)
 

@@ -7,7 +7,7 @@ import socket
 import re
 import json
 
-from augur.application.db.engine import create_database_engine
+from augur.application.db.engine import DatabaseEngine
 from sqlalchemy.exc import OperationalError 
 
 
@@ -19,7 +19,8 @@ def test_connection(function_internet_connection):
             #try to ping google's dns server
             socket.create_connection(("8.8.8.8",53))
             return ctx.invoke(function_internet_connection, *args, **kwargs)
-        except OSError:
+        except OSError as e:
+            print(e)
             print(f"\n\n{usage} command setup failed\nYou are not connect to the internet. Please connect to the internet to run Augur\n")
             sys.exit()        
         
@@ -28,7 +29,7 @@ def test_connection(function_internet_connection):
 def test_db_connection(function_db_connection):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
-        engine = create_database_engine()
+        engine = DatabaseEngine().engine
         usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
         try:
             engine.connect()

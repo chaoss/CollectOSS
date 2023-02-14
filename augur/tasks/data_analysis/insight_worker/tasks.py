@@ -15,19 +15,29 @@ import warnings
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, ChaossMetricStatus, RepoInsight, RepoInsightsRecord
-from augur.application.db.engine import create_database_engine
 from augur.application.db.util import execute_session_query
 
 warnings.filterwarnings('ignore')
 
-engine = create_database_engine()
 
 @celery.task
-def insight_model(repo_git: str) -> None:
+def insight_task():
 
-    logger = logging.getLogger(insight_model.__name__)
+    logger = logging.getLogger(insight_task.__name__)
+    from augur.tasks.init.celery_app import engine
 
+    with DatabaseSession(logger, engine) as session:
+        query = session.query(Repo)
+        repos = execute_session_query(query, 'all')
+    
+
+        for repo in repos:
+            insight_model(repo.repo_git, logger, engine, session)
+
+
+def insight_model(repo_git: str,logger,engine,session) -> None:
     refresh = True
     send_insights = True
 
@@ -38,17 +48,17 @@ def insight_model(repo_git: str) -> None:
     metrics = {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
                 "reviews": "pull_requests", "contributors-new": "new_contributors"}
 
-    with DatabaseSession(logger) as session:
+    config = AugurConfig(logger, session)
 
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_id = execute_session_query(query, 'one').repo_id
+    query = session.query(Repo).filter(Repo.repo_git == repo_git)
+    repo_id = execute_session_query(query, 'one').repo_id
 
-        anomaly_days = session.config.get_value('Insight_Task', 'anomaly_days')
-        training_days = session.config.get_value('Insight_Task', 'training_days')
-        contamination = session.config.get_value('Insight_Task', 'contamination')
-        confidence = session.config.get_value('Insight_Task', 'confidence_interval') / 100
-        api_host = session.config.get_value('Server', 'host')
-        api_port = session.config.get_value('Server', 'port')
+    anomaly_days = config.get_value('Insight_Task', 'anomaly_days')
+    training_days = config.get_value('Insight_Task', 'training_days')
+    contamination = config.get_value('Insight_Task', 'contamination')
+    confidence = config.get_value('Insight_Task', 'confidence_interval') / 100
+    api_host = config.get_value('Server', 'host')
+    api_port = config.get_value('Server', 'port')
 
     logger.info("Discovering insights for repo {}\n".format(repo_git))
 
@@ -96,7 +106,6 @@ def insight_model(repo_git: str) -> None:
         return
 
     """ Deletion of old insights """
-
     # Delete previous insights not in the anomaly_days param
     min_date = datetime.datetime.now() - datetime.timedelta(days=anomaly_days)
     logger.info("MIN DATE: {}\n".format(min_date))
@@ -243,7 +252,7 @@ def insight_model(repo_git: str) -> None:
                     "data_source": data_source
                 }
 
-                with DatabaseSession(logger) as session:
+                with DatabaseSession(logger, engine) as session:
                     repo_insight_record_obj = RepoInsightsRecord(**record)
                     session.add(repo_insight_record_obj)
                     session.commit()
@@ -288,7 +297,7 @@ def insight_model(repo_git: str) -> None:
                     "data_source": data_source
                 }
 
-                with DatabaseSession(logger) as session:
+                with DatabaseSession(logger, engine) as session:
                     repo_insight_obj = RepoInsight(**data_point)
                     session.add(repo_insight_obj)
                     session.commit()
@@ -302,7 +311,7 @@ def insight_model(repo_git: str) -> None:
                 logger.info("error occurred while storing datapoint: {}\n".format(repr(e)))
                 break
 
-def confidence_interval_insights(logger):
+def confidence_interval_insights(logger, engine):
     """ Anomaly detection method based on confidence intervals
     """
 
@@ -321,8 +330,9 @@ def confidence_interval_insights(logger):
     # endpointSQL = s.sql.text("""
     #     SELECT * FROM chaoss_metric_status WHERE cm_source = 'augur_db'
     #     """)
-    # for endpoint in pd.read_sql(endpointSQL, create_database_engine(), params={}).to_records():
-    #     endpoints.append(endpoint)
+    #with DatabaseEngine(connection_pool_size=1) as engine:
+        # for endpoint in pd.read_sql(endpointSQL,engine, params={}).to_records():
+        #     endpoints.append(endpoint)
 
     """"""
 
@@ -464,10 +474,9 @@ def confidence_interval_insights(logger):
                             "data_source": data_source
                         }
 
-                        with DatabaseSession(logger) as session:
-                            repo_insight_obj = RepoInsightsRecord(**record)
-                            session.add(repo_insight_obj)
-                            session.commit()
+                        repo_insight_obj = RepoInsightsRecord(**record)
+                        session.add(repo_insight_obj)
+                        session.commit()
 
                         logger.info("Primary key inserted into the repo_insights_records table: {}\n".format(repo_insight_obj.ri_id))
 
@@ -495,10 +504,9 @@ def confidence_interval_insights(logger):
                                     "tool_version": tool_version,
                                     "data_source": data_source
                                 }
-                                with DatabaseSession(logger) as session:
-                                    repo_insight_obj = RepoInsight(**data_point)
-                                    session.add(repo_insight_obj)
-                                    session.commit()
+                                repo_insight_obj = RepoInsight(**data_point)
+                                session.add(repo_insight_obj)
+                                session.commit()
 
                                 logger.info("Primary key inserted into the repo_insights table: " + str(
                                     repo_insight_obj.ri_id))
@@ -515,7 +523,7 @@ def confidence_interval_insights(logger):
             else:
                 logger.info("Key: {} has empty raw_values, should not have key here".format(key))
 
-def send_insight(insight, units_from_mean, logger):
+def send_insight(insight, units_from_mean, logger, engine):
     try:
         repoSQL = s.sql.text("""
             SELECT repo_git, rg_name 
@@ -523,7 +531,7 @@ def send_insight(insight, units_from_mean, logger):
             WHERE repo_id = {}
         """.format(insight['repo_id']))
 
-        repo = pd.read_sql(repoSQL, create_database_engine(), params={}).iloc[0]
+        repo = pd.read_sql(repoSQL, engine, params={}).iloc[0]
 
         begin_date = datetime.datetime.now() - datetime.timedelta(days=anomaly_days)
         dict_date = insight['ri_date'].strftime("%Y-%m-%d %H:%M:%S")
@@ -561,11 +569,8 @@ def clear_insights(repo_id, new_endpoint, new_field, logger):
                 AND ri_field = '{}'
     """.format(repo_id, new_endpoint, new_field)
     try:
-        engine = create_database_engine()
         result = engine.execute(deleteSQL)
-        engine.dispose()
     except Exception as e:
-        engine.dispose()
         logger.info("Error occured deleting insight slot: {}".format(e))
 
     # Delete all insights
@@ -581,11 +586,8 @@ def clear_insights(repo_id, new_endpoint, new_field, logger):
                 AND ri_field = '{}'
     """.format(repo_id, new_endpoint, new_field)
     try:
-        engine = create_database_engine()
         result = engine.execute(deleteSQL)
-        engine.dispose()
     except Exception as e:
-        engine.dispose()
         logger.info("Error occured deleting insight slot: {}".format(e))
 
 def clear_insight(repo_id, new_score, new_metric, new_field, logger):
@@ -604,7 +606,7 @@ def clear_insight(repo_id, new_score, new_metric, new_field, logger):
         AND ri_field = '{}'
         ORDER BY ri_score DESC
     """.format(repo_id, new_metric, new_field))
-    rec = json.loads(pd.read_sql(recordSQL, create_database_engine(), params={}).to_json(orient='records'))
+    rec = json.loads(pd.read_sql(recordSQL, engine, params={}).to_json(orient='records'))
     logger.info("recordsql: {}, \n{}".format(recordSQL, rec))
     # If new score is higher, continue with deletion
     if len(rec) > 0:
@@ -625,11 +627,8 @@ def clear_insight(repo_id, new_score, new_metric, new_field, logger):
                             AND ri_field = '{}'
                 """.format(record['repo_id'], record['ri_metric'], record['ri_field'])
                 try:
-                    engine = create_database_engine()
-                    result = engineexecute(deleteSQL)
-                    engine.dispose()
+                    result = engine.execute(deleteSQL)
                 except Exception as e:
-                    engine.dispose()
                     logger.info("Error occured deleting insight slot: {}".format(e))
     else:
         insertion_directions['record'] = True
@@ -642,7 +641,7 @@ def clear_insight(repo_id, new_score, new_metric, new_field, logger):
         WHERE repo_id = {}
         ORDER BY ri_score ASC
     """.format(repo_id))
-    ins = json.loads(pd.read_sql(insightSQL, create_database_engine(), params={}).to_json(orient='records'))
+    ins = json.loads(pd.read_sql(insightSQL, engine, params={}).to_json(orient='records'))
     logger.info("This repos insights: {}".format(ins))
 
     # Determine if inisghts need to be deleted based on if there are more insights than we want stored,
@@ -680,11 +679,8 @@ def clear_insight(repo_id, new_score, new_metric, new_field, logger):
                     AND ri_metric = '{}'
         """.format(insight['repo_id'], insight['ri_metric'])
         try:
-            engine = create_database_engine()
             result = engine.execute(deleteSQL)
-            engine.dispose()
         except Exception as e:
-            engine.dispose()
             logger.info("Error occured deleting insight slot: {}".format(e))
 
     return insertion_directions
@@ -700,7 +696,8 @@ def confidence_interval(data, logger, timeperiod='week', confidence=.95, ):
     logger.info("H: {}".format(h))
     return m, m - h, m + h
 
-def update_metrics(api_host, api_port, tool_source, tool_version, logger):
+def update_metrics(api_host, api_port, tool_source, tool_version, logger, session, engine):
+
     logger.info("Preparing to update metrics ...\n\n" +
                  "Hitting endpoint: http://{}:{}/api/unstable/metrics/status ...\n".format(
                      api_host, api_port))
@@ -712,7 +709,7 @@ def update_metrics(api_host, api_port, tool_source, tool_version, logger):
 
     # Duplicate checking ...
     need_insertion = filter_duplicates({'cm_api_endpoint_repo': "endpoint"}, ['chaoss_metric_status'],
-                                            active_metrics, logger)
+                                            active_metrics, logger, engine)
     logger.info("Count of contributors needing insertion: " + str(len(need_insertion)) + "\n")
 
     for metric in need_insertion:
@@ -732,16 +729,15 @@ def update_metrics(api_host, api_port, tool_source, tool_version, logger):
             "tool_version": tool_version,
             "data_source": metric['data_source']
         }
-        with DatabaseSession(logger) as session:
-            cms_tuple = ChaossMetricStatus(**cms_tuple)
-            session.add(cms_tuple)
-            session.commit()
+        cms_tuple = ChaossMetricStatus(**cms_tuple)
+        session.add(cms_tuple)
+        session.commit()
 
-            logger.info("Primary key inserted into the metrics table: {}\n".format(cms_tuple.cms_id))
+        logger.info("Primary key inserted into the metrics table: {}\n".format(cms_tuple.cms_id))
 
         logger.info("Inserted metric: " + metric['display_name'] + "\n")
 
-def filter_duplicates(cols, tables, og_data, logger):
+def filter_duplicates(cols, tables, og_data, logger, engine):
     need_insertion = []
 
     table_str = tables[0]
@@ -752,7 +748,7 @@ def filter_duplicates(cols, tables, og_data, logger):
         colSQL = s.sql.text("""
             SELECT {} FROM {}
             """.format(col, table_str))
-        values = pd.read_sql(colSQL, create_database_engine(), params={})
+        values = pd.read_sql(colSQL, engine, params={})
 
         for obj in og_data:
             if values.isin([obj[cols[col]]]).any().any():

@@ -2,7 +2,7 @@
 FROM python:3.8.11-slim-buster
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.42.0"
+LABEL version="0.44.1"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -10,6 +10,7 @@ RUN set -x \
     && apt-get update \
     && apt-get -y install --no-install-recommends \
         git \
+        bash \
         curl \
         gcc \
         python3-pip \
@@ -32,6 +33,8 @@ RUN python3 -m venv /opt/venv
 
 RUN set -x \
     && /opt/venv/bin/pip install .
+
+RUN ./scripts/docker/install-workers-deps.sh
 
 RUN ./scripts/docker/install-go.sh
 # RUN ./scripts/install/workers.sh 

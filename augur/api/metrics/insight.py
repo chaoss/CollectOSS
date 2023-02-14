@@ -7,8 +7,7 @@ import sqlalchemy as s
 import pandas as pd
 from augur.api.util import register_metric
 
-from augur.application.db.engine import create_database_engine
-engine = create_database_engine()
+from ..server import engine
 
 @register_metric(type="repo_group_only")
 def top_insights(repo_group_id, num_repos=6):

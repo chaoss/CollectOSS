@@ -1,9 +1,7 @@
 from logging import Logger
 
-from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.application.db.session import DatabaseSession
-from augur.tasks.init.celery_app import engine
 
 
 class GithubTaskSession(DatabaseSession):

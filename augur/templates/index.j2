@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename= 'favicon/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename= 'favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename= 'favicon/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename= 'favicon/site.webmanifest') }}">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+    <!-- jQuery Google CDN -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+    <link href="{{ url_for('static', filename= 'css/stylesheet.css') }}" rel="stylesheet">
+
+    {% if title %}
+    <title>{{title}} - Augur View</title>
+    {% else %}
+    <title>Augur View</title>
+    {% endif %}
+
+    {% if redirect %}
+    <meta http-equiv="refresh" content="{{ pause or 0 }}; URL='{{ url_for('root', path=redirect) }}'"/>
+    {% endif %}
+</head>
+
+<body>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <!-- TOASTS -->
+    {% include 'notifications.j2' %}
+    <!-- TOPNAV -->
+    {% include 'navbar.j2' %}
+    <!-- body-content -->
+    <div class="content">
+        {% if invalid %}
+        <h1>Invalid API URL</h1>
+        <p>The API URL [{{ api_url or 'unspecified'}}] is invalid</p>
+        {% elif body %}
+        {% include '%s.j2' % body ignore missing %}
+        {% else %}
+        <h1>404 - Page Not Found</h1>
+        <p>The page you were looking for isn't here, try clicking one of the navigation links above</p>
+        {% endif %}
+    </div>
+    <!-- footer -->
+    <div class="jumbotron text-center footer">
+        <div class="d-flex flex-fill align-content-between flex-wrap">
+            <div class="order-1 flex-grow-1">
+                <p style="color: white;">This is a beta build of Augur-View. Experimental frontend features may not be fully functional.</p>
+                {# <p style="color: white;">Currently serving: {{api_url or 'api_url unspecified'}}</p> #}
+            </div>
+            <div class="order-2">
+                <a href="https://chaoss.community/">
+                    <img src="{{ url_for('logo', brand='chaoss') }}" class="img-fluid float-center" alt="Chaos Logo" style="width: 50%;">
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

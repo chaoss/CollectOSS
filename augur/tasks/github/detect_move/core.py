@@ -5,11 +5,20 @@ from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.util import parse_json_response
 import logging
+from enum import Enum
+from augur.application.db.util import execute_session_query
 
-def extract_owner_and_repo_from_endpoint(session,url):
-    response_from_gh = hit_api(session.oauths, url, session.logger)
+class CollectionState(Enum):
+    SUCCESS = "Success"
+    PENDING = "Pending"
+    ERROR = "Error"
+    COLLECTING = "Collecting"
 
-    page_data = parse_json_response(session.logger, response_from_gh)
+
+def extract_owner_and_repo_from_endpoint(key_auth, url, logger):
+    response_from_gh = hit_api(key_auth, url, logger)
+
+    page_data = parse_json_response(logger, response_from_gh)
 
     full_repo_name = page_data['full_name']
 
@@ -17,7 +26,7 @@ def extract_owner_and_repo_from_endpoint(session,url):
 
     return splits[0], splits[-1]
 
-def ping_github_for_repo_move(session,repo):
+def ping_github_for_repo_move(session,repo, logger):
 
     owner, name = get_owner_repo(repo.repo_git)
     url = f"https://api.github.com/repos/{owner}/{name}"
@@ -41,7 +50,7 @@ def ping_github_for_repo_move(session,repo):
         session.logger.info(f"Repo found at url: {url}")
         return
     
-    owner, name = extract_owner_and_repo_from_endpoint(session, response_from_gh.headers['location'])
+    owner, name = extract_owner_and_repo_from_endpoint(session, response_from_gh.headers['location'], logger)
 
     current_repo_dict = repo.__dict__
     del current_repo_dict['_sa_instance_state']
@@ -66,3 +75,13 @@ def ping_github_for_repo_move(session,repo):
     result = session.insert_data(current_repo_dict, Repo, ['repo_id'])
 
     session.logger.info(f"Updated repo for {owner}/{name}\n")
+
+    statusQuery = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
+
+    collectionRecord = execute_session_query(statusQuery,'one')
+    collectionRecord.status = CollectionState.PENDING.value
+    session.commit()
+
+    raise Exception("ERROR: Repo has moved! Marked repo as pending and stopped collection")
+
+    

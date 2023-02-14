@@ -76,13 +76,13 @@ def initialize_stream_handler(logger, log_level):
 
 def get_log_config():
     
-    from augur.application.db.engine import create_database_engine
+    from augur.application.db.engine import DatabaseEngine
 
     # we are using this session instead of the 
     # DatabaseSession class because the DatabaseSession 
     # class requires a logger, and we are setting up logger thigns here 
-    engine = create_database_engine()
-    session = Session(engine)
+    with DatabaseEngine() as engine:
+        session = Session(engine)
 
     query = session.query(Config).filter_by(section_name="Logging")
     section_data = execute_session_query(query, 'all')

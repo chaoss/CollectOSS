@@ -87,6 +87,14 @@ function get_facade_repo_path() {
   [[ "${facade_repo_directory}" != */ ]] && facade_repo_directory="${facade_repo_directory}/"
 }
 
+function get_rabbitmq_broker_url(){
+    echo
+    echo "Please provide your rabbitmq broker url."
+    echo "** This is required for Augur to run all collection tasks. ***"
+    read -p "broker_url: " rabbitmq_conn_string
+    echo
+}
+
 
 function create_config(){
 
@@ -146,13 +154,24 @@ function create_config(){
     echo "Please unset AUGUR_FACADE_REPO_DIRECTORY if you would like to be prompted for the facade repo directory"
       facade_repo_directory=$AUGUR_FACADE_REPO_DIRECTORY
     fi
+
+    if [[ -z "${RABBITMQ_CONN_STRING}" ]]
+    then
+        get_rabbitmq_broker_url
+    else
+    echo
+    echo "Found RABBITMQ_CONN_STRING environment variable with value $RABBITMQ_CONN_STRING"
+    echo "Using it in the config" 
+    echo "Please unset RABBITMQ_CONN_STRING if you would like to be prompted for the facade repo directory"
+      rabbitmq_conn_string=$RABBITMQ_CONN_STRING
+    fi
     
     #special case for docker entrypoint
     if [ $target = "docker" ]; then
-      cmd=( augur config init --github-api-key $github_api_key --gitlab-api-key $gitlab_api_key --facade-repo-directory $facade_repo_directory --redis-conn-string $redis_conn_string )
+      cmd=( augur config init --github-api-key $github_api_key --gitlab-api-key $gitlab_api_key --facade-repo-directory $facade_repo_directory --redis-conn-string $redis_conn_string --rabbitmq-conn-string $rabbitmq_conn_string )
       echo "init with redis $redis_conn_string"
     else
-      cmd=( augur config init --github-api-key $github_api_key --gitlab-api-key $gitlab_api_key --facade-repo-directory $facade_repo_directory )
+      cmd=( augur config init --github-api-key $github_api_key --gitlab-api-key $gitlab_api_key --facade-repo-directory $facade_repo_directory --rabbitmq-conn-string $rabbitmq_conn_string )
     fi
 
 

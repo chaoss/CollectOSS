@@ -148,7 +148,7 @@ def fill_empty_affiliations(session):
                     f"SET cmt_{attribution}_affiliation = :affiliation "
                     f"WHERE cmt_{attribution}_email = :email "
                     f"AND cmt_{attribution}_affiliation IS NULL "
-                    f"AND cmt_{attribution}_date::date >= {match['ca_start_date']}::date")
+                    f"AND cmt_{attribution}_date::date >= \'{match['ca_start_date']}\'::date")
                     ).bindparams(affiliation=match['ca_affiliation'],email=email)
 
                 session.log_activity('Info', f"attr: {attribution} \nmatch:{match}\nsql: {update}")
@@ -158,6 +158,7 @@ def fill_empty_affiliations(session):
                 except Exception as e: 
                     session.log_activity('Info', f"Error encountered: {e}")
                     session.log_activity('Info', f"Affiliation insertion failed for {email} ")
+                    session.log_activity('Info', f"Offending query: {update} ")
 
     def discover_alias(email):
 

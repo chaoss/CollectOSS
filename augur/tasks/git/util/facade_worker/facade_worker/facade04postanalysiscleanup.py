@@ -37,8 +37,10 @@ import getopt
 import xlsxwriter
 import configparser
 import sqlalchemy as s
+from augur.application.db.util import execute_session_query
+from augur.application.db.models import *
 
-def git_repo_cleanup(session):
+def git_repo_cleanup(session,repo_git):
 
 # Clean up any git repos that are pending deletion
 
@@ -47,23 +49,24 @@ def git_repo_cleanup(session):
 	session.log_activity('Info','Processing deletions')
 
 
-	query = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Delete'""")
+	query = session.query(Repo).filter(
+		Repo.repo_git == repo_git,Repo.repo_status == "Delete")#s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Delete'""")
 
-	delete_repos = session.fetchall_data_from_sql_text(query)
+	delete_repos = execute_session_query(query,'all')#session.fetchall_data_from_sql_text(query)
 
 	for row in delete_repos:
 
 		# Remove the files on disk
 
 		cmd = ("rm -rf %s%s/%s%s"
-			% (session.repo_base_directory,row['repo_group_id'],row['repo_path'],row['repo_name']))
+			% (session.repo_base_directory,row.repo_group_id,row.repo_path,row.repo_name))
 
 		return_code = subprocess.Popen([cmd],shell=True).wait()
 
 		# Remove the analysis data
 
 		remove_commits = s.sql.text("""DELETE FROM commits WHERE repo_id=:repo_id
-			""").bindparams(repo_id=row['repo_id'])
+			""").bindparams(repo_id=row.repo_id)
 		session.execute_sql(remove_commits) 
 
 		optimize_table = s.sql.text("""OPTIMIZE TABLE commits""")
@@ -72,21 +75,21 @@ def git_repo_cleanup(session):
 		# Remove cached repo data
 
 		remove_dm_repo_weekly = s.sql.text("""DELETE FROM dm_repo_weekly WHERE repo_id=:repo_id
-			""").bindparams(repo_id=row['repo_id'])
+			""").bindparams(repo_id=row.repo_id)
 		session.execute_sql(remove_dm_repo_weekly)
 
 		optimize_table = s.sql.text("""OPTIMIZE TABLE dm_repo_weekly""")
 		session.execute_sql(optimize_table)
 
 		remove_dm_repo_monthly = s.sql.text("""DELETE FROM dm_repo_monthly WHERE repo_id=:repo_id
-			""").bindparams(repo_id=row['repo_id'])
+			""").bindparams(repo_id=row.repo_id)
 		session.execute_sql(remove_dm_repo_monthly)
 
 		optimize_table = s.sql.text("""OPTIMIZE TABLE dm_repo_monthly""")
 		session.execute_sql(optimize_table)
 
 		remove_dm_repo_annual = s.sql.text("""DELETE FROM dm_repo_annual WHERE repo_id=:repo_id
-			""").bindparams(repo_id=row['repo_id'])
+			""").bindparams(repo_id=row.repo_id)
 		session.execute_sql(remove_dm_repo_annual)
 
 		optimize_table = s.sql.text("""OPTIMIZE TABLE dm_repo_annual""")
@@ -95,29 +98,29 @@ def git_repo_cleanup(session):
 		# Set project to be recached if just removing a repo
 
 		set_project_recache = s.sql.text("""UPDATE projects SET recache=TRUE
-			WHERE id=:repo_group_id""").bindparams(repo_group_id=row['repo_group_id'])
+			WHERE id=:repo_group_id""").bindparams(repo_group_id=row.repo_group_id)
 		session.execute_sql(set_project_recache)
 		# Remove the entry from the repos table
 
 		query = s.sql.text("""DELETE FROM repo WHERE repo_id=:repo_id
-			""").bindparams(repo_id=row['repo_id'])
+			""").bindparams(repo_id=row.repo_id)
 		session.execute_sql(query)
 
 		#log_activity('Verbose','Deleted repo %s' % row[0])
-		#session.logger.debug(f"Deleted repo {row['repo_id']}")
-		session.log_activity('Verbose',f"Deleted repo {row['repo_id']}")
-		cleanup = '%s/%s%s' % (row['repo_group_id'],row['repo_path'],row['repo_name'])
+		#session.logger.debug(f"Deleted repo {row.repo_id}")
+		session.log_activity('Verbose',f"Deleted repo {row.repo_id}")
+		cleanup = '%s/%s%s' % (row.repo_group_id,row.repo_path,row.repo_name)
 
 		# Remove any working commits
 
 		remove_working_commits = s.sql.text("""DELETE FROM working_commits WHERE repos_id=:repo_id
-			""").bindparams(repo_id=row['repo_id'])
+			""").bindparams(repo_id=row.repo_id)
 		session.execute_sql(remove_working_commits)
 
 		# Remove the repo from the logs
 
 		remove_logs = s.sql.text("""DELETE FROM repos_fetch_log WHERE repos_id =:repo_id
-			""").bindparams(repo_id=row['repo_id'])
+			""").bindparams(repo_id=row.repo_id)
 
 		session.execute_sql(remove_logs)
 
@@ -136,7 +139,7 @@ def git_repo_cleanup(session):
 			session.log_activity('Verbose',f"Attempted {cmd}")
 
 		#update_repo_log(row[0],'Deleted')
-		session.update_repo_log(row['repo_id'],'Deleted')
+		session.update_repo_log(row.repo_id,'Deleted')
 
 	# Clean up deleted projects
 

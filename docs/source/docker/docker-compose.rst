@@ -19,61 +19,25 @@ The default ports for each service are\:
         TCP/IP connections on port 5432?
   
 
-Docker Compose with the script (recommended)
-============================================
-This section details how to use Augur's docker-setup script to get a docker-compose deployment up and running as fast as possible.
-
-Running the containers
------------------------
-
-.. warning::
-
-    Don't forget to provide your external database credentials in the ``docker_env.txt`` file or generate it within the script. `More about the configuration file here <getting-started.html>`_
-
-To run Augur
-
-.. code-block:: bash
-
-    sudo ./docker-setup.sh
-
-Answer the prompts depending on your needs. If you are using a local database it is important to use 10.254.254.254 as a hostname or localhost if prompted. If you are using the container database or the test database press 2 or 3 for the prompt answer.
-
-The script should automatically generate the environment variables for the docker containers and compose files. Additionally, it will set up a network alias so that the containers can communicate with localhost. Finally, it also takes care of whether or not to generate the schema to protect the integrity of any databases in use.
-
-
-.. warning::
-
-    It is also important to only generate the schema if you need to otherwise your database could become unusable later on.
-
-Stopping the containers
--------------------------
-
-To stop the containers, do a keyboard interrupt while the script is running ``Ctrl+C``. The script will then ask if you want to generate log files to look at later.
-
-If not using the script, the standard method of stopping the containers that you started should work such as ``docker stop`` or ``docker-compose down``
-
-Once you've got your container up and running, checkout out `how to use them <usage.html>`_ 
-
-
-Docker Compose without a script
+Docker Compose
 ===============================
 
-This section of the documentation details how to use Augur's Docker Compose configuration to get the full stack up and running as fast as possible without the recommended helper script. 
+This section of the documentation details how to use Augur's Docker Compose configuration to get the full stack up and running. 
 
 .. warning::
 
-    Don't forget to provide your external database credentials in the ``docker_env.txt`` file. Additionally an ``.env`` file is needed for the ``*.yml`` files' environment variables. Don't forget to set the variables specified in these files namely ``AUGUR_DB_TYPE`` and ``AUGUR_DB_HOST``.
+    Don't forget to provide your external database credentials in a file called ``.env`` file. Make sure the following environment variables are specified.
+    Don't specify AUGUR_DB if you want the docker database to be used.
 
-    Example docker_env.txt:
+    Example .env:
     .. code:: 
 
-        AUGUR_GITHUB_API_KEY=your_key_here
-        AUGUR_DB_SCHEMA_BUILD=0
-        AUGUR_DB_HOST=xx.xxx.xxx.xxx
-        AUGUR_DB_NAME=augur
-        AUGUR_DB_PORT=5432
-        AUGUR_DB_USER=augur
-        AUGUR_DB_PASSWORD=somePassword
+        AUGUR_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx 
+        AUGUR_GITHUB_USERNAME=usernameGithub
+        AUGUR_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
+        AUGUR_GITLAB_USERNAME=usernameGitlab
+        AUGUR_DB=yourDBString
+
 
 
 To run Augur **without** the database container:
@@ -88,13 +52,6 @@ To run Augur **with** the database container:
 
     docker-compose -f docker-compose.yml -f database-compose.yml up
 
-If you want to use the ``test_data`` image with the data preloaded, change the ``image`` line of ``database-compose.yml`` to:
-
-.. code::
-
-    image: augurlabs/augur:test_data
-
-Or you can set it dynamically in the .env file.
 
 Stopping the containers
 -------------------------

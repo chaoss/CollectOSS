@@ -8,8 +8,7 @@ import sqlalchemy as s
 import pandas as pd
 from augur.api.util import register_metric
 
-from augur.application.db.engine import create_database_engine
-engine = create_database_engine()
+from ..server import engine
 
 @register_metric()
 def committers(repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):
@@ -167,6 +166,7 @@ def annual_commit_count_ranked_by_new_repo_in_repo_group(repo_group_id, repo_id=
             GROUP BY repo.repo_id, repo_name, YEAR
             ORDER BY YEAR ASC
         """.format(table, period))
+
     results = pd.read_sql(cdRgNewrepRankedCommitsSQL, engine, params={'repo_id': repo_id, 
         'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date})
     return results
@@ -310,6 +310,7 @@ def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
 
         results = pd.read_sql(total_commits_SQL, engine,
                             params={'year': year, 'repo_id': repo_id})
+
     if not results.iloc[0]['sum']:
         return pd.DataFrame()
     
@@ -353,7 +354,7 @@ def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
         """)
 
         results = pd.read_sql(committers_SQL, engine,
-                              params={'year': year, 'repo_id': repo_id})
+                            params={'year': year, 'repo_id': repo_id})
 
     cumsum = 0
     for i, row in results.iterrows():

@@ -2,7 +2,7 @@ import time
 import logging
 
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
@@ -102,8 +102,6 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         # Use the email found in the commit data if api data is NULL
         emailFromCommitData = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
 
-        session.logger.info(
-            f"Successfully retrieved data from github for email: {emailFromCommitData}")
 
         # Get name from commit if not found by GitHub
         name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
@@ -152,7 +150,7 @@ def process_commit_metadata(session,contributorQueue,repo_id):
                 #"data_source": interface.data_source
             }
 
-            session.logger.info(f"{cntrb}")
+            #session.logger.info(f"{cntrb}")
 
         except Exception as e:
             session.logger.info(f"Error when trying to create cntrb: {e}")
@@ -212,10 +210,9 @@ def link_commits_to_contributor(session,contributorQueue):
         query = s.sql.text("""
                 UPDATE commits 
                 SET cmt_ght_author_id=:cntrb_id
-                WHERE cmt_committer_email=:cntrb_email
-                OR cmt_author_raw_email=:cntrb_email
+                WHERE 
+                cmt_author_raw_email=:cntrb_email
                 OR cmt_author_email=:cntrb_email
-                OR cmt_committer_raw_email=:cntrb_email
         """).bindparams(cntrb_id=cntrb["cntrb_id"],cntrb_email=cntrb["email"])
 
         #engine.execute(query, **data)
@@ -228,15 +225,19 @@ def link_commits_to_contributor(session,contributorQueue):
 # Update the contributors table from the data facade has gathered.
 @celery.task
 def insert_facade_contributors(repo_id):
-    logger = logging.getLogger(insert_facade_contributors.__name__)
-    #session = GithubTaskSession(logger)
 
-    with GithubTaskSession(logger) as session:
-        session.logger.info(
-            "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
+    from augur.tasks.init.celery_app import engine
+
+    logger = logging.getLogger(insert_facade_contributors.__name__)
+
+    with GithubTaskSession(logger, engine) as session:
+        
 
         # Get all of the commit data's emails and names from the commit table that do not appear
         # in the contributors table or the contributors_aliases table.
+
+        session.logger.info(
+        "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
         new_contrib_sql = s.sql.text("""
                 SELECT DISTINCT
                     commits.cmt_author_name AS NAME,
@@ -283,12 +284,13 @@ def insert_facade_contributors(repo_id):
         #json.loads(pd.read_sql(new_contrib_sql, self.db, params={
         #             'repo_id': repo_id}).to_json(orient="records"))
 
-    
+
 
         process_commit_metadata(session,list(new_contribs),repo_id)
 
         session.logger.debug("DEBUG: Got through the new_contribs")
     
+
     with FacadeSession(logger) as session:
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
@@ -333,12 +335,4 @@ def insert_facade_contributors(repo_id):
 
         session.logger.info("Done with inserting and updating facade contributors")
     return
-
-@celery.task
-def facade_grab_contribs(repo_id):
-    logger = logging.getLogger(facade_grab_contribs.__name__)
-    with FacadeSession(logger) as session:
-    
-        grab_committer_list(session,repo_id)
-    
 

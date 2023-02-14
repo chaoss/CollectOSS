@@ -2,7 +2,7 @@ import time
 import logging
 
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
@@ -13,6 +13,8 @@ from augur.application.db.util import execute_session_query
 
 @celery.task
 def process_contributors():
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(process_contributors.__name__)
 
@@ -43,7 +45,7 @@ def process_contributors():
 
             url = f"https://api.github.com/users/{contributor_dict['cntrb_login']}" 
 
-            data = retrieve_dict_data(url, session)
+            data = retrieve_dict_data(url, session.oauths, logger)
 
             if data is None:
                 print(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
@@ -63,12 +65,12 @@ def process_contributors():
 
 
 
-def retrieve_dict_data(url: str, session):
+def retrieve_dict_data(url: str, key_auth, logger):
 
     num_attempts = 0
     while num_attempts <= 10:
 
-        response = hit_api(session.oauths, url, session.logger)
+        response = hit_api(key_auth, url, logger)
 
         # increment attempts
         if response is None:
@@ -81,14 +83,14 @@ def retrieve_dict_data(url: str, session):
         if "message" in page_data:
 
             if page_data['message'] == "Not Found":
-                session.logger.info(
+                logger.info(
                     "Github repo was not found or does not exist for endpoint: "
                     f"{response.url}\n"
                 )
                 break
 
             elif "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in page_data['message']:
-                session.logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
+                logger.info('\n\n\n\nSleeping for 100 seconds due to secondary rate limit issue.\n\n\n\n')
                 time.sleep(100)
                 continue
 

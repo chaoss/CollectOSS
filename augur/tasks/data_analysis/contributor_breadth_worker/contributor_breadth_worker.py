@@ -7,7 +7,6 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.application.db.models import ContributorRepo
-from augur.application.db.engine import create_database_engine
 
 ### This worker scans all the platform users in Augur, and pulls their platform activity 
 ### logs. Those are then used to analyze what repos each is working in (which will include repos not
@@ -24,6 +23,8 @@ from augur.application.db.engine import create_database_engine
 
 @celery.task
 def contributor_breadth_model() -> None:
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(contributor_breadth_model.__name__)
 
@@ -43,7 +44,8 @@ def contributor_breadth_model() -> None:
         WHERE gh_login IS NOT NULL
     """)
 
-    current_cntrb_logins = json.loads(pd.read_sql(cntrb_login_query, create_database_engine(), params={}).to_json(orient="records"))
+    
+    current_cntrb_logins = json.loads(pd.read_sql(cntrb_login_query, engine, params={}).to_json(orient="records"))
 
     ## We need a list of all contributors so we can iterate through them to gather events
     ## We need a list of event ids to avoid insertion of duplicate events. We ignore the event
@@ -84,7 +86,7 @@ def contributor_breadth_model() -> None:
         WHERE 1 = 1
     """)
 
-    current_event_ids = json.loads(pd.read_sql(dup_query, create_database_engine(), params={}).to_json(orient="records"))
+    current_event_ids = json.loads(pd.read_sql(dup_query, engine, params={}).to_json(orient="records"))
 
     #Convert list of dictionaries to regular list of 'event_ids'.
     #The only values that the sql query returns are event_ids so
@@ -99,7 +101,7 @@ def contributor_breadth_model() -> None:
         # source_cntrb_repos seemed like not exactly what the variable is for; its a list of actions for
         # each Github gh_login value already in our database
 
-        with DatabaseSession(logger) as session:
+        with DatabaseSession(logger, engine) as session:
             cntrb_events = []
             for page_data, page in GithubPaginator(repo_cntrb_url, session.oauths, logger).iter_pages():
 

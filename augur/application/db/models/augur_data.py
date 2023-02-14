@@ -21,9 +21,20 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
+import logging
+import re
+from typing import List, Any, Dict
+
+
 from augur.application.db.models.base import Base
+from augur.application import requires_db_session
+from augur.application.db.util import execute_session_query
+DEFAULT_REPO_GROUP_ID = 1
 
 metadata = Base.metadata
+
+logger = logging.getLogger(__name__)
 
 
 t_analysis_log = Table(
@@ -545,6 +556,26 @@ class RepoGroup(Base):
     data_source = Column(String)
     data_collection_date = Column(TIMESTAMP(precision=0))
 
+    @staticmethod
+    def is_valid_repo_group_id(session, repo_group_id: int) -> bool:
+        """Deterime is repo_group_id exists.
+
+        Args:
+            repo_group_id: id from the repo groups table
+
+        Returns:
+            True if it exists, False if it does not
+        """
+
+        query = session.query(RepoGroup).filter(RepoGroup.repo_group_id == repo_group_id)
+
+        try:
+            result = execute_session_query(query, 'one')
+        except (NoResultFound, MultipleResultsFound):
+            return False
+
+        return True
+
 
 t_repos_fetch_log = Table(
     "repos_fetch_log",
@@ -813,8 +844,158 @@ class Repo(Base):
     )
 
     repo_group = relationship("RepoGroup")
+    user_repo = relationship("UserRepo")
+    collection_status = relationship("CollectionStatus", back_populates="repo")
+
+    @staticmethod
+    def get_by_id(session, repo_id):
+
+        return session.query(Repo).filter(Repo.repo_id == repo_id).first()
+
+    @staticmethod
+    def get_by_repo_git(session, repo_git):
+
+        return session.query(Repo).filter(Repo.repo_git == repo_git).first()
+
+    @staticmethod
+    def is_valid_github_repo(session, url: str) -> bool:
+        """Determine whether repo url is valid.
+
+        Args:
+            url: repo_url
+
+        Returns
+            True if repo url is valid and False if not
+        """
+        from augur.tasks.github.util.github_paginator import hit_api
+
+        REPO_ENDPOINT = "https://api.github.com/repos/{}/{}"
+
+        if not session.oauths.list_of_keys:
+            return False, {"status": "No valid github api keys to retrieve data with"}
+
+        owner, repo = Repo.parse_github_repo_url(url)
+        if not owner or not repo:
+            return False, {"status":"Invalid repo url"}
+
+        url = REPO_ENDPOINT.format(owner, repo)
+
+        attempts = 0
+        while attempts < 10:
+            result = hit_api(session.oauths, url, logger)
+
+            # if result is None try again
+            if not result:
+                attempts+=1
+                continue
+
+            data = result.json()
+            # if there was an error return False
+            if "message" in data.keys():
+
+                if data["message"] == "Not Found":
+                    return False, {"status": "Invalid repo"}
+
+                return False, {"status": f"Github Error: {data['message']}"}
+
+            return True, {"status": "Valid repo"}
+
+    @staticmethod
+    def parse_github_repo_url(url: str) -> tuple:
+        """ Gets the owner and repo from a url.
+
+        Args:
+            url: Github url
+
+        Returns:
+            Tuple of owner and repo. Or a tuple of None and None if the url is invalid.
+        """
+
+        if url.endswith(".github") or url.endswith(".github.io") or url.endswith(".js"):
+
+            result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
+        else:
+
+            result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _]+)(.git)?\/?$", url)
+
+        if not result:
+            return None, None
+
+        capturing_groups = result.groups()
 
 
+        owner = capturing_groups[0]
+        repo = capturing_groups[1]
+
+        return owner, repo
+
+    @staticmethod
+    def parse_github_org_url(url):
+        """ Gets the owner from a org url.
+
+        Args:
+            url: Github org url
+
+        Returns:
+            Org name. Or None if the url is invalid.
+        """
+
+        result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/?$", url)
+
+        if not result:
+            return None
+
+        # if the result is not None then the groups should be valid so we don't worry about index errors here
+        return result.groups()[0]
+
+    @staticmethod
+    def insert(session, url: str, repo_group_id: int, tool_source):
+        """Add a repo to the repo table.
+
+        Args:
+            url: repo url
+            repo_group_id: group to assign repo to
+
+        Note:
+            If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
+        """
+
+        if not isinstance(url, str) or not isinstance(repo_group_id, int) or not isinstance(tool_source, str):
+            return None
+
+        if not RepoGroup.is_valid_repo_group_id(session, repo_group_id):
+            return None
+
+        repo_data = {
+            "repo_group_id": repo_group_id,
+            "repo_git": url,
+            "repo_status": "New",
+            "tool_source": tool_source,
+            "tool_version": "1.0",
+            "data_source": "Git"
+        }
+
+        repo_unique = ["repo_git"]
+        return_columns = ["repo_id"]
+        result = session.insert_data(repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
+
+        if not result:
+            return None
+
+        if repo_group_id != DEFAULT_REPO_GROUP_ID:
+            # update the repo group id
+            query = session.query(Repo).filter(Repo.repo_git == url)
+            repo = execute_session_query(query, 'one')
+
+            if not repo.repo_group_id == repo_group_id:
+                repo.repo_group_id = repo_group_id
+                session.commit()
+
+        return result[0]["repo_id"]
+
+
+
+        
 class RepoTestCoverage(Base):
     __tablename__ = "repo_test_coverage"
     __table_args__ = {"schema": "augur_data"}
