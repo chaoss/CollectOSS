@@ -599,11 +599,21 @@ def generate_non_repo_domain_facade_tasks(logger):
         facade_sequence = []
 
         if nuke_stored_affiliations:
-            facade_sequence.append(nuke_affiliations_facade_task.si().on_error(facade_error_handler.s()))#nuke_affiliations(session.cfg)
+            #facade_sequence.append(nuke_affiliations_facade_task.si().on_error(facade_error_handler.s()))#nuke_affiliations(session.cfg)
+            logger.info("Nuke stored affiliations is deprecated.")
+            # deprecated because the UI component of facade where affiliations would be 
+            # nuked upon change no longer exists, and this information can easily be derived 
+            # from queries and materialized views in the current version of Augur.
+            # This method is also a major performance bottleneck with little value.
 
         #session.logger.info(session.cfg)
         if not limited_run or (limited_run and fix_affiliations):
-            facade_sequence.append(fill_empty_affiliations_facade_task.si().on_error(facade_error_handler.s()))#fill_empty_affiliations(session)
+            #facade_sequence.append(fill_empty_affiliations_facade_task.si().on_error(facade_error_handler.s()))#fill_empty_affiliations(session)
+            logger.info("Fill empty affiliations is deprecated.")
+            # deprecated because the UI component of facade where affiliations would need 
+            # to be fixed upon change no longer exists, and this information can easily be derived 
+            # from queries and materialized views in the current version of Augur.
+            # This method is also a major performance bottleneck with little value.
 
         if force_invalidate_caches:
             facade_sequence.append(invalidate_caches_facade_task.si().on_error(facade_error_handler.s()))#invalidate_caches(session.cfg)
