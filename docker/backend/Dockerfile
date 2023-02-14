@@ -34,6 +34,8 @@ RUN python3 -m venv /opt/venv
 RUN set -x \
     && /opt/venv/bin/pip install .
 
+RUN ./scripts/docker/install-workers-deps.sh
+
 RUN ./scripts/docker/install-go.sh
 # RUN ./scripts/install/workers.sh 
 
