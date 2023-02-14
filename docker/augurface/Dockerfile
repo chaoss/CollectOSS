@@ -2,7 +2,7 @@
 FROM node:16 as build-stage
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.42.0"
+LABEL version="0.44.0"
 
 WORKDIR /augur/frontend/
 COPY ./docker/frontend/docker.config.json frontend.config.json
