@@ -23,10 +23,12 @@ from augur.tasks.start_tasks import augur_collection_monitor, CollectionState
 from augur.tasks.init.redis_connection import redis_connection 
 from augur.application.db.models import Repo, CollectionStatus
 from augur.application.db.session import DatabaseSession
+from augur.application.db.util import execute_session_query
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.cli import test_connection, test_db_connection 
 import sqlalchemy as s
+from sqlalchemy import or_, and_
 
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
@@ -116,17 +118,24 @@ def start(disable_collection, development, port):
         create_collection_status(logger)
 
         with DatabaseSession(logger) as session:
-            collection_status_list = session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value
-                or CollectionStatus.secondary_status == CollectionState.COLLECTING.value)
+            primaryCollecting = CollectionStatus.core_status == CollectionState.COLLECTING.value
+            secondaryCollecting = CollectionStatus.secondary_status == CollectionState.COLLECTING.value
+
+            query = session.query(CollectionStatus).filter(or_(primaryCollecting,secondaryCollecting))
+
+            collection_status_list = execute_session_query(query,'all')
 
             for status in collection_status_list:
                 repo = status.repo
                 repo.repo_name = None
                 repo.repo_path = None
                 repo.repo_status = "New"
+
+                status.core_status = "Pending"
+                status.secondary_status = "Pending"
             
-            collection_status_list.update({CollectionStatus.core_status: "Pending"})
-            collection_status_list.update({CollectionStatus.secondary_status: "Pending"})
+            #collection_status_list.update({CollectionStatus.core_status: "Pending"})
+            #collection_status_list.update({CollectionStatus.secondary_status: "Pending"})
             session.commit()
           
         augur_collection_monitor.si().apply_async()
