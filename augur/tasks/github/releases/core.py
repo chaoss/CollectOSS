@@ -14,7 +14,7 @@ from augur.tasks.github.util.gh_graphql_entities import hit_api_graphql, request
 from augur.application.db.util import execute_session_query
 
 
-def get_release_inf(session, repo_id, release, tag_only):
+def get_release_inf(repo_id, release, tag_only):
     if not tag_only:
 
         if release['author'] is None:
@@ -81,7 +81,7 @@ def insert_release(session, repo_id, owner, release, tag_only = False):
 
     # Put all data together in format of the table
     session.logger.info(f'Inserting release for repo with id:{repo_id}, owner:{owner}, release name:{release["name"]}\n')
-    release_inf = get_release_inf(session, repo_id, release, tag_only)
+    release_inf = get_release_inf(repo_id, release, tag_only)
 
     #Do an upsert
     session.insert_data(release_inf,Release,['release_id'])

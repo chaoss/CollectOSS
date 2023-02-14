@@ -100,8 +100,8 @@ def grab_repo_info_from_graphql_endpoint(session,query):
     return data
     
 
-def repo_info_model(session, repo_orm_obj):
-    session.logger.info("Beginning filling the repo_info model for repo: " + repo_orm_obj.repo_git + "\n")
+def repo_info_model(session, repo_orm_obj, logger):
+    logger.info("Beginning filling the repo_info model for repo: " + repo_orm_obj.repo_git + "\n")
 
     owner, repo = get_owner_repo(repo_orm_obj.repo_git)
 
@@ -220,7 +220,7 @@ def repo_info_model(session, repo_orm_obj):
     try:
         data = grab_repo_info_from_graphql_endpoint(session, query)
     except Exception as e:
-        session.logger.error(f"Could not grab info for repo {repo_orm_obj.repo_id}")
+        logger.error(f"Could not grab info for repo {repo_orm_obj.repo_id}")
         raise e
         return
 
@@ -235,7 +235,7 @@ def repo_info_model(session, repo_orm_obj):
     committers_count = query_committers_count(session, owner, repo)
 
     # Put all data together in format of the table
-    session.logger.info(f'Inserting repo info for repo with id:{repo_orm_obj.repo_id}, owner:{owner}, name:{repo}\n')
+    logger.info(f'Inserting repo info for repo with id:{repo_orm_obj.repo_id}, owner:{owner}, name:{repo}\n')
     rep_inf = {
         'repo_id': repo_orm_obj.repo_id,
         'last_updated': data['updatedAt'] if 'updatedAt' in data else None,
@@ -301,6 +301,6 @@ def repo_info_model(session, repo_orm_obj):
     update_repo_data = s.sql.text("""UPDATE repo SET forked_from=:forked, repo_archived=:archived, repo_archived_date_collected=:archived_date_collected WHERE repo_id=:repo_id""").bindparams(forked=forked, archived=archived, archived_date_collected=archived_date_collected, repo_id=repo_orm_obj.repo_id)
     session.execute_sql(update_repo_data)
 
-    session.logger.info(f"Inserted info for {owner}/{repo}\n")
+    logger.info(f"Inserted info for {owner}/{repo}\n")
 
 

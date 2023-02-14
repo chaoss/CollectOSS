@@ -131,7 +131,7 @@ def extract_data_from_pr_list(pull_requests: List[dict],
     return pr_dicts, pr_mapping_data, pr_numbers, contributors
 
 
-def insert_pr_contributors(contributors: List[dict], session: GithubTaskSession, task_name: str) -> None:
+def insert_pr_contributors(contributors: List[dict], session: DatabaseSession, task_name: str) -> None:
     """Insert pr contributors
     
     Args:
@@ -148,7 +148,7 @@ def insert_pr_contributors(contributors: List[dict], session: GithubTaskSession,
     session.insert_data(contributors, Contributor, ["cntrb_id"])
 
 
-def insert_prs(pr_dicts: List[dict], session: GithubTaskSession, task_name: str) -> Optional[List[dict]]:
+def insert_prs(pr_dicts: List[dict], session: DatabaseSession, task_name: str) -> Optional[List[dict]]:
     """Insert pull requests
     
     Args:
@@ -213,7 +213,7 @@ def map_other_pr_data_to_pr(
     return pr_label_dicts, pr_assignee_dicts, pr_reviewer_dicts, pr_metadata_dicts 
 
 
-def insert_pr_labels(labels: List[dict], logger: logging.Logger) -> None:
+def insert_pr_labels(labels: List[dict], logger: logging.Logger, session) -> None:
     """Insert pull request labels
 
     Note:
@@ -223,16 +223,12 @@ def insert_pr_labels(labels: List[dict], logger: logging.Logger) -> None:
         labels: list of labels to insert
         logger: handles logging
     """
-    from augur.tasks.init.celery_app import engine
-
-    with DatabaseSession(logger, engine) as session:
-
-        # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
-        pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
-        session.insert_data(labels, PullRequestLabel, pr_label_natural_keys)
+    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
+    pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
+    session.insert_data(labels, PullRequestLabel, pr_label_natural_keys)
 
 
-def insert_pr_assignees(assignees: List[dict], logger: logging.Logger) -> None:
+def insert_pr_assignees(assignees: List[dict], logger: logging.Logger, session) -> None:
     """Insert pull request assignees
 
     Note:
@@ -242,16 +238,12 @@ def insert_pr_assignees(assignees: List[dict], logger: logging.Logger) -> None:
         assignees: list of assignees to insert
         logger: handles logging
     """
-    from augur.tasks.init.celery_app import engine
-
-    with DatabaseSession(logger, engine) as session:
-
-        # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
-        pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-        session.insert_data(assignees, PullRequestAssignee, pr_assignee_natural_keys)
+    # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
+    pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
+    session.insert_data(assignees, PullRequestAssignee, pr_assignee_natural_keys)
 
 
-def insert_pr_reviewers(reviewers: List[dict], logger: logging.Logger) -> None:
+def insert_pr_reviewers(reviewers: List[dict], logger: logging.Logger, session) -> None:
     """Insert pull request reviewers
 
     Note:
@@ -261,16 +253,12 @@ def insert_pr_reviewers(reviewers: List[dict], logger: logging.Logger) -> None:
         reviewers: list of reviewers to insert
         logger: handles logging
     """
-    from augur.tasks.init.celery_app import engine
-
-    with DatabaseSession(logger, engine) as session:
-
-        # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
-        pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
-        session.insert_data(reviewers, PullRequestReviewer, pr_reviewer_natural_keys)
+    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
+    pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
+    session.insert_data(reviewers, PullRequestReviewer, pr_reviewer_natural_keys)
 
 
-def insert_pr_metadata(metadata: List[dict], logger: logging.Logger) -> None:
+def insert_pr_metadata(metadata: List[dict], logger: logging.Logger, session) -> None:
     """Insert pull request metadata
 
     Note:
@@ -280,14 +268,10 @@ def insert_pr_metadata(metadata: List[dict], logger: logging.Logger) -> None:
         metadata: list of metadata to insert
         logger: handles logging
     """
-    from augur.tasks.init.celery_app import engine
-
-    with DatabaseSession(logger, engine) as session:
-
-        # inserting pr metadata
-        # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
-        pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
-        session.insert_data(metadata, PullRequestMeta, pr_metadata_natural_keys)
+    # inserting pr metadata
+    # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
+    pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
+    session.insert_data(metadata, PullRequestMeta, pr_metadata_natural_keys)
 
 
 

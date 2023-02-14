@@ -7,7 +7,6 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.application.db.models import ContributorRepo
-from augur.application.db.engine import DatabaseEngine
 
 ### This worker scans all the platform users in Augur, and pulls their platform activity 
 ### logs. Those are then used to analyze what repos each is working in (which will include repos not
@@ -87,8 +86,7 @@ def contributor_breadth_model() -> None:
         WHERE 1 = 1
     """)
 
-    with DatabaseEngine(connection_pool_size=1) as engine:
-        current_event_ids = json.loads(pd.read_sql(dup_query, engine, params={}).to_json(orient="records"))
+    current_event_ids = json.loads(pd.read_sql(dup_query, engine, params={}).to_json(orient="records"))
 
     #Convert list of dictionaries to regular list of 'event_ids'.
     #The only values that the sql query returns are event_ids so
