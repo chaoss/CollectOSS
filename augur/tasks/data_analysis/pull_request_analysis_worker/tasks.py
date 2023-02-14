@@ -12,7 +12,6 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, PullRequestAnalysis
-from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
 
 # from sklearn.metrics import (confusion_matrix, f1_score, precision_score, recall_score)
