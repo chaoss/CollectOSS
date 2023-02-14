@@ -298,21 +298,8 @@ def repo_info_model(session, repo_orm_obj):
     else:
         archived = 0
 
-    current_repo_dict = repo_orm_obj.__dict__
-
-    #delete irrelevant sqlalchemy metadata
-    del current_repo_dict['_sa_instance_state']
-
-    rep_additional_data = {
-        'forked_from': forked,
-        'repo_archived': archived,
-        'repo_archived_date_collected': archived_date_collected
-    }
-
-    current_repo_dict.update(rep_additional_data)
-    result = session.insert_data(current_repo_dict, Repo, ['repo_id'])
-    #result = self.db.execute(self.repo_table.update().where(
-    #    self.repo_table.c.repo_id==repo_id).values(rep_additional_data))
+    update_repo_data = s.sql.text("""UPDATE repo SET forked_from=:forked, repo_archived=:archived, repo_archived_date_collected=:archived_date_collected WHERE repo_id=:repo_id""").bindparams(forked=forked, archived=archived, archived_date_collected=archived_date_collected, repo_id=repo_orm_obj.repo_id)
+    session.execute_sql(update_repo_data)
 
     session.logger.info(f"Inserted info for {owner}/{repo}\n")
 

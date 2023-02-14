@@ -180,8 +180,6 @@ def extract_pr_review_message_ref_data(comment: dict, pr_review_id, repo_id: int
 
 def extract_pr_event_data(event: dict, pr_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
 
-    # TODO: Add db pull request id
-
     pr_event = {
         'pull_request_id': pr_id,
         'cntrb_id': event["cntrb_id"] if "cntrb_id" in event else None,
@@ -203,8 +201,6 @@ def extract_pr_event_data(event: dict, pr_id: int, platform_id: int, repo_id: in
 
 
 def extract_issue_event_data(event: dict, issue_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
-
-    # TODO: Add db pull request id
 
     issue_event = {
         'issue_event_src_id': int(event['id']),

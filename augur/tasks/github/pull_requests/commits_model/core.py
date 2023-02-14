@@ -4,7 +4,6 @@ import traceback
 import sqlalchemy as s
 from augur.application.db.data_parse import *
 from augur.application.db.session import DatabaseSession
-from augur.tasks.init.celery_app import engine
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.application.db.models import *
@@ -13,6 +12,8 @@ from augur.application.db.util import execute_session_query
 
 
 def pull_request_commits_model(repo_id,logger):
+
+    from augur.tasks.init.celery_app import engine
     
     # query existing PRs and the respective url we will append the commits url to
     pr_url_sql = s.sql.text("""
@@ -22,22 +23,24 @@ def pull_request_commits_model(repo_id,logger):
         """).bindparams(repo_id=repo_id)
     pr_urls = []
     #pd.read_sql(pr_number_sql, self.db, params={})
-    session = GithubTaskSession(logger)
-    pr_urls = session.fetchall_data_from_sql_text(pr_url_sql)#session.execute_sql(pr_number_sql).fetchall()
-    
-    query = session.query(Repo).filter(Repo.repo_id == repo_id)
-    repo = execute_session_query(query, 'one')
+
+    with DatabaseSession(logger, engine) as session:
+        pr_urls = session.fetchall_data_from_sql_text(pr_url_sql)#session.execute_sql(pr_number_sql).fetchall()
+        
+        query = session.query(Repo).filter(Repo.repo_id == repo_id)
+        repo = execute_session_query(query, 'one')
 
     owner, name = get_owner_repo(repo.repo_git)
 
     logger.info(f"Getting pull request commits for repo: {repo.repo_git}")
-    
-    for index,pr_info in enumerate(pr_urls):
-        logger.info(f'Querying commits for pull request #{index + 1} of {len(pr_urls)}')
 
-        commits_url = pr_info['pr_url'] + '/commits?state=all'
+    with GithubTaskSession(logger, engine) as session:
+        
+        for index,pr_info in enumerate(pr_urls):
+            logger.info(f'Querying commits for pull request #{index + 1} of {len(pr_urls)}')
 
-        try:
+            commits_url = pr_info['pr_url'] + '/commits?state=all'
+
             #Paginate through the pr commits
             pr_commits = GithubPaginator(commits_url, session.oauths, logger)
 
@@ -62,11 +65,8 @@ def pull_request_commits_model(repo_id,logger):
                 #Execute bulk upsert
                 pr_commits_natural_keys = [	"pull_request_id", "repo_id", "pr_cmt_sha"]
                 session.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
-            
-        except Exception as e:
-            logger.error(f"Ran into error with pull request #{index + 1} in repo {repo_id}")
-            logger.error(
-            ''.join(traceback.format_exception(None, e, e.__traceback__)))
+                
+
 
 
 

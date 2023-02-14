@@ -1,0 +1,65 @@
+:root {
+    --color-bg: #1A233A;
+    --color-bg-light: #272E48;
+    --color-fg: white;
+    --color-fg-contrast: black;
+    --color-accent: #6f42c1;
+    --color-accent-dark: #6134b3;
+    --color-notice: #00ddff;
+    --color-notice-contrast: #006979;
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    overflow: hidden;
+}
+
+.content-column {
+    overflow-y: scroll;
+}
+
+.dashboard-content {
+    background-color: var(--color-bg-light);
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+    background-color: var(--color-accent);
+}
+
+.dashboard-sidebar {
+    width: 280px;
+    background-color: var(--color-bg-light) !important;
+}
+
+.dashboard-form-control {
+    border: 1px solid #596280;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    border-radius: 2px;
+    font-size: .825rem;
+    background: #1A233A;
+    color: #bcd0f7;
+}
+
+table {
+    background-color: var(--color-fg);
+    color: var(--color-fg-contrast);
+}
+
+.toast-container {
+    top: 80px !important;
+    right: 16px !important;
+}
+
+.toast {
+    background-color: var(--color-notice);
+    color: var(--color-fg);
+}
+
+#toast-placeholder {
+    display: none;
+    z-index: 100;
+}

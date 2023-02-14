@@ -42,7 +42,6 @@ from .facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, in
 from augur.tasks.github.facade_github.contributor_interfaceable.contributor_interface import *
 
 from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.tasks.init.celery_app import engine
 from logging import Logger
 from sqlalchemy.sql.elements import TextClause
 

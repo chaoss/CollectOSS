@@ -21,8 +21,9 @@ from collections import Counter
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, RepoClusterMessage, RepoTopic, TopicWord
-from augur.application.db.engine import create_database_engine
+from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
 
 
@@ -31,9 +32,21 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 
 
 @celery.task
-def clustering_model(repo_git: str) -> None:
+def clustering_task():
 
     logger = logging.getLogger(clustering_model.__name__)
+    from augur.tasks.init.celery_app import engine
+
+    with DatabaseSession(logger, engine) as session:
+        query = session.query(Repo)
+        repos = execute_session_query(query, 'all')
+    
+
+    for repo in repos:
+        clustering_model(repo.repo_git, logger, engine)
+
+
+def clustering_model(repo_git: str,logger,engine) -> None:
 
     logger.info(f"Starting clustering analysis for {repo_git}")
 
@@ -49,15 +62,17 @@ def clustering_model(repo_git: str) -> None:
     tool_version = '0.2.0'
     data_source = 'Augur Collected Messages'
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
+
+        config = AugurConfig(logger, session)
 
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id
 
-        num_clusters = session.config.get_value("Clustering_Task", 'num_clusters')
-        max_df = session.config.get_value("Clustering_Task", 'max_df')
-        max_features = session.config.get_value("Clustering_Task", 'max_features')
-        min_df = session.config.get_value("Clustering_Task", 'min_df')
+        num_clusters = config.get_value("Clustering_Task", 'num_clusters')
+        max_df = config.get_value("Clustering_Task", 'max_df')
+        max_features = config.get_value("Clustering_Task", 'max_features')
+        min_df = config.get_value("Clustering_Task", 'min_df')
 
         logger.info(f"Min df: {min_df}. Max df: {max_df}")
 
@@ -109,7 +124,8 @@ def clustering_model(repo_git: str) -> None:
             """
     )
     # result = db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
-    msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, create_database_engine(), params={"repo_id": repo_id})
+    with DatabaseEngine(connection_pool_size=1) as engine:
+        msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, engine, params={"repo_id": repo_id})
     logger.info(msg_df_cur_repo.head())
     logger.debug(f"Repo message df size: {len(msg_df_cur_repo.index)}")
 
@@ -164,14 +180,14 @@ def clustering_model(repo_git: str) -> None:
         'tool_version': tool_version,
         'data_source': data_source
     }
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
         repo_cluster_messages_obj = RepoClusterMessage(**record)
         session.add(repo_cluster_messages_obj)
         session.commit()
 
-    # result = db.execute(repo_cluster_messages_table.insert().values(record))
-    logging.info(
-        "Primary key inserted into the repo_cluster_messages table: {}".format(repo_cluster_messages_obj.msg_cluster_id))
+        # result = db.execute(repo_cluster_messages_table.insert().values(record))
+        logging.info(
+            "Primary key inserted into the repo_cluster_messages table: {}".format(repo_cluster_messages_obj.msg_cluster_id))
     try:
         logger.debug('pickling')
         lda_model = pickle.load(open("lda_model", "rb"))
@@ -192,7 +208,7 @@ def clustering_model(repo_git: str) -> None:
         prediction = lda_model.transform(count_matrix_cur_repo)
 
         logger.debug('for loop for vocab')
-        with DatabaseSession(logger) as session:
+        with DatabaseSession(logger, engine) as session:
             for i, prob_vector in enumerate(prediction):
                 # repo_id = msg_df.loc[i]['repo_id']
                 for i, prob in enumerate(prob_vector):
@@ -298,7 +314,8 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
         AND prmr.msg_id=m.msg_id
         """
     )
-    msg_df_all = pd.read_sql(get_messages_sql, create_database_engine(), params={})
+    with DatabaseEngine(connection_pool_size=1) as engine:
+        msg_df_all = pd.read_sql(get_messages_sql, engine, params={})
 
     # select only highly active repos
     logger.debug("Selecting highly active repos")
@@ -365,7 +382,7 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
     # twid = self.db.execute(key_sequence_words_sql)
     # logger.info("twid variable is: {}".format(twid))
     # insert topic list into database
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
         topic_id = 1
         for topic in topic_list:
             # twid = self.get_max_id('topic_words', 'topic_words_id') + 1

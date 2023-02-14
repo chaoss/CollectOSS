@@ -10,8 +10,9 @@ from augur.tasks.data_analysis.message_insights.message_sentiment import get_sen
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, PullRequestAnalysis
-from augur.application.db.engine import create_database_engine
+from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
 
 # from sklearn.metrics import (confusion_matrix, f1_score, precision_score, recall_score)
@@ -21,9 +22,23 @@ from augur.application.db.util import execute_session_query
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 @celery.task
-def pull_request_analysis_model(repo_git: str) -> None:
+def pull_request_analysis_task():
 
-    logger = logging.getLogger(pull_request_analysis_model.__name__)
+    logger = logging.getLogger(pull_request_analysis_task.__name__)
+    from augur.tasks.init.celery_app import engine
+
+    with DatabaseSession(logger, engine) as session:
+        query = session.query(Repo)
+        repos = execute_session_query(query, 'all')
+    
+
+    for repo in repos:
+        pull_request_analysis_model(repo.repo_git, logger, engine)
+
+
+
+def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
+
 
     tool_source = 'Pull Request Analysis Worker'
     tool_version = '0.0.0'
@@ -31,12 +46,14 @@ def pull_request_analysis_model(repo_git: str) -> None:
 
     insight_days = 200
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
+
+        config = AugurConfig(logger, session)
 
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id
 
-        senti_models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", session.config.get_value("Message_Insights", 'models_dir'))
+        senti_models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", config.get_value("Message_Insights", 'models_dir'))
 
         logger.info(f'Sentiment model dir located - {senti_models_dir}')
 
@@ -62,7 +79,7 @@ def pull_request_analysis_model(repo_git: str) -> None:
         and pr_src_state like 'open' 
     """)
 
-    df_pr = pd.read_sql_query(pr_SQL, create_database_engine(), params={'begin_date': begin_date, 'repo_id': repo_id})
+    df_pr = pd.read_sql_query(pr_SQL, engine, params={'begin_date': begin_date, 'repo_id': repo_id})
 
     logger.info(f'PR Dataframe dim: {df_pr.shape}\n')
 
@@ -94,13 +111,14 @@ def pull_request_analysis_model(repo_git: str) -> None:
             left outer join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
             left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id where issue_message_ref.repo_id = :repo_id""")
 
-    df_message = pd.read_sql_query(messages_SQL, create_database_engine(), params={'repo_id': repo_id})
+    df_message = pd.read_sql_query(messages_SQL, engine, params={'repo_id': repo_id})
 
     logger.info(f'Mapping messages to PR, find comment & participants counts')
 
     # Map PR to its corresponding messages
+    
     pr_ref_sql = s.sql.text("select * from augur_data.pull_request_message_ref")
-    df_pr_ref = pd.read_sql_query(pr_ref_sql, create_database_engine())
+    df_pr_ref = pd.read_sql_query(pr_ref_sql, engine)
     df_merge = pd.merge(df_pr, df_pr_ref, on='pull_request_id', how='left')
     df_merge = pd.merge(df_merge, df_message, on='msg_id', how='left')
     df_merge = df_merge.dropna(subset=['msg_id'], axis=0)
@@ -153,7 +171,7 @@ def pull_request_analysis_model(repo_git: str) -> None:
             SELECT repo_id, pull_requests_merged, pull_request_count,watchers_count, last_updated FROM 
             augur_data.repo_info where repo_id = :repo_id
             """)
-    df_repo = pd.read_sql_query(repo_sql, create_database_engine(), params={'repo_id': repo_id})
+    df_repo = pd.read_sql_query(repo_sql, engine, params={'repo_id': repo_id})
 
     df_repo = df_repo.loc[df_repo.groupby('repo_id').last_updated.idxmax(), :]
     df_repo = df_repo.drop(['last_updated'], axis=1)
@@ -198,7 +216,7 @@ def pull_request_analysis_model(repo_git: str) -> None:
     logger.info('Begin PR_analysis data insertion...')
     logger.info(f'{df.shape[0]} data records to be inserted')
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
         for row in df.itertuples(index=False):
             try:
                 msg = {

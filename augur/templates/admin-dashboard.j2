@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename= 'favicon/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename= 'favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename= 'favicon/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename= 'favicon/site.webmanifest') }}">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+    <!-- jQuery Google CDN -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="{{ url_for('static', filename= 'css/dashboard.css') }}" rel="stylesheet">
+
+    <title>Dasboard - Augur View</title>
+</head>
+
+<body style="min-height: 100%;" class="dashboard-body">
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <div class="container-fluid h-100 d-flex flex-column fixed-top" style="height: 100%;">
+        <div class="row flex-fill" style="height: inherit;">
+            <div class="d-flex flex-column p-3 text-white dashboard-sidebar mh-100">
+                <div class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                    <span class="fs-4">Dashboard</span>
+                </div>
+                <hr>
+                <ul class="nav nav-pills flex-column mb-auto" id="nav-list">
+                    <li class="nav-item">
+                        <a href="#stats-section" class="nav-link active" aria-current="page">Stats</a>
+                    </li>
+                    <li>
+                        <a href="#accounts-section" class="nav-link text-white">Accounts</a>
+                    </li>
+                    <li>
+                        <a href="#config-section" class="nav-link text-white">Configuration</a>
+                    </li>
+                </ul>
+                <hr>
+                <div class="dropdown">
+                    <a href="{{ url_for('root') }}" class="d-flex align-items-center text-white text-decoration-none">
+                        <img src="{{ url_for('logo') }}" alt="Augur logo" height="32" class="rounded-circle me-2">
+                    </a>
+                    {# Reserved for future use
+                    <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+                        <li><a class="dropdown-item" href="#">New project...</a></li>
+                        <li><a class="dropdown-item" href="#">Settings</a></li>
+                        <li><a class="dropdown-item" href="#">Profile</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="#">Sign out</a></li>
+                    </ul>
+                    #}
+                </div>
+            </div>
+            {# Start dashboard content #}
+            <div class="col-xl-9 col-lg-9 col-md-12 col-sm-12 col-12 mb-3 content-column mh-100">
+                <h1 id="stats-section">Stats</h1>
+                {# Start content card #}
+                <div class="card dashboard-content">
+                    <div class="card-body">
+                        {# Start form body #}
+                        <form id="stats-form">
+                            {% for section in sections %}
+                            <div class="row mb-3">
+                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                    <h6 class="mb-3 text-primary">{{ section.title }}</h6>
+                                </div>
+                                {% for setting in section.settings %}
+                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                                    <div class="form-group">
+                                        <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
+                                        <input type="text" class="form-control" id="{{ setting.id }}" placeholder="{{ setting.value }}">
+                                        <div class="form-text mb-1">{{ setting.description or "No description available" }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                            {# <div class="row">
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" id="submit" name="submit" class="btn btn-primary">Restart</button>
+                                </div>
+                            </div> #}
+                        </form>
+                    </div>
+                </div>
+                <h1 id="accounts-section">User Accounts</h1>
+                {# Start content card #}
+                <div class="card dashboard-content">
+                    <div class="card-body">
+                        <form id="accounts-form">
+                            {% for section in sections %}
+                            <div class="row mb-3">
+                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                    <h6 class="mb-3 text-primary">{{ section.title }}</h6>
+                                </div>
+                                {% for setting in section.settings %}
+                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                                    <div class="form-group">
+                                        <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
+                                        <input type="text" class="form-control" id="{{ setting.id }}" placeholder="{{ setting.value }}">
+                                        <div class="form-text mb-1">{{ setting.description or "No description available" }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                            {# <div class="row">
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" id="submit" name="submit" class="btn btn-primary">Restart</button>
+                                </div>
+                            </div> #}
+                        </form>
+                    </div>
+                </div>
+                <h1 id="config-section">Configuration</h1>
+                {# Start content card #}
+                <div class="card dashboard-content">
+                    <div class="card-body">
+                        <form id="settings-form">
+                            {% for section in config.items() %}
+                            <div class="row mb-3">
+                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                    <h6 class="mb-3 text-primary">{{ section[0] }}</h6>
+                                </div>
+                                {% for setting in section[1].items() %}
+                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                                    <div class="form-group">
+                                        <label for="config_{{ section[0] }}_{{ setting[0] }}" class="mb-1">{{ setting[0] }}</label>
+                                        <input type="text" class="form-control" id="config_{{ section[0] }}_{{ setting[0] }}" placeholder="{{ setting[1] }}">
+                                        <div class="form-text mb-1">No description available</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                            <div class="row">
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" id="submit" name="submit" class="btn btn-primary">Update Settings</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="{{ url_for('static', filename='js/range.js') }}" charset="utf-8"></script>
+<script type="text/javascript">
+var elements = document.getElementsByClassName("nav-link");
+range(elements.length).forEach((i) => {
+    elements[i].addEventListener("click", function() {
+        setActive(elements[i]);
+    })
+});
+
+function setActive(navLink) {
+    var elements = document.getElementsByClassName("nav-link");
+    range(elements.length).forEach((i) => {
+        if(elements[i].classList.contains("active")) {
+            elements[i].classList.add("text-white");
+            elements[i].classList.remove("active");
+        }
+    });
+    navLink.classList.add("active");
+    navLink.classList.remove("text-white");
+}
+</script>
+</html>

@@ -15,18 +15,35 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 from celery import chain, signature, group
 import uuid
 import traceback
+from sqlalchemy import update
 
 
 from augur import instance_id
-from augur.tasks.start_tasks import start_task
+from augur.tasks.start_tasks import augur_collection_monitor, CollectionState
 from augur.tasks.init.redis_connection import redis_connection 
-from augur.application.db.models import Repo
+from augur.application.db.models import Repo, CollectionStatus
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
+from augur.application.config import AugurConfig
 from augur.application.cli import test_connection, test_db_connection 
+import sqlalchemy as s
 
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
+
+
+def create_collection_status(logger):
+
+    with DatabaseSession(logger) as session:
+        query = s.sql.text("""
+        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.collection_status)
+        """)
+
+        repos = session.execute_sql(query).fetchall()
+
+        for repo in repos:
+            CollectionStatus.insert(session,repo[0])
+
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
@@ -34,7 +51,6 @@ def cli():
 
 @cli.command("start")
 @click.option("--disable-collection", is_flag=True, default=False, help="Turns off data collection workers")
-@click.option("--development", is_flag=True, default=False, help="Enable development mode, implies --disable-collection")
 @click.option("--development", is_flag=True, default=False, help="Enable development mode, implies --disable-collection")
 @click.option('--port')
 @test_connection
@@ -53,46 +69,73 @@ def start(disable_collection, development, port):
         raise e
     
     if development:
-        disable_collection = True
         os.environ["AUGUR_DEV"] = "1"
         logger.info("Starting in development mode")
 
-    
-    with DatabaseSession(logger) as session:
-   
+    try:
         gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
-        host = session.config.get_value("Server", "host")
+    except FileNotFoundError:
+        logger.error("\n\nPlease run augur commands in the root directory\n\n")
 
-        if not port:
-            port = session.config.get_value("Server", "port")
+    db_session = DatabaseSession(logger)
+    config = AugurConfig(logger, db_session)
+    host = config.get_value("Server", "host")
 
-        gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} --preload augur.api.server:app"
-        server = subprocess.Popen(gunicorn_command.split(" "))
+    if not port:
+        port = config.get_value("Server", "port")
+        
+    db_session.invalidate()
 
-        time.sleep(3)
-        logger.info('Gunicorn webserver started...')
-        logger.info(f'Augur is running at: http://127.0.0.1:{session.config.get_value("Server", "port")}')
+    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app"
+    server = subprocess.Popen(gunicorn_command.split(" "))
 
-        worker_1_process = None
-        cpu_worker_process = None
-        celery_beat_process = None
-        if not disable_collection:
+    time.sleep(3)
+    logger.info('Gunicorn webserver started...')
+    logger.info(f'Augur is running at: http://127.0.0.1:{port}')
 
-            if os.path.exists("celerybeat-schedule.db"):
-                logger.info("Deleting old task schedule")
-                os.remove("celerybeat-schedule.db")
+    scheduling_worker_process = None
+    core_worker_process = None
+    secondary_worker_process = None
+    celery_beat_process = None
+    if not disable_collection:
 
-            worker_1 = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=100 -n {uuid.uuid4().hex}@%h"
-            cpu_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h -Q cpu"
-            worker_1_process = subprocess.Popen(worker_1.split(" "))
+        if os.path.exists("celerybeat-schedule.db"):
+            logger.info("Deleting old task schedule")
+            os.remove("celerybeat-schedule.db")
 
-            cpu_worker_process = subprocess.Popen(cpu_worker.split(" "))
-            time.sleep(5)
+        scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=14 -n core:{uuid.uuid4().hex}@%h"
+        secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=5 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+        
+        scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
+        core_worker_process = subprocess.Popen(core_worker.split(" "))
+        secondary_worker_process = subprocess.Popen(secondary_worker.split(" "))
 
-            start_task.si().apply_async()
+        time.sleep(5)
 
-            celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
-            celery_beat_process = subprocess.Popen(celery_command.split(" "))       
+        create_collection_status(logger)
+
+        with DatabaseSession(logger) as session:
+            collection_status_list = session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value
+                or CollectionStatus.secondary_status == CollectionState.COLLECTING.value)
+
+            for status in collection_status_list:
+                repo = status.repo
+                repo.repo_name = None
+                repo.repo_path = None
+                repo.repo_status = "New"
+            
+            collection_status_list.update({CollectionStatus.core_status: "Pending"})
+            collection_status_list.update({CollectionStatus.secondary_status: "Pending"})
+            session.commit()
+          
+        augur_collection_monitor.si().apply_async()
+
+        celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
+        celery_beat_process = subprocess.Popen(celery_command.split(" "))    
+
+    else:
+        logger.info("Collection disabled")   
     
     try:
         server.wait()
@@ -102,13 +145,17 @@ def start(disable_collection, development, port):
             logger.info("Shutting down server")
             server.terminate()
 
-        if worker_1_process:
-            logger.info("Shutting down celery process")
-            worker_1_process.terminate()
+        if core_worker_process:
+            logger.info("Shutting down celery process: core")
+            core_worker_process.terminate()
 
-        if cpu_worker_process:
-            logger.info("Shutting down celery process")
-            cpu_worker_process.terminate()
+        if scheduling_worker_process:
+            logger.info("Shutting down celery process: scheduling")
+            scheduling_worker_process.terminate()
+
+        if secondary_worker_process:
+            logger.info("Shutting down celery process: secondary")
+            secondary_worker_process.terminate()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
@@ -116,6 +163,12 @@ def start(disable_collection, development, port):
 
         try:
             clear_redis_caches()
+            connection_string = ""
+            with DatabaseSession(logger) as session:
+                config = AugurConfig(logger, session)
+                connection_string = config.get_section("RabbitMQ")['connection_string']
+
+            clear_rabbitmq_messages(connection_string)
             
         except RedisConnectionError:
             pass
@@ -126,18 +179,34 @@ def stop():
     """
     Sends SIGTERM to all Augur server & worker processes
     """
-    _broadcast_signal_to_processes(given_logger=logging.getLogger("augur.cli"))
+    logger = logging.getLogger("augur.cli")
+    _broadcast_signal_to_processes(given_logger=logger)
 
     clear_redis_caches()
+    connection_string = ""
+    with DatabaseSession(logger) as session:
+        config = AugurConfig(logger, session)
+        connection_string = config.get_section("RabbitMQ")['connection_string']
+
+    clear_rabbitmq_messages(connection_string)
 
 @cli.command('kill')
 def kill():
     """
     Sends SIGKILL to all Augur server & worker processes
     """
-    _broadcast_signal_to_processes(broadcast_signal=signal.SIGKILL, given_logger=logging.getLogger("augur.cli"))
+    logger = logging.getLogger("augur.cli")
+    _broadcast_signal_to_processes(broadcast_signal=signal.SIGKILL, given_logger=logger)
 
     clear_redis_caches()
+
+    connection_string = ""
+    with DatabaseSession(logger) as session:
+        config = AugurConfig(logger, session)
+        connection_string = config.get_section("RabbitMQ")['connection_string']
+
+    clear_rabbitmq_messages(connection_string)
+
 
 def clear_redis_caches():
     """Clears the redis databases that celery and redis use."""
@@ -146,6 +215,14 @@ def clear_redis_caches():
     celery_purge_command = "celery -A augur.tasks.init.celery_app.celery_app purge -f"
     subprocess.call(celery_purge_command.split(" "))
     redis_connection.flushdb()
+
+def clear_rabbitmq_messages(connection_string):
+    virtual_host_string = connection_string.split("/")[-1]
+
+    logger.info("Clearing all messages from celery queue in rabbitmq")
+    rabbitmq_purge_command = f"sudo rabbitmqctl purge_queue celery -p {virtual_host_string}"
+    subprocess.call(rabbitmq_purge_command.split(" "))
+
 
 @cli.command('export-env')
 def export_env(config):
