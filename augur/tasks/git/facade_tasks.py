@@ -407,7 +407,7 @@ def git_repo_updates_facade_task(repo_git):
         git_repo_updates(session, repo_git)
 
 
-def generate_analysis_sequence(logger,repo_git):
+def generate_analysis_sequence(logger,repo_git, session):
     """Run the analysis by looping over all active repos. For each repo, we retrieve
     the list of commits which lead to HEAD. If any are missing from the database,
     they are filled in. Then we check to see if any commits in the database are
@@ -422,58 +422,56 @@ def generate_analysis_sequence(logger,repo_git):
     
     analysis_sequence = []
 
-    with FacadeSession(logger) as session:
-        repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
-        WHERE repo_git=:value""").bindparams(value=repo_git)
-        repos = session.fetchall_data_from_sql_text(repo_list)
+    repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
+    WHERE repo_git=:value""").bindparams(value=repo_git)
+    repos = session.fetchall_data_from_sql_text(repo_list)
 
-        start_date = session.get_setting('start_date')
+    start_date = session.get_setting('start_date')
 
-        repo_ids = [repo['repo_id'] for repo in repos]
+    repo_ids = [repo['repo_id'] for repo in repos]
 
-        repo_id = repo_ids.pop(0)
+    repo_id = repo_ids.pop(0)
 
-        #determine amount of celery tasks to run at once in each grouped task load
-        concurrentTasks = int((-1 * (15/(len(repo_ids)+1))) + 15)
-        logger.info(f"Scheduling concurrent layers {concurrentTasks} tasks at a time.")
+    #determine amount of celery tasks to run at once in each grouped task load
+    concurrentTasks = int((-1 * (15/(len(repo_ids)+1))) + 15)
+    logger.info(f"Scheduling concurrent layers {concurrentTasks} tasks at a time.")
 
-        analysis_sequence.append(facade_analysis_init_facade_task.si())
+    analysis_sequence.append(facade_analysis_init_facade_task.si())
 
-        analysis_sequence.append(grab_comitters.si(repo_id))
+    analysis_sequence.append(grab_comitters.si(repo_id))
 
-        analysis_sequence.append(trim_commits_facade_task.si(repo_id))
+    analysis_sequence.append(trim_commits_facade_task.si(repo_id))
 
-        analysis_sequence.append(analyze_commits_in_parallel.si(repo_id,True))
+    analysis_sequence.append(analyze_commits_in_parallel.si(repo_id,True))
 
-        analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_id))
+    analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_id))
 
-        
-        analysis_sequence.append(facade_analysis_end_facade_task.si())
+    
+    analysis_sequence.append(facade_analysis_end_facade_task.si())
     
     logger.info(f"Analysis sequence: {analysis_sequence}")
     return analysis_sequence
 
 
 
-def generate_contributor_sequence(logger,repo_git):
+def generate_contributor_sequence(logger,repo_git, session):
     
     contributor_sequence = []
     #all_repo_ids = []
     repo_id = None
-    with FacadeSession(logger) as session:
         
-        #contributor_sequence.append(facade_start_contrib_analysis_task.si())
-        query = s.sql.text("""SELECT repo_id FROM repo
-        WHERE repo_git=:value""").bindparams(value=repo_git)
+    #contributor_sequence.append(facade_start_contrib_analysis_task.si())
+    query = s.sql.text("""SELECT repo_id FROM repo
+    WHERE repo_git=:value""").bindparams(value=repo_git)
 
-        repo = session.execute_sql(query).fetchone()
-        session.logger.info(f"repo: {repo}")
-        repo_id = repo[0]
-        #pdb.set_trace()
-        #breakpoint()
-        #for repo in all_repos:
-        #    contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
-        #all_repo_ids = [repo['repo_id'] for repo in all_repos]
+    repo = session.execute_sql(query).fetchone()
+    session.logger.info(f"repo: {repo}")
+    repo_id = repo[0]
+    #pdb.set_trace()
+    #breakpoint()
+    #for repo in all_repos:
+    #    contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
+    #all_repo_ids = [repo['repo_id'] for repo in all_repos]
 
     #contrib_group = create_grouped_task_load(dataList=all_repo_ids,task=insert_facade_contributors)#group(contributor_sequence)
     #contrib_group.link_error(facade_error_handler.s())
@@ -530,10 +528,10 @@ def generate_facade_chain(logger,repo_git):
             facade_sequence.append(force_repo_analysis_facade_task.si(repo_git))
 
         #Generate commit analysis task order.
-        facade_sequence.extend(generate_analysis_sequence(logger,repo_git))
+        facade_sequence.extend(generate_analysis_sequence(logger,repo_git,session))
 
         #Generate contributor analysis task group.
-        facade_sequence.append(generate_contributor_sequence(logger,repo_git))
+        facade_sequence.append(generate_contributor_sequence(logger,repo_git, session))
 
         
         logger.info(f"Facade sequence: {facade_sequence}")
