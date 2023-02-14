@@ -16,9 +16,19 @@ from augur.application.db.util import execute_session_query
 
 def get_release_inf(session, repo_id, release, tag_only):
     if not tag_only:
-        name = "" if release['author']['name'] is None else release['author']['name']
-        company = "" if release['author']['company'] is None else release['author']['company']
-        author = name + '_' + company
+
+        if release['author'] is None:
+            author = 'No Author Available.'
+            name = "N/A"
+            company = "N/A"
+        else:
+            author = release["author"]
+
+            name = author.get("name") or "nobody"
+            company = author.get("company") or "nocompany"
+            author = name + '_' + company
+
+
         release_inf = {
             'release_id': release['id'],
             'repo_id': repo_id,
@@ -36,21 +46,16 @@ def get_release_inf(session, repo_id, release, tag_only):
         }
     else:
         if 'tagger' in release['target']:
-            if 'name' in release['target']['tagger']:
-                name = release['target']['tagger']['name']
-            else:
-                name = ""
-            if 'email' in release['target']['tagger']:
-                email = '_' + release['target']['tagger']['email']
-            else:
-                email = ""
-            author = name + email
-            if 'date' in release['target']['tagger']:
-                date = release['target']['tagger']['date']
-            else:
-                date = ""
+
+            tagger = release["target"]["tagger"]
+
+            date = tagger.get("date") or ""
+            name = tagger.get("name") or "nobody"
+            email = tagger.get("email") or "noemail"
+
+            author = name + "_" + email
         else:
-            author = ""
+            author = "nobody"
             date = ""
         release_inf = {
             'release_id': release['id'],
@@ -176,7 +181,7 @@ def releases_model(session, repo_git, repo_id):
         session.logger.info(f"Ran into problem when fetching data for repo {repo_git}: {e}")
         return
 
-    session.logger.info("repository value is: {}\n".format(data))
+    #session.logger.info("repository value is: {}\n".format(data))
     if 'releases' in data:
         if 'edges' in data['releases'] and data['releases']['edges']:
             for n in data['releases']['edges']:

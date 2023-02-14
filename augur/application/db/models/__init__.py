@@ -99,5 +99,14 @@ from augur.application.db.models.augur_operations import (
     WorkerSettingsFacade,
     Config,
     User,
-    UserRepo
+    UserRepo,
+    UserGroup,
+    UserSessionToken,
+    ClientApplication,
+    Subscription,
+    SubscriptionType,
+    RefreshToken,
+    CollectionStatus
 )
+
+DEFAULT_REPO_GROUP_IDS = [1, 10]

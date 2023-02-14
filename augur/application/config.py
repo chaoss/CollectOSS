@@ -18,7 +18,9 @@ def get_development_flag_from_config():
         section = "Augur"
         setting = "developer"
 
-        return config.get_value(section, setting)
+        flag = config.get_value(section, setting)
+
+    return flag
 
 def get_development_flag():
     return os.getenv("AUGUR_DEV") or get_development_flag_from_config() or False
@@ -71,8 +73,11 @@ default_config = {
                 "cache_group": 0, 
                 "connection_string": "redis://127.0.0.1:6379/"
             },
+            "RabbitMQ": {
+                "connection_string": "amqp://augur:password123@localhost:5672/augur_vhost"
+            },
             "Tasks": {
-                "collection_interval": 2592000
+                "collection_interval": 300
             },
             "Message_Insights": {
                     "insight_days": 30,
@@ -95,7 +100,8 @@ default_config = {
             },
             "Task_Routine": {
                 "prelim_phase": 1,
-                "repo_collect_phase": 1,
+                "primary_repo_collect_phase": 1,
+                "secondary_repo_collect_phase": 1,
                 "machine_learning_phase": 0
             }
         }
@@ -176,6 +182,11 @@ class AugurConfig():
         Returns:
             The value from config if found, and None otherwise
         """
+
+        # TODO temporary until added to the DB schema
+        if section_name == "frontend" and setting_name == "pagination_offset":
+            return 25
+
         try:
             query = self.session.query(Config).filter(Config.section_name == section_name, Config.setting_name == setting_name)
             config_setting = execute_session_query(query, 'one')

@@ -4,7 +4,6 @@ import traceback
 import sqlalchemy as s
 from augur.application.db.data_parse import *
 from augur.application.db.session import DatabaseSession
-from augur.tasks.init.celery_app import engine
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection, hit_api_graphql
@@ -13,22 +12,25 @@ from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.util import execute_session_query
 
 def pull_request_files_model(repo_id,logger):
+    
+    from augur.tasks.init.celery_app import engine
 
-        # query existing PRs and the respective url we will append the commits url to
-        pr_number_sql = s.sql.text("""
-            SELECT DISTINCT pr_src_number as pr_src_number, pull_requests.pull_request_id
-            FROM pull_requests--, pull_request_meta
-            WHERE repo_id = :repo_id
-        """).bindparams(repo_id=repo_id)
-        pr_numbers = []
-        #pd.read_sql(pr_number_sql, self.db, params={})
-        session = GithubTaskSession(logger)
+    # query existing PRs and the respective url we will append the commits url to
+    pr_number_sql = s.sql.text("""
+        SELECT DISTINCT pr_src_number as pr_src_number, pull_requests.pull_request_id
+        FROM pull_requests--, pull_request_meta
+        WHERE repo_id = :repo_id
+    """).bindparams(repo_id=repo_id)
+    pr_numbers = []
+    #pd.read_sql(pr_number_sql, self.db, params={})
+
+    with GithubTaskSession(logger, engine) as session:
         result = session.execute_sql(pr_number_sql).fetchall()
         pr_numbers = [dict(zip(row.keys(), row)) for row in result]
 
         query = session.query(Repo).filter(Repo.repo_id == repo_id)
         repo = execute_session_query(query, 'one')
-    
+
         owner, name = get_owner_repo(repo.repo_git)
 
         pr_file_rows = []
@@ -88,7 +90,7 @@ def pull_request_files_model(repo_id,logger):
 
 
 
-        if len(pr_file_rows) > 0:
-            #Execute a bulk upsert with sqlalchemy 
-            pr_file_natural_keys = ["pull_request_id", "repo_id", "pr_file_path"]
-            session.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)
+    if len(pr_file_rows) > 0:
+        #Execute a bulk upsert with sqlalchemy 
+        pr_file_natural_keys = ["pull_request_id", "repo_id", "pr_file_path"]
+        session.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)

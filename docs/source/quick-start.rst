@@ -105,18 +105,39 @@ Then, once you've connected to your PostgreSQL instance:
     postgres=# CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
     postgres=# GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
 
-Git Configuration
+Install RabbitMQ
 ~~~~~~~~~~~~~~~~~~~~~~~~
-- Configure Git: These instructions assume the potential of large repositories that occasionally perform significant refactoring within a small number of commits. Our experience is that nearly all organizations have at least one project that meets these criteria.
+To set up rabbitmq for augur you must install it with the relevant package manager
+for your distro. You can find more info on how to install rabbitmq `here <https://www.rabbitmq.com/download.html>`_.
+
+After installation, you must also set up your rabbitmq instance by running the below commands:
 
 .. code-block:: bash
 
-	git config --global diff.renames true
-	git config --global diff.renameLimit 200000
-	git config --global credential.helper cache
-	git config --global credential.helper 'cache --timeout=9999999999999'
+	sudo rabbitmqctl add_user augur password123
 
-- For each platform, perform a command-line login  to cache Git credentials for the LINUX user who operates Augur. This step is required in order to prevent the Facade Commit Counting Diesel from stalling on a command-line prompt when repositories move or disappear.
+	sudo rabbitmqctl add_vhost augur_vhost
+
+	sudo rabbitmqctl set_user_tags augur augurTag
+
+	sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
+
+.. note::
+	it is important to have a static hostname when using rabbitmq as it uses hostname
+	to communicate with nodes.
+
+Then, start rabbitmq server with 
+.. code-block:: bash
+
+    sudo systemctl start rabbitmq.service
+
+
+If your setup of rabbitmq is successful your broker url should look like this:
+
+broker_url = 'amqp://augur:password123@localhost:5672/augur_vhost'
+
+During installation you will be prompted for this broker url.
+
 
 Install Go
 ~~~~~~~~~~~~~~~~~~~~~~~~

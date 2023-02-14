@@ -165,7 +165,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 			raise e
 
 
-		session.log_activity('Debug',f"Stored commit: {commit}")
+		#session.log_activity('Debug',f"Stored commit: {commit}")
 
 
 ### The real function starts here ###
@@ -203,7 +203,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 	#db_local.commit()
 	session.execute_sql(store_working_commit)
 
-	session.log_activity('Debug',f"Stored working commit and analyzing : {commit}")
+	#session.log_activity('Debug',f"Stored working commit and analyzing : {commit}")
 
 	for line in git_log.stdout.read().decode("utf-8",errors="ignore").split(os.linesep):
 		if len(line) > 0:
@@ -346,7 +346,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 			""").bindparams(repo_id=repo_id,hash=commit)
 		session.execute_sql(remove_commit)
 
-		session.log_activity('Debug',f"Completed and removed working commit: {commit}")
+		#session.log_activity('Debug',f"Completed and removed working commit: {commit}")
 	except:
 		session.log_activity('Info', f"Working Commit: {commit}")
 	# If multithreading, clean up the local database

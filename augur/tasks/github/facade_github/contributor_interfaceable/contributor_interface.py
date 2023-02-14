@@ -182,9 +182,9 @@ def insert_alias(session, contributor, email):
         session.logger.info(
             f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
 
-    session.logger.info(f"Creating alias for email: {email}")
+    #session.logger.info(f"Creating alias for email: {email}")
 
-    session.logger.info(f"{contributor_table_data} has type {type(contributor_table_data)}")
+    #session.logger.info(f"{contributor_table_data} has type {type(contributor_table_data)}")
     # Insert a new alias that corresponds to where the contributor was found
     # use the email of the new alias for canonical_email if the api returns NULL
     # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
@@ -283,7 +283,7 @@ def fetch_username_from_email(session, commit):
     # Default to failed state
     login_json = None
 
-    session.logger.info(f"Here is the commit: {commit}")
+    #session.logger.info(f"Here is the commit: {commit}")
 
     # email = commit['email_raw'] if 'email_raw' in commit else commit['email_raw']
 
@@ -301,11 +301,12 @@ def fetch_username_from_email(session, commit):
 
     login_json = request_dict_from_endpoint(session,
         url, timeout_wait=30)
-    session.logger.info(f"email api url {url}")
+    
     # Check if the email result got anything, if it failed try a name search.
     if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
         session.logger.info(
             f"Could not resolve the username from {commit['email_raw']}")
+        session.logger.info(f"email api url {url}")
 
         # Go back to failure condition
         login_json = None
@@ -377,7 +378,7 @@ def get_login_with_supplemental_data(session, commit_data):
         if item['score'] > match['score']:
             match = item
 
-    session.logger.info(
+    session.logger.debug(
         "When searching for a contributor, we found the following users: {}\n".format(match))
 
     return match['login']

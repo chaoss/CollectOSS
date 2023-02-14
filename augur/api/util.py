@@ -9,6 +9,8 @@ import types
 import sys
 import beaker
 
+from flask import request
+
 __ROOT = os.path.abspath(os.path.dirname(__file__))
 def get_data_path(path):
     """
@@ -74,3 +76,27 @@ def register_metric(metadata=None, **kwargs):
 
         return function
     return decorate
+
+""" 
+    Extract authorization token by type from request header
+"""
+def get_token(token_type):
+    auth = request.headers.get("Authorization")
+    if auth:
+        tokens = auth.split(",")
+        for token in tokens:
+            if f"{token_type} " in token:
+                return token.replace(f"{token_type}", "").strip()
+
+""" 
+    Extract Bearer token from request header
+"""
+def get_bearer_token():
+    return get_token("Bearer")
+
+""" 
+    Extract Client token from request header
+"""
+def get_client_token():
+    return get_token("Client")
+    

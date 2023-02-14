@@ -1,5 +1,5 @@
 """Defines the Celery app."""
-from celery.signals import worker_process_init, worker_process_shutdown
+from celery.signals import worker_process_init, worker_process_shutdown, eventlet_pool_started, eventlet_pool_preshutdown, eventlet_pool_postshutdown
 import logging
 from typing import List, Dict
 import os
@@ -11,8 +11,11 @@ from sqlalchemy import create_engine, event
 
 from augur.application.logs import TaskLogConfig
 from augur.application.db.session import DatabaseSession
+from augur.application.db.engine import DatabaseEngine
+from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string
-from augur.tasks.init import get_redis_conn_values
+from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
+from augur.application.db.models import CollectionStatus
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +34,8 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.pull_requests.files_model.tasks',
                 'augur.tasks.github.pull_requests.commits_model.tasks']
 
-git_tasks = ['augur.tasks.git.facade_tasks']
+git_tasks = ['augur.tasks.git.facade_tasks',
+            'augur.tasks.git.dependency_tasks.tasks']
 
 data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
                        'augur.tasks.data_analysis.clustering_worker.tasks',
@@ -48,21 +52,24 @@ else:
 redis_db_number, redis_conn_string = get_redis_conn_values()
 
 # initialize the celery app
-BROKER_URL = f'{redis_conn_string}{redis_db_number}'
+BROKER_URL = get_rabbitmq_conn_string()#f'{redis_conn_string}{redis_db_number}'
 BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 
 celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)
 
 # define the queues that tasks will be put in (by default tasks are put in celery queue)
 celery_app.conf.task_routes = {
-    'augur.tasks.git.facade_tasks.*': {'queue': 'cpu'}
+    'augur.tasks.start_tasks.*': {'queue': 'scheduling'},
+    'augur.tasks.github.pull_requests.commits_model.tasks.*': {'queue': 'secondary'},
+    'augur.tasks.github.pull_requests.files_model.tasks.*': {'queue': 'secondary'},
+    'augur.tasks.git.dependency_tasks.tasks.*': {'queue': 'secondary'}
 }
 
 #Setting to be able to see more detailed states of running tasks
 celery_app.conf.task_track_started = True
 
 #ignore task results by default
-celery_app.conf.task_ignore_result = True
+##celery_app.conf.task_ignore_result = True
 
 # store task erros even if the task result is ignored
 celery_app.conf.task_store_errors_even_if_ignored = True
@@ -100,6 +107,8 @@ def split_tasks_into_groups(augur_tasks: List[str]) -> Dict[str, List[str]]:
     return grouped_tasks
 
 
+
+
 @celery_app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
     """Setup task scheduler.
@@ -113,13 +122,23 @@ def setup_periodic_tasks(sender, **kwargs):
     Returns
         The tasks so that they are grouped by the module they are defined in
     """
-    from augur.tasks.start_tasks import start_task
+    from augur.tasks.start_tasks import augur_collection_monitor
+    from augur.tasks.start_tasks import non_repo_domain_tasks
+    
+    with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
 
-    with DatabaseSession(logger) as session:
+        config = AugurConfig(logger, session)
 
-        collection_interval = session.config.get_value('Tasks', 'collection_interval')
-        logger.info(f"Scheduling collection every {collection_interval/60/60} hours")
-        sender.add_periodic_task(collection_interval, start_task.s())
+        print(augur_collection_monitor)
+
+        collection_interval = config.get_value('Tasks', 'collection_interval')
+        logger.info(f"Scheduling collection every {collection_interval/60} minutes")
+        sender.add_periodic_task(collection_interval, augur_collection_monitor.s())
+
+        #Do longer tasks less often
+        non_domain_collection_interval = collection_interval * 5
+        logger.info(f"Scheduling non-repo-domain collection every {non_domain_collection_interval/60} minutes")
+        sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks.s())
 
 
 @after_setup_logger.connect
@@ -139,9 +158,9 @@ def init_worker(**kwargs):
 
     global engine
 
-    from augur.application.db.engine import create_database_engine
+    from augur.application.db.engine import DatabaseEngine
 
-    engine = create_database_engine()
+    engine = DatabaseEngine(pool_size=5, max_overflow=10, pool_timeout=240).engine
 
 
 @worker_process_shutdown.connect
@@ -150,4 +169,5 @@ def shutdown_worker(**kwargs):
     if engine:
         logger.info('Closing database connectionn for worker')
         engine.dispose()
+
 

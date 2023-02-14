@@ -13,7 +13,6 @@ Augur provides several Docker images designed to get you started with our softwa
    The frontend is very out of date and will likely not work. It is still available, but it is in the process of being replaced with an entirely new frontend so the old frontend is not being actively fixed.
 
 - ``augurlabs/augur:database``, an empty PostgreSQL database with the Augur schema installed
-- ``augurlabs/augur:test_data``, a PostgreSQL database loaded with the data used in our testing environment
 
 If you're not familiar with Docker, their `starting guide <https://www.docker.com/resources/what-container>`_ is a great resource.
 
@@ -23,7 +22,7 @@ If you are less familiar with Docker, or experience issues you cannot resolve at
 
 Credentials
 ------------
-Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. Alternatively, you can also set up the database within a docker container either manually or through the script but this is not recommended.
+Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. Alternatively, you can also set up the database within a docker container either manually or through docker-compose.
 
 .. note::
 
@@ -61,17 +60,15 @@ Now that you've got your external database credentials (if you are using one) an
 
 Your database credentials and other environment variables used at runtime are stored in a file when running manually and are taken from the active bash session when using docker-compose.
 
-You can provide your own ``docker_env.txt`` to pull from. The file should have the below format and set all the variables to some value.
+You can provide your own ``.env`` file to pull from. The file should have the below format and set all the variables to some value.
 
   .. code:: 
 
-    AUGUR_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxx
-    AUGUR_GITHUB_USERNAME=ExampleUser
-    AUGUR_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxx
-    AUGUR_GITLAB_USERNAME=ExampleUser
-    AUGUR_DB=postgresql://xxxx:xxxxxxxx@yourhost:5432/yourdb
-    REDIS_CONN_STRING=redis://yourhost:6379
-    AUGUR_DB_SCHEMA_BUILD=0
+    AUGUR_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx 
+    AUGUR_GITHUB_USERNAME=usernameGithub
+    AUGUR_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
+    AUGUR_GITLAB_USERNAME=usernameGitlab
+    AUGUR_DB=yourDBString
 
 
 Now that you've created your config file or are ready to generate it yourself, you're ready to `get going <quick-start.html>`_ .

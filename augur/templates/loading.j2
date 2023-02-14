@@ -1,0 +1,14 @@
+{% if not d %}
+    <h1>Uh oh, Something went wrong!</h1>
+    <p>You were sent to this page because we were loading something for you, but we didn't catch your destination.</p>
+    <p>Go back to the previous page and try again. If that doesn't help, submit an issue to https://github.com/chaoss/augur .</p>
+{% else %}
+    <meta http-equiv="refresh" content="5; URL={{url_for('root', path=d)}}"/>
+    <h1>Give us a moment!</h1>
+    <p>We are retreiving some data for you, and it may take up to a few seconds to load.</p>
+    <p>If you aren't redirected in a few seconds, go back to the previous page and try again.</p>
+    <script type="text/javascript">
+        // window.location.replace('{{root}}{{d}}');
+    </script>
+    <h2>Redirecting to: {{url_for('root', path=d)}}</h2>
+{% endif %}

@@ -1,0 +1,113 @@
+{% if repos %}
+<!-- Top pagination menu start -->
+<h1>{{ group }}</h1>
+<nav aria-label="Repository pagination menu" class="overflow-auto">
+    <ul class="pagination">
+        <li class="page-item {% if activePage == 0 %} disabled {% else %} w3-hover-purple {% endif %}">
+            <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage - 1), s=sorting, r=reverse, group=group)}}" {% if activePage == 0 %} tabindex="-1" {% endif %}>Previous</a>
+        </li>
+        {% for page in range(0, pages|int + 1) %}
+        <li class="page-item">
+            <a class="page-link {% if page == activePage %} paginationActive {% else %} w3-hover-blue {% endif %}" href="{{ url_for(PS, q=query_key, p=page, s=sorting, r=reverse, group=group)}}">{{page + 1}}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if activePage == pages|int %} disabled {% endif %}">
+            <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage + 1), s=sorting, r=reverse, group=group)}}" {% if activePage == pages|int %} tabindex="-1" {% endif %}>Next</a>
+        </li>
+    </ul>
+</nav>
+<!-- Table start -->
+{# Create the header row for the repo table:
+    Here we dynamically generate the header row by defining a dictionary list
+    which contains the titles of each column, accompanied by an optional "key"
+    item. If a column definition contains a "key" item, that column is assumed
+    to be sortable, sorting links for that data are generated using the given
+    key. It is done this way because the client does not receive the full data
+    each time they load the page, and instead the server sorts the full data.
+#}
+{# "title" : "Group", "key" : "rg_name"}, #}
+{%- set tableHeaders =
+    [{"title" : "#"},
+    {"title" : "Repo Name", "key" : "repo_name"},
+    {"title" : "Reports"},
+    {"title" : "Commits", "key" : "commits_all_time"},
+    {"title" : "Issues", "key" : "issues_all_time"},
+    {"title" : "Change Requests"},
+    {"title" : "Remove"}] -%}
+<div class="display-table rounded w3-animate-opacity">
+    <table class="table table-striped table-bordered">
+        <!-- Table header start -->
+        <thead>
+            <tr>
+                {%- for header in tableHeaders -%}
+                {% if header.key %}
+                    {%- if sorting == header.key -%}
+                        {%- set sorting_link = url_for(PS, q=query_key, p=activePage, s=header.key, r= not reverse) -%}
+                    {%- else -%}
+                        {%- set sorting_link = url_for(PS, q=query_key, p=activePage, s=header.key) -%}
+                    {%- endif -%}
+                <th scope="col"><a class="sorting-link" href="{{ sorting_link }}"> {{ header.title }}
+                    {%- if sorting == header.key and reverse %} ▲ {% elif sorting == header.key %} ▼ {% endif %}</a></th>
+                {% else -%}
+                <th scope="col">{{ header.title }}</th>
+                {% endif %} {%- endfor -%}
+            </tr>
+        </thead>
+        <!-- Table rows start -->
+        <tbody>
+            {% for repo in repos %}
+            <tr>
+                <th scope="row">{{loop.index + (activePage) * offset}}</th>
+                <td><a href="{{ url_for('repo_repo_view', id=repo.repo_id) }}">{{ repo.repo_name }}</a></td>
+                {# <td><a href="{{ url_for('repo_groups_view', group=repo.repo_group_id) }}">{{ repo.rg_name }}</a></td> #}
+                <td>TODO</td>
+                <td>{{ repo.commits_all_time|int }}</td>
+                <td>{{ repo.issues_all_time|int }}</td>
+                <td>TODO</td>
+                <td><button class="btn btn-outline-primary btn-sm" onclick="delrepo(this, '{{ group }}', '{{ repo.repo_id }}')">Delete</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<!-- Bottom pagination menu start -->
+<br>
+<nav aria-label="Repository pagination menu" class="overflow-auto">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if activePage == 0 %} disabled {% else %} w3-hover-purple {% endif %}">
+            <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage - 1), s=sorting, r=reverse, group=group)}}" {% if activePage == 0 %} tabindex="-1" {% endif %}>Previous</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="#">{{activePage}}</a>
+        </li>
+        <li class="page-item {% if activePage == pages|int %} disabled {% endif %}">
+            <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage + 1), s=sorting, r=reverse, group=group)}}" {% if activePage == pages|int %} tabindex="-1" {% endif %}>Next</a>
+        </li>
+    </ul>
+</nav>
+{% elif query_key %}
+<h1>Your search did not match any repositories</h1>
+{% elif current_user.is_authenticated %}
+<h1>No Repos Tracked</h1>
+<p>Add repos to your personal tracker in your <a href="{{ url_for('user_settings') }}">profile page</a></p>
+{% elif activePage != 0 %}
+<h1>Invalid Page</h1>
+<a href="{{ url_for(PS, q=query_key, s=sorting, r=reverse, group=group)}}">Click here to go back</a>
+{% else %}
+<h1>No repos in group</h1>
+<p>Add repos to this group in your <a href="{{ url_for('user_settings') }}">profile page</a></p>
+{% endif %}
+
+<script type="text/javascript">
+
+    var delrepo = function (button, group_name, repo_id) {
+        if (button.getAttribute("data-confirm")) {
+            window.location.replace("{{ url_for('user_remove_repo') }}?group_name=" + group_name + "&repo_id=" + repo_id)
+        } else {
+            button.setAttribute("data-confirm", "true");
+            button.innerHTML = "Confirm";
+            button.classList.remove("btn-outline-primary");
+            button.classList.add("btn-outline-danger");
+        }
+    }
+</script>

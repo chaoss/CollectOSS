@@ -1,11 +1,12 @@
 import time
 import logging
+import traceback
 
-
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
@@ -13,36 +14,44 @@ from augur.application.db.util import execute_session_query
 
 platform_id = 1
 
-
-@celery.task
+@celery.task()
 def collect_events(repo_git: str):
+
+    from augur.tasks.init.celery_app import engine
+
+    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(collect_events.__name__)
     
-        # define GithubTaskSession to handle insertions, and store oauth keys 
-    with GithubTaskSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
 
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
+        try:
+            
+            query = session.query(Repo).filter(Repo.repo_git == repo_git)
+            repo_obj = execute_session_query(query, 'one')
+            repo_id = repo_obj.repo_id
 
-        owner, repo = get_owner_repo(repo_git)
+            owner, repo = get_owner_repo(repo_git)
 
-        logger.info(f"Collecting Github events for {owner}/{repo}")
+            logger.info(f"Collecting Github events for {owner}/{repo}")
 
-        url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
+            url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
 
-    event_data = retrieve_all_event_data(repo_git, logger)
+            event_data = retrieve_all_event_data(repo_git, logger)
 
-    if event_data:
+            if event_data:
+            
+                process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger)
 
-        process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger)
-
-    else:
-        logger.info(f"{owner}/{repo} has no events")
+            else:
+                logger.info(f"{owner}/{repo} has no events")
+        except Exception as e:
+            logger.error(f"Could not collect events for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
 def retrieve_all_event_data(repo_git: str, logger):
+
+    from augur.tasks.init.celery_app import engine
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -50,7 +59,6 @@ def retrieve_all_event_data(repo_git: str, logger):
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
     
-        # define GithubTaskSession to handle insertions, and store oauth keys 
     with GithubTaskSession(logger, engine) as session:
     
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
@@ -76,6 +84,8 @@ def retrieve_all_event_data(repo_git: str, logger):
     return all_data        
 
 def process_events(events, task_name, repo_id, logger):
+
+    from augur.tasks.init.celery_app import engine
     
     tool_source = "Github events task"
     tool_version = "2.0"
@@ -85,7 +95,7 @@ def process_events(events, task_name, repo_id, logger):
     issue_event_dicts = []
     contributors = []
 
-    with GithubTaskSession(logger, engine) as session:
+    with DatabaseSession(logger, engine) as session:
 
         not_mapable_event_count = 0
         event_len = len(events)
