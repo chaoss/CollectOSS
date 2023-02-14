@@ -130,9 +130,12 @@ def start(disable_collection, development, port):
                 repo.repo_name = None
                 repo.repo_path = None
                 repo.repo_status = "New"
+
+                status.core_status = "Pending"
+                status.secondary_status = "Pending"
             
-            collection_status_list.update({CollectionStatus.core_status: "Pending"})
-            collection_status_list.update({CollectionStatus.secondary_status: "Pending"})
+            #collection_status_list.update({CollectionStatus.core_status: "Pending"})
+            #collection_status_list.update({CollectionStatus.secondary_status: "Pending"})
             session.commit()
           
         augur_collection_monitor.si().apply_async()
