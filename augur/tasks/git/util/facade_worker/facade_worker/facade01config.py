@@ -305,7 +305,7 @@ class FacadeConfig:
             sys.exit(1)
 
         self.tool_source = '\'Facade \''
-        self.tool_version = '\'1.2.4\''
+        self.tool_version = '\'1.3.0\''
         self.data_source = '\'Git Log\''
 
         self.worker_options = worker_options
