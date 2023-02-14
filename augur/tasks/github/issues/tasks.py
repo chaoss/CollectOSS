@@ -41,11 +41,11 @@ def collect_issues(repo_git : str) -> None:
 
             owner, repo = get_owner_repo(repo_git)
         
-            issue_data = retrieve_all_issue_data(repo_git, logger)
+            issue_data = retrieve_all_issue_data(repo_git, logger, session.oauths)
 
             if issue_data:
             
-                process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger)
+                process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger, session)
 
             else:
                 logger.info(f"{owner}/{repo} has no issues")
@@ -54,11 +54,7 @@ def collect_issues(repo_git : str) -> None:
 
 
 
-def retrieve_all_issue_data(repo_git, logger) -> None:
-
-    from augur.tasks.init.celery_app import engine
-
-    print(f"Eventlet engine id: {id(engine)}")
+def retrieve_all_issue_data(repo_git, logger, key_auth) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -66,12 +62,9 @@ def retrieve_all_issue_data(repo_git, logger) -> None:
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
 
-    
-    with GithubTaskSession(logger, engine) as session:
-
-        # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-        # Reference the code documenation for GithubPaginator for more details
-        issues = GithubPaginator(url, session.oauths, logger)
+    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
+    # Reference the code documenation for GithubPaginator for more details
+    issues = GithubPaginator(url, key_auth, logger)
 
     # this is defined so we can decrement it each time 
     # we come across a pr, so at the end we can log how 
@@ -96,9 +89,7 @@ def retrieve_all_issue_data(repo_git, logger) -> None:
 
     return all_data
     
-def process_issues(issues, task_name, repo_id, logger) -> None:
-
-    from augur.tasks.init.celery_app import engine
+def process_issues(issues, task_name, repo_id, logger, session) -> None:
     
     # get repo_id or have it passed
     tool_source = "Issue Task"
@@ -147,64 +138,62 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
         print("No issues found while processing")  
         return
 
-    with DatabaseSession(logger, engine) as session:
+    # remove duplicate contributors before inserting
+    contributors = remove_duplicate_dicts(contributors)
 
-        # remove duplicate contributors before inserting
-        contributors = remove_duplicate_dicts(contributors)
+    # insert contributors from these issues
+    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    session.insert_data(contributors, Contributor, ["cntrb_id"])
+                        
 
-        # insert contributors from these issues
-        logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-        session.insert_data(contributors, Contributor, ["cntrb_id"])
-                            
+    # insert the issues into the issues table. 
+    # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
+    # specified in issue_return_columns is the columns of data we want returned. This data will return in this form; {"issue_url": url, "issue_id": id}
+    logger.info(f"{task_name}: Inserting {len(issue_dicts)} issues")
+    issue_natural_keys = ["repo_id", "gh_issue_id"]
+    issue_return_columns = ["issue_url", "issue_id"]
+    issue_string_columns = ["issue_title", "issue_body"]
+    try:
+        issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
+    except IntegrityError as e:
+        logger.error(f"Ran into integrity error:{e} \n Offending data: \n{issue_dicts}")
 
-        # insert the issues into the issues table. 
-        # issue_urls are gloablly unique across github so we are using it to determine whether an issue we collected is already in the table
-        # specified in issue_return_columns is the columns of data we want returned. This data will return in this form; {"issue_url": url, "issue_id": id}
-        logger.info(f"{task_name}: Inserting {len(issue_dicts)} issues")
-        issue_natural_keys = ["repo_id", "gh_issue_id"]
-        issue_return_columns = ["issue_url", "issue_id"]
-        issue_string_columns = ["issue_title", "issue_body"]
+        if development:
+            raise e
+    # loop through the issue_return_data so it can find the labels and 
+    # assignees that corelate to the issue that was inserted labels 
+    issue_label_dicts = []
+    issue_assignee_dicts = []
+    for data in issue_return_data:
+
+        issue_url = data["issue_url"]
+        issue_id = data["issue_id"]
+
         try:
-            issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
-        except IntegrityError as e:
-            logger.error(f"Ran into integrity error:{e} \n Offending data: \n{issue_dicts}")
-
-            if development:
-                raise e
-        # loop through the issue_return_data so it can find the labels and 
-        # assignees that corelate to the issue that was inserted labels 
-        issue_label_dicts = []
-        issue_assignee_dicts = []
-        for data in issue_return_data:
-
-            issue_url = data["issue_url"]
-            issue_id = data["issue_id"]
-
-            try:
-                other_issue_data = issue_mapping_data[issue_url]
-            except KeyError as e:
-                logger.info(f"{task_name}: Cold not find other issue data. This should never happen. Error: {e}")
+            other_issue_data = issue_mapping_data[issue_url]
+        except KeyError as e:
+            logger.info(f"{task_name}: Cold not find other issue data. This should never happen. Error: {e}")
 
 
-            # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
-            dict_key = "issue_id"
-            issue_label_dicts += add_key_value_pair_to_dicts(other_issue_data["labels"], "issue_id", issue_id)
-            issue_assignee_dicts += add_key_value_pair_to_dicts(other_issue_data["assignees"], "issue_id", issue_id)
+        # add the issue id to the lables and assignees, then add them to a list of dicts that will be inserted soon
+        dict_key = "issue_id"
+        issue_label_dicts += add_key_value_pair_to_dicts(other_issue_data["labels"], "issue_id", issue_id)
+        issue_assignee_dicts += add_key_value_pair_to_dicts(other_issue_data["assignees"], "issue_id", issue_id)
 
 
-        logger.info(f"{task_name}: Inserting other issue data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
+    logger.info(f"{task_name}: Inserting other issue data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
 
-        # inserting issue labels
-        # we are using label_src_id and issue_id to determine if the label is already in the database.
-        issue_label_natural_keys = ['label_src_id', 'issue_id']
-        issue_label_string_fields = ["label_text", "label_description"]
-        session.insert_data(issue_label_dicts, IssueLabel,
-                            issue_label_natural_keys, string_fields=issue_label_string_fields)
-    
-        # inserting issue assignees
-        # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
-        issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-        session.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
+    # inserting issue labels
+    # we are using label_src_id and issue_id to determine if the label is already in the database.
+    issue_label_natural_keys = ['label_src_id', 'issue_id']
+    issue_label_string_fields = ["label_text", "label_description"]
+    session.insert_data(issue_label_dicts, IssueLabel,
+                        issue_label_natural_keys, string_fields=issue_label_string_fields)
+
+    # inserting issue assignees
+    # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
+    issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
+    session.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
 
 
 

@@ -10,7 +10,6 @@ from collections import Counter
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, DiscourseInsight
-from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
 
 #import os, sys, time, requests, json
