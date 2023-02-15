@@ -319,11 +319,7 @@ def non_repo_domain_tasks():
 def get_collection_status_repo_git_from_filter(session,filter_condition,limit):
     repo_status_list = session.query(CollectionStatus).filter(filter_condition).limit(limit).all()
 
-    repo_ids = [repo.repo_id for repo in repo_status_list]
-
-    repo_git_result = session.query(Repo).filter(Repo.repo_id.in_(tuple(repo_ids))).all()
-
-    return [repo.repo_git for repo in repo_git_result]
+    return [status.repo.repo_git for status in repo_status_list]
 
 
 @celery.task
