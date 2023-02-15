@@ -15,7 +15,6 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, MessageAnalysis, MessageAnalysisSummary
-from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
 
 #SPDX-License-Identifier: MIT
@@ -33,12 +32,12 @@ def message_insight_task():
         repos = execute_session_query(query, 'all')
     
 
-    for repo in repos:
-        message_insight_model(repo.repo_git, logger, engine)
+        for repo in repos:
+            message_insight_model(repo.repo_git, logger, engine, session)
 
 
 
-def message_insight_model(repo_git: str,logger,engine) -> None:
+def message_insight_model(repo_git: str,logger,engine, session) -> None:
 
     full_train = True
     begin_date = ''
@@ -50,15 +49,13 @@ def message_insight_model(repo_git: str,logger,engine) -> None:
     now = datetime.datetime.utcnow()
     run_id = int(now.timestamp())+5
 
-    with DatabaseSession(logger, engine) as session:
+    config = AugurConfig(logger, session)
 
-        config = AugurConfig(logger, session)
+    query = session.query(Repo).filter(Repo.repo_git == repo_git)
+    repo_id = execute_session_query(query, 'one').repo_id
 
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_id = execute_session_query(query, 'one').repo_id
-
-        models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", config.get_value("Message_Insights", 'models_dir'))
-        insight_days = config.get_value("Message_Insights", 'insight_days')
+    models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", config.get_value("Message_Insights", 'models_dir'))
+    insight_days = config.get_value("Message_Insights", 'insight_days')
 
     # Any initial database instructions, like finding the last tuple inserted or generate the next ID value
 
@@ -100,7 +97,7 @@ def message_insight_model(repo_git: str,logger,engine) -> None:
         logger.debug(f'{begin_date}')
 
         # Assign new run_id for every run
-        run_id = get_max_id('message_analysis', 'worker_run_id', logger)
+        run_id = get_max_id('message_analysis', 'worker_run_id', logger, engine)
 
         logger.info(f'Last analyzed msg_id of repo {repo_id} is {df_past["msg_id"].iloc[-1]}')
         logger.info(f'Fetching recent messages from {begin_date} of repo {repo_id}...\n')
@@ -198,34 +195,32 @@ def message_insight_model(repo_git: str,logger,engine) -> None:
         logger.info('Begin message_analysis data insertion...')
         logger.info(f'{df_message.shape[0]} data records to be inserted')
 
-        with DatabaseSession(logger, engine) as session:
+        for row in df_message.itertuples(index=False):
+            try:
+                msg = {
+                    "msg_id": row.msg_id,
+                    "worker_run_id": run_id,
+                    "sentiment_score": row.sentiment_score,
+                    "reconstruction_error": row.rec_err,
+                    "novelty_flag": row.novel_label,
+                    "feedback_flag": None,
+                    "tool_source": tool_source,
+                    "tool_version": tool_version,
+                    "data_source": data_source,
+                }
 
-            for row in df_message.itertuples(index=False):
-                try:
-                    msg = {
-                        "msg_id": row.msg_id,
-                        "worker_run_id": run_id,
-                        "sentiment_score": row.sentiment_score,
-                        "reconstruction_error": row.rec_err,
-                        "novelty_flag": row.novel_label,
-                        "feedback_flag": None,
-                        "tool_source": tool_source,
-                        "tool_version": tool_version,
-                        "data_source": data_source,
-                    }
+                message_analysis_object = MessageAnalysis(**msg)
+                session.add(message_analysis_object)
+                session.commit()
 
-                    message_analysis_object = MessageAnalysis(**msg)
-                    session.add(message_analysis_object)
-                    session.commit()
-
-                    # result = create_database_engine().execute(message_analysis_table.insert().values(msg))
-                    logger.info(
-                        f'Primary key inserted into the message_analysis table: {message_analysis_object.msg_analysis_id}')
-                    # logger.info(
-                    #     f'Inserted data point {results_counter} with msg_id {row.msg_id} and timestamp {row.msg_timestamp}')
-                except Exception as e:
-                    logger.error(f'Error occurred while storing datapoint {repr(e)}')
-                    break
+                # result = create_database_engine().execute(message_analysis_table.insert().values(msg))
+                logger.info(
+                    f'Primary key inserted into the message_analysis table: {message_analysis_object.msg_analysis_id}')
+                # logger.info(
+                #     f'Inserted data point {results_counter} with msg_id {row.msg_id} and timestamp {row.msg_timestamp}')
+            except Exception as e:
+                logger.error(f'Error occurred while storing datapoint {repr(e)}')
+                break
 
         logger.info('Data insertion completed\n')
 
@@ -406,7 +401,7 @@ def message_insight_model(repo_git: str,logger,engine) -> None:
         logger.info(f'Insights dict: {insights}')
 
         # Send insights to Auggie
-        send_insight(repo_id, insights, logger)
+        send_insight(repo_id, insights, logger, engine)
 
     else:
         if df_message.empty:
@@ -415,7 +410,7 @@ def message_insight_model(repo_git: str,logger,engine) -> None:
             logger.warning("Insufficient data to analyze")
 
 
-def send_insight(repo_id, insights, logger):
+def send_insight(repo_id, insights, logger, engine):
     try:
         repoSQL = s.sql.text("""
             SELECT repo_git, rg_name 
@@ -423,8 +418,7 @@ def send_insight(repo_id, insights, logger):
             WHERE repo_id = {}
         """.format(repo_id))
 
-        with DatabaseEngine(connection_pool_size=1) as engine:
-            repo = pd.read_sql(repoSQL, engine, params={}).iloc[0]
+        repo = pd.read_sql(repoSQL, engine, params={}).iloc[0]
 
         to_send = {
             'message_insight': True,
@@ -443,7 +437,7 @@ def send_insight(repo_id, insights, logger):
         logger.info("Sending insight to Auggie failed: {}\n".format(e))
 
 
-def get_max_id(table, column, logger, default=25150):
+def get_max_id(table, column, logger, engine, default=25150):
     """ Gets the max value (usually used for id/pk's) of any Integer column
         of any table
 
@@ -459,8 +453,7 @@ def get_max_id(table, column, logger, default=25150):
         SELECT max({0}.{1}) AS {1}
         FROM {0}
     """.format(table, column))
-    with DatabaseEngine(connection_pool_size=1) as engine:
-        rs = pd.read_sql(max_id_sql, engine, params={})
+    rs = pd.read_sql(max_id_sql, engine, params={})
     if rs.iloc[0][column] is not None:
         max_id = int(rs.iloc[0][column]) + 1
         logger.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))

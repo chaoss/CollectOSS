@@ -15,10 +15,10 @@ class CollectionState(Enum):
     COLLECTING = "Collecting"
 
 
-def extract_owner_and_repo_from_endpoint(session,url):
-    response_from_gh = hit_api(session.oauths, url, session.logger)
+def extract_owner_and_repo_from_endpoint(key_auth, url, logger):
+    response_from_gh = hit_api(key_auth, url, logger)
 
-    page_data = parse_json_response(session.logger, response_from_gh)
+    page_data = parse_json_response(logger, response_from_gh)
 
     full_repo_name = page_data['full_name']
 
@@ -26,7 +26,7 @@ def extract_owner_and_repo_from_endpoint(session,url):
 
     return splits[0], splits[-1]
 
-def ping_github_for_repo_move(session,repo):
+def ping_github_for_repo_move(session,repo, logger):
 
     owner, name = get_owner_repo(repo.repo_git)
     url = f"https://api.github.com/repos/{owner}/{name}"
@@ -50,7 +50,7 @@ def ping_github_for_repo_move(session,repo):
         session.logger.info(f"Repo found at url: {url}")
         return
     
-    owner, name = extract_owner_and_repo_from_endpoint(session, response_from_gh.headers['location'])
+    owner, name = extract_owner_and_repo_from_endpoint(session, response_from_gh.headers['location'], logger)
 
     current_repo_dict = repo.__dict__
     del current_repo_dict['_sa_instance_state']

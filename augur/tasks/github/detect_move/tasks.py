@@ -21,6 +21,6 @@ def detect_github_repo_move(repo_git : str) -> None:
             query = session.query(Repo).filter(Repo.repo_git == repo_git)
             repo = execute_session_query(query, 'one')
             logger.info(f"Pinging repo: {repo_git}")
-            ping_github_for_repo_move(session, repo)
+            ping_github_for_repo_move(session, repo, logger)
         except Exception as e:
             logger.error(f"Could not check repo source for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
