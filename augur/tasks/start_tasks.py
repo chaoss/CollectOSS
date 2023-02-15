@@ -413,10 +413,11 @@ def augur_collection_monitor():
         not_collecting = CollectionStatus.secondary_status != str(CollectionState.COLLECTING.value)
         never_collected = CollectionStatus.secondary_data_last_collected == None
         old_collection = CollectionStatus.secondary_data_last_collected <= cutoff_date
+        primary_collected = CollectionStatus.core_status == str(CollectionState.SUCCESS.value)
 
         limit = max_repo_secondary_count-active_repo_count
 
-        repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
+        repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(primary_collected,not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
 
         logger.info(f"Starting secondary collection on {len(repo_git_identifiers)} repos")
 
