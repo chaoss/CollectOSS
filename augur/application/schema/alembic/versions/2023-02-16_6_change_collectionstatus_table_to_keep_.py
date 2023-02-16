@@ -52,6 +52,17 @@ def upgrade():
                existing_type=sa.VARCHAR(),
                nullable=False,
                schema='augur_operations')
+
+
+    #Add toggle for facade collection.
+    conn = op.get_bind()
+    result = conn.execute(text("""SELECT * FROM augur_operations.config WHERE section_name='Task_Routine';""")).fetchall()
+    if result:
+
+        conn.execute(text(f"""
+            INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES ('Task_Routine', 'facade_phase', '{1}', 'int');
+            INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES ('Facade', 'run_facade_contributors', '{1}', 'int');
+            """))
     # ### end Alembic commands ###
 
 

@@ -105,6 +105,29 @@ def secondary_task_success(repo_git):
         session.commit()
 
 @celery.task
+def facade_task_success(repo_git):
+
+    from augur.tasks.init.celery_app import engine
+
+    logger = logging.getLogger(facade_task_success.__name__)
+
+    logger.info(f"Repo '{repo_git}' succeeded through facade task collection")
+
+    with DatabaseSession(logger, engine) as session:
+
+        repo = Repo.get_by_repo_git(session, repo_git)
+        if not repo:
+            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
+
+        collection_status = repo.collection_status[0]
+
+        collection_status.facade_status = CollectionState.SUCCESS.value
+        collection_status.facade_data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        collection_status.facade_task_id = None
+
+        session.commit()
+
+@celery.task
 def task_failed(request,exc,traceback):
 
     from augur.tasks.init.celery_app import engine
@@ -112,7 +135,11 @@ def task_failed(request,exc,traceback):
     logger = logging.getLogger(task_failed.__name__)
     
     with DatabaseSession(logger,engine) as session:
-        query = session.query(CollectionStatus).filter(CollectionStatus.core_task_id == request.id)
+        core_id_match = CollectionStatus.core_task_id == request.id
+        secondary_id_match = CollectionStatus.secondary_task_id == request.id
+        facade_id_match = CollectionStatus.facade_task_id == request.id
+
+        query = session.query(CollectionStatus).filter(or_(core_id_match,secondary_id_match,facade_id_match))
 
         collectionRecord = execute_session_query(query,'one')
 
@@ -128,12 +155,16 @@ def task_failed(request,exc,traceback):
         
         if collectionRecord.core_status == CollectionState.COLLECTING.value:
             # set status to Error in db
-            collectionRecord.core_status = CollectionStatus.ERROR
+            collectionRecord.core_status = CollectionStatus.ERROR.value
             session.commit()
 
         if collectionRecord.secondary_status == CollectionState.COLLECTING.value:
             # set status to Error in db
-            collectionRecord.secondary_status = CollectionStatus.ERROR
+            collectionRecord.secondary_status = CollectionStatus.ERROR.value
+            session.commit()
+        
+        if collectionRecord.facade_status == CollectionState.COLLECTING.value:
+            collectionRecord.facade_status = CollectionStatus.ERROR.value
             session.commit()
 
         # log traceback to error file
@@ -175,9 +206,9 @@ def primary_repo_collect_phase(repo_git):
     )
 
     repo_task_group = group(
-        #repo_info_task,
+        repo_info_task,
         chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
-        generate_facade_chain(logger,repo_git),
+        #facade_phase(logger,repo_git),
         collect_releases.si(repo_git)
     )
 
@@ -322,6 +353,167 @@ def get_collection_status_repo_git_from_filter(session,filter_condition,limit):
     return [status.repo.repo_git for status in repo_status_list]
 
 
+def start_primary_collection(session,max_repo,days):
+
+    #Get phase options from the config
+    config = AugurConfig(session.logger, session)
+    phase_options = config.get_section("Task_Routine")
+
+    #Get list of enabled phases 
+    enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
+
+    #Primary collection hook.
+    primary_enabled_phases = []
+
+    #Primary jobs
+    if prelim_phase.__name__ in enabled_phase_names:
+        primary_enabled_phases.append(prelim_phase)
+    
+    if primary_repo_collect_phase.__name__ in enabled_phase_names:
+        primary_enabled_phases.append(primary_repo_collect_phase)
+
+    #task success is scheduled no matter what the config says.
+    def core_task_success_gen(repo_git):
+        return core_task_success.si(repo_git)
+    
+    primary_enabled_phases.append(core_task_success_gen)
+    
+    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
+
+    cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
+    not_erroed = CollectionStatus.core_status != str(CollectionState.ERROR.value)
+    not_collecting = CollectionStatus.core_status != str(CollectionState.COLLECTING.value)
+    never_collected = CollectionStatus.core_data_last_collected == None
+    old_collection = CollectionStatus.core_data_last_collected <= cutoff_date
+
+    limit = max_repo-active_repo_count
+
+    #Get repos for primary collection hook
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
+
+    session.logger.info(f"Starting primary collection on {len(repo_git_identifiers)} repos")
+
+    session.logger.info(f"Primary collection starting for: {tuple(repo_git_identifiers)}")
+
+    primary_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=primary_enabled_phases)
+
+    #Start data collection and update the collectionStatus with the task_ids
+    for repo_git, task_id in primary_augur_collection.start_data_collection():
+        
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+
+        #set status in database to collecting
+        repoStatus = repo.collection_status[0]
+        repoStatus.core_task_id = task_id
+        #repoStatus.secondary_task_id = task_id
+        repoStatus.core_status = CollectionState.COLLECTING.value
+        session.commit()
+
+def start_secondary_collection(session,max_repo,days):
+    #Get phase options from the config
+    config = AugurConfig(session.logger, session)
+    phase_options = config.get_section("Task_Routine")
+
+    #Get list of enabled phases 
+    enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
+
+    #Deal with secondary collection
+    secondary_enabled_phases = []
+
+    if prelim_phase.__name__ in enabled_phase_names:
+        secondary_enabled_phases.append(prelim_phase)
+
+    if secondary_repo_collect_phase.__name__ in enabled_phase_names:
+        secondary_enabled_phases.append(secondary_repo_collect_phase)
+
+    def secondary_task_success_gen(repo_git):
+        return secondary_task_success.si(repo_git)
+
+    secondary_enabled_phases.append(secondary_task_success_gen)
+
+    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.secondary_status == CollectionState.COLLECTING.value).all())
+
+    cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
+    not_erroed = CollectionStatus.secondary_status != str(CollectionState.ERROR.value)
+    not_collecting = CollectionStatus.secondary_status != str(CollectionState.COLLECTING.value)
+    never_collected = CollectionStatus.secondary_data_last_collected == None
+    old_collection = CollectionStatus.secondary_data_last_collected <= cutoff_date
+    primary_collected = CollectionStatus.core_status == str(CollectionState.SUCCESS.value)
+
+    limit = max_repo-active_repo_count
+
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(primary_collected,not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
+
+    session.logger.info(f"Starting secondary collection on {len(repo_git_identifiers)} repos")
+
+    session.logger.info(f"Secondary collection starting for: {tuple(repo_git_identifiers)}")
+
+    secondary_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=secondary_enabled_phases)
+
+    #Start data collection and update the collectionStatus with the task_ids
+    for repo_git, task_id in secondary_augur_collection.start_data_collection():
+        
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+
+        #set status in database to collecting
+        repoStatus = repo.collection_status[0]
+        #repoStatus.core_task_id = task_id
+        repoStatus.secondary_task_id = task_id
+        repoStatus.secondary_status = CollectionState.COLLECTING.value
+        session.commit()
+
+def start_facade_collection(session,max_repo,days):
+    #Get phase options from the config
+    config = AugurConfig(session.logger, session)
+    phase_options = config.get_section("Task_Routine")
+
+    #Get list of enabled phases 
+    enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
+
+    #Deal with secondary collection
+    facade_enabled_phases = []
+
+    if prelim_phase.__name__ in enabled_phase_names:
+        facade_enabled_phases.append(prelim_phase)
+
+    if facade_phase.__name__ in enabled_phase_names:
+        facade_enabled_phases.append(facade_phase)
+
+    def facade_task_success_gen(repo_git):
+        return facade_task_success.si(repo_git)
+
+    facade_enabled_phases.append(facade_task_success_gen)
+
+    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
+
+    cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
+    not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
+    not_collecting = CollectionStatus.facade_status != str(CollectionState.COLLECTING.value)
+    never_collected = CollectionStatus.facade_data_last_collected == None
+    old_collection = CollectionStatus.facade_data_last_collected <= cutoff_date
+
+    limit = max_repo-active_repo_count
+
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
+
+    session.logger.info(f"Starting facade collection on {len(repo_git_identifiers)} repos")
+
+    session.logger.info(f"Facade collection starting for: {tuple(repo_git_identifiers)}")
+
+    facade_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=facade_enabled_phases)
+
+    #Start data collection and update the collectionStatus with the task_ids
+    for repo_git, task_id in facade_augur_collection.start_data_collection():
+        
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+
+        #set status in database to collecting
+        repoStatus = repo.collection_status[0]
+        #repoStatus.core_task_id = task_id
+        repoStatus.facade_task_id = task_id
+        repoStatus.facade_status = CollectionState.COLLECTING.value
+        session.commit()
+
 @celery.task
 def augur_collection_monitor():     
 
@@ -331,111 +523,13 @@ def augur_collection_monitor():
 
     logger.info("Checking for repos to collect")
 
-    #Get phase options from the config
     with DatabaseSession(logger, engine) as session:
 
-        max_repo_primary_count = 50
-        days = 30
-
-        config = AugurConfig(logger, session)
-        phase_options = config.get_section("Task_Routine")
-
-        #Get list of enabled phases 
-        enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]
-
-        #Primary collection hook.
-        primary_enabled_phases = []
-
-        #Primary jobs
-        if prelim_phase.__name__ in enabled_phase_names:
-            primary_enabled_phases.append(prelim_phase)
+        start_primary_collection(session, max_repo=50, days=30)
         
-        if primary_repo_collect_phase.__name__ in enabled_phase_names:
-            primary_enabled_phases.append(primary_repo_collect_phase)
+        start_secondary_collection(session, max_repo=30, days=30)
 
-        #task success is scheduled no matter what the config says.
-        def core_task_success_gen(repo_git):
-            return core_task_success.si(repo_git)
-        
-        primary_enabled_phases.append(core_task_success_gen)
-        
-        active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
-
-        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
-        not_erroed = CollectionStatus.core_status != str(CollectionState.ERROR.value)
-        not_collecting = CollectionStatus.core_status != str(CollectionState.COLLECTING.value)
-        never_collected = CollectionStatus.core_data_last_collected == None
-        old_collection = CollectionStatus.core_data_last_collected <= cutoff_date
-
-        limit = max_repo_primary_count-active_repo_count
-
-        #Get repos for primary collection hook
-        repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
-
-        logger.info(f"Starting primary collection on {len(repo_git_identifiers)} repos")
-
-        logger.info(f"Primary collection starting for: {tuple(repo_git_identifiers)}")
-
-        primary_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=primary_enabled_phases)
-
-        #Start data collection and update the collectionStatus with the task_ids
-        for repo_git, task_id in primary_augur_collection.start_data_collection():
-            
-            repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
-
-            #set status in database to collecting
-            repoStatus = repo.collection_status[0]
-            repoStatus.core_task_id = task_id
-            #repoStatus.secondary_task_id = task_id
-            repoStatus.core_status = CollectionState.COLLECTING.value
-            session.commit()
-        
-        #Deal with secondary collection
-        secondary_enabled_phases = []
-
-        if prelim_phase.__name__ in enabled_phase_names:
-            secondary_enabled_phases.append(prelim_phase)
-
-        if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-            secondary_enabled_phases.append(secondary_repo_collect_phase)
-
-        def secondary_task_success_gen(repo_git):
-            return secondary_task_success.si(repo_git)
-
-        secondary_enabled_phases.append(secondary_task_success_gen)
-
-
-        max_repo_secondary_count = 30
-        active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.secondary_status == CollectionState.COLLECTING.value).all())
-
-        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
-        not_erroed = CollectionStatus.secondary_status != str(CollectionState.ERROR.value)
-        not_collecting = CollectionStatus.secondary_status != str(CollectionState.COLLECTING.value)
-        never_collected = CollectionStatus.secondary_data_last_collected == None
-        old_collection = CollectionStatus.secondary_data_last_collected <= cutoff_date
-        primary_collected = CollectionStatus.core_status == str(CollectionState.SUCCESS.value)
-
-        limit = max_repo_secondary_count-active_repo_count
-
-        repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(primary_collected,not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
-
-        logger.info(f"Starting secondary collection on {len(repo_git_identifiers)} repos")
-
-        logger.info(f"Secondary collection starting for: {tuple(repo_git_identifiers)}")
-
-        secondary_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=secondary_enabled_phases)
-
-        #Start data collection and update the collectionStatus with the task_ids
-        for repo_git, task_id in secondary_augur_collection.start_data_collection():
-            
-            repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
-
-            #set status in database to collecting
-            repoStatus = repo.collection_status[0]
-            #repoStatus.core_task_id = task_id
-            repoStatus.secondary_task_id = task_id
-            repoStatus.secondary_status = CollectionState.COLLECTING.value
-            session.commit()
+        start_facade_collection(session, max_repo=30, days=30)
 
 
 

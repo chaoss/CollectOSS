@@ -38,19 +38,17 @@ default_config = {
             },
             "Facade": {
                 "check_updates": 1,
-                "clone_repos": 1,
                 "create_xlsx_summary_files": 1,
                 "delete_marked_repos": 0,
                 "fix_affiliations": 1,
-                "force_analysis": 1,
                 "force_invalidate_caches": 1,
-                "force_updates": 1,
                 "limited_run": 0,
                 "multithreaded": 1,
                 "nuke_stored_affiliations": 0,
                 "pull_repos": 1,
                 "rebuild_caches": 1,
-                "run_analysis": 1
+                "run_analysis": 1,
+                "run_facade_contributors": 1
             },
             "Server": {
                 "cache_expire": "3600",
@@ -102,6 +100,7 @@ default_config = {
                 "prelim_phase": 1,
                 "primary_repo_collect_phase": 1,
                 "secondary_repo_collect_phase": 1,
+                "facade_phase": 1,
                 "machine_learning_phase": 0
             }
         }
