@@ -410,8 +410,10 @@ class User(Base):
         return result
 
     def add_repo(self, group_name, repo_url):
+        
+        from augur.tasks.github.util.github_task_session import GithubTaskSession
 
-        with DatabaseSession(logger) as session:
+        with GithubTaskSession(logger) as session:
             result = UserRepo.add(session, repo_url, self.user_id, group_name)
 
         return result
@@ -425,7 +427,9 @@ class User(Base):
 
     def add_org(self, group_name, org_url):
 
-        with DatabaseSession(logger) as session:
+        from augur.tasks.github.util.github_task_session import GithubTaskSession
+
+        with GithubTaskSession(logger) as session:
             result = UserRepo.add_org_repos(session, org_url, self.user_id, group_name)
 
         return result
