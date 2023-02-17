@@ -1345,10 +1345,8 @@ def mean_days_between_PR_comments():
 
     plot_width = 950
     p1 = figure(x_axis_type="datetime",
-                title="{}: Mean {} Between Comments by Month Closed for {} Pull Requests".format(repo_dict[repo_id],
-                                                                                                    time_unit,
-                                                                                                    description),
-                plot_width=plot_width, x_range=(pr_all[x_axis].min(), pr_all[x_axis].max()), plot_height=500,
+                title="{}: Mean {} Between Comments by Month Closed for {} Pull Requests".format(repo_dict[repo_id], time_unit, description),
+                plot_width=plot_width, x_range=(data_dict["All"][x_axis].min(), data_dict["All"][x_axis].max()), plot_height=500,
                 toolbar_location=None)
     colors = Category20[10][6:]
     color_index = 0
@@ -1379,11 +1377,9 @@ def mean_days_between_PR_comments():
             possible_maximums.append(
                 max(driver_df_mean.loc[driver_df_mean[line_group] == line_group_value][y_axis].dropna()))
     for repo, num_outliers in num_outliers_repo_map.items():
-        # FIXME repo_name is not defined
-        if repo_name == repo:
-            p1.add_layout(
-                Title(text="** {} outliers for {} were removed".format(num_outliers, repo), align="center"),
-                "below")
+        p1.add_layout(
+            Title(text="** {} outliers for {} were removed".format(num_outliers, repo), align="center"),
+            "below")
 
     p1.grid.grid_line_alpha = 0.3
     p1.xaxis.axis_label = 'Month Closed'
