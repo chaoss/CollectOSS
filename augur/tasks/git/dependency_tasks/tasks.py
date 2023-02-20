@@ -15,10 +15,12 @@ def process_dependency_metrics(repo_git):
     logger = logging.getLogger(process_dependency_metrics.__name__)
 
     with DatabaseSession(logger, engine) as session:
+        logger.info(f"repo_git: {repo_git}")
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo = execute_session_query(query,'one')
+        
 
         try:
+            repo = execute_session_query(query,'one')
             deps_model(session, repo.repo_id)
         except Exception as e:
             session.logger.error(f"Could not complete deps_model!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")

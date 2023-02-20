@@ -8,6 +8,7 @@ Create Date: 2023-02-16 12:45:57.486871
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql import text
 
 # revision identifiers, used by Alembic.
 revision = '6'
@@ -25,7 +26,7 @@ def upgrade():
                existing_server_default=sa.text('nextval(\'"augur_data".releases_release_id_seq\'::regclass)'),
                schema='augur_data')
     
-
+    
     op.drop_column('repo', 'repo_status', schema='augur_data')
     op.add_column('collection_status', sa.Column('facade_status', sa.String(), server_default=sa.text("'Pending'"), nullable=False), schema='augur_operations')
     op.add_column('collection_status', sa.Column('facade_data_last_collected', postgresql.TIMESTAMP(), nullable=True), schema='augur_operations')
