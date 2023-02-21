@@ -46,6 +46,8 @@ class CollectionState(Enum):
     PENDING = "Pending"
     ERROR = "Error"
     COLLECTING = "Collecting"
+    UPDATE = "Update"
+    FAILED_CLONE = "Failed Clone"
 
 """
 @celery.task(bind=True)
@@ -155,19 +157,23 @@ def task_failed(request,exc,traceback):
         except Exception as e:
             logger.error(f"Could not mutate request chain! \n Error: {e}")
         
-        if collectionRecord.core_status == CollectionState.COLLECTING.value:
+        if collectionRecord.core_task_id == request.id:
             # set status to Error in db
             collectionRecord.core_status = CollectionStatus.ERROR.value
-            session.commit()
+            collectionRecord.core_task_id = None
+        
 
-        if collectionRecord.secondary_status == CollectionState.COLLECTING.value:
+        if collectionRecord.secondary_task_id == request.id:
             # set status to Error in db
             collectionRecord.secondary_status = CollectionStatus.ERROR.value
-            session.commit()
+            collectionRecord.secondary_task_id = None
+            
         
-        if collectionRecord.facade_status == CollectionState.COLLECTING.value:
+        if collectionRecord.facade_task_id == request.id:
             collectionRecord.facade_status = CollectionStatus.ERROR.value
-            session.commit()
+            collectionRecord.facade_task_id = None
+        
+        session.commit()
     
     
 
@@ -483,11 +489,11 @@ def start_facade_collection(session,max_repo,days):
 
     facade_enabled_phases.append(facade_task_success_gen)
 
-    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
+    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_task_id != None).all())
 
     cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
     not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
-    not_collecting = CollectionStatus.facade_status != str(CollectionState.COLLECTING.value)
+    not_collecting = CollectionStatus.facade_task_id == None
     never_collected = CollectionStatus.facade_data_last_collected == None
     old_collection = CollectionStatus.facade_data_last_collected <= cutoff_date
 
@@ -510,7 +516,6 @@ def start_facade_collection(session,max_repo,days):
         repoStatus = repo.collection_status[0]
         #repoStatus.core_task_id = task_id
         repoStatus.facade_task_id = task_id
-        repoStatus.facade_status = CollectionState.COLLECTING.value
         session.commit()
 
 @celery.task

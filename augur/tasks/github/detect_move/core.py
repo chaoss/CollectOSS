@@ -66,7 +66,6 @@ def ping_github_for_repo_move(session,repo, logger):
         'repo_git': f"https://github.com/{owner}/{name}",
         'repo_path': None,
         'repo_name': None,
-        'repo_status': 'New',
         'description': f"(Originally hosted at {url}) {old_description}"
     }
 

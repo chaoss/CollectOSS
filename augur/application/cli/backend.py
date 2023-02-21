@@ -116,28 +116,10 @@ def start(disable_collection, development, port):
         time.sleep(5)
 
         create_collection_status(logger)
-
+        
         with DatabaseSession(logger) as session:
-            primaryCollecting = CollectionStatus.core_status == CollectionState.COLLECTING.value
-            secondaryCollecting = CollectionStatus.secondary_status == CollectionState.COLLECTING.value
+            clean_collection_status(session)
 
-            query = session.query(CollectionStatus).filter(or_(primaryCollecting,secondaryCollecting))
-
-            collection_status_list = execute_session_query(query,'all')
-
-            for status in collection_status_list:
-                repo = status.repo
-                repo.repo_name = None
-                repo.repo_path = None
-                repo.repo_status = "New"
-
-                status.core_status = "Pending"
-                status.secondary_status = "Pending"
-            
-            #collection_status_list.update({CollectionStatus.core_status: "Pending"})
-            #collection_status_list.update({CollectionStatus.secondary_status: "Pending"})
-            session.commit()
-          
         augur_collection_monitor.si().apply_async()
 
         celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
@@ -232,8 +214,11 @@ def clean_collection_status(session):
         SET secondary_status='Pending'
         WHERE secondary_status='Collecting';
         UPDATE augur_operations.collection_status 
+        SET facade_status='Update'
+        WHERE facade_status LIKE '%Collecting%';
+        UPDATE augur_operations.collection_status
         SET facade_status='Pending'
-        WHERE facade_status='Collecting';
+        WHERE facade_status='Failed Clone';
     """))
 
 @cli.command('export-env')
@@ -263,7 +248,18 @@ def repo_reset(augur_app):
     """
     Refresh repo collection to force data collection
     """
-    augur_app.database.execute("UPDATE augur_data.repo SET repo_path = NULL, repo_name = NULL, repo_status = 'New'; TRUNCATE augur_data.commits CASCADE; ")
+    augur_app.database.execute(s.sql.text("""UPDATE augur_operations.collection_status 
+        SET core_status='Pending';
+        UPDATE augur_operations.collection_status 
+        SET secondary_status='Pending';
+        UPDATE augur_operations.collection_status 
+        SET facade_status='Update'
+        WHERE facade_status='Collecting' OR facade_status='Success' OR facade_status='Error';
+        UPDATE augur_operations.collection_status
+        SET facade_status='Pending'
+        WHERE facade_status='Failed Clone';
+        TRUNCATE augur_data.commits CASCADE;
+        """))
 
     logger.info("Repos successfully reset")
 

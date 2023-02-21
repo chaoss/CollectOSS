@@ -64,12 +64,17 @@ def facade_error_handler(request,exc,traceback):
 
 #Predefine facade collection with tasks
 @celery.task
-def facade_analysis_init_facade_task():
+def facade_analysis_init_facade_task(repo_id):
 
     logger = logging.getLogger(facade_analysis_init_facade_task.__name__)
     with FacadeSession(logger) as session:
         session.update_status('Running analysis')
         session.log_activity('Info',f"Beginning analysis.")
+
+        update_project_status = s.sql.text("""UPDATE augur_operations.collection_status
+            SET facade_status='Collecting' WHERE 
+            repo_id=:repo_id""").bindparams(repo_id=repo_id)
+        session.execute_sql(update_project_status)
 
 @celery.task
 def grab_comitters(repo_id,platform="github"):
@@ -420,7 +425,7 @@ def generate_analysis_sequence(logger,repo_git, session):
     concurrentTasks = int((-1 * (15/(len(repo_ids)+1))) + 15)
     logger.info(f"Scheduling concurrent layers {concurrentTasks} tasks at a time.")
 
-    analysis_sequence.append(facade_analysis_init_facade_task.si())
+    analysis_sequence.append(facade_analysis_init_facade_task.si(repo_id))
 
     analysis_sequence.append(grab_comitters.si(repo_id))
 
@@ -514,7 +519,7 @@ def facade_phase(repo_git):
         #if not limited_run or (limited_run and delete_marked_repos):
         #    facade_sequence.append(git_repo_cleanup_facade_task.si(repo_git))#git_repo_cleanup(session,repo_git_identifiers)
 
-        if 'New' in status.repo_status:
+        if 'Pending' in status.facade_status or 'Failed Clone' in status.facade_status:
             facade_sequence.append(git_repo_initialize_facade_task.si(repo_git))#git_repo_initialize(session,repo_git_identifiers)
 
         #TODO: alter this to work with current collection.

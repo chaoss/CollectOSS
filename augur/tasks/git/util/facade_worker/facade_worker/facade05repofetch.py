@@ -134,7 +134,7 @@ def git_repo_initialize(session, repo_git):
         session.execute_sql(query)
 
         query = s.sql.text("""UPDATE augur_operations.collection_status
-            SET repo_status='New (Initializing)'
+            SET facade_status='Collecting (Initializing)'
             WHERE repo_id=:idParam""").bindparams(idParam=row.repo_id)
 
         session.execute_sql(query)
@@ -150,7 +150,7 @@ def git_repo_initialize(session, repo_git):
             # circumstances caches are rebuilt only once per waiting period.
 
             update_project_status = s.sql.text("""UPDATE augur_operations.collection_status
-                SET repo_status='Update' WHERE 
+                SET facade_status='Update' WHERE 
                 repo_id=:repo_id""").bindparams(repo_id=row.repo_id)
             session.execute_sql(update_project_status)
 
@@ -168,7 +168,7 @@ def git_repo_initialize(session, repo_git):
             # If cloning failed, log it and set the status back to new
             update_repo_log(session, row.repo_id,f"Failed ({return_code})")
 
-            query = s.sql.text("""UPDATE augur_operations.collection_status SET repo_status='New (failed)' WHERE repo_id=:repo_id and repo_status !='Empty'
+            query = s.sql.text("""UPDATE augur_operations.collection_status SET facade_status='Failed Clone' WHERE repo_id=:repo_id
                 """).bindparams(repo_id=row.repo_id)
 
             session.execute_sql(query)

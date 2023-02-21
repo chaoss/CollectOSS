@@ -38,7 +38,6 @@ def get_all_repos():
             repo.repo_name,
             repo.description,
             repo.repo_git AS url,
-            repo.repo_status,
             a.commits_all_time,
             b.issues_all_time,
             c.pull_requests_all_time,
@@ -80,7 +79,6 @@ def get_repos_in_repo_group(repo_group_id):
             repo.repo_name,
             repo.description,
             repo.repo_git AS url,
-            repo.repo_status,
             a.commits_all_time,
             b.issues_all_time,
             c.pull_requests_all_time

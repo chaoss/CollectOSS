@@ -31,7 +31,7 @@ def upgrade():
     op.add_column('collection_status', sa.Column('facade_status', sa.String(), server_default=sa.text("'Pending'"), nullable=False), schema='augur_operations')
     op.add_column('collection_status', sa.Column('facade_data_last_collected', postgresql.TIMESTAMP(), nullable=True), schema='augur_operations')
     op.add_column('collection_status', sa.Column('facade_task_id', sa.String(), nullable=True), schema='augur_operations')
-    op.add_column('collection_status', sa.Column('repo_status', sa.String(), server_default=sa.text("'New'::character varying"), nullable=False), schema='augur_operations')
+    #op.add_column('collection_status', sa.Column('repo_status', sa.String(), server_default=sa.text("'New'::character varying"), nullable=False), schema='augur_operations')
     
     #Recreate the foreign key
     op.drop_constraint('collection_status_repo_id_fk', 'collection_status', schema='augur_operations', type_='foreignkey')
@@ -87,7 +87,7 @@ def downgrade():
                schema='augur_operations')
     op.drop_constraint('collection_status_repo_id_fk', 'collection_status', schema='augur_operations', type_='foreignkey')
     op.create_foreign_key('collection_status_repo_id_fk', 'collection_status', 'repo', ['repo_id'], ['repo_id'], source_schema='augur_operations')
-    op.drop_column('collection_status', 'repo_status', schema='augur_operations')
+    #op.drop_column('collection_status', 'repo_status', schema='augur_operations')
     op.drop_column('collection_status', 'facade_task_id', schema='augur_operations')
     op.drop_column('collection_status', 'facade_data_last_collected', schema='augur_operations')
     op.drop_column('collection_status', 'facade_status', schema='augur_operations')

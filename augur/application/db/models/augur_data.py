@@ -972,7 +972,6 @@ class Repo(Base):
         repo_data = {
             "repo_group_id": repo_group_id,
             "repo_git": url,
-            "repo_status": "New",
             "tool_source": tool_source,
             "tool_version": "1.0",
             "data_source": "Git"
