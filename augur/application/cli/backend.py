@@ -232,8 +232,8 @@ def clean_collection_status(session):
         SET secondary_status='Pending'
         WHERE secondary_status='Collecting';
         UPDATE augur_operations.collection_status 
-        SET secondary_status='Pending'
-        WHERE secondary_status='Collecting';
+        SET facade_status='Pending'
+        WHERE facade_status='Collecting';
     """))
 
 @cli.command('export-env')
