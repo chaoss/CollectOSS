@@ -133,6 +133,9 @@ def task_failed(request,exc,traceback):
     from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(task_failed.__name__)
+
+    # log traceback to error file
+    logger.error(f"Task {request.id} raised exception: {exc}\n{traceback}")
     
     with DatabaseSession(logger,engine) as session:
         core_id_match = CollectionStatus.core_task_id == request.id
@@ -166,9 +169,6 @@ def task_failed(request,exc,traceback):
         if collectionRecord.facade_status == CollectionState.COLLECTING.value:
             collectionRecord.facade_status = CollectionStatus.ERROR.value
             session.commit()
-
-        # log traceback to error file
-        session.logger.error(f"Task {request.id} raised exception: {exc}\n{traceback}")
     
     
 

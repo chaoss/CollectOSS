@@ -136,7 +136,7 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(collection_interval, augur_collection_monitor.s())
 
         #Do longer tasks less often
-        non_domain_collection_interval = collection_interval * 5
+        non_domain_collection_interval = collection_interval * 800
         logger.info(f"Scheduling non-repo-domain collection every {non_domain_collection_interval/60} minutes")
         sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks.s())
 
