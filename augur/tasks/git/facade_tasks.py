@@ -530,7 +530,7 @@ def facade_phase(repo_git):
 
         #Generate contributor analysis task group.
         if not limited_run or (limited_run and run_facade_contributors):
-            facade_sequence.append(generate_contributor_sequence(logger,repo_git))
+            facade_sequence.append(generate_contributor_sequence(logger,repo_git,session))
 
 
         logger.info(f"Facade sequence: {facade_sequence}")
