@@ -526,7 +526,7 @@ def facade_phase(repo_git):
 
         #Generate commit analysis task order.
         if not limited_run or (limited_run and run_analysis):
-            facade_sequence.extend(generate_analysis_sequence(logger,repo_git))
+            facade_sequence.extend(generate_analysis_sequence(logger,repo_git,session))
 
         #Generate contributor analysis task group.
         if not limited_run or (limited_run and run_facade_contributors):
