@@ -171,14 +171,7 @@ def start(disable_collection, development, port):
             celery_beat_process.terminate()
 
         try:
-            clear_redis_caches()
-            connection_string = ""
-            with DatabaseSession(logger) as session:
-                config = AugurConfig(logger, session)
-                connection_string = config.get_section("RabbitMQ")['connection_string']
-
-            clear_rabbitmq_messages(connection_string)
-            
+            cleanup_after_collection_halt(logger)
         except RedisConnectionError:
             pass
 
@@ -191,13 +184,7 @@ def stop():
     logger = logging.getLogger("augur.cli")
     _broadcast_signal_to_processes(given_logger=logger)
 
-    clear_redis_caches()
-    connection_string = ""
-    with DatabaseSession(logger) as session:
-        config = AugurConfig(logger, session)
-        connection_string = config.get_section("RabbitMQ")['connection_string']
-
-    clear_rabbitmq_messages(connection_string)
+    cleanup_after_collection_halt(logger)
 
 @cli.command('kill')
 def kill():
@@ -207,15 +194,18 @@ def kill():
     logger = logging.getLogger("augur.cli")
     _broadcast_signal_to_processes(broadcast_signal=signal.SIGKILL, given_logger=logger)
 
-    clear_redis_caches()
+    cleanup_after_collection_halt(logger)
 
+def cleanup_after_collection_halt(logger):
+    clear_redis_caches()
     connection_string = ""
     with DatabaseSession(logger) as session:
         config = AugurConfig(logger, session)
         connection_string = config.get_section("RabbitMQ")['connection_string']
 
-    clear_rabbitmq_messages(connection_string)
+        clean_collection_status(session)
 
+    clear_rabbitmq_messages(connection_string)
 
 def clear_redis_caches():
     """Clears the redis databases that celery and redis use."""
@@ -232,6 +222,19 @@ def clear_rabbitmq_messages(connection_string):
     rabbitmq_purge_command = f"sudo rabbitmqctl purge_queue celery -p {virtual_host_string}"
     subprocess.call(rabbitmq_purge_command.split(" "))
 
+#Make sure that database reflects collection status when processes are killed/stopped.
+def clean_collection_status(session):
+    session.execute_sql(s.sql.text("""
+        UPDATE augur_operations.collection_status 
+        SET core_status='Pending'
+        WHERE core_status='Collecting';
+        UPDATE augur_operations.collection_status 
+        SET secondary_status='Pending'
+        WHERE secondary_status='Collecting';
+        UPDATE augur_operations.collection_status 
+        SET secondary_status='Pending'
+        WHERE secondary_status='Collecting';
+    """))
 
 @cli.command('export-env')
 def export_env(config):
