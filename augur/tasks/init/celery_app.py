@@ -40,7 +40,8 @@ git_tasks = ['augur.tasks.git.facade_tasks',
 data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
                        'augur.tasks.data_analysis.clustering_worker.tasks',
                        'augur.tasks.data_analysis.discourse_analysis.tasks',
-                       'augur.tasks.data_analysis.pull_request_analysis_worker.tasks']
+                       'augur.tasks.data_analysis.pull_request_analysis_worker.tasks',
+                       'augur.tasks.data_analysis.insight_worker.tasks']
 
 materialized_view_tasks = ['augur.tasks.db.refresh_materialized_views']
 
@@ -160,7 +161,7 @@ def init_worker(**kwargs):
 
     from augur.application.db.engine import DatabaseEngine
 
-    engine = DatabaseEngine(pool_size=5, max_overflow=10, pool_timeout=240).engine
+    engine = DatabaseEngine(pool_size=5, max_overflow=10).engine
 
 
 @worker_process_shutdown.connect

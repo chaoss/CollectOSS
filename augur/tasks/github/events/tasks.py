@@ -19,11 +19,9 @@ def collect_events(repo_git: str):
 
     from augur.tasks.init.celery_app import engine
 
-    from augur.tasks.init.celery_app import engine
-
     logger = logging.getLogger(collect_events.__name__)
     
-    with DatabaseSession(logger, engine) as session:
+    with GithubTaskSession(logger, engine) as session:
 
         try:
             
@@ -37,11 +35,11 @@ def collect_events(repo_git: str):
 
             url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
 
-            event_data = retrieve_all_event_data(repo_git, logger)
+            event_data = retrieve_all_event_data(repo_git, logger, session.oauths)
 
             if event_data:
             
-                process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger)
+                process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger, session)
 
             else:
                 logger.info(f"{owner}/{repo} has no events")
@@ -49,7 +47,7 @@ def collect_events(repo_git: str):
             logger.error(f"Could not collect events for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
-def retrieve_all_event_data(repo_git: str, logger):
+def retrieve_all_event_data(repo_git: str, logger, key_auth):
 
     from augur.tasks.init.celery_app import engine
 
@@ -58,11 +56,9 @@ def retrieve_all_event_data(repo_git: str, logger):
     logger.info(f"Collecting Github events for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
-    
-    with GithubTaskSession(logger, engine) as session:
-    
-        # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-        events = GithubPaginator(url, session.oauths, logger)
+        
+    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
+    events = GithubPaginator(url, key_auth, logger)
 
 
     num_pages = events.get_num_pages()
@@ -83,7 +79,7 @@ def retrieve_all_event_data(repo_git: str, logger):
 
     return all_data        
 
-def process_events(events, task_name, repo_id, logger):
+def process_events(events, task_name, repo_id, logger, session):
 
     from augur.tasks.init.celery_app import engine
     
@@ -95,85 +91,83 @@ def process_events(events, task_name, repo_id, logger):
     issue_event_dicts = []
     contributors = []
 
-    with DatabaseSession(logger, engine) as session:
+    not_mapable_event_count = 0
+    event_len = len(events)
+    for event in events:
 
-        not_mapable_event_count = 0
-        event_len = len(events)
-        for event in events:
+        event, contributor = process_github_event_contributors(logger, event, tool_source, tool_version, data_source)
 
-            event, contributor = process_github_event_contributors(logger, event, tool_source, tool_version, data_source)
+        # event_mapping_data is the pr or issue data needed to relate the event to an issue or pr
+        event_mapping_data = event["issue"]
 
-            # event_mapping_data is the pr or issue data needed to relate the event to an issue or pr
-            event_mapping_data = event["issue"]
+        if event_mapping_data is None:
+            not_mapable_event_count += 1
+            continue
+        
+        if 'pull_request' in list(event_mapping_data.keys()):
+            pr_url = event_mapping_data["pull_request"]["url"]
 
-            if event_mapping_data is None:
-                not_mapable_event_count += 1
+            try:
+                query = session.query(PullRequest).filter(PullRequest.pr_url == pr_url)
+                related_pr = execute_session_query(query, 'one')
+            except s.orm.exc.NoResultFound:
+                logger.info(f"{task_name}: Could not find related pr")
+                logger.info(f"{task_name}: We were searching for: {pr_url}")
+                # TODO: Add table to log all errors
+                logger.info(f"{task_name}: Skipping")
                 continue
-            
-            if 'pull_request' in list(event_mapping_data.keys()):
-                pr_url = event_mapping_data["pull_request"]["url"]
 
-                try:
-                    query = session.query(PullRequest).filter(PullRequest.pr_url == pr_url)
-                    related_pr = execute_session_query(query, 'one')
-                except s.orm.exc.NoResultFound:
-                    logger.info(f"{task_name}: Could not find related pr")
-                    logger.info(f"{task_name}: We were searching for: {pr_url}")
-                    # TODO: Add table to log all errors
-                    logger.info(f"{task_name}: Skipping")
-                    continue
+            pr_event_dicts.append(
+                extract_pr_event_data(event, related_pr.pull_request_id, platform_id, repo_id,
+                                    tool_source, tool_version, data_source)
+            )
 
-                pr_event_dicts.append(
-                    extract_pr_event_data(event, related_pr.pull_request_id, platform_id, repo_id,
+        else:
+            issue_url = event_mapping_data["url"]
+
+            try:
+                query = session.query(Issue).filter(Issue.issue_url == issue_url)
+                related_issue = execute_session_query(query, 'one')
+            except s.orm.exc.NoResultFound:
+                logger.info(f"{task_name}: Could not find related pr")
+                logger.info(
+                    f"{task_name}: We were searching for: {issue_url}")
+                # TODO: Add table to log all errors
+                logger.info(f"{task_name}: Skipping")
+                continue
+
+            issue_event_dicts.append(
+                extract_issue_event_data(event, related_issue.issue_id, platform_id, repo_id,
                                         tool_source, tool_version, data_source)
-                )
+            )
+        
+        # add contributor to list after porcessing the event, 
+        # so if it fails processing for some reason the contributor is not inserted
+        # NOTE: contributor is none when there is no contributor data on the event
+        if contributor:
+            contributors.append(contributor)
 
-            else:
-                issue_url = event_mapping_data["url"]
+    # remove contributors that were found in the data more than once
+    contributors = remove_duplicate_dicts(contributors)
 
-                try:
-                    query = session.query(Issue).filter(Issue.issue_url == issue_url)
-                    related_issue = execute_session_query(query, 'one')
-                except s.orm.exc.NoResultFound:
-                    logger.info(f"{task_name}: Could not find related pr")
-                    logger.info(
-                        f"{task_name}: We were searching for: {issue_url}")
-                    # TODO: Add table to log all errors
-                    logger.info(f"{task_name}: Skipping")
-                    continue
+    session.insert_data(contributors, Contributor, ["cntrb_id"])
 
-                issue_event_dicts.append(
-                    extract_issue_event_data(event, related_issue.issue_id, platform_id, repo_id,
-                                            tool_source, tool_version, data_source)
-                )
-            
-            # add contributor to list after porcessing the event, 
-            # so if it fails processing for some reason the contributor is not inserted
-            # NOTE: contributor is none when there is no contributor data on the event
-            if contributor:
-                contributors.append(contributor)
+    issue_events_len = len(issue_event_dicts)
+    pr_events_len = len(pr_event_dicts)
+    if event_len != (issue_events_len + pr_events_len):
 
-        # remove contributors that were found in the data more than once
-        contributors = remove_duplicate_dicts(contributors)
+        unassigned_events = event_len - issue_events_len - pr_events_len
 
-        session.insert_data(contributors, Contributor, ["cntrb_id"])
+        logger.error(f"{task_name}: {event_len} events were processed, but {pr_events_len} pr events were found and related to a pr, and {issue_events_len} issue events were found and related to an issue. {not_mapable_event_count} events were not related to a pr or issue due to the api returning insufficient data. For some reason {unassigned_events} events were not able to be processed even when the api returned sufficient data. This is usually because pull requests or issues have not been collected, and the events are skipped because they cannot be related to a pr or issue")
 
-        issue_events_len = len(issue_event_dicts)
-        pr_events_len = len(pr_event_dicts)
-        if event_len != (issue_events_len + pr_events_len):
+    logger.info(f"{task_name}: Inserting {len(pr_event_dicts)} pr events and {len(issue_event_dicts)} issue events")
 
-            unassigned_events = event_len - issue_events_len - pr_events_len
+    # TODO: Could replace this with "id" but it isn't stored on the table for some reason
+    pr_event_natural_keys = ["node_id"]
+    session.insert_data(pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
 
-            logger.error(f"{task_name}: {event_len} events were processed, but {pr_events_len} pr events were found and related to a pr, and {issue_events_len} issue events were found and related to an issue. {not_mapable_event_count} events were not related to a pr or issue due to the api returning insufficient data. For some reason {unassigned_events} events were not able to be processed even when the api returned sufficient data. This is usually because pull requests or issues have not been collected, and the events are skipped because they cannot be related to a pr or issue")
-
-        logger.info(f"{task_name}: Inserting {len(pr_event_dicts)} pr events and {len(issue_event_dicts)} issue events")
-
-        # TODO: Could replace this with "id" but it isn't stored on the table for some reason
-        pr_event_natural_keys = ["node_id"]
-        session.insert_data(pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
-
-        issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
-        session.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
+    issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
+    session.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
 
 
 # TODO: Should we skip an event if there is no contributor to resolve it o

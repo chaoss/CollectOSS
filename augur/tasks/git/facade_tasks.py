@@ -47,8 +47,6 @@ from augur.application.logs import TaskLogConfig
 @celery.task
 def facade_error_handler(request,exc,traceback):
 
-    from augur.tasks.init.celery_app import engine
-
     logger = logging.getLogger(facade_error_handler.__name__)
 
     logger.error(f"Task {request.id} raised exception: {exc}! \n {traceback}")
@@ -67,8 +65,6 @@ def facade_error_handler(request,exc,traceback):
 #Predefine facade collection with tasks
 @celery.task
 def facade_analysis_init_facade_task():
-
-    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(facade_analysis_init_facade_task.__name__)
     with FacadeSession(logger) as session:
@@ -90,8 +86,6 @@ def grab_comitters(repo_id,platform="github"):
 
 @celery.task
 def trim_commits_facade_task(repo_id):
-
-    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(trim_commits_facade_task.__name__)
 
@@ -141,8 +135,6 @@ def trim_commits_facade_task(repo_id):
 
 @celery.task
 def trim_commits_post_analysis_facade_task(repo_id):
-
-    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
     
@@ -226,17 +218,14 @@ def trim_commits_post_analysis_facade_task(repo_id):
 @celery.task
 def facade_analysis_end_facade_task():
 
-    from augur.tasks.init.celery_app import engine
-
     logger = logging.getLogger(facade_analysis_end_facade_task.__name__)
-    FacadeSession(logger).log_activity('Info','Running analysis (complete)')
+    with FacadeSession(logger) as session:
+        session.log_activity('Info','Running analysis (complete)')
 
 
 
 @celery.task
 def facade_start_contrib_analysis_task():
-
-    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(facade_start_contrib_analysis_task.__name__)
     with FacadeSession(logger) as session:
@@ -249,8 +238,6 @@ def facade_start_contrib_analysis_task():
 def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
     """Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
     """
-
-    from augur.tasks.init.celery_app import engine
 
     #create new session for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
@@ -339,8 +326,6 @@ def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
 @celery.task
 def nuke_affiliations_facade_task():
 
-    from augur.tasks.init.celery_app import engine
-
     logger = logging.getLogger(nuke_affiliations_facade_task.__name__)
     
     with FacadeSession(logger) as session:
@@ -349,16 +334,12 @@ def nuke_affiliations_facade_task():
 @celery.task
 def fill_empty_affiliations_facade_task():
 
-    from augur.tasks.init.celery_app import engine
-
     logger = logging.getLogger(fill_empty_affiliations_facade_task.__name__)
     with FacadeSession(logger) as session:
         fill_empty_affiliations(session)
 
 @celery.task
 def invalidate_caches_facade_task():
-
-    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(invalidate_caches_facade_task.__name__)
 
@@ -367,8 +348,6 @@ def invalidate_caches_facade_task():
 
 @celery.task
 def rebuild_unknown_affiliation_and_web_caches_facade_task():
-
-    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(rebuild_unknown_affiliation_and_web_caches_facade_task.__name__)
     
@@ -379,8 +358,6 @@ def rebuild_unknown_affiliation_and_web_caches_facade_task():
 @celery.task
 def git_repo_cleanup_facade_task(repo_git):
 
-    from augur.tasks.init.celery_app import engine
-
     logger = logging.getLogger(git_repo_cleanup_facade_task.__name__)
 
     with FacadeSession(logger) as session:
@@ -388,8 +365,6 @@ def git_repo_cleanup_facade_task(repo_git):
 
 @celery.task
 def git_repo_initialize_facade_task(repo_git):
-
-    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
 
@@ -410,15 +385,13 @@ def git_repo_initialize_facade_task(repo_git):
 @celery.task
 def git_repo_updates_facade_task(repo_git):
 
-    from augur.tasks.init.celery_app import engine
-
     logger = logging.getLogger(git_repo_updates_facade_task.__name__)
 
     with FacadeSession(logger) as session:
         git_repo_updates(session, repo_git)
 
 
-def generate_analysis_sequence(logger,repo_git):
+def generate_analysis_sequence(logger,repo_git, session):
     """Run the analysis by looping over all active repos. For each repo, we retrieve
     the list of commits which lead to HEAD. If any are missing from the database,
     they are filled in. Then we check to see if any commits in the database are
@@ -433,58 +406,56 @@ def generate_analysis_sequence(logger,repo_git):
     
     analysis_sequence = []
 
-    with FacadeSession(logger) as session:
-        repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
-        WHERE repo_git=:value""").bindparams(value=repo_git)
-        repos = session.fetchall_data_from_sql_text(repo_list)
+    repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
+    WHERE repo_git=:value""").bindparams(value=repo_git)
+    repos = session.fetchall_data_from_sql_text(repo_list)
 
-        start_date = session.get_setting('start_date')
+    start_date = session.get_setting('start_date')
 
-        repo_ids = [repo['repo_id'] for repo in repos]
+    repo_ids = [repo['repo_id'] for repo in repos]
 
-        repo_id = repo_ids.pop(0)
+    repo_id = repo_ids.pop(0)
 
-        #determine amount of celery tasks to run at once in each grouped task load
-        concurrentTasks = int((-1 * (15/(len(repo_ids)+1))) + 15)
-        logger.info(f"Scheduling concurrent layers {concurrentTasks} tasks at a time.")
+    #determine amount of celery tasks to run at once in each grouped task load
+    concurrentTasks = int((-1 * (15/(len(repo_ids)+1))) + 15)
+    logger.info(f"Scheduling concurrent layers {concurrentTasks} tasks at a time.")
 
-        analysis_sequence.append(facade_analysis_init_facade_task.si())
+    analysis_sequence.append(facade_analysis_init_facade_task.si())
 
-        analysis_sequence.append(grab_comitters.si(repo_id))
+    analysis_sequence.append(grab_comitters.si(repo_id))
 
-        analysis_sequence.append(trim_commits_facade_task.si(repo_id))
+    analysis_sequence.append(trim_commits_facade_task.si(repo_id))
 
-        analysis_sequence.append(analyze_commits_in_parallel.si(repo_id,True))
+    analysis_sequence.append(analyze_commits_in_parallel.si(repo_id,True))
 
-        analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_id))
+    analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_id))
 
-        
-        analysis_sequence.append(facade_analysis_end_facade_task.si())
+    
+    analysis_sequence.append(facade_analysis_end_facade_task.si())
     
     logger.info(f"Analysis sequence: {analysis_sequence}")
     return analysis_sequence
 
 
 
-def generate_contributor_sequence(logger,repo_git):
+def generate_contributor_sequence(logger,repo_git, session):
     
     contributor_sequence = []
     #all_repo_ids = []
     repo_id = None
-    with FacadeSession(logger) as session:
         
-        #contributor_sequence.append(facade_start_contrib_analysis_task.si())
-        query = s.sql.text("""SELECT repo_id FROM repo
-        WHERE repo_git=:value""").bindparams(value=repo_git)
+    #contributor_sequence.append(facade_start_contrib_analysis_task.si())
+    query = s.sql.text("""SELECT repo_id FROM repo
+    WHERE repo_git=:value""").bindparams(value=repo_git)
 
-        repo = session.execute_sql(query).fetchone()
-        session.logger.info(f"repo: {repo}")
-        repo_id = repo[0]
-        #pdb.set_trace()
-        #breakpoint()
-        #for repo in all_repos:
-        #    contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
-        #all_repo_ids = [repo['repo_id'] for repo in all_repos]
+    repo = session.execute_sql(query).fetchone()
+    session.logger.info(f"repo: {repo}")
+    repo_id = repo[0]
+    #pdb.set_trace()
+    #breakpoint()
+    #for repo in all_repos:
+    #    contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
+    #all_repo_ids = [repo['repo_id'] for repo in all_repos]
 
     #contrib_group = create_grouped_task_load(dataList=all_repo_ids,task=insert_facade_contributors)#group(contributor_sequence)
     #contrib_group.link_error(facade_error_handler.s())

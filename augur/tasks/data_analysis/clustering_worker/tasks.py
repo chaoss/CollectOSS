@@ -23,7 +23,6 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, RepoClusterMessage, RepoTopic, TopicWord
-from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
 
 
@@ -42,11 +41,11 @@ def clustering_task():
         repos = execute_session_query(query, 'all')
     
 
-    for repo in repos:
-        clustering_model(repo.repo_git, logger, engine)
+        for repo in repos:
+            clustering_model(repo.repo_git, logger, engine, session)
 
 
-def clustering_model(repo_git: str,logger,engine) -> None:
+def clustering_model(repo_git: str,logger,engine, session) -> None:
 
     logger.info(f"Starting clustering analysis for {repo_git}")
 
@@ -62,19 +61,17 @@ def clustering_model(repo_git: str,logger,engine) -> None:
     tool_version = '0.2.0'
     data_source = 'Augur Collected Messages'
 
-    with DatabaseSession(logger, engine) as session:
+    config = AugurConfig(logger, session)
 
-        config = AugurConfig(logger, session)
+    query = session.query(Repo).filter(Repo.repo_git == repo_git)
+    repo_id = execute_session_query(query, 'one').repo_id
 
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_id = execute_session_query(query, 'one').repo_id
+    num_clusters = config.get_value("Clustering_Task", 'num_clusters')
+    max_df = config.get_value("Clustering_Task", 'max_df')
+    max_features = config.get_value("Clustering_Task", 'max_features')
+    min_df = config.get_value("Clustering_Task", 'min_df')
 
-        num_clusters = config.get_value("Clustering_Task", 'num_clusters')
-        max_df = config.get_value("Clustering_Task", 'max_df')
-        max_features = config.get_value("Clustering_Task", 'max_features')
-        min_df = config.get_value("Clustering_Task", 'min_df')
-
-        logger.info(f"Min df: {min_df}. Max df: {max_df}")
+    logger.info(f"Min df: {min_df}. Max df: {max_df}")
 
     logger.info("If you did not install NLTK libraries when you installed Augur, this will fail. ")
     #nltk.download('all')
@@ -124,15 +121,14 @@ def clustering_model(repo_git: str,logger,engine) -> None:
             """
     )
     # result = db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
-    with DatabaseEngine(connection_pool_size=1) as engine:
-        msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, engine, params={"repo_id": repo_id})
+    msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, engine, params={"repo_id": repo_id})
     logger.info(msg_df_cur_repo.head())
     logger.debug(f"Repo message df size: {len(msg_df_cur_repo.index)}")
 
     # check if dumped pickle file exists, if exists no need to train the model
     if not os.path.exists(MODEL_FILE_NAME):
         logger.info("clustering model not trained. Training the model.........")
-        train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source)
+        train_model(logger, engine, session, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source)
     else:
         model_stats = os.stat(MODEL_FILE_NAME)
         model_age = (time.time() - model_stats.st_mtime)
@@ -140,7 +136,7 @@ def clustering_model(repo_git: str,logger,engine) -> None:
         logger.debug(f'model age is: {model_age}')
         if model_age > 2000000:
             logger.info("clustering model to old. Retraining the model.........")
-            train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source)
+            train_model(logger, engine, session, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source)
         else:
             logger.info("using pre-trained clustering model....")
 
@@ -180,14 +176,13 @@ def clustering_model(repo_git: str,logger,engine) -> None:
         'tool_version': tool_version,
         'data_source': data_source
     }
-    with DatabaseSession(logger, engine) as session:
-        repo_cluster_messages_obj = RepoClusterMessage(**record)
-        session.add(repo_cluster_messages_obj)
-        session.commit()
+    repo_cluster_messages_obj = RepoClusterMessage(**record)
+    session.add(repo_cluster_messages_obj)
+    session.commit()
 
-        # result = db.execute(repo_cluster_messages_table.insert().values(record))
-        logging.info(
-            "Primary key inserted into the repo_cluster_messages table: {}".format(repo_cluster_messages_obj.msg_cluster_id))
+    # result = db.execute(repo_cluster_messages_table.insert().values(record))
+    logging.info(
+        "Primary key inserted into the repo_cluster_messages table: {}".format(repo_cluster_messages_obj.msg_cluster_id))
     try:
         logger.debug('pickling')
         lda_model = pickle.load(open("lda_model", "rb"))
@@ -208,22 +203,21 @@ def clustering_model(repo_git: str,logger,engine) -> None:
         prediction = lda_model.transform(count_matrix_cur_repo)
 
         logger.debug('for loop for vocab')
-        with DatabaseSession(logger, engine) as session:
-            for i, prob_vector in enumerate(prediction):
-                # repo_id = msg_df.loc[i]['repo_id']
-                for i, prob in enumerate(prob_vector):
-                    record = {
-                        'repo_id': int(repo_id),
-                        'topic_id': i + 1,
-                        'topic_prob': prob,
-                        'tool_source': tool_source,
-                        'tool_version': tool_version,
-                        'data_source': data_source
-                    }
+        for i, prob_vector in enumerate(prediction):
+            # repo_id = msg_df.loc[i]['repo_id']
+            for i, prob in enumerate(prob_vector):
+                record = {
+                    'repo_id': int(repo_id),
+                    'topic_id': i + 1,
+                    'topic_prob': prob,
+                    'tool_source': tool_source,
+                    'tool_version': tool_version,
+                    'data_source': data_source
+                }
 
-                    repo_topic_object = RepoTopic(**record)
-                    session.add(repo_topic_object)
-                    session.commit()
+                repo_topic_object = RepoTopic(**record)
+                session.add(repo_topic_object)
+                session.commit()
 
                     # result = db.execute(repo_topic_table.insert().values(record))
     except Exception as e:
@@ -271,7 +265,7 @@ def preprocess_and_tokenize(text):
     stems = [stemmer.stem(t) for t in tokens]
     return stems
 
-def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source):
+def train_model(logger, engine, session, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source):
     def visualize_labels_PCA(features, labels, annotations, num_components, title):
         labels_color_map = {-1: "red"}
         for label in labels:
@@ -314,8 +308,7 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
         AND prmr.msg_id=m.msg_id
         """
     )
-    with DatabaseEngine(connection_pool_size=1) as engine:
-        msg_df_all = pd.read_sql(get_messages_sql, engine, params={})
+    msg_df_all = pd.read_sql(get_messages_sql, engine, params={})
 
     # select only highly active repos
     logger.debug("Selecting highly active repos")
@@ -382,33 +375,32 @@ def train_model(logger, max_df, min_df, max_features, ngram_range, num_clusters,
     # twid = self.db.execute(key_sequence_words_sql)
     # logger.info("twid variable is: {}".format(twid))
     # insert topic list into database
-    with DatabaseSession(logger, engine) as session:
-        topic_id = 1
-        for topic in topic_list:
-            # twid = self.get_max_id('topic_words', 'topic_words_id') + 1
+    topic_id = 1
+    for topic in topic_list:
+        # twid = self.get_max_id('topic_words', 'topic_words_id') + 1
+        # logger.info("twid variable is: {}".format(twid))
+        for i in topic.argsort()[:-num_words_per_topic - 1:-1]:
+            # twid+=1
+            # logger.info("in loop incremented twid variable is: {}".format(twid))
             # logger.info("twid variable is: {}".format(twid))
-            for i in topic.argsort()[:-num_words_per_topic - 1:-1]:
-                # twid+=1
-                # logger.info("in loop incremented twid variable is: {}".format(twid))
-                # logger.info("twid variable is: {}".format(twid))
-                record = {
-                    # 'topic_words_id': twid,
-                    # 'word_prob': word_prob[i],
-                    'topic_id': int(topic_id),
-                    'word': feature_names[i],
-                    'tool_source': tool_source,
-                    'tool_version': tool_version,
-                    'data_source': data_source
-                }
+            record = {
+                # 'topic_words_id': twid,
+                # 'word_prob': word_prob[i],
+                'topic_id': int(topic_id),
+                'word': feature_names[i],
+                'tool_source': tool_source,
+                'tool_version': tool_version,
+                'data_source': data_source
+            }
 
-                topic_word_obj = TopicWord(**record)
-                session.add(topic_word_obj)
-                session.commit()
+            topic_word_obj = TopicWord(**record)
+            session.add(topic_word_obj)
+            session.commit()
 
-                # result = db.execute(topic_words_table.insert().values(record))
-                logger.info(
-                    "Primary key inserted into the topic_words table: {}".format(topic_word_obj.topic_words_id))
-            topic_id += 1
+            # result = db.execute(topic_words_table.insert().values(record))
+            logger.info(
+                "Primary key inserted into the topic_words table: {}".format(topic_word_obj.topic_words_id))
+        topic_id += 1
 
     # insert topic list into database
 

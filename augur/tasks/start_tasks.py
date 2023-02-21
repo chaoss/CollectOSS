@@ -30,7 +30,6 @@ from celery.result import allow_join_result
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
-from augur.application.db.engine import DatabaseEngine
 from augur.application.db.util import execute_session_query
 from logging import Logger
 from enum import Enum
