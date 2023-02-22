@@ -7,7 +7,7 @@ import traceback
 
 
 @celery.task()
-def detect_github_repo_move(repo_git : str) -> None:
+def detect_github_repo_move_core(repo_git : str) -> None:
 
     from augur.tasks.init.celery_app import engine
 
@@ -17,10 +17,24 @@ def detect_github_repo_move(repo_git : str) -> None:
     with GithubTaskSession(logger, engine) as session:
         #Ping each repo with the given repo_git to make sure
         #that they are still in place. 
-        try:
-            query = session.query(Repo).filter(Repo.repo_git == repo_git)
-            repo = execute_session_query(query, 'one')
-            logger.info(f"Pinging repo: {repo_git}")
-            ping_github_for_repo_move(session, repo, logger)
-        except Exception as e:
-            logger.error(f"Could not check repo source for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo = execute_session_query(query, 'one')
+        logger.info(f"Pinging repo: {repo_git}")
+        ping_github_for_repo_move(session, repo, logger)
+
+
+@celery.task()
+def detect_github_repo_move_secondary(repo_git : str) -> None:
+
+    from augur.tasks.init.celery_app import engine
+
+    logger = logging.getLogger(detect_github_repo_move.__name__)
+
+    logger.info(f"Starting repo_move operation with {repo_git}")
+    with GithubTaskSession(logger, engine) as session:
+        #Ping each repo with the given repo_git to make sure
+        #that they are still in place. 
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo = execute_session_query(query, 'one')
+        logger.info(f"Pinging repo: {repo_git}")
+        ping_github_for_repo_move(session, repo, logger,collection_hook='secondary')

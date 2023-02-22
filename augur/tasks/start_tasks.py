@@ -184,7 +184,12 @@ def prelim_phase(repo_git):
 
     logger = logging.getLogger(prelim_phase.__name__)
 
-    return detect_github_repo_move.si(repo_git)
+    return detect_github_repo_move_core.si(repo_git)
+
+def prelim_phase_secondary(repo_git):
+    logger = logging.getLogger(prelim_phase.__name__)
+
+    return detect_github_repo_move_secondary.si(repo_git)
 
 
 def primary_repo_collect_phase(repo_git):
@@ -421,7 +426,7 @@ def start_secondary_collection(session,max_repo,days):
     secondary_enabled_phases = []
 
     if prelim_phase.__name__ in enabled_phase_names:
-        secondary_enabled_phases.append(prelim_phase)
+        secondary_enabled_phases.append(prelim_phase_secondary)
 
     if secondary_repo_collect_phase.__name__ in enabled_phase_names:
         secondary_enabled_phases.append(secondary_repo_collect_phase)
@@ -468,9 +473,6 @@ def start_facade_collection(session,max_repo,days):
 
     #Deal with secondary collection
     facade_enabled_phases = []
-
-    if prelim_phase.__name__ in enabled_phase_names:
-        facade_enabled_phases.append(prelim_phase)
 
     if facade_phase.__name__ in enabled_phase_names:
         facade_enabled_phases.append(facade_phase)

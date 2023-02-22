@@ -93,21 +93,13 @@ def git_repo_initialize(session, repo_git):
         #result = session.fetchall_data_from_sql_text(query)
 
         # Check if there will be a storage path collision
-        # If there is a collision, append a slug to repo_name to yield a unique path
+        # If there is a collision, throw an error so that it updates the existing repo instead of trying 
+        # to reclone.
         if os.path.isdir(f"{repo_path}{repo_name}"):#len(result):
 
-            slug = 1
-            is_collision = True
-            while is_collision:
-
-                if os.path.isdir(f"{repo_path}{repo_name}-{slug}"):
-                    slug += 1
-                else:
-                    is_collision = False
-
-            repo_name = f"{repo_name}-{slug}"
-
             session.log_activity('Verbose',f"Identical repo detected, storing {git} in {repo_name}")
+            session.logger.error("Identical repo found in facade directory!")
+            raise FileExistsError("Repo already found in facade directory! Cannot clone. Setting repo to error state and exiting.")
 
         # Create the prerequisite directories
         return_code = subprocess.Popen([f"mkdir -p {repo_path}"],shell=True).wait()

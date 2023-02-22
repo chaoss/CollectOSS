@@ -26,7 +26,7 @@ def extract_owner_and_repo_from_endpoint(key_auth, url, logger):
 
     return splits[0], splits[-1]
 
-def ping_github_for_repo_move(session,repo, logger):
+def ping_github_for_repo_move(session,repo, logger,collection_hook='core'):
 
     owner, name = get_owner_repo(repo.repo_git)
     url = f"https://api.github.com/repos/{owner}/{name}"
@@ -78,7 +78,13 @@ def ping_github_for_repo_move(session,repo, logger):
     statusQuery = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
 
     collectionRecord = execute_session_query(statusQuery,'one')
-    collectionRecord.status = CollectionState.PENDING.value
+    if collection_hook == 'core':
+        collectionRecord.core_status = CollectionState.PENDING.value
+        collectionRecord.core_task_id = None
+    elif collection_hook == 'secondary':
+        collectionRecord.secondary_status = CollectionState.PENDING.value
+        collectionRecord.secondary_task_id = None
+
     session.commit()
 
     raise Exception("ERROR: Repo has moved! Marked repo as pending and stopped collection")
