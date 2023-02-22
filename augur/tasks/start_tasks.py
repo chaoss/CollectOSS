@@ -223,6 +223,7 @@ def primary_repo_collect_phase(repo_git):
         repo_info_task,
         chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
         #facade_phase(logger,repo_git),
+        process_dependency_metrics.si(repo_git),
         collect_releases.si(repo_git)
     )
 
@@ -234,8 +235,7 @@ def secondary_repo_collect_phase(repo_git):
 
     repo_task_group = group(
         process_pull_request_files.si(repo_git),
-        process_pull_request_commits.si(repo_git),
-        process_dependency_metrics.si(repo_git)
+        process_pull_request_commits.si(repo_git)
     )
 
     return repo_task_group
