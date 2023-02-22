@@ -549,11 +549,11 @@ def generate_non_repo_domain_facade_tasks(logger):
         limited_run = session.limited_run
         delete_marked_repos = session.delete_marked_repos
         pull_repos = session.pull_repos
-        clone_repos = session.clone_repos
+        # clone_repos = session.clone_repos
         check_updates = session.check_updates
-        force_updates = session.force_updates
+        # force_updates = session.force_updates
         run_analysis = session.run_analysis
-        force_analysis = session.force_analysis
+        # force_analysis = session.force_analysis
         nuke_stored_affiliations = session.nuke_stored_affiliations
         fix_affiliations = session.fix_affiliations
         force_invalidate_caches = session.force_invalidate_caches
