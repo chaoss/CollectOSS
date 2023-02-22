@@ -86,14 +86,15 @@ def git_repo_initialize(session, repo_git):
             session.log_activity('Info',f"Repo Name from facade05, line 93: {repo_name}")
 
 
-        # Check if there will be a storage path collision
-        query = s.sql.text("""SELECT NULL FROM repo WHERE CONCAT(repo_group_id,'/',repo_path,repo_name) = :repo_group_id
-            """).bindparams(repo_group_id=f"{row.repo_group_id}/{repo_relative_path}{repo_name}")
         
-        result = session.fetchall_data_from_sql_text(query)
+        #query = s.sql.text("""SELECT NULL FROM repo WHERE CONCAT(repo_group_id,'/',repo_path,repo_name) = :repo_group_id
+        #    """).bindparams(repo_group_id=f"{row.repo_group_id}/{repo_relative_path}{repo_name}")
+        #
+        #result = session.fetchall_data_from_sql_text(query)
 
+        # Check if there will be a storage path collision
         # If there is a collision, append a slug to repo_name to yield a unique path
-        if len(result):
+        if os.path.isdir(f"{repo_path}{repo_name}"):#len(result):
 
             slug = 1
             is_collision = True
