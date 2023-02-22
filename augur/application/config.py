@@ -75,7 +75,7 @@ default_config = {
                 "connection_string": "amqp://augur:password123@localhost:5672/augur_vhost"
             },
             "Tasks": {
-                "collection_interval": 300
+                "collection_interval": 60
             },
             "Message_Insights": {
                     "insight_days": 30,
