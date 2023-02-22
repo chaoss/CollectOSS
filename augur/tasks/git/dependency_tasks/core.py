@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 import requests
 import json
+import re
 import traceback
 from augur.application.db.data_parse import *
 from augur.application.db.models import *
@@ -44,16 +45,12 @@ def generate_deps_data(session, repo_id, path):
             session.logger.error(f"Could not complete generate_deps_data!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
-def deps_model(session, repo_id):
+def deps_model(session, repo_id,repo_git):
     """ Data collection and storage method
     """
     session.logger.info(f"This is the deps model repo: {repo_id}.")
 
-    repo_path_sql = s.sql.text("""
-        SELECT repo_id, CONCAT(repo_group_id || chr(47) || repo_path || repo_name) AS path
-        FROM repo
-        WHERE repo_id = :repo_id
-    """).bindparams(repo_id=repo_id)
+    
 
     result = session.execute_sql(repo_path_sql)
     
