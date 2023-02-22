@@ -93,6 +93,11 @@ def git_repo_initialize(session, repo_git):
         #
         #result = session.fetchall_data_from_sql_text(query)
 
+        query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
+            repo_name=:nameParam WHERE repo_id=:idParam
+            """).bindparams(pathParam=repo_relative_path,nameParam=repo_name,idParam=row.repo_id)
+
+        session.execute_sql(query)
         # Check if there will be a storage path collision
         # If there is a collision, throw an error so that it updates the existing repo instead of trying 
         # to reclone.
@@ -104,6 +109,7 @@ def git_repo_initialize(session, repo_git):
             collectionRecord = execute_session_query(statusQuery,'one')
             collectionRecord.facade_status = 'Update'
             collectionRecord.facade_task_id = None
+            session.commit()
             raise FileExistsError("Repo already found in facade directory! Cannot clone. Setting repo to Update state and exiting.")
 
         # Create the prerequisite directories
