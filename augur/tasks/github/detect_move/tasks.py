@@ -11,7 +11,7 @@ def detect_github_repo_move_core(repo_git : str) -> None:
 
     from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(detect_github_repo_move.__name__)
+    logger = logging.getLogger(detect_github_repo_move_core.__name__)
 
     logger.info(f"Starting repo_move operation with {repo_git}")
     with GithubTaskSession(logger, engine) as session:
@@ -28,7 +28,7 @@ def detect_github_repo_move_secondary(repo_git : str) -> None:
 
     from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(detect_github_repo_move.__name__)
+    logger = logging.getLogger(detect_github_repo_move_secondary.__name__)
 
     logger.info(f"Starting repo_move operation with {repo_git}")
     with GithubTaskSession(logger, engine) as session:

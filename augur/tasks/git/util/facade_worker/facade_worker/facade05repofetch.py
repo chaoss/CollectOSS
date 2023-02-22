@@ -39,6 +39,7 @@ import configparser
 import sqlalchemy as s
 from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author  
 from augur.application.db.models.augur_data import *
+from augur.application.db.models.augur_operations import CollectionStatus
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list
 
 def git_repo_initialize(session, repo_git):
@@ -99,7 +100,11 @@ def git_repo_initialize(session, repo_git):
 
             session.log_activity('Verbose',f"Identical repo detected, storing {git} in {repo_name}")
             session.logger.error("Identical repo found in facade directory!")
-            raise FileExistsError("Repo already found in facade directory! Cannot clone. Setting repo to error state and exiting.")
+            statusQuery = session.query(CollectionStatus).filter(CollectionStatus.repo_id == row.repo_id)
+            collectionRecord = execute_session_query(statusQuery,'one')
+            collectionRecord.facade_status = 'Update'
+            collectionRecord.facade_task_id = None
+            raise FileExistsError("Repo already found in facade directory! Cannot clone. Setting repo to Update state and exiting.")
 
         # Create the prerequisite directories
         return_code = subprocess.Popen([f"mkdir -p {repo_path}"],shell=True).wait()
