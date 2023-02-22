@@ -41,51 +41,26 @@ from .facade02utilitymethods import update_repo_log, trim_commit, store_working_
 from augur.application.db.models.augur_data import *
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list
 
-def git_repo_initialize(session, repo_git,repo_group_id=None):
+def git_repo_initialize(session, repo_git):
 
     # Select any new git repos so we can set up their locations and git clone
-    # Select any new git repos so we can set up their locations and git clone
-    new_repos = []
-    if repo_group_id is None:
-        session.update_status('Fetching non-cloned repos')
-        session.log_activity('Info','Fetching non-cloned repos')
+    
+    session.update_status('Fetching non-cloned repos')
+    session.log_activity('Info','Fetching non-cloned repos')
 
-        query = s.sql.text("""SELECT repo_id,repo_group_id,repo_git FROM repo WHERE repo_status LIKE 'New%'
-            AND repo_git=:value""").bindparams(value=repo_git)
         
-        
-        #Get data as a list of dicts
-        new_repos = session.fetchall_data_from_sql_text(query)#list(cfg.cursor)
-        session.log_activity('Info', f'SPG new_repos is {new_repos}')
+    #Get data as a list of dicts
+    #new_repos = session.fetchall_data_from_sql_text(query)#list(cfg.cursor)
+    row = Repo.get_by_repo_git(session, repo_git)
 
 
-    else:
-        session.update_status(f"Fetching repos with repo group id: {repo_group_id}")
-        session.log_activity('Info',f"Fetching repos with repo group id: {repo_group_id}")
+    if row:
 
-        #query = s.sql.text("""SELECT repo_id,repo_group_id,repo_git FROM repo WHERE repo_status LIKE 'New%'""")
-         
-        query = session.query(Repo).filter('New' in Repo.repo_status, Repo.repo_git == repo_git)
-        result = execute_session_query(query, 'all')
+        session.log_activity('Info',f"Fetching repos with repo group id: {row.repo_group_id}")
 
-        session.log_activity('Info',f'SPG result is {result}')
+        update_repo_log(session, row.repo_id,'Cloning')
 
-        for repo in result:
-            repo_dict = repo.__dict__
-            try:
-                del repo_dict['_sa_instance_state']
-            except:
-                pass
-            
-            new_repos.append(repo_dict)
-
-    for row in new_repos:
-
-        session.log_activity('Info',f"Fetching repos with repo group id: {row['repo_group_id']}")
-
-        update_repo_log(session, row['repo_id'],'Cloning')
-
-        git = html.unescape(row['repo_git'])
+        git = html.unescape(row.repo_git)
 
         # Strip protocol from remote URL, set a unique path on the filesystem
         if git.find('://',0) > 0:
@@ -100,7 +75,7 @@ def git_repo_initialize(session, repo_git,repo_group_id=None):
 
 
         # Get the full path to the directory where we'll clone the repo
-        repo_path = (f"{session.repo_base_directory}{row['repo_group_id']}/{repo_relative_path}")
+        repo_path = (f"{session.repo_base_directory}{row.repo_group_id}/{repo_relative_path}")
         session.log_activity('Info',f"Repo Path from facade05, line 86: {repo_path}")
 
 
@@ -113,7 +88,7 @@ def git_repo_initialize(session, repo_git,repo_group_id=None):
 
         # Check if there will be a storage path collision
         query = s.sql.text("""SELECT NULL FROM repo WHERE CONCAT(repo_group_id,'/',repo_path,repo_name) = :repo_group_id
-            """).bindparams(repo_group_id=f"{row['repo_group_id']}/{repo_relative_path}{repo_name}")
+            """).bindparams(repo_group_id=f"{row.repo_group_id}/{repo_relative_path}{repo_name}")
         
         result = session.fetchall_data_from_sql_text(query)
 
@@ -143,18 +118,24 @@ def git_repo_initialize(session, repo_git,repo_group_id=None):
         if return_code != 0:
             print("COULD NOT CREATE REPO DIRECTORY")
 
-            update_repo_log(session, row['repo_id'],'Failed (mkdir)')
+            update_repo_log(session, row.repo_id,'Failed (mkdir)')
             session.update_status(f"Failed (mkdir {repo_path})")
             session.log_activity('Error',f"Could not create repo directory: {repo_path}" )
 
             raise Exception("Could not create git repo's prerequisite directories. "
                 " Do you have write access?")
 
-        update_repo_log(session, row['repo_id'],'New (cloning)')
+        update_repo_log(session, row.repo_id,'New (cloning)')
 
-        query = s.sql.text("""UPDATE repo SET repo_status='New (Initializing)', repo_path=:pathParam, 
-            repo_name=:nameParam WHERE repo_id=:idParam and repo_status != 'Empty'
-            """).bindparams(pathParam=repo_relative_path,nameParam=repo_name,idParam=row['repo_id'])
+        query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
+            repo_name=:nameParam WHERE repo_id=:idParam
+            """).bindparams(pathParam=repo_relative_path,nameParam=repo_name,idParam=row.repo_id)
+
+        session.execute_sql(query)
+
+        query = s.sql.text("""UPDATE augur_operations.collection_status
+            SET facade_status='Collecting (Initializing)'
+            WHERE repo_id=:idParam""").bindparams(idParam=row.repo_id)
 
         session.execute_sql(query)
 
@@ -168,26 +149,27 @@ def git_repo_initialize(session, repo_git,repo_group_id=None):
             # Mark the entire project for an update, so that under normal
             # circumstances caches are rebuilt only once per waiting period.
 
-            update_project_status = s.sql.text("""UPDATE repo SET repo_status='Update' WHERE 
-                repo_group_id=:repo_group_id AND repo_status != 'Empty' AND repo_id=:repo_id""").bindparams(repo_group_id=row['repo_group_id'], repo_id=row["repo_id"])
+            update_project_status = s.sql.text("""UPDATE augur_operations.collection_status
+                SET facade_status='Update' WHERE 
+                repo_id=:repo_id""").bindparams(repo_id=row.repo_id)
             session.execute_sql(update_project_status)
 
             # Since we just cloned the new repo, set it straight to analyze.
-            query = s.sql.text("""UPDATE repo SET repo_status='Analyze',repo_path=:repo_path, repo_name=:repo_name
-                WHERE repo_id=:repo_id and repo_status != 'Empty'
-                """).bindparams(repo_path=repo_relative_path,repo_name=repo_name,repo_id=row['repo_id'])
+            query = s.sql.text("""UPDATE repo SET repo_path=:repo_path, repo_name=:repo_name
+                WHERE repo_id=:repo_id
+                """).bindparams(repo_path=repo_relative_path,repo_name=repo_name,repo_id=row.repo_id)
 
             session.execute_sql(query)
 
-            update_repo_log(session, row['repo_id'],'Up-to-date')
+            update_repo_log(session, row.repo_id,'Up-to-date')
             session.log_activity('Info',f"Cloned {git}")
 
         else:
             # If cloning failed, log it and set the status back to new
-            update_repo_log(session, row['repo_id'],f"Failed ({return_code})")
+            update_repo_log(session, row.repo_id,f"Failed ({return_code})")
 
-            query = s.sql.text("""UPDATE repo SET repo_status='New (failed)' WHERE repo_id=:repo_id and repo_status !='Empty'
-                """).bindparams(repo_id=row['repo_id'])
+            query = s.sql.text("""UPDATE augur_operations.collection_status SET facade_status='Failed Clone' WHERE repo_id=:repo_id
+                """).bindparams(repo_id=row.repo_id)
 
             session.execute_sql(query)
 
@@ -197,12 +179,14 @@ def git_repo_initialize(session, repo_git,repo_group_id=None):
 
     session.log_activity('Info', f"Fetching new repos (complete)")
 
-    
+
+#Deprecated functionality. No longer used 
+#Should be re-purposed in start_tasks when tasks are being scheduled
 def check_for_repo_updates(session,repo_git):
 
 # Check the last time a repo was updated and if it has been longer than the
 # update_frequency, mark its project for updating during the next analysis.
-
+    raise NotImplementedError("This functionality is deprecated and won't work with present facade versions")
     session.update_status('Checking if any repos need to update')
     session.log_activity('Info','Checking repos to update')
 
@@ -264,7 +248,9 @@ def check_for_repo_updates(session,repo_git):
 
     session.log_activity('Info','Checking repos to update (complete)')
 
+#Deprecated. No longer used.
 def force_repo_updates(session,repo_git):
+    raise NotImplementedError("This functionality is deprecated and won't work with present facade versions")
 
 # Set the status of all non-new repos to "Update".
 
@@ -278,7 +264,9 @@ def force_repo_updates(session,repo_git):
 
     session.log_activity('Info','Forcing repos to update (complete)')
 
+#Deprecated. No longer used.
 def force_repo_analysis(session,repo_git):
+    raise NotImplementedError("This functionality is deprecated and won't work with present facade versions")
 
     session.update_status('Forcing all non-new repos to be analyzed')
     session.log_activity('Info','Forcing repos to be analyzed')
@@ -302,7 +290,7 @@ def git_repo_updates(session,repo_git):
     #query = s.sql.text("""SELECT repo_id,repo_group_id,repo_git,repo_name,repo_path FROM repo WHERE
     #    repo_status='Update'""")
     query = session.query(Repo).filter(
-		Repo.repo_git == repo_git,Repo.repo_status == 'Update')
+		Repo.repo_git == repo_git)
     result = execute_session_query(query, 'all')
 
     try:
@@ -450,11 +438,6 @@ def git_repo_updates(session,repo_git):
                 #default_branch = ''
 
     if return_code == 0:
-
-        set_to_analyze = s.sql.text("""UPDATE repo SET repo_status='Analyze' WHERE repo_id=:repo_id and repo_status != 'Empty AND repo_id=:repo_id'
-            """).bindparams(repo_id=row['repo_id'])
-        
-        session.execute_sql(set_to_analyze)
 
         update_repo_log(session, row['repo_id'],'Up-to-date')
         session.log_activity('Verbose',f"Updated {row['repo_git']}")

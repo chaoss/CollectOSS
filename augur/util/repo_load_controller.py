@@ -233,7 +233,6 @@ class RepoLoadController:
             select = """    DISTINCT(augur_data.repo.repo_id),
                     augur_data.repo.description,
                     augur_data.repo.repo_git AS url,
-                    augur_data.repo.repo_status,
                     a.commits_all_time,
                     b.issues_all_time,
                     rg_name,

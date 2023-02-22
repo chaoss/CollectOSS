@@ -814,14 +814,17 @@ class Repo(Base):
         ForeignKey("augur_data.repo_groups.repo_group_id"), nullable=False
     )
     repo_git = Column(String, nullable=False)
+
+    #TODO: repo_path and repo_name should be generated columns in postgresql
     repo_path = Column(String)
     repo_name = Column(String)
     repo_added = Column(
         TIMESTAMP(precision=0), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
-    repo_status = Column(
-        String, nullable=False, server_default=text("'New'::character varying")
-    )
+    
+    #repo_status = Column(
+    #    String, nullable=False, server_default=text("'New'::character varying")
+    #)
     repo_type = Column(
         String,
         server_default=text("''::character varying"),
@@ -969,7 +972,6 @@ class Repo(Base):
         repo_data = {
             "repo_group_id": repo_group_id,
             "repo_git": url,
-            "repo_status": "New",
             "tool_source": tool_source,
             "tool_version": "1.0",
             "data_source": "Git"

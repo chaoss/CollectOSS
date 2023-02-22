@@ -933,6 +933,10 @@ class CollectionStatus(Base):
     secondary_task_id = Column(String)
     event_last_collected = Column(TIMESTAMP)
 
+    facade_status = Column(String,nullable=False, server_default=text("'Pending'"))
+    facade_data_last_collected = Column(TIMESTAMP)
+    facade_task_id = Column(String)
+    
     repo = relationship("Repo", back_populates="collection_status")
 
     @staticmethod
