@@ -158,13 +158,6 @@ def git_repo_initialize(session, repo_git):
                 repo_id=:repo_id""").bindparams(repo_id=row.repo_id)
             session.execute_sql(update_project_status)
 
-            # Since we just cloned the new repo, set it straight to analyze.
-            query = s.sql.text("""UPDATE repo SET repo_path=:repo_path, repo_name=:repo_name
-                WHERE repo_id=:repo_id
-                """).bindparams(repo_path=repo_relative_path,repo_name=repo_name,repo_id=row.repo_id)
-
-            session.execute_sql(query)
-
             update_repo_log(session, row.repo_id,'Up-to-date')
             session.log_activity('Info',f"Cloned {git}")
 

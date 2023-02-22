@@ -969,9 +969,12 @@ class Repo(Base):
         if not RepoGroup.is_valid_repo_group_id(session, repo_group_id):
             return None
 
+        split_repo_git = re.search(r"https:\/\/(github\.com\/[A-Za-z0-9 \- _]+\/)([A-Za-z0-9 \- _ .]+)$", url).groups()
         repo_data = {
             "repo_group_id": repo_group_id,
             "repo_git": url,
+            "repo_path": split_repo_git[0],
+            "repo_name": split_repo_git[1],
             "tool_source": tool_source,
             "tool_version": "1.0",
             "data_source": "Git"
