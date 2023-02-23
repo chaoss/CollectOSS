@@ -63,8 +63,41 @@ def git_repo_initialize(session, repo_git):
 
         git = html.unescape(row.repo_git)
 
-        repo_path = row.repo_path
-        repo_name = row.repo_name
+        # Strip protocol from remote URL, set a unique path on the filesystem
+        if git.find('://',0) > 0:
+            repo_relative_path = git[git.find('://',0)+3:][:git[git.find('://',0)+3:].rfind('/',0)+1]
+            session.log_activity('Info',f"Repo Relative Path from facade05, from for row in new_repos, line 79: {repo_relative_path}")
+            session.log_activity('Info',f"The git path used : {git}")
+
+
+        else:
+            repo_relative_path = git[:git.rfind('/',0)+1]
+            session.log_activity('Info',f"Repo Relative Path from facade05, line 80, reset at 86: {repo_relative_path}")
+
+
+        # Get the full path to the directory where we'll clone the repo
+        repo_path = (f"{session.repo_base_directory}{row.repo_group_id}/{repo_relative_path}")
+        session.log_activity('Info',f"Repo Path from facade05, line 86: {repo_path}")
+
+
+        # Get the name of repo
+        repo_name = git[git.rfind('/',0)+1:]
+        if repo_name.find('.git',0) > -1:
+            repo_name = repo_name[:repo_name.find('.git',0)]
+            session.log_activity('Info',f"Repo Name from facade05, line 93: {repo_name}")
+
+
+        
+        #query = s.sql.text("""SELECT NULL FROM repo WHERE CONCAT(repo_group_id,'/',repo_path,repo_name) = :repo_group_id
+        #    """).bindparams(repo_group_id=f"{row.repo_group_id}/{repo_relative_path}{repo_name}")
+        #
+        #result = session.fetchall_data_from_sql_text(query)
+
+        query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
+            repo_name=:nameParam WHERE repo_id=:idParam
+            """).bindparams(pathParam=repo_relative_path,nameParam=repo_name,idParam=row.repo_id)
+
+        session.execute_sql(query)
         # Check if there will be a storage path collision
         # If there is a collision, throw an error so that it updates the existing repo instead of trying 
         # to reclone.
@@ -97,6 +130,12 @@ def git_repo_initialize(session, repo_git):
                 " Do you have write access?")
 
         update_repo_log(session, row.repo_id,'New (cloning)')
+
+        query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
+            repo_name=:nameParam WHERE repo_id=:idParam
+            """).bindparams(pathParam=repo_relative_path,nameParam=repo_name,idParam=row.repo_id)
+
+        session.execute_sql(query)
 
         query = s.sql.text("""UPDATE augur_operations.collection_status
             SET facade_status='Collecting (Initializing)'
