@@ -125,6 +125,7 @@ def setup_periodic_tasks(sender, **kwargs):
     """
     from augur.tasks.start_tasks import augur_collection_monitor
     from augur.tasks.start_tasks import non_repo_domain_tasks
+    from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
     
     with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
 
@@ -140,6 +141,10 @@ def setup_periodic_tasks(sender, **kwargs):
         non_domain_collection_interval = collection_interval * 5
         logger.info(f"Scheduling non-repo-domain collection every {non_domain_collection_interval/60} minutes")
         sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks.s())
+
+        refresh_materialized_views_freq = 36 # hours
+        logger.info(f"Scheduling refresh materialized view every {refresh_materialized_views_freq} hours")
+        sender.add_periodic_task(refresh_materialized_views_freq*60*60, refresh_materialized_views.s())
 
 
 @after_setup_logger.connect
