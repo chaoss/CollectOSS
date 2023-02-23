@@ -21,6 +21,6 @@ def process_dependency_metrics(repo_git):
 
         try:
             repo = execute_session_query(query,'one')
-            deps_model(session, repo.repo_id)
+            deps_model(session, repo.repo_id,repo_git,repo.repo_group_id)
         except Exception as e:
             session.logger.error(f"Could not complete deps_model!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")

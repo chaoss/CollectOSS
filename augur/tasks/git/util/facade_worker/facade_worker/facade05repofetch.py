@@ -39,6 +39,7 @@ import configparser
 import sqlalchemy as s
 from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author  
 from augur.application.db.models.augur_data import *
+from augur.application.db.models.augur_operations import CollectionStatus
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list
 
 def git_repo_initialize(session, repo_git):
@@ -56,7 +57,7 @@ def git_repo_initialize(session, repo_git):
 
     if row:
 
-        session.log_activity('Info',f"Fetching repos with repo group id: {row.repo_group_id}")
+        session.log_activity('Info',f"Fetching repo with repo id: {row.repo_id}")
 
         update_repo_log(session, row.repo_id,'Cloning')
 
@@ -86,27 +87,30 @@ def git_repo_initialize(session, repo_git):
             session.log_activity('Info',f"Repo Name from facade05, line 93: {repo_name}")
 
 
-        # Check if there will be a storage path collision
-        query = s.sql.text("""SELECT NULL FROM repo WHERE CONCAT(repo_group_id,'/',repo_path,repo_name) = :repo_group_id
-            """).bindparams(repo_group_id=f"{row.repo_group_id}/{repo_relative_path}{repo_name}")
         
-        result = session.fetchall_data_from_sql_text(query)
+        #query = s.sql.text("""SELECT NULL FROM repo WHERE CONCAT(repo_group_id,'/',repo_path,repo_name) = :repo_group_id
+        #    """).bindparams(repo_group_id=f"{row.repo_group_id}/{repo_relative_path}{repo_name}")
+        #
+        #result = session.fetchall_data_from_sql_text(query)
 
-        # If there is a collision, append a slug to repo_name to yield a unique path
-        if len(result):
+        query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
+            repo_name=:nameParam WHERE repo_id=:idParam
+            """).bindparams(pathParam=repo_relative_path,nameParam=repo_name,idParam=row.repo_id)
 
-            slug = 1
-            is_collision = True
-            while is_collision:
-
-                if os.path.isdir(f"{repo_path}{repo_name}-{slug}"):
-                    slug += 1
-                else:
-                    is_collision = False
-
-            repo_name = f"{repo_name}-{slug}"
+        session.execute_sql(query)
+        # Check if there will be a storage path collision
+        # If there is a collision, throw an error so that it updates the existing repo instead of trying 
+        # to reclone.
+        if os.path.isdir(f"{repo_path}{repo_name}"):#len(result):
 
             session.log_activity('Verbose',f"Identical repo detected, storing {git} in {repo_name}")
+            session.logger.error("Identical repo found in facade directory!")
+            statusQuery = session.query(CollectionStatus).filter(CollectionStatus.repo_id == row.repo_id)
+            collectionRecord = execute_session_query(statusQuery,'one')
+            collectionRecord.facade_status = 'Update'
+            collectionRecord.facade_task_id = None
+            session.commit()
+            raise FileExistsError("Repo already found in facade directory! Cannot clone. Setting repo to Update state and exiting.")
 
         # Create the prerequisite directories
         return_code = subprocess.Popen([f"mkdir -p {repo_path}"],shell=True).wait()
@@ -153,13 +157,6 @@ def git_repo_initialize(session, repo_git):
                 SET facade_status='Update' WHERE 
                 repo_id=:repo_id""").bindparams(repo_id=row.repo_id)
             session.execute_sql(update_project_status)
-
-            # Since we just cloned the new repo, set it straight to analyze.
-            query = s.sql.text("""UPDATE repo SET repo_path=:repo_path, repo_name=:repo_name
-                WHERE repo_id=:repo_id
-                """).bindparams(repo_path=repo_relative_path,repo_name=repo_name,repo_id=row.repo_id)
-
-            session.execute_sql(query)
 
             update_repo_log(session, row.repo_id,'Up-to-date')
             session.log_activity('Info',f"Cloned {git}")

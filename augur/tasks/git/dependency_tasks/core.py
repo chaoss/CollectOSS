@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 import requests
 import json
+import re
 import traceback
 from augur.application.db.data_parse import *
 from augur.application.db.models import *
@@ -44,20 +45,17 @@ def generate_deps_data(session, repo_id, path):
             session.logger.error(f"Could not complete generate_deps_data!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
-def deps_model(session, repo_id):
+def deps_model(session, repo_id,repo_git,repo_group_id):
     """ Data collection and storage method
     """
     session.logger.info(f"This is the deps model repo: {repo_id}.")
 
-    repo_path_sql = s.sql.text("""
-        SELECT repo_id, CONCAT(repo_group_id || chr(47) || repo_path || repo_name) AS path
-        FROM repo
-        WHERE repo_id = :repo_id
-    """).bindparams(repo_id=repo_id)
-
-    result = session.execute_sql(repo_path_sql)
     
-    relative_repo_path = result.fetchone()[1]
+
+    #result = session.execute_sql(repo_path_sql)
+    result = re.search(r"https:\/\/(github\.com\/[A-Za-z0-9 \- _]+\/)([A-Za-z0-9 \- _ .]+)$", repo_git).groups()
+    
+    relative_repo_path = f"{repo_group_id}/{result[0]}{result[1]}"
     config = AugurConfig(session.logger, session)
     absolute_repo_path = config.get_section("Facade")['repo_directory'] + relative_repo_path
 

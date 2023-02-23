@@ -16,7 +16,7 @@ from sqlalchemy import or_, and_
 from augur.tasks.github import *
 if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
     from augur.tasks.data_analysis import *
-from augur.tasks.github.detect_move.tasks import detect_github_repo_move
+from augur.tasks.github.detect_move.tasks import detect_github_repo_move_core, detect_github_repo_move_secondary
 from augur.tasks.github.releases.tasks import collect_releases
 from augur.tasks.github.repo_info.tasks import collect_repo_info
 from augur.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
@@ -145,8 +145,6 @@ def task_failed(request,exc,traceback):
 
         query = session.query(CollectionStatus).filter(or_(core_id_match,secondary_id_match,facade_id_match))
 
-        collectionRecord = execute_session_query(query,'one')
-
         print(f"chain: {request.chain}")
         #Make sure any further execution of tasks dependent on this one stops.
         try:
@@ -156,6 +154,12 @@ def task_failed(request,exc,traceback):
             pass #Task is not part of a chain. Normal so don't log.
         except Exception as e:
             logger.error(f"Could not mutate request chain! \n Error: {e}")
+        
+        try:
+            collectionRecord = execute_session_query(query,'one')
+        except:
+            #Exit if we can't find the record.
+            return
         
         if collectionRecord.core_task_id == request.id:
             # set status to Error in db
@@ -184,7 +188,12 @@ def prelim_phase(repo_git):
 
     logger = logging.getLogger(prelim_phase.__name__)
 
-    return detect_github_repo_move.si(repo_git)
+    return detect_github_repo_move_core.si(repo_git)
+
+def prelim_phase_secondary(repo_git):
+    logger = logging.getLogger(prelim_phase.__name__)
+
+    return detect_github_repo_move_secondary.si(repo_git)
 
 
 def primary_repo_collect_phase(repo_git):
@@ -214,6 +223,7 @@ def primary_repo_collect_phase(repo_git):
         repo_info_task,
         chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
         #facade_phase(logger,repo_git),
+        process_dependency_metrics.si(repo_git),
         collect_releases.si(repo_git)
     )
 
@@ -225,8 +235,7 @@ def secondary_repo_collect_phase(repo_git):
 
     repo_task_group = group(
         process_pull_request_files.si(repo_git),
-        process_pull_request_commits.si(repo_git),
-        process_dependency_metrics.si(repo_git)
+        process_pull_request_commits.si(repo_git)
     )
 
     return repo_task_group
@@ -421,7 +430,7 @@ def start_secondary_collection(session,max_repo,days):
     secondary_enabled_phases = []
 
     if prelim_phase.__name__ in enabled_phase_names:
-        secondary_enabled_phases.append(prelim_phase)
+        secondary_enabled_phases.append(prelim_phase_secondary)
 
     if secondary_repo_collect_phase.__name__ in enabled_phase_names:
         secondary_enabled_phases.append(secondary_repo_collect_phase)
@@ -468,9 +477,6 @@ def start_facade_collection(session,max_repo,days):
 
     #Deal with secondary collection
     facade_enabled_phases = []
-
-    if prelim_phase.__name__ in enabled_phase_names:
-        facade_enabled_phases.append(prelim_phase)
 
     if facade_phase.__name__ in enabled_phase_names:
         facade_enabled_phases.append(facade_phase)
