@@ -269,7 +269,6 @@ def non_repo_domain_tasks():
 
     from augur.tasks.init.celery_app import engine
 
-
     logger = logging.getLogger(non_repo_domain_tasks.__name__)
 
     logger.info("Executing non-repo domain tasks")
@@ -305,7 +304,6 @@ def non_repo_domain_tasks():
 
     tasks = chain(
         *enabled_tasks,
-        refresh_materialized_views.si()
     )
 
     tasks.apply_async()
