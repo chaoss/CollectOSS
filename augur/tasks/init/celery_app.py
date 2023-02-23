@@ -123,6 +123,7 @@ def setup_periodic_tasks(sender, **kwargs):
     Returns
         The tasks so that they are grouped by the module they are defined in
     """
+    from celery.schedules import crontab
     from augur.tasks.start_tasks import augur_collection_monitor
     from augur.tasks.start_tasks import non_repo_domain_tasks
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
@@ -142,9 +143,9 @@ def setup_periodic_tasks(sender, **kwargs):
         logger.info(f"Scheduling non-repo-domain collection every {non_domain_collection_interval/60} minutes")
         sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks.s())
 
-        refresh_materialized_views_freq = 36 # hours
-        logger.info(f"Scheduling refresh materialized view every {refresh_materialized_views_freq} hours")
-        sender.add_periodic_task(refresh_materialized_views_freq*60*60, refresh_materialized_views.s())
+        logger.info(f"Scheduling refresh materialized view every night at 1am CDT")
+        sender.add_periodic_task(crontab(hour=1, minute=0), refresh_materialized_views.s())
+        
 
 
 @after_setup_logger.connect
