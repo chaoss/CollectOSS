@@ -35,7 +35,8 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.pull_requests.commits_model.tasks']
 
 git_tasks = ['augur.tasks.git.facade_tasks',
-            'augur.tasks.git.dependency_tasks.tasks']
+            'augur.tasks.git.dependency_tasks.tasks',
+            'augur.tasks.git.dependency_libyear_tasks.tasks']
 
 data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
                        'augur.tasks.data_analysis.clustering_worker.tasks',
