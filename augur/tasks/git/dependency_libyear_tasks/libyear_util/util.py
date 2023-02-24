@@ -112,7 +112,10 @@ def get_deps_libyear_data(path):
             if dependency['package'] == 'PYPI':
                 data = get_pypi_data(dependency['name'])
                 current_version = sort_dependency_requirement(dependency,data)
-                latest_version = get_latest_version(data)
+                try:
+                    latest_version = get_latest_version(data)
+                except KeyError:
+                    latest_version = None
                 latest_release_date = get_release_date(data, latest_version)
                 if current_version:
                     current_release_date = get_release_date(data, current_version)

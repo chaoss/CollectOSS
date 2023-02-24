@@ -44,6 +44,7 @@ def generate_deps_libyear_data(session, repo_id, path):
 
         if not deps:
             session.logger.info(f"No deps found for repo {repo_id} on path {path}")
+            return
 
         for dep in deps:
             repo_deps = {
