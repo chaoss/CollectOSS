@@ -48,7 +48,7 @@ def generate_deps_data(session, repo_id, path):
 def deps_model(session, repo_id,repo_git,repo_group_id):
     """ Data collection and storage method
     """
-    session.logger.info(f"This is the deps model repo: {repo_id}.")
+    session.logger.info(f"This is the deps model repo: {repo_git}.")
 
     
 
