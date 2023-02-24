@@ -36,7 +36,7 @@ def upgrade():
                 UPDATE "repo"
                 SET repo_path=:path,repo_name=:name
                 WHERE repo_git=:repo_git
-                """).bindparams(repo_path=repo_path,repo_name=repo_name,repo_git=row.repo_git))
+                """).bindparams(path=repo_path,repo_name=repo_name,repo_git=row.repo_git))
     # ### end Alembic commands ###
 
 
