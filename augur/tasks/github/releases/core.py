@@ -71,27 +71,27 @@ def get_release_inf(repo_id, release, tag_only):
     return release_inf
 
 
-def insert_release(session, repo_id, owner, release, tag_only = False):
+def insert_release(augur_db, logger, repo_id, owner, release, tag_only = False):
 
     # Get current table values
-    session.logger.info('Getting release table values\n')
-    query = session.query(Release.release_id).filter(Release.repo_id == repo_id)
+    logger.info('Getting release table values\n')
+    query = augur_db.session.query(Release.release_id).filter(Release.repo_id == repo_id)
     release_id_data = execute_session_query(query, 'all')#pd.read_sql(release_id_data_sql, self.db, params={'repo_id': repo_id})
     release_id_data = [str(r_id).strip() for r_id in release_id_data]#release_id_data.apply(lambda x: x.str.strip())
 
     # Put all data together in format of the table
-    session.logger.info(f'Inserting release for repo with id:{repo_id}, owner:{owner}, release name:{release["name"]}\n')
+    logger.info(f'Inserting release for repo with id:{repo_id}, owner:{owner}, release name:{release["name"]}\n')
     release_inf = get_release_inf(repo_id, release, tag_only)
 
     #Do an upsert
-    session.insert_data(release_inf,Release,['release_id'])
+    augur_db.insert_data(release_inf,Release,['release_id'])
 
-    session.logger.info(f"Inserted info for {owner}/{repo_id}/{release['name']}\n")
+    logger.info(f"Inserted info for {owner}/{repo_id}/{release['name']}\n")
 
     return
 
 
-def get_query(session, owner, repo, tag_only):
+def get_query(logger, owner, repo, tag_only):
     if not tag_only:
         query = """
             {
@@ -146,25 +146,25 @@ def get_query(session, owner, repo, tag_only):
             }
         """ % (owner, repo, 100)
 
-    session.logger.debug(f"query is: {query}")
+    logger.debug(f"query is: {query}")
 
     return query
 
 
 
-def fetch_data(session, github_url, repo_id, tag_only = False):
+def fetch_data(key_auth, logger, github_url, repo_id, tag_only = False):
 
-    session.logger.info("Beginning filling the releases model for repo: " + github_url + "\n")
+    logger.info("Beginning filling the releases model for repo: " + github_url + "\n")
 
     owner, repo = get_owner_repo(github_url)
 
     url = 'https://api.github.com/graphql'
 
-    query = get_query(session,owner, repo, tag_only)
+    query = get_query(logger, owner, repo, tag_only)
 
     # Hit the graphql endpoint
-    session.logger.info("Hitting endpoint: {} ...\n".format(url))
-    data = request_graphql_dict(session, url, query)
+    logger.info("Hitting endpoint: {} ...\n".format(url))
+    data = request_graphql_dict(key_auth, url, query)
 
     if 'data' in data:
         data = data['data']['repository']
@@ -173,42 +173,42 @@ def fetch_data(session, github_url, repo_id, tag_only = False):
 
     return data
 
-def releases_model(session, repo_git, repo_id):
+def releases_model(augur_db, key_auth, logger, repo_git, repo_id):
 
     try:
-        data = fetch_data(session,repo_git, repo_id)
+        data = fetch_data(key_auth, logger, repo_git, repo_id)
     except Exception as e:
-        session.logger.info(f"Ran into problem when fetching data for repo {repo_git}: {e}")
+        logger.info(f"Ran into problem when fetching data for repo {repo_git}: {e}")
         return
 
-    #session.logger.info("repository value is: {}\n".format(data))
+    #logger.info("repository value is: {}\n".format(data))
     if 'releases' in data:
         if 'edges' in data['releases'] and data['releases']['edges']:
             for n in data['releases']['edges']:
                 if 'node' in n:
                     release = n['node']
                     #self.insert_release(task, repo_id, data['owner'], release)
-                    insert_release(session, repo_id, data['owner'], release)
+                    insert_release(augur_db, logger, repo_id, data['owner'], release)
                 else:
-                    session.logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
+                    logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
         elif 'edges' in data['releases'] and not data['releases']['edges']:
-            session.logger.info("Searching for tags instead of releases...")
-            data = fetch_data(session,repo_git, repo_id,True)
-            session.logger.info("refs value is: {}\n".format(data))
+            logger.info("Searching for tags instead of releases...")
+            data = fetch_data(key_auth, logger, repo_git, repo_id,True)
+            logger.info("refs value is: {}\n".format(data))
             if 'refs' in data:
                 if 'edges' in data['refs']:
                     for n in data['refs']['edges']:
                         if 'node' in n:
                             release = n['node']
                             #self.insert_release(task, repo_id, data['owner'], release, True)
-                            insert_release(session, repo_id, data['owner'], release, True)
+                            insert_release(augur_db, repo_id, data['owner'], release, True)
                         else:
-                            session.logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
+                            logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
                 else:
-                    session.logger.info("There are no releases to insert for current repository: {}\n".format(data))
+                    logger.info("There are no releases to insert for current repository: {}\n".format(data))
             else:
-                session.logger.info("There are no refs in data: {}\n".format(data))
+                logger.info("There are no refs in data: {}\n".format(data))
         else:
-            session.logger.info("There are no releases to insert for current repository: {}\n".format(data))
+            logger.info("There are no releases to insert for current repository: {}\n".format(data))
     else:
-        session.logger.info("Graphql response does not contain repository: {}\n".format(data))
+        logger.info("Graphql response does not contain repository: {}\n".format(data))

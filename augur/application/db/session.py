@@ -48,16 +48,17 @@ def remove_null_characters_from_list_of_dicts(data_list, fields):
 
     return data_list
 
-
 class DatabaseSession(Session):
 
     def __init__(self, logger, engine=None, from_msg=None):
     
         self.logger = logger
         self.engine = engine
+        self.session = self
         self.engine_created = False
 
         if self.engine is None:
+            self.logger.debug("Passing engine will be required soon")
             from augur.application.db.engine import DatabaseEngine
 
             self.engine_created = True
