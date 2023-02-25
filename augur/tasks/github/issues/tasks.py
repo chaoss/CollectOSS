@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
-from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
@@ -21,31 +21,26 @@ development = get_development_flag()
 @celery.task()
 def collect_issues(repo_git : str) -> None:
 
-    from augur.tasks.init.celery_app import engine
-
-    print(f"Eventlet engine id: {id(engine)}")
-
-    from augur.tasks.init.celery_app import engine
-
-    print(f"Eventlet engine id: {id(engine)}")
 
     logger = logging.getLogger(collect_issues.__name__)
     
-    with GithubTaskSession(logger, engine) as session:
+    with GithubTaskManifest(logger) as manifest:
+
+        augur_db = manifest.augur_db
 
         try:
         
-            query = session.query(Repo).filter(Repo.repo_git == repo_git)
+            query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
             repo_obj = execute_session_query(query, 'one')
             repo_id = repo_obj.repo_id
 
             owner, repo = get_owner_repo(repo_git)
         
-            issue_data = retrieve_all_issue_data(repo_git, logger, session.oauths)
+            issue_data = retrieve_all_issue_data(repo_git, logger, manifest.key_auth)
 
             if issue_data:
             
-                process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger, session)
+                process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger, augur_db)
 
             else:
                 logger.info(f"{owner}/{repo} has no issues")
@@ -89,7 +84,7 @@ def retrieve_all_issue_data(repo_git, logger, key_auth) -> None:
 
     return all_data
     
-def process_issues(issues, task_name, repo_id, logger, session) -> None:
+def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
     
     # get repo_id or have it passed
     tool_source = "Issue Task"
@@ -143,7 +138,7 @@ def process_issues(issues, task_name, repo_id, logger, session) -> None:
 
     # insert contributors from these issues
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    session.insert_data(contributors, Contributor, ["cntrb_id"])
+    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
                         
 
     # insert the issues into the issues table. 
@@ -154,7 +149,7 @@ def process_issues(issues, task_name, repo_id, logger, session) -> None:
     issue_return_columns = ["issue_url", "issue_id"]
     issue_string_columns = ["issue_title", "issue_body"]
     try:
-        issue_return_data = session.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
+        issue_return_data = augur_db.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
     except IntegrityError as e:
         logger.error(f"Ran into integrity error:{e} \n Offending data: \n{issue_dicts}")
 
@@ -187,13 +182,13 @@ def process_issues(issues, task_name, repo_id, logger, session) -> None:
     # we are using label_src_id and issue_id to determine if the label is already in the database.
     issue_label_natural_keys = ['label_src_id', 'issue_id']
     issue_label_string_fields = ["label_text", "label_description"]
-    session.insert_data(issue_label_dicts, IssueLabel,
+    augur_db.insert_data(issue_label_dicts, IssueLabel,
                         issue_label_natural_keys, string_fields=issue_label_string_fields)
 
     # inserting issue assignees
     # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
     issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    session.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
+    augur_db.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
 
 
 

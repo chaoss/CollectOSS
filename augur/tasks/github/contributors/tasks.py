@@ -5,7 +5,7 @@ import logging
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
-from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import wait_child_tasks
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 from augur.application.db.util import execute_session_query
@@ -22,9 +22,11 @@ def process_contributors():
     tool_version = "2.0"
     data_source = "Github API"
 
-    with GithubTaskSession(logger, engine) as session:
+    with GithubTaskManifest(logger) as manifest:
 
-        query = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at is None, Contributor.cntrb_last_used is None)
+        augur_db = manifest.augur_db
+
+        query = augur_db.session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at is None, Contributor.cntrb_last_used is None)
         contributors = execute_session_query(query, 'all')
 
         contributors_len = len(contributors)
@@ -45,7 +47,7 @@ def process_contributors():
 
             url = f"https://api.github.com/users/{contributor_dict['cntrb_login']}" 
 
-            data = retrieve_dict_data(url, session.oauths, logger)
+            data = retrieve_dict_data(url, manifest.key_auth, logger)
 
             if data is None:
                 print(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
@@ -61,7 +63,7 @@ def process_contributors():
             enriched_contributors.append(contributor_dict)
 
         logger.info(f"Enriching {len(enriched_contributors)} contributors")
-        session.insert_data(enriched_contributors, Contributor, ["cntrb_id"])
+        augur_db.insert_data(enriched_contributors, Contributor, ["cntrb_id"])
 
 
 
