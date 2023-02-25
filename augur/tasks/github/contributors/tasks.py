@@ -14,8 +14,6 @@ from augur.application.db.util import execute_session_query
 @celery.task
 def process_contributors():
 
-    from augur.tasks.init.celery_app import engine
-
     logger = logging.getLogger(process_contributors.__name__)
 
     tool_source = "Contributors task"

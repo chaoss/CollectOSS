@@ -40,6 +40,6 @@ class GithubTaskSession(DatabaseSession):
 
         super().__init__(logger, engine=engine)
 
-        self.oauths = GithubRandomKeyAuth(self)
+        self.oauths = GithubRandomKeyAuth(self, logger)
         self.platform_id = 1
         

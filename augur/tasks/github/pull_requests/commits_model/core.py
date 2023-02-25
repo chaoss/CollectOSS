@@ -4,7 +4,6 @@ import traceback
 import sqlalchemy as s
 from augur.application.db.data_parse import *
 from augur.application.db.session import DatabaseSession
-from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo

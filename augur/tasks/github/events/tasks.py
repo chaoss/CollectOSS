@@ -49,8 +49,6 @@ def collect_events(repo_git: str):
 
 def retrieve_all_event_data(repo_git: str, logger, key_auth):
 
-    from augur.tasks.init.celery_app import engine
-
     owner, repo = get_owner_repo(repo_git)
 
     logger.info(f"Collecting Github events for {owner}/{repo}")
@@ -80,8 +78,6 @@ def retrieve_all_event_data(repo_git: str, logger, key_auth):
     return all_data        
 
 def process_events(events, task_name, repo_id, logger, augur_db):
-
-    from augur.tasks.init.celery_app import engine
     
     tool_source = "Github events task"
     tool_version = "2.0"
