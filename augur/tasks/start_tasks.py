@@ -237,7 +237,7 @@ def secondary_repo_collect_phase(repo_git):
 
     repo_task_group = group(
         process_pull_request_files.si(repo_git),
-        process_pull_request_commits.si(repo_git)
+        process_pull_request_commits.si(repo_git),
     )
 
     return repo_task_group

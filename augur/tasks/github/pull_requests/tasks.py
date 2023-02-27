@@ -6,12 +6,13 @@ from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
-from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.application.db.session import DatabaseSession
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, PullRequestMessageRef, Contributor, Repo
 from augur.application.db.util import execute_session_query
+from ..messages.tasks import process_github_comment_contributors
 
 
 platform_id = 1
@@ -20,30 +21,22 @@ platform_id = 1
 @celery.task()
 def collect_pull_requests(repo_git: str) -> None:
 
-    from augur.tasks.init.celery_app import engine
-
-    print(f"Eventlet engine id: {id(engine)}")
-
-    from augur.tasks.init.celery_app import engine
-
-    print(f"Eventlet engine id: {id(engine)}")
-
     logger = logging.getLogger(collect_pull_requests.__name__)
 
-    logger.info(f"Celery engine: {engine}")
+    with GithubTaskManifest(logger) as manifest:
 
-    with GithubTaskSession(logger, engine) as session:
+        augur_db = manifest.augur_db
 
         try:
 
-            repo_id = session.query(Repo).filter(
+            repo_id = augur_db.session.query(Repo).filter(
             Repo.repo_git == repo_git).one().repo_id
 
             owner, repo = get_owner_repo(repo_git)
-            pr_data = retrieve_all_pr_data(repo_git, logger, session.oauths)
+            pr_data = retrieve_all_pr_data(repo_git, logger, manifest.key_auth)
 
             if pr_data:
-                process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger, session)
+                process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
             else:
                 logger.info(f"{owner}/{repo} has no pull requests")
         except Exception as e:
@@ -54,9 +47,6 @@ def collect_pull_requests(repo_git: str) -> None:
 # TODO: Fix column names in pull request labels table
 def retrieve_all_pr_data(repo_git: str, logger, key_auth) -> None:
 
-    owner, repo = get_owner_repo(repo_git)
-
-    # define GithubTaskSession to handle insertions, and store oauth keys 
     owner, repo = get_owner_repo(repo_git)
 
     logger.info(f"Collecting pull requests for {owner}/{repo}")
@@ -85,9 +75,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth) -> None:
     return all_data
 
     
-def process_pull_requests(pull_requests, task_name, repo_id, logger, session):
-
-    from augur.tasks.init.celery_app import engine
+def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
 
     tool_source = "Pr Task"
     tool_version = "2.0"
@@ -95,96 +83,79 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, session):
 
     pr_dicts, pr_mapping_data, pr_numbers, contributors = extract_data_from_pr_list(pull_requests, repo_id, tool_source, tool_version, data_source)
 
-    with DatabaseSession(logger, engine) as session:
+    # remove duplicate contributors before inserting
+    contributors = remove_duplicate_dicts(contributors)
 
-        # remove duplicate contributors before inserting
-        contributors = remove_duplicate_dicts(contributors)
-
-        # insert contributors from these prs
-        logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-        session.insert_data(contributors, Contributor, ["cntrb_id"])
+    # insert contributors from these prs
+    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
 
 
-        # insert the prs into the pull_requests table. 
-        # pr_urls are gloablly unique across github so we are using it to determine whether a pull_request we collected is already in the table
-        # specified in pr_return_columns is the columns of data we want returned. This data will return in this form; {"pr_url": url, "pull_request_id": id}
-        logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
-        pr_natural_keys = ["repo_id", "pr_src_id"]
-        pr_return_columns = ["pull_request_id", "pr_url"]
-        pr_string_fields = ["pr_src_title", "pr_body"]
-        pr_return_data = session.insert_data(pr_dicts, PullRequest, pr_natural_keys, 
-                                return_columns=pr_return_columns, string_fields=pr_string_fields)
+    # insert the prs into the pull_requests table. 
+    # pr_urls are gloablly unique across github so we are using it to determine whether a pull_request we collected is already in the table
+    # specified in pr_return_columns is the columns of data we want returned. This data will return in this form; {"pr_url": url, "pull_request_id": id}
+    logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
+    pr_natural_keys = ["repo_id", "pr_src_id"]
+    pr_return_columns = ["pull_request_id", "pr_url"]
+    pr_string_fields = ["pr_src_title", "pr_body"]
+    pr_return_data = augur_db.insert_data(pr_dicts, PullRequest, pr_natural_keys, 
+                            return_columns=pr_return_columns, string_fields=pr_string_fields)
 
-        if pr_return_data is None:
-            return
-
-
-        # loop through the pr_return_data (which is a list of pr_urls 
-        # and pull_request_id in dicts) so we can find the labels, 
-        # assignees, reviewers, and assignees that match the pr
-        pr_label_dicts = []
-        pr_assignee_dicts = []
-        pr_reviewer_dicts = []
-        pr_metadata_dicts = []
-        for data in pr_return_data:
-
-            pr_url = data["pr_url"]
-            pull_request_id = data["pull_request_id"]
-
-            try:
-                other_pr_data = pr_mapping_data[pr_url]
-            except KeyError as e:
-                logger.info(f"Cold not find other pr data. This should never happen. Error: {e}")
+    if pr_return_data is None:
+        return
 
 
-            # add the pull_request_id to the labels, assignees, reviewers, or metadata then add them to a list of dicts that will be inserted soon
-            dict_key = "pull_request_id"
-            pr_label_dicts += add_key_value_pair_to_dicts(other_pr_data["labels"], dict_key, pull_request_id)
-            pr_assignee_dicts += add_key_value_pair_to_dicts(other_pr_data["assignees"], dict_key, pull_request_id)
-            pr_reviewer_dicts += add_key_value_pair_to_dicts(other_pr_data["reviewers"], dict_key, pull_request_id)
-            pr_metadata_dicts += add_key_value_pair_to_dicts(other_pr_data["metadata"], dict_key, pull_request_id)
-            
+    # loop through the pr_return_data (which is a list of pr_urls 
+    # and pull_request_id in dicts) so we can find the labels, 
+    # assignees, reviewers, and assignees that match the pr
+    pr_label_dicts = []
+    pr_assignee_dicts = []
+    pr_reviewer_dicts = []
+    pr_metadata_dicts = []
+    for data in pr_return_data:
 
-        logger.info(f"{task_name}: Inserting other pr data of lengths: Labels: {len(pr_label_dicts)} - Assignees: {len(pr_assignee_dicts)} - Reviewers: {len(pr_reviewer_dicts)} - Metadata: {len(pr_metadata_dicts)}")
+        pr_url = data["pr_url"]
+        pull_request_id = data["pull_request_id"]
 
-        # inserting pr labels
-        # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
-        pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
-        pr_label_string_fields = ["pr_src_description"]
-        session.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys, string_fields=pr_label_string_fields)
-    
-        # inserting pr assignees
-        # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
-        pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-        session.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
+        try:
+            other_pr_data = pr_mapping_data[pr_url]
+        except KeyError as e:
+            logger.info(f"Cold not find other pr data. This should never happen. Error: {e}")
 
-    
-        # inserting pr requested reviewers
-        # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
-        pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
-        session.insert_data(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
+
+        # add the pull_request_id to the labels, assignees, reviewers, or metadata then add them to a list of dicts that will be inserted soon
+        dict_key = "pull_request_id"
+        pr_label_dicts += add_key_value_pair_to_dicts(other_pr_data["labels"], dict_key, pull_request_id)
+        pr_assignee_dicts += add_key_value_pair_to_dicts(other_pr_data["assignees"], dict_key, pull_request_id)
+        pr_reviewer_dicts += add_key_value_pair_to_dicts(other_pr_data["reviewers"], dict_key, pull_request_id)
+        pr_metadata_dicts += add_key_value_pair_to_dicts(other_pr_data["metadata"], dict_key, pull_request_id)
         
-        # inserting pr metadata
-        # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
-        pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
-        pr_metadata_string_fields = ["pr_src_meta_label"]
-        session.insert_data(pr_metadata_dicts, PullRequestMeta,
-                            pr_metadata_natural_keys, string_fields=pr_metadata_string_fields)
+
+    logger.info(f"{task_name}: Inserting other pr data of lengths: Labels: {len(pr_label_dicts)} - Assignees: {len(pr_assignee_dicts)} - Reviewers: {len(pr_reviewer_dicts)} - Metadata: {len(pr_metadata_dicts)}")
+
+    # inserting pr labels
+    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
+    pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
+    pr_label_string_fields = ["pr_src_description"]
+    augur_db.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys, string_fields=pr_label_string_fields)
+
+    # inserting pr assignees
+    # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
+    pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
+    augur_db.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # inserting pr requested reviewers
+    # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
+    pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
+    augur_db.insert_data(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
+    
+    # inserting pr metadata
+    # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
+    pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
+    pr_metadata_string_fields = ["pr_src_meta_label"]
+    augur_db.insert_data(pr_metadata_dicts, PullRequestMeta,
+                        pr_metadata_natural_keys, string_fields=pr_metadata_string_fields)
 
 
 
@@ -234,13 +205,15 @@ def pull_request_review_comments(repo_git: str) -> None:
     logger.info(f"Collecting pull request comments for {owner}/{repo}")
     
     # define GithubTaskSession to handle insertions, and store oauth keys 
-    with GithubTaskSession(logger, engine) as session:
+    with GithubTaskManifest(logger) as manifest:
+
+        augur_db = manifest.augur_db
 
         # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-        pr_review_comments = GithubPaginator(url, session.oauths, logger)
+        pr_review_comments = GithubPaginator(url, manifest.key_auth, logger)
 
         # get repo_id
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id
 
 
@@ -286,7 +259,7 @@ def pull_request_review_comments(repo_git: str) -> None:
         logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
         message_natural_keys = ["platform_msg_id"]
         message_return_columns = ["msg_id", "platform_msg_id"]
-        message_return_data = session.insert_data(pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
+        message_return_data = augur_db.insert_data(pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
 
 
         pr_review_message_ref_insert_data = []
@@ -312,14 +285,12 @@ def pull_request_review_comments(repo_git: str) -> None:
 
         logger.info(f"Inserting {len(pr_review_message_ref_insert_data)} pr review refs")
         pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
-        session.insert_data(pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
+        augur_db.insert_data(pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
 
 
 # do this task after others because we need to add the multi threading like we did it before
 @celery.task
 def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
-
-    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(pull_request_reviews.__name__)
 
@@ -330,9 +301,11 @@ def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
     tool_version = "2.0"
     data_source = "Github API"
 
-    with GithubTaskSession(logger, engine) as session:
+    with GithubTaskManifest(logger) as manifest:
 
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        augur_db = manifest.augur_db
+
+        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id
 
         # define GithubTaskSession to handle insertions, and store oauth keys 
@@ -349,14 +322,14 @@ def pull_request_reviews(repo_git: str, pr_number_list: [int]) -> None:
 
             logger.info(f"Processing pr number: {pr_number}")
 
-            reviews = PullRequest(session, owner, repo, pr_number).get_reviews_collection()
+            reviews = PullRequest(augur_db, owner, repo, pr_number).get_reviews_collection()
 
             review_list = list(reviews)
 
             for review in review_list:
                 print(review["comments"])
 
-            pr_review_dicts += extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, data_source)
+            pr_review_dicts += extract_needed_pr_review_data(reviews, platform_id, repo_id, tool_version, data_source)
 
 
         print(len(pr_review_dicts))
