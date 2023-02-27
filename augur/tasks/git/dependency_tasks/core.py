@@ -34,13 +34,7 @@ def generate_deps_data(session, repo_id, path):
                         'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
                     }
 
-                    insert_statement = s.sql.text("""
-                        INSERT INTO "repo_dependencies" ("repo_id", "dep_name", "dep_count", "dep_language", "tool_source", "tool_version", "data_source", "data_collection_date")
-                        VALUES (:repo_id, :dep_name, :dep_count, :dep_language, :tool_source, :tool_version, :data_source, :data_collection_date)
-                    """).bindparams(**repo_deps)
-
-                    #result = self.db.execute(self.repo_dependencies_table.insert().values(repo_deps))
-                    session.execute_sql(insert_statement)
+                    session.insert_data(repo_deps,RepoDependency,["repo_id","dep_name"])
         except Exception as e:
             session.logger.error(f"Could not complete generate_deps_data!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
