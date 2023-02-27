@@ -10,7 +10,7 @@ class GithubRandomKeyAuth(RandomKeyAuth):
     github collections can have a class randomly selects an api key for each request    
     """
 
-    def __init__(self, session: DatabaseSession):
+    def __init__(self, session: DatabaseSession, logger):
         """Creates a GithubRandomKeyAuth object and initializes the RandomKeyAuth parent class"""
 
     
