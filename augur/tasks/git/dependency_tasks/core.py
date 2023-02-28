@@ -62,10 +62,6 @@ def deps_model(session, repo_id,repo_git,repo_group_id):
         session.logger.error(f"Could not complete deps_model!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
-def parse_scorecard(raw):
-    pass
-
-
 def generate_scorecard(session,repo_id,path):
     """Runs scorecard on repo and stores data in database
         :param repo_id: Repository ID
