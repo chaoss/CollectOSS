@@ -87,6 +87,19 @@ def process_events(events, task_name, repo_id, logger, augur_db):
     issue_event_dicts = []
     contributors = []
 
+
+    # create mapping from issue url to issue id of current issues
+    issue_url_to_id_map = {}
+    issues = augur_db.session.query(Issue).filter(Issue.repo_id == repo_id).all()
+    for issue in issues:
+        issue_url_to_id_map[issue.issue_url] = issue.issue_id
+
+    # create mapping from pr url to pr id of current pull requests
+    pr_url_to_id_map = {}
+    prs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    for pr in prs:
+        pr_url_to_id_map[pr.pr_url] = pr.pull_request_id
+
     not_mapable_event_count = 0
     event_len = len(events)
     for event in events:
@@ -99,22 +112,24 @@ def process_events(events, task_name, repo_id, logger, augur_db):
         if event_mapping_data is None:
             not_mapable_event_count += 1
             continue
-        
-        if 'pull_request' in list(event_mapping_data.keys()):
-            pr_url = event_mapping_data["pull_request"]["url"]
+
+        pull_request = event_mapping_data.get('pull_request', None)
+        if pull_request:
+            pr_url = pull_request["url"]
 
             try:
-                query = augur_db.session.query(PullRequest).filter(PullRequest.pr_url == pr_url)
-                related_pr = execute_session_query(query, 'one')
-            except s.orm.exc.NoResultFound:
+                pull_request_id = pr_url_to_id_map[pr_url]
+
+                # query = augur_db.session.query(PullRequest).filter(PullRequest.pr_url == pr_url)
+                # related_pr = execute_session_query(query, 'one')
+            except KeyError:
                 logger.info(f"{task_name}: Could not find related pr")
                 logger.info(f"{task_name}: We were searching for: {pr_url}")
-                # TODO: Add table to log all errors
                 logger.info(f"{task_name}: Skipping")
                 continue
 
             pr_event_dicts.append(
-                extract_pr_event_data(event, related_pr.pull_request_id, platform_id, repo_id,
+                extract_pr_event_data(event, pull_request_id, platform_id, repo_id,
                                     tool_source, tool_version, data_source)
             )
 
@@ -122,18 +137,17 @@ def process_events(events, task_name, repo_id, logger, augur_db):
             issue_url = event_mapping_data["url"]
 
             try:
-                query = augur_db.session.query(Issue).filter(Issue.issue_url == issue_url)
-                related_issue = execute_session_query(query, 'one')
-            except s.orm.exc.NoResultFound:
+                issue_id = issue_url_to_id_map[issue_url]
+                # query = augur_db.session.query(Issue).filter(Issue.issue_url == issue_url)
+                # related_issue = execute_session_query(query, 'one')
+            except KeyError:
                 logger.info(f"{task_name}: Could not find related pr")
-                logger.info(
-                    f"{task_name}: We were searching for: {issue_url}")
-                # TODO: Add table to log all errors
+                logger.info(f"{task_name}: We were searching for: {issue_url}")
                 logger.info(f"{task_name}: Skipping")
                 continue
 
             issue_event_dicts.append(
-                extract_issue_event_data(event, related_issue.issue_id, platform_id, repo_id,
+                extract_issue_event_data(event, issue_id, platform_id, repo_id,
                                         tool_source, tool_version, data_source)
             )
         
