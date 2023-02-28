@@ -45,7 +45,7 @@ def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=40):
             
             #print(json.dumps(json_dict))
             response = client.post(
-                url=url,auth=keyAuth,json=json_dict
+                url=url,auth=keyAuth,json=json_dict, timeout=timeout
                 )
         
         except TimeoutError:
