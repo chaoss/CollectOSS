@@ -1778,7 +1778,9 @@ class RepoDepsLibyear(Base):
 
 class RepoDepsScorecard(Base):
     __tablename__ = "repo_deps_scorecard"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = ( UniqueConstraint("repo_id","name", name="deps-scorecard-insert-unique"),
+        {"schema": "augur_data"}
+    )
 
     repo_deps_scorecard_id = Column(
         BigInteger,
