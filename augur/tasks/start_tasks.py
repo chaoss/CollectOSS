@@ -21,7 +21,7 @@ from augur.tasks.github.releases.tasks import collect_releases
 from augur.tasks.github.repo_info.tasks import collect_repo_info
 from augur.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
-from augur.tasks.git.dependency_tasks.tasks import process_dependency_metrics
+from augur.tasks.git.dependency_tasks.tasks import process_dependency_metrics, process_ossf_scorecard_metrics
 from augur.tasks.git.dependency_libyear_tasks.tasks import process_libyear_dependency_metrics
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.db.refresh_materialized_views import *
@@ -226,6 +226,7 @@ def primary_repo_collect_phase(repo_git):
         #facade_phase(logger,repo_git),
         process_dependency_metrics.si(repo_git),
         process_libyear_dependency_metrics.si(repo_git),
+        process_ossf_scorecard_metrics.si(repo_git),
         collect_releases.si(repo_git)
     )
 
