@@ -28,19 +28,21 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth):
 
     owner, name = get_owner_repo(repo.repo_git)
 
+    task_name = f"{owner}/{name} Pr commits"
+
     logger.info(f"Getting pull request commits for repo: {repo.repo_git}")
         
+    all_data = []
     for index,pr_info in enumerate(pr_urls):
-        logger.info(f'Querying commits for pull request #{index + 1} of {len(pr_urls)}')
+        logger.info(f'{task_name}: Querying commits for pull request #{index + 1} of {len(pr_urls)}')
 
         commits_url = pr_info['pr_url'] + '/commits?state=all'
 
         #Paginate through the pr commits
         pr_commits = GithubPaginator(commits_url, key_auth, logger)
 
-        all_data = []
         for page_data in pr_commits:
-            logger.info(f"Processing pr commit with hash {page_data['sha']}")
+            logger.info(f"{task_name}: Processing pr commit with hash {page_data['sha']}")
             pr_commit_row = {
                 'pull_request_id': pr_info['pull_request_id'],
                 'pr_cmt_sha': page_data['sha'],
@@ -55,10 +57,10 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth):
 
             all_data.append(pr_commit_row)
     
-        if len(all_data) > 0:
-            #Execute bulk upsert
-            pr_commits_natural_keys = [	"pull_request_id", "repo_id", "pr_cmt_sha"]
-            augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
+    if len(all_data) > 0:
+        logger.info(f"{task_name}: Inserting {len(all_data)} rows")
+        pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
+        augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
             
 
 
