@@ -1,9 +1,17 @@
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from flask import render_template, flash, url_for
+from flask import render_template, flash, url_for, Flask
 from .init import *
 from .server import User
+from ..server import app, db_session
+from augur.application.config import AugurConfig
 import urllib.request, urllib.error, json, os, math, yaml, urllib3, time, logging, re
+
+init_logging()
+
+from .init import logger
+
+config = AugurConfig(logger, db_session)
 
 def parse_url(url):
     from urllib.parse import urlparse
@@ -47,7 +55,7 @@ def validate_api_url(url):
                 if "status" in response:
                     return request.url
         except Exception as e:
-            logging.error(f"Error during serving URL verification: {str(e)}")
+            logger.error(f"Error during serving URL verification: {str(e)}")
 
         return False
 
@@ -88,9 +96,9 @@ def loadSettings():
     if not configFilePath.is_file():
         init_settings()
         with open(configFile, 'w') as file:
-            logging.info(f"Generating default configuration file: {configFile}")
+            logger.info(f"Generating default configuration file: {configFile}")
             yaml.dump(settings, file)
-            logging.info("Default configuration file successfully generated.")
+            logger.info("Default configuration file successfully generated.")
     else:
         with open(configFilePath) as file:
             settings = yaml.load(file, Loader=yaml.FullLoader)
@@ -103,7 +111,7 @@ def loadSettings():
         else:
             try:
                 cachePath.mkdir(parents=True)
-                logging.info("cache directory initialized")
+                logger.info("cache directory initialized")
             except Exception as err:
                 raise Exception(f"Cannot initialize caching: could not create cache directory [{cachePath}]")
 
@@ -120,16 +128,15 @@ def loadSettings():
 
 """ ----------------------------------------------------------------
 """
-def getSetting(key):
-    if key == "serving":
-        return "http://127.0.0.1:5000/api/unstable"
-    return settings[key]
-
-init_logging()
+def getSetting(key, section = "View"):
+    if section == "View":
+        if key == "serving":
+            return "http://127.0.0.1:5000/api/unstable"
+        return settings[key]
+    else:
+        return config.get_value(section, key)
 
 loadSettings()
-
-from .init import logger
 
 User.api = getSetting("serving")
 User.logger = logger
@@ -149,16 +156,16 @@ def loadReports():
                     image['id'] = id = id + 1
         return True
     except Exception as err:
-        logging.error(f"An exception occurred reading reports endpoints from [{getSetting('reports')}]:")
-        logging.error(err)
+        logger.error(f"An exception occurred reading reports endpoints from [{getSetting('reports')}]:")
+        logger.error(err)
         try:
             with open(getSetting("reports"), 'w') as file:
-                logging.info("Attempting to generate default reports.yml")
+                logger.info("Attempting to generate default reports.yml")
                 yaml.dump(reports, file)
-                logging.info("Default reports file successfully generated.")
+                logger.info("Default reports file successfully generated.")
         except Exception as ioErr:
-            logging.error("Error creating default report configuration:")
-            logging.error(ioErr)
+            logger.error("Error creating default report configuration:")
+            logger.error(ioErr)
         return False
 
 if not loadReports():
@@ -176,11 +183,11 @@ def cacheFileExists(filename):
             if(cache_file_age > getSetting('cache_expiry')):
                 try:
                     cache_file.unlink()
-                    logging.info(f"Cache file {filename} removed due to expiry")
+                    logger.info(f"Cache file {filename} removed due to expiry")
                     return False
                 except Exception as e:
-                    logging.error("Error: cache file age exceeds expiry limit, but an exception occurred while attempting to remove")
-                    logging.error(e)
+                    logger.error("Error: cache file age exceeds expiry limit, but an exception occurred while attempting to remove")
+                    logger.error(e)
         return True
     else:
         return False
@@ -220,7 +227,7 @@ requestJson:
 def requestJson(endpoint, cached = True):
     filename = toCacheFilepath(endpoint)
     requestURL = getSetting('serving') + "/" + endpoint
-    logging.info(f'requesting json from: {endpoint}')
+    logger.info(f'requesting json from: {endpoint}')
     try:
         if cached and cacheFileExists(filename):
             with open(filename) as f:
@@ -239,8 +246,8 @@ def requestJson(endpoint, cached = True):
             cache_files_requested.remove(filename)
         return data
     except Exception as err:
-        logging.error("An exception occurred while fulfilling a json request")
-        logging.error(err)
+        logger.error("An exception occurred while fulfilling a json request")
+        logger.error(err)
         return False, str(err)
 
 """ ----------------------------------------------------------------
@@ -257,8 +264,8 @@ def requestPNG(endpoint):
             cache_files_requested.remove(filename)
         return toCacheURL(endpoint)
     except Exception as err:
-        logging.error("An exception occurred while fulfilling a png request")
-        logging.error(err)
+        logger.error("An exception occurred while fulfilling a png request")
+        logger.error(err)
 
 """ ----------------------------------------------------------------
 """
@@ -269,20 +276,26 @@ def download(url, cmanager, filename, image_cache, image_id, repo_id = None):
     if cacheFileExists(filename):
         image_cache[image_id]['exists'] = True
         return
-    response = cmanager.request('GET', url)
+    try:
+        response = cmanager.request('GET', url)
+    except Exception as e:
+        logger.error("Could not make request: " + str(e))
+        raise e
+    
     if "json" in response.headers['Content-Type']:
-        logging.warn(f"repo {repo_id}: unexpected json response in image request")
-        logging.warn(f"  response: {response.data.decode('utf-8')}")
+        logger.warn(f"repo {repo_id}: unexpected json response in image request")
+        logger.warn(f"  response: {response.data.decode('utf-8')}")
         image_cache[image_id]['exists'] = False
         return
     if response and response.status == 200:
         image_cache[image_id]['exists'] = True
         try:
             with open(filename, 'wb') as f:
+                logger.info("Writing image: " + filename)
                 f.write(response.data)
         except Exception as err:
-            logging.error("An exception occurred writing a cache file to disk")
-            logging.error(err)
+            logger.error("An exception occurred writing a cache file to disk")
+            logger.error(err)
 
 """ ----------------------------------------------------------------
 """
@@ -294,6 +307,9 @@ def requestReports(repo_id):
     # initialize a new request entry to hold the resulting data
     report_requests[repo_id] = {}
     report_requests[repo_id]['complete'] = False
+
+    host = getSetting("host", "Server")
+    port = getSetting("port", "Server")
 
     """ ----------
         If the report definition could not be loaded, we cannot determine what
@@ -319,7 +335,7 @@ def requestReports(repo_id):
             # Where should the downloaded image be stored (in cache)
             filename = toCacheFilename(f"{image['url']}?repo_id={repo_id}")
             # Where are we downloading the image from
-            image_url = url_for(image['url'], repo_id = repo_id)
+            image_url = f"{host}:{port}" + url_for(image['url'], repo_id = repo_id)
             # f"{getSetting('serving')}/{image['url']}?repo_id={repo_id}"
             
             # Add a request for this image to the thread pool using the download function

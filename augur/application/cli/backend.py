@@ -93,7 +93,7 @@ def start(disable_collection, development, port):
 
     time.sleep(3)
     logger.info('Gunicorn webserver started...')
-    logger.info(f'Augur is running at: http://127.0.0.1:{port}')
+    logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
 
     scheduling_worker_process = None
     core_worker_process = None
