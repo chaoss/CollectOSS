@@ -9,12 +9,14 @@ from typing import List, Any, Dict
 
 import logging 
 import secrets
+import importlib
 
-from augur.application.db.models import Repo
+from augur.application.db.models import Repo, RepoGroup
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models.base import Base
-DEFAULT_REPO_GROUP_ID = 1
+schema_6_revision = importlib.import_module('augur.application.schema.alembic.versions.6_add_repo_group_for_frontend_repos')
 
+FRONTEND_REPO_GROUP_NAME = schema_6_revision.repo_group_name
 logger = logging.getLogger(__name__)
 
 def retrieve_org_repos(session, url: str) -> List[str]:
@@ -410,8 +412,10 @@ class User(Base):
         return result
 
     def add_repo(self, group_name, repo_url):
+        
+        from augur.tasks.github.util.github_task_session import GithubTaskSession
 
-        with DatabaseSession(logger) as session:
+        with GithubTaskSession(logger) as session:
             result = UserRepo.add(session, repo_url, self.user_id, group_name)
 
         return result
@@ -425,7 +429,9 @@ class User(Base):
 
     def add_org(self, group_name, org_url):
 
-        with DatabaseSession(logger) as session:
+        from augur.tasks.github.util.github_task_session import GithubTaskSession
+
+        with GithubTaskSession(logger) as session:
             result = UserRepo.add_org_repos(session, org_url, self.user_id, group_name)
 
         return result
@@ -724,7 +730,11 @@ class UserRepo(Base):
             if not result[0]:
                 return False, {"status": result[1]["status"], "repo_url": url}
 
-        repo_id = Repo.insert(session, url, DEFAULT_REPO_GROUP_ID, "Frontend")
+        frontend_repo_group = session.query(RepoGroup).filter(RepoGroup.rg_name == FRONTEND_REPO_GROUP_NAME).first()
+        if not frontend_repo_group:
+            return False, {"status": "Could not find repo group with name 'Frontend Repos'", "repo_url": url} 
+
+        repo_id = Repo.insert(session, url, frontend_repo_group.repo_group_id, "Frontend")
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 

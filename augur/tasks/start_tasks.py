@@ -239,6 +239,7 @@ def secondary_repo_collect_phase(repo_git):
     repo_task_group = group(
         process_pull_request_files.si(repo_git),
         process_pull_request_commits.si(repo_git),
+        chain(collect_pull_request_reviews.si(repo_git), collect_pull_request_review_comments.si(repo_git))
     )
 
     return repo_task_group
@@ -338,6 +339,16 @@ def non_repo_domain_tasks():
     with DatabaseSession(logger, engine) as session:
 
         enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
+
+        #Disable augur from running these tasks more than once unless requested
+        query = s.sql.text("""
+            UPDATE augur_operations.config
+            SET value=0
+            WHERE section_name='Task_Routine'
+            AND setting_name='machine_learning_phase'
+        """)
+
+        session.execute_sql(query)
 
         #Disable augur from running these tasks more than once unless requested
         query = s.sql.text("""
