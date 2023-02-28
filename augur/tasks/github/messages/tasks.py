@@ -185,7 +185,7 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
     message_return_data = augur_db.insert_data(message_dicts, Message, message_natural_keys, 
                                                 return_columns=message_return_columns, string_fields=message_string_fields)
     
-    
+
     pr_message_ref_dicts = []
     issue_message_ref_dicts = []
     for data in message_return_data:
@@ -206,7 +206,7 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
     pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
     augur_db.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
 
-    logger.info(f"{task_name}: Inserting {len(pr_message_ref_dicts)} issue messages ref rows")
+    logger.info(f"{task_name}: Inserting {len(issue_message_ref_dicts)} issue messages ref rows")
     issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
     augur_db.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
 
