@@ -95,7 +95,7 @@ def generate_scorecard(session,repo_id,path):
     required_output = json.loads(output)
 
     session.logger.info('adding to database...')
-    session.logger.info(f"Required output: {required_output}")
+    session.logger.debug(f"output: {required_output}")
 
     if not required_output['checks']:
         session.logger.info('No scorecard checks found!')
@@ -128,6 +128,8 @@ def generate_scorecard(session,repo_id,path):
             'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         }
         session.insert_data(repo_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
+    
+    session.logger.info(f"Done generating scorecard for repo {repo_id} from path {path}")
 
 
 """
