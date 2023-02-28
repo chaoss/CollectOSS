@@ -347,6 +347,16 @@ def non_repo_domain_tasks():
 
         session.execute_sql(query)
 
+        #Disable augur from running these tasks more than once unless requested
+        query = s.sql.text("""
+            UPDATE augur_operations.config
+            SET value=0
+            WHERE section_name='Task_Routine'
+            AND setting_name='machine_learning_phase'
+        """)
+
+        session.execute_sql(query)
+
     enabled_tasks = []
 
     enabled_tasks.extend(generate_non_repo_domain_facade_tasks(logger))

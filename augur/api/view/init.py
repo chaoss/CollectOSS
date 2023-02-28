@@ -1,6 +1,7 @@
 from pathlib import Path
 from .server import Environment
-import logging, sqlite3, secrets, hashlib, yaml
+from augur.application.logs import AugurLogger
+import logging, secrets, yaml
 
 env = Environment()
 
@@ -52,7 +53,7 @@ def version_check(current_settings):
 
         current_settings["version"] = version
         write_settings(current_settings)
-        logging.info(f"Configuration updated from {to_version_string(old)} to {to_version_string(version)}")
+        logger.info(f"Configuration updated from {to_version_string(old)} to {to_version_string(version)}")
 
     def compare_versions(old, new):
         if old["major"] < new["major"]:
@@ -141,7 +142,5 @@ reports = {
 
 # Initialize logging
 def init_logging():
-    format = "%(asctime)s: %(message)s"
     global logger
-    logger = logging.getLogger("augur view")
-    logger.setLevel("DEBUG")
+    logger = AugurLogger("augur_view", reset_logfiles=True).get_logger()

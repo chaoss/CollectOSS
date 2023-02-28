@@ -861,7 +861,7 @@ class Repo(Base):
         return session.query(Repo).filter(Repo.repo_git == repo_git).first()
 
     @staticmethod
-    def is_valid_github_repo(session, url: str) -> bool:
+    def is_valid_github_repo(gh_session, url: str) -> bool:
         """Determine whether repo url is valid.
 
         Args:
@@ -874,7 +874,7 @@ class Repo(Base):
 
         REPO_ENDPOINT = "https://api.github.com/repos/{}/{}"
 
-        if not session.oauths.list_of_keys:
+        if not gh_session.oauths.list_of_keys:
             return False, {"status": "No valid github api keys to retrieve data with"}
 
         owner, repo = Repo.parse_github_repo_url(url)
@@ -885,7 +885,7 @@ class Repo(Base):
 
         attempts = 0
         while attempts < 10:
-            result = hit_api(session.oauths, url, logger)
+            result = hit_api(gh_session.oauths, url, logger)
 
             # if result is None try again
             if not result:
