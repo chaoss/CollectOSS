@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 import logging
 import requests
 import json
@@ -61,6 +62,10 @@ def deps_model(session, repo_id,repo_git,repo_group_id):
         session.logger.error(f"Could not complete deps_model!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
+def parse_scorecard(raw):
+    pass
+
+
 def generate_scorecard(session,repo_id,path):
     """Runs scorecard on repo and stores data in database
         :param repo_id: Repository ID
@@ -84,12 +89,49 @@ def generate_scorecard(session,repo_id,path):
     config = AugurConfig(session.logger, session)
     os.environ['GITHUB_AUTH_TOKEN'] = config.get_section("Keys")['github_api_key']#self.config['gh_api_key']
     
-    p= subprocess.run(['./scorecard', command], cwd= path_to_scorecard ,capture_output=True, text=True, timeout=None)
+    p= subprocess.run(['./scorecard', command, '--format=json'], cwd= path_to_scorecard ,capture_output=True, text=True, timeout=None)
     session.logger.info('subprocess completed successfully... ')
-    output = p.stdout.split('\n')
-    required_output = output[4:20]
+    output = p.stdout
+    required_output = json.loads(output)
 
     session.logger.info('adding to database...')
+    session.logger.info(f"Required output: {required_output}")
+
+    if not required_output['checks']:
+        session.logger.info('No scorecard checks found!')
+        return
+    
+    #Store the overall score first
+    overall_deps_scorecard = {
+        'repo_id': repo_id,
+        'name': 'OSSF_SCORECARD_AGGREGATE_SCORE',
+        'scorecard_check_details': required_output['repo'],
+        'score': required_output['score'],
+        'tool_source': 'scorecard_model',
+        'tool_version': '0.43.9',
+        'data_source': 'Git',
+        'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+    }
+
+    session.insert_data(overall_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
+
+    #Store misc data from scorecard in json field. 
+    for check in required_output['checks']:
+        repo_deps_scorecard = {
+            'repo_id': repo_id,
+            'name': check['name'],
+            'scorecard_check_details': check,
+            'score': check['score'],
+            'tool_source': 'scorecard_model',
+            'tool_version': '0.43.9',
+            'data_source': 'Git',
+            'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+        }
+        session.insert_data(repo_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
+
+
+"""
+    
 
     for test in required_output:
         temp = test.split()
@@ -105,3 +147,4 @@ def generate_scorecard(session,repo_id,path):
 
         } 
         session.insert_data(repo_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
+"""
