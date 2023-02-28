@@ -40,6 +40,7 @@ import sqlalchemy as s
 from augur.application.db.util import execute_session_query
 from augur.application.db.models import *
 
+#Will delete repos passed and cleanup associated commit data.
 def git_repo_cleanup(session,repo_git):
 
 # Clean up any git repos that are pending deletion
@@ -50,7 +51,7 @@ def git_repo_cleanup(session,repo_git):
 
 
 	query = session.query(Repo).filter(
-		Repo.repo_git == repo_git,Repo.repo_status == "Delete")#s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Delete'""")
+		Repo.repo_git == repo_git)#s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Delete'""")
 
 	delete_repos = execute_session_query(query,'all')#session.fetchall_data_from_sql_text(query)
 

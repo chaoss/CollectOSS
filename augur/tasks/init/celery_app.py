@@ -63,6 +63,7 @@ celery_app.conf.task_routes = {
     'augur.tasks.start_tasks.*': {'queue': 'scheduling'},
     'augur.tasks.github.pull_requests.commits_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.files_model.tasks.*': {'queue': 'secondary'},
+    'augur.tasks.github.pull_requests.tasks.collect_pull_request_reviews': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.*': {'queue': 'secondary'}
 }
 
@@ -137,7 +138,7 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(collection_interval, augur_collection_monitor.s())
 
         #Do longer tasks less often
-        non_domain_collection_interval = collection_interval * 5
+        non_domain_collection_interval = collection_interval * 300
         logger.info(f"Scheduling non-repo-domain collection every {non_domain_collection_interval/60} minutes")
         sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks.s())
 
