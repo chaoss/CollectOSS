@@ -2,6 +2,8 @@ from datetime import datetime
 import logging
 import requests
 import json
+import os
+import subprocess
 import re
 import traceback
 from augur.application.db.data_parse import *
@@ -34,13 +36,7 @@ def generate_deps_data(session, repo_id, path):
                         'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
                     }
 
-                    insert_statement = s.sql.text("""
-                        INSERT INTO "repo_dependencies" ("repo_id", "dep_name", "dep_count", "dep_language", "tool_source", "tool_version", "data_source", "data_collection_date")
-                        VALUES (:repo_id, :dep_name, :dep_count, :dep_language, :tool_source, :tool_version, :data_source, :data_collection_date)
-                    """).bindparams(**repo_deps)
-
-                    #result = self.db.execute(self.repo_dependencies_table.insert().values(repo_deps))
-                    session.execute_sql(insert_statement)
+                    session.insert_data(repo_deps,RepoDependency,["repo_id","dep_name"])
         except Exception as e:
             session.logger.error(f"Could not complete generate_deps_data!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
@@ -48,7 +44,7 @@ def generate_deps_data(session, repo_id, path):
 def deps_model(session, repo_id,repo_git,repo_group_id):
     """ Data collection and storage method
     """
-    session.logger.info(f"This is the deps model repo: {repo_id}.")
+    session.logger.info(f"This is the deps model repo: {repo_git}.")
 
     
 
@@ -63,3 +59,49 @@ def deps_model(session, repo_id,repo_git,repo_group_id):
         generate_deps_data(session,repo_id, absolute_repo_path)
     except Exception as e:
         session.logger.error(f"Could not complete deps_model!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+
+
+def generate_scorecard(session,repo_id,path):
+    """Runs scorecard on repo and stores data in database
+        :param repo_id: Repository ID
+        :param path: URL path of the Repostiory
+    """
+    session.logger.info('Generating scorecard data for repo')
+    session.logger.info(f"Repo ID: {repo_id}, Path: {path}")
+
+    # we convert relative path in the format required by scorecard like github.com/chaoss/augur
+    # raw_path,_ = path.split('-')
+    # scorecard_repo_path = raw_path[2:]
+    path = path[8:]
+    if path[-4:] == '.git':
+        path = path.replace(".git", "")
+    command = '--repo='+ path
+    
+    #this is path where our scorecard project is located
+    path_to_scorecard = os.environ['HOME'] + '/scorecard'
+
+    #setting the environmental variable which is required by scorecard  
+    config = AugurConfig(session.logger, session)
+    os.environ['GITHUB_AUTH_TOKEN'] = config.get_section("Keys")['github_api_key']#self.config['gh_api_key']
+    
+    p= subprocess.run(['./scorecard', command], cwd= path_to_scorecard ,capture_output=True, text=True, timeout=None)
+    session.logger.info('subprocess completed successfully... ')
+    output = p.stdout.split('\n')
+    required_output = output[4:20]
+
+    session.logger.info('adding to database...')
+
+    for test in required_output:
+        temp = test.split()
+        repo_deps_scorecard = {
+            'repo_id': repo_id,
+            'name': temp[0],
+            'status': temp[1],
+            'score': temp[2],
+            'tool_source': 'scorecard_model',
+            'tool_version': '0.43.9',
+            'data_source': 'Git',
+            'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        } 
+        session.insert_data(repo_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
