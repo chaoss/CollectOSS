@@ -141,19 +141,10 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
 
             issue_message_ref_data = extract_needed_issue_message_ref_data(message, issue_id, repo_id, tool_source, tool_version, data_source)
 
-            logger.info(f"MSG ID: {message['id']}. Type: {type(message['id'])}")
             message_ref_mapping_data[message["id"]] = {
                 "msg_ref_data": issue_message_ref_data,
                 "is_issue": True
             }
-
-            # message_ref_mapping_data.append(
-            #     {
-            #         "platform_msg_id": message["id"],
-            #         "msg_ref_data": issue_message_ref_data,
-            #         "is_issue": True
-            #     }
-            # )
 
         else:
 
@@ -169,20 +160,11 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
             pr_message_ref_data = extract_needed_pr_message_ref_data(message, pull_request_id, repo_id, tool_source, tool_version, data_source)
 
 
-            logger.info(f"MSG ID: {message['id']}. Type: {type(message['id'])}")
             message_ref_mapping_data[message["id"]] = {
                 "msg_ref_data": pr_message_ref_data,
                 "is_issue": False
             }
 
-            # message_ref_mapping_data.append(
-            #     {
-            #         "platform_msg_id": message["id"],
-            #         "msg_ref_data": pr_message_ref_data,
-            #         "is_issue": False
-            #     }
-            # )
-        
         if related_pr_or_issue_found:
 
             message_dicts.append(
@@ -203,6 +185,7 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
     message_return_data = augur_db.insert_data(message_dicts, Message, message_natural_keys, 
                                                 return_columns=message_return_columns, string_fields=message_string_fields)
     
+    
     pr_message_ref_dicts = []
     issue_message_ref_dicts = []
     for data in message_return_data:
@@ -218,31 +201,6 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
             issue_message_ref_dicts.append(message_ref_data)
         else:
             pr_message_ref_dicts.append(message_ref_data)
-
-
-    # pr_message_ref_dicts = []
-    # issue_message_ref_dicts = []
-    # for mapping_data in message_ref_mapping_data:
-
-    #     value = mapping_data["platform_msg_id"]
-    #     key = "platform_msg_id"
-
-    #     issue_or_pr_message = find_dict_in_list_of_dicts(message_return_data, key, value)
-
-    #     if issue_or_pr_message:
-
-    #         msg_id = issue_or_pr_message["msg_id"]
-    #     else:
-    #         logger.info(f"{task_name}: Count not find issue or pull request message to map to")
-    #         continue
-
-    #     message_ref_data = mapping_data["msg_ref_data"]
-    #     message_ref_data["msg_id"] = msg_id 
-
-    #     if mapping_data["is_issue"] is True:
-    #         issue_message_ref_dicts.append(message_ref_data)
-    #     else:
-    #         pr_message_ref_dicts.append(message_ref_data)
 
     logger.info(f"{task_name}: Inserting {len(pr_message_ref_dicts)} pr messages ref rows")
     pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
