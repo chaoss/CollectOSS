@@ -162,8 +162,9 @@ def init_worker(**kwargs):
     global engine
 
     from augur.application.db.engine import DatabaseEngine
+    from sqlalchemy.pool import NullPool, StaticPool
 
-    engine = DatabaseEngine(pool_size=5, max_overflow=10).engine
+    engine = DatabaseEngine(poolclass=StaticPool).engine
 
 
 @worker_process_shutdown.connect
