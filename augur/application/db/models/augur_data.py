@@ -1715,7 +1715,7 @@ class RepoClusterMessage(Base):
 
 class RepoDependency(Base):
     __tablename__ = "repo_dependencies"
-    __table_args__ = ( UniqueConstraint("repo_id","dep_name", name="deps-insert-unique"),
+    __table_args__ = ( UniqueConstraint("repo_id","dep_name","data_collection_date", name="deps-insert-unique"),
         {"schema": "augur_data",
         "comment": "Contains the dependencies for a repo.",},
     )
