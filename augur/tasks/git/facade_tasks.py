@@ -38,6 +38,9 @@ from augur.application.db import data_parse
 from augur.tasks.util.AugurUUID import GithubUUID, UnresolvableUUID
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo, CollectionStatus
 
+from augur.tasks.git.dependency_tasks.tasks import process_dependency_metrics
+from augur.tasks.git.dependency_libyear_tasks.tasks import process_libyear_dependency_metrics
+
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.gh_graphql_entities import PullRequest
 from augur.tasks.github.util.github_task_session import *
@@ -516,6 +519,7 @@ def facade_phase(repo_git):
         multithreaded = session.multithreaded
 
         facade_sequence = []
+        facade_core_collection = []
 
         #Currently repos are never deleted
         #if not limited_run or (limited_run and delete_marked_repos):
@@ -531,14 +535,24 @@ def facade_phase(repo_git):
         if not limited_run or (limited_run and pull_repos):
             facade_sequence.append(git_repo_updates_facade_task.si(repo_git))
 
+        #facade_sequence.append(process_dependency_metrics.si(repo_git))
         #Generate commit analysis task order.
         if not limited_run or (limited_run and run_analysis):
-            facade_sequence.extend(generate_analysis_sequence(logger,repo_git,session))
+            facade_core_collection.extend(generate_analysis_sequence(logger,repo_git,session))
 
         #Generate contributor analysis task group.
         if not limited_run or (limited_run and run_facade_contributors):
-            facade_sequence.append(generate_contributor_sequence(logger,repo_git,session))
+            facade_core_collection.append(generate_contributor_sequence(logger,repo_git,session))
 
+
+        #These tasks need repos to be cloned by facade before they can work.
+        facade_sequence.append(
+            group(
+                chain(*facade_core_collection),
+                process_dependency_metrics.si(repo_git),
+                process_libyear_dependency_metrics.si(repo_git)
+            )
+        )
 
         logger.info(f"Facade sequence: {facade_sequence}")
         return chain(*facade_sequence)

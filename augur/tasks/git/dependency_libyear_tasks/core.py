@@ -37,6 +37,7 @@ def generate_deps_libyear_data(session, repo_id, path):
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
+        date_scanned = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         session.logger.info('Searching for deps in repo')
         session.logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
@@ -61,7 +62,7 @@ def generate_deps_libyear_data(session, repo_id, path):
                 'tool_source': 'deps_libyear',
                 'tool_version': '0.44.3',
                 'data_source': 'git',
-                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'data_collection_date': date_scanned
             }
 
             #result = self.db.execute(self.repo_deps_libyear_table.insert().values(repo_deps))
@@ -72,4 +73,4 @@ def generate_deps_libyear_data(session, repo_id, path):
             #""").bindparams(**repo_deps)
 #
             #session.execute_sql(insert_statement)
-            session.insert_data(repo_deps, RepoDepsLibyear, ["repo_id","name"])
+            session.insert_data(repo_deps, RepoDepsLibyear, ["repo_id","name","data_collection_date"])

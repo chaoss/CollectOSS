@@ -20,26 +20,31 @@ def generate_deps_data(session, repo_id, path):
         :param path: Absolute path of the Repostiory
         """
         
+        scan_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         session.logger.info('Searching for deps in repo')
-        session.logger.info(f'Repo ID: {repo_id}, Path: {path}')
+        session.logger.info(f'Repo ID: {repo_id}, Path: {path}, Scan date: {scan_date}')
+
+        
 
         deps = dep_calc.get_deps(path)
         try: 
             for dep in deps:
-                    repo_deps = {
-                        'repo_id': repo_id,
-                        'dep_name' : dep.name,
-    	                'dep_count' : dep.count,
-    	                'dep_language' : dep.language,
-                        'tool_source': 'deps_model',
-                        'tool_version': '0.43.9',
-                        'data_source': 'Git',
-                        'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-                    }
+                repo_deps = {
+                    'repo_id': repo_id,
+                    'dep_name' : dep.name,
+                    'dep_count' : dep.count,
+                    'dep_language' : dep.language,
+                    'tool_source': 'deps_model',
+                    'tool_version': '0.43.9',
+                    'data_source': 'Git',
+                    'data_collection_date': scan_date
+                }
 
-                    session.insert_data(repo_deps,RepoDependency,["repo_id","dep_name"])
+                session.insert_data(repo_deps,RepoDependency,["repo_id","dep_name","data_collection_date"])
         except Exception as e:
             session.logger.error(f"Could not complete generate_deps_data!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        
+        session.logger.info(f"Inserted {len(deps)} dependencies for repo {repo_id}")
 
 
 def deps_model(session, repo_id,repo_git,repo_group_id):
@@ -88,7 +93,12 @@ def generate_scorecard(session,repo_id,path):
     p= subprocess.run(['./scorecard', command, '--format=json'], cwd= path_to_scorecard ,capture_output=True, text=True, timeout=None)
     session.logger.info('subprocess completed successfully... ')
     output = p.stdout
-    required_output = json.loads(output)
+
+    try:
+        required_output = json.loads(output)
+    except Exception as e:
+        session.logger.error(f"Could not parse required output! \n output: {output} \n Error: {e}")
+        return
 
     session.logger.info('adding to database...')
     session.logger.debug(f"output: {required_output}")
