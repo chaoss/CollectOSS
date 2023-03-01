@@ -93,7 +93,12 @@ def generate_scorecard(session,repo_id,path):
     p= subprocess.run(['./scorecard', command, '--format=json'], cwd= path_to_scorecard ,capture_output=True, text=True, timeout=None)
     session.logger.info('subprocess completed successfully... ')
     output = p.stdout
-    required_output = json.loads(output)
+
+    try:
+        required_output = json.loads(output)
+    except Exception as e:
+        session.logger.error(f"Could not parse required output! \n output: {output} \n Error: {e}")
+        return
 
     session.logger.info('adding to database...')
     session.logger.debug(f"output: {required_output}")
