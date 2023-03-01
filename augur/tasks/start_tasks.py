@@ -226,7 +226,7 @@ def primary_repo_collect_phase(repo_git):
         #facade_phase(logger,repo_git),
         process_dependency_metrics.si(repo_git),
         process_libyear_dependency_metrics.si(repo_git),
-        #process_ossf_scorecard_metrics.si(repo_git),
+        process_ossf_scorecard_metrics.si(repo_git),
         collect_releases.si(repo_git)
     )
 
