@@ -1745,7 +1745,7 @@ class RepoDependency(Base):
 
 class RepoDepsLibyear(Base):
     __tablename__ = "repo_deps_libyear"
-    __table_args__ = ( UniqueConstraint("repo_id","name", name="deps-libyear-insert-unique"),
+    __table_args__ = ( UniqueConstraint("repo_id","name", "data_collection_date", name="deps-libyear-insert-unique"),
         {"schema": "augur_data"}
     )
 
