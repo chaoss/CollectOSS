@@ -180,7 +180,11 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
 def process_pull_request_review_contributor(pr_review: dict, tool_source: str, tool_version: str, data_source: str):
 
     # get contributor data and set pr cntrb_id
-    pr_review_cntrb = extract_needed_contributor_data(pr_review["user"], tool_source, tool_version, data_source)
+    user = pr_review["user"]
+    if user["id"] is None:
+        return None
+    
+    pr_review_cntrb = extract_needed_contributor_data(user, tool_source, tool_version, data_source)
     pr_review["cntrb_id"] = pr_review_cntrb["cntrb_id"]
 
     return pr_review_cntrb
@@ -351,7 +355,8 @@ def collect_pull_request_reviews(repo_git: str) -> None:
         contributors = []
         for raw_pr_review in all_raw_pr_reviews:
             contributor = process_pull_request_review_contributor(raw_pr_review, tool_source, tool_version, data_source)
-            contributors.append(contributor)
+            if contributor:
+                contributors.append(contributor)
 
         logger.info(f"{owner}/{repo} Pr reviews: Inserting {len(contributors)} contributors")
         augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
