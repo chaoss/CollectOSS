@@ -40,22 +40,24 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth):
 
         #Paginate through the pr commits
         pr_commits = GithubPaginator(commits_url, key_auth, logger)
-
+        
         for page_data in pr_commits:
-            logger.info(f"{task_name}: Processing pr commit with hash {page_data['sha']}")
-            pr_commit_row = {
-                'pull_request_id': pr_info['pull_request_id'],
-                'pr_cmt_sha': page_data['sha'],
-                'pr_cmt_node_id': page_data['node_id'],
-                'pr_cmt_message': page_data['commit']['message'],
-                # 'pr_cmt_comments_url': pr_commit['comments_url'],
-                'tool_source': 'pull_request_commits_model',
-                'tool_version': '0.41',
-                'data_source': 'GitHub API',
-                'repo_id': repo_id,
-            }
 
-            all_data.append(pr_commit_row)
+            if page_data:
+                logger.info(f"{task_name}: Processing pr commit with hash {page_data['sha']}")
+                pr_commit_row = {
+                    'pull_request_id': pr_info['pull_request_id'],
+                    'pr_cmt_sha': page_data['sha'],
+                    'pr_cmt_node_id': page_data['node_id'],
+                    'pr_cmt_message': page_data['commit']['message'],
+                    # 'pr_cmt_comments_url': pr_commit['comments_url'],
+                    'tool_source': 'pull_request_commits_model',
+                    'tool_version': '0.41',
+                    'data_source': 'GitHub API',
+                    'repo_id': repo_id,
+                }
+
+                all_data.append(pr_commit_row)
     
     if len(all_data) > 0:
         logger.info(f"{task_name}: Inserting {len(all_data)} rows")
