@@ -283,9 +283,6 @@ class AugurTaskRoutine:
     def start_data_collection(self):
         """Start all task items and return.
         """
-        self.logger.info("Starting augur collection")
-
-        self.logger.info(f"Enabled phases: {list(self.jobs_dict.keys())}")
         augur_collection_list = []
         
         for repo_git in self.repos:
@@ -303,7 +300,6 @@ class AugurTaskRoutine:
 
             #augur_collection_sequence.append(core_task_success.si(repo_git))
             #Link all phases in a chain and send to celery
-            print(augur_collection_sequence)
             augur_collection_chain = chain(*augur_collection_sequence)
             task_id = augur_collection_chain.apply_async(link_error=task_failed.s()).task_id
 
@@ -416,6 +412,8 @@ def start_primary_collection(session,max_repo,days):
     repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
 
     session.logger.info(f"Starting primary collection on {len(repo_git_identifiers)} repos")
+    if len(repo_git_identifiers) == 0:
+        return
 
     session.logger.info(f"Primary collection starting for: {tuple(repo_git_identifiers)}")
 
@@ -466,6 +464,8 @@ def start_secondary_collection(session,max_repo,days):
     repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(primary_collected,not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
 
     session.logger.info(f"Starting secondary collection on {len(repo_git_identifiers)} repos")
+    if len(repo_git_identifiers) == 0:
+        return
 
     session.logger.info(f"Secondary collection starting for: {tuple(repo_git_identifiers)}")
 
@@ -511,6 +511,8 @@ def start_facade_collection(session,max_repo,days):
     repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
 
     session.logger.info(f"Starting facade collection on {len(repo_git_identifiers)} repos")
+    if len(repo_git_identifiers) == 0:
+        return
 
     session.logger.info(f"Facade collection starting for: {tuple(repo_git_identifiers)}")
 
