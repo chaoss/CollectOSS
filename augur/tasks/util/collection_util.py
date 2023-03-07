@@ -152,7 +152,7 @@ def date_weight_factor(days_since_last_collection):
     return (days_since_last_collection ** 3) / 25
 
 
-def get_repo_weight_by_issue(logger,repo_git):
+def get_repo_weight_by_issue(logger,repo_git,days_since_last_collection):
 
 
     owner,name = get_owner_repo(repo_git)
@@ -161,7 +161,7 @@ def get_repo_weight_by_issue(logger,repo_git):
         repo_graphql = GitHubRepoGraphql(logger, manifest.key_auth, owner, name)
         number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
     
-    return number_of_issues_and_prs
+    return number_of_issues_and_prs - date_weight_factor(days_since_last_collection)
 
 
 
@@ -187,6 +187,9 @@ def facade_task_success(repo_git):
         collection_status.facade_task_id = None
 
         session.commit()
+
+def get_repo_weight_by_commit(logger,repo_git,days_since_last_collection):
+    pass
 
 
 class AugurTaskRoutine:
