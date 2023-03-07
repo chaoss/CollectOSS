@@ -177,7 +177,7 @@ def process_pull_request_review_contributor(pr_review: dict, tool_source: str, t
 
     # get contributor data and set pr cntrb_id
     user = pr_review["user"]
-    if user["id"] is None:
+    if user is None:
         return None
     
     pr_review_cntrb = extract_needed_contributor_data(user, tool_source, tool_version, data_source)
