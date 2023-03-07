@@ -15,6 +15,7 @@ from augur.application.logs import AugurLogger
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
+from augur.application.config import AugurConfig
 
 
 # class syntax

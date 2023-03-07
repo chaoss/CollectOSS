@@ -27,7 +27,6 @@ from augur.tasks.git.facade_tasks import *
 from augur.tasks.db.refresh_materialized_views import *
 # from augur.tasks.data_analysis import *
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
 from logging import Logger
 from enum import Enum
