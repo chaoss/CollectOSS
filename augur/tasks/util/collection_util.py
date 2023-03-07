@@ -21,6 +21,7 @@ from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.application.db.session import DatabaseSession
 
 # class syntax
 class CollectionState(Enum):
