@@ -27,20 +27,16 @@ def collect_pull_requests(repo_git: str) -> None:
 
         augur_db = manifest.augur_db
 
-        try:
+        repo_id = augur_db.session.query(Repo).filter(
+        Repo.repo_git == repo_git).one().repo_id
 
-            repo_id = augur_db.session.query(Repo).filter(
-            Repo.repo_git == repo_git).one().repo_id
+        owner, repo = get_owner_repo(repo_git)
+        pr_data = retrieve_all_pr_data(repo_git, logger, manifest.key_auth)
 
-            owner, repo = get_owner_repo(repo_git)
-            pr_data = retrieve_all_pr_data(repo_git, logger, manifest.key_auth)
-
-            if pr_data:
-                process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
-            else:
-                logger.info(f"{owner}/{repo} has no pull requests")
-        except Exception as e:
-            logger.error(f"Could not collect pull requests for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        if pr_data:
+            process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+        else:
+            logger.info(f"{owner}/{repo} has no pull requests")
         
     
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
@@ -254,6 +250,10 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
         pr_review_comments_len = len(all_raw_pr_review_messages)
         logger.info(f"{owner}/{repo}: Pr review comments len: {pr_review_comments_len}")
         for index, comment in enumerate(all_raw_pr_review_messages):
+
+            # pull_request_review_id is required to map it to the correct pr review
+            if not comment["pull_request_review_id"]:
+                continue
 
             pr_review_comment_dicts.append(
                                     extract_needed_message_data(comment, platform_id, repo_id, tool_source, tool_version, data_source)
