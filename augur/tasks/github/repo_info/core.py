@@ -14,16 +14,16 @@ from augur.application.db.models import *
 from augur.tasks.github.util.github_task_session import *
 
 
-def query_committers_count(session, owner, repo):
+def query_committers_count(key_auth, logger, owner, repo):
 
-    session.logger.info('Querying committers count\n')
+    logger.info('Querying committers count\n')
     url = f'https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100'
 
-    contributors = GithubPaginator(url, session.oauths, session.logger)
+    contributors = GithubPaginator(url, key_auth, logger)
     
     return len(contributors)
 
-def get_repo_data(session, url, response):
+def get_repo_data(logger, url, response):
     data = {}
     try:
         data = response.json()
@@ -31,24 +31,24 @@ def get_repo_data(session, url, response):
         data = json.loads(json.dumps(response.text))
 
     if 'errors' in data:
-        session.logger.info("Error!: {}".format(data['errors']))
+        logger.info("Error!: {}".format(data['errors']))
         raise Exception(f"Github returned error response! {data['errors']}")
 
     if 'id' not in data:
-        session.logger.info("Request returned a non-data dict: {}\n".format(data))
+        logger.info("Request returned a non-data dict: {}\n".format(data))
         if data['message'] == 'Not Found':
             raise Exception(f"Github repo was not found or does not exist for endpoint: {url}\n")
 
     return data
 
 
-def is_forked(session, owner, repo): #/repos/:owner/:repo parent
-    session.logger.info('Querying parent info to verify if the repo is forked\n')
+def is_forked(key_auth, logger, owner, repo): #/repos/:owner/:repo parent
+    logger.info('Querying parent info to verify if the repo is forked\n')
     url = f'https://api.github.com/repos/{owner}/{repo}'
 
-    r = hit_api(session.oauths, url, session.logger)#requests.get(url, headers=self.headers)
+    r = hit_api(key_auth, url, logger)#requests.get(url, headers=self.headers)
 
-    data = get_repo_data(session, url, r)
+    data = get_repo_data(logger, url, r)
 
     if 'fork' in data:
         if 'parent' in data:
@@ -57,14 +57,14 @@ def is_forked(session, owner, repo): #/repos/:owner/:repo parent
 
     return False
 
-def is_archived(session, owner, repo):
-    session.logger.info('Querying committers count\n')
+def is_archived(key_auth, logger, owner, repo):
+    logger.info('Querying committers count\n')
     url = f'https://api.github.com/repos/{owner}/{repo}'
 
-    r = hit_api(session.oauths, url, session.logger)#requests.get(url, headers=self.headers)
+    r = hit_api(key_auth, url, logger)#requests.get(url, headers=self.headers)
     #self.update_gh_rate_limit(r)
 
-    data = get_repo_data(session, url, r)
+    data = get_repo_data(logger, url, r)
 
     if 'archived' in data:
         if data['archived']:
@@ -75,11 +75,11 @@ def is_archived(session, owner, repo):
 
     return False
 
-def grab_repo_info_from_graphql_endpoint(session,query):
+def grab_repo_info_from_graphql_endpoint(key_auth, logger, query):
     url = 'https://api.github.com/graphql'
     # Hit the graphql endpoint and retry 3 times in case of failure
-    session.logger.info("Hitting endpoint: {} ...\n".format(url))
-    r = hit_api_graphql(session.oauths, url, session.logger, query)
+    logger.info("Hitting endpoint: {} ...\n".format(url))
+    r = hit_api_graphql(key_auth, url, logger, query)
     
     data = {}
     try:
@@ -93,15 +93,15 @@ def grab_repo_info_from_graphql_endpoint(session,query):
     if 'data' in data:
         data = data['data']['repository']
     else:
-        session.logger.info("Request returned a non-data dict: {}\n".format(data))
+        logger.info("Request returned a non-data dict: {}\n".format(data))
         if data['message'] == 'Not Found':
             raise Exception(f"Github repo was not found or does not exist for endpoint: {url}\n")
     
     return data
     
 
-def repo_info_model(session, repo_orm_obj):
-    session.logger.info("Beginning filling the repo_info model for repo: " + repo_orm_obj.repo_git + "\n")
+def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
+    logger.info("Beginning filling the repo_info model for repo: " + repo_orm_obj.repo_git + "\n")
 
     owner, repo = get_owner_repo(repo_orm_obj.repo_git)
 
@@ -218,24 +218,23 @@ def repo_info_model(session, repo_orm_obj):
     # }
 
     try:
-        data = grab_repo_info_from_graphql_endpoint(session, query)
+        data = grab_repo_info_from_graphql_endpoint(key_auth, logger, query)
     except Exception as e:
-        session.logger.error(f"Could not grab info for repo {repo_orm_obj.repo_id}")
+        logger.error(f"Could not grab info for repo {repo_orm_obj.repo_id}")
         raise e
-        return
 
     # Just checking that the data is accessible (would not be if repo no longer exists)
     try:
         data['updatedAt']
     except Exception as e:
         raise Exception(f"Cannot access repo_info data: {data}\nError: {e}. \"Completing\" task.")
-        return
+
 
     # Get committers count info that requires seperate endpoint  
-    committers_count = query_committers_count(session, owner, repo)
+    committers_count = query_committers_count(key_auth, logger, owner, repo)
 
     # Put all data together in format of the table
-    session.logger.info(f'Inserting repo info for repo with id:{repo_orm_obj.repo_id}, owner:{owner}, name:{repo}\n')
+    logger.info(f'Inserting repo info for repo with id:{repo_orm_obj.repo_id}, owner:{owner}, name:{repo}\n')
     rep_inf = {
         'repo_id': repo_orm_obj.repo_id,
         'last_updated': data['updatedAt'] if 'updatedAt' in data else None,
@@ -286,11 +285,11 @@ def repo_info_model(session, repo_orm_obj):
             :tool_source, :tool_version, :data_source)
 			""").bindparams(**rep_inf)
 
-    session.execute_sql(insert_statement)
+    augur_db.execute_sql(insert_statement)
 
     # Note that the addition of information about where a repository may be forked from, and whether a repository is archived, updates the `repo` table, not the `repo_info` table.
-    forked = is_forked(session, owner, repo)
-    archived = is_archived(session, owner, repo)
+    forked = is_forked(key_auth, logger, owner, repo)
+    archived = is_archived(key_auth, logger, owner, repo)
     archived_date_collected = None
     if archived is not False:
         archived_date_collected = archived
@@ -298,22 +297,9 @@ def repo_info_model(session, repo_orm_obj):
     else:
         archived = 0
 
-    current_repo_dict = repo_orm_obj.__dict__
+    update_repo_data = s.sql.text("""UPDATE repo SET forked_from=:forked, repo_archived=:archived, repo_archived_date_collected=:archived_date_collected WHERE repo_id=:repo_id""").bindparams(forked=forked, archived=archived, archived_date_collected=archived_date_collected, repo_id=repo_orm_obj.repo_id)
+    augur_db.execute_sql(update_repo_data)
 
-    #delete irrelevant sqlalchemy metadata
-    del current_repo_dict['_sa_instance_state']
-
-    rep_additional_data = {
-        'forked_from': forked,
-        'repo_archived': archived,
-        'repo_archived_date_collected': archived_date_collected
-    }
-
-    current_repo_dict.update(rep_additional_data)
-    result = session.insert_data(current_repo_dict, Repo, ['repo_id'])
-    #result = self.db.execute(self.repo_table.update().where(
-    #    self.repo_table.c.repo_id==repo_id).values(rep_additional_data))
-
-    session.logger.info(f"Inserted info for {owner}/{repo}\n")
+    logger.info(f"Inserted info for {owner}/{repo}\n")
 
 

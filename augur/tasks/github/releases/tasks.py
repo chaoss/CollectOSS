@@ -1,15 +1,20 @@
-from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.releases.core import *
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.util import execute_session_query
+import traceback
 
 @celery.task
-def collect_releases():
+def collect_releases(repo_git):
 
     logger = logging.getLogger(collect_releases.__name__)
-    with GithubTaskSession(logger, engine) as session:
-        query = session.query(Repo)
-        repos = execute_session_query(query, 'all')
+    with GithubTaskManifest(logger) as manifest:
 
-        for repo in repos:
-            releases_model(session, repo.repo_git, repo.repo_id)
+        augur_db = manifest.augur_db
+
+        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_obj = execute_session_query(query, 'one')
+        repo_id = repo_obj.repo_id
+
+
+        releases_model(augur_db, manifest.key_auth, logger, repo_git, repo_id)

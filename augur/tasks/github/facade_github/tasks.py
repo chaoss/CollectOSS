@@ -2,7 +2,7 @@ import time
 import logging
 
 
-from augur.tasks.init.celery_app import celery_app as celery, engine
+from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskSession
@@ -14,6 +14,7 @@ from augur.tasks.util.worker_util import create_grouped_task_load
 from celery.result import allow_join_result
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
+from sqlalchemy.orm.exc import NoResultFound
 
 
 def process_commit_metadata(session,contributorQueue,repo_id):
@@ -25,44 +26,27 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         name = contributor['name']
 
         # check the email to see if it already exists in contributor_aliases
-        try:
-            # Look up email to see if resolved
-            """
-            alias_table_data = interface.db.execute(
-                s.sql.select([s.column('alias_email')]).where(
-                    interface.contributors_aliases_table.c.alias_email == email
-                )
-            ).fetchall()
-            """
-
-
-            query = session.query(ContributorsAlias).filter_by(alias_email=email)
-            alias_table_data = execute_session_query(query, 'all')
-            if len(alias_table_data) >= 1:
-                # Move on if email resolved
-
-                #interface.logger.info(
-                #    f"Email {email} has been resolved earlier.")
-
-                continue
-        except Exception as e:
+        
+        # Look up email to see if resolved
+        query = session.query(ContributorsAlias).filter_by(alias_email=email)
+        alias_table_data = execute_session_query(query, 'all')
+        if len(alias_table_data) >= 1:
+            # Move on if email resolved
             session.logger.info(
-                f"Successfully retrieved data from github for email: {emailFromCommitData}")
+                f"Email {email} has been resolved earlier.")
+
+            continue
         
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
-        try:
+        
             
-            query = session.query(UnresolvedCommitEmail).filter_by(name=name)
-            unresolved_query_result = execute_session_query(query, 'all')
+        query = session.query(UnresolvedCommitEmail).filter_by(name=name)
+        unresolved_query_result = execute_session_query(query, 'all')
 
-            if len(unresolved_query_result) >= 1:
+        if len(unresolved_query_result) >= 1:
 
-                #interface.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
-
-                continue
-        except Exception as e:
-            session.logger.info(f"Failed to query unresolved alias table with error: {e}")
-    
+            session.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
+            continue
 
         login = None
     
@@ -73,7 +57,7 @@ def process_commit_metadata(session,contributorQueue,repo_id):
 
             login = contributors_with_matching_name.gh_login
 
-        except Exception as e:
+        except NoResultFound as e:
             session.logger.debug(f"Failed local login lookup with error: {e}")
         
 
@@ -102,70 +86,62 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         # Use the email found in the commit data if api data is NULL
         emailFromCommitData = contributor['email_raw'] if 'email_raw' in contributor else contributor['email']
 
-        session.logger.info(
-            f"Successfully retrieved data from github for email: {emailFromCommitData}")
 
         # Get name from commit if not found by GitHub
         name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
 
-        try:
-            
-            #cntrb_id = AugurUUID(session.platform_id,user_data['id']).to_UUID()
 
-            cntrb_id = GithubUUID()
-            cntrb_id["user"] = int(user_data['id'])
-            cntrb_id["platform"] = session.platform_id
+        #cntrb_id = AugurUUID(session.platform_id,user_data['id']).to_UUID()
 
-            # try to add contributor to database
-            cntrb = {
-                "cntrb_id" : cntrb_id.to_UUID(),
-                "cntrb_login": user_data['login'],
-                "cntrb_created_at": user_data['created_at'],
-                "cntrb_email": user_data['email'] if 'email' in user_data else None,
-                "cntrb_company": user_data['company'] if 'company' in user_data else None,
-                "cntrb_location": user_data['location'] if 'location' in user_data else None,
-                # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
-                "gh_user_id": user_data['id'],
-                "gh_login": user_data['login'],
-                "gh_url": user_data['url'],
-                "gh_html_url": user_data['html_url'],
-                "gh_node_id": user_data['node_id'],
-                "gh_avatar_url": user_data['avatar_url'],
-                "gh_gravatar_id": user_data['gravatar_id'],
-                "gh_followers_url": user_data['followers_url'],
-                "gh_following_url": user_data['following_url'],
-                "gh_gists_url": user_data['gists_url'],
-                "gh_starred_url": user_data['starred_url'],
-                "gh_subscriptions_url": user_data['subscriptions_url'],
-                "gh_organizations_url": user_data['organizations_url'],
-                "gh_repos_url": user_data['repos_url'],
-                "gh_events_url": user_data['events_url'],
-                "gh_received_events_url": user_data['received_events_url'],
-                "gh_type": user_data['type'],
-                "gh_site_admin": user_data['site_admin'],
-                "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
-                # Get name from commit if api doesn't get it.
-                "cntrb_full_name": name_field if 'name' not in user_data or user_data['name'] is None else user_data['name'],
-                #"tool_source": interface.tool_source,
-                #"tool_version": interface.tool_version,
-                #"data_source": interface.data_source
-            }
+        cntrb_id = GithubUUID()
+        cntrb_id["user"] = int(user_data['id'])
+        cntrb_id["platform"] = session.platform_id
 
-            session.logger.info(f"{cntrb}")
+        # try to add contributor to database
+        cntrb = {
+            "cntrb_id" : cntrb_id.to_UUID(),
+            "cntrb_login": user_data['login'],
+            "cntrb_created_at": user_data['created_at'],
+            "cntrb_email": user_data['email'] if 'email' in user_data else None,
+            "cntrb_company": user_data['company'] if 'company' in user_data else None,
+            "cntrb_location": user_data['location'] if 'location' in user_data else None,
+            # "cntrb_type": , dont have a use for this as of now ... let it default to null
+            "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
+            "gh_user_id": user_data['id'],
+            "gh_login": user_data['login'],
+            "gh_url": user_data['url'],
+            "gh_html_url": user_data['html_url'],
+            "gh_node_id": user_data['node_id'],
+            "gh_avatar_url": user_data['avatar_url'],
+            "gh_gravatar_id": user_data['gravatar_id'],
+            "gh_followers_url": user_data['followers_url'],
+            "gh_following_url": user_data['following_url'],
+            "gh_gists_url": user_data['gists_url'],
+            "gh_starred_url": user_data['starred_url'],
+            "gh_subscriptions_url": user_data['subscriptions_url'],
+            "gh_organizations_url": user_data['organizations_url'],
+            "gh_repos_url": user_data['repos_url'],
+            "gh_events_url": user_data['events_url'],
+            "gh_received_events_url": user_data['received_events_url'],
+            "gh_type": user_data['type'],
+            "gh_site_admin": user_data['site_admin'],
+            "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
+            # Get name from commit if api doesn't get it.
+            "cntrb_full_name": name_field if 'name' not in user_data or user_data['name'] is None else user_data['name'],
+            #"tool_source": interface.tool_source,
+            #"tool_version": interface.tool_version,
+            #"data_source": interface.data_source
+        }
 
-        except Exception as e:
-            session.logger.info(f"Error when trying to create cntrb: {e}")
-            continue
-        
+        #session.logger.info(f"{cntrb}")
+
+
         
         #Executes an upsert with sqlalchemy 
         cntrb_natural_keys = ['cntrb_login']
-        try:
-            session.insert_data(cntrb,Contributor,cntrb_natural_keys)
-        except Exception as e:
-            session.logger.error(f"Could not complete singular contributor insert!!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
-            continue
+        
+        session.insert_data(cntrb,Contributor,cntrb_natural_keys)
+
 
         try:
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
@@ -197,6 +173,7 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         except Exception as e:
             session.logger.info(
                 f"Deleting now resolved email failed with error: {e}")
+            raise e
     
         
     return
@@ -212,10 +189,9 @@ def link_commits_to_contributor(session,contributorQueue):
         query = s.sql.text("""
                 UPDATE commits 
                 SET cmt_ght_author_id=:cntrb_id
-                WHERE cmt_committer_email=:cntrb_email
-                OR cmt_author_raw_email=:cntrb_email
+                WHERE 
+                cmt_author_raw_email=:cntrb_email
                 OR cmt_author_email=:cntrb_email
-                OR cmt_committer_raw_email=:cntrb_email
         """).bindparams(cntrb_id=cntrb["cntrb_id"],cntrb_email=cntrb["email"])
 
         #engine.execute(query, **data)
@@ -228,15 +204,19 @@ def link_commits_to_contributor(session,contributorQueue):
 # Update the contributors table from the data facade has gathered.
 @celery.task
 def insert_facade_contributors(repo_id):
-    logger = logging.getLogger(insert_facade_contributors.__name__)
-    #session = GithubTaskSession(logger)
 
-    with GithubTaskSession(logger) as session:
-        session.logger.info(
-            "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
+    from augur.tasks.init.celery_app import engine
+
+    logger = logging.getLogger(insert_facade_contributors.__name__)
+
+    with GithubTaskSession(logger, engine) as session:
+        
 
         # Get all of the commit data's emails and names from the commit table that do not appear
         # in the contributors table or the contributors_aliases table.
+
+        session.logger.info(
+        "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
         new_contrib_sql = s.sql.text("""
                 SELECT DISTINCT
                     commits.cmt_author_name AS NAME,
@@ -283,12 +263,13 @@ def insert_facade_contributors(repo_id):
         #json.loads(pd.read_sql(new_contrib_sql, self.db, params={
         #             'repo_id': repo_id}).to_json(orient="records"))
 
-    
+
 
         process_commit_metadata(session,list(new_contribs),repo_id)
 
         session.logger.debug("DEBUG: Got through the new_contribs")
     
+
     with FacadeSession(logger) as session:
         # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
         # i.e., if a contributor already exists, we use it!
@@ -333,12 +314,4 @@ def insert_facade_contributors(repo_id):
 
         session.logger.info("Done with inserting and updating facade contributors")
     return
-
-@celery.task
-def facade_grab_contribs(repo_id):
-    logger = logging.getLogger(facade_grab_contribs.__name__)
-    with FacadeSession(logger) as session:
-    
-        grab_committer_list(session,repo_id)
-    
 

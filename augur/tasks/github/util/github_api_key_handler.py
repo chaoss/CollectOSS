@@ -1,11 +1,11 @@
 import httpx
+import time
 
 from typing import Optional, List
 
-from augur.application.db.models import WorkerOauth
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.session import DatabaseSession
-from augur.tasks.init.celery_app import engine
+from augur.application.config import AugurConfig
 
 class GithubApiKeyHandler():
     """Handles Github API key retrieval from the database and redis
@@ -23,6 +23,7 @@ class GithubApiKeyHandler():
 
         self.session = session
         self.logger = session.logger
+        self.config = AugurConfig(self.logger, session)
 
         self.oauth_redis_key = "oauth_keys_list"
 
@@ -41,7 +42,7 @@ class GithubApiKeyHandler():
             Github API key from config table
         """
 
-        return self.session.config.get_value("Keys", "github_api_key")
+        return self.config.get_value("Keys", "github_api_key")
 
     def get_api_keys_from_database(self) -> List[str]:
         """Retieves all github api keys from database
@@ -52,6 +53,8 @@ class GithubApiKeyHandler():
         Returns:
             Github api keys that are in the database
         """
+        from augur.application.db.models import WorkerOauth
+
         select = WorkerOauth.access_token
         where = [WorkerOauth.access_token != self.config_key, WorkerOauth.platform == 'github']
 
@@ -75,8 +78,16 @@ class GithubApiKeyHandler():
         if redis_keys:
             return redis_keys
 
-        keys = self.get_api_keys_from_database()
-    
+        attempts = 0
+        while attempts < 3:
+
+            try:
+                keys = self.get_api_keys_from_database()
+                break
+            except:
+                time.sleep(5)
+                attempts += 1
+
         if self.config_key is not None:
             keys += [self.config_key]
 
@@ -91,6 +102,8 @@ class GithubApiKeyHandler():
                 # removes key if it returns "Bad Credentials"
                 if self.is_bad_api_key(client, key) is False:
                     valid_keys.append(key)
+                else:
+                    print(f"WARNING: The key '{key}' is not a valid key. Hint: If valid in past it may have expired")
 
         # just in case the mulitprocessing adds extra values to the list.
         # we are clearing it before we push the values we got

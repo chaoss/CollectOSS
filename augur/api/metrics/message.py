@@ -9,9 +9,7 @@ import sqlalchemy as s
 import pandas as pd
 from augur.api.util import register_metric
 
-from augur.application.db.engine import create_database_engine
-engine = create_database_engine()
-
+from ..server import engine
 
 @register_metric()
 def repo_messages(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -32,7 +30,6 @@ def repo_messages(repo_group_id, repo_id=None, period='day', begin_date=None, en
         end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     repomessagesSQL = None
-
 
     if repo_id:
 
@@ -90,8 +87,8 @@ def repo_messages(repo_group_id, repo_id=None, period='day', begin_date=None, en
         """)
             
         results = pd.read_sql(repomessagesSQL, engine,
-                              params={'repo_group_id': repo_group_id, 'period': period,
-                                      'begin_date': begin_date, 'end_date': end_date})
+                            params={'repo_group_id': repo_group_id, 'period': period,
+                                    'begin_date': begin_date, 'end_date': end_date})
 
     return results
 

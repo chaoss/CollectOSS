@@ -1,0 +1,233 @@
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<h1>Collection Status</h1>
+<hr/>
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <h2>Pull Requests</h2>
+        <div class="row row-cols-1 col-auto g-3" style="margin-bottom: 30px; min-width: 80%;">
+            <div class="col">
+                <div class="card d-flex justify-content-center align-items-center" style="margin-bottom: 30px; padding: 10px;">
+                    <div id="pull_requests_dashboard_div_1" style="min-width: 100%; color: black;">
+                        <div id="pull_requests_filter_div_1"></div>
+                        <div id="pull_requests_div_1" style="min-width: 90%; min-height: 300px"></div>
+                    </div>
+                </div>
+                <div class="card d-flex justify-content-center align-items-center" style="margin-bottom: 30px; padding: 10px;">
+                    <div id="pull_requests_div_2" style="min-width: 90%; min-height: 300px"></div>
+                </div>
+                <div class="card d-flex justify-content-center align-items-center" style="padding: 10px;">
+                    <div id="pull_requests_div_3" style="min-width: 90%; min-height: 300px"></div>
+                </div>
+            </div>
+        </div>
+        <h2>Issues</h2>
+        <div class="row row-cols-1 col-auto g-3" style="margin-bottom: 30px; min-width: 80%;">
+            <div class="col">
+                <div class="card d-flex justify-content-center align-items-center" style="margin-bottom: 30px; padding: 10px;">
+                    <div id="issues_div" style="min-width: 90%; min-height: 300px"></div>
+                </div>
+            </div>
+        </div>
+        <h3>Time between most recently collected issue and last collection run</h3>
+        <div class="row row-cols-1 col-auto g-3" style="margin-bottom: 30px; min-width: 80%;">
+            <div class="col">
+                <div class="card d-flex justify-content-center align-items-center" style="margin-bottom: 30px; padding: 10px;">
+                    <div id="issues_timeline_div" style="min-width: 90%; min-height: 300px"></div>
+                </div>
+            </div>
+        </div>
+        <h2>Commits</h2>
+        <div class="row row-cols-1 col-auto g-3" style="margin-bottom: 30px; min-width: 80%;">
+            <div class="col">
+                <div class="card d-flex justify-content-center align-items-center" style="margin-bottom: 30px; padding: 10px;">
+                    <div id="commits_div" style="min-width: 90%; min-height: 300px"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+    function loadCharts() {
+        $.getJSON("{{ url_for('pull_request_collection_status') }}", function(response) {
+            // ------------------------------------------------- PRS COUNT CHART
+            var data = new google.visualization.DataTable();
+            var dashboard = new google.visualization.Dashboard(document.getElementById('pull_requests_dashboard_div_1'));
+            data.addColumn('string', 'Repo Name');
+            data.addColumn('number', 'Pull Request Count');
+            data.addColumn('number', 'Pull Requests Collected');
+
+            var rangeSlider = new google.visualization.ControlWrapper({
+                'controlType': 'NumberRangeFilter',
+                'containerId': 'pull_requests_filter_div_1',
+                'options': {
+                    'filterColumnLabel': 'Pull Request Count',
+                    'ui': {'labelStacking': 'vertical'}
+                }
+            });
+
+            for(let i = 0; i < response.length; ++i) {
+                let repo = response[i];
+                if(repo['pull_request_count'] > 0 ||  repo['pull_requests_collected'] > 0) {
+                    data.addRow([repo['repo_name'], repo['pull_request_count'], repo['pull_requests_collected']]);
+                }
+            }
+
+            var options = {
+                chart: {
+                    title: 'Pull request collection status'
+                },
+                hAxis: {
+                    title: 'Repos'
+                },
+                vAxis: {
+                    title: 'Number of datapoints'
+                }
+            };
+            // var materialChart = new google.charts.Bar(document.getElementById('pull_requests_div_1'));
+            var materialChart  = new google.visualization.ChartWrapper({
+                'chartType': 'Bar',
+                'containerId': 'pull_requests_div_1',
+                options
+            });
+            dashboard.bind(rangeSlider, materialChart);
+            dashboard.draw(data);
+
+            // ----------------------------------------------- PRS MISSING CHART
+            data = new google.visualization.DataTable();
+            data.addColumn('string', 'Repo Name');
+            data.addColumn('number', 'Pull Requests Missing');
+
+            for(let i = 0; i < response.length; ++i) {
+                let repo = response[i];
+                if(repo['pull_requests_missing'] > 0) {
+                    data.addRow([repo['repo_name'], repo['pull_requests_missing']]);
+                }
+            }
+
+            options = {
+                chart: {
+                    title: 'Missing pull requests'
+                },
+                hAxis: {
+                    title: 'Repos'
+                },
+                vAxis: {
+                    title: 'Number of Missing PRS'
+                }
+            };
+            materialChart = new google.charts.Bar(document.getElementById('pull_requests_div_2'));
+            materialChart.draw(data, options);
+
+            // ------------------------------------------------- PRS RATIO CHART
+            data = new google.visualization.DataTable();
+            data.addColumn('string', 'Repo Name');
+            data.addColumn('number', 'Issues ratio');
+
+            for(let i = 0; i < response.length; ++i) {
+                let repo = response[i];
+                data.addRow([repo['repo_name'], repo['ratio_issues']]);
+            }
+
+            options = {
+                chart: {
+                    title: 'Ratio of collected to total pull requests'
+                },
+                hAxis: {
+                    title: 'Repos'
+                },
+                vAxis: {
+                    title: 'Ratio',
+                    format:'#%',
+                    min:0,
+                    max:1
+                }
+            };
+            materialChart = new google.charts.Bar(document.getElementById('pull_requests_div_3'));
+            materialChart.draw(data, options);
+        });
+        $.getJSON("{{ url_for('issue_collection_status') }}", function(response) {
+            // ---------------------------------------------------- ISSUES CHART
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Repo Name');
+            data.addColumn('number', 'Issues Count');
+
+            for(let i = 0; i < response.length; ++i) {
+                let repo = response[i];
+                data.addRow([repo['repo_name'], repo['issues_count']]);
+            }
+
+            var options = {
+                chart: {
+                    title: 'Number of issues collected'
+                },
+                hAxis: {
+                    title: 'Repos'
+                },
+                vAxis: {
+                    title: 'Number of datapoints'
+                }
+            };
+            var materialChart = new google.charts.Bar(document.getElementById('issues_div'));
+            materialChart.draw(data, options);
+
+            // ------------------------------------------------- ISSUES TIMELINE
+            var container = document.getElementById('issues_timeline_div');
+            var chart = new google.visualization.Timeline(container);
+            var dataTable = new google.visualization.DataTable();
+
+            dataTable.addColumn({ type: 'string', id: 'Repo Name' });
+            dataTable.addColumn({ type: 'date', id: 'Start' });
+            dataTable.addColumn({ type: 'date', id: 'End' });
+            for(let i = 0; i < response.length; ++i) {
+                let repo = response[i];
+                var start = new Date(repo['most_recently_collected_issue']);
+                var end = new Date(repo['last_collected']);
+                if(start < end) {
+                    dataTable.addRow([repo['repo_name'], start, end]);
+                } else {
+                    // currently being collected, invalid date range
+                    console.log(repo);
+                }
+            }
+            // apparently 41 is *usually* the height of a "row" in Gcharts
+            // but 43 works better for spacing in this case
+            var height = response.length * 43;
+            options = {'height':height};
+
+            chart.draw(dataTable, options);
+
+        });
+        $.getJSON("{{ url_for('commit_collection_status') }}", function(response) {
+            // ----------------------------- COMMITS COMPLETION STATUS PIE CHART
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Completion status');
+            data.addColumn('number', 'Number of repos');
+
+            var complete = 0;
+            for(let i = 0; i < response.length; ++i) {
+                let repo = response[i];
+                if(repo['repo_status'] == "Complete") {
+                    ++complete;
+                }
+            }
+
+            data.addRow(["Complete", complete]);
+            data.addRow(["Incomplete", response.length - complete]);
+
+            var options = {
+                title: 'Completion status of commits collection'
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('commits_div'));
+
+            chart.draw(data, options);
+        });
+    }
+    // Load Gchart packages and render charts
+    google.charts.load('current', {packages: ['corechart', 'bar', 'timeline', 'controls']});
+    google.charts.setOnLoadCallback(loadCharts);
+</script>

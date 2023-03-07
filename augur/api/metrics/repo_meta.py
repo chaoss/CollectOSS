@@ -10,9 +10,7 @@ import math
 import logging
 
 from augur.api.util import register_metric
-
-from augur.application.db.engine import create_database_engine
-engine = create_database_engine()
+from ..server import engine
 
 logger = logging.getLogger("augur")
 
@@ -48,8 +46,9 @@ def code_changes(repo_group_id, repo_id=None, period='week', begin_date=None, en
             ORDER BY week
         """)
 
+        
         results = pd.read_sql(code_changes_SQL, engine, params={'repo_group_id': repo_group_id, 'period': period,
-                                                                 'begin_date': begin_date, 'end_date': end_date})
+                                                                    'begin_date': begin_date, 'end_date': end_date})
         results['week'] = results['week'].apply(lambda x: x - 1)
         results['date'] = results['year'].astype(str) + ' ' + results['week'].astype(str) + ' 0'
         results['date'] = results['date'].apply(lambda x: datetime.datetime.strptime(x, "%Y %W %w"))
@@ -69,8 +68,9 @@ def code_changes(repo_group_id, repo_id=None, period='week', begin_date=None, en
             ORDER BY week
         """)
 
+        
         results = pd.read_sql(code_changes_SQL, engine, params={'repo_id': repo_id, 'period': period,
-                                                                 'begin_date': begin_date, 'end_date': end_date})
+                                                                    'begin_date': begin_date, 'end_date': end_date})
 
         results['week'] = results['week'].apply(lambda x: x - 1)
         results['date'] = results['year'].astype(str) + ' ' + results['week'].astype(str) + ' 0'
@@ -112,7 +112,7 @@ def code_changes_lines(repo_group_id, repo_id=None, period='day', begin_date=Non
         """)
 
         results = pd.read_sql(code_changes_lines_SQL, engine, params={'repo_group_id': repo_group_id, 'period': period,
-                                                                       'begin_date': begin_date, 'end_date': end_date})
+                                                                    'begin_date': begin_date, 'end_date': end_date})
 
         return results
 
@@ -130,8 +130,9 @@ def code_changes_lines(repo_group_id, repo_id=None, period='day', begin_date=Non
             ORDER BY date;
         """)
 
+        
         results = pd.read_sql(code_changes_lines_SQL, engine, params={'repo_id': repo_id, 'period': period,
-                                                                       'begin_date': begin_date, 'end_date': end_date})
+                                                                        'begin_date': begin_date, 'end_date': end_date})
         return results
 
 
@@ -150,29 +151,30 @@ def sub_projects(repo_group_id, repo_id=None, begin_date=None, end_date=None):
     if not end_date:
         end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    if repo_id:
-        sub_projectsSQL = s.sql.text("""
-            SELECT COUNT(*)  AS sub_project_count
-            FROM repo
-            WHERE repo_group_id = (
-            SELECT repo_group_id
-            FROM repo
-            WHERE  repo_id = :repo_id)
-            AND repo_added BETWEEN :begin_date AND :end_date
-        """)
+    
+        if repo_id:
+            sub_projectsSQL = s.sql.text("""
+                SELECT COUNT(*)  AS sub_project_count
+                FROM repo
+                WHERE repo_group_id = (
+                SELECT repo_group_id
+                FROM repo
+                WHERE  repo_id = :repo_id)
+                AND repo_added BETWEEN :begin_date AND :end_date
+            """)
 
-        results = pd.read_sql(sub_projectsSQL, engine, params={'repo_id': repo_id,
-                                                                'begin_date': begin_date, 'end_date': end_date})
-    else:
-        sub_projectsSQL = s.sql.text("""
-            SELECT COUNT(*) AS sub_project_count
-            FROM repo
-            WHERE repo_group_id = :repo_group_id
-            AND repo_added BETWEEN :begin_date AND :end_date
-        """)
+            results = pd.read_sql(sub_projectsSQL, engine, params={'repo_id': repo_id,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
+        else:
+            sub_projectsSQL = s.sql.text("""
+                SELECT COUNT(*) AS sub_project_count
+                FROM repo
+                WHERE repo_group_id = :repo_group_id
+                AND repo_added BETWEEN :begin_date AND :end_date
+            """)
 
-        results = pd.read_sql(sub_projectsSQL, engine, params={'repo_group_id': repo_group_id,
-                                                                'begin_date': begin_date, 'end_date': end_date})
+            results = pd.read_sql(sub_projectsSQL, engine, params={'repo_group_id': repo_group_id,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
     return results
 
 
@@ -192,6 +194,7 @@ def sbom_download(repo_group_id, repo_id=None):
     logger.debug(dosocs_SQL)
     params = {'repo_id': repo_id}
 
+    
     return pd.read_sql(dosocs_SQL, engine, params=params)
     #return [json.dumps(license_information)]
 
@@ -260,6 +263,7 @@ def forks(repo_group_id, repo_id=None):
             ORDER BY repo_info.repo_id, date
         """)
 
+        
         results = pd.read_sql(forks_SQL, engine, params={'repo_group_id': repo_group_id})
         return results
 
@@ -274,6 +278,7 @@ def forks(repo_group_id, repo_id=None):
             ORDER BY date
         """)
 
+        
         results = pd.read_sql(forks_SQL, engine, params={'repo_id': repo_id})
         return results
 
@@ -298,6 +303,7 @@ def fork_count(repo_group_id, repo_id=None):
                  WHERE  repo_group_id = :repo_group_id)
         """)
 
+        
         results = pd.read_sql(fork_count_SQL, engine, params={'repo_group_id': repo_group_id})
         return results
     else:
@@ -309,6 +315,7 @@ def fork_count(repo_group_id, repo_id=None):
             LIMIT 1
         """)
 
+    
         results = pd.read_sql(fork_count_SQL, engine, params={'repo_id': repo_id})
         return results
 
@@ -337,6 +344,7 @@ def languages(repo_group_id, repo_id=None):
             WHERE repo_id = :repo_id
         """)
 
+        
         results = pd.read_sql(languages_SQL, engine, params={'repo_id': repo_id})
         return results
 
@@ -587,9 +595,10 @@ def license_count(repo_group_id, repo_id=None):
             GROUP BY a.name, a.number_of_license, a.licensed, b.total
         """)
 
-    results = pd.read_sql(license_declared_SQL, engine, params={'repo_id': repo_id, 'repo_group_id':repo_group_id})
+    
+        results = pd.read_sql(license_declared_SQL, engine, params={'repo_id': repo_id, 'repo_group_id':repo_group_id})
 
-    return results
+        return results
 
 
 @register_metric()
@@ -615,6 +624,7 @@ def stars(repo_group_id, repo_id=None):
             ORDER BY repo_info.repo_id, date
         """)
 
+        
         results = pd.read_sql(stars_SQL, engine, params={'repo_group_id': repo_group_id})
         return results
 
@@ -629,8 +639,8 @@ def stars(repo_group_id, repo_id=None):
             ORDER BY date
         """)
 
-        results = pd.read_sql(stars_SQL, engine, params={'repo_id': repo_id})
-        return results
+    results = pd.read_sql(stars_SQL, engine, params={'repo_id': repo_id})
+    return results
 
 @register_metric()
 def stars_count(repo_group_id, repo_id=None):
@@ -653,6 +663,7 @@ def stars_count(repo_group_id, repo_id=None):
                  WHERE  repo_group_id = :repo_group_id)
         """)
 
+        
         results = pd.read_sql(stars_count_SQL, engine, params={'repo_group_id': repo_group_id})
         return results
     else:
@@ -690,6 +701,7 @@ def watchers(repo_group_id, repo_id=None):
             ORDER BY repo_info.repo_id, date
         """)
 
+        
         results = pd.read_sql(watchers_SQL, engine, params={'repo_group_id': repo_group_id})
         return results
 
@@ -704,6 +716,7 @@ def watchers(repo_group_id, repo_id=None):
             ORDER BY date
         """)
 
+        
         results = pd.read_sql(watchers_SQL, engine, params={'repo_id': repo_id})
         return results
 
@@ -728,6 +741,7 @@ def watchers_count(repo_group_id, repo_id=None):
                  WHERE  repo_group_id = :repo_group_id)
         """)
 
+        
         results = pd.read_sql(watchers_count_SQL, engine, params={'repo_group_id': repo_group_id})
         return results
     else:
@@ -739,6 +753,7 @@ def watchers_count(repo_group_id, repo_id=None):
             LIMIT 1
         """)
 
+        
         results = pd.read_sql(watchers_count_SQL, engine, params={'repo_id': repo_id})
         return results
 
@@ -782,6 +797,7 @@ calendar year (a new repo in that year), show all commits for that year (total f
             ORDER BY net desc
             LIMIT 10
         """)
+    
     results = pd.read_sql(cdRgNewrepRankedCommitsSQL, engine, params={ "repo_group_id": repo_group_id,
     "repo_id": repo_id, "calendar_year": calendar_year})
     return results
@@ -877,6 +893,7 @@ def annual_lines_of_code_count_ranked_by_repo_in_repo_group(repo_group_id, repo_
                 LIMIT 10
             """)
 
+    
 
     results = pd.read_sql(cdRgTpRankedCommitsSQL, engine, params={ "repo_group_id": repo_group_id,
         "repo_id": repo_id})
@@ -931,6 +948,7 @@ def lines_of_code_commit_counts_by_calendar_year_grouped(repo_url, calendar_year
             GROUP BY week
         """)
 
+    
     results = pd.read_sql(cdRepTpIntervalLocCommitsSQL, engine, params={"repourl": '%{}%'.format(repo_url), 'calendar_year': calendar_year})
     return results
 
@@ -951,8 +969,9 @@ def average_weekly_commits(repo_group_id=None, repo_id=None, calendar_year=None)
         ORDER BY repo_name
     """.format(extra_and))
 
+    
     results = pd.read_sql(average_weekly_commits_sql, engine, params={"repo_group_id": repo_group_id,
-        "repo_id": repo_id, "calendar_year": calendar_year})
+            "repo_id": repo_id, "calendar_year": calendar_year})
     return results
 
 @register_metric()
@@ -1034,6 +1053,7 @@ def aggregate_summary(repo_group_id, repo_id=None, begin_date=None, end_date=Non
                 ) temp
             ) commit_data
         """)
+        
         results = pd.read_sql(summarySQL, engine, params={'repo_group_id': repo_group_id,
                                                         'begin_date': begin_date, 'end_date': end_date})
         return results
@@ -1102,6 +1122,7 @@ def aggregate_summary(repo_group_id, repo_id=None, begin_date=None, end_date=Non
                 ) temp
             ) commit_data
         """)
+        
         results = pd.read_sql(summarySQL, engine, params={'repo_id': repo_id,
                                                         'begin_date': begin_date, 'end_date': end_date})
         return results

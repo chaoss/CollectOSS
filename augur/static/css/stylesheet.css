@@ -1,0 +1,453 @@
+:root {
+    --color-bg: #252525;
+    --color-bg-light: #4a4651;
+    --color-fg: white;
+    --color-fg-contrast: black;
+    --color-accent: #6f42c1;
+    --color-accent-dark: #6134b3;
+    --color-notice: #00ddff;
+    --color-notice-contrast: #006979;
+    --color-link: #5de4ff
+}
+
+html,
+body {
+    /* IE 10-11 didn't like using min-height */
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-bg);
+}
+
+.hidden {
+    display: none;
+}
+
+.content {
+    flex: 1 0 auto;
+    /* Prevent Chrome, Opera, and Safari from letting these items shrink to smaller than their content's default minimum size. */
+    padding: 20px;
+    padding-top: 100px;
+    color: var(--color-fg);
+    text-align: center;
+}
+
+.footer {
+    flex-shrink: 0;
+    /* Prevent Chrome, Opera, and Safari from letting these items shrink to smaller than their content's default minimum size. */
+    padding: 5px;
+    background-color: var(--color-bg-light);
+    width: 100%;
+}
+
+.nav-image {
+    width: 100px;
+}
+
+.nav-separator {
+    background-color: var(--color-accent-dark);
+    max-width: 5px;
+    min-width: 5px;
+    height: 35px;
+}
+
+.content-column {
+    overflow-y: scroll;
+}
+
+.dashboard-content {
+    background-color: var(--color-bg-light);
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+    background-color: var(--color-accent);
+}
+
+.dashboard-sidebar {
+    width: 280px;
+    background-color: var(--color-bg-light) !important;
+}
+
+.dashboard-form-control {
+    border: 1px solid #596280;
+    -webkit-border-radius: 2px;
+    -moz-border-radius: 2px;
+    border-radius: 2px;
+    font-size: .825rem;
+    background: #1A233A;
+    color: #bcd0f7;
+}
+
+.notification-icon {
+    height: 30px;
+    -webkit-filter: invert(100%);
+    /* safari 6.0 - 9.0 */
+    filter: invert(100%);
+}
+
+.submitContainer {
+    background-color: var(--color-accent);
+}
+
+.toast-container {
+    top: 80px !important;
+    right: 16px !important;
+}
+
+.toast {
+    background-color: var(--color-notice);
+    color: var(--color-fg);
+}
+
+#toast-placeholder {
+    display: none;
+}
+
+.dashboard-sidebar {
+    height: 100%;
+}
+
+.display-table {
+    background-color: white !important;
+    overflow: auto;
+}
+
+.paginationActive {
+    background-color: var(--color-accent-dark);
+    border-color: var(--color-accent-dark);
+    color: var(--color-fg);
+}
+
+.sorting-link {
+    color: var(--color-fg-contrast);
+    text-decoration: none;
+}
+
+/* User settings page */
+
+.user-settings-form {
+    width: 30%;
+    min-width: 300px;
+    margin: auto;
+}
+
+.user-settings-form label {
+    margin-top: 10px;
+}
+
+.user-card {
+    background-color: var(--color-bg-light);
+    margin-bottom: 40px;
+}
+
+.user-card a {
+    color: var(--color-link);
+}
+
+/* Login Page */
+
+#registration-div {
+    -webkit-transition: opacity 0.5s ease;
+    -moz-transition: opacity 0.5s ease;
+    -ms-transition: opacity 0.5s ease;
+    -o-transition: opacity 0.5s ease;
+    transition: opacity 0.5s ease;
+}
+
+form i {
+    pointer-events: none;
+}
+
+.password-toggle {
+    background-color: var(--color-fg);
+    border: 1px solid #ced4da;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Image Zoom */
+
+img[id^="report_image_"] {
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+img[id^="report_image_"]:hover {
+    filter: brightness(50%);
+}
+
+/* The Modal (background) */
+.modal {
+    display: none;
+    /* Hidden by default */
+    position: fixed;
+    /* Stay in place */
+    z-index: 1;
+    /* Sit on top */
+    padding-top: 100px;
+    /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%;
+    /* Full width */
+    height: 100%;
+    /* Full height */
+    overflow: auto;
+    /* Enable scroll if needed */
+    background-color: rgb(0, 0, 0);
+    /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.9);
+    /* Black w/ opacity */
+}
+
+/* Modal Content (image) */
+.modal-content {
+    margin: auto;
+    display: block;
+    width: 70%;
+}
+
+/* Caption of Modal Image */
+#caption {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+    text-align: center;
+    color: #ccc;
+    padding: 10px 0;
+    height: 80px;
+}
+
+#close-caption {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+    text-align: center;
+    color: #ccc;
+    padding: 10px 0;
+    height: 50px;
+}
+
+/* Add Animation */
+.modal-content,
+#caption {
+    -webkit-animation-name: zoom;
+    -webkit-animation-duration: 0.6s;
+    animation-name: zoom;
+    animation-duration: 0.6s;
+}
+
+@-webkit-keyframes zoom {
+    from {
+        -webkit-transform: scale(0)
+    }
+
+    to {
+        -webkit-transform: scale(1)
+    }
+}
+
+@keyframes zoom {
+    from {
+        transform: scale(0)
+    }
+
+    to {
+        transform: scale(1)
+    }
+}
+
+/* The Close Button */
+.close {
+    position: absolute;
+    top: 45px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.close:hover,
+.close:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* 100% Image Width on Smaller Screens */
+@media only screen and (max-width: 700px) {
+    .modal-content {
+        width: 100%;
+    }
+}
+
+.img_placeholder {
+    width: 256px;
+    height: 256px;
+}
+
+.card-footer-wrap {
+    width: 256px;
+
+}
+
+/* Loading Animation */
+
+.dot-flashing {
+    position: relative;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: #9880ff;
+    color: #9880ff;
+    animation: dotFlashing 1s infinite linear alternate;
+    animation-delay: .5s;
+}
+
+.dot-flashing::before,
+.dot-flashing::after {
+    content: '';
+    display: inline-block;
+    position: absolute;
+    top: 0;
+}
+
+.dot-flashing::before {
+    left: -15px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: #9880ff;
+    color: #9880ff;
+    animation: dotFlashing 1s infinite alternate;
+    animation-delay: 0s;
+}
+
+.dot-flashing::after {
+    left: 15px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: #9880ff;
+    color: #9880ff;
+    animation: dotFlashing 1s infinite alternate;
+    animation-delay: 1s;
+}
+
+@keyframes dotFlashing {
+    0% {
+        background-color: #9880ff;
+    }
+
+    50%,
+    100% {
+        background-color: #ebe6ff;
+    }
+}
+
+.spinner {
+    -webkit-animation: rotator 1.4s linear infinite;
+    animation: rotator 1.4s linear infinite;
+}
+
+.spinner-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@-webkit-keyframes rotator {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(270deg);
+    }
+}
+
+@keyframes rotator {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(270deg);
+    }
+}
+.path {
+    stroke-dasharray: 187;
+    stroke-dashoffset: 0;
+    transform-origin: center;
+    -webkit-animation: dash 1.4s ease-in-out infinite, colors 5.6s ease-in-out infinite;
+    animation: dash 1.4s ease-in-out infinite, colors 5.6s ease-in-out infinite;
+}
+
+@-webkit-keyframes colors {
+    0% {
+        stroke: #4285F4;
+    }
+    25% {
+        stroke: #DE3E35;
+    }
+    50% {
+        stroke: #F7C223;
+    }
+    75% {
+        stroke: #1B9A59;
+    }
+    100% {
+        stroke: #4285F4;
+    }
+}
+
+@keyframes colors {
+    0% {
+        stroke: #4285F4;
+    }
+    25% {
+        stroke: #DE3E35;
+    }
+    50% {
+        stroke: #F7C223;
+    }
+    75% {
+        stroke: #1B9A59;
+    }
+    100% {
+        stroke: #4285F4;
+    }
+}
+@-webkit-keyframes dash {
+    0% {
+        stroke-dashoffset: 187;
+    }
+    50% {
+        stroke-dashoffset: 46.75;
+        transform: rotate(135deg);
+    }
+    100% {
+        stroke-dashoffset: 187;
+        transform: rotate(450deg);
+    }
+}
+@keyframes dash {
+    0% {
+        stroke-dashoffset: 187;
+    }
+    50% {
+        stroke-dashoffset: 46.75;
+        transform: rotate(135deg);
+    }
+    100% {
+        stroke-dashoffset: 187;
+        transform: rotate(450deg);
+    }
+}

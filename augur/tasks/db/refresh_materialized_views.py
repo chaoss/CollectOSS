@@ -11,6 +11,8 @@ from augur.application.db.session import DatabaseSession
 @celery.task
 def refresh_materialized_views():
 
+    from augur.tasks.init.celery_app import engine
+
     logger = logging.getLogger(refresh_materialized_views.__name__)
 
     refresh_view_query = s.sql.text("""    
@@ -25,6 +27,6 @@ def refresh_materialized_views():
                 REFRESH MATERIALIZED VIEW augur_data.explorer_libyear_summary with data;
     """)
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
 
         session.execute_sql(refresh_view_query)
