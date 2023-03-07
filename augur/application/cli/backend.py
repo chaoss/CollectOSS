@@ -183,12 +183,12 @@ def cleanup_after_collection_halt(logger):
     clear_redis_caches()
     connection_string = ""
     with DatabaseSession(logger) as session:
-        config = AugurConfig(logger, session)
-        connection_string = config.get_section("RabbitMQ")['connection_string']
+        #config = AugurConfig(logger, session)
+        #connection_string = config.get_section("RabbitMQ")['connection_string']
 
         clean_collection_status(session)
 
-    clear_rabbitmq_messages(connection_string)
+    clear_rabbitmq_messages()
 
 def clear_redis_caches():
     """Clears the redis databases that celery and redis use."""
@@ -198,12 +198,14 @@ def clear_redis_caches():
     subprocess.call(celery_purge_command.split(" "))
     redis_connection.flushdb()
 
-def clear_rabbitmq_messages(connection_string):
-    virtual_host_string = connection_string.split("/")[-1]
+def clear_rabbitmq_messages():
+    #virtual_host_string = connection_string.split("/")[-1]
 
     logger.info("Clearing all messages from celery queue in rabbitmq")
-    rabbitmq_purge_command = f"sudo rabbitmqctl purge_queue celery -p {virtual_host_string}"
-    subprocess.call(rabbitmq_purge_command.split(" "))
+    from augur.tasks.init.celery_app import celery_app
+    celery_app.control.purge()
+    #rabbitmq_purge_command = f"sudo rabbitmqctl purge_queue celery -p {virtual_host_string}"
+    #subprocess.call(rabbitmq_purge_command.split(" "))
 
 #Make sure that database reflects collection status when processes are killed/stopped.
 def clean_collection_status(session):
