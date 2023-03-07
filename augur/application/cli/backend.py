@@ -223,6 +223,7 @@ def clean_collection_status(session):
         SET facade_status='Pending'
         WHERE facade_status='Failed Clone';
     """))
+    #TODO: write timestamp for currently running repos.
 
 @cli.command('export-env')
 def export_env(config):
