@@ -215,7 +215,7 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
 
 def is_issue_message(html_url):
 
-    return 'pull' not in html_url
+    return '/pull/' not in html_url
 
 
 def process_github_comment_contributors(message, tool_source, tool_version, data_source):
