@@ -7,6 +7,7 @@ import os
 from enum import Enum
 import math
 import numpy as np
+import datetime
 #from celery.result import AsyncResult
 from celery import signature
 from celery import group, chain, chord, signature
@@ -16,7 +17,10 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
 from augur.application.config import AugurConfig
-
+from augur.tasks.github.util.util import get_owner_repo
+from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
+from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
+from augur.tasks.github.util.github_task_session import GithubTaskManifest
 
 # class syntax
 class CollectionState(Enum):
@@ -143,6 +147,23 @@ def secondary_task_success(repo_git):
         collection_status.secondary_task_id = None
 
         session.commit()
+
+def date_weight_factor(days_since_last_collection):
+    return (days_since_last_collection ** 3) / 25
+
+
+def get_repo_weight_by_issue(logger,repo_git):
+
+
+    owner,name = get_owner_repo(repo_git)
+
+    with GithubTaskManifest(logger) as manifest:
+        repo_graphql = GitHubRepoGraphql(logger, manifest.key_auth, owner, name)
+        number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
+    
+    return number_of_issues_and_prs
+
+
 
 @celery.task
 def facade_task_success(repo_git):
