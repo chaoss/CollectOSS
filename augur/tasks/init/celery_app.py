@@ -20,7 +20,8 @@ from augur.application.db.models import CollectionStatus
 logger = logging.getLogger(__name__)
 
 start_tasks = ['augur.tasks.start_tasks',
-                'augur.tasks.data_analysis']
+                'augur.tasks.data_analysis',
+                'augur.tasks.util.collection_util']
 
 github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.issues.tasks',
