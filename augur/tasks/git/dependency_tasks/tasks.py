@@ -19,11 +19,9 @@ def process_dependency_metrics(repo_git):
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         
 
-        try:
-            repo = execute_session_query(query,'one')
-            deps_model(session, repo.repo_id,repo_git,repo.repo_group_id)
-        except Exception as e:
-            session.logger.error(f"Could not complete deps_model!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        repo = execute_session_query(query,'one')
+        deps_model(session, repo.repo_id,repo_git,repo.repo_group_id)
+
 
 @celery.task
 def process_ossf_scorecard_metrics(repo_git):
@@ -36,9 +34,5 @@ def process_ossf_scorecard_metrics(repo_git):
 
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         
-
-        try:
-            repo = execute_session_query(query,'one')
-            generate_scorecard(session, repo.repo_id, repo_git)
-        except Exception as e:
-            session.logger.error(f"Could not complete deps_model!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        repo = execute_session_query(query,'one')
+        generate_scorecard(session, repo.repo_id, repo_git)

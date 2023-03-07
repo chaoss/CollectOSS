@@ -18,8 +18,5 @@ def process_pull_request_commits(repo_git: str) -> None:
 
         query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo = execute_session_query(query, 'one')
-        try:
-            pull_request_commits_model(repo.repo_id, logger, augur_db, manifest.key_auth)
-        except Exception as e:
-            logger.error(f"Could not complete pull_request_commits_model!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
-            raise e
+
+        pull_request_commits_model(repo.repo_id, logger, augur_db, manifest.key_auth)
