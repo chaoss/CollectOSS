@@ -15,8 +15,5 @@ def process_pull_request_files(repo_git: str) -> None:
         augur_db = manifest.augur_db
         query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo = execute_session_query(query, 'one')
-        try:
-            pull_request_files_model(repo.repo_id, logger, augur_db, manifest.key_auth)
-        except Exception as e:
-            logger.error(f"Could not complete pull_request_files_model!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
-            #raise e
+
+        pull_request_files_model(repo.repo_id, logger, augur_db, manifest.key_auth)

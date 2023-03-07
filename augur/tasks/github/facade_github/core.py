@@ -12,25 +12,18 @@ from augur.tasks.util.AugurUUID import AugurUUID, GithubUUID, UnresolvableUUID
 
 
 
-
-
-def query_github_contributors(session, entry_info, repo_id):
+def query_github_contributors(session, github_url):
 
     """ Data collection function
     Query the GitHub API for contributors
     """
-    session.logger.info(f"Querying contributors with given entry info: {entry_info}\n")
-
-    ## It absolutely doesn't matter if the contributor has already contributoed to a repo. it only matters that they exist in our table, and
-    ## if the DO, then we DO NOT want to insert them again in any GitHub Method.
-    github_url = entry_info['given']['github_url'] if 'github_url' in entry_info['given'] else entry_info['given']['git_url']
 
     # Extract owner/repo from the url for the endpoint
     try:
         owner, name = get_owner_repo(github_url)
     except IndexError as e:
-        session.logger.error(f"Encountered bad entry info: {entry_info}")
-        return
+        session.logger.error(f"Encountered bad url: {github_url}")
+        raise e
 
     # Set the base of the url and place to hold contributors to insert
     contributors_url = (
@@ -131,31 +124,16 @@ def query_github_contributors(session, entry_info, repo_id):
             
         except Exception as e:
             session.logger.error("Caught exception: {}".format(e))
-            session.logger.error(f"Traceback: {traceback.format_exc()}")
             session.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
-            continue
+            raise e
 
 # Get all the committer data for a repo.
 # Used by facade in facade03analyzecommit
 def grab_committer_list(session, repo_id, platform="github"):
 
     # Create API endpoint from repo_id
-    try:
-        endpoint = create_endpoint_from_repo_id(session, repo_id)
-    except Exception as e:
-        session.logger.info(
-            f"Could not create endpoint from repo {repo_id} because of ERROR: {e}")
-        # Exit on failure
-        return
 
+    endpoint = create_endpoint_from_repo_id(session, repo_id)
 
-    contrib_entry_info = {
-        'given': {
-            'github_url': endpoint,
-            'git_url': endpoint,
-            'gitlab_url': endpoint
-        }
-    }
-
-    query_github_contributors(session,contrib_entry_info, repo_id)
+    query_github_contributors(session,endpoint)
     

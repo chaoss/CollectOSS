@@ -16,7 +16,5 @@ def collect_releases(repo_git):
         repo_obj = execute_session_query(query, 'one')
         repo_id = repo_obj.repo_id
 
-        try:
-            releases_model(augur_db, manifest.key_auth, logger, repo_git, repo_id)
-        except Exception as e:
-            logger.error(f"Could not collect releases for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+
+        releases_model(augur_db, manifest.key_auth, logger, repo_git, repo_id)

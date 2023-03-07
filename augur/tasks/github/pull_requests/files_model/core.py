@@ -68,22 +68,17 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth):
             'values' : values
         }
 
-        try:
-            file_collection = GraphQlPageCollection(query, key_auth, logger,bind=params)
+        
+        file_collection = GraphQlPageCollection(query, key_auth, logger,bind=params)
 
-            pr_file_rows += [{
-                'pull_request_id': pr_info['pull_request_id'],
-                'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
-                'pr_file_deletions': pr_file['deletions'] if 'deletions' in pr_file else None,
-                'pr_file_path': pr_file['path'],
-                'data_source': 'GitHub API',
-                'repo_id': repo_id, 
-                } for pr_file in file_collection if pr_file and 'path' in pr_file]
-        except Exception as e:
-            logger.error(f"Ran into error with pull request #{index + 1} in repo {repo_id}")
-            logger.error(
-            ''.join(traceback.format_exception(None, e, e.__traceback__)))
-
+        pr_file_rows += [{
+            'pull_request_id': pr_info['pull_request_id'],
+            'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
+            'pr_file_deletions': pr_file['deletions'] if 'deletions' in pr_file else None,
+            'pr_file_path': pr_file['path'],
+            'data_source': 'GitHub API',
+            'repo_id': repo_id, 
+            } for pr_file in file_collection if pr_file and 'path' in pr_file]
 
 
     if len(pr_file_rows) > 0:

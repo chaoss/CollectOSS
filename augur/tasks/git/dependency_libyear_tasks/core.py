@@ -26,10 +26,8 @@ def deps_libyear_model( session, repo_id,repo_git,repo_group_id):
         
         absolute_repo_path = config.get_section("Facade")['repo_directory'] + relative_repo_path#self.config['repo_directory'] + relative_repo_path
 
-        try:
-            generate_deps_libyear_data(session,repo_id, absolute_repo_path)
-        except Exception as e:
-            session.logger.error(f"Could not complete deps_libyear_model!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        generate_deps_libyear_data(session,repo_id, absolute_repo_path)
+
 
 def generate_deps_libyear_data(session, repo_id, path):
         """Scans for package files and calculates libyear

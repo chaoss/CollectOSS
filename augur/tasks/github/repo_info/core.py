@@ -222,14 +222,13 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
     except Exception as e:
         logger.error(f"Could not grab info for repo {repo_orm_obj.repo_id}")
         raise e
-        return
 
     # Just checking that the data is accessible (would not be if repo no longer exists)
     try:
         data['updatedAt']
     except Exception as e:
         raise Exception(f"Cannot access repo_info data: {data}\nError: {e}. \"Completing\" task.")
-        return
+
 
     # Get committers count info that requires seperate endpoint  
     committers_count = query_committers_count(key_auth, logger, owner, repo)
