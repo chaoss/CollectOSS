@@ -128,9 +128,16 @@ def get_deps_libyear_data(path, logger):
                 data = get_NPM_data(dependency['name'])
                 current_version = get_npm_current_version(data, dependency['requirement'])
                 latest_version = get_npm_latest_version(data)
-                latest_release_date = get_npm_release_date(data, latest_version)
+                try:
+                    latest_release_date = get_npm_release_date(data, latest_version)
+                except KeyError:
+                    latest_release_date = None
+
                 if current_version:
-                    current_release_date = get_npm_release_date(data, current_version)
+                    try:
+                        current_release_date = get_npm_release_date(data, current_version)
+                    except KeyError:
+                        current_release_date = None
 
             libyear = get_libyear(current_version, current_release_date, latest_version, latest_release_date)
             if not latest_release_date:
