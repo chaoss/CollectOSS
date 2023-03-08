@@ -30,7 +30,7 @@ def find(name, path):
             return os.path.join(root, name)
 
 
-def get_parsed_deps(path):
+def get_parsed_deps(path,logger):
 
     deps_file = None
     dependency_list = list()
@@ -75,7 +75,11 @@ def get_parsed_deps(path):
             dependency_list = parse_conda(file_handle) 
             
         elif f == 'package.json':
-            dependency_list = parse_package_json(file_handle)
+            try:
+                dependency_list = parse_package_json(file_handle)
+            except KeyError as e:
+                logger.error(f"package.json for repo at path {path} is missing required key: {e}\n Skipping file...")
+
         
         return dependency_list
 
@@ -100,11 +104,11 @@ def get_libyear(current_version, current_release_date, latest_version, latest_re
     return libyear
 
 
-def get_deps_libyear_data(path):
+def get_deps_libyear_data(path, logger):
     current_release_date = None
     libyear = None
 
-    dependencies = get_parsed_deps(path)
+    dependencies = get_parsed_deps(path,logger)
     if dependencies:
         for dependency in dependencies:
 
@@ -116,9 +120,9 @@ def get_deps_libyear_data(path):
                     latest_version = get_latest_version(data)
                 except KeyError:
                     latest_version = None
-                latest_release_date = get_release_date(data, latest_version)
+                latest_release_date = get_release_date(data, latest_version,logger)
                 if current_version:
-                    current_release_date = get_release_date(data, current_version)
+                    current_release_date = get_release_date(data, current_version,logger)
 
             elif dependency['package'] == 'NPM':
                 data = get_NPM_data(dependency['name'])
