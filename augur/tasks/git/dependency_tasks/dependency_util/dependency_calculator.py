@@ -47,7 +47,7 @@ def get_language_deps(path, language, name,logger):
 		except UnicodeDecodeError as e:
 			logger.error(f"Could not parse file {f} at path: {path}\n Error: {e}")
 			return []
-		except IsADirectoryError:
+		except IsADirectoryError as e:
 			logger.error(f"Given file's path is a directory!\n file: {f}\n path: {path}\n Error: {e}")
 			return []
 
