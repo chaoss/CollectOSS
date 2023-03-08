@@ -249,14 +249,10 @@ def start_secondary_collection(session,max_repo,days):
 
 def start_facade_collection(session,max_repo,days):
 
-    #Get list of enabled phases 
-    enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
-
     #Deal with secondary collection
     facade_enabled_phases = []
-
-    if facade_phase.__name__ in enabled_phase_names:
-        facade_enabled_phases.append(facade_phase)
+    
+    facade_enabled_phases.append(facade_phase)
 
     def facade_task_success_gen(repo_git):
         return facade_task_success.si(repo_git)
@@ -303,12 +299,16 @@ def augur_collection_monitor():
     logger.info("Checking for repos to collect")
 
     with DatabaseSession(logger, engine) as session:
+        #Get list of enabled phases 
+        enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
+
 
         start_primary_collection(session, max_repo=50, days=30)
         
         start_secondary_collection(session, max_repo=30, days=30)
 
-        start_facade_collection(session, max_repo=30, days=30)
+        if facade_phase.__name__ in enabled_phase_names:
+            start_facade_collection(session, max_repo=30, days=30)
 
 
 
