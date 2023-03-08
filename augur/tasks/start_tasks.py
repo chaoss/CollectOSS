@@ -247,6 +247,50 @@ def start_secondary_collection(session,max_repo,days):
         repoStatus.secondary_status = CollectionState.COLLECTING.value
         session.commit()
 
+def start_facade_clone_update(session,max_repo,days):
+    facade_enabled_phases = []
+
+    facade_enabled_phases.append(facade_clone_update_phase)
+
+    def facade_clone_update_success_gen(repo_git):
+        return facade_clone_update_success.si(repo_git)
+    
+    facade_enabled_phases.append(facade_clone_update_success_gen)
+
+    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.INITIALIZING.value).all())
+
+    cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
+    not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
+    not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
+    not_collecting = CollectionStatus.facade_status != str(CollectionState.COLLECTING.value)
+    not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
+    never_collected = CollectionStatus.facade_data_last_collected == None
+    old_collection = CollectionStatus.facade_data_last_collected <= cutoff_date
+
+    limit = max_repo-active_repo_count
+
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_failed_clone,not_erroed, not_collecting, not_initializing, or_(never_collected, old_collection)),limit)
+
+    session.logger.info(f"Starting facade clone/update on {len(repo_git_identifiers)} repos")
+    if len(repo_git_identifiers) == 0:
+        return
+
+    
+    session.logger.info(f"Facade clone/update starting for: {tuple(repo_git_identifiers)}")
+
+    facade_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=facade_enabled_phases)
+
+    #Start data collection and update the collectionStatus with the task_ids
+    for repo_git, task_id in facade_augur_collection.start_data_collection():
+        
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+
+        #set status in database to collecting
+        repoStatus = repo.collection_status[0]
+        repoStatus.facade_task_id = task_id
+        repoStatus.facade_status = CollectionState.INITIALIZING.value
+        session.commit()
+
 def start_facade_collection(session,max_repo,days):
 
     #Deal with secondary collection
@@ -259,17 +303,20 @@ def start_facade_collection(session,max_repo,days):
 
     facade_enabled_phases.append(facade_task_success_gen)
 
-    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_task_id != None).all())
+    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
 
     cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
     not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
-    not_collecting = CollectionStatus.facade_task_id == None
+    not_pending = CollectionStatus.facade_status != str(CollectionState.PENDING.value)
+    not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
+    not_collecting = CollectionStatus.facade_status != str(CollectionState.COLLECTING.value)
+    not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
     never_collected = CollectionStatus.facade_data_last_collected == None
     old_collection = CollectionStatus.facade_data_last_collected <= cutoff_date
 
     limit = max_repo-active_repo_count
 
-    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing, or_(never_collected, old_collection)),limit)
 
     session.logger.info(f"Starting facade collection on {len(repo_git_identifiers)} repos")
     if len(repo_git_identifiers) == 0:
@@ -287,6 +334,7 @@ def start_facade_collection(session,max_repo,days):
         #set status in database to collecting
         repoStatus = repo.collection_status[0]
         repoStatus.facade_task_id = task_id
+        repoStatus.facade_status = CollectionState.COLLECTING.value
         session.commit()
 
 @celery.task
@@ -308,6 +356,7 @@ def augur_collection_monitor():
         start_secondary_collection(session, max_repo=30, days=30)
 
         if facade_phase.__name__ in enabled_phase_names:
+            start_facade_clone_update(session,max_repo=15,days=30)
             start_facade_collection(session, max_repo=30, days=30)
 
 

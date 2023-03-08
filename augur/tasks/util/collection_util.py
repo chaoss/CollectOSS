@@ -29,6 +29,7 @@ class CollectionState(Enum):
     PENDING = "Pending"
     ERROR = "Error"
     COLLECTING = "Collecting"
+    INITIALIZING = "Initializing"
     UPDATE = "Update"
     FAILED_CLONE = "Failed Clone"
 
@@ -97,7 +98,10 @@ def task_failed(request,exc,traceback):
             
         
         if collectionRecord.facade_task_id == request.id:
-            collectionRecord.facade_status = CollectionStatus.ERROR.value
+            #Failed clone is differant than an error in collection.
+            if collectionRecord.facade_status != CollectionStatus.FAILED_CLONE.value:
+                collectionRecord.facade_status = CollectionStatus.ERROR.value
+
             collectionRecord.facade_task_id = None
         
         session.commit()
@@ -185,6 +189,28 @@ def facade_task_success(repo_git):
 
         collection_status.facade_status = CollectionState.SUCCESS.value
         collection_status.facade_data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        collection_status.facade_task_id = None
+
+        session.commit()
+
+@celery.task
+def facade_clone_update_success(repo_git):
+
+    from augur.tasks.init.celery_app import engine
+
+    logger = logging.getLogger(facade_clone_update_success.__name__)
+
+    logger.info(f"Repo '{repo_git}' succeeded through facade update/clone")
+
+    with DatabaseSession(logger, engine) as session:
+
+        repo = Repo.get_by_repo_git(session, repo_git)
+        if not repo:
+            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
+
+        collection_status = repo.collection_status[0]
+
+        collection_status.facade_status = CollectionState.UPDATE.value
         collection_status.facade_task_id = None
 
         session.commit()
