@@ -39,7 +39,7 @@ def generate_deps_libyear_data(session, repo_id, path):
         session.logger.info('Searching for deps in repo')
         session.logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
-        deps = get_deps_libyear_data(path)
+        deps = get_deps_libyear_data(path,session.logger)
 
         if not deps:
             session.logger.info(f"No deps found for repo {repo_id} on path {path}")

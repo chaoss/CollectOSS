@@ -37,7 +37,7 @@ import getopt
 import xlsxwriter
 import configparser
 import sqlalchemy as s
-from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author  
+from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author, get_absolute_repo_path
 from augur.application.db.models.augur_data import *
 from augur.application.db.models.augur_operations import CollectionStatus
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list
@@ -309,11 +309,13 @@ def git_repo_updates(session,repo_git):
 
     #default_branch = ''
 
+    absolute_path = get_absolute_repo_path(session.repo_base_directory, row["repo_group_id"], row['repo_path'], row["repo_name"])
+
     while attempt < 2:
 
         try:
 
-            firstpull = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} pull")
+            firstpull = (f"git -C {absolute_path} pull")
 
             return_code_remote = subprocess.Popen([firstpull],shell=True).wait()
 
@@ -328,7 +330,7 @@ def git_repo_updates(session,repo_git):
 
 #                    session.log_activity('Verbose', f'remote default is {logremotedefault}.')
 
-                getremotedefault = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
+                getremotedefault = (f"git -C {absolute_path} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
 
                 return_code_remote = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE, shell=True).wait()
 
@@ -338,7 +340,7 @@ def git_repo_updates(session,repo_git):
 
                 session.log_activity('Verbose', f'remote default getting checked out is: {remotedefault}.')
 
-                getremotedefault = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} checkout {remotedefault}")
+                getremotedefault = (f"git -C {absolute_path} checkout {remotedefault}")
 
                 session.log_activity('Verbose', f"get remote default command is: \n \n {getremotedefault} \n \n ")
 
@@ -346,7 +348,7 @@ def git_repo_updates(session,repo_git):
 
                 if return_code_remote_default_again == 0: 
                     session.log_activity('Verbose', "local checkout worked.")
-                    cmd = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} pull")
+                    cmd = (f"git -C {absolute_path} pull")
 
                     return_code = subprocess.Popen([cmd],shell=True).wait()
 
@@ -356,7 +358,7 @@ def git_repo_updates(session,repo_git):
 
         finally: 
 
-            cmd = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} pull")
+            cmd = (f"git -C {absolute_path} pull")
 
             return_code = subprocess.Popen([cmd],shell=True).wait()
 
@@ -377,7 +379,7 @@ def git_repo_updates(session,repo_git):
 
 #                session.log_activity('Verbose', f'remote default is {logremotedefault}.')
 
-            getremotedefault = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
+            getremotedefault = (f"git -C {absolute_path} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
 
             return_code_remote = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
 
@@ -387,7 +389,7 @@ def git_repo_updates(session,repo_git):
 
             try: 
 
-                getremotedefault = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} checkout {remotedefault}")
+                getremotedefault = (f"git -C {absolute_path} checkout {remotedefault}")
 
 
                 return_code_remote_default = subprocess.Popen([getremotedefault],stdout=subprocess.PIPE,shell=True).wait()
@@ -396,7 +398,7 @@ def git_repo_updates(session,repo_git):
 
                 session.log_activity('Verbose', f'get remote default result: {return_message_getremotedefault}')
 
-                getcurrentbranch = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} branch")
+                getcurrentbranch = (f"git -C {absolute_path} branch")
 
                 return_code_local = subprocess.Popen([getcurrentbranch],stdout=subprocess.PIPE,shell=True).wait()
 
@@ -406,17 +408,17 @@ def git_repo_updates(session,repo_git):
 
                 session.log_activity('Verbose', f'remote default is: {remotedefault}, and localdefault is {localdefault}.') 
 
-                cmd_checkout_default =  (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} checkout {remotedefault}")
+                cmd_checkout_default =  (f"git -C {absolute_path} checkout {remotedefault}")
 
                 cmd_checkout_default_wait = subprocess.Popen([cmd_checkout_default],shell=True).wait()
 
-                cmdpull2 = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} pull")
+                cmdpull2 = (f"git -C {absolute_path} pull")
 
-                cmd_reset = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} reset --hard origin")
+                cmd_reset = (f"git -C {absolute_path} reset --hard origin")
 
                 cmd_reset_wait = subprocess.Popen([cmd_reset],shell=True).wait()
 
-                cmd_clean = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} clean -df")
+                cmd_clean = (f"git -C {absolute_path} clean -df")
 
                 return_code_clean = subprocess.Popen([cmd_clean],shell=True).wait()
 
@@ -425,7 +427,7 @@ def git_repo_updates(session,repo_git):
                 session.log_activity('Verbose', f'Second pass failed: {e}.')
                 pass 
 
-        cmdpull2 = (f"git -C {session.repo_base_directory}{row['repo_group_id']}/{row['repo_path']}{row['repo_name']} pull")
+        cmdpull2 = (f"git -C {absolute_path} pull")
         
         print(cmdpull2)
         return_code = subprocess.Popen([cmdpull2],shell=True).wait()

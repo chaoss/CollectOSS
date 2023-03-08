@@ -67,17 +67,21 @@ def get_latest_version(data):
     return data['info']['version']
 
 
-def get_release_date(data, version):
+def get_release_date(data, version,logger):
     if not data:
-        print('invalid data')
+        logger.info('invalid data')
         return None
     releases = data['releases']
     name = data['info']['name']
     try:
         version_date = releases[version][-1]['upload_time_iso_8601']
     except IndexError:
-        print(f'Used release of {name}=={version} has no upload time.')
-        return None    
+        logger.error(f'Used release of {name}=={version} has no upload time.')
+        return None 
+    except KeyError as e:
+        logger.error(f'Could not find an entry for version {version}')
+        return None
+    
     # version_date = dateutil.parser.parse(version_date)
     return version_date
 

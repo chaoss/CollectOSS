@@ -26,6 +26,7 @@ import sqlalchemy as s
 
 
 from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
+from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
 from augur.tasks.github.facade_github.tasks import *
 
@@ -167,35 +168,14 @@ def trim_commits_post_analysis_facade_task(repo_id):
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
-        parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
-        "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
-        stdout=subprocess.PIPE, shell=True)
-
-        parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
-
-        # If there are no commits in the range, we still get a blank entry in
-        # the set. Remove it, as it messes with the calculations
-
-        if '' in parent_commits:
-            parent_commits.remove('')
+        parent_commits = get_parent_commits_set(repo_loc, start_date)
 
         # Grab the existing commits from the database
-
-        existing_commits = set()
-
-        find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
-            """).bindparams(repo_id=repo_id)
-
-        #session.cfg.cursor.execute(find_existing, (repo[0], ))
-
-        try:
-            for commit in session.fetchall_data_from_sql_text(find_existing):#list(session.cfg.cursor):
-                existing_commits.add(commit['cmt_commit_hash'])
-        except:
-            session.log_activity('Info', 'list(cfg.cursor) returned an error')
+        existing_commits = get_existing_commits_set(session, repo_id)
 
         # Find missing commits and add them
 
@@ -260,38 +240,16 @@ def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
-        parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
-        "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
-        stdout=subprocess.PIPE, shell=True)
-
-        parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
-
-        # If there are no commits in the range, we still get a blank entry in
-        # the set. Remove it, as it messes with the calculations
-
-        if '' in parent_commits:
-            parent_commits.remove('')
+        parent_commits = get_parent_commits_set(repo_loc, start_date)
 
         # Grab the existing commits from the database
-
-        existing_commits = set()
-
-        find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
-            """).bindparams(repo_id=repo_id)
-
-        #session.cfg.cursor.execute(find_existing, (repo[0], ))
-
-        try:
-            for commit in session.fetchall_data_from_sql_text(find_existing):#list(session.cfg.cursor):
-                existing_commits.add(commit['cmt_commit_hash'])
-        except:
-            session.log_activity('Info', 'list(cfg.cursor) returned an error')
+        existing_commits = get_existing_commits_set(session, repo_id)
 
         # Find missing commits and add them
-
         missing_commits = parent_commits - existing_commits
 
         session.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
@@ -301,7 +259,7 @@ def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
             #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
 
             #encode the repo_id with the commit.
-            commits = [commit for commit in list(missing_commits)]
+            commits = list(missing_commits)
             #Get all missing commits into one large list to split into task pools
             queue.extend(commits)
         else:
@@ -323,10 +281,10 @@ def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
             repo = execute_session_query(query,'one')
 
         logger.info(f"Got to analysis!")
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        repo_loc = (f"{absoulte_path}/.git")
         
         for count, commitTuple in enumerate(queue):
-
-            repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")    
 
             analyze_commit(session, repo_id, repo_loc, commitTuple)
 

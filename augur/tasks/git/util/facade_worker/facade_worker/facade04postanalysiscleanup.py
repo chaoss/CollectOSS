@@ -38,6 +38,7 @@ import xlsxwriter
 import configparser
 import sqlalchemy as s
 from augur.application.db.util import execute_session_query
+from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_absolute_repo_path
 from augur.application.db.models import *
 
 #Will delete repos passed and cleanup associated commit data.
@@ -59,8 +60,10 @@ def git_repo_cleanup(session,repo_git):
 
 		# Remove the files on disk
 
-		cmd = ("rm -rf %s%s/%s%s"
-			% (session.repo_base_directory,row.repo_group_id,row.repo_path,row.repo_name))
+		absolute_path = get_absolute_repo_path(session.repo_base_directory, row.repo_group_id, row.repo_path, row.repo_name)
+
+		cmd = ("rm -rf %s"
+			% (absolute_path))
 
 		return_code = subprocess.Popen([cmd],shell=True).wait()
 
