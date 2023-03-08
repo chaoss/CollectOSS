@@ -110,3 +110,7 @@ def trim_author(session, email):
 
 	session.log_activity('Debug',f"Trimmed working author: {email}")
 
+def get_absolute_repo_path(repo_base_dir, repo_group_id, repo_path, repo_name):
+	
+	return f"{repo_base_dir}{repo_group_id}/{repo_path}{repo_name}"
+
