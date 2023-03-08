@@ -53,7 +53,7 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         #Check the contributors table for a login for the given name
         try:
             query = session.query(Contributor).filter_by(cntrb_full_name=name)
-            contributors_with_matching_name = execute_session_query(query, 'one')
+            contributors_with_matching_name = execute_session_query(query, 'first')
 
             login = contributors_with_matching_name.gh_login
 
