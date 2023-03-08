@@ -51,14 +51,14 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         login = None
     
         #Check the contributors table for a login for the given name
-        try:
-            query = session.query(Contributor).filter_by(cntrb_full_name=name)
-            contributors_with_matching_name = execute_session_query(query, 'first')
 
-            login = contributors_with_matching_name.gh_login
+        query = session.query(Contributor).filter_by(cntrb_full_name=name)
+        contributors_with_matching_name = execute_session_query(query, 'first')
 
-        except NoResultFound as e:
+        if not contributors_with_matching_name:
             session.logger.debug(f"Failed local login lookup with error: {e}")
+        else:
+            login = contributors_with_matching_name.gh_login
         
 
         # Try to get the login from the commit sha
