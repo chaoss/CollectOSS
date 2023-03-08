@@ -53,11 +53,11 @@ def get_collection_status_repo_git_from_filter(session,filter_condition,limit):
 
 
 @celery.task
-def task_failed(request,exc,traceback):
+def task_failed_util(request,exc,traceback):
 
     from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(task_failed.__name__)
+    logger = logging.getLogger(task_failed_util.__name__)
 
     # log traceback to error file
     logger.error(f"Task {request.id} raised exception: {exc}\n{traceback}")
@@ -108,11 +108,11 @@ def task_failed(request,exc,traceback):
     
     
 @celery.task
-def core_task_success(repo_git):
+def core_task_success_util(repo_git):
 
     from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(core_task_success.__name__)
+    logger = logging.getLogger(core_task_success_util.__name__)
 
     logger.info(f"Repo '{repo_git}' succeeded through core collection")
 
@@ -131,11 +131,11 @@ def core_task_success(repo_git):
         session.commit()
 
 @celery.task
-def secondary_task_success(repo_git):
+def secondary_task_success_util(repo_git):
 
     from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(secondary_task_success.__name__)
+    logger = logging.getLogger(secondary_task_success_util.__name__)
 
     logger.info(f"Repo '{repo_git}' succeeded through secondary collection")
 
@@ -171,11 +171,11 @@ def get_repo_weight_by_issue(logger,repo_git,days_since_last_collection):
 
 
 @celery.task
-def facade_task_success(repo_git):
+def facade_task_success_util(repo_git):
 
     from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(facade_task_success.__name__)
+    logger = logging.getLogger(facade_task_success_util.__name__)
 
     logger.info(f"Repo '{repo_git}' succeeded through facade task collection")
 
@@ -194,11 +194,11 @@ def facade_task_success(repo_git):
         session.commit()
 
 @celery.task
-def facade_clone_update_success(repo_git):
+def facade_clone_update_success_util(repo_git):
 
     from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(facade_clone_update_success.__name__)
+    logger = logging.getLogger(facade_clone_update_success_util.__name__)
 
     logger.info(f"Repo '{repo_git}' succeeded through facade update/clone")
 
@@ -274,10 +274,10 @@ class AugurTaskRoutine:
                 #The preliminary task creates the larger task chain 
                 augur_collection_sequence.append(job(repo_git))
 
-            #augur_collection_sequence.append(core_task_success.si(repo_git))
+            #augur_collection_sequence.append(core_task_success_util.si(repo_git))
             #Link all phases in a chain and send to celery
             augur_collection_chain = chain(*augur_collection_sequence)
-            task_id = augur_collection_chain.apply_async(link_error=task_failed.s()).task_id
+            task_id = augur_collection_chain.apply_async(link_error=task_failed_util.s()).task_id
 
             self.logger.info(f"Setting repo_id {repo_id} to collecting for repo: {repo_git}")
 

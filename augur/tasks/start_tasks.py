@@ -158,10 +158,10 @@ def start_primary_collection(session,max_repo,days):
         primary_enabled_phases.append(primary_repo_collect_phase)
 
     #task success is scheduled no matter what the config says.
-    def core_task_success_gen(repo_git):
-        return core_task_success.si(repo_git)
+    def core_task_success_util_gen(repo_git):
+        return core_task_success_util.si(repo_git)
     
-    primary_enabled_phases.append(core_task_success_gen)
+    primary_enabled_phases.append(core_task_success_util_gen)
     
     active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
 
@@ -210,10 +210,10 @@ def start_secondary_collection(session,max_repo,days):
     if secondary_repo_collect_phase.__name__ in enabled_phase_names:
         secondary_enabled_phases.append(secondary_repo_collect_phase)
 
-    def secondary_task_success_gen(repo_git):
-        return secondary_task_success.si(repo_git)
+    def secondary_task_success_util_gen(repo_git):
+        return secondary_task_success_util.si(repo_git)
 
-    secondary_enabled_phases.append(secondary_task_success_gen)
+    secondary_enabled_phases.append(secondary_task_success_util_gen)
 
     active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.secondary_status == CollectionState.COLLECTING.value).all())
 
@@ -252,10 +252,10 @@ def start_facade_clone_update(session,max_repo,days):
 
     facade_enabled_phases.append(facade_clone_update_phase)
 
-    def facade_clone_update_success_gen(repo_git):
-        return facade_clone_update_success.si(repo_git)
+    def facade_clone_update_success_util_gen(repo_git):
+        return facade_clone_update_success_util.si(repo_git)
     
-    facade_enabled_phases.append(facade_clone_update_success_gen)
+    facade_enabled_phases.append(facade_clone_update_success_util_gen)
 
     active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.INITIALIZING.value).all())
 
@@ -298,10 +298,10 @@ def start_facade_collection(session,max_repo,days):
     
     facade_enabled_phases.append(facade_phase)
 
-    def facade_task_success_gen(repo_git):
-        return facade_task_success.si(repo_git)
+    def facade_task_success_util_gen(repo_git):
+        return facade_task_success_util.si(repo_git)
 
-    facade_enabled_phases.append(facade_task_success_gen)
+    facade_enabled_phases.append(facade_task_success_util_gen)
 
     active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
 
