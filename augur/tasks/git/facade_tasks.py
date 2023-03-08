@@ -26,6 +26,7 @@ import sqlalchemy as s
 
 
 from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
+from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_absolute_repo_path
 from augur.tasks.git.util.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
 from augur.tasks.github.facade_github.tasks import *
 
@@ -167,7 +168,8 @@ def trim_commits_post_analysis_facade_task(repo_id):
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
         parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
@@ -260,7 +262,8 @@ def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
         parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
@@ -323,10 +326,10 @@ def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
             repo = execute_session_query(query,'one')
 
         logger.info(f"Got to analysis!")
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        repo_loc = (f"{absoulte_path}/.git")
         
         for count, commitTuple in enumerate(queue):
-
-            repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")    
 
             analyze_commit(session, repo_id, repo_loc, commitTuple)
 
