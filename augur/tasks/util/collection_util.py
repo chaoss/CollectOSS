@@ -99,7 +99,7 @@ def task_failed_util(request,exc,traceback):
         
         if collectionRecord.facade_task_id == request.id:
             #Failed clone is differant than an error in collection.
-            if collectionRecord.facade_status != CollectionStatus.FAILED_CLONE.value:
+            if collectionRecord.facade_status != CollectionStatus.FAILED_CLONE.value or collectionRecord.facade_status != CollectionStatus.UPDATE.value:
                 collectionRecord.facade_status = CollectionStatus.ERROR.value
 
             collectionRecord.facade_task_id = None
