@@ -102,9 +102,12 @@ def loadSettings():
     else:
         with open(configFilePath) as file:
             settings = yaml.load(file, Loader=yaml.FullLoader)
+    
+    # # Ensure that the cache directory exists and is valid
+    # cachePath = Path(settings["caching"])
 
-    # Ensure that the cache directory exists and is valid
-    cachePath = Path(settings["caching"])
+    cachePath = Path(url_for("static")) / "cache"
+
     if not cachePath.is_dir():
         if cachePath.is_file():
             raise Exception(f"Cannot initialize caching: cache path [{cachePath}] is a file")
@@ -291,7 +294,7 @@ def download(url, cmanager, filename, image_cache, image_id, repo_id = None):
         image_cache[image_id]['exists'] = True
         try:
             with open(filename, 'wb') as f:
-                logger.info("Writing image: " + filename)
+                logger.info("Writing image: " + str(filename))
                 f.write(response.data)
         except Exception as err:
             logger.error("An exception occurred writing a cache file to disk")
