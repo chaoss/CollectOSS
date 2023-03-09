@@ -106,7 +106,7 @@ def loadSettings():
     # # Ensure that the cache directory exists and is valid
     # cachePath = Path(settings["caching"])
 
-    cachePath = Path(url_for("static")) / "cache"
+    cachePath = Path.cwd() / "augur" / "static" / "cache"
 
     if not cachePath.is_dir():
         if cachePath.is_file():
