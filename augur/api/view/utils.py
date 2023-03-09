@@ -204,7 +204,7 @@ def toCacheFilename(endpoint, append = True):
     return endpoint.replace("/", ".").replace("?", "_").replace("=", "_") + ('.agcache' if append else "")
 
 def toCacheFilepath(endpoint, append = True):
-    return getSetting('caching').joinpath(toCacheFilename(endpoint), append)
+    return getSetting('caching').joinpath(toCacheFilename(endpoint, append))
 
 def toCacheURL(endpoint):
     return getSetting('approot') + str(toCacheFilepath(endpoint))
