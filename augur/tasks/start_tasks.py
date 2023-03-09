@@ -39,8 +39,15 @@ CELERY_CHAIN_TYPE = type(chain())
 
 
 
-#Predefine phases. For new phases edit this and the config to reflect.
-#The domain of tasks ran should be very explicit.
+"""
+    Predefine phases. For new phases edit this and the config to reflect.
+    The domain of tasks ran should be very explicit.
+
+    A phase in this context is a function that takes a repo_git and returns a message
+    for the celery worker to process.
+"""
+
+#Prelim phases are used to detect if where the repo has hosted has moved or not.
 def prelim_phase(repo_git):
 
     logger = logging.getLogger(prelim_phase.__name__)
@@ -53,6 +60,7 @@ def prelim_phase_secondary(repo_git):
     return detect_github_repo_move_secondary.si(repo_git)
 
 
+#This is the phase that defines the message for core augur collection
 def primary_repo_collect_phase(repo_git):
     logger = logging.getLogger(primary_repo_collect_phase.__name__)
 
@@ -87,6 +95,8 @@ def primary_repo_collect_phase(repo_git):
     return repo_task_group
 
 
+#This phase creates the message for secondary collection tasks.
+#These are less important and have their own worker.
 def secondary_repo_collect_phase(repo_git):
     logger = logging.getLogger(secondary_repo_collect_phase.__name__)
 
@@ -101,6 +111,8 @@ def secondary_repo_collect_phase(repo_git):
 
 
 
+#This is a periodic task that runs less often to handle less important collection tasks such as 
+#refreshing the materialized views.
 @celery.task
 def non_repo_domain_tasks():
 
@@ -141,7 +153,11 @@ def non_repo_domain_tasks():
 
 
 
-
+    """
+        The below functions define augur's collection hooks.
+        Each collection hook schedules tasks for a number of repos
+        that are either new or older than a set amount of days.
+    """
 def start_primary_collection(session,max_repo,days):
 
     #Get list of enabled phases 
@@ -356,6 +372,7 @@ def augur_collection_monitor():
         start_secondary_collection(session, max_repo=30, days=30)
 
         if facade_phase.__name__ in enabled_phase_names:
+            #Schedule facade collection before clone/updates as that is a higher priority
             start_facade_collection(session, max_repo=30, days=30)
             start_facade_clone_update(session,max_repo=15,days=30)
 
