@@ -26,7 +26,7 @@ def generate_deps_data(session, repo_id, path):
 
         
 
-        deps = dep_calc.get_deps(path)
+        deps = dep_calc.get_deps(path,session.logger)
         
         for dep in deps:
             repo_deps = {

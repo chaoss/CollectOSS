@@ -431,6 +431,45 @@ def generate_contributor_sequence(logger,repo_git, session):
     return insert_facade_contributors.si(repo_id)
 
 
+def facade_clone_update_phase(repo_git):
+    logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
+    logger.info(f"Generating sequence to update/clone repo {repo_git}")
+
+    with FacadeSession(logger) as session:
+        
+        facade_sequence = []
+
+        #Get the repo_id
+        repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
+        WHERE repo_git=:value""").bindparams(value=repo_git)
+        repos = session.fetchall_data_from_sql_text(repo_list)
+
+        start_date = session.get_setting('start_date')
+
+        repo_ids = [repo['repo_id'] for repo in repos]
+
+        repo_id = repo_ids.pop(0)
+
+        #Get the collectionStatus
+        query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id)
+
+        status = execute_session_query(query,'one')
+        
+        # Figure out what we need to do
+        limited_run = session.limited_run
+        pull_repos = session.pull_repos
+
+        if 'Pending' in status.facade_status or 'Failed Clone' in status.facade_status:
+            facade_sequence.append(git_repo_initialize_facade_task.si(repo_git))#git_repo_initialize(session,repo_git_identifiers)
+
+        #TODO: alter this to work with current collection.
+        #if not limited_run or (limited_run and check_updates):
+        #    facade_sequence.append(check_for_repo_updates_facade_task.si(repo_git))#check_for_repo_updates(session,repo_git_identifiers)
+
+        if not limited_run or (limited_run and pull_repos):
+            facade_sequence.append(git_repo_updates_facade_task.si(repo_git))
+                
+        return chain(*facade_sequence)
 
 
 def facade_phase(repo_git):
@@ -457,43 +496,13 @@ def facade_phase(repo_git):
         
         # Figure out what we need to do
         limited_run = session.limited_run
-        delete_marked_repos = session.delete_marked_repos
-        pull_repos = session.pull_repos
-        #clone_repos = session.clone_repos
-        check_updates = session.check_updates
-        #force_updates = session.force_updates
         run_analysis = session.run_analysis
         #force_analysis = session.force_analysis
         run_facade_contributors = session.run_facade_contributors
-        nuke_stored_affiliations = session.nuke_stored_affiliations
-        fix_affiliations = session.fix_affiliations
-        force_invalidate_caches = session.force_invalidate_caches
-        rebuild_caches = session.rebuild_caches
-        #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
-            # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
-            #   'update_frequency')) else 0
-        force_invalidate_caches = session.force_invalidate_caches
-        create_xlsx_summary_files = session.create_xlsx_summary_files
-        multithreaded = session.multithreaded
 
         facade_sequence = []
         facade_core_collection = []
 
-        #Currently repos are never deleted
-        #if not limited_run or (limited_run and delete_marked_repos):
-        #    facade_sequence.append(git_repo_cleanup_facade_task.si(repo_git))#git_repo_cleanup(session,repo_git_identifiers)
-
-        if 'Pending' in status.facade_status or 'Failed Clone' in status.facade_status:
-            facade_sequence.append(git_repo_initialize_facade_task.si(repo_git))#git_repo_initialize(session,repo_git_identifiers)
-
-        #TODO: alter this to work with current collection.
-        #if not limited_run or (limited_run and check_updates):
-        #    facade_sequence.append(check_for_repo_updates_facade_task.si(repo_git))#check_for_repo_updates(session,repo_git_identifiers)
-
-        if not limited_run or (limited_run and pull_repos):
-            facade_sequence.append(git_repo_updates_facade_task.si(repo_git))
-
-        #facade_sequence.append(process_dependency_metrics.si(repo_git))
         #Generate commit analysis task order.
         if not limited_run or (limited_run and run_analysis):
             facade_core_collection.extend(generate_analysis_sequence(logger,repo_git,session))

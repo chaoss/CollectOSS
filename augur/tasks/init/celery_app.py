@@ -20,7 +20,8 @@ from augur.application.db.models import CollectionStatus
 logger = logging.getLogger(__name__)
 
 start_tasks = ['augur.tasks.start_tasks',
-                'augur.tasks.data_analysis']
+                'augur.tasks.data_analysis',
+                'augur.tasks.util.collection_util']
 
 github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.issues.tasks',
@@ -62,6 +63,7 @@ celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tas
 # define the queues that tasks will be put in (by default tasks are put in celery queue)
 celery_app.conf.task_routes = {
     'augur.tasks.start_tasks.*': {'queue': 'scheduling'},
+    'augur.tasks.util.collection_util.*': {'queue': 'scheduling'},
     'augur.tasks.github.pull_requests.commits_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.files_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.tasks.collect_pull_request_reviews': {'queue': 'secondary'},

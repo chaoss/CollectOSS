@@ -137,12 +137,6 @@ def git_repo_initialize(session, repo_git):
 
         session.execute_sql(query)
 
-        query = s.sql.text("""UPDATE augur_operations.collection_status
-            SET facade_status='Collecting (Initializing)'
-            WHERE repo_id=:idParam""").bindparams(idParam=row.repo_id)
-
-        session.execute_sql(query)
-
         session.log_activity('Verbose',f"Cloning: {git}")
 
         cmd = f"git -C {repo_path} clone '{git}' {repo_name}"
@@ -152,12 +146,6 @@ def git_repo_initialize(session, repo_git):
             # If cloning succeeded, repo is ready for analysis
             # Mark the entire project for an update, so that under normal
             # circumstances caches are rebuilt only once per waiting period.
-
-            update_project_status = s.sql.text("""UPDATE augur_operations.collection_status
-                SET facade_status='Update' WHERE 
-                repo_id=:repo_id""").bindparams(repo_id=row.repo_id)
-            session.execute_sql(update_project_status)
-
             update_repo_log(session, row.repo_id,'Up-to-date')
             session.log_activity('Info',f"Cloned {git}")
 
