@@ -264,7 +264,7 @@ def start_facade_clone_update(session,max_repo,days):
     not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
     not_collecting = CollectionStatus.facade_status != str(CollectionState.COLLECTING.value)
     not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
-    never_collected = CollectionStatus.facade_data_last_collected == None
+    never_collected = CollectionStatus.facade_status == CollectionState.PENDING.value
     old_collection = CollectionStatus.facade_data_last_collected <= cutoff_date
 
     limit = max_repo-active_repo_count
