@@ -56,7 +56,7 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         contributors_with_matching_name = execute_session_query(query, 'first')
 
         if not contributors_with_matching_name:
-            session.logger.debug(f"Failed local login lookup with error: {e}")
+            session.logger.debug("Failed local login lookup")
         else:
             login = contributors_with_matching_name.gh_login
         
