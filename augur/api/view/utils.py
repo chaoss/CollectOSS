@@ -200,11 +200,11 @@ def stripStatic(url):
 
 """ ----------------------------------------------------------------
 """
-def toCacheFilename(endpoint):
-    return endpoint.replace("/", ".").replace("?", "_").replace("=", "_") + '.agcache'
+def toCacheFilename(endpoint, append = True):
+    return endpoint.replace("/", ".").replace("?", "_").replace("=", "_") + ('.agcache' if append else "")
 
-def toCacheFilepath(endpoint):
-    return getSetting('caching').joinpath(toCacheFilename(endpoint))
+def toCacheFilepath(endpoint, append = True):
+    return getSetting('caching').joinpath(toCacheFilename(endpoint), append)
 
 def toCacheURL(endpoint):
     return getSetting('approot') + str(toCacheFilepath(endpoint))
@@ -275,7 +275,7 @@ def requestPNG(endpoint):
 def download(url, cmanager, filename, image_cache, image_id, repo_id = None):
     image_cache[image_id] = {}
     image_cache[image_id]['filename'] = filename
-    filename = toCacheFilepath(filename)
+    filename = toCacheFilepath(filename, False)
     if cacheFileExists(filename):
         image_cache[image_id]['exists'] = True
         return
