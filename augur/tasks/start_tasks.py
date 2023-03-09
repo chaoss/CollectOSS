@@ -356,8 +356,8 @@ def augur_collection_monitor():
         start_secondary_collection(session, max_repo=30, days=30)
 
         if facade_phase.__name__ in enabled_phase_names:
-            start_facade_clone_update(session,max_repo=15,days=30)
             start_facade_collection(session, max_repo=30, days=30)
+            start_facade_clone_update(session,max_repo=15,days=30)
 
 
 
