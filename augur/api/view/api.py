@@ -10,7 +10,7 @@ from ..server import app, db_session
 def cache(file=None):
     if file is None:
         return redirect(url_for('static', filename="cache"))
-    return redirect(url_for('static', filename="cache/" + toCacheFilename(file)))
+    return redirect(url_for('static', filename="cache/" + toCacheFilename(file, False)))
 
 @app.route('/account/repos/add', methods = ['POST'])
 @login_required
