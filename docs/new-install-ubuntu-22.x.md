@@ -159,6 +159,42 @@ maxmemory 20GB
 **Consequences** : If the settings are too low for Redis, Augur's maintainer team has observed cases where collection appears to stall. (TEAM: This is a working theory as of 3/10/2023 for Ubuntu 22.x, based on EC2 experiments.)
 
 
+#### Possible EC2 Configuration Requirements
+
+With virtualization there may be issues associated with redis-server connections exceeding available memory. In these cases, the following workarounds help to resolve issues. 
+
+Specifically, you may find this error in your augur logs: 
+```shell
+redis.exceptions.ConnectionError: Error 111 connecting to 127.0.0.1:6379. Connection refused.
+```
+
+**INSTALL** `sudo apt install libhugetlbfs-bin`
+
+**COMMAND**: 
+```
+hugeadm --thp-never` &&
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
+```
+
+
+```shell
+sudo vi /etc/rc.local
+```
+
+**paste** into `/etc/rc.local`
+```shell
+if test -f /sys/kernel/mm/transparent_hugepage/enabled; then
+   echo never > /sys/kernel/mm/transparent_hugepage/enabled
+fi
+```
+
+
+**EDIT** : `/etc/default/grub` add the following line: 
+```shell
+GRUB_DISABLE_OS_PROBER=true
+```
+
+
 ## Postgresql Configuration
 Your postgresql instance should optimally allow 1,000 connections: 
 
