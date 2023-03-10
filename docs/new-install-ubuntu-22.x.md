@@ -164,6 +164,8 @@ Your postgresql instance should optimally allow 1,000 connections:
 
 ```shell
 max_connections = 1000                  # (change requires restart)
+shared_buffers = 8GB                    # min 128kB
+work_mem = 2GB                  # min 64kB
 ```
 
 Augur will generally hold up to 150 simultaneous connections while collecting data. The 1,000 number is recommended to accommodate both collection and analysis on the same database. Use of PGBouncer or other utility may change these characteristics.  
