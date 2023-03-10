@@ -1,6 +1,6 @@
 ## Augur Setup
 
-# Ubuntu 20.04.x
+# Ubuntu 22.x
 We default to this version of Ubuntu for the moment because Augur does not yet support python3.10, which is the default version of python3.x distributed with Ubuntu 22.0x.x
 
 ## Git Platform Requirements (Things to have setup prior to initiating installation.)
