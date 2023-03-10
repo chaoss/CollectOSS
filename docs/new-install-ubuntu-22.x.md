@@ -145,6 +145,20 @@ AND
 setting_name='cache_group';
 ```
 
+
+**Edit** the `/etc/redis/redis.conf` file to ensure these parameters are configured in this way: 
+```shell
+supervised systemd
+databases 900
+maxmemory-samples 10
+maxmemory 20GB
+```
+
+**NOTE**: You may be able to have fewer databases and lower maxmemory settings. This is a function of how many repositories you are collecting data for at a given time. The more repositories you are managing data for, the close to these settings you will need to be. 
+
+**Consequences** : If the settings are too low for Redis, Augur's maintainer team has observed cases where collection appears to stall. (TEAM: This is a working theory as of 3/10/2023 for Ubuntu 22.x, based on EC2 experiments.)
+
+
 ## Augur Commands
 
 To access command line options, use `augur --help`. To load repos from GitHub organizations prior to collection, or in other ways, the direct route is `augur db --help`. 
