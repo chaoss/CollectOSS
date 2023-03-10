@@ -130,6 +130,37 @@ def core_task_success_util(repo_git):
 
         session.commit()
 
+def date_weight_factor(days_since_last_collection):
+    return (days_since_last_collection ** 3) / 25
+
+
+def get_repo_weight_by_issue(logger,repo_git,days_since_last_collection):
+
+
+    owner,name = get_owner_repo(repo_git)
+
+    with GithubTaskManifest(logger) as manifest:
+        repo_graphql = GitHubRepoGraphql(logger, manifest.key_auth, owner, name)
+        number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
+    
+    return number_of_issues_and_prs - date_weight_factor(days_since_last_collection)
+
+
+def get_repo_weight_core(logger,repo_git):
+    from augur.tasks.init.celery_app import engine
+
+    with DatabaseSession(logger,engine) as session:
+        repo = Repo.get_by_repo_git(session, repo_git)
+        if not repo:
+            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
+
+        status = repo.collection_status[0]
+
+        time_delta = datetime.datetime.now() - status.core_data_last_collected
+
+        return get_repo_weight_by_issue(logger, repo_git, time_delta.days)
+
+
 @celery.task
 def secondary_task_success_util(repo_git):
 
@@ -153,21 +184,19 @@ def secondary_task_success_util(repo_git):
 
         session.commit()
 
-def date_weight_factor(days_since_last_collection):
-    return (days_since_last_collection ** 3) / 25
+def get_repo_weight_secondary(logger,repo_git):
+    from augur.tasks.init.celery_app import engine
 
+    with DatabaseSession(logger,engine) as session:
+        repo = Repo.get_by_repo_git(session, repo_git)
+        if not repo:
+            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
 
-def get_repo_weight_by_issue(logger,repo_git,days_since_last_collection):
+        status = repo.collection_status[0]
 
+        time_delta = datetime.datetime.now() - status.secondary_data_last_collected
 
-    owner,name = get_owner_repo(repo_git)
-
-    with GithubTaskManifest(logger) as manifest:
-        repo_graphql = GitHubRepoGraphql(logger, manifest.key_auth, owner, name)
-        number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
-    
-    return number_of_issues_and_prs - date_weight_factor(days_since_last_collection)
-
+        return get_repo_weight_by_issue(logger, repo_git, time_delta.days)
 
 
 @celery.task
@@ -219,9 +248,48 @@ def get_repo_weight_by_commit(logger,repo_git,days_since_last_collection):
     pass
 
 
+class AugurCollectionTotalRepoWeight:
+    """
+        small class to encapsulate the weight calculation of each repo that is
+        being scheduled. Intended to be used as a counter where while it is greater than
+        one it is subtracted from until it reaches zero. The weight calculation starts
+        from a default method for core repos and can be passed differant calculations accordingly
+        as a function that takes a repo_git
+
+
+    Attributes:
+        logger (Logger): Get logger from AugurLogger
+        value (int): current value of the collection weight
+        value_weight_calculation (function): List of repo_ids to run collection on.
+    """
+    def __init__(self,starting_value: int, weight_calculation=get_repo_weight_core):
+        self.logger = AugurLogger("data_collection_jobs").get_logger()
+        self.value = starting_value
+        self.value_weight_calculation = weight_calculation
+    
+    #This class can have it's value subtracted using a Repo orm class
+    #or a plain integer value.
+    def __sub__(self, other):
+
+        if isinstance(other, int):
+            self.value -= other
+        elif isinstance(other, AugurCollectionTotalRepoWeight):
+            self.value -= other.value
+        elif isinstance(other, Repo):
+            repo_weight = self.value_weight_calculation(self.logger,other.repo_git)
+            self.value -= repo_weight
+        else:
+            raise TypeError(f"Could not subtract object of type {type(other)}")
+
+        return self
+
+
 class AugurTaskRoutine:
-    """class to keep track of various groups of collection tasks as well as how they relate to one another.
-    Accessible like a dict, each dict item represents a 'phase' of augur collection executed more or less in parallel.
+    """
+        class to keep track of various groups of collection tasks for a group of repos
+        as well as the users those repos belong to. Allows to run the repos round robin
+        relative to the users.
+
 
     Attributes:
         logger (Logger): Get logger from AugurLogger
