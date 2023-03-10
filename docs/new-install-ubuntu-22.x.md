@@ -159,6 +159,15 @@ maxmemory 20GB
 **Consequences** : If the settings are too low for Redis, Augur's maintainer team has observed cases where collection appears to stall. (TEAM: This is a working theory as of 3/10/2023 for Ubuntu 22.x, based on EC2 experiments.)
 
 
+## Postgresql Configuration
+Your postgresql instance should optimally allow 1,000 connections: 
+
+```shell
+max_connections = 1000                  # (change requires restart)
+```
+
+Augur will generally hold up to 150 simultaneous connections while collecting data. The 1,000 number is recommended to accommodate both collection and analysis on the same database. Use of PGBouncer or other utility may change these characteristics.  
+
 ## Augur Commands
 
 To access command line options, use `augur --help`. To load repos from GitHub organizations prior to collection, or in other ways, the direct route is `augur db --help`. 
