@@ -35,6 +35,16 @@ sudo apt install firefox-geckodriver
 # You will almost certainly need to reboot after this. 
 ```
 
+### RabbitMQ Configuration
+The default timeout for RabbitMQ needs to be set on Ubuntu 22.x. 
+```shell
+sudo vi /etc/rabbitmq/advanced.config
+```
+
+Add this one line to that file (the period at the end matters): 
+```shell
+[ {rabbit, [ {consumer_timeout, undefined} ]} ].
+```
 
 ## Git Configuration
 There are some Git configuration parameters that help when you are cloning repos over time, and a platform prompts you for credentials when it finds a repo is deleted:
