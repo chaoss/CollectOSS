@@ -313,51 +313,41 @@ class AugurCollectionTotalRepoWeight:
         else:
             raise TypeError(f"Could not subtract object of type {type(other)}")
 
+        if self.value < 0:
+            self.value = 0
+
         return self
 
 
 class AugurTaskRoutine:
     """
-        class to keep track of various groups of collection tasks for a group of repos
-        as well as the users those repos belong to. Allows to run the repos round robin
-        relative to the users.
+        class to keep track of various groups of collection tasks for a group of repos.
+        Simple version to just schedule a number of repos not worrying about repo weight.
+        Used when scheduling repo clones/updates.
 
 
     Attributes:
         logger (Logger): Get logger from AugurLogger
-        jobs_dict (dict): Dict of data collection phases to run
         repos (List[str]): List of repo_ids to run collection on.
         collection_phases (List[str]): List of phases to run in augur collection.
         session: Database session to use
     """
-    def __init__(self,session,repos: List[str]=[],collection_phases: List[str]=[]):
+    def __init__(self,session,repos: List[str]=[],collection_phases: List=[]):
         self.logger = AugurLogger("data_collection_jobs").get_logger()
         #self.session = TaskSession(self.logger)
-        self.jobs_dict = {}
         self.collection_phases = collection_phases
         #self.disabled_collection_tasks = disabled_collection_tasks
         self.repos = repos
         self.session = session
 
-        #Assemble default phases
-        #These will then be able to be overridden through the config.
-        for phase in collection_phases:
-            self.jobs_dict[phase.__name__] = phase
-
-    #Get and set dict values that correspond to phases of collection
-    def __getitem__(self,key: str) -> dict:
-        """Return the collection group with the specified key.
-        """
-        return self.jobs_dict[key]
-    
-    def __setitem__(self,key: str,newJobs):
-        """Create a new collection job group with the name of the key specified.
-        """
-        self.collection_phases.append(newJobs)
-        self.jobs_dict[key] = newJobs
 
     def start_data_collection(self):
         """Start all task items and return.
+
+            The purpose is to encapsulate both preparing each message to the broker
+            and starting the tasks for each repo in a general sense.
+            This way all the specific stuff for each collection hook/ repo
+            is generalized.
         """
         augur_collection_list = []
         
@@ -367,9 +357,7 @@ class AugurTaskRoutine:
             repo_id = repo.repo_id
 
             augur_collection_sequence = []
-            for phaseName, job in self.jobs_dict.items():
-                self.logger.info(f"Queuing phase {phaseName} for repo {repo_git}")
-                
+            for job in collection_phases:
                 #Add the phase to the sequence in order as a celery task.
                 #The preliminary task creates the larger task chain 
                 augur_collection_sequence.append(job(repo_git))
@@ -382,4 +370,16 @@ class AugurTaskRoutine:
             self.logger.info(f"Setting repo_id {repo_id} to collecting for repo: {repo_git}")
 
             #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
+            #This is done because it can't be feasibly implemented in a way which completely encapsulates the logic while also
+            #avoiding defining a subclass for each repo hook which would defeat the purpose.
             yield repo_git, task_id
+
+
+class AugurWeightedTaskRoutine(AugurTaskRoutine):
+    def __init__(self,session,repos: List[str]=[],collection_phases: List[str]=[]):
+        
+        #Define superclass vars
+        super().__init__(session,repos=repos,collection_phases=collection_phases)
+
+        #Define Total repo weight
+        raise NotImplementedError
