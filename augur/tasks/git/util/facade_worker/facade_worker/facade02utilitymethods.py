@@ -32,6 +32,7 @@ import time
 import datetime
 import html.parser
 import subprocess
+from subprocess import check_output
 import os
 import getopt
 import xlsxwriter
@@ -139,3 +140,19 @@ def get_existing_commits_set(session, repo_id):
 	existing_commits = [commit['cmt_commit_hash'] for commit in session.fetchall_data_from_sql_text(find_existing)]
 
 	return set(existing_commits)
+
+def date_weight_factor(days_since_last_collection):
+    return (days_since_last_collection ** 3) / 25
+
+def get_repo_weight_by_commit(logger,repo_git,days_since_last_collection):
+	with FacadeSession(logger) as session:
+		
+		absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+		repo_loc = (f"{absolute_path}/.git")
+
+		#git --git-dir <.git directory> rev-list --count HEAD
+		check_commit_count_cmd = check_output(["git","--git-dir",repo_loc, "rev-list", "--count", "HEAD"])
+
+		commit_count = int(check_commit_count_cmd)
+	
+	return commit_count - date_weight_factor(days_since_last_collection)

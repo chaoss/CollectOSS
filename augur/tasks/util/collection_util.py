@@ -22,6 +22,7 @@ from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepo
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.application.db.session import DatabaseSession
+from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_repo_weight_by_commit
 
 # class syntax
 class CollectionState(Enum):
@@ -146,6 +147,7 @@ def get_repo_weight_by_issue(logger,repo_git,days_since_last_collection):
     return number_of_issues_and_prs - date_weight_factor(days_since_last_collection)
 
 
+#Get the weight for each repo for the core collection hook
 def get_repo_weight_core(logger,repo_git):
     from augur.tasks.init.celery_app import engine
 
@@ -156,9 +158,15 @@ def get_repo_weight_core(logger,repo_git):
 
         status = repo.collection_status[0]
 
-        time_delta = datetime.datetime.now() - status.core_data_last_collected
+        last_collected = status.core_data_last_collected
 
-        return get_repo_weight_by_issue(logger, repo_git, time_delta.days)
+        if last_collected:
+            time_delta = datetime.datetime.now() - last_collected
+            days = time_delta.days
+        else:
+            days = 0
+
+        return get_repo_weight_by_issue(logger, repo_git, days)
 
 
 @celery.task
@@ -184,6 +192,7 @@ def secondary_task_success_util(repo_git):
 
         session.commit()
 
+#Get the weight for each repo for the secondary collection hook.
 def get_repo_weight_secondary(logger,repo_git):
     from augur.tasks.init.celery_app import engine
 
@@ -194,9 +203,15 @@ def get_repo_weight_secondary(logger,repo_git):
 
         status = repo.collection_status[0]
 
-        time_delta = datetime.datetime.now() - status.secondary_data_last_collected
+        last_collected = status.secondary_data_last_collected
 
-        return get_repo_weight_by_issue(logger, repo_git, time_delta.days)
+        if last_collected:
+            time_delta = datetime.datetime.now() - status.secondary_data_last_collected
+            days = time_delta
+        else:
+            days = 0
+
+        return get_repo_weight_by_issue(logger, repo_git, days)
 
 
 @celery.task
@@ -222,6 +237,26 @@ def facade_task_success_util(repo_git):
 
         session.commit()
 
+def get_repo_weight_facade(logger,repo_git):
+    from augur.tasks.init.celery_app import engine
+
+    with DatabaseSession(logger,engine) as session:
+        repo = Repo.get_by_repo_git(session, repo_git)
+        if not repo:
+            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
+
+        status = repo.collection_status[0]
+        last_collected = status.facade_data_last_collected
+
+        if last_collected:
+            time_delta = datetime.datetime.now() - last_collected
+            days = time_delta.days
+        else:
+            days = 0
+
+        return get_repo_weight_by_issue(logger, repo_git, days)
+
+
 @celery.task
 def facade_clone_update_success_util(repo_git):
 
@@ -243,9 +278,6 @@ def facade_clone_update_success_util(repo_git):
         collection_status.facade_task_id = None
 
         session.commit()
-
-def get_repo_weight_by_commit(logger,repo_git,days_since_last_collection):
-    pass
 
 
 class AugurCollectionTotalRepoWeight:

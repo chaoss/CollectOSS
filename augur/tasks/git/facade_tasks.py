@@ -77,11 +77,6 @@ def facade_analysis_init_facade_task(repo_id):
         session.update_status('Running analysis')
         session.log_activity('Info',f"Beginning analysis.")
 
-        update_project_status = s.sql.text("""UPDATE augur_operations.collection_status
-            SET facade_status='Collecting' WHERE 
-            repo_id=:repo_id""").bindparams(repo_id=repo_id)
-        session.execute_sql(update_project_status)
-
 @celery.task
 def grab_comitters(repo_id,platform="github"):
 
@@ -473,8 +468,6 @@ def facade_clone_update_phase(repo_git):
 
 
 def facade_phase(repo_git):
-    #raise NotImplemented
-
     logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
     logger.info("Generating facade sequence")
     with FacadeSession(logger) as session:
