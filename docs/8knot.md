@@ -11,6 +11,12 @@ sudo apt install python3-dev &&
 sudo apt install python3.10-venv &&
 ```
 
+## Clone 8Knot
+```shell
+git clone https://github.com/oss-aspen/8knot &&
+git checkout redis-remap
+```
+
 
 ## Start 8knot
 To see if everything works: 
