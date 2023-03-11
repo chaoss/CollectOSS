@@ -254,7 +254,7 @@ def get_repo_weight_facade(logger,repo_git):
         else:
             days = 0
 
-        return get_repo_weight_by_issue(logger, repo_git, days)
+        return get_repo_weight_by_commit(logger, repo_git, days)
 
 
 @celery.task
@@ -309,6 +309,9 @@ class AugurCollectionTotalRepoWeight:
             self.value -= other.value
         elif isinstance(other, Repo):
             repo_weight = self.value_weight_calculation(self.logger,other.repo_git)
+            self.value -= repo_weight
+        elif isinstance(other, str):
+            repo_weight = self.value_weight_calculation(self.logger,other)
             self.value -= repo_weight
         else:
             raise TypeError(f"Could not subtract object of type {type(other)}")
@@ -391,16 +394,52 @@ class AugurTaskRoutine:
             self.logger.info(f"Setting repo_id {repo_id} to collecting for repo: {repo_git}")
 
             #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
-            #This is done because it can't be feasibly implemented in a way which completely encapsulates the logic while also
-            #avoiding defining a subclass for each repo hook which would defeat the purpose.
             yield repo_git, task_id
 
 
 class AugurWeightedTaskRoutine(AugurTaskRoutine):
-    def __init__(self,session,repos: List[str]=[],collection_phases: List[str]=[]):
+    def __init__(self,session,repos: List[str]=[],collection_phases: List[str]=[],collection_hook: str="core",total_repo_weight=10000):
         
         #Define superclass vars
-        super().__init__(session,repos=repos,collection_phases=collection_phases)
+        super().__init__(session,repos=repos,collection_phases=collection_phases,collection_hook=collection_hook)
 
         #Define Total repo weight
-        raise NotImplementedError
+        if collection_hook == "core":
+            #Core collection hook has a repo weight of 
+            self.total_repo_weight = AugurCollectionTotalRepoWeight(total_repo_weight)
+        elif collection_hook == "secondary":
+            self.total_repo_weight = AugurCollectionTotalRepoWeight(total_repo_weight,weight_calculation=get_repo_weight_secondary)
+        elif collection_hook == "facade":
+            self.total_repo_weight = AugurCollectionTotalRepoWeight(total_repo_weight,weight_calculation=get_repo_weight_facade)
+    
+
+    #Overwrite super method
+    def send_messages(self):
+        augur_collection_list = []
+        
+        for repo_git in self.repos:
+            #Check total repo weight
+            if self.total_repo_weight.value == 0:
+                break
+            
+            #Subtract repo's weight
+            self.total_repo_weight = self.total_repo_weight - repo_git
+
+            repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
+            repo_id = repo.repo_id
+
+            augur_collection_sequence = []
+            for job in collection_phases:
+                #Add the phase to the sequence in order as a celery task.
+                #The preliminary task creates the larger task chain 
+                augur_collection_sequence.append(job(repo_git))
+
+            #augur_collection_sequence.append(core_task_success_util.si(repo_git))
+            #Link all phases in a chain and send to celery
+            augur_collection_chain = chain(*augur_collection_sequence)
+            task_id = augur_collection_chain.apply_async(link_error=task_failed_util.s()).task_id
+
+            self.logger.info(f"Setting repo_id {repo_id} to collecting for repo: {repo_git}")
+
+            #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
+            yield repo_git, task_id
