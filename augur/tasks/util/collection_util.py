@@ -330,18 +330,30 @@ class AugurTaskRoutine:
         logger (Logger): Get logger from AugurLogger
         repos (List[str]): List of repo_ids to run collection on.
         collection_phases (List[str]): List of phases to run in augur collection.
+        collection_hook (str): String determining the attributes to update when collection for a repo starts. e.g. core
         session: Database session to use
     """
-    def __init__(self,session,repos: List[str]=[],collection_phases: List=[]):
+    def __init__(self,session,repos: List[str]=[],collection_phases: List=[],collection_hook: str="core"):
         self.logger = AugurLogger("data_collection_jobs").get_logger()
         #self.session = TaskSession(self.logger)
         self.collection_phases = collection_phases
         #self.disabled_collection_tasks = disabled_collection_tasks
         self.repos = repos
         self.session = session
+        self.collection_hook = collection_hook
 
-    def update_status_and_id(repo_git, task_id):
-        raise NotImplementedError
+        #Also have attribute to determine what to set repos' status as when they are run
+        self.start_state = CollectionState.COLLECTING.value
+
+    def update_status_and_id(self,repo_git, task_id):
+        repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
+
+        #Set status in database to collecting
+        repoStatus = repo.collection_status[0]
+        #
+        setattr(repoStatus,f"{self.collection_hook}_task_id",task_id)
+        setattr(repoStatus,f"{self.collection_hook}_status",self.start_state)
+        self.session.commit()
 
     def start_data_collection(self):
         """Start all task items and return.
@@ -351,6 +363,13 @@ class AugurTaskRoutine:
             This way all the specific stuff for each collection hook/ repo
             is generalized.
         """
+
+        #Send messages starts each repo and yields its running info
+        #to concurrently update the correct field in the database.
+        for repo_git, task_id in self.send_messages():
+            self.update_status_and_id(repo_git,task_id)
+    
+    def send_messages(self):
         augur_collection_list = []
         
         for repo_git in self.repos:
