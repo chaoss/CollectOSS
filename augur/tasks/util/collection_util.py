@@ -340,6 +340,8 @@ class AugurTaskRoutine:
         self.repos = repos
         self.session = session
 
+    def update_status_and_id(repo_git, task_id):
+        raise NotImplementedError
 
     def start_data_collection(self):
         """Start all task items and return.
