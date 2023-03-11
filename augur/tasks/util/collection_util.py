@@ -292,7 +292,7 @@ class AugurCollectionTotalRepoWeight:
     Attributes:
         logger (Logger): Get logger from AugurLogger
         value (int): current value of the collection weight
-        value_weight_calculation (function): List of repo_ids to run collection on.
+        value_weight_calculation (function): Function to use on repo to determine weight
     """
     def __init__(self,starting_value: int, weight_calculation=get_repo_weight_core):
         self.logger = AugurLogger("data_collection_jobs").get_logger()
@@ -398,6 +398,20 @@ class AugurTaskRoutine:
 
 
 class AugurWeightedTaskRoutine(AugurTaskRoutine):
+    """
+        class to keep track of various groups of collection tasks for a group of repos.
+        Intermediate class that takes into account relative weights of repos and stops after
+        a set limit of repos limited by their size.
+
+
+    Attributes:
+        logger (Logger): Get logger from AugurLogger
+        repos (List[str]): List of repo_ids to run collection on.
+        collection_phases (List[str]): List of phases to run in augur collection.
+        collection_hook (str): String determining the attributes to update when collection for a repo starts. e.g. core
+        session: Database session to use
+        total_repo_weight (AugurCollectionTotalRepoWeight): object that allows repo objects and repo_git strings to be subtracted from it
+    """
     def __init__(self,session,repos: List[str]=[],collection_phases: List[str]=[],collection_hook: str="core",total_repo_weight=10000):
         
         #Define superclass vars
@@ -414,6 +428,13 @@ class AugurWeightedTaskRoutine(AugurTaskRoutine):
     
 
     #Overwrite super method
+    #now returns resulting weight after either reaching zero or 
+    #scheduling all repos assigned to the object.
+    def start_data_collection(self):
+        super().start_data_collection()
+
+        return self.total_repo_weight.value
+
     def send_messages(self):
         augur_collection_list = []
         
@@ -443,3 +464,25 @@ class AugurWeightedTaskRoutine(AugurTaskRoutine):
 
             #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
             yield repo_git, task_id
+
+if __name__ == "__main__":
+    #Examples of using AugurCollectionTotalRepoWeight
+    weight = AugurCollectionTotalRepoWeight(10000)
+    print(f"Weight value: {weight.value}")
+
+    #Apply subtraction operation with string
+    weight = weight - "https://github.com/chaoss/augur"
+    print(f"Weight value: {weight.value}")
+
+    #Apply subtraction operation with orm object
+    with DatabaseSession(logging.getLogger()) as session:
+        repo = Repo.get_by_repo_git(session, 'https://github.com/operate-first/blueprint')
+        weight = weight - repo
+    
+    print(f"Weight value: {weight.value}")
+
+    #Use commit count instead of issues and pr count
+    commitWeight = AugurCollectionTotalRepoWeight(100000,weight_calculation=get_repo_weight_facade)
+    print(f"commit weight value: {commitWeight.value}")
+    #commitWeight = commitWeight - "https://github.com/eclipse/che-theia-activity-tracker"
+    #print(f"commit weight value: {commitWeight.value}")

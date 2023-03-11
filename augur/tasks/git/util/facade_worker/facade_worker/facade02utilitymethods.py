@@ -40,6 +40,7 @@ import configparser
 import sqlalchemy as s
 from .facade01config import get_database_args_from_env
 from augur.application.db.models.augur_data import *
+from .facade01config import FacadeSession as FacadeSession
 #from augur.tasks.git.util.facade_worker.facade
 
 def update_repo_log(session, repos_id,status):
@@ -146,7 +147,7 @@ def date_weight_factor(days_since_last_collection):
 
 def get_repo_weight_by_commit(logger,repo_git,days_since_last_collection):
 	with FacadeSession(logger) as session:
-		
+		repo = Repo.get_by_repo_git(session, repo_git)
 		absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
 		repo_loc = (f"{absolute_path}/.git")
 
