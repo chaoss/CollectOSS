@@ -368,7 +368,8 @@ def collect_pull_request_reviews(repo_git: str) -> None:
             logger.info(f"Pr review type: {type(raw_pr_review)}")
             logger.info(raw_pr_review)
 
-            pr_reviews.append(extract_needed_pr_review_data(raw_pr_review, pull_request_id, repo_id, platform_id, tool_source, tool_version))
+            if "cntrb_id" in raw_pr_review:
+                pr_reviews.append(extract_needed_pr_review_data(raw_pr_review, pull_request_id, repo_id, platform_id, tool_source, tool_version))
 
         logger.info(f"{owner}/{repo}: Inserting pr reviews of length: {len(pr_reviews)}")
         pr_review_natural_keys = ["pr_review_src_id",]
