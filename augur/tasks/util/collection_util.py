@@ -381,7 +381,7 @@ class AugurTaskRoutine:
             repo_id = repo.repo_id
 
             augur_collection_sequence = []
-            for job in collection_phases:
+            for job in self.collection_phases:
                 #Add the phase to the sequence in order as a celery task.
                 #The preliminary task creates the larger task chain 
                 augur_collection_sequence.append(job(repo_git))
@@ -450,7 +450,7 @@ class AugurWeightedTaskRoutine(AugurTaskRoutine):
             repo_id = repo.repo_id
 
             augur_collection_sequence = []
-            for job in collection_phases:
+            for job in self.collection_phases:
                 #Add the phase to the sequence in order as a celery task.
                 #The preliminary task creates the larger task chain 
                 augur_collection_sequence.append(job(repo_git))

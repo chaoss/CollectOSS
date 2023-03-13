@@ -9,7 +9,7 @@ import logging
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.github.util.gh_graphql_entities import hit_api_graphql
+from augur.tasks.github.util.gh_graphql_entities import hit_api_graphql, request_graphql_dict
 from augur.application.db.models import *
 from augur.tasks.github.util.github_task_session import *
 
@@ -79,7 +79,7 @@ def grab_repo_info_from_graphql_endpoint(key_auth, logger, query):
     url = 'https://api.github.com/graphql'
     # Hit the graphql endpoint and retry 3 times in case of failure
     logger.info("Hitting endpoint: {} ...\n".format(url))
-    r = hit_api_graphql(key_auth, url, logger, query)
+    r = request_graphql_dict(key_auth, logger, url, query)
     
     data = {}
     try:
