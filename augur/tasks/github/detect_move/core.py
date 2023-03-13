@@ -51,17 +51,11 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
     while attempts < 10:
         response_from_gh = hit_api(key_auth, url, logger)
 
-        if response_from_gh:
+        if response_from_gh and response_from_gh.status_code != 404:
             break
 
         attempts += 1
 
-    if attempts == 10:
-        logger.warning(f"Could not check if repo moved because the api timed out 10 times. Url: {url}")
-        return
-
-    
-    
     #Mark as errored if not found
     if response_from_gh.status_code == 404:
         logger.error(f"Repo {repo.repo_git} responded 404 when pinged!")
@@ -76,7 +70,11 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
         update_repo_with_dict(current_repo_dict, repo_update_dict, logger, augur_db)
 
         raise Exception(f"ERROR: Repo not found at requested host {repo.repo_git}")
+    elif attempts == 10:
+        logger.warning(f"Could not check if repo moved because the api timed out 10 times. Url: {url}")
+        return
     
+
     #skip if not moved
     #301 moved permanently 
     if response_from_gh.status_code != 301:
