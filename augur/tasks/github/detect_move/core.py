@@ -5,6 +5,7 @@ from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.util import parse_json_response
 import logging
+from datetime import datetime
 from enum import Enum
 from augur.application.db.util import execute_session_query
 
@@ -13,6 +14,20 @@ class CollectionState(Enum):
     PENDING = "Pending"
     ERROR = "Error"
     COLLECTING = "Collecting"
+
+
+def update_repo_with_dict(current_dict,new_dict,logger,db):
+    
+    
+    to_insert = current_dict
+    del to_insert['_sa_instance_state']
+    to_insert.update(new_dict)
+
+    result = db.insert_data(to_insert, Repo, ['repo_id'])
+
+    url = to_insert['repo_git']
+    logger.info(f"Updated repo for {url}\n")
+
 
 
 def extract_owner_and_repo_from_endpoint(key_auth, url, logger):
@@ -30,6 +45,7 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
 
     owner, name = get_owner_repo(repo.repo_git)
     url = f"https://api.github.com/repos/{owner}/{name}"
+    current_repo_dict = repo.__dict__
 
     attempts = 0
     while attempts < 10:
@@ -44,21 +60,30 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
         logger.warning(f"Could not check if repo moved because the api timed out 10 times. Url: {url}")
         return
 
+    
+    
+    #Mark as errored if not found
+    if response_from_gh.status_code == 404:
+        logger.error(f"Repo {repo.repo_git} responded 404 when pinged!")
+
+        repo_update_dict = {
+        'repo_git': repo.repo_git,
+        'repo_path': None,
+        'repo_name': None,
+        'description': f"During our check for this repo on {datetime.today().strftime('%Y-%m-%d')}, a 404 error was returned. The repository does not appear to have moved. Instead, it appears to be deleted"
+        }
+
+        update_repo_with_dict(current_repo_dict, repo_update_dict, logger, augur_db)
+
+        raise Exception(f"ERROR: Repo not found at requested host {repo.repo_git}")
+    
     #skip if not moved
     #301 moved permanently 
     if response_from_gh.status_code != 301:
         logger.info(f"Repo found at url: {url}")
         return
     
-    #Mark as errored if not found
-    if response_from_gh.status_code == 404:
-        logger.error(f"Repo {repo.repo_git} responded 404 when pinged!")
-        raise Exception(f"ERROR: Repo not found at requested host {repo.repo_git}")
-    
     owner, name = extract_owner_and_repo_from_endpoint(key_auth, response_from_gh.headers['location'], logger)
-
-    current_repo_dict = repo.__dict__
-    del current_repo_dict['_sa_instance_state']
 
 
     try:
@@ -74,11 +99,7 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
         'description': f"(Originally hosted at {url}) {old_description}"
     }
 
-    current_repo_dict.update(repo_update_dict)
-
-    result = augur_db.insert_data(current_repo_dict, Repo, ['repo_id'])
-
-    logger.info(f"Updated repo for {owner}/{name}\n")
+    update_repo_with_dict(current_repo_dict, repo_update_dict, logger,augur_db)
 
     statusQuery = augur_db.session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
 
