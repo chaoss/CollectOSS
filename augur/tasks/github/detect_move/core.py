@@ -50,6 +50,11 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
         logger.info(f"Repo found at url: {url}")
         return
     
+    #Mark as errored if not found
+    if response_from_gh.status_code == 404:
+        logger.error(f"Repo {repo.repo_git} responded 404 when pinged!")
+        raise Exception(f"ERROR: Repo not found at requested host {repo.repo_git}")
+    
     owner, name = extract_owner_and_repo_from_endpoint(key_auth, response_from_gh.headers['location'], logger)
 
     current_repo_dict = repo.__dict__
