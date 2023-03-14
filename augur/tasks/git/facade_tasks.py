@@ -33,6 +33,7 @@ from augur.tasks.github.facade_github.tasks import *
 from augur.tasks.util.worker_util import create_grouped_task_load
 
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 
 
 from augur.application.db import data_parse
@@ -69,7 +70,7 @@ def facade_error_handler(request,exc,traceback):
 
 
 #Predefine facade collection with tasks
-@celery.task
+@celery.task(base=AugurFacadeRepoCollectionTask)
 def facade_analysis_init_facade_task(repo_git):
 
     logger = logging.getLogger(facade_analysis_init_facade_task.__name__)
@@ -86,12 +87,16 @@ def facade_analysis_init_facade_task(repo_git):
             repo_id=:repo_id""").bindparams(repo_id=repo_id)
         session.execute_sql(update_project_status)
 
-@celery.task
-def grab_comitters(repo_id,platform="github"):
+@celery.task(base=AugurFacadeRepoCollectionTask)
+def grab_comitters(repo_git,platform="github"):
 
     from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(grab_comitters.__name__)
+    with FacadeSession(logger) as session:
+
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo.repo_id
 
     try:
         grab_committer_list(GithubTaskSession(logger, engine), repo_id,platform)
@@ -99,12 +104,15 @@ def grab_comitters(repo_id,platform="github"):
         logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
-@celery.task
-def trim_commits_facade_task(repo_id):
+@celery.task(base=AugurFacadeRepoCollectionTask)
+def trim_commits_facade_task(repo_git):
 
     logger = logging.getLogger(trim_commits_facade_task.__name__)
 
     with FacadeSession(logger) as session:
+
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo.repo_id
 
         def update_analysis_log(repos_id,status):
 
@@ -148,13 +156,16 @@ def trim_commits_facade_task(repo_id):
         update_analysis_log(repo_id,'Collecting data')
         logger.info(f"Got past repo {repo_id}")
 
-@celery.task
-def trim_commits_post_analysis_facade_task(repo_id):
+@celery.task(base=AugurFacadeRepoCollectionTask)
+def trim_commits_post_analysis_facade_task(repo_git):
 
     logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
     
 
     with FacadeSession(logger) as session:
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo.repo_id
+
         start_date = session.get_setting('start_date')
         def update_analysis_log(repos_id,status):
 
@@ -228,14 +239,18 @@ def facade_start_contrib_analysis_task():
 
 
 #enable celery multithreading
-@celery.task
-def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
+@celery.task(base=AugurFacadeRepoCollectionTask)
+def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     """Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
     """
 
     #create new session for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
     with FacadeSession(logger) as session:
+        
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo.repo_id
+
         start_date = session.get_setting('start_date')
 
         session.logger.info(f"Generating sequence for repo {repo_id}")
@@ -390,13 +405,13 @@ def generate_analysis_sequence(logger,repo_git, session):
 
     analysis_sequence.append(facade_analysis_init_facade_task.si(repo_git))
 
-    analysis_sequence.append(grab_comitters.si(repo_id))
+    analysis_sequence.append(grab_comitters.si(repo_git))
 
-    analysis_sequence.append(trim_commits_facade_task.si(repo_id))
+    analysis_sequence.append(trim_commits_facade_task.si(repo_git))
 
-    analysis_sequence.append(analyze_commits_in_parallel.si(repo_id,True))
+    analysis_sequence.append(analyze_commits_in_parallel.si(repo_git,True))
 
-    analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_id))
+    analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_git))
 
     
     analysis_sequence.append(facade_analysis_end_facade_task.si())
