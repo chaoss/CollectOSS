@@ -17,6 +17,16 @@ from augur.application.db.engine import get_database_string
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
 from augur.application.db.models import CollectionStatus
 
+class CollectionState(Enum):
+    SUCCESS = "Success"
+    PENDING = "Pending"
+    ERROR = "Error"
+    COLLECTING = "Collecting"
+    INITIALIZING = "Initializing"
+    UPDATE = "Update"
+    FAILED_CLONE = "Failed Clone"
+
+
 logger = logging.getLogger(__name__)
 
 start_tasks = ['augur.tasks.start_tasks',
@@ -58,7 +68,55 @@ redis_db_number, redis_conn_string = get_redis_conn_values()
 BROKER_URL = get_rabbitmq_conn_string()#f'{redis_conn_string}{redis_db_number}'
 BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 
-celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)
+
+class AugurTask(celery.Task):
+    def task_failed_util(self,exc,traceback,task_id,args, kwargs, einfo):
+
+        from augur.tasks.init.celery_app import engine
+
+        logger = logging.getLogger(task_failed_util.__name__)
+
+        # log traceback to error file
+        logger.error(f"Task {task_id} raised exception: {exc}\n{traceback}")
+
+        with DatabaseSession(logger,engine) as session:
+            core_id_match = CollectionStatus.core_task_id == task_id
+            secondary_id_match = CollectionStatus.secondary_task_id == task_id
+            facade_id_match = CollectionStatus.facade_task_id == task_id
+
+            query = session.query(CollectionStatus).filter(or_(core_id_match,secondary_id_match,facade_id_match))
+
+            try:
+                collectionRecord = execute_session_query(query,'one')
+            except:
+                #Exit if we can't find the record.
+                return
+
+            if collectionRecord.core_task_id == task_id:
+                # set status to Error in db
+                collectionRecord.core_status = CollectionState.ERROR.value
+                collectionRecord.core_task_id = None
+
+
+            if collectionRecord.secondary_task_id == task_id:
+                # set status to Error in db
+                collectionRecord.secondary_status = CollectionState.ERROR.value
+                collectionRecord.secondary_task_id = None
+
+
+            if collectionRecord.facade_task_id == task_id:
+                #Failed clone is differant than an error in collection.
+                if collectionRecord.facade_status != CollectionState.FAILED_CLONE.value or collectionRecord.facade_status != CollectionState.UPDATE.value:
+                    collectionRecord.facade_status = CollectionState.ERROR.value
+
+                collectionRecord.facade_task_id = None
+
+            session.commit()
+
+
+
+
+celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks, task_cls='augur.tasks.init.celery_app:AugurTask')
 
 # define the queues that tasks will be put in (by default tasks are put in celery queue)
 celery_app.conf.task_routes = {
