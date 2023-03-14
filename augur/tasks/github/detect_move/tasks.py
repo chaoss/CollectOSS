@@ -1,12 +1,13 @@
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.detect_move.core import *
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.util import execute_session_query
 import traceback
 
 
 
-@celery.task()
+@celery.task(base=AugurCoreRepoCollectionTask)
 def detect_github_repo_move_core(repo_git : str) -> None:
 
     logger = logging.getLogger(detect_github_repo_move_core.__name__)
@@ -22,7 +23,7 @@ def detect_github_repo_move_core(repo_git : str) -> None:
         ping_github_for_repo_move(augur_db, manifest.key_auth, repo, logger)
 
 
-@celery.task()
+@celery.task(base=AugurCoreRepoCollectionTask)
 def detect_github_repo_move_secondary(repo_git : str) -> None:
 
     logger = logging.getLogger(detect_github_repo_move_secondary.__name__)

@@ -4,6 +4,7 @@ import traceback
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
@@ -18,7 +19,7 @@ from ..messages.tasks import process_github_comment_contributors
 platform_id = 1
 
 
-@celery.task()
+@celery.task(base=AugurCoreRepoCollectionTask)
 def collect_pull_requests(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_pull_requests.__name__)
