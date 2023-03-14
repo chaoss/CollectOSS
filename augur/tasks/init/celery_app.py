@@ -70,7 +70,7 @@ BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 
 
 class AugurTask(celery.Task):
-    def task_failed_util(self,exc,traceback,task_id,args, kwargs, einfo):
+    def on_failure(self,exc,traceback,task_id,args, kwargs, einfo):
 
         from augur.tasks.init.celery_app import engine
 
