@@ -24,8 +24,7 @@ development = get_development_flag()
 def collect_issues(repo_git : str) -> None:
 
 
-    logger = logging.getLogger(collect_issues.__name__)
-    raise Exception()    
+    logger = logging.getLogger(collect_issues.__name__) 
     with GithubTaskManifest(logger) as manifest:
 
         augur_db = manifest.augur_db
