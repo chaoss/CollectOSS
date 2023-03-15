@@ -146,7 +146,6 @@ def non_repo_domain_tasks():
 
     tasks = chain(
         *enabled_tasks,
-        refresh_materialized_views.si()
     )
 
     tasks.apply_async()
