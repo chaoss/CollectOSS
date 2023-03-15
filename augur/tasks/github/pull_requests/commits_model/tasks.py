@@ -3,11 +3,12 @@ import traceback
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.pull_requests.commits_model.core import *
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurSecondaryRepoCollectionTask
 from augur.application.db.util import execute_session_query
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 
 
-@celery.task()
+@celery.task(base=AugurSecondaryRepoCollectionTask)
 def process_pull_request_commits(repo_git: str) -> None:
 
     logger = logging.getLogger(process_pull_request_commits.__name__)
