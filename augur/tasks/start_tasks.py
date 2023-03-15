@@ -201,16 +201,8 @@ def start_primary_collection(session,max_repo,days):
     primary_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=primary_enabled_phases)
 
     #Start data collection and update the collectionStatus with the task_ids
-    for repo_git, task_id in primary_augur_collection.start_data_collection():
-        
-        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+    primary_augur_collection.start_data_collection()
 
-        #set status in database to collecting
-        repoStatus = repo.collection_status[0]
-        repoStatus.core_task_id = task_id
-        #repoStatus.secondary_task_id = task_id
-        repoStatus.core_status = CollectionState.COLLECTING.value
-        session.commit()
 
 def start_secondary_collection(session,max_repo,days):
 
@@ -250,18 +242,9 @@ def start_secondary_collection(session,max_repo,days):
 
     session.logger.info(f"Secondary collection starting for: {tuple(repo_git_identifiers)}")
 
-    secondary_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=secondary_enabled_phases)
+    secondary_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=secondary_enabled_phases,collection_hook="secondary")
 
-    #Start data collection and update the collectionStatus with the task_ids
-    for repo_git, task_id in secondary_augur_collection.start_data_collection():
-        
-        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
-
-        #set status in database to collecting
-        repoStatus = repo.collection_status[0]
-        repoStatus.secondary_task_id = task_id
-        repoStatus.secondary_status = CollectionState.COLLECTING.value
-        session.commit()
+    secondary_augur_collection.start_data_collection()
 
 def start_facade_clone_update(session,max_repo,days):
     facade_enabled_phases = []
@@ -294,18 +277,11 @@ def start_facade_clone_update(session,max_repo,days):
     
     session.logger.info(f"Facade clone/update starting for: {tuple(repo_git_identifiers)}")
 
-    facade_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=facade_enabled_phases)
+    facade_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=facade_enabled_phases,collection_hook="facade")
+    #Change start state so cloning repos appear as initializing instead of collecting.
+    facade_augur_collection.start_state = CollectionState.INITIALIZING.value
 
-    #Start data collection and update the collectionStatus with the task_ids
-    for repo_git, task_id in facade_augur_collection.start_data_collection():
-        
-        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
-
-        #set status in database to collecting
-        repoStatus = repo.collection_status[0]
-        repoStatus.facade_task_id = task_id
-        repoStatus.facade_status = CollectionState.INITIALIZING.value
-        session.commit()
+    facade_augur_collection.start_data_collection()
 
 def start_facade_collection(session,max_repo,days):
 
@@ -340,18 +316,9 @@ def start_facade_collection(session,max_repo,days):
 
     session.logger.info(f"Facade collection starting for: {tuple(repo_git_identifiers)}")
 
-    facade_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=facade_enabled_phases)
+    facade_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=facade_enabled_phases,collection_hook="facade")
 
-    #Start data collection and update the collectionStatus with the task_ids
-    for repo_git, task_id in facade_augur_collection.start_data_collection():
-        
-        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
-
-        #set status in database to collecting
-        repoStatus = repo.collection_status[0]
-        repoStatus.facade_task_id = task_id
-        repoStatus.facade_status = CollectionState.COLLECTING.value
-        session.commit()
+    facade_augur_collection.start_data_collection()
 
 @celery.task
 def augur_collection_monitor():     
