@@ -4,9 +4,10 @@ from augur.application.db.session import DatabaseSession
 from augur.tasks.github.pull_requests.files_model.core import *
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurSecondaryRepoCollectionTask
 from augur.application.db.util import execute_session_query
 
-@celery.task()
+@celery.task(base=AugurSecondaryRepoCollectionTask)
 def process_pull_request_files(repo_git: str) -> None:
 
     logger = logging.getLogger(process_pull_request_files.__name__)

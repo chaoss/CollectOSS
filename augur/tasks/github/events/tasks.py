@@ -3,6 +3,7 @@ import logging
 import traceback
 
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
@@ -14,7 +15,7 @@ from augur.application.db.util import execute_session_query
 
 platform_id = 1
 
-@celery.task()
+@celery.task(base=AugurCoreRepoCollectionTask)
 def collect_events(repo_git: str):
 
     logger = logging.getLogger(collect_events.__name__)

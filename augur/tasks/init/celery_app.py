@@ -3,19 +3,32 @@ from celery.signals import worker_process_init, worker_process_shutdown, eventle
 import logging
 from typing import List, Dict
 import os
+from enum import Enum
+import traceback
+import celery
 from celery import Celery
 from celery import current_app 
 from celery.signals import after_setup_logger
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, or_, and_
 
 
-from augur.application.logs import TaskLogConfig
+from augur.application.logs import TaskLogConfig, AugurLogger
 from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import DatabaseEngine
 from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
-from augur.application.db.models import CollectionStatus
+from augur.application.db.models import CollectionStatus, Repo
+
+class CollectionState(Enum):
+    SUCCESS = "Success"
+    PENDING = "Pending"
+    ERROR = "Error"
+    COLLECTING = "Collecting"
+    INITIALIZING = "Initializing"
+    UPDATE = "Update"
+    FAILED_CLONE = "Failed Clone"
+
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +71,44 @@ redis_db_number, redis_conn_string = get_redis_conn_values()
 BROKER_URL = get_rabbitmq_conn_string()#f'{redis_conn_string}{redis_db_number}'
 BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 
+
+#Classes for tasks that take a repo_git as an argument.
+class AugurCoreRepoCollectionTask(celery.Task):
+
+    def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core'):
+        from augur.tasks.init.celery_app import engine
+
+        logger = AugurLogger(logger_name).get_logger()
+
+        logger.error(f"Task {task_id} raised exception: {exc}\n Traceback: {''.join(traceback.format_exception(None, exc, exc.__traceback__))}")
+
+        with DatabaseSession(logger,engine) as session:
+            logger.info(f"Repo git: {repo_git}")
+            repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+
+            repoStatus = repo.collection_status[0]
+            setattr(repoStatus, f"{collection_hook}_status", CollectionState.ERROR.value)
+            setattr(repoStatus, f"{collection_hook}_task_id", None)
+            session.commit()
+
+    def on_failure(self,exc,task_id,args, kwargs, einfo):
+        repo_git = args[0]
+        # log traceback to error file
+        self.augur_handle_task_failure(exc, task_id, repo_git, "core_task_failure")
+
+class AugurSecondaryRepoCollectionTask(AugurCoreRepoCollectionTask):
+    def on_failure(self,exc,task_id,args, kwargs, einfo):
+        
+        repo_git = args[0]
+        self.augur_handle_task_failure(exc, task_id, repo_git, "secondary_task_failure",collection_hook='secondary')
+
+class AugurFacadeRepoCollectionTask(AugurCoreRepoCollectionTask):
+    def on_failure(self,exc,task_id,args, kwargs, einfo):
+        repo_git = args[0]
+        self.augur_handle_task_failure(exc, task_id, repo_git, "facade_task_failure",collection_hook='facade')
+
+
+#task_cls='augur.tasks.init.celery_app:AugurCoreRepoCollectionTask'
 celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)
 
 # define the queues that tasks will be put in (by default tasks are put in celery queue)
