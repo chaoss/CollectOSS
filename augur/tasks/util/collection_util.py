@@ -431,7 +431,10 @@ class AugurWeightedTaskRoutine(AugurTaskRoutine):
     #now returns resulting weight after either reaching zero or 
     #scheduling all repos assigned to the object.
     def start_data_collection(self):
-        super().start_data_collection()
+        #Send messages starts each repo and yields its running info
+        #to concurrently update the correct field in the database.
+        for repo_git, task_id in self.send_messages():
+            self.update_status_and_id(repo_git,task_id)
 
         return self.total_repo_weight.value
 
