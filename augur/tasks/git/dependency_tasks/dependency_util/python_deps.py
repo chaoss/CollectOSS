@@ -14,7 +14,20 @@ def get_files(path):
 
 
 def get_deps_for_file(path):
+    try:
+        return get_deps_for_file_ast(path)
+    except Exception:
+        return get_deps_for_file_simple_regex(path)
 
+def get_deps_for_file_simple_regex(path):
+    f = open(path, 'r',encoding="utf-8")
+
+    matches = re.findall("import\s*(\w*)", f.read())
+    f.close()
+    return matches
+
+
+def get_deps_for_file_ast(path):
     with open(path, "r", encoding="utf-8") as f:
 
         imports = set()
