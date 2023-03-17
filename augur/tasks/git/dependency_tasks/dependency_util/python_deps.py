@@ -16,7 +16,7 @@ def get_files(path):
 def get_deps_for_file(path):
     try:
         return get_deps_for_file_ast(path)
-    except Exception as e:
+    except Exception:
         return get_deps_for_file_simple_regex(path)
 
 def get_deps_for_file_simple_regex(path):
