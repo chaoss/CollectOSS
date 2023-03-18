@@ -32,8 +32,8 @@ def downgrade():
 
 def add_repo_clone_data_table_1(upgrade = True):
 
-    clone_sequence = Sequence("augur_data.repo_clones_data_id_seq")
-    add_sequence_to_model(clone_sequence, **{'schema': None})
+    # clone_sequence = Sequence("augur_data.repo_clones_data_id_seq")
+    # add_sequence_to_model(clone_sequence, **{'schema': None})
 
     @renderers.dispatch_for(CreateSequenceOp)
     def render_create_sequence(autogen_context, op):
@@ -52,7 +52,7 @@ def add_repo_clone_data_table_1(upgrade = True):
 
     if upgrade:
 
-        op.create_sequence('repo_clones_data_id_seq', **{'schema': 'augur_data'})
+        op.create_sequence('repo_clones_data_id_seq','schema': 'augur_data')
         op.create_table('repo_clones_data',
         sa.Column('repo_clone_data_id', sa.BigInteger(), server_default=sa.text("nextval('augur_data.repo_clones_data_id_seq'::regclass)"), nullable=False),
         sa.Column('repo_id', sa.BigInteger(), nullable=False),
@@ -74,5 +74,5 @@ def add_repo_clone_data_table_1(upgrade = True):
         op.drop_table('repo_clones_data', schema='augur_data')
         op.execute(DropSequence(Sequence('augur_data.repo_clones_data_id_seq')))
         add_sequence_to_model(clone_sequence, 'augur_data')
-        op.drop_sequence('repo_clones_data_id_seq', **{'schema': 'augur_data'})
+        op.drop_sequence('repo_clones_data_id_seq','schema': 'augur_data')
 
