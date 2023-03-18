@@ -1,7 +1,7 @@
 """traffic additions
 
-Revision ID: 3
-Revises: 2
+Revision ID: 12
+Revises: 11
 Create Date: 2022-12-30 19:23:17.997570
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '3'
-down_revision = '2'
+revision = '12'
+down_revision = '11'
 branch_labels = None
 depends_on = None
 
