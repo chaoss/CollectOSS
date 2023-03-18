@@ -35,20 +35,20 @@ def add_repo_clone_data_table_1(upgrade = True):
     # clone_sequence = Sequence("augur_data.repo_clones_data_id_seq")
     # add_sequence_to_model(clone_sequence, **{'schema': None})
 
-    @renderers.dispatch_for(CreateSequenceOp)
-    def render_create_sequence(autogen_context, op):
-        return "op.create_sequence(%r, **%r)" % (
-            op.sequence_name,
-            {"schema": op.schema}
-        )
+    # @renderers.dispatch_for(CreateSequenceOp)
+    # def render_create_sequence(autogen_context, op):
+    #     return "op.create_sequence(%r, **%r)" % (
+    #         op.sequence_name,
+    #         {"schema": op.schema}
+    #     )
 
 
-    @renderers.dispatch_for(DropSequenceOp)
-    def render_drop_sequence(autogen_context, op):
-        return "op.drop_sequence(%r, **%r)" % (
-            op.sequence_name,
-            {"schema": op.schema}
-        ) 
+    # @renderers.dispatch_for(DropSequenceOp)
+    # def render_drop_sequence(autogen_context, op):
+    #     return "op.drop_sequence(%r, **%r)" % (
+    #         op.sequence_name,
+    #         {"schema": op.schema}
+    #     ) 
 
     if upgrade:
 
