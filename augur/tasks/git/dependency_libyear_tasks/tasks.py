@@ -3,9 +3,10 @@ import traceback
 from augur.application.db.session import DatabaseSession
 from augur.tasks.git.dependency_libyear_tasks.core import *
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 from augur.application.db.util import execute_session_query
 
-@celery.task
+@celery.task(base=AugurFacadeRepoCollectionTask)
 def process_libyear_dependency_metrics(repo_git):
     #raise NotImplementedError
 

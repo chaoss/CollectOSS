@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
@@ -16,14 +17,14 @@ from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 from augur.application.config import get_development_flag
 from augur.application.db.util import execute_session_query
+
 development = get_development_flag()
 
-@celery.task()
+@celery.task(base=AugurCoreRepoCollectionTask)
 def collect_issues(repo_git : str) -> None:
 
 
-    logger = logging.getLogger(collect_issues.__name__)
-    
+    logger = logging.getLogger(collect_issues.__name__) 
     with GithubTaskManifest(logger) as manifest:
 
         augur_db = manifest.augur_db

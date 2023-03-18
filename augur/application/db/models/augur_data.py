@@ -968,17 +968,16 @@ class Repo(Base):
 
         if not RepoGroup.is_valid_repo_group_id(session, repo_group_id):
             return None
-
-        result = re.search(r"https:\/\/(github\.com\/[A-Za-z0-9 \- _]+\/)([A-Za-z0-9 \- _ .]+)$", url)
-        if not result:
+        
+        owner, repo = Repo.parse_github_repo_url(url)
+        if not owner or not repo:
             return None
 
-        split_repo_git = result.groups()        
         repo_data = {
             "repo_group_id": repo_group_id,
             "repo_git": url,
-            "repo_path": split_repo_git[0],
-            "repo_name": split_repo_git[1],
+            "repo_path": f"github.com/{owner}/",
+            "repo_name": repo,
             "tool_source": tool_source,
             "tool_version": "1.0",
             "data_source": "Git"
@@ -990,15 +989,6 @@ class Repo(Base):
 
         if not result:
             return None
-
-        if repo_group_id != DEFAULT_REPO_GROUP_ID:
-            # update the repo group id
-            query = session.query(Repo).filter(Repo.repo_git == url)
-            repo = execute_session_query(query, 'one')
-
-            if not repo.repo_group_id == repo_group_id:
-                repo.repo_group_id = repo_group_id
-                session.commit()
 
         return result[0]["repo_id"]
 

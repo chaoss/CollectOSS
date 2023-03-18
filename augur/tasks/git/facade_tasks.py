@@ -26,12 +26,14 @@ import sqlalchemy as s
 
 
 from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
+from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
 from augur.tasks.github.facade_github.tasks import *
 
 from augur.tasks.util.worker_util import create_grouped_task_load
 
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 
 
 from augur.application.db import data_parse
@@ -68,25 +70,28 @@ def facade_error_handler(request,exc,traceback):
 
 
 #Predefine facade collection with tasks
-@celery.task
-def facade_analysis_init_facade_task(repo_id):
+@celery.task(base=AugurFacadeRepoCollectionTask)
+def facade_analysis_init_facade_task(repo_git):
 
     logger = logging.getLogger(facade_analysis_init_facade_task.__name__)
     with FacadeSession(logger) as session:
+
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo.repo_id
+
         session.update_status('Running analysis')
         session.log_activity('Info',f"Beginning analysis.")
 
-        update_project_status = s.sql.text("""UPDATE augur_operations.collection_status
-            SET facade_status='Collecting' WHERE 
-            repo_id=:repo_id""").bindparams(repo_id=repo_id)
-        session.execute_sql(update_project_status)
-
-@celery.task
-def grab_comitters(repo_id,platform="github"):
+@celery.task(base=AugurFacadeRepoCollectionTask)
+def grab_comitters(repo_git,platform="github"):
 
     from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(grab_comitters.__name__)
+    with FacadeSession(logger) as session:
+
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo.repo_id
 
     try:
         grab_committer_list(GithubTaskSession(logger, engine), repo_id,platform)
@@ -94,12 +99,15 @@ def grab_comitters(repo_id,platform="github"):
         logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
-@celery.task
-def trim_commits_facade_task(repo_id):
+@celery.task(base=AugurFacadeRepoCollectionTask)
+def trim_commits_facade_task(repo_git):
 
     logger = logging.getLogger(trim_commits_facade_task.__name__)
 
     with FacadeSession(logger) as session:
+
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo.repo_id
 
         def update_analysis_log(repos_id,status):
 
@@ -143,13 +151,16 @@ def trim_commits_facade_task(repo_id):
         update_analysis_log(repo_id,'Collecting data')
         logger.info(f"Got past repo {repo_id}")
 
-@celery.task
-def trim_commits_post_analysis_facade_task(repo_id):
+@celery.task(base=AugurFacadeRepoCollectionTask)
+def trim_commits_post_analysis_facade_task(repo_git):
 
     logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
     
 
     with FacadeSession(logger) as session:
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo.repo_id
+
         start_date = session.get_setting('start_date')
         def update_analysis_log(repos_id,status):
 
@@ -167,35 +178,14 @@ def trim_commits_post_analysis_facade_task(repo_id):
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
-        parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
-        "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
-        stdout=subprocess.PIPE, shell=True)
-
-        parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
-
-        # If there are no commits in the range, we still get a blank entry in
-        # the set. Remove it, as it messes with the calculations
-
-        if '' in parent_commits:
-            parent_commits.remove('')
+        parent_commits = get_parent_commits_set(repo_loc, start_date)
 
         # Grab the existing commits from the database
-
-        existing_commits = set()
-
-        find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
-            """).bindparams(repo_id=repo_id)
-
-        #session.cfg.cursor.execute(find_existing, (repo[0], ))
-
-        try:
-            for commit in session.fetchall_data_from_sql_text(find_existing):#list(session.cfg.cursor):
-                existing_commits.add(commit['cmt_commit_hash'])
-        except:
-            session.log_activity('Info', 'list(cfg.cursor) returned an error')
+        existing_commits = get_existing_commits_set(session, repo_id)
 
         # Find missing commits and add them
 
@@ -244,14 +234,18 @@ def facade_start_contrib_analysis_task():
 
 
 #enable celery multithreading
-@celery.task
-def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
+@celery.task(base=AugurFacadeRepoCollectionTask)
+def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     """Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
     """
 
     #create new session for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
     with FacadeSession(logger) as session:
+        
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo.repo_id
+
         start_date = session.get_setting('start_date')
 
         session.logger.info(f"Generating sequence for repo {repo_id}")
@@ -260,38 +254,16 @@ def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
-        parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
-        "--pretty=format:'%%H' --since=%s" % (repo_loc,start_date)],
-        stdout=subprocess.PIPE, shell=True)
-
-        parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
-
-        # If there are no commits in the range, we still get a blank entry in
-        # the set. Remove it, as it messes with the calculations
-
-        if '' in parent_commits:
-            parent_commits.remove('')
+        parent_commits = get_parent_commits_set(repo_loc, start_date)
 
         # Grab the existing commits from the database
-
-        existing_commits = set()
-
-        find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
-            """).bindparams(repo_id=repo_id)
-
-        #session.cfg.cursor.execute(find_existing, (repo[0], ))
-
-        try:
-            for commit in session.fetchall_data_from_sql_text(find_existing):#list(session.cfg.cursor):
-                existing_commits.add(commit['cmt_commit_hash'])
-        except:
-            session.log_activity('Info', 'list(cfg.cursor) returned an error')
+        existing_commits = get_existing_commits_set(session, repo_id)
 
         # Find missing commits and add them
-
         missing_commits = parent_commits - existing_commits
 
         session.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
@@ -301,7 +273,7 @@ def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
             #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
 
             #encode the repo_id with the commit.
-            commits = [commit for commit in list(missing_commits)]
+            commits = list(missing_commits)
             #Get all missing commits into one large list to split into task pools
             queue.extend(commits)
         else:
@@ -323,10 +295,10 @@ def analyze_commits_in_parallel(repo_id, multithreaded: bool)-> None:
             repo = execute_session_query(query,'one')
 
         logger.info(f"Got to analysis!")
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        repo_loc = (f"{absoulte_path}/.git")
         
         for count, commitTuple in enumerate(queue):
-
-            repo_loc = (f"{session.repo_base_directory}{repo.repo_group_id}/{repo.repo_path}{repo.repo_name}/.git")    
 
             analyze_commit(session, repo_id, repo_loc, commitTuple)
 
@@ -426,19 +398,15 @@ def generate_analysis_sequence(logger,repo_git, session):
 
     repo_id = repo_ids.pop(0)
 
-    #determine amount of celery tasks to run at once in each grouped task load
-    concurrentTasks = int((-1 * (15/(len(repo_ids)+1))) + 15)
-    logger.info(f"Scheduling concurrent layers {concurrentTasks} tasks at a time.")
+    analysis_sequence.append(facade_analysis_init_facade_task.si(repo_git))
 
-    analysis_sequence.append(facade_analysis_init_facade_task.si(repo_id))
+    analysis_sequence.append(grab_comitters.si(repo_git))
 
-    analysis_sequence.append(grab_comitters.si(repo_id))
+    analysis_sequence.append(trim_commits_facade_task.si(repo_git))
 
-    analysis_sequence.append(trim_commits_facade_task.si(repo_id))
+    analysis_sequence.append(analyze_commits_in_parallel.si(repo_git,True))
 
-    analysis_sequence.append(analyze_commits_in_parallel.si(repo_id,True))
-
-    analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_id))
+    analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_git))
 
     
     analysis_sequence.append(facade_analysis_end_facade_task.si())
@@ -473,11 +441,48 @@ def generate_contributor_sequence(logger,repo_git, session):
     return insert_facade_contributors.si(repo_id)
 
 
+def facade_clone_update_phase(repo_git):
+    logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
+    logger.info(f"Generating sequence to update/clone repo {repo_git}")
+
+    with FacadeSession(logger) as session:
+        
+        facade_sequence = []
+
+        #Get the repo_id
+        repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
+        WHERE repo_git=:value""").bindparams(value=repo_git)
+        repos = session.fetchall_data_from_sql_text(repo_list)
+
+        start_date = session.get_setting('start_date')
+
+        repo_ids = [repo['repo_id'] for repo in repos]
+
+        repo_id = repo_ids.pop(0)
+
+        #Get the collectionStatus
+        query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id)
+
+        status = execute_session_query(query,'one')
+        
+        # Figure out what we need to do
+        limited_run = session.limited_run
+        pull_repos = session.pull_repos
+
+        if 'Pending' in status.facade_status or 'Failed Clone' in status.facade_status:
+            facade_sequence.append(git_repo_initialize_facade_task.si(repo_git))#git_repo_initialize(session,repo_git_identifiers)
+
+        #TODO: alter this to work with current collection.
+        #if not limited_run or (limited_run and check_updates):
+        #    facade_sequence.append(check_for_repo_updates_facade_task.si(repo_git))#check_for_repo_updates(session,repo_git_identifiers)
+
+        if not limited_run or (limited_run and pull_repos):
+            facade_sequence.append(git_repo_updates_facade_task.si(repo_git))
+                
+        return chain(*facade_sequence)
 
 
 def facade_phase(repo_git):
-    #raise NotImplemented
-
     logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
     logger.info("Generating facade sequence")
     with FacadeSession(logger) as session:
@@ -499,43 +504,13 @@ def facade_phase(repo_git):
         
         # Figure out what we need to do
         limited_run = session.limited_run
-        delete_marked_repos = session.delete_marked_repos
-        pull_repos = session.pull_repos
-        #clone_repos = session.clone_repos
-        check_updates = session.check_updates
-        #force_updates = session.force_updates
         run_analysis = session.run_analysis
         #force_analysis = session.force_analysis
         run_facade_contributors = session.run_facade_contributors
-        nuke_stored_affiliations = session.nuke_stored_affiliations
-        fix_affiliations = session.fix_affiliations
-        force_invalidate_caches = session.force_invalidate_caches
-        rebuild_caches = session.rebuild_caches
-        #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
-            # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
-            #   'update_frequency')) else 0
-        force_invalidate_caches = session.force_invalidate_caches
-        create_xlsx_summary_files = session.create_xlsx_summary_files
-        multithreaded = session.multithreaded
 
         facade_sequence = []
         facade_core_collection = []
 
-        #Currently repos are never deleted
-        #if not limited_run or (limited_run and delete_marked_repos):
-        #    facade_sequence.append(git_repo_cleanup_facade_task.si(repo_git))#git_repo_cleanup(session,repo_git_identifiers)
-
-        if 'Pending' in status.facade_status or 'Failed Clone' in status.facade_status:
-            facade_sequence.append(git_repo_initialize_facade_task.si(repo_git))#git_repo_initialize(session,repo_git_identifiers)
-
-        #TODO: alter this to work with current collection.
-        #if not limited_run or (limited_run and check_updates):
-        #    facade_sequence.append(check_for_repo_updates_facade_task.si(repo_git))#check_for_repo_updates(session,repo_git_identifiers)
-
-        if not limited_run or (limited_run and pull_repos):
-            facade_sequence.append(git_repo_updates_facade_task.si(repo_git))
-
-        #facade_sequence.append(process_dependency_metrics.si(repo_git))
         #Generate commit analysis task order.
         if not limited_run or (limited_run and run_analysis):
             facade_core_collection.extend(generate_analysis_sequence(logger,repo_git,session))

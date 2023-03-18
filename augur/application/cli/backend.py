@@ -221,7 +221,7 @@ def clean_collection_status(session):
         WHERE facade_status LIKE '%Collecting%';
         UPDATE augur_operations.collection_status
         SET facade_status='Pending'
-        WHERE facade_status='Failed Clone';
+        WHERE facade_status='Failed Clone' OR facade_status='Initializing';
     """))
     #TODO: write timestamp for currently running repos.
 
@@ -261,7 +261,7 @@ def repo_reset(augur_app):
         WHERE facade_status='Collecting' OR facade_status='Success' OR facade_status='Error';
         UPDATE augur_operations.collection_status
         SET facade_status='Pending'
-        WHERE facade_status='Failed Clone';
+        WHERE facade_status='Failed Clone' OR facade_status='Initializing';
         TRUNCATE augur_data.commits CASCADE;
         """))
 

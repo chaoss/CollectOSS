@@ -30,7 +30,7 @@ def parse_repo_url(url: str) -> tuple:
         Tuple of owner and repo. Or a tuple of None and None if the url is invalid.
     """
 
-    if url.endswith(".github") or url.endswith(".github.io") or url.endswith(".js"):
+    if url.endswith(".github") or url.endswith(".io") or url.endswith(".js"):
 
         result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
     else:
