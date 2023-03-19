@@ -10,7 +10,7 @@ from alembic.autogenerate import renderers
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.schema import Sequence
+from sqlalchemy.schema import Sequence as schema 
 
 # revision identifiers, used by Alembic.
 revision = '12'
@@ -19,6 +19,11 @@ branch_labels = None
 depends_on = None
 
 traffic_sequence = Sequence('repo_clones_data_id_seq', schema='augur_data')
+
+# Current Error
+    #   File "/home/sean/github/berkeley/augur/application/schema/alembic/versions/12_traffic_additions.py", line 38, in add_repo_clone_data_table_1
+    #     op.execute(schema.CreateSequence(traffic_sequence))
+    # NameError: name 'schema' is not defined
 
 def upgrade():
 
