@@ -115,8 +115,9 @@ def get_deps_libyear_data(path, logger):
             #NOTE: Add new if for new package parser
             if dependency['package'] == 'PYPI':
                 data = get_pypi_data(dependency['name'])
-                current_version = sort_dependency_requirement(dependency,data)
+                
                 try:
+                    current_version = sort_dependency_requirement(dependency,data)
                     latest_version = get_latest_version(data)
                 except KeyError:
                     logger.error(f"Could not get current version of dependency for path {path}.\n  Dependency: {dependency}")

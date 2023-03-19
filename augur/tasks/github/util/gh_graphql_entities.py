@@ -336,6 +336,9 @@ class GraphQlPageCollection(collections.abc.Sequence):
         data = self.request_graphql_dict(variables=params)
         try:
             coreData = self.extract_paginate_result(data)
+
+            #Check to make sure we have data
+            coreData['totalCount']
         except KeyError as e:
             self.logger.error("Could not extract paginate result because there was no data returned")
             self.logger.error(
