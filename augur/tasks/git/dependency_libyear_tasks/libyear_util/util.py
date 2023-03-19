@@ -128,8 +128,8 @@ def get_deps_libyear_data(path, logger):
             elif dependency['package'] == 'NPM':
                 data = get_NPM_data(dependency['name'])
                 current_version = get_npm_current_version(data, dependency['requirement'])
-                latest_version = get_npm_latest_version(data)
                 try:
+                    latest_version = get_npm_latest_version(data)
                     latest_release_date = get_npm_release_date(data, latest_version)
                 except KeyError:
                     logger.error(f"Could not get latest version of dependency for path {path}.\n  Dependency: {dependency}")
