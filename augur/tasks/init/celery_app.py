@@ -87,9 +87,16 @@ class AugurCoreRepoCollectionTask(celery.Task):
             repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
 
             repoStatus = repo.collection_status[0]
-            setattr(repoStatus, f"{collection_hook}_status", CollectionState.ERROR.value)
-            setattr(repoStatus, f"{collection_hook}_task_id", None)
-            session.commit()
+
+            #Only set to error if the repo was actually running at the time.
+            #This is to allow for things like exiting from collection without error.
+            #i.e. detect_repo_move changes the repo's repo_git and resets collection to pending without error
+            prevStatus = getattr(repoS, f"{collection_hook}_status")
+
+            if prevStatus == CollectionState.COLLECTING.value or prevStatus == CollectionState.INITIALIZING.value:
+                setattr(repoStatus, f"{collection_hook}_status", CollectionState.ERROR.value)
+                setattr(repoStatus, f"{collection_hook}_task_id", None)
+                session.commit()
 
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         repo_git = args[0]
