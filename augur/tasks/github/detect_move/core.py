@@ -70,7 +70,7 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
         update_repo_with_dict(current_repo_dict, repo_update_dict, logger, augur_db)
 
         raise Exception(f"ERROR: Repo not found at requested host {repo.repo_git}")
-    elif attempts == 10:
+    elif attempts >= 10:
         logger.warning(f"Could not check if repo moved because the api timed out 10 times. Url: {url}")
         return
     
