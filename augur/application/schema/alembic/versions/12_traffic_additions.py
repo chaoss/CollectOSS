@@ -10,7 +10,7 @@ from alembic.autogenerate import renderers
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.schema import Sequence as schema 
+from sqlalchemy.schema import Sequence 
 
 # revision identifiers, used by Alembic.
 revision = '12'
@@ -40,7 +40,7 @@ def add_repo_clone_data_table_1(upgrade = True):
 
     if upgrade:
 
-        op.execute(schema.CreateSequence(traffic_sequence))
+        op.execute(CreateSequence(traffic_sequence))
         op.create_table('repo_clones_data',
         sa.Column('repo_clone_data_id', sa.BigInteger(), server_default=sa.text("nextval('augur_data.repo_clones_data_id_seq'::regclass)"), nullable=False),
         sa.Column('repo_id', sa.BigInteger(), nullable=False),
