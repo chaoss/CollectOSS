@@ -81,6 +81,8 @@ def grab_repo_info_from_graphql_endpoint(key_auth, logger, query):
     logger.info("Hitting endpoint: {} ...\n".format(url))
     data = request_graphql_dict(key_auth, logger, url, query)
 
+    if not data:
+        raise Exception(f"Could not get data from endpoint!")
     if 'errors' in data:
         raise Exception(f"Error!: {data['errors']}")
     
@@ -216,13 +218,6 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
     except Exception as e:
         logger.error(f"Could not grab info for repo {repo_orm_obj.repo_id}")
         raise e
-
-    # Just checking that the data is accessible (would not be if repo no longer exists)
-    try:
-        data['updatedAt']
-    except Exception as e:
-        raise Exception(f"Cannot access repo_info data: {data}\nError: {e}. \"Completing\" task.")
-
 
     # Get committers count info that requires seperate endpoint  
     committers_count = query_committers_count(key_auth, logger, owner, repo)
