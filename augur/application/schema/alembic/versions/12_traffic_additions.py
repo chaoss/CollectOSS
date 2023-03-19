@@ -51,7 +51,11 @@ def add_repo_clone_data_table_1(upgrade = True):
         sa.PrimaryKeyConstraint('repo_clone_data_id'),
         schema='augur_data'
         )
-        op.create_unique_constraint('repo_clone_unique', 'repo_clones_data', ['repo_id'])
+
+        ### I don't think we want repo_id to be unique here. I think we want to have many entries per repo
+        # op.create_unique_constraint('repo_clone_unique', 'repo_clones_data', ['repo_id'])
+
+        
         # I do not think this is necessary, SPG, 3/19/2023
         #op.drop_constraint('user_repo_user_id_fkey', 'user_repos', schema='augur_operations', type_='foreignkey')
         #op.create_foreign_key(None, 'user_repos', 'repo', ['repo_id'], ['repo_id'], source_schema='augur_operations', referent_schema='augur_data')
