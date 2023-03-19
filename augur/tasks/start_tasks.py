@@ -112,7 +112,7 @@ def primary_repo_collect_phase(repo_git):
     secondary_repo_jobs = group(
         collect_events.si(repo_git),#*create_grouped_task_load(dataList=first_pass, task=collect_events).tasks,
         collect_github_messages.si(repo_git), #*create_grouped_task_load(dataList=first_pass,task=collect_github_messages).tasks,
-        collect_github_repo_clones_data.si(repo_git)
+        collect_github_repo_clones_data.si(repo_git),
     )
 
     repo_task_group = group(
