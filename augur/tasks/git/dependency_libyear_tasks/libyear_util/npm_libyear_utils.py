@@ -14,15 +14,26 @@ def clean_version(version):
     version = [v for v in version if v.isdigit() or v == '.']
     return ''.join(version)
 
+def split_version(version):
+    #Split version string into list seperated by .
+    #assign elements of list to respective variables.
+    version_list = list(version.split('.'))
+    patch = version_list.pop(-1)
+    minor = version_list.pop(-1)
+    major = version_list[0]
+
+    return major,minor,patch
+
+
 
 def get_latest_patch(version, data):
     versions = data['versions']
     try:
         index = list(versions.keys()).index(version)
-    except:
-        #NOTE: Add error logging here
-        pass
-    major,minor,patch = version.split('.')
+    except ValueError as e:
+        raise e
+    
+    major,minor,patch = split_version(version)
     consider_version = version
     for v in list(versions.keys())[index:]:
         if v.split('.')[0]==major:
@@ -36,10 +47,11 @@ def get_lastest_minor(version, data):
     versions = data['versions']
     try:
         index = list(versions.keys()).index(version)
-    except:
-        #NOTE: Add error logging here
-        pass
-    major,minor,patch = version.split('.')
+    except ValueError as e:
+        raise e
+
+    major,minor,patch = split_version(version)
+    
     consider_version = get_latest_patch(version, data)
     for v in list(versions.keys())[index:]:
         if v.split('.')[0]==major:
@@ -61,8 +73,14 @@ def get_npm_latest_version(data):
 #add code here
 def get_npm_current_version(data, requirement):
     if requirement[0]=='~':
-        return get_latest_patch(clean_version(requirement), data)
+        try:
+            return get_latest_patch(clean_version(requirement), data)
+        except ValueError:
+            return None
     elif requirement[0]=='^':
-        return get_lastest_minor(clean_version(requirement), data)
+        try:
+            return get_lastest_minor(clean_version(requirement), data)
+        except ValueError:
+            return None
     else:
         return requirement

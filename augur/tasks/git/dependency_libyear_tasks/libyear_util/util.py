@@ -119,7 +119,8 @@ def get_deps_libyear_data(path, logger):
                 try:
                     latest_version = get_latest_version(data)
                 except KeyError:
-                    latest_version = None
+                    logger.error(f"Could not get current version of dependency for path {path}.\n  Dependency: {dependency}")
+                    continue
                 latest_release_date = get_release_date(data, latest_version,logger)
                 if current_version:
                     current_release_date = get_release_date(data, current_version,logger)
@@ -131,13 +132,15 @@ def get_deps_libyear_data(path, logger):
                 try:
                     latest_release_date = get_npm_release_date(data, latest_version)
                 except KeyError:
-                    latest_release_date = None
+                    logger.error(f"Could not get latest version of dependency for path {path}.\n  Dependency: {dependency}")
+                    continue
 
                 if current_version:
                     try:
                         current_release_date = get_npm_release_date(data, current_version)
                     except KeyError:
-                        current_release_date = None
+                        logger.error(f"Could not get latest version of dependency for path {path}.\n  Dependency: {dependency}")
+                        continue
 
             libyear = get_libyear(current_version, current_release_date, latest_version, latest_release_date)
             if not latest_release_date:
