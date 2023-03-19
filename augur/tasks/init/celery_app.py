@@ -92,7 +92,7 @@ class AugurCoreRepoCollectionTask(celery.Task):
             #Only set to error if the repo was actually running at the time.
             #This is to allow for things like exiting from collection without error.
             #i.e. detect_repo_move changes the repo's repo_git and resets collection to pending without error
-            prevStatus = getattr(repoS, f"{collection_hook}_status")
+            prevStatus = getattr(repo, f"{collection_hook}_status")
 
             if prevStatus == CollectionState.COLLECTING.value or prevStatus == CollectionState.INITIALIZING.value:
                 setattr(repoStatus, f"{collection_hook}_status", CollectionState.ERROR.value)
