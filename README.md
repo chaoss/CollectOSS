@@ -20,7 +20,6 @@ Augur is now releasing a dramatically improved new version to the main branch. I
 - The next release of the new version will include a hosted version of Augur where anyone can create an account and add repos “they care about”. If the hosted instance already has a requested organization or repository it will be added to a user’s view. If its a new repository or organization, the user will be notified that collection will take (time required for the scale of repositories added). 
 
 ## What is Augur?
-
 Augur is a software suite for collecting and measuring structured data
 about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities.
 
