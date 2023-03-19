@@ -18,7 +18,7 @@ down_revision = '11'
 branch_labels = None
 depends_on = None
 
-traffic_sequence = Sequence('augur_data.repo_clones_data_id_seq')
+traffic_sequence = Sequence('repo_clones_data_id_seq', schema='augur_data')
 
 def upgrade():
 
@@ -35,7 +35,7 @@ def add_repo_clone_data_table_1(upgrade = True):
 
     if upgrade:
 
-        op.execute(schema.CreateSequence(traffic_sequence), schema='augur_data')
+        op.execute(schema.CreateSequence(traffic_sequence))
         op.create_table('repo_clones_data',
         sa.Column('repo_clone_data_id', sa.BigInteger(), server_default=sa.text("nextval('augur_data.repo_clones_data_id_seq'::regclass)"), nullable=False),
         sa.Column('repo_id', sa.BigInteger(), nullable=False),
