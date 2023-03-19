@@ -18,7 +18,7 @@ down_revision = '11'
 branch_labels = None
 depends_on = None
 
-traffic_sequence = Sequence('augur_data.repo_clones_data_id_seq', metadata=meta)
+traffic_sequence = Sequence('augur_data.repo_clones_data_id_seq')
 
 def upgrade():
 
