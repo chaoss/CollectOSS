@@ -45,6 +45,7 @@ def generate_deps_libyear_data(session, repo_id, path):
             session.logger.info(f"No deps found for repo {repo_id} on path {path}")
             return
 
+        to_insert = []
         for dep in deps:
             repo_deps = {
                 'repo_id': repo_id,
@@ -71,4 +72,5 @@ def generate_deps_libyear_data(session, repo_id, path):
             #""").bindparams(**repo_deps)
 #
             #session.execute_sql(insert_statement)
-            session.insert_data(repo_deps, RepoDepsLibyear, ["repo_id","name","data_collection_date"])
+            to_insert.append(repo_deps)
+        session.insert_data(to_insert, RepoDepsLibyear, ["repo_id","name","data_collection_date"])
