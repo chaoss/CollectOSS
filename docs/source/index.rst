@@ -47,13 +47,18 @@ If you want to see augur in action, you can view CHAOSS’s augur instance `here
 Current maintainers
 --------------------
 - `Derek Howard <https://github.com/howderek>`_
-- `Sean P. Goggins <http://www.seangoggins.net>`_
-- `Matt Snell <https://github.com/Nebrethar>`_
 - `Andrew Brain <https://github.com/ABrain7710>`_
+- `Isaac Milarsky <https://github.com/IsaacMilarky>`_
+- `John McGinnis <https://github.com/Ulincys>`_ 
+- `Sean P. Goggins <https://github.com/sgoggins>`_ 
+
 
 
 Former maintainers
 --------------------
+- `Carter Landis <https://github.com/ccarterlandis>`_
+- `Gabe Heim <https://github.com/gabe-heim>`_
+- `Matt Snell <https://github.com/Nebrethar>`_
 - `Christian Cmehil-Warn <https://github.com/christiancme>`_
 - `Jonah Zukosky <https://github.com/jonahz5222>`_
 - `Carolyn Perniciaro <https://github.com/CMPerniciaro>`_
