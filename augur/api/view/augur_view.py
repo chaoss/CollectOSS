@@ -1,8 +1,10 @@
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user, login_required
 from .utils import *
 from .url_converters import *
 from .init import logger
+
+from functools import wraps
 
 # from .server import User
 from ..server import app, db_session
@@ -32,15 +34,20 @@ def page_not_found(error):
 
 @app.errorhandler(405)
 def unsupported_method(error):
-
     if AUGUR_API_VERSION in str(request.url_rule):
-        return jsonify({"status": "Unsupported method"}), 405
+        return jsonify({"status": "Unsupported Method"}), 405
     
     return render_message("405 - Method not supported", "The resource you are trying to access does not support the request method used"), 405
 
+@app.errorhandler(403)
+def forbidden(error):
+    if AUGUR_API_VERSION in str(request.url_rule):
+        return jsonify({"status": "Forbidden"}), 403
+    
+    return render_message("403 - Forbidden", "You do not have permission to view this page"), 403
+
 @login_manager.unauthorized_handler
 def unauthorized():
-
     if AUGUR_API_VERSION in str(request.url_rule):
 
         token_str = get_bearer_token()
@@ -52,6 +59,16 @@ def unauthorized():
 
     session["login_next"] = url_for(request.endpoint, **request.args)
     return redirect(url_for('user_login'))
+
+def admin_required(func):
+    @login_required
+    @wraps(func)
+    def inner_function(*args, **kwargs):
+        if current_user.admin:
+            return func(*args, **kwargs)
+        else:
+            forbidden(None)
+    return inner_function
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -83,22 +100,17 @@ def load_user(user_id):
 
 @login_manager.request_loader
 def load_user_request(request):
-
-    print(f"Current time of user request: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))}")
     token = get_bearer_token()
-
     current_time = int(time.time())
+
     token = db_session.query(UserSessionToken).filter(UserSessionToken.token == token, UserSessionToken.expiration >= current_time).first()
+
     if token:
-
-        print("Valid user")
-
         user = token.user
         user._is_authenticated = True
         user._is_active = True
-
         return user
-        
+    
     return None
 
 @app.template_filter('as_datetime')

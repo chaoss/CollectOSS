@@ -88,12 +88,18 @@ def start(disable_collection, development, port):
         
     db_session.invalidate()
 
-    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app"
+    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file=gunicorn.log"
     server = subprocess.Popen(gunicorn_command.split(" "))
 
-    time.sleep(3)
-    logger.info('Gunicorn webserver started...')
-    logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
+    try:
+        server.wait(5)
+
+        # IF we get to this point, Gunicorn did not start successfully
+        logger.error("Gunicorn failed to start in time: exiting")
+        exit(1)
+    except subprocess.TimeoutExpired as e:
+        logger.info('Gunicorn webserver started...')
+        logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
 
     scheduling_worker_process = None
     core_worker_process = None
