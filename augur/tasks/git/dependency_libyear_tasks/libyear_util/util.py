@@ -134,6 +134,7 @@ def get_deps_libyear_data(path, logger):
                         latest_release_date = None
                 except KeyError:
                     logger.error(f"Could not get current date of dependency for path {path} with version {latest_version}.\n  Dependency: {dependency}")
+                    latest_release_date = None
                 
                 if current_version:
                     current_release_date = get_release_date(data, current_version,logger)
