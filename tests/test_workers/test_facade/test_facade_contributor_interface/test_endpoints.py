@@ -36,9 +36,9 @@ def set_up_repo_groups(database_connection):
     repo_group_IDs = [group[0] for group in df.fetchall()]
 
     insertSQL = s.sql.text("""
-        INSERT INTO augur_data.repo(repo_group_id, repo_git, repo_status,
+        INSERT INTO augur_data.repo(repo_group_id, repo_git,
         tool_source, tool_version, data_source, data_collection_date)
-        VALUES (:repo_group_id, :repo_git, 'New', 'CLI', 1.0, 'Git', CURRENT_TIMESTAMP)
+        VALUES (:repo_group_id, :repo_git, 'CLI', 1.0, 'Git', CURRENT_TIMESTAMP)
     """)
 
     with open("tests/test_workers/test_facade/test_facade_contributor_interface/test_repos.csv") as upload_repos_file:
