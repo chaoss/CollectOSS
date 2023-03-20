@@ -90,6 +90,16 @@ def unauthorized():
     session["login_next"] = url_for(request.endpoint, **request.args)
     return redirect(url_for('user_login'))
 
+def admin_required(func):
+    @login_required
+    @wraps(func)
+    def inner_function(*args, **kwargs):
+        if current_user.admin:
+            return func(*args, **kwargs)
+        else:
+            forbidden(None)
+    return inner_function
+
 @login_manager.user_loader
 def load_user(user_id):
 
