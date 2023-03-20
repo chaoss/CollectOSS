@@ -12,26 +12,18 @@ from ..server import app, engine
 def commit_collection_status():  # TODO: make this name automatic - wrapper?
     commit_collection_sql = s.sql.text("""
         SELECT
-            repo_id,
-            repo_path,
-            repo_name,
-            repo_git,
-            repo_status
+            r.repo_id,
+            r.repo_path,
+            r.repo_name,
+            r.repo_git,
+		    c.facade_status as repo_status
         FROM
-            repo
+            repo r,
+			collection_status c
         WHERE
-            repo_status != 'Complete'
-        UNION
-        SELECT
-            repo_id,
-            repo_path,
-            repo_name,
-            repo_git,
-            repo_status
-        FROM
-            repo
-        WHERE
-            repo_status = 'Complete'
+			r.repo_id = c.repo_id
+		AND
+			c.facade_status = 'Success';
     """)
     results = pd.read_sql(commit_collection_sql,  engine)
     data = results.to_json(
