@@ -5,6 +5,7 @@ import logging
 import math
 from flask import render_template, request, redirect, url_for, session, flash
 from .utils import *
+from .augur_view import admin_required
 from flask_login import login_user, logout_user, current_user, login_required
 
 from augur.application.db.models import User, Repo, ClientApplication
@@ -326,6 +327,7 @@ Admin dashboard:
     View the admin dashboard.
 """
 @app.route('/dashboard')
+@admin_required
 def dashboard_view():
     empty = [
         { "title": "Placeholder", "settings": [
@@ -338,5 +340,7 @@ def dashboard_view():
     ]
 
     backend_config = requestJson("config/get", False)
+
+    logger.info(backend_config)
 
     return render_template('admin-dashboard.j2', sections = empty, config = backend_config)
