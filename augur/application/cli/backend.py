@@ -15,6 +15,7 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 from celery import chain, signature, group
 import uuid
 import traceback
+from urllib.parse import urlparse
 from sqlalchemy import update
 
 
@@ -183,12 +184,12 @@ def cleanup_after_collection_halt(logger):
     clear_redis_caches()
     connection_string = ""
     with DatabaseSession(logger) as session:
-        #config = AugurConfig(logger, session)
-        #connection_string = config.get_section("RabbitMQ")['connection_string']
+        config = AugurConfig(logger, session)
+        connection_string = config.get_section("RabbitMQ")['connection_string']
 
         clean_collection_status(session)
 
-    clear_rabbitmq_messages()
+    clear_rabbitmq_messages(connection_string)
 
 def clear_redis_caches():
     """Clears the redis databases that celery and redis use."""
@@ -198,12 +199,27 @@ def clear_redis_caches():
     subprocess.call(celery_purge_command.split(" "))
     redis_connection.flushdb()
 
-def clear_rabbitmq_messages():
+def clear_all_message_queues(connection_string):
+    queues = ['celery','secondary','scheduling']
+
+    virtual_host_string = connection_string.split("/")[-1]
+
+    #Parse username and password with urllib
+    parsed = urlparse(connection_string)
+
+    for q in queues:
+        curl_cmd = f"curl -i -u {parsed.username}:{parsed.password} -XDELETE http://localhost:{parsed.port}/api/queues/{virtual_host_string}/{q}"
+        subprocess.call(curl_cmd.split(" "))
+
+
+def clear_rabbitmq_messages(connection_string):
     #virtual_host_string = connection_string.split("/")[-1]
 
     logger.info("Clearing all messages from celery queue in rabbitmq")
     from augur.tasks.init.celery_app import celery_app
     celery_app.control.purge()
+
+    clear_all_message_queues(connection_string)
     #rabbitmq_purge_command = f"sudo rabbitmqctl purge_queue celery -p {virtual_host_string}"
     #subprocess.call(rabbitmq_purge_command.split(" "))
 
