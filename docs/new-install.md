@@ -117,7 +117,7 @@ curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/s
 curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/scheduling
 ```
 
-We provide this functionality to limit, as far as possible, the need for sudo privileges on the Augur operating system user.  With sudo, you can accomplish the same thing with: 
+We provide this functionality to limit, as far as possible, the need for sudo privileges on the Augur operating system user.  With sudo, you can accomplish the same thing with (Given a vhost named AugurB [case sensitive]): 
 
 1. To list the queues
 ```
