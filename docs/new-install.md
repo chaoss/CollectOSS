@@ -183,6 +183,12 @@ AND
 setting_name='cache_group';
 ```
 
+#### What does Redis Do?
+Redis is used to make the state of data collection jobs visible on an external dashboard, like Flower. Internally, Augur relies on Redis to cache GitHub API Keys, and for OAuth Authentication. Redis is used to maintain awareness of Augur's internal state.
+
+#### What does RabbitMQ Do?
+Augur is a distributed system. Even on one server, there are many collection processes happening simultaneously. Each job to collect data is put on the RabbitMQ Queue by Augur's "Main Brain". Then independent workers pop messages off the RabbitMQ Queue and go collect the data. These tasks then become standalone processes that report their completion or failure states back to the Redis server. 
+
 
 **Edit** the `/etc/redis/redis.conf` file to ensure these parameters are configured in this way: 
 ```shell
