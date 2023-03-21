@@ -256,7 +256,7 @@ Start Augur: `(nohup augur backend start &)`
 When data collection is complete you will see only a single task running in your flower Dashboard.
 
 ## Accessing Repo Addition and Visualization Front End
-Your Augur intance will now be available at http://hostname.io:port_number
+Your Augur instance will now be available at http://hostname.io:port_number
 
 For example: http://chaoss.tv:5038 
 
@@ -274,9 +274,3 @@ You can stop augur with `augur backend stop`, followed by `augur backend kill`. 
 4. `sudo docker build -t augur-new -f docker/backend/Dockerfile .`
 5. `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to run the database in a Docker Container or 
    `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. 
-
-### Errata (Old Frontend)
-
-14. If you have frontend configuration issues that result in a *failure* to complete steps with npm, we recommend you install and use `nvm`: https://tecadmin.net/how-to-install-nvm-on-ubuntu-20-04/ to set your nodejs release to the latest LTS of 12.x or 16.x. For example: `nvm ls-remote | grep -i 'latest'` and `nvm alias default 16.??` (whatever the latest version of 16 is.)
-15. Also, please explore our new frontend, being developed at https://github.com/augurlabs/augur_view. The `dev` branch is the most current. 
-
