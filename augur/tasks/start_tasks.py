@@ -200,8 +200,8 @@ def start_primary_collection(session,max_repo,days):
     if prelim_phase.__name__ in enabled_phase_names:
         primary_enabled_phases.append(prelim_phase)
     
-    if primary_repo_collect_phase.__name__ in enabled_phase_names:
-        primary_enabled_phases.append(primary_repo_collect_phase)
+    
+    primary_enabled_phases.append(primary_repo_collect_phase)
 
     #task success is scheduled no matter what the config says.
     def core_task_success_util_gen(repo_git):
@@ -245,8 +245,8 @@ def start_secondary_collection(session,max_repo,days):
     if prelim_phase.__name__ in enabled_phase_names:
         secondary_enabled_phases.append(prelim_phase_secondary)
 
-    if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-        secondary_enabled_phases.append(secondary_repo_collect_phase)
+    
+    secondary_enabled_phases.append(secondary_repo_collect_phase)
 
     def secondary_task_success_util_gen(repo_git):
         return secondary_task_success_util.si(repo_git)
@@ -363,10 +363,11 @@ def augur_collection_monitor():
         #Get list of enabled phases 
         enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
 
-
-        start_primary_collection(session, max_repo=50, days=30)
+        if primary_repo_collect_phase.__name__ in enabled_phase_names:
+            start_primary_collection(session, max_repo=50, days=30)
         
-        start_secondary_collection(session, max_repo=30, days=30)
+        if secondary_repo_collect_phase.__name__ in enabled_phase_names:
+            start_secondary_collection(session, max_repo=30, days=30)
 
         if facade_phase.__name__ in enabled_phase_names:
             #Schedule facade collection before clone/updates as that is a higher priority
