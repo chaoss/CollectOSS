@@ -84,17 +84,40 @@ exit
 ## Rabbitmq Broker Configuration
 You have to setup a specific user, and broker host for your augur instance. You can accomplish this by running the below commands:
 ```shell
+sudo rabbitmq-plugins enable rabbitmq_management
 sudo rabbitmqctl add_user augur password123 &&
 sudo rabbitmqctl add_vhost augur_vhost &&
-sudo rabbitmqctl set_user_tags augur augurTag &&
+sudo rabbitmqctl set_user_tags augur augurTag administrator &&
 sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
 ```
+
+- We need rabbitmq_management so we can purge our own queues with an API call 
+- We need a user
+- We need a vhost
+- We then set permissions 
 
 NOTE: it is important to have a static hostname when using rabbitmq as it uses hostname to communicate with nodes.
 
 If your setup of rabbitmq is successful your broker url should look like this:
 
 **broker_url = `amqp://augur:password123@localhost:5672/augur_vhost`**
+
+### RabbitMQ Developer Note:
+These are the queues we create: 
+- cpu
+- secondary
+- scheduling 
+
+The endpoints to hit to purge queues on exit are: 
+```
+curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/cpu
+
+curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/secondary
+
+curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/scheduling
+```
+
+Where AugurB is the vhost. The management API at port 15672 will only exist if you have already installed the rabbitmq_management plugin. 
 
 **During Augur installation, you will be prompted for this broker_url**
 
