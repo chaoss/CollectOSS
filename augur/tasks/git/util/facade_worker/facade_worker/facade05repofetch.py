@@ -104,13 +104,14 @@ def git_repo_initialize(session, repo_git):
         if os.path.isdir(f"{repo_path}{repo_name}"):#len(result):
 
             session.log_activity('Verbose',f"Identical repo detected, storing {git} in {repo_name}")
-            session.logger.error("Identical repo found in facade directory!")
+            session.logger.warning(f"Identical repo found in facade directory! Repo git: {git}")
             statusQuery = session.query(CollectionStatus).filter(CollectionStatus.repo_id == row.repo_id)
             collectionRecord = execute_session_query(statusQuery,'one')
             collectionRecord.facade_status = 'Update'
             collectionRecord.facade_task_id = None
             session.commit()
-            raise FileExistsError("Repo already found in facade directory! Cannot clone. Setting repo to Update state and exiting.")
+
+            return 
 
         # Create the prerequisite directories
         return_code = subprocess.Popen([f"mkdir -p {repo_path}"],shell=True).wait()
