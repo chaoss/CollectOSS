@@ -104,7 +104,7 @@ If your setup of rabbitmq is successful your broker url should look like this:
 
 ### RabbitMQ Developer Note:
 These are the queues we create: 
-- cpu
+- celery (the main queue)
 - secondary
 - scheduling 
 
