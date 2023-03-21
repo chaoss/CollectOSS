@@ -208,8 +208,8 @@ def clear_all_message_queues(connection_string):
     parsed = urlparse(connection_string)
 
     for q in queues:
-        curl_cmd = f"curl --verbose -i -u {parsed.username}:{parsed.password} -XDELETE http://localhost:{parsed.port}/api/queues/{virtual_host_string}/{q}"
-        subprocess.call(curl_cmd.split(" "))
+        curl_cmd = f"curl -i -u {parsed.username}:{parsed.password} -XDELETE http://localhost:15672/api/queues/{virtual_host_string}/{q}"
+        subprocess.call(curl_cmd.split(" "),stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 def clear_rabbitmq_messages(connection_string):
