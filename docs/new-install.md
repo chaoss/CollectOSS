@@ -104,18 +104,33 @@ If your setup of rabbitmq is successful your broker url should look like this:
 
 ### RabbitMQ Developer Note:
 These are the queues we create: 
-- cpu
+- celery (the main queue)
 - secondary
 - scheduling 
 
 The endpoints to hit to purge queues on exit are: 
 ```
-curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/cpu
+curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/celery
 
 curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/secondary
 
 curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/scheduling
 ```
+
+We provide this functionality to limit, as far as possible, the need for sudo privileges on the Augur operating system user.  With sudo, you can accomplish the same thing with (Given a vhost named AugurB [case sensitive]): 
+
+1. To list the queues
+```
+ sudo rabbitmqctl list_queues -p AugurB name messages consumers
+```
+
+2. To empty the queues, simply execute the command for your queues. Below are the 3 queues that Augur creates for you: 
+```
+ sudo rabbitmqctl purge_queue celery -p AugurB
+ sudo rabbitmqctl purge_queue secondary -p AugurB
+ sudo rabbitmqctl purge_queue scheduling -p AugurB
+```
+
 
 Where AugurB is the vhost. The management API at port 15672 will only exist if you have already installed the rabbitmq_management plugin. 
 
@@ -167,6 +182,12 @@ section_name='Redis'
 AND 
 setting_name='cache_group';
 ```
+
+#### What does Redis Do?
+Redis is used to make the state of data collection jobs visible on an external dashboard, like Flower. Internally, Augur relies on Redis to cache GitHub API Keys, and for OAuth Authentication. Redis is used to maintain awareness of Augur's internal state.
+
+#### What does RabbitMQ Do?
+Augur is a distributed system. Even on one server, there are many collection processes happening simultaneously. Each job to collect data is put on the RabbitMQ Queue by Augur's "Main Brain". Then independent workers pop messages off the RabbitMQ Queue and go collect the data. These tasks then become standalone processes that report their completion or failure states back to the Redis server. 
 
 
 **Edit** the `/etc/redis/redis.conf` file to ensure these parameters are configured in this way: 
@@ -241,7 +262,7 @@ Start Augur: `(nohup augur backend start &)`
 When data collection is complete you will see only a single task running in your flower Dashboard.
 
 ## Accessing Repo Addition and Visualization Front End
-Your Augur intance will now be available at http://hostname.io:port_number
+Your Augur instance will now be available at http://hostname.io:port_number
 
 For example: http://chaoss.tv:5038 
 
@@ -259,9 +280,3 @@ You can stop augur with `augur backend stop`, followed by `augur backend kill`. 
 4. `sudo docker build -t augur-new -f docker/backend/Dockerfile .`
 5. `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to run the database in a Docker Container or 
    `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. 
-
-### Errata (Old Frontend)
-
-14. If you have frontend configuration issues that result in a *failure* to complete steps with npm, we recommend you install and use `nvm`: https://tecadmin.net/how-to-install-nvm-on-ubuntu-20-04/ to set your nodejs release to the latest LTS of 12.x or 16.x. For example: `nvm ls-remote | grep -i 'latest'` and `nvm alias default 16.??` (whatever the latest version of 16 is.)
-15. Also, please explore our new frontend, being developed at https://github.com/augurlabs/augur_view. The `dev` branch is the most current. 
-
