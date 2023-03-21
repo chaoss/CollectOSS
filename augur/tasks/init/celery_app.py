@@ -126,7 +126,7 @@ celery_app.conf.task_routes = {
     'augur.tasks.github.pull_requests.commits_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.files_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.tasks.collect_pull_request_reviews': {'queue': 'secondary'},
-    'augur.tasks.git.dependency_tasks.tasks.*': {'queue': 'secondary'}
+    'augur.tasks.git.dependency_tasks.tasks.process_ossf_scorecard_metrics': {'queue': 'secondary'}
 }
 
 #Setting to be able to see more detailed states of running tasks
