@@ -1,4 +1,4 @@
-"""No null repo_path and repo_name
+"""No null author affiliation and committer affiliation in commits table
 
 Revision ID: 7
 Revises: 6
