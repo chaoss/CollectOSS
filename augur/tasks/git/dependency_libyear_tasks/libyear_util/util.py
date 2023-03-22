@@ -92,7 +92,7 @@ def get_libyear(current_version, current_release_date, latest_version, latest_re
     if not latest_release_date:
         return -1
 
-    if not current_version:
+    if not current_version or not current_release_date:
         return 0
 
     current_release_date= dateutil.parser.parse(current_release_date)
