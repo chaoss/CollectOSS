@@ -164,7 +164,7 @@ def fetch_data(key_auth, logger, github_url, repo_id, tag_only = False):
 
     # Hit the graphql endpoint
     logger.info("Hitting endpoint: {} ...\n".format(url))
-    data = request_graphql_dict(key_auth, url, query)
+    data = request_graphql_dict(key_auth,logger, url, query)
 
     if 'data' in data:
         data = data['data']['repository']
