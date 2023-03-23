@@ -3,9 +3,10 @@ import logging
 import traceback
 
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
-from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
@@ -14,18 +15,18 @@ from augur.application.db.util import execute_session_query
 
 platform_id = 1
 
-@celery.task()
+@celery.task(base=AugurCoreRepoCollectionTask)
 def collect_events(repo_git: str):
-
-    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(collect_events.__name__)
     
-    with GithubTaskSession(logger, engine) as session:
+    with GithubTaskManifest(logger) as manifest:
+
+        augur_db = manifest.augur_db
 
         try:
             
-            query = session.query(Repo).filter(Repo.repo_git == repo_git)
+            query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
             repo_obj = execute_session_query(query, 'one')
             repo_id = repo_obj.repo_id
 
@@ -35,11 +36,11 @@ def collect_events(repo_git: str):
 
             url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
 
-            event_data = retrieve_all_event_data(repo_git, logger, session.oauths)
+            event_data = retrieve_all_event_data(repo_git, logger, manifest.key_auth)
 
             if event_data:
             
-                process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger, session)
+                process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger, manifest.augur_db)
 
             else:
                 logger.info(f"{owner}/{repo} has no events")
@@ -48,8 +49,6 @@ def collect_events(repo_git: str):
 
 
 def retrieve_all_event_data(repo_git: str, logger, key_auth):
-
-    from augur.tasks.init.celery_app import engine
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -79,9 +78,7 @@ def retrieve_all_event_data(repo_git: str, logger, key_auth):
 
     return all_data        
 
-def process_events(events, task_name, repo_id, logger, session):
-
-    from augur.tasks.init.celery_app import engine
+def process_events(events, task_name, repo_id, logger, augur_db):
     
     tool_source = "Github events task"
     tool_version = "2.0"
@@ -90,6 +87,19 @@ def process_events(events, task_name, repo_id, logger, session):
     pr_event_dicts = []
     issue_event_dicts = []
     contributors = []
+
+
+    # create mapping from issue url to issue id of current issues
+    issue_url_to_id_map = {}
+    issues = augur_db.session.query(Issue).filter(Issue.repo_id == repo_id).all()
+    for issue in issues:
+        issue_url_to_id_map[issue.issue_url] = issue.issue_id
+
+    # create mapping from pr url to pr id of current pull requests
+    pr_url_to_id_map = {}
+    prs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    for pr in prs:
+        pr_url_to_id_map[pr.pr_url] = pr.pull_request_id
 
     not_mapable_event_count = 0
     event_len = len(events)
@@ -103,22 +113,24 @@ def process_events(events, task_name, repo_id, logger, session):
         if event_mapping_data is None:
             not_mapable_event_count += 1
             continue
-        
-        if 'pull_request' in list(event_mapping_data.keys()):
-            pr_url = event_mapping_data["pull_request"]["url"]
+
+        pull_request = event_mapping_data.get('pull_request', None)
+        if pull_request:
+            pr_url = pull_request["url"]
 
             try:
-                query = session.query(PullRequest).filter(PullRequest.pr_url == pr_url)
-                related_pr = execute_session_query(query, 'one')
-            except s.orm.exc.NoResultFound:
+                pull_request_id = pr_url_to_id_map[pr_url]
+
+                # query = augur_db.session.query(PullRequest).filter(PullRequest.pr_url == pr_url)
+                # related_pr = execute_session_query(query, 'one')
+            except KeyError:
                 logger.info(f"{task_name}: Could not find related pr")
                 logger.info(f"{task_name}: We were searching for: {pr_url}")
-                # TODO: Add table to log all errors
                 logger.info(f"{task_name}: Skipping")
                 continue
 
             pr_event_dicts.append(
-                extract_pr_event_data(event, related_pr.pull_request_id, platform_id, repo_id,
+                extract_pr_event_data(event, pull_request_id, platform_id, repo_id,
                                     tool_source, tool_version, data_source)
             )
 
@@ -126,18 +138,17 @@ def process_events(events, task_name, repo_id, logger, session):
             issue_url = event_mapping_data["url"]
 
             try:
-                query = session.query(Issue).filter(Issue.issue_url == issue_url)
-                related_issue = execute_session_query(query, 'one')
-            except s.orm.exc.NoResultFound:
+                issue_id = issue_url_to_id_map[issue_url]
+                # query = augur_db.session.query(Issue).filter(Issue.issue_url == issue_url)
+                # related_issue = execute_session_query(query, 'one')
+            except KeyError:
                 logger.info(f"{task_name}: Could not find related pr")
-                logger.info(
-                    f"{task_name}: We were searching for: {issue_url}")
-                # TODO: Add table to log all errors
+                logger.info(f"{task_name}: We were searching for: {issue_url}")
                 logger.info(f"{task_name}: Skipping")
                 continue
 
             issue_event_dicts.append(
-                extract_issue_event_data(event, related_issue.issue_id, platform_id, repo_id,
+                extract_issue_event_data(event, issue_id, platform_id, repo_id,
                                         tool_source, tool_version, data_source)
             )
         
@@ -150,7 +161,7 @@ def process_events(events, task_name, repo_id, logger, session):
     # remove contributors that were found in the data more than once
     contributors = remove_duplicate_dicts(contributors)
 
-    session.insert_data(contributors, Contributor, ["cntrb_id"])
+    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
 
     issue_events_len = len(issue_event_dicts)
     pr_events_len = len(pr_event_dicts)
@@ -164,10 +175,10 @@ def process_events(events, task_name, repo_id, logger, session):
 
     # TODO: Could replace this with "id" but it isn't stored on the table for some reason
     pr_event_natural_keys = ["node_id"]
-    session.insert_data(pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
+    augur_db.insert_data(pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
 
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
-    session.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
+    augur_db.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
 
 
 # TODO: Should we skip an event if there is no contributor to resolve it o

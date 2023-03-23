@@ -5144,6 +5144,174 @@ paths:
             type: object
       tags:
         - visualizations
+  /complexity/project_lines: 
+    get: 
+      description: 'Returns project line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of lines in the project repository.' 
+      operationId: Total Lines (repo)
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 25540'
+                  type: integer
+                repo_git:
+                  description: 'Example: https://github.com/chaoss/augur'
+                  type: string
+                repo_name:
+                  description: 'Example: augur'
+                  type: string
+                total_lines:
+                  description: 'Example: 274734'
+                  type: integer
+                average_lines:
+                  description: 'Example: 1000'
+                  type: integer
+            type: array
+      tags:
+      - complexity
+  /complexity/project_file_complexity: 
+    get: 
+      description: 'Returns project file complexity data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average file complexity of the project repository.' 
+      operationId: File Complexity (repo)
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 25540'
+                  type: integer
+                repo_git:
+                  description: 'Example: https://github.com/chaoss/augur'
+                  type: string
+                repo_name:
+                  description: 'Example: augur'
+                  type: string
+                sum_code_complexity:
+                  description: 'Example: 0'
+                  type: integer
+                average_code_complexity:
+                  description: 'Example: 0'
+                  type: integer
+            type: array
+      tags:
+      - complexity
+  /complexity/project_blank_lines: 
+    get: 
+      description: 'Returns project blank line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of blank lines in the project repository.' 
+      operationId: Total Blank Lines (repo)
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 25540'
+                  type: integer
+                repo_git:
+                  description: 'Example: https://github.com/chaoss/augur'
+                  type: string
+                repo_name:
+                  description: 'Example: augur'
+                  type: string
+                blank_lines:
+                  description: 'Example: 274734'
+                  type: integer
+                avg_blank_lines:
+                  description: 'Example: 923'
+                  type: integer
+            type: array
+      tags:
+      - complexity
+  /complexity/project_comment_lines: 
+    get: 
+      description: 'Returns project comment line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of comment lines in the project repository.' 
+      operationId: Total Comment Lines (repo)
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 25540'
+                  type: integer
+                repo_git:
+                  description: 'Example: https://github.com/chaoss/augur'
+                  type: string
+                repo_name:
+                  description: 'Example: augur'
+                  type: string
+                comment_lines:
+                  description: 'Example: 5066'
+                  type: integer
+                avg_comment_lines:
+                  description: 'Example: 345'
+                  type: integer
+            type: array
+      tags:
+      - complexity
+  /complexity/project_files: 
+    get: 
+      description: 'Returns project file data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total number of files in the project repository.' 
+      operationId: Total Files (repo)
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 25540'
+                  type: integer
+                repo_git:
+                  description: 'Example: https://github.com/chaoss/augur'
+                  type: string
+                repo_name:
+                  description: 'Example: augur'
+                  type: string
+                files:
+                  description: 'Example: 207'
+                  type: integer
+            type: array
+      tags:
+      - complexity
+  /complexity/project_languages: 
+    get: 
+      description: 'Returns project language data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the lines and files of a language in a repository.' 
+      operationId: Project Languages (repo)
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                repo_id:
+                  description: 'Example: 25540'
+                  type: integer
+                repo_git:
+                  description: 'Example: https://github.com/chaoss/augur'
+                  type: string
+                repo_name:
+                  description: 'Example: augur'
+                  type: string
+                programming_language:
+                  description: 'Example: Python'
+                  type: string
+                code_lines:
+                  description: 'Example: 207'
+                  type: integer
+                files:
+                  description: 'Example: 12'
+                  type: integer
+            type: array
+      tags:
+      - complexity
   /repo-groups/:repo_group_id/repo-messages:
     get:
       description: 'The number of messages exchanged for a repository group over a specified period.'

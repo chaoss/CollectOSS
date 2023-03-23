@@ -5,7 +5,6 @@ from typing import Dict, List, Tuple, Optional
 
 from augur.application.db.data_parse import *
 from augur.application.db.session import DatabaseSession
-from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, PullRequestMessageRef, Contributor, Repo

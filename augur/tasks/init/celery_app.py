@@ -3,24 +3,38 @@ from celery.signals import worker_process_init, worker_process_shutdown, eventle
 import logging
 from typing import List, Dict
 import os
+from enum import Enum
+import traceback
+import celery
 from celery import Celery
 from celery import current_app 
 from celery.signals import after_setup_logger
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, or_, and_
 
 
-from augur.application.logs import TaskLogConfig
+from augur.application.logs import TaskLogConfig, AugurLogger
 from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import DatabaseEngine
 from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
-from augur.application.db.models import CollectionStatus
+from augur.application.db.models import CollectionStatus, Repo
+
+class CollectionState(Enum):
+    SUCCESS = "Success"
+    PENDING = "Pending"
+    ERROR = "Error"
+    COLLECTING = "Collecting"
+    INITIALIZING = "Initializing"
+    UPDATE = "Update"
+    FAILED_CLONE = "Failed Clone"
+
 
 logger = logging.getLogger(__name__)
 
 start_tasks = ['augur.tasks.start_tasks',
-                'augur.tasks.data_analysis']
+                'augur.tasks.data_analysis',
+                'augur.tasks.util.collection_util']
 
 github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.issues.tasks',
@@ -32,10 +46,12 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.repo_info.tasks',
                 'augur.tasks.github.detect_move.tasks',
                 'augur.tasks.github.pull_requests.files_model.tasks',
-                'augur.tasks.github.pull_requests.commits_model.tasks']
+                'augur.tasks.github.pull_requests.commits_model.tasks',
+                'augur.tasks.github.traffic.tasks']
 
 git_tasks = ['augur.tasks.git.facade_tasks',
-            'augur.tasks.git.dependency_tasks.tasks']
+            'augur.tasks.git.dependency_tasks.tasks',
+            'augur.tasks.git.dependency_libyear_tasks.tasks']
 
 data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
                        'augur.tasks.data_analysis.clustering_worker.tasks',
@@ -56,14 +72,61 @@ redis_db_number, redis_conn_string = get_redis_conn_values()
 BROKER_URL = get_rabbitmq_conn_string()#f'{redis_conn_string}{redis_db_number}'
 BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 
+
+#Classes for tasks that take a repo_git as an argument.
+class AugurCoreRepoCollectionTask(celery.Task):
+
+    def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core'):
+        from augur.tasks.init.celery_app import engine
+
+        logger = AugurLogger(logger_name).get_logger()
+
+        logger.error(f"Task {task_id} raised exception: {exc}\n Traceback: {''.join(traceback.format_exception(None, exc, exc.__traceback__))}")
+
+        with DatabaseSession(logger,engine) as session:
+            logger.info(f"Repo git: {repo_git}")
+            repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+
+            repoStatus = repo.collection_status[0]
+
+            #Only set to error if the repo was actually running at the time.
+            #This is to allow for things like exiting from collection without error.
+            #i.e. detect_repo_move changes the repo's repo_git and resets collection to pending without error
+            prevStatus = getattr(repoStatus, f"{collection_hook}_status")
+
+            if prevStatus == CollectionState.COLLECTING.value or prevStatus == CollectionState.INITIALIZING.value:
+                setattr(repoStatus, f"{collection_hook}_status", CollectionState.ERROR.value)
+                setattr(repoStatus, f"{collection_hook}_task_id", None)
+                session.commit()
+
+    def on_failure(self,exc,task_id,args, kwargs, einfo):
+        repo_git = args[0]
+        # log traceback to error file
+        self.augur_handle_task_failure(exc, task_id, repo_git, "core_task_failure")
+
+class AugurSecondaryRepoCollectionTask(AugurCoreRepoCollectionTask):
+    def on_failure(self,exc,task_id,args, kwargs, einfo):
+        
+        repo_git = args[0]
+        self.augur_handle_task_failure(exc, task_id, repo_git, "secondary_task_failure",collection_hook='secondary')
+
+class AugurFacadeRepoCollectionTask(AugurCoreRepoCollectionTask):
+    def on_failure(self,exc,task_id,args, kwargs, einfo):
+        repo_git = args[0]
+        self.augur_handle_task_failure(exc, task_id, repo_git, "facade_task_failure",collection_hook='facade')
+
+
+#task_cls='augur.tasks.init.celery_app:AugurCoreRepoCollectionTask'
 celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)
 
 # define the queues that tasks will be put in (by default tasks are put in celery queue)
 celery_app.conf.task_routes = {
     'augur.tasks.start_tasks.*': {'queue': 'scheduling'},
+    'augur.tasks.util.collection_util.*': {'queue': 'scheduling'},
     'augur.tasks.github.pull_requests.commits_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.files_model.tasks.*': {'queue': 'secondary'},
-    'augur.tasks.git.dependency_tasks.tasks.*': {'queue': 'secondary'}
+    'augur.tasks.github.pull_requests.tasks.collect_pull_request_reviews': {'queue': 'secondary'},
+    'augur.tasks.git.dependency_tasks.tasks.process_ossf_scorecard_metrics': {'queue': 'secondary'}
 }
 
 #Setting to be able to see more detailed states of running tasks
@@ -139,7 +202,7 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(collection_interval, augur_collection_monitor.s())
 
         #Do longer tasks less often
-        non_domain_collection_interval = collection_interval * 5
+        non_domain_collection_interval = collection_interval * 300
         logger.info(f"Scheduling non-repo-domain collection every {non_domain_collection_interval/60} minutes")
         sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks.s())
 
@@ -166,8 +229,9 @@ def init_worker(**kwargs):
     global engine
 
     from augur.application.db.engine import DatabaseEngine
+    from sqlalchemy.pool import NullPool, StaticPool
 
-    engine = DatabaseEngine(pool_size=5, max_overflow=10).engine
+    engine = DatabaseEngine(poolclass=StaticPool).engine
 
 
 @worker_process_shutdown.connect

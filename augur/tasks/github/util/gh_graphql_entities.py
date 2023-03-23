@@ -45,7 +45,7 @@ def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=40):
             
             #print(json.dumps(json_dict))
             response = client.post(
-                url=url,auth=keyAuth,json=json_dict
+                url=url,auth=keyAuth,json=json_dict, timeout=timeout
                 )
         
         except TimeoutError:
@@ -67,17 +67,17 @@ def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=40):
     
     return response
 
-def request_graphql_dict(session,url,query,variables={},timeout_wait=10):
+def request_graphql_dict(key_auth, logger, url,query,variables={},timeout_wait=10):
     attempts = 0
     response_data = None
     success = False
     while attempts < 10:
         #self.logger.info(f"{attempts}")
         try:
-            result = hit_api_graphql(session.oauths, url, session.logger, query,variables=variables)
+            result = hit_api_graphql(key_auth, url, logger, query,variables=variables)
             #self.hit_api(query,variables=variables)
         except TimeoutError:
-            session.logger.info(
+            logger.info(
                 f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
             time.sleep(timeout_wait)
             continue
@@ -94,30 +94,30 @@ def request_graphql_dict(session,url,query,variables={},timeout_wait=10):
         #self.logger.info(f"api return: {response_data}")
 
         if type(response_data) == dict:
-            err = process_dict_response(session.logger, result, response_data)
+            err = process_dict_response(logger, result, response_data)
 
             if err and err != GithubApiResult.SUCCESS:
                 attempts += 1
-                session.logger.info(f"err: {err}")
+                logger.info(f"err: {err}")
                 continue
             
             success = True
             break
         elif type(response_data) == list:
-            session.logger.warning("Wrong type returned, trying again...")
-            session.logger.info(f"Returned list: {response_data}")
+            logger.warning("Wrong type returned, trying again...")
+            logger.info(f"Returned list: {response_data}")
         elif type(response_data) == str:
             logger.info(
                 f"Warning! page_data was string: {response_data}")
             if "<!DOCTYPE html>" in response_data:
-                session.logger.info("HTML was returned, trying again...\n")
+                logger.info("HTML was returned, trying again...\n")
             elif len(response_data) == 0:
                 logger.warning("Empty string, trying again...\n")
             else:
                 try:
                     # Sometimes raw text can be converted to a dict
                     response_data = json.loads(response_data)
-                    session.logger.info(f"{response_data}")
+                    logger.info(f"{response_data}")
                     err = process_graphql_dict_response(logger,result,response_data)
 
                     #If we get an error message that's not None
@@ -212,18 +212,18 @@ class GraphQlPageCollection(collections.abc.Sequence):
                 self.logger.warning("Wrong type returned, trying again...")
                 self.logger.info(f"Returned list: {response_data}")
             elif type(response_data) == str:
-                logger.info(
+                self.logger.info(
                     f"Warning! page_data was string: {response_data}")
                 if "<!DOCTYPE html>" in response_data:
                     self.logger.info("HTML was returned, trying again...\n")
                 elif len(response_data) == 0:
-                    logger.warning("Empty string, trying again...\n")
+                    self.logger.warning("Empty string, trying again...\n")
                 else:
                     try:
                         # Sometimes raw text can be converted to a dict
                         response_data = json.loads(response_data)
                         self.logger.info(f"{response_data}")
-                        err = process_graphql_dict_response(logger,result,response_data)
+                        err = process_graphql_dict_response(self.logger,result,response_data)
 
                         #If we get an error message that's not None
                         if err and err != GithubApiResult.SUCCESS:
@@ -336,6 +336,9 @@ class GraphQlPageCollection(collections.abc.Sequence):
         data = self.request_graphql_dict(variables=params)
         try:
             coreData = self.extract_paginate_result(data)
+
+            #Check to make sure we have data
+            coreData['totalCount']
         except KeyError as e:
             self.logger.error("Could not extract paginate result because there was no data returned")
             self.logger.error(
@@ -385,12 +388,12 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
 #use httpx and pass random_key_auth
 class GitHubRepo():
-    def __init__(self, session, owner, repo):
+    def __init__(self, logger, key_auth, owner, repo):
 
-        self.keyAuth = session.oauths
+        self.keyAuth = key_auth
         self.url = "https://api.github.com/graphql"
 
-        self.logger = session.logger
+        self.logger = logger
 
         self.owner = owner
         self.repo = repo
@@ -518,12 +521,12 @@ class GitHubRepo():
 
 
 class PullRequest():
-    def __init__(self, session, owner, repo, number):
+    def __init__(self, logger, key_auth, owner, repo, number):
 
-        self.keyAuth = session.oauths
+        self.keyAuth = key_auth
         self.url = "https://api.github.com/graphql"
 
-        self.logger = session.logger
+        self.logger = logger
 
         self.owner = owner
         self.repo = repo

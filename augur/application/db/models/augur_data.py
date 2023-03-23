@@ -814,14 +814,17 @@ class Repo(Base):
         ForeignKey("augur_data.repo_groups.repo_group_id"), nullable=False
     )
     repo_git = Column(String, nullable=False)
+
+    #TODO: repo_path and repo_name should be generated columns in postgresql
     repo_path = Column(String)
     repo_name = Column(String)
     repo_added = Column(
         TIMESTAMP(precision=0), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
-    repo_status = Column(
-        String, nullable=False, server_default=text("'New'::character varying")
-    )
+    
+    #repo_status = Column(
+    #    String, nullable=False, server_default=text("'New'::character varying")
+    #)
     repo_type = Column(
         String,
         server_default=text("''::character varying"),
@@ -965,11 +968,16 @@ class Repo(Base):
 
         if not RepoGroup.is_valid_repo_group_id(session, repo_group_id):
             return None
+        
+        owner, repo = Repo.parse_github_repo_url(url)
+        if not owner or not repo:
+            return None
 
         repo_data = {
             "repo_group_id": repo_group_id,
             "repo_git": url,
-            "repo_status": "New",
+            "repo_path": f"github.com/{owner}/",
+            "repo_name": repo,
             "tool_source": tool_source,
             "tool_version": "1.0",
             "data_source": "Git"
@@ -981,15 +989,6 @@ class Repo(Base):
 
         if not result:
             return None
-
-        if repo_group_id != DEFAULT_REPO_GROUP_ID:
-            # update the repo group id
-            query = session.query(Repo).filter(Repo.repo_git == url)
-            repo = execute_session_query(query, 'one')
-
-            if not repo.repo_group_id == repo_group_id:
-                repo.repo_group_id = repo_group_id
-                session.commit()
 
         return result[0]["repo_id"]
 
@@ -1706,10 +1705,10 @@ class RepoClusterMessage(Base):
 
 class RepoDependency(Base):
     __tablename__ = "repo_dependencies"
-    __table_args__ = {
-        "schema": "augur_data",
-        "comment": "Contains the dependencies for a repo.",
-    }
+    __table_args__ = ( UniqueConstraint("repo_id","dep_name","data_collection_date", name="deps-insert-unique"),
+        {"schema": "augur_data",
+        "comment": "Contains the dependencies for a repo.",},
+    )
 
     repo_dependencies_id = Column(
         BigInteger,
@@ -1736,7 +1735,9 @@ class RepoDependency(Base):
 
 class RepoDepsLibyear(Base):
     __tablename__ = "repo_deps_libyear"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = ( UniqueConstraint("repo_id","name", "data_collection_date", name="deps-libyear-insert-unique"),
+        {"schema": "augur_data"}
+    )
 
     repo_deps_libyear_id = Column(
         BigInteger,
@@ -1767,7 +1768,9 @@ class RepoDepsLibyear(Base):
 
 class RepoDepsScorecard(Base):
     __tablename__ = "repo_deps_scorecard"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = ( UniqueConstraint("repo_id","name", name="deps-scorecard-insert-unique"),
+        {"schema": "augur_data"}
+    )
 
     repo_deps_scorecard_id = Column(
         BigInteger,
@@ -1778,7 +1781,8 @@ class RepoDepsScorecard(Base):
     )
     repo_id = Column(ForeignKey("augur_data.repo.repo_id"))
     name = Column(String)
-    status = Column(String)
+    #status = Column(String)
+    scorecard_check_details = Column(JSONB)
     score = Column(String)
     tool_source = Column(String)
     tool_version = Column(String)
@@ -3343,4 +3347,32 @@ class PullRequestReviewMessageRef(Base):
 
     msg = relationship("Message")
     pr_review = relationship("PullRequestReview")
+    repo = relationship("Repo")
+
+
+class RepoClone(Base):
+    __tablename__ = "repo_clones_data"
+    __table_args__ = {"schema": "augur_data"}
+
+    repo_clone_data_id = Column(
+        BigInteger,
+        primary_key=True,
+        server_default=text(
+            "nextval('augur_data.repo_clones_data_id_seq'::regclass)"
+        ),
+    )
+    repo_id = Column(
+        ForeignKey(
+            "augur_data.repo.repo_id",
+            ondelete="RESTRICT",
+            onupdate="CASCADE",
+            deferrable=True,
+            initially="DEFERRED",
+        ),
+        nullable=False,
+    )
+    unique_clones = Column(BigInteger)
+    count_clones = Column(BigInteger)
+    clone_data_timestamp = Column(TIMESTAMP(precision=6))
+
     repo = relationship("Repo")

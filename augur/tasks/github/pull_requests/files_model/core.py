@@ -4,17 +4,14 @@ import traceback
 import sqlalchemy as s
 from augur.application.db.data_parse import *
 from augur.application.db.session import DatabaseSession
-from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection, hit_api_graphql
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.util import execute_session_query
 
-def pull_request_files_model(repo_id,logger, session):
+def pull_request_files_model(repo_id,logger, augur_db, key_auth):
     
-    from augur.tasks.init.celery_app import engine
-
     # query existing PRs and the respective url we will append the commits url to
     pr_number_sql = s.sql.text("""
         SELECT DISTINCT pr_src_number as pr_src_number, pull_requests.pull_request_id
@@ -24,10 +21,10 @@ def pull_request_files_model(repo_id,logger, session):
     pr_numbers = []
     #pd.read_sql(pr_number_sql, self.db, params={})
 
-    result = session.execute_sql(pr_number_sql).fetchall()
+    result = augur_db.execute_sql(pr_number_sql).fetchall()
     pr_numbers = [dict(zip(row.keys(), row)) for row in result]
 
-    query = session.query(Repo).filter(Repo.repo_id == repo_id)
+    query = augur_db.session.query(Repo).filter(Repo.repo_id == repo_id)
     repo = execute_session_query(query, 'one')
 
     owner, name = get_owner_repo(repo.repo_git)
@@ -71,25 +68,20 @@ def pull_request_files_model(repo_id,logger, session):
             'values' : values
         }
 
-        try:
-            file_collection = GraphQlPageCollection(query, session.oauths, session.logger,bind=params)
+        
+        file_collection = GraphQlPageCollection(query, key_auth, logger,bind=params)
 
-            pr_file_rows += [{
-                'pull_request_id': pr_info['pull_request_id'],
-                'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
-                'pr_file_deletions': pr_file['deletions'] if 'deletions' in pr_file else None,
-                'pr_file_path': pr_file['path'],
-                'data_source': 'GitHub API',
-                'repo_id': repo_id, 
-                } for pr_file in file_collection if pr_file and 'path' in pr_file]
-        except Exception as e:
-            logger.error(f"Ran into error with pull request #{index + 1} in repo {repo_id}")
-            logger.error(
-            ''.join(traceback.format_exception(None, e, e.__traceback__)))
-
+        pr_file_rows += [{
+            'pull_request_id': pr_info['pull_request_id'],
+            'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
+            'pr_file_deletions': pr_file['deletions'] if 'deletions' in pr_file else None,
+            'pr_file_path': pr_file['path'],
+            'data_source': 'GitHub API',
+            'repo_id': repo_id, 
+            } for pr_file in file_collection if pr_file and 'path' in pr_file]
 
 
     if len(pr_file_rows) > 0:
         #Execute a bulk upsert with sqlalchemy 
         pr_file_natural_keys = ["pull_request_id", "repo_id", "pr_file_path"]
-        session.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)
+        augur_db.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)

@@ -14,6 +14,7 @@ from augur.tasks.util.worker_util import create_grouped_task_load
 from celery.result import allow_join_result
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
+from sqlalchemy.orm.exc import NoResultFound
 
 
 def process_commit_metadata(session,contributorQueue,repo_id):
@@ -25,56 +26,39 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         name = contributor['name']
 
         # check the email to see if it already exists in contributor_aliases
-        try:
-            # Look up email to see if resolved
-            """
-            alias_table_data = interface.db.execute(
-                s.sql.select([s.column('alias_email')]).where(
-                    interface.contributors_aliases_table.c.alias_email == email
-                )
-            ).fetchall()
-            """
-
-
-            query = session.query(ContributorsAlias).filter_by(alias_email=email)
-            alias_table_data = execute_session_query(query, 'all')
-            if len(alias_table_data) >= 1:
-                # Move on if email resolved
-
-                #interface.logger.info(
-                #    f"Email {email} has been resolved earlier.")
-
-                continue
-        except Exception as e:
+        
+        # Look up email to see if resolved
+        query = session.query(ContributorsAlias).filter_by(alias_email=email)
+        alias_table_data = execute_session_query(query, 'all')
+        if len(alias_table_data) >= 1:
+            # Move on if email resolved
             session.logger.info(
-                f"Successfully retrieved data from github for email: {emailFromCommitData}")
+                f"Email {email} has been resolved earlier.")
+
+            continue
         
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
-        try:
+        
             
-            query = session.query(UnresolvedCommitEmail).filter_by(name=name)
-            unresolved_query_result = execute_session_query(query, 'all')
+        query = session.query(UnresolvedCommitEmail).filter_by(name=name)
+        unresolved_query_result = execute_session_query(query, 'all')
 
-            if len(unresolved_query_result) >= 1:
+        if len(unresolved_query_result) >= 1:
 
-                #interface.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
-
-                continue
-        except Exception as e:
-            session.logger.info(f"Failed to query unresolved alias table with error: {e}")
-    
+            session.logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
+            continue
 
         login = None
     
         #Check the contributors table for a login for the given name
-        try:
-            query = session.query(Contributor).filter_by(cntrb_full_name=name)
-            contributors_with_matching_name = execute_session_query(query, 'one')
 
+        query = session.query(Contributor).filter_by(cntrb_full_name=name)
+        contributors_with_matching_name = execute_session_query(query, 'first')
+
+        if not contributors_with_matching_name:
+            session.logger.debug("Failed local login lookup")
+        else:
             login = contributors_with_matching_name.gh_login
-
-        except Exception as e:
-            session.logger.debug(f"Failed local login lookup with error: {e}")
         
 
         # Try to get the login from the commit sha
@@ -106,64 +90,58 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         # Get name from commit if not found by GitHub
         name_field = contributor['commit_name'] if 'commit_name' in contributor else contributor['name']
 
-        try:
-            
-            #cntrb_id = AugurUUID(session.platform_id,user_data['id']).to_UUID()
 
-            cntrb_id = GithubUUID()
-            cntrb_id["user"] = int(user_data['id'])
-            cntrb_id["platform"] = session.platform_id
+        #cntrb_id = AugurUUID(session.platform_id,user_data['id']).to_UUID()
 
-            # try to add contributor to database
-            cntrb = {
-                "cntrb_id" : cntrb_id.to_UUID(),
-                "cntrb_login": user_data['login'],
-                "cntrb_created_at": user_data['created_at'],
-                "cntrb_email": user_data['email'] if 'email' in user_data else None,
-                "cntrb_company": user_data['company'] if 'company' in user_data else None,
-                "cntrb_location": user_data['location'] if 'location' in user_data else None,
-                # "cntrb_type": , dont have a use for this as of now ... let it default to null
-                "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
-                "gh_user_id": user_data['id'],
-                "gh_login": user_data['login'],
-                "gh_url": user_data['url'],
-                "gh_html_url": user_data['html_url'],
-                "gh_node_id": user_data['node_id'],
-                "gh_avatar_url": user_data['avatar_url'],
-                "gh_gravatar_id": user_data['gravatar_id'],
-                "gh_followers_url": user_data['followers_url'],
-                "gh_following_url": user_data['following_url'],
-                "gh_gists_url": user_data['gists_url'],
-                "gh_starred_url": user_data['starred_url'],
-                "gh_subscriptions_url": user_data['subscriptions_url'],
-                "gh_organizations_url": user_data['organizations_url'],
-                "gh_repos_url": user_data['repos_url'],
-                "gh_events_url": user_data['events_url'],
-                "gh_received_events_url": user_data['received_events_url'],
-                "gh_type": user_data['type'],
-                "gh_site_admin": user_data['site_admin'],
-                "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
-                # Get name from commit if api doesn't get it.
-                "cntrb_full_name": name_field if 'name' not in user_data or user_data['name'] is None else user_data['name'],
-                #"tool_source": interface.tool_source,
-                #"tool_version": interface.tool_version,
-                #"data_source": interface.data_source
-            }
+        cntrb_id = GithubUUID()
+        cntrb_id["user"] = int(user_data['id'])
+        cntrb_id["platform"] = session.platform_id
 
-            #session.logger.info(f"{cntrb}")
+        # try to add contributor to database
+        cntrb = {
+            "cntrb_id" : cntrb_id.to_UUID(),
+            "cntrb_login": user_data['login'],
+            "cntrb_created_at": user_data['created_at'],
+            "cntrb_email": user_data['email'] if 'email' in user_data else None,
+            "cntrb_company": user_data['company'] if 'company' in user_data else None,
+            "cntrb_location": user_data['location'] if 'location' in user_data else None,
+            # "cntrb_type": , dont have a use for this as of now ... let it default to null
+            "cntrb_canonical": user_data['email'] if 'email' in user_data and user_data['email'] is not None else emailFromCommitData,
+            "gh_user_id": user_data['id'],
+            "gh_login": user_data['login'],
+            "gh_url": user_data['url'],
+            "gh_html_url": user_data['html_url'],
+            "gh_node_id": user_data['node_id'],
+            "gh_avatar_url": user_data['avatar_url'],
+            "gh_gravatar_id": user_data['gravatar_id'],
+            "gh_followers_url": user_data['followers_url'],
+            "gh_following_url": user_data['following_url'],
+            "gh_gists_url": user_data['gists_url'],
+            "gh_starred_url": user_data['starred_url'],
+            "gh_subscriptions_url": user_data['subscriptions_url'],
+            "gh_organizations_url": user_data['organizations_url'],
+            "gh_repos_url": user_data['repos_url'],
+            "gh_events_url": user_data['events_url'],
+            "gh_received_events_url": user_data['received_events_url'],
+            "gh_type": user_data['type'],
+            "gh_site_admin": user_data['site_admin'],
+            "cntrb_last_used": None if 'updated_at' not in user_data else user_data['updated_at'],
+            # Get name from commit if api doesn't get it.
+            "cntrb_full_name": name_field if 'name' not in user_data or user_data['name'] is None else user_data['name'],
+            #"tool_source": interface.tool_source,
+            #"tool_version": interface.tool_version,
+            #"data_source": interface.data_source
+        }
 
-        except Exception as e:
-            session.logger.info(f"Error when trying to create cntrb: {e}")
-            continue
-        
+        #session.logger.info(f"{cntrb}")
+
+
         
         #Executes an upsert with sqlalchemy 
         cntrb_natural_keys = ['cntrb_login']
-        try:
-            session.insert_data(cntrb,Contributor,cntrb_natural_keys)
-        except Exception as e:
-            session.logger.error(f"Could not complete singular contributor insert!!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
-            continue
+        
+        session.insert_data(cntrb,Contributor,cntrb_natural_keys)
+
 
         try:
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
@@ -195,6 +173,7 @@ def process_commit_metadata(session,contributorQueue,repo_id):
         except Exception as e:
             session.logger.info(
                 f"Deleting now resolved email failed with error: {e}")
+            raise e
     
         
     return

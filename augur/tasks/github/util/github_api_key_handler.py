@@ -6,7 +6,6 @@ from typing import Optional, List
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
-from augur.tasks.init.celery_app import engine
 
 class GithubApiKeyHandler():
     """Handles Github API key retrieval from the database and redis

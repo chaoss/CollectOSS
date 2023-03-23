@@ -110,13 +110,14 @@ def extract_needed_pr_metadata(metadata_list: List[dict], repo_id: int, tool_sou
     return metadata_dicts
 
 
-def extract_pr_review_message_ref_data(comment: dict, pr_review_id, repo_id: int, tool_version: str, data_source: str) -> dict:
+def extract_pr_review_message_ref_data(comment: dict, augur_pr_review_id, github_pr_review_id, repo_id: int, tool_version: str, data_source: str) -> dict:
 
     pr_review_comment_message_ref = {
         # msg_id turned up null when I removed the cast to int ..
         'msg_id': comment["msg_id"],
+        'pr_review_id': augur_pr_review_id,
         'pr_review_msg_url': comment['url'],
-        'pr_review_src_id': int(pr_review_id),
+        'pr_review_src_id': int(github_pr_review_id),
         'pr_review_msg_src_id': int(comment['id']),
         'pr_review_msg_node_id': comment['node_id'],
         'pr_review_msg_diff_hunk': comment['diff_hunk'],
@@ -424,40 +425,6 @@ def extract_needed_message_data(comment: dict, platform_id: int, repo_id: int, t
 
     return dict_data
 
-def extract_need_pr_review_data(reviews, platform_id, repo_id, tool_version, data_source):
-
-    if len(reviews) == 0:
-        return []
-
-    review_data = []
-    for review in reviews:
-
-        pr_review_dict = {
-                'cntrb_id': None,
-                'pr_review_author_association': review['author_association'],
-                'pr_review_state': review['state'],
-                'pr_review_body': str(review['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
-                    review['body']
-                ) else None,
-                'pr_review_submitted_at': review['submitted_at'] if (
-                    'submitted_at' in review
-                ) else None,
-                'pr_review_src_id': int(float(review['id'])), #12/3/2021 cast as int due to error. # Here, `pr_review_src_id` is mapped to `id` SPG 11/29/2021. This is fine. Its the review id.
-                'pr_review_node_id': review['node_id'],
-                'pr_review_html_url': review['html_url'],
-                'pr_review_pull_request_url': review['pull_request_url'],
-                'pr_review_commit_id': review['commit_id'],
-                'tool_source': 'pull_request_reviews model',
-                'tool_version': tool_version+ "_reviews",
-                'data_source': data_source,
-                'repo_id': repo_id,
-                'platform_id': platform_id 
-        }
-
-        review_data.append(pr_review_dict)
-
-    return review_data
-
 def extract_needed_contributor_data(contributor, tool_source, tool_version, data_source):
 
     cntrb_id = GithubUUID()   
@@ -499,8 +466,49 @@ def extract_needed_contributor_data(contributor, tool_source, tool_version, data
 
     return contributor
 
+def extract_needed_clone_history_data(clone_history_data:List[dict], repo_id:int):
 
+    if len(clone_history_data) == 0:
+        return []
 
+    clone_data_dicts = []
+    for clone in clone_history_data:
+        clone_data_dict = {
+            'repo_id': repo_id,
+            'clone_data_timestamp': clone['timestamp'],
+            'count_clones': clone['count'],
+            'unique_clones': clone['uniques']
+        }
+        clone_data_dicts.append(clone_data_dict)
+
+    return clone_data_dicts
+
+def extract_needed_pr_review_data(review, pull_request_id, repo_id, platform_id, tool_version, data_source):
+
+    review_row =  {
+                'pull_request_id': pull_request_id,
+                'cntrb_id': review["cntrb_id"],
+                'pr_review_author_association': review['author_association'],
+                'pr_review_state': review['state'],
+                'pr_review_body': str(review['body']).encode(encoding='UTF-8',errors='backslashreplace').decode(encoding='UTF-8',errors='ignore') if (
+                    review['body']
+                ) else None,
+                'pr_review_submitted_at': review['submitted_at'] if (
+                    'submitted_at' in review
+                ) else None,
+                'pr_review_src_id': int(float(review['id'])), #12/3/2021 cast as int due to error. # Here, `pr_review_src_id` is mapped to `id` SPG 11/29/2021. This is fine. Its the review id.
+                'pr_review_node_id': review['node_id'],
+                'pr_review_html_url': review['html_url'],
+                'pr_review_pull_request_url': review['pull_request_url'],
+                'pr_review_commit_id': review['commit_id'] if 'commit_id' in review else None,
+                'tool_source': 'pull_request_reviews model',
+                'tool_version': tool_version+ "_reviews",
+                'data_source': data_source,
+                'repo_id': repo_id,
+                'platform_id': platform_id 
+            }
+
+    return review_row
 
 
                 

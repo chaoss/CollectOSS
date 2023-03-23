@@ -32,6 +32,7 @@ import time
 import datetime
 import html.parser
 import subprocess
+from subprocess import check_output
 import os
 import getopt
 import xlsxwriter
@@ -39,6 +40,7 @@ import configparser
 import sqlalchemy as s
 from .facade01config import get_database_args_from_env
 from augur.application.db.models.augur_data import *
+from .facade01config import FacadeSession as FacadeSession
 #from augur.tasks.git.util.facade_worker.facade
 
 def update_repo_log(session, repos_id,status):
@@ -110,3 +112,48 @@ def trim_author(session, email):
 
 	session.log_activity('Debug',f"Trimmed working author: {email}")
 
+def get_absolute_repo_path(repo_base_dir, repo_group_id, repo_path, repo_name):
+	
+	return f"{repo_base_dir}{repo_group_id}/{repo_path}{repo_name}"
+
+def get_parent_commits_set(absolute_repo_path, start_date):
+	
+	parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
+								"--pretty=format:'%%H' --since=%s" % (absolute_repo_path,start_date)],
+	stdout=subprocess.PIPE, shell=True)
+
+	parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
+
+	# If there are no commits in the range, we still get a blank entry in
+	# the set. Remove it, as it messes with the calculations
+
+	if '' in parent_commits:
+		parent_commits.remove('')
+
+	return parent_commits
+
+
+def get_existing_commits_set(session, repo_id):
+
+	find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
+		""").bindparams(repo_id=repo_id)
+
+	existing_commits = [commit['cmt_commit_hash'] for commit in session.fetchall_data_from_sql_text(find_existing)]
+
+	return set(existing_commits)
+
+def date_weight_factor(days_since_last_collection):
+    return (days_since_last_collection ** 3) / 25
+
+def get_repo_weight_by_commit(logger,repo_git,days_since_last_collection):
+	with FacadeSession(logger) as session:
+		repo = Repo.get_by_repo_git(session, repo_git)
+		absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+		repo_loc = (f"{absolute_path}/.git")
+
+		#git --git-dir <.git directory> rev-list --count HEAD
+		check_commit_count_cmd = check_output(["git","--git-dir",repo_loc, "rev-list", "--count", "HEAD"])
+
+		commit_count = int(check_commit_count_cmd)
+	
+	return commit_count - date_weight_factor(days_since_last_collection)

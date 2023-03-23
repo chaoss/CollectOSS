@@ -48,16 +48,17 @@ def remove_null_characters_from_list_of_dicts(data_list, fields):
 
     return data_list
 
-
 class DatabaseSession(Session):
 
     def __init__(self, logger, engine=None, from_msg=None):
     
         self.logger = logger
         self.engine = engine
+        self.session = self
         self.engine_created = False
 
         if self.engine is None:
+            self.logger.debug("Passing engine will be required soon")
             from augur.application.db.engine import DatabaseEngine
 
             self.engine_created = True
@@ -85,16 +86,17 @@ class DatabaseSession(Session):
     
     def execute_sql(self, sql_text):
 
-        with EngineConnection(self.engine) as connection:
+        with self.engine.connect() as connection:
+
             return_data = connection.execute(sql_text)  
 
         return return_data
 
     def fetchall_data_from_sql_text(self,sql_text):
 
-        with EngineConnection(self.engine) as connection:
+        with self.engine.connect() as connection:
 
-            result = connection.execute(sql_text)  .fetchall()
+            result = connection.execute(sql_text).fetchall()
         return [dict(zip(row.keys(), row)) for row in result]
 
     def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:

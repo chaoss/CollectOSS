@@ -50,6 +50,29 @@ def get_database_string() -> str:
 
     return db_conn_string
 
+def create_database_engine(url, **kwargs):  
+    """Create sqlalchemy database engine 
+
+    Note:
+        A new database engine is created each time the function is called
+
+    Returns:
+        sqlalchemy database engine
+    """ 
+
+    engine = create_engine(url, **kwargs)
+
+    @event.listens_for(engine, "connect", insert=True)
+    def set_search_path(dbapi_connection, connection_record):
+        existing_autocommit = dbapi_connection.autocommit
+        dbapi_connection.autocommit = True
+        cursor = dbapi_connection.cursor()
+        cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
+        cursor.close()
+        dbapi_connection.autocommit = existing_autocommit
+
+    return engine
+
 class DatabaseEngine():
 
     def __init__(self, **kwargs):
@@ -79,35 +102,11 @@ class DatabaseEngine():
 
 
     def create_database_engine(self, **kwargs):  
-        """Create sqlalchemy database engine 
 
-        Note:
-            A new database engine is created each time the function is called
-
-        Returns:
-            sqlalchemy database engine
-        """ 
-
-        # curframe = inspect.currentframe()
-        # calframe = inspect.getouterframes(curframe, 2)
-        # print('file name:', calframe[1][1])
-        # print('function name:', calframe[1][3])
 
         db_conn_string = get_database_string()
 
-        engine = create_engine(db_conn_string, **kwargs)
-
-        @event.listens_for(engine, "connect", insert=True)
-        def set_search_path(dbapi_connection, connection_record):
-            existing_autocommit = dbapi_connection.autocommit
-            dbapi_connection.autocommit = True
-            cursor = dbapi_connection.cursor()
-            cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
-            cursor.close()
-            dbapi_connection.autocommit = existing_autocommit
-
-        return engine
-
+        return create_database_engine(db_conn_string, **kwargs)
 
 class EngineConnection():
 

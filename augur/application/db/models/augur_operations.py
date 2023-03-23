@@ -14,9 +14,9 @@ import importlib
 from augur.application.db.models import Repo, RepoGroup
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models.base import Base
-schema_6_revision = importlib.import_module('augur.application.schema.alembic.versions.6_add_repo_group_for_frontend_repos')
 
-FRONTEND_REPO_GROUP_NAME = schema_6_revision.repo_group_name
+
+FRONTEND_REPO_GROUP_NAME = "Frontend Repos"
 logger = logging.getLogger(__name__)
 
 def retrieve_org_repos(session, url: str) -> List[str]:
@@ -943,6 +943,10 @@ class CollectionStatus(Base):
     secondary_task_id = Column(String)
     event_last_collected = Column(TIMESTAMP)
 
+    facade_status = Column(String,nullable=False, server_default=text("'Pending'"))
+    facade_data_last_collected = Column(TIMESTAMP)
+    facade_task_id = Column(String)
+    
     repo = relationship("Repo", back_populates="collection_status")
 
     @staticmethod

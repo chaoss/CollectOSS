@@ -15,6 +15,7 @@ from redis.exceptions import ConnectionError as RedisConnectionError
 from celery import chain, signature, group
 import uuid
 import traceback
+from urllib.parse import urlparse
 from sqlalchemy import update
 
 
@@ -93,7 +94,7 @@ def start(disable_collection, development, port):
 
     time.sleep(3)
     logger.info('Gunicorn webserver started...')
-    logger.info(f'Augur is running at: http://127.0.0.1:{port}')
+    logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
 
     scheduling_worker_process = None
     core_worker_process = None
@@ -116,28 +117,11 @@ def start(disable_collection, development, port):
         time.sleep(5)
 
         create_collection_status(logger)
-
+        
         with DatabaseSession(logger) as session:
-            primaryCollecting = CollectionStatus.core_status == CollectionState.COLLECTING.value
-            secondaryCollecting = CollectionStatus.secondary_status == CollectionState.COLLECTING.value
 
-            query = session.query(CollectionStatus).filter(or_(primaryCollecting,secondaryCollecting))
+            clean_collection_status(session)
 
-            collection_status_list = execute_session_query(query,'all')
-
-            for status in collection_status_list:
-                repo = status.repo
-                repo.repo_name = None
-                repo.repo_path = None
-                repo.repo_status = "New"
-
-                status.core_status = "Pending"
-                status.secondary_status = "Pending"
-            
-            #collection_status_list.update({CollectionStatus.core_status: "Pending"})
-            #collection_status_list.update({CollectionStatus.secondary_status: "Pending"})
-            session.commit()
-          
         augur_collection_monitor.si().apply_async()
 
         celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
@@ -171,14 +155,7 @@ def start(disable_collection, development, port):
             celery_beat_process.terminate()
 
         try:
-            clear_redis_caches()
-            connection_string = ""
-            with DatabaseSession(logger) as session:
-                config = AugurConfig(logger, session)
-                connection_string = config.get_section("RabbitMQ")['connection_string']
-
-            clear_rabbitmq_messages(connection_string)
-            
+            cleanup_after_collection_halt(logger)
         except RedisConnectionError:
             pass
 
@@ -191,13 +168,7 @@ def stop():
     logger = logging.getLogger("augur.cli")
     _broadcast_signal_to_processes(given_logger=logger)
 
-    clear_redis_caches()
-    connection_string = ""
-    with DatabaseSession(logger) as session:
-        config = AugurConfig(logger, session)
-        connection_string = config.get_section("RabbitMQ")['connection_string']
-
-    clear_rabbitmq_messages(connection_string)
+    cleanup_after_collection_halt(logger)
 
 @cli.command('kill')
 def kill():
@@ -207,15 +178,18 @@ def kill():
     logger = logging.getLogger("augur.cli")
     _broadcast_signal_to_processes(broadcast_signal=signal.SIGKILL, given_logger=logger)
 
-    clear_redis_caches()
+    cleanup_after_collection_halt(logger)
 
+def cleanup_after_collection_halt(logger):
+    clear_redis_caches()
     connection_string = ""
     with DatabaseSession(logger) as session:
         config = AugurConfig(logger, session)
         connection_string = config.get_section("RabbitMQ")['connection_string']
 
-    clear_rabbitmq_messages(connection_string)
+        clean_collection_status(session)
 
+    clear_rabbitmq_messages(connection_string)
 
 def clear_redis_caches():
     """Clears the redis databases that celery and redis use."""
@@ -225,13 +199,47 @@ def clear_redis_caches():
     subprocess.call(celery_purge_command.split(" "))
     redis_connection.flushdb()
 
-def clear_rabbitmq_messages(connection_string):
+def clear_all_message_queues(connection_string):
+    queues = ['celery','secondary','scheduling']
+
     virtual_host_string = connection_string.split("/")[-1]
 
-    logger.info("Clearing all messages from celery queue in rabbitmq")
-    rabbitmq_purge_command = f"sudo rabbitmqctl purge_queue celery -p {virtual_host_string}"
-    subprocess.call(rabbitmq_purge_command.split(" "))
+    #Parse username and password with urllib
+    parsed = urlparse(connection_string)
 
+    for q in queues:
+        curl_cmd = f"curl -i -u {parsed.username}:{parsed.password} -XDELETE http://localhost:15672/api/queues/{virtual_host_string}/{q}"
+        subprocess.call(curl_cmd.split(" "),stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+def clear_rabbitmq_messages(connection_string):
+    #virtual_host_string = connection_string.split("/")[-1]
+
+    logger.info("Clearing all messages from celery queue in rabbitmq")
+    from augur.tasks.init.celery_app import celery_app
+    celery_app.control.purge()
+
+    clear_all_message_queues(connection_string)
+    #rabbitmq_purge_command = f"sudo rabbitmqctl purge_queue celery -p {virtual_host_string}"
+    #subprocess.call(rabbitmq_purge_command.split(" "))
+
+#Make sure that database reflects collection status when processes are killed/stopped.
+def clean_collection_status(session):
+    session.execute_sql(s.sql.text("""
+        UPDATE augur_operations.collection_status 
+        SET core_status='Pending'
+        WHERE core_status='Collecting';
+        UPDATE augur_operations.collection_status 
+        SET secondary_status='Pending'
+        WHERE secondary_status='Collecting';
+        UPDATE augur_operations.collection_status 
+        SET facade_status='Update', facade_task_id=NULL
+        WHERE facade_status LIKE '%Collecting%';
+        UPDATE augur_operations.collection_status
+        SET facade_status='Pending'
+        WHERE facade_status='Failed Clone' OR facade_status='Initializing';
+    """))
+    #TODO: write timestamp for currently running repos.
 
 @cli.command('export-env')
 def export_env(config):
@@ -260,7 +268,18 @@ def repo_reset(augur_app):
     """
     Refresh repo collection to force data collection
     """
-    augur_app.database.execute("UPDATE augur_data.repo SET repo_path = NULL, repo_name = NULL, repo_status = 'New'; TRUNCATE augur_data.commits CASCADE; ")
+    augur_app.database.execute(s.sql.text("""UPDATE augur_operations.collection_status 
+        SET core_status='Pending';
+        UPDATE augur_operations.collection_status 
+        SET secondary_status='Pending';
+        UPDATE augur_operations.collection_status 
+        SET facade_status='Update'
+        WHERE facade_status='Collecting' OR facade_status='Success' OR facade_status='Error';
+        UPDATE augur_operations.collection_status
+        SET facade_status='Pending'
+        WHERE facade_status='Failed Clone' OR facade_status='Initializing';
+        TRUNCATE augur_data.commits CASCADE;
+        """))
 
     logger.info("Repos successfully reset")
 

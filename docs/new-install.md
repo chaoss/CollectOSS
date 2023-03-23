@@ -1,6 +1,6 @@
 ## Augur Setup
 
-# Ubuntu 20.04.x
+# Ubuntu 22.x
 We default to this version of Ubuntu for the moment because Augur does not yet support python3.10, which is the default version of python3.x distributed with Ubuntu 22.0x.x
 
 ## Git Platform Requirements (Things to have setup prior to initiating installation.)
@@ -20,24 +20,7 @@ sudo apt update &&
 sudo apt upgrade && 
 sudo apt install software-properties-common && 
 sudo apt install python3-dev && 
-sudo apt install python3.8-venv &&
-sudo apt install postgresql postgresql-contrib postgresql-client && 
-sudo apt install build-essential && 
-sudo apt install redis-server &&  
-sudo apt install erlang && 
-sudo apt install rabbitmq-server && 
-sudo snap install go --classic && 
-sudo apt install nginx && 
-sudo apt install firefox-geckodriver
-```
-
-### Annotated
-```shell 
-sudo apt update && 
-sudo apt upgrade && 
-sudo apt install software-properties-common && 
-sudo apt install python3-dev && 
-sudo apt install python3.8-venv &&
+sudo apt install python3.10-venv &&
 sudo apt install postgresql postgresql-contrib postgresql-client && 
 sudo apt install build-essential && 
 sudo apt install redis-server &&  # required 
@@ -45,7 +28,22 @@ sudo apt install erlang && # required
 sudo apt install rabbitmq-server && #required
 sudo snap install go --classic && #required: Go Needs to be version 1.19.x or higher. Snap is the package manager that gets you to the right version. Classic enables it to actually be installed at the correct version.
 sudo apt install nginx && # required for hosting
-sudo apt install firefox-geckodriver # required for visualization API 
+sudo add-apt-repository ppa:mozillateam/firefox-next &&
+sudo apt install firefox=111.0~b8+build1-0ubuntu0.22.04.1 &&
+sudo apt install firefox-geckodriver
+
+# You will almost certainly need to reboot after this. 
+```
+
+### RabbitMQ Configuration
+The default timeout for RabbitMQ needs to be set on Ubuntu 22.x. 
+```shell
+sudo vi /etc/rabbitmq/advanced.config
+```
+
+Add this one line to that file (the period at the end matters): 
+```shell
+[ {rabbit, [ {consumer_timeout, undefined} ]} ].
 ```
 
 ## Git Configuration
@@ -61,8 +59,8 @@ There are some Git configuration parameters that help when you are cloning repos
 ## Postgresql Configuration
 Create a PostgreSQL database for Augur to use
 ```shell
-sudo su -
-su - postgres
+sudo su - &&
+su - postgres &&
 psql
 ```
 
@@ -86,11 +84,17 @@ exit
 ## Rabbitmq Broker Configuration
 You have to setup a specific user, and broker host for your augur instance. You can accomplish this by running the below commands:
 ```shell
-sudo rabbitmqctl add_user augur password123 ||
+sudo rabbitmq-plugins enable rabbitmq_management
+sudo rabbitmqctl add_user augur password123 &&
 sudo rabbitmqctl add_vhost augur_vhost &&
-sudo rabbitmqctl set_user_tags augur augurTag &&
+sudo rabbitmqctl set_user_tags augur augurTag administrator &&
 sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
 ```
+
+- We need rabbitmq_management so we can purge our own queues with an API call 
+- We need a user
+- We need a vhost
+- We then set permissions 
 
 NOTE: it is important to have a static hostname when using rabbitmq as it uses hostname to communicate with nodes.
 
@@ -98,9 +102,41 @@ If your setup of rabbitmq is successful your broker url should look like this:
 
 **broker_url = `amqp://augur:password123@localhost:5672/augur_vhost`**
 
+### RabbitMQ Developer Note:
+These are the queues we create: 
+- celery (the main queue)
+- secondary
+- scheduling 
+
+The endpoints to hit to purge queues on exit are: 
+```
+curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/celery
+
+curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/secondary
+
+curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/scheduling
+```
+
+We provide this functionality to limit, as far as possible, the need for sudo privileges on the Augur operating system user.  With sudo, you can accomplish the same thing with (Given a vhost named AugurB [case sensitive]): 
+
+1. To list the queues
+```
+ sudo rabbitmqctl list_queues -p AugurB name messages consumers
+```
+
+2. To empty the queues, simply execute the command for your queues. Below are the 3 queues that Augur creates for you: 
+```
+ sudo rabbitmqctl purge_queue celery -p AugurB
+ sudo rabbitmqctl purge_queue secondary -p AugurB
+ sudo rabbitmqctl purge_queue scheduling -p AugurB
+```
+
+
+Where AugurB is the vhost. The management API at port 15672 will only exist if you have already installed the rabbitmq_management plugin. 
+
 **During Augur installation, you will be prompted for this broker_url**
 
-##  Proxying Augur through Nginx
+## Proxying Augur through Nginx
 Assumes nginx is installed. 
 
 Then you create a file for the server you want Augur to run under in the location of your `sites-enabled` directory for nginx (In this example, Augur is running on port 5038: 
@@ -147,6 +183,73 @@ AND
 setting_name='cache_group';
 ```
 
+#### What does Redis Do?
+Redis is used to make the state of data collection jobs visible on an external dashboard, like Flower. Internally, Augur relies on Redis to cache GitHub API Keys, and for OAuth Authentication. Redis is used to maintain awareness of Augur's internal state.
+
+#### What does RabbitMQ Do?
+Augur is a distributed system. Even on one server, there are many collection processes happening simultaneously. Each job to collect data is put on the RabbitMQ Queue by Augur's "Main Brain". Then independent workers pop messages off the RabbitMQ Queue and go collect the data. These tasks then become standalone processes that report their completion or failure states back to the Redis server. 
+
+
+**Edit** the `/etc/redis/redis.conf` file to ensure these parameters are configured in this way: 
+```shell
+supervised systemd
+databases 900
+maxmemory-samples 10
+maxmemory 20GB
+```
+
+**NOTE**: You may be able to have fewer databases and lower maxmemory settings. This is a function of how many repositories you are collecting data for at a given time. The more repositories you are managing data for, the close to these settings you will need to be. 
+
+**Consequences** : If the settings are too low for Redis, Augur's maintainer team has observed cases where collection appears to stall. (TEAM: This is a working theory as of 3/10/2023 for Ubuntu 22.x, based on EC2 experiments.)
+
+
+#### Possible EC2 Configuration Requirements
+
+With virtualization there may be issues associated with redis-server connections exceeding available memory. In these cases, the following workarounds help to resolve issues. 
+
+Specifically, you may find this error in your augur logs: 
+```shell
+redis.exceptions.ConnectionError: Error 111 connecting to 127.0.0.1:6379. Connection refused.
+```
+
+**INSTALL** `sudo apt install libhugetlbfs-bin`
+
+**COMMAND**: 
+```
+hugeadm --thp-never` &&
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
+```
+
+
+```shell
+sudo vi /etc/rc.local
+```
+
+**paste** into `/etc/rc.local`
+```shell
+if test -f /sys/kernel/mm/transparent_hugepage/enabled; then
+   echo never > /sys/kernel/mm/transparent_hugepage/enabled
+fi
+```
+
+
+**EDIT** : `/etc/default/grub` add the following line: 
+```shell
+GRUB_DISABLE_OS_PROBER=true
+```
+
+
+## Postgresql Configuration
+Your postgresql instance should optimally allow 1,000 connections: 
+
+```shell
+max_connections = 1000                  # (change requires restart)
+shared_buffers = 8GB                    # min 128kB
+work_mem = 2GB                  # min 64kB
+```
+
+Augur will generally hold up to 150 simultaneous connections while collecting data. The 1,000 number is recommended to accommodate both collection and analysis on the same database. Use of PGBouncer or other utility may change these characteristics.  
+
 ## Augur Commands
 
 To access command line options, use `augur --help`. To load repos from GitHub organizations prior to collection, or in other ways, the direct route is `augur db --help`. 
@@ -159,7 +262,7 @@ Start Augur: `(nohup augur backend start &)`
 When data collection is complete you will see only a single task running in your flower Dashboard.
 
 ## Accessing Repo Addition and Visualization Front End
-Your Augur intance will now be available at http://hostname.io:port_number
+Your Augur instance will now be available at http://hostname.io:port_number
 
 For example: http://chaoss.tv:5038 
 
@@ -177,9 +280,3 @@ You can stop augur with `augur backend stop`, followed by `augur backend kill`. 
 4. `sudo docker build -t augur-new -f docker/backend/Dockerfile .`
 5. `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to run the database in a Docker Container or 
    `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. 
-
-### Errata (Old Frontend)
-
-14. If you have frontend configuration issues that result in a *failure* to complete steps with npm, we recommend you install and use `nvm`: https://tecadmin.net/how-to-install-nvm-on-ubuntu-20-04/ to set your nodejs release to the latest LTS of 12.x or 16.x. For example: `nvm ls-remote | grep -i 'latest'` and `nvm alias default 16.??` (whatever the latest version of 16 is.)
-15. Also, please explore our new frontend, being developed at https://github.com/augurlabs/augur_view. The `dev` branch is the most current. 
-
