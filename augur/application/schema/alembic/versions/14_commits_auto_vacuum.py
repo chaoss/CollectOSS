@@ -1,4 +1,4 @@
-"""No null author affiliation and committer affiliation in commits table
+"""Frequent vaccuming on high update commits table
 
 Revision ID: 14
 Revises: 13
