@@ -139,7 +139,12 @@ def get_deps_libyear_data(path, logger):
                     except KeyError:
                         current_release_date = None
 
-            libyear = get_libyear(current_version, current_release_date, latest_version, latest_release_date)
+            if current_release_date:
+                libyear = get_libyear(current_version, current_release_date, latest_version, latest_release_date)
+            else:
+                current_release_date = dateutil.parser.parse('1970-01-01 00:00:00')
+                libyear = -1
+            
             if not latest_release_date:
                 latest_release_date = dateutil.parser.parse('1970-01-01 00:00:00')
                 libyear = -1
