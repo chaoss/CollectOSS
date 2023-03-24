@@ -337,7 +337,7 @@ class AugurTaskRoutine:
         session: Database session to use
     """
     def __init__(self,session,repos: List[str]=[],collection_phases: List=[],collection_hook: str="core"):
-        self.logger = AugurLogger("data_collection_jobs").get_logger()
+        self.logger = session.logger
         #self.session = TaskSession(self.logger)
         self.collection_phases = collection_phases
         #self.disabled_collection_tasks = disabled_collection_tasks

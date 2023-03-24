@@ -196,7 +196,7 @@ def start_primary_collection(session,max_repo,days,max_collection_weight):
 
     session.logger.info(f"Starting primary collection on {len(repo_git_identifiers)} repos")
     if len(repo_git_identifiers) == 0:
-        return
+        return 0
 
     session.logger.info(f"Primary collection starting for: {tuple(repo_git_identifiers)}")
 
@@ -240,7 +240,7 @@ def start_secondary_collection(session,max_repo,days,max_collection_weight):
 
     session.logger.info(f"Starting secondary collection on {len(repo_git_identifiers)} repos")
     if len(repo_git_identifiers) == 0:
-        return
+        return 0
 
     session.logger.info(f"Secondary collection starting for: {tuple(repo_git_identifiers)}")
 
@@ -314,7 +314,7 @@ def start_facade_collection(session,max_repo,days,max_collection_weight):
 
     session.logger.info(f"Starting facade collection on {len(repo_git_identifiers)} repos")
     if len(repo_git_identifiers) == 0:
-        return
+        return 0
 
     session.logger.info(f"Facade collection starting for: {tuple(repo_git_identifiers)}")
 
