@@ -203,7 +203,7 @@ def start_primary_collection(session,max_repo,days,max_collection_weight):
     primary_augur_collection = AugurWeightedTaskRoutine(session,repos=repo_git_identifiers,collection_phases=primary_enabled_phases,total_repo_weight=max_collection_weight)
 
     #Start data collection and update the collectionStatus with the task_ids
-    primary_augur_collection.start_data_collection()
+    return primary_augur_collection.start_data_collection()
 
 
 def start_secondary_collection(session,max_repo,days,max_collection_weight):
@@ -246,7 +246,7 @@ def start_secondary_collection(session,max_repo,days,max_collection_weight):
 
     secondary_augur_collection = AugurWeightedTaskRoutine(session,repos=repo_git_identifiers,collection_phases=secondary_enabled_phases,collection_hook="secondary",total_repo_weight=max_collection_weight)
 
-    secondary_augur_collection.start_data_collection()
+    return secondary_augur_collection.start_data_collection()
 
 def start_facade_clone_update(session,max_repo,days):
     facade_enabled_phases = []
@@ -320,7 +320,7 @@ def start_facade_collection(session,max_repo,days,max_collection_weight):
 
     facade_augur_collection = AugurWeightedTaskRoutine(session,repos=repo_git_identifiers,collection_phases=facade_enabled_phases,collection_hook="facade",total_repo_weight=max_collection_weight)
 
-    facade_augur_collection.start_data_collection()
+    return facade_augur_collection.start_data_collection()
 
 @celery.task
 def augur_collection_monitor():     
@@ -349,15 +349,21 @@ def augur_collection_monitor():
         enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
 
         if primary_repo_collect_phase.__name__ in enabled_phase_names:
-            start_primary_collection(session, max_repo=50, days=30,max_collection_weight=core_weight.value)
+            raw_weight = start_primary_collection(session, max_repo=50, days=30,max_collection_weight=core_weight.value)
+
+            #Subtract weight used.
+            core_weight.value = core_weight.value - raw_weight
         
         if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-            start_secondary_collection(session, max_repo=30, days=30,max_collection_weight=secondary_weight.value)
+            raw_weight = start_secondary_collection(session, max_repo=30, days=30,max_collection_weight=secondary_weight.value)
+            secondary_weight.value = secondary_weight.value - raw_weight
 
         if facade_phase.__name__ in enabled_phase_names:
             #Schedule facade collection before clone/updates as that is a higher priority
-            start_facade_collection(session, max_repo=30, days=30,max_collection_weight=facade_weight.value)
+            weight = start_facade_collection(session, max_repo=30, days=30,max_collection_weight=facade_weight.value)
             start_facade_clone_update(session,max_repo=15,days=30)
+
+            facade_weight.value = facade_weight.value - weight
 
 
 
