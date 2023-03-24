@@ -24,7 +24,7 @@ class RedisScalar:
             redis.set(self.redis_scalar_key,self.__value)
         else:
             #else get the value 
-            self.__value = int(redis.get(self.redis_scalar_key))
+            self.__value = int(float(redis.get(self.redis_scalar_key)))
 
     @property
     def value(self):
