@@ -28,6 +28,7 @@ def generate_deps_data(session, repo_id, path):
 
         deps = dep_calc.get_deps(path,session.logger)
         
+        to_insert = []
         for dep in deps:
             repo_deps = {
                 'repo_id': repo_id,
@@ -40,7 +41,9 @@ def generate_deps_data(session, repo_id, path):
                 'data_collection_date': scan_date
             }
 
-            session.insert_data(repo_deps,RepoDependency,["repo_id","dep_name","data_collection_date"])
+            to_insert.append(repo_deps)
+            
+        session.insert_data(to_insert,RepoDependency,["repo_id","dep_name","data_collection_date"])
         
         session.logger.info(f"Inserted {len(deps)} dependencies for repo {repo_id}")
 
@@ -102,6 +105,7 @@ def generate_scorecard(session,repo_id,path):
         return
     
     #Store the overall score first
+    to_insert = []
     overall_deps_scorecard = {
         'repo_id': repo_id,
         'name': 'OSSF_SCORECARD_AGGREGATE_SCORE',
@@ -112,8 +116,8 @@ def generate_scorecard(session,repo_id,path):
         'data_source': 'Git',
         'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
     }
-
-    session.insert_data(overall_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
+    to_insert.append(overall_deps_scorecard)
+   # session.insert_data(overall_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
 
     #Store misc data from scorecard in json field. 
     for check in required_output['checks']:
@@ -127,26 +131,10 @@ def generate_scorecard(session,repo_id,path):
             'data_source': 'Git',
             'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         }
-        session.insert_data(repo_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
+        to_insert.append(repo_deps_scorecard)
+    
+    session.insert_data(to_insert, RepoDepsScorecard, ["repo_id","name"])
     
     session.logger.info(f"Done generating scorecard for repo {repo_id} from path {path}")
 
 
-"""
-    
-
-    for test in required_output:
-        temp = test.split()
-        repo_deps_scorecard = {
-            'repo_id': repo_id,
-            'name': temp[0],
-            'status': temp[1],
-            'score': temp[2],
-            'tool_source': 'scorecard_model',
-            'tool_version': '0.43.9',
-            'data_source': 'Git',
-            'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-
-        } 
-        session.insert_data(repo_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
-"""

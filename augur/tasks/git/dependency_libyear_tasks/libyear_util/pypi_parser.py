@@ -42,7 +42,12 @@ requirement_regrex = re.compile(REQUIREMENTS_REGEXP)
 
 def parse_requirement_txt(file_handle):
 
-    manifest= file_handle.read()
+    try:
+        manifest= file_handle.read()
+    except UnicodeDecodeError:
+        #Try UTF-16 as a shot in the dark
+        manifest = file_handle.read().decode("utf-16")
+
     deps=list()
     for line in manifest.split('\n'):
         matches = require_regrex.search(line.replace("'",""))

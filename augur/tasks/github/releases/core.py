@@ -164,7 +164,7 @@ def fetch_data(key_auth, logger, github_url, repo_id, tag_only = False):
 
     # Hit the graphql endpoint
     logger.info("Hitting endpoint: {} ...\n".format(url))
-    data = request_graphql_dict(key_auth, url, query)
+    data = request_graphql_dict(key_auth,logger, url, query)
 
     if 'data' in data:
         data = data['data']['repository']
@@ -201,7 +201,7 @@ def releases_model(augur_db, key_auth, logger, repo_git, repo_id):
                         if 'node' in n:
                             release = n['node']
                             #self.insert_release(task, repo_id, data['owner'], release, True)
-                            insert_release(augur_db, repo_id, data['owner'], release, True)
+                            insert_release(augur_db,logger, repo_id, data['owner'], release, True)
                         else:
                             logger.info("There's no release to insert. Current node is not available in releases: {}\n".format(n))
                 else:

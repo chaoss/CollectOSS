@@ -46,7 +46,8 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.repo_info.tasks',
                 'augur.tasks.github.detect_move.tasks',
                 'augur.tasks.github.pull_requests.files_model.tasks',
-                'augur.tasks.github.pull_requests.commits_model.tasks']
+                'augur.tasks.github.pull_requests.commits_model.tasks',
+                'augur.tasks.github.traffic.tasks']
 
 git_tasks = ['augur.tasks.git.facade_tasks',
             'augur.tasks.git.dependency_tasks.tasks',
@@ -87,9 +88,16 @@ class AugurCoreRepoCollectionTask(celery.Task):
             repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
 
             repoStatus = repo.collection_status[0]
-            setattr(repoStatus, f"{collection_hook}_status", CollectionState.ERROR.value)
-            setattr(repoStatus, f"{collection_hook}_task_id", None)
-            session.commit()
+
+            #Only set to error if the repo was actually running at the time.
+            #This is to allow for things like exiting from collection without error.
+            #i.e. detect_repo_move changes the repo's repo_git and resets collection to pending without error
+            prevStatus = getattr(repoStatus, f"{collection_hook}_status")
+
+            if prevStatus == CollectionState.COLLECTING.value or prevStatus == CollectionState.INITIALIZING.value:
+                setattr(repoStatus, f"{collection_hook}_status", CollectionState.ERROR.value)
+                setattr(repoStatus, f"{collection_hook}_task_id", None)
+                session.commit()
 
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         repo_git = args[0]
@@ -118,7 +126,7 @@ celery_app.conf.task_routes = {
     'augur.tasks.github.pull_requests.commits_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.files_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.tasks.collect_pull_request_reviews': {'queue': 'secondary'},
-    'augur.tasks.git.dependency_tasks.tasks.*': {'queue': 'secondary'}
+    'augur.tasks.git.dependency_tasks.tasks.process_ossf_scorecard_metrics': {'queue': 'secondary'}
 }
 
 #Setting to be able to see more detailed states of running tasks
