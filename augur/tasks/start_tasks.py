@@ -372,7 +372,7 @@ def augur_collection_monitor():
 
         if facade_phase.__name__ in enabled_phase_names:
             #Schedule facade collection before clone/updates as that is a higher priority
-            start_facade_collection(session, max_repo=25, days=30)
+            start_facade_collection(session, max_repo=20, days=30)
             start_facade_clone_update(session,max_repo=15,days=30)
 
 
