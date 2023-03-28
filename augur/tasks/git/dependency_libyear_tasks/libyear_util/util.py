@@ -92,7 +92,7 @@ def get_libyear(current_version, current_release_date, latest_version, latest_re
     if not latest_release_date:
         return -1
 
-    if not current_version:
+    if not current_version or not current_release_date:
         return 0
 
     current_release_date= dateutil.parser.parse(current_release_date)
@@ -117,7 +117,7 @@ def get_deps_libyear_data(path, logger):
                 data = get_pypi_data(dependency['name'])
                 try:
                     current_version = sort_dependency_requirement(dependency,data)
-                except KeyError:
+                except (KeyError, TypeError) as e:
                     logger.error(f"Could not get current version of dependency for path {path}.\n  Dependency: {dependency}")
                     current_version = None
                 try:
