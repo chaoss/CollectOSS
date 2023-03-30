@@ -187,8 +187,9 @@ class RepoLoadController:
 
         data = results.to_dict(orient="records")
 
-        for row in data:
-            row["repo_name"] = re.search(r"github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$", row["url"]).groups()[0]
+        # The SELECT statement in generate_repo_query has been updated to include `repo_name`
+        # for row in data:
+        #     row["repo_name"] = re.search(r"github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$", row["url"]).groups()[0]
 
         return data, {"status": "success"}
 
@@ -236,6 +237,7 @@ class RepoLoadController:
                     a.commits_all_time,
                     b.issues_all_time,
                     rg_name,
+                    repo_name,
                     augur_data.repo.repo_group_id"""
 
         query = f"""
