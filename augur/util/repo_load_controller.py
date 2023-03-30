@@ -289,6 +289,13 @@ class RepoLoadController:
             page = kwargs.get("page") or 0
             page_size = kwargs.get("page_size") or 25
 
+            # implement sorting by query_key
+            search = kwargs.get("search")
+            qkey = kwargs.get("query_key") or "repo_name"
+
+            if search:
+                query += f"\t    WHERE {qkey} ilike '%{search}%'"
+
             query += f"\t    ORDER BY {order_by} {direction}\n"
             query += f"\t    LIMIT {page_size}\n"
             query += f"\t    OFFSET {page*page_size};\n"
