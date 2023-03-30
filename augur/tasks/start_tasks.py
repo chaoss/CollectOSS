@@ -368,7 +368,7 @@ def augur_collection_monitor():
             start_primary_collection(session, max_repo=60, days=30)
         
         if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-            start_secondary_collection(session, max_repo=30, days=30)
+            start_secondary_collection(session, max_repo=20, days=30)
 
         if facade_phase.__name__ in enabled_phase_names:
             #Schedule facade collection before clone/updates as that is a higher priority
