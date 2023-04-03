@@ -458,11 +458,11 @@ class User(Base):
 
         return result
 
-    def get_repo_count(self):
+    def get_repo_count(self, search = None):
         from augur.util.repo_load_controller import RepoLoadController
 
         with DatabaseSession(logger) as session:
-            result = RepoLoadController(session).get_repo_count(source="user", user=self)
+            result = RepoLoadController(session).get_repo_count(source="user", user=self, search = search)
 
         return result
 
