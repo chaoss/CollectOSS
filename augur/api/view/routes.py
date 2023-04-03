@@ -75,10 +75,10 @@ def repo_table_view():
     
     if current_user.is_authenticated:
         data = current_user.get_repos(page = page, sort = sorting, direction = direction, search=query)[0]
-        page_count = (current_user.get_repo_count()[0] or 0) // pagination_offset
+        page_count = (current_user.get_repo_count(search = query)[0] or 0) // pagination_offset
     else:
         data = get_all_repos(page = page, sort = sorting, direction = direction, search=query)[0]
-        page_count = (get_all_repos_count()[0] or 0) // pagination_offset
+        page_count = (get_all_repos_count(search = query)[0] or 0) // pagination_offset
     
     #if not cacheFileExists("repos.json"):
     #    return renderLoading("repos/views/table", query, "repos.json")
@@ -132,7 +132,7 @@ status:
     This route returns the status view, which displays information
     about the current status of collection in the backend
 """
-@app.route('/status')
+@app.route('/collection/status')
 def status_view():
     return render_module("status", title="Status")
 
