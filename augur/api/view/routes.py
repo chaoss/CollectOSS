@@ -72,13 +72,12 @@ def repo_table_view():
     config = AugurConfig(logger, db_session)
 
     pagination_offset = config.get_value("frontend", "pagination_offset")
-
     
     if current_user.is_authenticated:
-        data = current_user.get_repos(page = page, sort = sorting, direction = direction)[0]
+        data = current_user.get_repos(page = page, sort = sorting, direction = direction, search=query)[0]
         page_count = (current_user.get_repo_count()[0] or 0) // pagination_offset
     else:
-        data = get_all_repos(page = page, sort = sorting, direction = direction)[0]
+        data = get_all_repos(page = page, sort = sorting, direction = direction, search=query)[0]
         page_count = (get_all_repos_count()[0] or 0) // pagination_offset
     
     #if not cacheFileExists("repos.json"):

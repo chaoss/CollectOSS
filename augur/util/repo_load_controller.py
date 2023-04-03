@@ -187,8 +187,9 @@ class RepoLoadController:
 
         data = results.to_dict(orient="records")
 
-        for row in data:
-            row["repo_name"] = re.search(r"github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$", row["url"]).groups()[0]
+        # The SELECT statement in generate_repo_query has been updated to include `repo_name`
+        # for row in data:
+        #     row["repo_name"] = re.search(r"github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$", row["url"]).groups()[0]
 
         return data, {"status": "success"}
 
@@ -230,12 +231,13 @@ class RepoLoadController:
             select = "    DISTINCT(augur_data.repo.repo_id)"
         else:
 
-            select = """    DISTINCT(augur_data.repo.repo_id),
+            select = f"""    DISTINCT(augur_data.repo.repo_id),
                     augur_data.repo.description,
                     augur_data.repo.repo_git AS url,
                     a.commits_all_time,
                     b.issues_all_time,
                     rg_name,
+                    (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name,
                     augur_data.repo.repo_group_id"""
 
         query = f"""
@@ -287,9 +289,25 @@ class RepoLoadController:
             page = kwargs.get("page") or 0
             page_size = kwargs.get("page_size") or 25
 
-            query += f"\t    ORDER BY {order_by} {direction}\n"
-            query += f"\t    LIMIT {page_size}\n"
-            query += f"\t    OFFSET {page*page_size};\n"
+            # implement sorting by query_key
+            search = kwargs.get("search")
+            qkey = kwargs.get("query_key") or "repo_name"
+
+            if search:
+                # The WHERE clause cannot use a column alias created in the directly preceeding SELECT clause
+                # We must wrap the query in an additional SELECT with a table alias
+                # This way, we can use WHERE with the computed repo_name column alias
+                query = f"""\tSELECT * from (
+                    {query}
+                ) res\n"""
+                query += f"\tWHERE {qkey} ilike '%{search}%'\n"
+                # This is done so repos with a NULL repo_name can still be sorted.
+                # "res" here is a randomly chosen table alias, short for "result"
+                # It is only included because it is required by the SQL syntax
+
+            query += f"\tORDER BY {order_by} {direction}\n"
+            query += f"\tLIMIT {page_size}\n"
+            query += f"\tOFFSET {page*page_size};\n"
 
         return query, {"status": "success"}
 
