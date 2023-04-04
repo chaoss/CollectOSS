@@ -7,6 +7,7 @@ from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import wait_child_tasks
+from augur.tasks.github.facade_github.tasks import *
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 from augur.application.db.util import execute_session_query
 
@@ -104,5 +105,19 @@ def retrieve_dict_data(url: str, key_auth, logger):
     return None
 
 
+@celery.task(base=AugurCoreRepoCollectionTask)
+def grab_comitters(repo_git,platform="github"):
 
+    from augur.tasks.init.celery_app import engine
+
+    logger = logging.getLogger(grab_comitters.__name__)
+    with DatabaseSession(logger,engine) as session:
+
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo.repo_id
+
+    try:
+        grab_committer_list(GithubTaskManifest(logger), repo_id,platform)
+    except Exception as e:
+        logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 

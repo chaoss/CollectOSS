@@ -33,6 +33,7 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
 # Returns None on failure.
+# NOTE: This function is being deprecated in favor of retrieve_dict_from_endpoint
 def request_dict_from_endpoint(session, url, timeout_wait=10):
     #session.logger.info(f"Hitting endpoint: {url}")
 
@@ -406,18 +407,18 @@ def get_login_with_commit_hash(session, commit_data, repo_id):
 
 
 
-def create_endpoint_from_repo_id(session, repo_id):
+def create_endpoint_from_repo_id(manifest, repo_id):
     
     """
         SELECT repo_git from repo
         WHERE repo_id = :repo_id_bind
     """
     #ORM syntax of above statement
-    query = session.query(Repo).filter_by(repo_id=repo_id)
+    query = manifest.augur_db.session.query(Repo).filter_by(repo_id=repo_id)
     result = execute_session_query(query, 'one')
 
     url = result.repo_git
-    session.logger.info(f"Url: {url}")
+    manifest.logger.info(f"Url: {url}")
 
     return url
 
