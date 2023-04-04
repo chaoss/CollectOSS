@@ -349,7 +349,7 @@ def augur_collection_monitor():
         enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
 
         if primary_repo_collect_phase.__name__ in enabled_phase_names:
-            raw_weight = start_primary_collection(session, max_repo=50, days=30,max_collection_weight=core_weight.value)
+            raw_weight = start_primary_collection(session, max_repo=20, days=30,max_collection_weight=core_weight.value)
 
             #Subtract weight used.
             core_weight.value = core_weight.value - raw_weight
@@ -360,7 +360,7 @@ def augur_collection_monitor():
 
         if facade_phase.__name__ in enabled_phase_names:
             #Schedule facade collection before clone/updates as that is a higher priority
-            weight = start_facade_collection(session, max_repo=30, days=30,max_collection_weight=facade_weight.value)
+            weight = start_facade_collection(session, max_repo=20, days=30,max_collection_weight=facade_weight.value)
             start_facade_clone_update(session,max_repo=15,days=30)
 
             facade_weight.value = facade_weight.value - weight

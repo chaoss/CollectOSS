@@ -6,13 +6,13 @@ from augur.util.repo_load_controller import RepoLoadController
 
 logger = logging.getLogger(__name__)
 
-def get_all_repos(page=0, page_size=25, sort="repo_id", direction="ASC"):
+def get_all_repos(page=0, page_size=25, sort="repo_id", direction="ASC", search=None):
 
     with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
 
         controller = RepoLoadController(session)
 
-        result = controller.paginate_repos("all", page, page_size, sort, direction)
+        result = controller.paginate_repos("all", page, page_size, sort, direction, search = search)
 
         return result
 

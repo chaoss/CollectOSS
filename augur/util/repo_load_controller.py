@@ -187,8 +187,9 @@ class RepoLoadController:
 
         data = results.to_dict(orient="records")
 
-        for row in data:
-            row["repo_name"] = re.search(r"github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$", row["url"]).groups()[0]
+        # The SELECT statement in generate_repo_query has been updated to include `repo_name`
+        # for row in data:
+        #     row["repo_name"] = re.search(r"github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$", row["url"]).groups()[0]
 
         return data, {"status": "success"}
 
@@ -202,10 +203,7 @@ class RepoLoadController:
             print("Func: get_repo_count. Error: Invalid source")
             return None, {"status": "Invalid source"}
 
-        user = kwargs.get("user")
-        group_name = kwargs.get("group_name")
-
-        query = self.generate_repo_query(source, count=True, user=user, group_name=group_name)
+        query = self.generate_repo_query(source, count=True, **kwargs)
         if not query[0]:
             return None, query[1]
 
@@ -221,21 +219,21 @@ class RepoLoadController:
             
         return result[0]["count"], {"status": "success"}
 
-        return query, {"status": "success"}
-
     def generate_repo_query(self, source, count, **kwargs):
 
         if count:
             # only query for repos ids so the query is faster for getting the count
-            select = "    DISTINCT(augur_data.repo.repo_id)"
+            select = """    DISTINCT(augur_data.repo.repo_id),
+                (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name"""
         else:
 
-            select = """    DISTINCT(augur_data.repo.repo_id),
+            select = f"""    DISTINCT(augur_data.repo.repo_id),
                     augur_data.repo.description,
                     augur_data.repo.repo_git AS url,
                     a.commits_all_time,
                     b.issues_all_time,
                     rg_name,
+                    (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name,
                     augur_data.repo.repo_group_id"""
 
         query = f"""
@@ -280,6 +278,22 @@ class RepoLoadController:
 
             query += "\t\t    JOIN augur_operations.user_repos ON augur_data.repo.repo_id = augur_operations.user_repos.repo_id\n"
             query += f"\t\t    WHERE augur_operations.user_repos.group_id = {group_id}\n"
+        
+        # implement sorting by query_key
+        search = kwargs.get("search")
+        qkey = kwargs.get("query_key") or "repo_name"
+
+        if search:
+            # The WHERE clause cannot use a column alias created in the directly preceeding SELECT clause
+            # We must wrap the query in an additional SELECT with a table alias
+            # This way, we can use WHERE with the computed repo_name column alias
+            query = f"""\tSELECT * from (
+                {query}
+            ) res\n"""
+            query += f"\tWHERE {qkey} ilike '%{search}%'\n"
+            # This is done so repos with a NULL repo_name can still be sorted.
+            # "res" here is a randomly chosen table alias, short for "result"
+            # It is only included because it is required by the SQL syntax
 
         if not count:
             order_by = kwargs.get("order_by") or "repo_id"
@@ -287,9 +301,9 @@ class RepoLoadController:
             page = kwargs.get("page") or 0
             page_size = kwargs.get("page_size") or 25
 
-            query += f"\t    ORDER BY {order_by} {direction}\n"
-            query += f"\t    LIMIT {page_size}\n"
-            query += f"\t    OFFSET {page*page_size};\n"
+            query += f"\tORDER BY {order_by} {direction}\n"
+            query += f"\tLIMIT {page_size}\n"
+            query += f"\tOFFSET {page*page_size};\n"
 
         return query, {"status": "success"}
 
