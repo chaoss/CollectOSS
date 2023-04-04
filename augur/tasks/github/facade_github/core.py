@@ -63,7 +63,7 @@ def query_github_contributors(manifest, github_url):
 
             contributor, result = retrieve_dict_from_endpoint(manifest, cntrb_url)
 
-            manifest.logger.info(f"Contributor: {contributor} \n")
+            #manifest.logger.info(f"Contributor: {contributor} \n")
             company = None
             location = None
             email = None
