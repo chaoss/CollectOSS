@@ -91,7 +91,7 @@ def primary_repo_collect_phase(repo_git):
         #facade_phase(logger,repo_git),
         
         collect_releases.si(repo_git),
-        grab_comitters(repo_git)
+        grab_comitters.si(repo_git)
     )
 
     return repo_task_group

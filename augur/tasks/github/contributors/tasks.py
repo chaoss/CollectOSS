@@ -3,6 +3,7 @@ import logging
 
 
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
@@ -12,7 +13,7 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 from augur.application.db.util import execute_session_query
 
 
-@celery.task
+@celery.task(base=AugurCoreRepoCollectionTask)
 def process_contributors():
 
     logger = logging.getLogger(process_contributors.__name__)
