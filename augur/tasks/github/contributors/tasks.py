@@ -13,7 +13,7 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 from augur.application.db.util import execute_session_query
 
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task
 def process_contributors():
 
     logger = logging.getLogger(process_contributors.__name__)
