@@ -154,14 +154,17 @@ def process_commit_metadata(session,contributorQueue,repo_id):
             return 
         
 
-        
+        #Replace each instance of a single or double quote with escape characters 
+        #for postgres
+        escapedEmail = email.replace('"',r'\"')
+        escapedEmail = escapedEmail.replace("'",r'\'')
         # Resolve any unresolved emails if we get to this point.
         # They will get added to the alias table later
         # Do this last to absolutely make sure that the email was resolved before we remove it from the unresolved table.
         query = s.sql.text("""
             DELETE FROM unresolved_commit_emails
             WHERE email='{}'
-        """.format(email))
+        """.format(escapedEmail))
 
         session.logger.info(f"Updating now resolved email {email}")
 
@@ -190,8 +193,9 @@ def link_commits_to_contributor(session,contributorQueue):
                 UPDATE commits 
                 SET cmt_ght_author_id=:cntrb_id
                 WHERE 
-                cmt_author_raw_email=:cntrb_email
-                OR cmt_author_email=:cntrb_email
+                (cmt_author_raw_email=:cntrb_email
+                OR cmt_author_email=:cntrb_email)
+                AND cmt_ght_author_id is NULL
         """).bindparams(cntrb_id=cntrb["cntrb_id"],cntrb_email=cntrb["email"])
 
         #engine.execute(query, **data)
