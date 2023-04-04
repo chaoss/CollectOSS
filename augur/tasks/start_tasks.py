@@ -90,7 +90,8 @@ def primary_repo_collect_phase(repo_git):
         chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
         #facade_phase(logger,repo_git),
         
-        collect_releases.si(repo_git)
+        collect_releases.si(repo_git),
+        grab_comitters(repo_git)
     )
 
     return repo_task_group
