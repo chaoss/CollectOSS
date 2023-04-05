@@ -133,7 +133,7 @@ def grab_committer_list(manifest, repo_id, platform="github"):
 
     # Create API endpoint from repo_id
 
-    endpoint = create_endpoint_from_repo_id(manifest, repo_id)
+    endpoint = create_endpoint_from_repo_id(manifest.logger,manifest.augur_db, repo_id)
 
     query_github_contributors(manifest,endpoint)
     

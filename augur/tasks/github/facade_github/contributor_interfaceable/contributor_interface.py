@@ -407,18 +407,18 @@ def get_login_with_commit_hash(session, commit_data, repo_id):
 
 
 
-def create_endpoint_from_repo_id(manifest, repo_id):
+def create_endpoint_from_repo_id(logger,db, repo_id):
     
     """
         SELECT repo_git from repo
         WHERE repo_id = :repo_id_bind
     """
     #ORM syntax of above statement
-    query = manifest.augur_db.session.query(Repo).filter_by(repo_id=repo_id)
+    query = db.session.query(Repo).filter_by(repo_id=repo_id)
     result = execute_session_query(query, 'one')
 
     url = result.repo_git
-    manifest.logger.info(f"Url: {url}")
+    logger.info(f"Url: {url}")
 
     return url
 
