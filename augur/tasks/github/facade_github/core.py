@@ -61,7 +61,7 @@ def query_github_contributors(manifest, github_url):
             #r = hit_api(session.oauths, cntrb_url, session.logger)
             #contributor = r.json()
 
-            contributor, result = retrieve_dict_from_endpoint(manifest, cntrb_url)
+            contributor, result = retrieve_dict_from_endpoint(manifest.logger,manifest.key_auth, cntrb_url)
 
             #manifest.logger.info(f"Contributor: {contributor} \n")
             company = None

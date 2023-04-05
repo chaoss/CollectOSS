@@ -554,18 +554,18 @@ def get_url_page_number(url: str) -> int:
     return page_number
 
 
-def retrieve_dict_from_endpoint(manifest, url, timeout_wait=10) -> Tuple[Optional[dict], GithubApiResult]:
+def retrieve_dict_from_endpoint(logger, key_auth, url, timeout_wait=10) -> Tuple[Optional[dict], GithubApiResult]:
     timeout = timeout_wait
     timeout_count = 0
     num_attempts = 1
 
     while num_attempts <= 10:
 
-        response = hit_api(manifest.key_auth, url, manifest.logger, timeout)
+        response = hit_api(key_auth, url, logger, timeout)
 
         if response is None:
             if timeout_count == 10:
-                manifest.logger.error(f"Request timed out 10 times for {url}")
+                logger.error(f"Request timed out 10 times for {url}")
                 return None, GithubApiResult.TIMEOUT
 
             timeout = timeout * 1.1
@@ -573,10 +573,10 @@ def retrieve_dict_from_endpoint(manifest, url, timeout_wait=10) -> Tuple[Optiona
             continue
         
         
-        page_data = parse_json_response(manifest.logger, response)
+        page_data = parse_json_response(logger, response)
 
         if isinstance(page_data, str):
-            str_processing_result: Union[str, List[dict]] = process_str_response(manifest.logger,page_data)
+            str_processing_result: Union[str, List[dict]] = process_str_response(logger,page_data)
 
             if isinstance(str_processing_result, dict):
                 #return str_processing_result, response, GithubApiResult.SUCCESS
@@ -587,17 +587,17 @@ def retrieve_dict_from_endpoint(manifest, url, timeout_wait=10) -> Tuple[Optiona
 
         # if the data is a list, then return it and the response
         if isinstance(page_data, list):
-            manifest.logger.warning("Wrong type returned, trying again...")
-            manifest.logger.info(f"Returned list: {response_data}")
+            logger.warning("Wrong type returned, trying again...")
+            logger.info(f"Returned list: {response_data}")
 
         # if the data is a dict then call process_dict_response, and 
         elif isinstance(page_data, dict):
-            dict_processing_result = process_dict_response(manifest.logger, response, page_data)
+            dict_processing_result = process_dict_response(logger, response, page_data)
 
             if dict_processing_result == GithubApiResult.SUCCESS:
                 return page_data, dict_processing_result
             if dict_processing_result == GithubApiResult.NEW_RESULT:
-                manifest.logger.info(f"Encountered new dict response from api on url: {url}. Response: {page_data}")
+                logger.info(f"Encountered new dict response from api on url: {url}. Response: {page_data}")
                 return None, GithubApiResult.NEW_RESULT
 
             if dict_processing_result == GithubApiResult.REPO_NOT_FOUND:
@@ -614,5 +614,5 @@ def retrieve_dict_from_endpoint(manifest, url, timeout_wait=10) -> Tuple[Optiona
 
         num_attempts += 1
 
-    manifest.logger.error("Unable to collect data in 10 attempts")
+    logger.error("Unable to collect data in 10 attempts")
     return None, GithubApiResult.NO_MORE_ATTEMPTS
