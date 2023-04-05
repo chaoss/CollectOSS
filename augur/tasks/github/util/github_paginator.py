@@ -406,7 +406,7 @@ class GithubPaginator(collections.abc.Sequence):
                     continue                    
 
             if isinstance(page_data, str) is True:
-                str_processing_result: Union[str, List[dict]] = process_str_response(self.logger,page_data)
+                str_processing_result: Union[str, List[dict]] = self.process_str_response(page_data)
 
                 if isinstance(str_processing_result, list):
                     return str_processing_result, response, GithubApiResult.SUCCESS
@@ -455,6 +455,31 @@ class GithubPaginator(collections.abc.Sequence):
 
 ###################################################
 
+    def process_str_response(self, page_data: str) -> Union[str, List[dict]]:
+        """Process an api response of type string.
+
+        Args:
+            page_data: the string response from the api that is being processed
+
+        Returns:
+            html_response, empty_string, and failed_to_parse_jsonif the data is not processable. 
+                Or a list of dicts if the json was parasable
+        """
+        self.logger.info(f"Warning! page_data was string: {page_data}\n")
+        
+        if "<!DOCTYPE html>" in page_data:
+            self.logger.info("HTML was returned, trying again...\n")
+            return GithubApiResult.HTML
+
+        if not page_data:
+            self.logger.info("Empty string, trying again...\n")
+            return GithubApiResult.EMPTY_STRING
+
+        try:
+            list_of_dict_page_data = json.loads(page_data)
+            return list_of_dict_page_data
+        except TypeError:
+            return "failed_to_parse_json"
 
 
 ################################################################################
@@ -479,32 +504,6 @@ def clean_url(url: str, keys: List[str]) -> str:
     u = u._replace(query=urlencode(query, True))
     
     return urlunparse(u)
-
-def process_str_response(logger, page_data: str) -> Union[str, List[dict]]:
-    """Process an api response of type string.
-
-    Args:
-        page_data: the string response from the api that is being processed
-
-    Returns:
-        html_response, empty_string, and failed_to_parse_jsonif the data is not processable. 
-            Or a list of dicts if the json was parasable
-    """
-    logger.info(f"Warning! page_data was string: {page_data}\n")
-    
-    if "<!DOCTYPE html>" in page_data:
-        logger.info("HTML was returned, trying again...\n")
-        return GithubApiResult.HTML
-
-    if not page_data:
-        logger.info("Empty string, trying again...\n")
-        return GithubApiResult.EMPTY_STRING
-
-    try:
-        list_of_dict_page_data = json.loads(page_data)
-        return list_of_dict_page_data
-    except TypeError:
-        return "failed_to_parse_json"
 
 
 def add_query_params(url: str, additional_params: dict) -> str:
