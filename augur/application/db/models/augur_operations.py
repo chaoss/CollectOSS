@@ -1,9 +1,10 @@
 # coding: utf-8
-from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey
+from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey, update
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import text as sql_text
 from werkzeug.security import generate_password_hash, check_password_hash
 from typing import List, Any, Dict
 
@@ -696,7 +697,7 @@ class UserRepo(Base):
         return data[0]["group_id"] == group_id and data[0]["repo_id"] == repo_id
 
     @staticmethod
-    def add(session, url: List[str], user_id: int, group_name=None, group_id=None, valid_repo=False) -> dict:
+    def add(session, url: List[str], user_id: int, group_name=None, group_id=None, valid_repo=False, repo_group_id=None) -> dict:
         """Add repo to the user repo table
 
         Args:
@@ -729,12 +730,18 @@ class UserRepo(Base):
             result = Repo.is_valid_github_repo(session, url)
             if not result[0]:
                 return False, {"status": result[1]["status"], "repo_url": url}
+            
+        # if no repo_group_id is passed then assign the repo to the frontend repo group
+        if repo_group_id is None:
 
-        frontend_repo_group = session.query(RepoGroup).filter(RepoGroup.rg_name == FRONTEND_REPO_GROUP_NAME).first()
-        if not frontend_repo_group:
-            return False, {"status": "Could not find repo group with name 'Frontend Repos'", "repo_url": url} 
+            frontend_repo_group = session.query(RepoGroup).filter(RepoGroup.rg_name == FRONTEND_REPO_GROUP_NAME).first()
+            if not frontend_repo_group:
+                return False, {"status": "Could not find repo group with name 'Frontend Repos'", "repo_url": url} 
+            
+            repo_group_id = frontend_repo_group.repo_group_id
 
-        repo_id = Repo.insert(session, url, frontend_repo_group.repo_group_id, "Frontend")
+
+        repo_id = Repo.insert(session, url, repo_group_id, "Frontend")
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
@@ -782,6 +789,7 @@ class UserRepo(Base):
             urls: list of org urls
             user_id: id of user_id from users table
         """
+
         group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
         if group_id is None:
             return False, {"status": "Invalid group name"}
@@ -789,19 +797,47 @@ class UserRepo(Base):
         result = retrieve_org_repos(session, url)
         if not result[0]:
             return False, result[1]
-
         repos = result[0]
+        
+
+        # parse github org url to get org name
+        org_name = Repo.parse_github_org_url(url)
+        if not org_name:
+            return False, {"status": "Invalid org url"}
+        
+        # get repo group if it exists
+        repo_group = RepoGroup.get_by_name(session, org_name)
+
+        # if it doesn't exist create one
+        if not repo_group:
+            repo_group = RepoGroup(rg_name=org_name, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
+                    tool_source="Loaded by user", tool_version="1.0", data_source="Git")
+            session.add(repo_group)
+            session.commit()
+
+        repo_group_id = repo_group.repo_group_id
+
+
         # try to get the repo group with this org name
         # if it does not exist create one
         failed_repos = []
         for repo in repos:
 
-            result = UserRepo.add(session, repo, user_id, group_id=group_id, valid_repo=True)
+            result = UserRepo.add(session, repo, user_id, group_id=group_id, valid_repo=True, repo_group_id=repo_group_id)
 
             # keep track of all the repos that failed
             if not result[0]:
                 failed_repos.append(repo)
 
+        update_stmt = (
+            update(Repo)
+            .where(Repo.repo_path == f"github.com/{org_name}/")
+            .where(Repo.repo_group_id != repo_group_id)
+            .values(repo_group_id=repo_group_id)
+        )
+        session.execute(update_stmt)
+        session.commit()
+  
         failed_count = len(failed_repos)
         if failed_count > 0:
             # this should never happen because an org should never return invalid repos

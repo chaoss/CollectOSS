@@ -530,6 +530,7 @@ class Platform(Base):
 class RepoGroup(Base):
     __tablename__ = "repo_groups"
     __table_args__ = (
+        UniqueConstraint("rg_name", name="rg_name_unique"),
         Index("rgidm", "repo_group_id", unique=True),
         Index("rgnameindex", "rg_name"),
         {"schema": "augur_data",
@@ -575,6 +576,18 @@ class RepoGroup(Base):
             return False
 
         return True
+    
+    @staticmethod
+    def get_by_name(session, rg_name):
+
+        query = session.query(RepoGroup).filter(RepoGroup.rg_name == rg_name)
+
+        try:
+            result = execute_session_query(query, 'one')
+        except (NoResultFound, MultipleResultsFound):
+            return None
+        
+        return result
 
 
 t_repos_fetch_log = Table(
