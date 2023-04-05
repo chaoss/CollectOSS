@@ -82,6 +82,22 @@ def facade_analysis_init_facade_task(repo_git):
         session.update_status('Running analysis')
         session.log_activity('Info',f"Beginning analysis.")
 
+@celery.task(base=AugurFacadeRepoCollectionTask)
+def grab_comitters(repo_git,platform="github"):
+
+    from augur.tasks.init.celery_app import engine
+
+    logger = logging.getLogger(grab_comitters.__name__)
+    with FacadeSession(logger) as session:
+
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+        repo_id = repo.repo_id
+
+    try:
+        grab_committer_list(GithubTaskSession(logger, engine), repo_id,platform)
+    except Exception as e:
+        logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+
 
 @celery.task(base=AugurFacadeRepoCollectionTask)
 def trim_commits_facade_task(repo_git):
@@ -383,6 +399,8 @@ def generate_analysis_sequence(logger,repo_git, session):
     repo_id = repo_ids.pop(0)
 
     analysis_sequence.append(facade_analysis_init_facade_task.si(repo_git))
+
+    analysis_sequence.append(grab_comitters.si(repo_git))
 
     analysis_sequence.append(trim_commits_facade_task.si(repo_git))
 

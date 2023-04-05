@@ -406,7 +406,7 @@ class GithubPaginator(collections.abc.Sequence):
                     continue                    
 
             if isinstance(page_data, str) is True:
-                str_processing_result: Union[str, List[dict]] = process_str_response(self.logger,page_data)
+                str_processing_result: Union[str, List[dict]] = self.process_str_response(page_data)
 
                 if isinstance(str_processing_result, list):
                     return str_processing_result, response, GithubApiResult.SUCCESS
@@ -455,6 +455,31 @@ class GithubPaginator(collections.abc.Sequence):
 
 ###################################################
 
+    def process_str_response(self, page_data: str) -> Union[str, List[dict]]:
+        """Process an api response of type string.
+
+        Args:
+            page_data: the string response from the api that is being processed
+
+        Returns:
+            html_response, empty_string, and failed_to_parse_jsonif the data is not processable. 
+                Or a list of dicts if the json was parasable
+        """
+        self.logger.info(f"Warning! page_data was string: {page_data}\n")
+        
+        if "<!DOCTYPE html>" in page_data:
+            self.logger.info("HTML was returned, trying again...\n")
+            return GithubApiResult.HTML
+
+        if not page_data:
+            self.logger.info("Empty string, trying again...\n")
+            return GithubApiResult.EMPTY_STRING
+
+        try:
+            list_of_dict_page_data = json.loads(page_data)
+            return list_of_dict_page_data
+        except TypeError:
+            return "failed_to_parse_json"
 
 
 ################################################################################
@@ -479,32 +504,6 @@ def clean_url(url: str, keys: List[str]) -> str:
     u = u._replace(query=urlencode(query, True))
     
     return urlunparse(u)
-
-def process_str_response(logger, page_data: str) -> Union[str, List[dict]]:
-    """Process an api response of type string.
-
-    Args:
-        page_data: the string response from the api that is being processed
-
-    Returns:
-        html_response, empty_string, and failed_to_parse_jsonif the data is not processable. 
-            Or a list of dicts if the json was parasable
-    """
-    logger.info(f"Warning! page_data was string: {page_data}\n")
-    
-    if "<!DOCTYPE html>" in page_data:
-        logger.info("HTML was returned, trying again...\n")
-        return GithubApiResult.HTML
-
-    if not page_data:
-        logger.info("Empty string, trying again...\n")
-        return GithubApiResult.EMPTY_STRING
-
-    try:
-        list_of_dict_page_data = json.loads(page_data)
-        return list_of_dict_page_data
-    except TypeError:
-        return "failed_to_parse_json"
 
 
 def add_query_params(url: str, additional_params: dict) -> str:
@@ -552,67 +551,3 @@ def get_url_page_number(url: str) -> int:
         return 1
 
     return page_number
-
-
-def retrieve_dict_from_endpoint(manifest, url, timeout_wait=10) -> Tuple[Optional[dict], GithubApiResult]:
-    timeout = timeout_wait
-    timeout_count = 0
-    num_attempts = 1
-
-    while num_attempts <= 10:
-
-        response = hit_api(manifest.key_auth, url, manifest.logger, timeout)
-
-        if response is None:
-            if timeout_count == 10:
-                manifest.logger.error(f"Request timed out 10 times for {url}")
-                return None, GithubApiResult.TIMEOUT
-
-            timeout = timeout * 1.1
-            num_attempts += 1
-            continue
-        
-        
-        page_data = parse_json_response(manifest.logger, response)
-
-        if isinstance(page_data, str):
-            str_processing_result: Union[str, List[dict]] = process_str_response(manifest.logger,page_data)
-
-            if isinstance(str_processing_result, dict):
-                #return str_processing_result, response, GithubApiResult.SUCCESS
-                page_data = str_processing_result
-            else:
-                num_attempts += 1
-                continue
-
-        # if the data is a list, then return it and the response
-        if isinstance(page_data, list):
-            manifest.logger.warning("Wrong type returned, trying again...")
-            manifest.logger.info(f"Returned list: {response_data}")
-
-        # if the data is a dict then call process_dict_response, and 
-        elif isinstance(page_data, dict):
-            dict_processing_result = process_dict_response(manifest.logger, response, page_data)
-
-            if dict_processing_result == GithubApiResult.SUCCESS:
-                return page_data, dict_processing_result
-            if dict_processing_result == GithubApiResult.NEW_RESULT:
-                manifest.logger.info(f"Encountered new dict response from api on url: {url}. Response: {page_data}")
-                return None, GithubApiResult.NEW_RESULT
-
-            if dict_processing_result == GithubApiResult.REPO_NOT_FOUND:
-                return None, GithubApiResult.REPO_NOT_FOUND
-
-            if dict_processing_result in (GithubApiResult.SECONDARY_RATE_LIMIT, GithubApiResult.ABUSE_MECHANISM_TRIGGERED):
-                continue
-
-            if dict_processing_result == GithubApiResult.RATE_LIMIT_EXCEEDED:
-                num_attempts = 0
-                continue                    
-
-        
-
-        num_attempts += 1
-
-    manifest.logger.error("Unable to collect data in 10 attempts")
-    return None, GithubApiResult.NO_MORE_ATTEMPTS
