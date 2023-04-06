@@ -15,22 +15,42 @@ def cache(file=None):
 @app.route('/account/repos/add', methods = ['POST'])
 @login_required
 def av_add_user_repo():
-    url = request.form.get("url")
+
+    urls = request.form.get('url').split(",")
     group = request.form.get("group_name")
+
+    print(urls)
+
+    if not urls:
+        return jsonify({"status": "No URLs provided"}), 400
 
     if group == "None":
         group = current_user.login_name + "_default"
 
-    if not url or not group:
-        flash("Repo or org URL must not be empty")
-    elif Repo.parse_github_org_url(url):
-        current_user.add_org(group, url)
-        flash("Successfully added org")
-    elif Repo.parse_github_repo_url(url):
-        current_user.add_repo(group, url)
-        flash("Successfully added repo")
+    added_orgs = 0
+    added_repos = 0
+
+    for url in urls:
+
+        url = url.strip()
+
+        if Repo.parse_github_org_url(url):
+            added = current_user.add_org(group, url)
+            if added:
+                added_orgs += 1
+
+        elif Repo.parse_github_repo_url(url)[0]:
+            print("Adding repo")
+            added = current_user.add_repo(group, url)
+            if added:
+                print("Repo added")
+                added_repos += 1
+
+    if not added_orgs and not added_repos:
+        flash(f"Unable to add any repos or orgs")
     else:
-        flash("Invalid repo or org url")
+        flash(f"Successfully added {added_repos} repos and {added_orgs} orgs")
+            
     
     return redirect(url_for("user_settings") + "?section=tracker")
 
