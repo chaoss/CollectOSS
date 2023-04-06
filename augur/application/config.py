@@ -285,14 +285,15 @@ class AugurConfig():
                 self.session.insert_data(setting,Config, ["section_name", "setting_name"])
             else:
                 #If setting exists. use raw update to not increase autoincrement
-                query = s.sql.text("""
-                    UPDATE augur_operations.config
-                    SET value=:val
-                    WHERE section_name=:section
-                    AND setting_name=:setting
-                """).bindparams(val=setting["value"],section=setting["section_name"],setting=setting["setting_name"])
+                update_query = (
+                    update(Config)
+                    .where(Config.section_name == setting["section_name"])
+                    .where(Config.setting_name == setting["setting_name"])
+                    .values(value=setting["value"])
+                )
 
-                self.session.execute_sql(query)
+                self.session.execute(update_query)
+                self.session.commit()
        
 
     def add_section_from_json(self, section_name: str, json_data: dict) -> None:
