@@ -807,6 +807,10 @@ class UserRepo(Base):
         
         # get repo group if it exists
         repo_group = RepoGroup.get_by_name(session, org_name)
+        if repo_group == "Error: Multiple Repo Groups with the same name found":
+            print("Error: Multiple Repo Groups with the same name found with name: {}".format(org_name))
+
+            return False, {"status": "Multiple Repo Groups with the same name found"}
 
         # if it doesn't exist create one
         if not repo_group:
