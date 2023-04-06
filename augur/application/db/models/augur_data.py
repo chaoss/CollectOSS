@@ -585,8 +585,6 @@ class RepoGroup(Base):
             result = execute_session_query(query, 'one')
         except NoResultFound:
             return None
-        except MultipleResultsFound:
-            return "Error: Multiple Repo Groups with the same name found."
         
         return result
 
