@@ -16,23 +16,27 @@ def cache(file=None):
 @login_required
 def av_add_user_repo():
 
-    urls = request.form.get('url').split(",")
+    urls = request.form.get('urls')
     group = request.form.get("group_name")
 
-    print(urls)
-
     if not urls:
-        return jsonify({"status": "No URLs provided"}), 400
+        flash("No URLs provided")
+        return redirect(url_for("user_settings") + "?section=tracker")
+    
+    # split on commas, carriage returns, and whitespace
+    urls = re.split(r'[,\r\s]+', urls)
+
+    # Remove duplicates and empty strings
+    # passing None to fitler removes any 
+    # values that don't evaluate to true
+    urls = list(filter(None, set(urls)))
 
     if group == "None":
         group = current_user.login_name + "_default"
 
     added_orgs = 0
     added_repos = 0
-
     for url in urls:
-
-        url = url.strip()
 
         if Repo.parse_github_org_url(url):
             added = current_user.add_org(group, url)
@@ -51,7 +55,6 @@ def av_add_user_repo():
     else:
         flash(f"Successfully added {added_repos} repos and {added_orgs} orgs")
             
-    
     return redirect(url_for("user_settings") + "?section=tracker")
 
 @app.route('/account/update', methods = ['POST'])

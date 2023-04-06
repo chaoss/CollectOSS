@@ -176,7 +176,7 @@
                                     <form id="user_repo_form" class="form-inline user-settings-form" method="POST" action="{{ url_for('av_add_user_repo') }}">
                                         <div class="form-group">
                                             <label for="repo_url">New Repo or Organization URL</label>
-                                            <input type="text" id="repo_url" name="url" class="form-control" required>
+                                            <textarea id="repo_url" name="urls" class="form-control" rows="4" required></textarea>
                                         </div>
                                         <br>
                                         <div class="form-group">
