@@ -1,7 +1,7 @@
 # coding: utf-8
 from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey, update
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text as sql_text
@@ -806,7 +806,12 @@ class UserRepo(Base):
             return False, {"status": "Invalid org url"}
         
         # get repo group if it exists
-        repo_group = RepoGroup.get_by_name(session, org_name)
+        try:
+            repo_group = RepoGroup.get_by_name(session, org_name)
+        except MultipleResultsFound:
+            print("Error: Multiple Repo Groups with the same name found with name: {}".format(org_name))
+
+            return False, {"status": "Multiple Repo Groups with the same name found"}
 
         # if it doesn't exist create one
         if not repo_group:

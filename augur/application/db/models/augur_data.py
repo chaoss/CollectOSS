@@ -530,7 +530,6 @@ class Platform(Base):
 class RepoGroup(Base):
     __tablename__ = "repo_groups"
     __table_args__ = (
-        UniqueConstraint("rg_name", name="rg_name_unique"),
         Index("rgidm", "repo_group_id", unique=True),
         Index("rgnameindex", "rg_name"),
         {"schema": "augur_data",
@@ -584,7 +583,7 @@ class RepoGroup(Base):
 
         try:
             result = execute_session_query(query, 'one')
-        except (NoResultFound, MultipleResultsFound):
+        except NoResultFound:
             return None
         
         return result
