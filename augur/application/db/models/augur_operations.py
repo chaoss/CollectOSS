@@ -829,6 +829,8 @@ class UserRepo(Base):
             if not result[0]:
                 failed_repos.append(repo)
 
+        # Update repo group id to new org's repo group id if the repo 
+        # is a part of the org and existed before org added
         update_stmt = (
             update(Repo)
             .where(Repo.repo_path == f"github.com/{org_name}/")
