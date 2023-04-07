@@ -168,9 +168,8 @@ def stop():
     Sends SIGTERM to all Augur server & worker processes
     """
     logger = logging.getLogger("augur.cli")
-    _broadcast_signal_to_processes(given_logger=logger)
 
-    cleanup_after_collection_halt(logger)
+    augur_stop(signal.SIGTERM, logger)
 
 @cli.command('kill')
 def kill():
@@ -178,9 +177,22 @@ def kill():
     Sends SIGKILL to all Augur server & worker processes
     """
     logger = logging.getLogger("augur.cli")
-    _broadcast_signal_to_processes(broadcast_signal=signal.SIGKILL, given_logger=logger)
+    augur_stop(signal.SIGKILL, logger)
 
-    cleanup_after_collection_halt(logger)
+
+def augur_stop(signal, logger):
+    """
+    Stops augur with the given signal, 
+    and cleans up collection if it was running
+    """
+
+    augur_processes = get_augur_processes()
+    _broadcast_signal_to_processes(augur_processes, broadcast_signal=signal, given_logger=logger)
+
+    # if celery is running, run the cleanup function
+    process_names = [process.name() for process in augur_processes]
+    if "celery" in process_names:
+        cleanup_after_collection_halt(logger)
 
 def cleanup_after_collection_halt(logger):
     clear_redis_caches()
@@ -305,20 +317,18 @@ def get_augur_processes():
                 pass
     return augur_processes
 
-def _broadcast_signal_to_processes(broadcast_signal=signal.SIGTERM, given_logger=None):
+def _broadcast_signal_to_processes(processes, broadcast_signal=signal.SIGTERM, given_logger=None):
     if given_logger is None:
         _logger = logger
     else:
         _logger = given_logger
-    augur_processes = get_augur_processes()
-    if augur_processes:
-        for process in augur_processes:
-            if process.pid != os.getpid():
-                logger.info(f"Stopping process {process.pid}")
-                try:
-                    process.send_signal(broadcast_signal)
-                except psutil.NoSuchProcess:
-                    pass
+    for process in processes:
+        if process.pid != os.getpid():
+            logger.info(f"Stopping process {process.pid}")
+            try:
+                process.send_signal(broadcast_signal)
+            except psutil.NoSuchProcess:
+                pass
 
 
 def raise_open_file_limit(num_files):
