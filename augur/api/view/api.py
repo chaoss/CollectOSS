@@ -34,21 +34,41 @@ def av_add_user_repo():
     if group == "None":
         group = current_user.login_name + "_default"
 
+
     added_orgs = 0
     added_repos = 0
     for url in urls:
 
+        # matches https://github.com/{org}/ or htts://github.com/{org}
         if Repo.parse_github_org_url(url):
             added = current_user.add_org(group, url)
             if added:
                 added_orgs += 1
 
+        # matches https://github.com/{org}/{repo}/ or htts://github.com/{org}/{repo}
         elif Repo.parse_github_repo_url(url)[0]:
             print("Adding repo")
             added = current_user.add_repo(group, url)
             if added:
                 print("Repo added")
                 added_repos += 1
+
+        # matches /{org}/{repo}/ or /{org}/{repo} or {org}/{repo}/ or {org}/{repo}
+        elif (match := re.match(r'^\/?([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$', url)):
+            org, repo = match.groups()
+            repo_url = f"https://github.com/{org}/{repo}/"
+            added = current_user.add_repo(group, repo_url)
+            if added:
+                added_repos += 1
+
+        # matches /{org}/ or /{org} or {org}/ or {org}
+        elif (match := re.match(r'^\/?([a-zA-Z0-9_-]+)\/?$', url)):
+            org = match.group(1)
+            org_url = f"https://github.com/{org}/"
+            added = current_user.add_org(group, org_url)
+            if added:
+                added_orgs += 1
+
 
     if not added_orgs and not added_repos:
         flash(f"Unable to add any repos or orgs")
