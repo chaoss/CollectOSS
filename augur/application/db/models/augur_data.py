@@ -981,6 +981,9 @@ class Repo(Base):
         if not RepoGroup.is_valid_repo_group_id(session, repo_group_id):
             return None
         
+        if url.endswith("/"):
+            url = url[:-1]
+        
         url = url.lower()
         
         owner, repo = Repo.parse_github_repo_url(url)
