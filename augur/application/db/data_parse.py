@@ -427,6 +427,9 @@ def extract_needed_message_data(comment: dict, platform_id: int, repo_id: int, t
 
 def extract_needed_contributor_data(contributor, tool_source, tool_version, data_source):
 
+    if not contributor:
+        return None
+
     cntrb_id = GithubUUID()   
     cntrb_id["user"] = contributor["id"]
 
