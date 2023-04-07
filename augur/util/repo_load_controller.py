@@ -9,7 +9,7 @@ from typing import List, Any, Dict
 
 from augur.application.db.engine import DatabaseEngine
 from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User, CollectionStatus
-from augur.application.db.models.augur_operations import retrieve_org_repos
+from augur.application.db.models.augur_operations import retrieve_owner_repos
 from augur.application.db.util import execute_session_query
 
 
@@ -103,9 +103,8 @@ class RepoLoadController:
         Args:
             org_data: dict with repo_group_id and org urls
         """
-
-        url = f"https://github.com/{org_name}"
-        repos = retrieve_org_repos(self.session, url)[0]
+        
+        repos = retrieve_owner_repos(self.session, org_name)[0]
         if not repos:
             print(
                 f"No organization with name {org_name} could be found")

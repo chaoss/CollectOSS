@@ -587,7 +587,7 @@ def retrieve_dict_from_endpoint(logger, key_auth, url, timeout_wait=10) -> Tuple
         # if the data is a list, then return it and the response
         if isinstance(page_data, list):
             logger.warning("Wrong type returned, trying again...")
-            logger.info(f"Returned list: {response_data}")
+            logger.info(f"Returned list: {page_data}")
 
         # if the data is a dict then call process_dict_response, and 
         elif isinstance(page_data, dict):
