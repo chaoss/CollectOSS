@@ -242,7 +242,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
             
             _, contributor = process_github_comment_contributors(comment, tool_source, tool_version, data_source)
             if contributor is not None:
-                contributors.append()
+                contributors.append(contributor)
 
         logger.info(f"{owner}/{repo} Pr review messages: Inserting {len(contributors)} contributors")
         augur_db.insert_data(contributors, Contributor, ["cntrb_id"])

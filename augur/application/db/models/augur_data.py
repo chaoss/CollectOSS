@@ -975,8 +975,6 @@ class Repo(Base):
             If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
         """
 
-        if not isinstance(url, str) or not isinstance(repo_group_id, int) or not isinstance(tool_source, str):
-
         if not isinstance(url, str) or not isinstance(repo_group_id, int) or not isinstance(tool_source, str) or not isinstance(repo_type, str):
             return None
 
