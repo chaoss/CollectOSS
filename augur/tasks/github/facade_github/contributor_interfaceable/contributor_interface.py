@@ -13,7 +13,7 @@ import math
 import traceback
 from augur.application.db.models import *
 from augur.tasks.util.AugurUUID import AugurUUID, GithubUUID, UnresolvableUUID
-from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api, process_dict_response
+from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api, process_dict_response, retrieve_dict_from_endpoint
 # Debugger
 import traceback
 from augur.tasks.github.util.github_paginator import GithubApiResult
@@ -115,8 +115,8 @@ def create_endpoint_from_email(email):
     return url
 
 
-def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
-    session.logger.info(
+def create_endpoint_from_commit_sha(logger,db,commit_sha, repo_id):
+    logger.info(
         f"Trying to create endpoint from commit hash: {commit_sha}")
 
     # https://api.github.com/repos/chaoss/augur/commits/53b0cc122ac9ecc1588d76759dc2e8e437f45b48
@@ -124,7 +124,7 @@ def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
 
     #stmnt = s.select(Repo.repo_path, Repo.repo_name).where(Repo.repo_id == repo_id)
 
-    query = session.query(Repo).filter_by(repo_id=repo_id)
+    query = db.query(Repo).filter_by(repo_id=repo_id)
     result = execute_session_query(query, 'one')
 
     if result.repo_path is None or result.repo_name is None:
@@ -136,7 +136,7 @@ def create_endpoint_from_commit_sha(session,commit_sha, repo_id):
 
     url = "https://api.github.com/repos/" + repo_path + "/commits/" + commit_sha
 
-    session.logger.info(f"Url: {url}")
+    logger.info(f"Url: {url}")
 
     return url
 
@@ -162,25 +162,25 @@ def create_endpoint_from_name(contributor):
 
     return url
 
-def insert_alias(session, contributor, email):
+def insert_alias(logger,db, contributor, email):
     # Insert cntrb_id and email of the corresponding record into the alias table
     # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
     # Same principle as enrich_cntrb_id method.
 
     
-    query = session.query(Contributor).filter_by(gh_user_id=contributor["gh_user_id"])
+    query = db.query(Contributor).filter_by(gh_user_id=contributor["gh_user_id"])
     contributor_table_data = execute_session_query(query, 'all')
     # self.logger.info(f"Contributor query: {contributor_table_data}")
 
     # Handle potential failures
     if len(contributor_table_data) == 1:
-        session.logger.info(
+        logger.info(
             f"cntrb_id {contributor_table_data[0].cntrb_id} found in database and assigned to enriched data")
     elif len(contributor_table_data) == 0:
-        session.logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
+        logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
         raise LookupError
     else:
-        session.logger.info(
+        logger.info(
             f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
 
     #session.logger.info(f"Creating alias for email: {email}")
@@ -200,7 +200,7 @@ def insert_alias(session, contributor, email):
 
     # Insert new alias
     
-    session.insert_data(alias, ContributorsAlias, ['alias_email'])
+    db.insert_data(alias, ContributorsAlias, ['alias_email'])
     
 
     return
@@ -279,7 +279,7 @@ def update_contributor(self, cntrb, max_attempts=3):
 #   \return A dictionary of response data from github with potential logins on success.
 #           None on failure
 
-def fetch_username_from_email(session, commit):
+def fetch_username_from_email(logger, auth, commit):
 
     # Default to failed state
     login_json = None
@@ -289,48 +289,26 @@ def fetch_username_from_email(session, commit):
     # email = commit['email_raw'] if 'email_raw' in commit else commit['email_raw']
 
     if len(commit['email_raw']) <= 2:
-        session.logger.info("Email less than two characters")
+        logger.info("Email less than two characters")
         return login_json  # Don't bother with emails that are blank or less than 2 characters
 
     try:
         url = create_endpoint_from_email(commit['email_raw'])
     except Exception as e:
-        session.logger.info(
+        logger.error(
             f"Couldn't resolve email url with given data. Reason: {e}")
         # If the method throws an error it means that we can't hit the endpoint so we can't really do much
         return login_json
 
-    login_json = request_dict_from_endpoint(session,
-        url, timeout_wait=30)
+    login_json, _ = retrieve_dict_from_endpoint(logger, auth, url)
     
     # Check if the email result got anything, if it failed try a name search.
     if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
-        session.logger.info(
+        logger.info(
             f"Could not resolve the username from {commit['email_raw']}")
-        session.logger.info(f"email api url {url}")
+        logger.info(f"email api url {url}")
 
-        # Go back to failure condition
-        login_json = None
-
-        # Add the email that couldn't be resolved to a garbage table.
-
-        unresolved = {
-            "email": commit['email_raw'],
-            "name": commit['name'],
-            #"tool_source": self.tool_source,
-            #"tool_version": self.tool_version,
-            #"data_source": self.data_source
-        }
-
-        session.logger.info(f"Inserting data to unresolved: {unresolved}")
-
-        try:
-            
-            unresolved_natural_keys = ['email']
-            session.insert_data(unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
-        except Exception as e:
-            session.logger.info(
-                f"Could not create new unresolved email {unresolved['email']}. Error: {e}")
+        return None
     else:
         # Return endpoint dictionary if email found it.
         return login_json
@@ -341,34 +319,47 @@ def fetch_username_from_email(session, commit):
 # Method to return the login given commit data using the supplemental data in the commit
 #   -email
 #   -name
-def get_login_with_supplemental_data(session, commit_data):
+def get_login_with_supplemental_data(logger,db,auth, commit_data):
 
     # Try to get login from all possible emails
     # Is None upon failure.
-    login_json = fetch_username_from_email(session,commit_data)
+    login_json = fetch_username_from_email(logger,auth,commit_data)
 
-    # Check if the email result got anything, if it failed try a name search.
+    # Check if the email result got anything, if it failed, place in unresolved and try a name search.
     if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
-        session.logger.info(
-            "Could not resolve the username from the email. Trying a name only search...")
+        
+        unresolved = {
+            "email": commit_data['email_raw'],
+            "name": commit_data['name'],
+        }
+        logger.info(f"Inserting data to unresolved: {unresolved}")
 
+        try:
+            
+            unresolved_natural_keys = ['email']
+            db.insert_data(unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
+        except Exception as e:
+            logger.error(
+                f"Could not create new unresolved email {unresolved['email']}. Error: {e}")
+
+        logger.info(
+            "Could not resolve the username from the email. Trying a name only search...")
         try:
             url = create_endpoint_from_name(commit_data)
         except Exception as e:
-            session.logger.info(
+            logger.info(
                 f"Couldn't resolve name url with given data. Reason: {e}")
             return None
 
-        login_json = request_dict_from_endpoint(session,
-            url, timeout_wait=30)
+        login_json, _ = retrieve_dict_from_endpoint(logger, auth, url)
 
     # total_count is the count of username's found by the endpoint.
     if login_json is None or 'total_count' not in login_json:
-        session.logger.info(
+        logger.info(
             "Search query returned an empty response, moving on...\n")
         return None
     if login_json['total_count'] == 0:
-        session.logger.info(
+        logger.info(
             "Search query did not return any results, adding commit's table remains null...\n")
 
         return None
@@ -379,23 +370,23 @@ def get_login_with_supplemental_data(session, commit_data):
         if item['score'] > match['score']:
             match = item
 
-    session.logger.debug(
+    logger.debug(
         "When searching for a contributor, we found the following users: {}\n".format(match))
 
     return match['login']
 
-def get_login_with_commit_hash(session, commit_data, repo_id):
+def get_login_with_commit_hash(logger,db,auth, commit_data, repo_id):
 
     # Get endpoint for login from hash
     url = create_endpoint_from_commit_sha(
-        session,commit_data['hash'], repo_id)
+        logger,db,commit_data['hash'], repo_id)
 
     #TODO: here.
     # Send api request
-    login_json = request_dict_from_endpoint(session,url)
+    login_json, _ = retrieve_dict_from_endpoint(logger, auth, url)#request_dict_from_endpoint(session,url)
 
     if login_json is None or 'sha' not in login_json:
-        session.logger.info(f"Search query returned empty data. Moving on. Data: {login_json}")
+        logger.info(f"Search query returned empty data. Moving on. Data: {login_json}")
         return None
 
     try:
