@@ -172,7 +172,9 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
                             extract_needed_message_data(message, platform_id, repo_id, tool_source, tool_version, data_source)
             )
 
-            contributors.append(contributor)
+            if contributor is not None:
+
+                contributors.append(contributor)
 
     contributors = remove_duplicate_dicts(contributors)
 
@@ -221,10 +223,13 @@ def is_issue_message(html_url):
 
 def process_github_comment_contributors(message, tool_source, tool_version, data_source):
 
-    message_cntrb = extract_needed_contributor_data(message["user"], tool_source, tool_version, data_source)
-    message["cntrb_id"] = message_cntrb["cntrb_id"]
+    contributor = extract_needed_contributor_data(message["user"], tool_source, tool_version, data_source)
+    if contributor:
+        message["cntrb_id"] = contributor["cntrb_id"]
+    else:
+        message["cntrb_id"] = None
 
-    return message, message_cntrb
+    return message, contributor
 
 
 # this function finds a dict in a list of dicts. 
