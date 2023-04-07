@@ -56,7 +56,7 @@ def retrieve_org_repos(session, url: str) -> List[str]:
 
     repo_urls = [repo["html_url"] for repo in repos]
 
-    return repo_urls, {"status": "Invalid owner url"}
+    return repo_urls, {"status": "success", "owner_type": "Organization"}
 
     
 metadata = Base.metadata
@@ -697,7 +697,7 @@ class UserRepo(Base):
         return data[0]["group_id"] == group_id and data[0]["repo_id"] == repo_id
 
     @staticmethod
-    def add(session, url: List[str], user_id: int, group_name=None, group_id=None, valid_repo=False, repo_group_id=None) -> dict:
+    def add(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_type=None, repo_group_id=None) -> dict:
         """Add repo to the user repo table
 
         Args:
@@ -719,17 +719,22 @@ class UserRepo(Base):
 
         if not group_name and not group_id:
             return False, {"status": "Need group name or group id to add a repo"}
+        
+        if from_org_list and not repo_type:
+            return False, {"status": "Repo type must be passed if the repo is from an organization's list of repos"}
 
         if group_id is None:
 
             group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
             if group_id is None:
                 return False, {"status": "Invalid group name"}
-
-        if not valid_repo:
+            
+        if not from_org_list:
             result = Repo.is_valid_github_repo(session, url)
             if not result[0]:
                 return False, {"status": result[1]["status"], "repo_url": url}
+            
+            repo_type = result[1]["repo_type"]
             
         # if no repo_group_id is passed then assign the repo to the frontend repo group
         if repo_group_id is None:
@@ -741,7 +746,7 @@ class UserRepo(Base):
             repo_group_id = frontend_repo_group.repo_group_id
 
 
-        repo_id = Repo.insert(session, url, repo_group_id, "Frontend")
+        repo_id = Repo.insert(session, url, repo_group_id, "Frontend", repo_type)
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
@@ -798,6 +803,7 @@ class UserRepo(Base):
         if not result[0]:
             return False, result[1]
         repos = result[0]
+        type = result[1]["owner_type"]
         
 
         # parse github org url to get org name
@@ -828,7 +834,7 @@ class UserRepo(Base):
         failed_repos = []
         for repo in repos:
 
-            result = UserRepo.add(session, repo, user_id, group_id=group_id, valid_repo=True, repo_group_id=repo_group_id)
+            result = UserRepo.add(session, repo, user_id, group_id=group_id, from_org_list=True, repo_type=type, repo_group_id=repo_group_id)
 
             # keep track of all the repos that failed
             if not result[0]:
