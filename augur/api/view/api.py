@@ -15,23 +15,66 @@ def cache(file=None):
 @app.route('/account/repos/add', methods = ['POST'])
 @login_required
 def av_add_user_repo():
-    url = request.form.get("url")
+
+    urls = request.form.get('urls')
     group = request.form.get("group_name")
+
+    if not urls:
+        flash("No URLs provided")
+        return redirect(url_for("user_settings") + "?section=tracker")
+    
+    # split on commas, carriage returns, and whitespace
+    urls = re.split(r'[,\r\s]+', urls)
+
+    # Remove duplicates and empty strings
+    # passing None to fitler removes any 
+    # values that don't evaluate to true
+    urls = list(filter(None, set(urls)))
 
     if group == "None":
         group = current_user.login_name + "_default"
 
-    if not url or not group:
-        flash("Repo or org URL must not be empty")
-    elif Repo.parse_github_org_url(url):
-        current_user.add_org(group, url)
-        flash("Successfully added org")
-    elif Repo.parse_github_repo_url(url):
-        current_user.add_repo(group, url)
-        flash("Successfully added repo")
+
+    added_orgs = 0
+    added_repos = 0
+    for url in urls:
+
+        # matches https://github.com/{org}/ or htts://github.com/{org}
+        if Repo.parse_github_org_url(url):
+            added = current_user.add_org(group, url)
+            if added:
+                added_orgs += 1
+
+        # matches https://github.com/{org}/{repo}/ or htts://github.com/{org}/{repo}
+        elif Repo.parse_github_repo_url(url)[0]:
+            print("Adding repo")
+            added = current_user.add_repo(group, url)
+            if added:
+                print("Repo added")
+                added_repos += 1
+
+        # matches /{org}/{repo}/ or /{org}/{repo} or {org}/{repo}/ or {org}/{repo}
+        elif (match := re.match(r'^\/?([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$', url)):
+            org, repo = match.groups()
+            repo_url = f"https://github.com/{org}/{repo}/"
+            added = current_user.add_repo(group, repo_url)
+            if added:
+                added_repos += 1
+
+        # matches /{org}/ or /{org} or {org}/ or {org}
+        elif (match := re.match(r'^\/?([a-zA-Z0-9_-]+)\/?$', url)):
+            org = match.group(1)
+            org_url = f"https://github.com/{org}/"
+            added = current_user.add_org(group, org_url)
+            if added:
+                added_orgs += 1
+
+
+    if not added_orgs and not added_repos:
+        flash(f"Unable to add any repos or orgs")
     else:
-        flash("Invalid repo or org url")
-    
+        flash(f"Successfully added {added_repos} repos and {added_orgs} orgs")
+            
     return redirect(url_for("user_settings") + "?section=tracker")
 
 @app.route('/account/update', methods = ['POST'])
