@@ -12,7 +12,7 @@ from augur.tasks.util.AugurUUID import AugurUUID, GithubUUID, UnresolvableUUID
 
 
 
-def query_github_contributors(session, github_url):
+def query_github_contributors(manifest, github_url):
 
     """ Data collection function
     Query the GitHub API for contributors
@@ -22,7 +22,7 @@ def query_github_contributors(session, github_url):
     try:
         owner, name = get_owner_repo(github_url)
     except IndexError as e:
-        session.logger.error(f"Encountered bad url: {github_url}")
+        manifest.logger.error(f"Encountered bad url: {github_url}")
         raise e
 
     # Set the base of the url and place to hold contributors to insert
@@ -40,11 +40,11 @@ def query_github_contributors(session, github_url):
     duplicate_col_map = {'cntrb_login': 'login'}
 
     #list to hold contributors needing insertion or update
-    contributor_list = GithubPaginator(contributors_url, session.oauths,session.logger)#paginate(contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
+    contributor_list = GithubPaginator(contributors_url, manifest.key_auth,manifest.logger)#paginate(contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
 
     len_contributor_list = len(contributor_list)
 
-    session.logger.info("Count of contributors needing insertion: " + str(len_contributor_list) + "\n")
+    manifest.logger.info("Count of contributors needing insertion: " + str(len_contributor_list) + "\n")
 
     if len_contributor_list == 0:
         return
@@ -57,13 +57,13 @@ def query_github_contributors(session, github_url):
             cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
 
             
-            session.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
+            manifest.logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
             #r = hit_api(session.oauths, cntrb_url, session.logger)
             #contributor = r.json()
 
-            contributor = request_dict_from_endpoint(session, cntrb_url)
+            contributor, result = retrieve_dict_from_endpoint(manifest.logger,manifest.key_auth, cntrb_url)
 
-            #session.logger.info(f"Contributor: {contributor} \n")
+            #manifest.logger.info(f"Contributor: {contributor} \n")
             company = None
             location = None
             email = None
@@ -81,7 +81,7 @@ def query_github_contributors(session, github_url):
             #cntrb_id = AugurUUID(session.platform_id,contributor['id']).to_UUID()
             cntrb_id = GithubUUID()
             cntrb_id["user"] = int(contributor['id'])
-            cntrb_id["platform"] = session.platform_id
+            cntrb_id["platform"] = manifest.platform_id
 
             cntrb = {
                 "cntrb_id" : cntrb_id.to_UUID(),
@@ -120,20 +120,20 @@ def query_github_contributors(session, github_url):
             cntrb_natural_keys = ['cntrb_id']
             #insert cntrb to table.
             #session.logger.info(f"Contributor:  {cntrb}  \n")
-            session.insert_data(cntrb,Contributor,cntrb_natural_keys)
+            manifest.augur_db.insert_data(cntrb,Contributor,cntrb_natural_keys)
             
         except Exception as e:
-            session.logger.error("Caught exception: {}".format(e))
-            session.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
+            manifest.logger.error("Caught exception: {}".format(e))
+            manifest.logger.error("Cascading Contributor Anomalie from missing repo contributor data: {} ...\n".format(cntrb_url))
             raise e
 
 # Get all the committer data for a repo.
 # Used by facade in facade03analyzecommit
-def grab_committer_list(session, repo_id, platform="github"):
+def grab_committer_list(manifest, repo_id, platform="github"):
 
     # Create API endpoint from repo_id
 
-    endpoint = create_endpoint_from_repo_id(session, repo_id)
+    endpoint = create_endpoint_from_repo_id(manifest.logger,manifest.augur_db, repo_id)
 
-    query_github_contributors(session,endpoint)
+    query_github_contributors(manifest,endpoint)
     
