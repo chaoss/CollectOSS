@@ -154,10 +154,12 @@ def start(disable_collection, development, port):
             logger.info("Shutting down celery beat process")
             celery_beat_process.terminate()
 
-        try:
-            cleanup_after_collection_halt(logger)
-        except RedisConnectionError:
-            pass
+        if not disable_collection:
+
+            try:
+                cleanup_after_collection_halt(logger)
+            except RedisConnectionError:
+                pass
 
 
 @cli.command('stop')
