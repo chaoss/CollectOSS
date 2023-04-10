@@ -25,24 +25,21 @@ app.url_map.converters['json'] = JSONConverter
 # Code 404 response page, for pages not found
 @app.errorhandler(404)
 def page_not_found(error):
-    if AUGUR_API_VERSION in str(request.url_rule):
+    if AUGUR_API_VERSION in str(request.path):
         return jsonify({"status": "Not Found"}), 404
 
     return render_template('index.j2', title='404', api_url=getSetting('serving')), 404
 
 @app.errorhandler(405)
 def unsupported_method(error):
-
-    if AUGUR_API_VERSION in str(request.url_rule):
+    if AUGUR_API_VERSION in str(request.path):
         return jsonify({"status": "Unsupported method"}), 405
     
     return render_message("405 - Method not supported", "The resource you are trying to access does not support the request method used"), 405
 
 @login_manager.unauthorized_handler
 def unauthorized():
-
-    if AUGUR_API_VERSION in str(request.url_rule):
-
+    if AUGUR_API_VERSION in str(request.path):
         token_str = get_bearer_token()
         token = db_session.query(UserSessionToken).filter(UserSessionToken.token == token_str).first()
         if not token:
