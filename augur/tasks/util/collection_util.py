@@ -22,7 +22,7 @@ from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepo
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.application.db.session import DatabaseSession
-from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_repo_weight_by_commit
+
 
 # class syntax
 class CollectionState(Enum):
@@ -131,20 +131,9 @@ def core_task_success_util(repo_git):
 
         session.commit()
 
-def date_weight_factor(days_since_last_collection):
-    return (days_since_last_collection ** 3) / 25
+#def date_weight_factor(days_since_last_collection):
+#    return (days_since_last_collection ** 3) / 25
 
-
-def get_repo_weight_by_issue(logger,repo_git):
-
-
-    owner,name = get_owner_repo(repo_git)
-
-    with GithubTaskManifest(logger) as manifest:
-        repo_graphql = GitHubRepoGraphql(logger, manifest.key_auth, owner, name)
-        number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
-    
-    return number_of_issues_and_prs
 
 
 #Get the weight for each repo for the core collection hook
@@ -228,16 +217,7 @@ def facade_task_success_util(repo_git):
 
         session.commit()
 
-def get_repo_weight_facade(logger,repo_git):
-    from augur.tasks.init.celery_app import engine
 
-    with DatabaseSession(logger,engine) as session:
-        repo = Repo.get_by_repo_git(session, repo_git)
-        if not repo:
-            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
-
-
-    return get_repo_weight_by_commit(logger, repo_git)
 
 
 @celery.task

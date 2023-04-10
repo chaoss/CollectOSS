@@ -15,7 +15,6 @@ from augur.application.db.models import Repo, RepoGroup
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models.base import Base
 
-from augur.tasks.util.collection_util import get_repo_weight_core, get_repo_weight_facade
 
 
 FRONTEND_REPO_GROUP_NAME = "Frontend Repos"
@@ -956,6 +955,9 @@ class CollectionStatus(Base):
 
     @staticmethod
     def insert(session, repo_id):
+        from augur.tasks.github.util.util import get_repo_weight_core
+        from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_repo_weight_by_commit
+
         query = s.sql.text("""SELECT repo_git FROM repo
             WHERE repo_id=:value""").bindparams(value=repo_id)
 
@@ -963,7 +965,12 @@ class CollectionStatus(Base):
         repo_git = repo[0]
 
         collection_status_unique = ["repo_id"]
-        result = session.insert_data({"repo_id": repo_id, "core_weight": get_repo_weight_core(session.logger, repo_git), "facade_weight": get_repo_weight_facade(session.logger, repo_git)}, CollectionStatus, collection_status_unique, on_conflict_update=False)
+
+        record = {"repo_id": repo_id, "core_weight": get_repo_weight_core(session.logger, repo_git), "facade_weight": get_repo_weight_by_commit(session.logger, repo_git)}
+        result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)
+
+        session.logger.info(f"Trying to insert repo \n core weight: {record['core_weight']} \n facade_weight: {record['facade_weight']}")
+
         if not result:
             return False
 

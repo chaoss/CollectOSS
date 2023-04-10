@@ -4,7 +4,10 @@ from httpx import Response
 import logging
 import json
 import httpx
-
+from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
+from augur.application.db.session import DatabaseSession
+from augur.application.db.models import Repo
 
 # This function adds a key value pair to a list of dicts and returns the modified list of dicts back
 def add_key_value_pair_to_dicts(data: List[dict], key: str, value: Any) -> List[dict]:
@@ -52,4 +55,27 @@ def parse_json_response(logger: logging.Logger, response: httpx.Response) -> dic
     except json.decoder.JSONDecodeError as e:
         logger.warning(f"invalid return from GitHub. Response was: {response.text}. Exception: {e}")
         return json.loads(json.dumps(response.text))
+
+def get_repo_weight_by_issue(logger,repo_git):
+
+
+    owner,name = get_owner_repo(repo_git)
+
+    with GithubTaskManifest(logger) as manifest:
+        repo_graphql = GitHubRepoGraphql(logger, manifest.key_auth, owner, name)
+        number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
+    
+    return number_of_issues_and_prs
+
+#Get the weight for each repo for the core collection hook
+def get_repo_weight_core(logger,repo_git):
+    from augur.tasks.init.celery_app import engine
+
+    with DatabaseSession(logger,engine) as session:
+        repo = Repo.get_by_repo_git(session, repo_git)
+        if not repo:
+            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
+
+
+    return get_repo_weight_by_issue(logger, repo_git)
 
