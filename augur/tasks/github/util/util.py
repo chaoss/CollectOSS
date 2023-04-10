@@ -5,7 +5,6 @@ import logging
 import json
 import httpx
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
-from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo
 
@@ -57,7 +56,7 @@ def parse_json_response(logger: logging.Logger, response: httpx.Response) -> dic
         return json.loads(json.dumps(response.text))
 
 def get_repo_weight_by_issue(logger,repo_git):
-
+    from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
 
     owner,name = get_owner_repo(repo_git)
 

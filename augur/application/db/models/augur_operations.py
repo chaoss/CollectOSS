@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
+import sqlalchemy as s
 from werkzeug.security import generate_password_hash, check_password_hash
 from typing import List, Any, Dict
 
