@@ -9,7 +9,7 @@ from typing import List, Any, Dict
 
 from augur.application.db.engine import DatabaseEngine
 from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User, CollectionStatus
-from augur.application.db.models.augur_operations import retrieve_org_repos
+from augur.application.db.models.augur_operations import retrieve_owner_repos
 from augur.application.db.util import execute_session_query
 
 
@@ -73,29 +73,44 @@ class RepoLoadController:
         self.session = gh_session
 
 
-    def add_cli_repo(self, repo_data: Dict[str, Any], valid_repo=False):
+    def add_cli_repo(self, repo_data: Dict[str, Any], from_org_list=False, repo_type=None):
         """Add list of repos to specified repo_groups
 
         Args:
             url_data: dict with repo_group_id and repo urls
         """
 
+        # if the repo is from an org list then 
+        # the repo type must be passed in
+        # so we don't have to hit an endpoint 
+        # for every repo to get its type
+        if from_org_list and not repo_type:
+            return False, {"status": "Repo type must be passed if the repo is from an organization's list of repos"}
+
         url = repo_data["url"]
         repo_group_id = repo_data["repo_group_id"]
 
-        if valid_repo or Repo.is_valid_github_repo(self.session, url)[0]:
+        # if it is from not from an org list then we need to check its validity, and get the repo type
+        if not from_org_list:
+            result = Repo.is_valid_github_repo(self.session, url)
+            if not result[0]:
+                return False, {"status": result[1]["status"], "repo_url": url}
+            
+            repo_type = result[1]["repo_type"]
 
-            # if the repo doesn't exist it adds it
-            # if the repo does exist it updates the repo_group_id
-            repo_id = Repo.insert(self.session, url, repo_group_id, "CLI")
 
-            if not repo_id:
-                logger.warning(f"Invalid repo group id specified for {url}, skipping.")
-                return {"status": f"Invalid repo group id specified for {url}, skipping."}
+        # if the repo doesn't exist it adds it
+        repo_id = Repo.insert(self.session, url, repo_group_id, "CLI", repo_type)
 
-            UserRepo.insert(self.session, repo_id)
+        if not repo_id:
+            logger.warning(f"Invalid repo group id specified for {url}, skipping.")
+            return False, {"status": f"Invalid repo group id specified for {url}, skipping."}
 
-            CollectionStatus.insert(self.session, repo_id)
+        UserRepo.insert(self.session, repo_id)
+
+        CollectionStatus.insert(self.session, repo_id)
+
+        return True, {"status": "Repo added", "repo_url": url}
 
     def add_cli_org(self, org_name):
         """Add list of orgs and their repos to specified repo_groups
@@ -103,9 +118,10 @@ class RepoLoadController:
         Args:
             org_data: dict with repo_group_id and org urls
         """
-
-        url = f"https://github.com/{org_name}"
-        repos = retrieve_org_repos(self.session, url)[0]
+        
+        result = retrieve_owner_repos(self.session, org_name)
+        repos = result[0]
+        type = result[1]["owner_type"]
         if not repos:
             print(
                 f"No organization with name {org_name} could be found")
@@ -126,12 +142,13 @@ class RepoLoadController:
         self.session.add(rg)
         self.session.commit()
         repo_group_id = rg.repo_group_id
-        logger.info(f"{org_name} repo group created")
+        print(f"{org_name} repo group created")
 
         for repo_url in repos:
-            logger.info(
-                f"Adding {repo_url}")
-            self.add_cli_repo({"url": repo_url, "repo_group_id": repo_group_id}, valid_repo=True)
+            print(f"Adding {repo_url}")
+            result, status = self.add_cli_repo({"url": repo_url, "repo_group_id": repo_group_id}, from_org_list=True, repo_type=type)
+            if not result:
+                print(status["status"])
 
         return {"status": "Org added"}
 
