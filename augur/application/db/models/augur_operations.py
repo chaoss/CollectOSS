@@ -15,6 +15,8 @@ from augur.application.db.models import Repo, RepoGroup
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models.base import Base
 
+from augur.tasks.util.collection_util import get_repo_weight_core, get_repo_weight_facade
+
 
 FRONTEND_REPO_GROUP_NAME = "Frontend Repos"
 logger = logging.getLogger(__name__)
@@ -946,14 +948,22 @@ class CollectionStatus(Base):
     facade_status = Column(String,nullable=False, server_default=text("'Pending'"))
     facade_data_last_collected = Column(TIMESTAMP)
     facade_task_id = Column(String)
+
+    core_weight = Column(BigInteger,nullable=False, server_default=text("0"))
+    facade_weight = Column(BigInteger,nullable=False, server_default=text("0"))
     
     repo = relationship("Repo", back_populates="collection_status")
 
     @staticmethod
     def insert(session, repo_id):
+        query = s.sql.text("""SELECT repo_git FROM repo
+            WHERE repo_id=:value""").bindparams(value=repo_id)
+
+        repo = session.execute_sql(query).fetchone()
+        repo_git = repo[0]
 
         collection_status_unique = ["repo_id"]
-        result = session.insert_data({"repo_id": repo_id}, CollectionStatus, collection_status_unique, on_conflict_update=False)
+        result = session.insert_data({"repo_id": repo_id, "core_weight": get_repo_weight_core(session.logger, repo_git), "facade_weight": get_repo_weight_facade(session.logger, repo_git)}, CollectionStatus, collection_status_unique, on_conflict_update=False)
         if not result:
             return False
 

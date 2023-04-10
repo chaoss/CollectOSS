@@ -135,7 +135,7 @@ def date_weight_factor(days_since_last_collection):
     return (days_since_last_collection ** 3) / 25
 
 
-def get_repo_weight_by_issue(logger,repo_git,days_since_last_collection):
+def get_repo_weight_by_issue(logger,repo_git):
 
 
     owner,name = get_owner_repo(repo_git)
@@ -144,7 +144,7 @@ def get_repo_weight_by_issue(logger,repo_git,days_since_last_collection):
         repo_graphql = GitHubRepoGraphql(logger, manifest.key_auth, owner, name)
         number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
     
-    return number_of_issues_and_prs - date_weight_factor(days_since_last_collection)
+    return number_of_issues_and_prs
 
 
 #Get the weight for each repo for the core collection hook
@@ -156,17 +156,8 @@ def get_repo_weight_core(logger,repo_git):
         if not repo:
             raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
 
-        status = repo.collection_status[0]
 
-        last_collected = status.core_data_last_collected
-
-        if last_collected:
-            time_delta = datetime.datetime.now() - last_collected
-            days = time_delta.days
-        else:
-            days = 0
-
-        return get_repo_weight_by_issue(logger, repo_git, days)
+    return get_repo_weight_by_issue(logger, repo_git)
 
 
 @celery.task
@@ -245,16 +236,8 @@ def get_repo_weight_facade(logger,repo_git):
         if not repo:
             raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
 
-        status = repo.collection_status[0]
-        last_collected = status.facade_data_last_collected
 
-        if last_collected:
-            time_delta = datetime.datetime.now() - last_collected
-            days = time_delta.days
-        else:
-            days = 0
-
-        return get_repo_weight_by_commit(logger, repo_git, days)
+    return get_repo_weight_by_commit(logger, repo_git)
 
 
 @celery.task
@@ -396,9 +379,9 @@ class AugurTaskRoutine:
             #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
             yield repo_git, task_id
 
-
+"""
 class AugurWeightedTaskRoutine(AugurTaskRoutine):
-    """
+    
         class to keep track of various groups of collection tasks for a group of repos.
         Intermediate class that takes into account relative weights of repos and stops after
         a set limit of repos limited by their size.
@@ -411,7 +394,7 @@ class AugurWeightedTaskRoutine(AugurTaskRoutine):
         collection_hook (str): String determining the attributes to update when collection for a repo starts. e.g. core
         session: Database session to use
         total_repo_weight (AugurCollectionTotalRepoWeight): object that allows repo objects and repo_git strings to be subtracted from it
-    """
+    
     def __init__(self,session,repos: List[str]=[],collection_phases: List[str]=[],collection_hook: str="core",total_repo_weight=10000):
         
         #Define superclass vars
@@ -467,25 +450,4 @@ class AugurWeightedTaskRoutine(AugurTaskRoutine):
 
             #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
             yield repo_git, task_id
-
-if __name__ == "__main__":
-    #Examples of using AugurCollectionTotalRepoWeight
-    weight = AugurCollectionTotalRepoWeight(10000)
-    print(f"Weight value: {weight.value}")
-
-    #Apply subtraction operation with string
-    weight = weight - "https://github.com/chaoss/augur"
-    print(f"Weight value: {weight.value}")
-
-    #Apply subtraction operation with orm object
-    with DatabaseSession(logging.getLogger()) as session:
-        repo = Repo.get_by_repo_git(session, 'https://github.com/operate-first/blueprint')
-        weight = weight - repo
-    
-    print(f"Weight value: {weight.value}")
-
-    #Use commit count instead of issues and pr count
-    commitWeight = AugurCollectionTotalRepoWeight(100000,weight_calculation=get_repo_weight_facade)
-    print(f"commit weight value: {commitWeight.value}")
-    #commitWeight = commitWeight - "https://github.com/eclipse/che-theia-activity-tracker"
-    #print(f"commit weight value: {commitWeight.value}")
+"""

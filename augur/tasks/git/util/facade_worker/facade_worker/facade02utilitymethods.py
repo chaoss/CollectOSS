@@ -145,7 +145,7 @@ def get_existing_commits_set(session, repo_id):
 def date_weight_factor(days_since_last_collection):
     return (days_since_last_collection ** 3) / 25
 
-def get_repo_weight_by_commit(logger,repo_git,days_since_last_collection):
+def get_repo_weight_by_commit(logger,repo_git):
 	with FacadeSession(logger) as session:
 		repo = Repo.get_by_repo_git(session, repo_git)
 		absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
@@ -156,4 +156,4 @@ def get_repo_weight_by_commit(logger,repo_git,days_since_last_collection):
 
 		commit_count = int(check_commit_count_cmd)
 	
-	return commit_count - date_weight_factor(days_since_last_collection)
+	return commit_count
