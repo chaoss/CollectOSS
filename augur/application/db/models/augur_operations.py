@@ -1,7 +1,7 @@
 # coding: utf-8
 from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey, update
 from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text as sql_text
@@ -20,7 +20,7 @@ from augur.application.db.models.base import Base
 FRONTEND_REPO_GROUP_NAME = "Frontend Repos"
 logger = logging.getLogger(__name__)
 
-def retrieve_org_repos(session, url: str) -> List[str]:
+def retrieve_owner_repos(session, owner: str) -> List[str]:
     """Get the repos for an org.
 
     Note:
@@ -32,21 +32,33 @@ def retrieve_org_repos(session, url: str) -> List[str]:
     Returns
         List of valid repo urls or empty list if invalid org
     """
-    from augur.tasks.github.util.github_paginator import GithubPaginator
+    from augur.tasks.github.util.github_paginator import GithubPaginator, retrieve_dict_from_endpoint
 
-    ORG_REPOS_ENDPOINT = "https://api.github.com/orgs/{}/repos?per_page=100"
-
-    owner = Repo.parse_github_org_url(url)
-    if not owner:
-        return None, {"status": "Invalid owner url"}
-
-    url = ORG_REPOS_ENDPOINT.format(owner)
-
-    repos = []
-
+    OWNER_INFO_ENDPOINT = f"https://api.github.com/users/{owner}"
+    ORG_REPOS_ENDPOINT = f"https://api.github.com/orgs/{owner}/repos?per_page=100"
+    USER_REPOS_ENDPOINT = f"https://api.github.com/users/{owner}/repos?per_page=100"
+    
     if not session.oauths.list_of_keys:
         return None, {"status": "No valid github api keys to retrieve data with"}
+    
+    # determine whether the owner is a user or an organization
+    data, _ = retrieve_dict_from_endpoint(logger, session.oauths, OWNER_INFO_ENDPOINT)
+    if not data:
+        return None, {"status": "Invalid owner"}
+    
+    owner_type = data["type"]
 
+
+    if owner_type == "User":
+        url = USER_REPOS_ENDPOINT
+    elif owner_type == "Organization":
+        url = ORG_REPOS_ENDPOINT
+    else:
+        return None, {"status": f"Invalid owner type: {owner_type}"}
+    
+    
+    # collect repo urls for the given owner
+    repos = []
     for page_data, page in GithubPaginator(url, session.oauths, logger).iter_pages():
 
         if page_data is None:
@@ -56,7 +68,7 @@ def retrieve_org_repos(session, url: str) -> List[str]:
 
     repo_urls = [repo["html_url"] for repo in repos]
 
-    return repo_urls, {"status": "Invalid owner url"}
+    return repo_urls, {"status": "success", "owner_type": owner_type}
 
     
 metadata = Base.metadata
@@ -697,7 +709,7 @@ class UserRepo(Base):
         return data[0]["group_id"] == group_id and data[0]["repo_id"] == repo_id
 
     @staticmethod
-    def add(session, url: List[str], user_id: int, group_name=None, group_id=None, valid_repo=False, repo_group_id=None) -> dict:
+    def add(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_type=None, repo_group_id=None) -> dict:
         """Add repo to the user repo table
 
         Args:
@@ -719,17 +731,22 @@ class UserRepo(Base):
 
         if not group_name and not group_id:
             return False, {"status": "Need group name or group id to add a repo"}
+        
+        if from_org_list and not repo_type:
+            return False, {"status": "Repo type must be passed if the repo is from an organization's list of repos"}
 
         if group_id is None:
 
             group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
             if group_id is None:
                 return False, {"status": "Invalid group name"}
-
-        if not valid_repo:
+            
+        if not from_org_list:
             result = Repo.is_valid_github_repo(session, url)
             if not result[0]:
                 return False, {"status": result[1]["status"], "repo_url": url}
+            
+            repo_type = result[1]["repo_type"]
             
         # if no repo_group_id is passed then assign the repo to the frontend repo group
         if repo_group_id is None:
@@ -741,7 +758,7 @@ class UserRepo(Base):
             repo_group_id = frontend_repo_group.repo_group_id
 
 
-        repo_id = Repo.insert(session, url, repo_group_id, "Frontend")
+        repo_id = Repo.insert(session, url, repo_group_id, "Frontend", repo_type)
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
@@ -793,24 +810,32 @@ class UserRepo(Base):
         group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
         if group_id is None:
             return False, {"status": "Invalid group name"}
+        
+        # parse github owner url to get owner name
+        owner = Repo.parse_github_org_url(url)
+        if not owner:
+            return False, {"status": "Invalid owner url"}
 
-        result = retrieve_org_repos(session, url)
+        result = retrieve_owner_repos(session, owner)
+
+        # if the result is returns None or []
         if not result[0]:
             return False, result[1]
-        repos = result[0]
         
-
-        # parse github org url to get org name
-        org_name = Repo.parse_github_org_url(url)
-        if not org_name:
-            return False, {"status": "Invalid org url"}
+        repos = result[0]
+        type = result[1]["owner_type"]
         
         # get repo group if it exists
-        repo_group = RepoGroup.get_by_name(session, org_name)
+        try:
+            repo_group = RepoGroup.get_by_name(session, owner)
+        except MultipleResultsFound:
+            print("Error: Multiple Repo Groups with the same name found with name: {}".format(owner))
+
+            return False, {"status": "Multiple Repo Groups with the same name found"}
 
         # if it doesn't exist create one
         if not repo_group:
-            repo_group = RepoGroup(rg_name=org_name, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
+            repo_group = RepoGroup(rg_name=owner, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
                     tool_source="Loaded by user", tool_version="1.0", data_source="Git")
             session.add(repo_group)
             session.commit()
@@ -823,7 +848,7 @@ class UserRepo(Base):
         failed_repos = []
         for repo in repos:
 
-            result = UserRepo.add(session, repo, user_id, group_id=group_id, valid_repo=True, repo_group_id=repo_group_id)
+            result = UserRepo.add(session, repo, user_id, group_id=group_id, from_org_list=True, repo_type=type, repo_group_id=repo_group_id)
 
             # keep track of all the repos that failed
             if not result[0]:
@@ -833,7 +858,7 @@ class UserRepo(Base):
         # is a part of the org and existed before org added
         update_stmt = (
             update(Repo)
-            .where(Repo.repo_path == f"github.com/{org_name}/")
+            .where(Repo.repo_path == f"github.com/{owner}/")
             .where(Repo.repo_group_id != repo_group_id)
             .values(repo_group_id=repo_group_id)
         )
