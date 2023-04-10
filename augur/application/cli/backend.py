@@ -313,7 +313,7 @@ def get_augur_processes():
                 if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in ''.join(process.info['cmdline'][:]).lower():
                     if process.pid != os.getpid():
                         augur_processes.append(process)
-            except KeyError:
+            except (KeyError, FileNotFoundError):
                 pass
     return augur_processes
 
