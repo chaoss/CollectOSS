@@ -75,10 +75,13 @@ def primary_repo_collect_phase(repo_git):
     #A chain is needed for each repo.
     repo_info_task = collect_repo_info.si(repo_git)#collection_task_wrapper(self)
 
-    primary_repo_jobs = group(
-        collect_issues.si(repo_git),
-        collect_pull_requests.si(repo_git)
-    )
+    header = [collect_issues.s(repo_git),collect_pull_requests.s(repo_git)]
+    primary_chord = chord(header)(core_task_update_weight_util.s(repo_git=repo_git))
+
+    #primary_repo_jobs = group(
+    #    collect_issues.si(repo_git),
+    #    collect_pull_requests.si(repo_git)
+    #)
 
     secondary_repo_jobs = group(
         collect_events.si(repo_git),#*create_grouped_task_load(dataList=first_pass, task=collect_events).tasks,
@@ -88,7 +91,7 @@ def primary_repo_collect_phase(repo_git):
 
     repo_task_group = group(
         repo_info_task,
-        chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
+        chain(primary_chord,secondary_repo_jobs,process_contributors.si()),
         #facade_phase(logger,repo_git),
         
         collect_releases.si(repo_git),

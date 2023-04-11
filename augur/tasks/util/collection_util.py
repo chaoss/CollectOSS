@@ -17,7 +17,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
 from augur.application.config import AugurConfig
-from augur.tasks.github.util.util import get_owner_repo
+from augur.tasks.github.util.util import get_owner_repo, get_repo_weight_core
 from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
@@ -134,6 +134,32 @@ def core_task_success_util(repo_git):
         collection_status.core_task_id = None
 
         session.commit()
+
+@celery.task
+def core_task_update_weight_util(issue_and_pr_nums,repo_git=None):
+    from augur.tasks.init.celery_app import engine
+    logger = logging.getLogger(git_update_commit_count_weight.__name__)
+
+    if repo_git is None:
+        return
+    
+    try: 
+        weight = get_repo_weight_core(logger,repo_git)
+    except Exception as e:
+        weight = None
+    
+    with DatabaseSession(logger,engine=engine) as session:
+        repo = Repo.get_by_repo_git(session, repo_git)
+
+        update_query = (
+            update(CollectionStatus)
+            .where(CollectionStatus.repo_id == repo.repo_id)
+            .values(core_weight=weight)
+        )
+
+        session.execute(update_query)
+        session.commit()
+
 
 #def date_weight_factor(days_since_last_collection):
 #    return (days_since_last_collection ** 3) / 25
