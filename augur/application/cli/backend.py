@@ -187,12 +187,14 @@ def augur_stop(signal, logger):
     """
 
     augur_processes = get_augur_processes()
-    _broadcast_signal_to_processes(augur_processes, broadcast_signal=signal, given_logger=logger)
-
     # if celery is running, run the cleanup function
     process_names = [process.name() for process in augur_processes]
+
+    _broadcast_signal_to_processes(augur_processes, broadcast_signal=signal, given_logger=logger)
+
     if "celery" in process_names:
         cleanup_after_collection_halt(logger)
+
 
 def cleanup_after_collection_halt(logger):
     clear_redis_caches()
