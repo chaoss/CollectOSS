@@ -148,7 +148,7 @@ def get_application_groups_and_repos(application: ClientApplication):
         valid_columns.append(column.strip())
 
     data = []
-    groups = application.groups
+    groups = application.user.groups
     for group in groups:
 
         repos = [repo.repo for repo in group.repos]
