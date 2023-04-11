@@ -126,3 +126,46 @@ def get_application_groups(application: ClientApplication):
     result = user.get_group_names()
 
     return jsonify({"status": "success", "group_names": result[0]})
+
+@app.route(f"/{AUGUR_API_VERSION}/application/groups/repos/", methods=['GET', 'POST'])
+@ssl_required
+@api_key_required
+def get_user_groups_and_repos(application: ClientApplication):
+    """Get a list of user groups and their repos"""
+    columns = request.args.get("columns")
+    if not columns:
+        return {"status": "Missing argument columns"}
+
+    # split list by , and remove whitespaces from edges
+
+    valid_columns = []
+    columns =  columns.split(",")
+    for column in columns:
+
+        if column.isspace() or column == "":
+            continue
+
+        valid_columns.append(column.strip())
+
+    data = []
+    groups = application.groups
+    for group in groups:
+
+        repos = [repo.repo for repo in group.repos]
+
+        group_repo_dicts = []
+        for repo in repos:
+
+            repo_dict = {}
+            for column in valid_columns:
+                try:
+                    repo_dict[column] = getattr(repo, column)
+                except AttributeError:
+                    return {"status": f"'{column}' is not a valid repo column"}
+
+            group_repo_dicts.append(repo_dict)
+
+        group_data = {"repos": group_repo_dicts, "favorited": group.favorited}
+        data.append({group.name: group_data})
+
+    return jsonify({"status": "success", "data": data})
