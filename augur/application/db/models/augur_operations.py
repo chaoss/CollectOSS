@@ -10,6 +10,7 @@ from typing import List, Any, Dict
 
 import logging 
 import secrets
+import traceback
 import importlib
 
 from augur.application.db.models import Repo, RepoGroup
@@ -1032,6 +1033,8 @@ class CollectionStatus(Base):
             core_weight = get_repo_weight_core(session.logger, repo_git)
         except Exception as e:
             core_weight = None
+            session.logger.error(
+                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
 
         record = {"repo_id": repo_id, "core_weight": core_weight}
         result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)

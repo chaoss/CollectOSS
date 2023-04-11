@@ -152,6 +152,8 @@ def core_task_update_weight_util(issue_and_pr_nums,repo_git=None):
             weight = sum(issue_and_pr_nums)#get_repo_weight_core(logger,repo_git)
 
             weight -= calculate_date_weight_from_timestamps(repo.repo_added, status.core_data_last_collected)
+
+            weight = max(0,weight)
         except Exception as e:
             logger.error(f"{e}")
             weight = None

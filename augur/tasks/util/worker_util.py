@@ -8,8 +8,7 @@ from celery.result import AsyncResult
 from celery.result import allow_join_result
 
 from typing import Optional, List, Any, Tuple
-import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 def create_grouped_task_load(*args,processes=8,dataList=[],task=None):
     
@@ -111,6 +110,7 @@ def calculate_date_weight_from_timestamps(added,last_collection):
     else:
         delta = datetime.now() - last_collection
     
+    print(f"Days: {delta.days}")
     return date_weight_factor(delta.days)
 
 

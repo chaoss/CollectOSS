@@ -158,4 +158,4 @@ def get_repo_weight_by_commit(logger,repo_git):
 
 		time_factor = calculate_date_weight_from_timestamps(repo.repo_added, status.facade_data_last_collected)
 	
-	return commit_count - time_factor
+	return max(0, commit_count - time_factor)

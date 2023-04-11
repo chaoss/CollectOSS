@@ -77,10 +77,14 @@ def get_repo_weight_core(logger,repo_git):
         if not repo:
             raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
         
-        status = repo.collection_status[0]
+        #try to get the collection status if it exists at this point
+        try:
+            status = repo.collection_status[0]
+            time_factor = calculate_date_weight_from_timestamps(repo.repo_added,status.core_data_last_collected)
+        except IndexError:
+            time_factor = calculate_date_weight_from_timestamps(repo.repo_added,None)
 
-        time_factor = calculate_date_weight_from_timestamps(repo.repo_added,status.core_data_last_collected)
 
-
-    return get_repo_weight_by_issue(logger, repo_git) - time_factor
+    #Don't go below zero.
+    return max(0,get_repo_weight_by_issue(logger, repo_git) - time_factor)
 
