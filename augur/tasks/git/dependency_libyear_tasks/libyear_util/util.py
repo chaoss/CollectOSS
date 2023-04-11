@@ -164,18 +164,9 @@ def get_deps_libyear_data(path, logger):
                         logger.error(f"Could not get latest version of dependency for path {path}.\n  Dependency: {dependency}")
                         current_release_date = dateutil.parser.parse('1970-01-01 00:00:00')
 
-<<<<<<< HEAD
-            if current_release_date:
-                libyear = get_libyear(current_version, current_release_date, latest_version, latest_release_date)
-            else:
-                current_release_date = dateutil.parser.parse('1970-01-01 00:00:00')
-                libyear = -1
-            
-=======
             
             libyear = get_libyear(current_version, current_release_date, latest_version, latest_release_date)
 
->>>>>>> dev
             if not latest_release_date:
                 latest_release_date = dateutil.parser.parse('1970-01-01 00:00:00')
                 libyear = -1
