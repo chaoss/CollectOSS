@@ -48,8 +48,8 @@ def get_enabled_phase_names_from_config(logger, session):
 #Used to get CollectionStatus for differant collection hooks
 def get_collection_status_repo_git_from_filter(session,filter_condition,limit,order=None):
 
-    if order:
-        repo_status_list = session.query(CollectionStatus).filter(filter_condition).order_by(order).limit(limit).all()
+    if order is not None:
+        repo_status_list = session.query(CollectionStatus).order_by(order).filter(filter_condition).limit(limit).all()
     else:
         repo_status_list = session.query(CollectionStatus).filter(filter_condition).limit(limit).all()
 
