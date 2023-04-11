@@ -138,7 +138,7 @@ def core_task_success_util(repo_git):
 @celery.task
 def core_task_update_weight_util(issue_and_pr_nums,repo_git=None):
     from augur.tasks.init.celery_app import engine
-    logger = logging.getLogger(git_update_commit_count_weight.__name__)
+    logger = logging.getLogger(core_task_update_weight_util.__name__)
 
     if repo_git is None:
         return
@@ -149,7 +149,7 @@ def core_task_update_weight_util(issue_and_pr_nums,repo_git=None):
         weight = None
     
     logger.info(f"Repo {repo_git} has a weight of {weight}")
-    
+
     with DatabaseSession(logger,engine=engine) as session:
         repo = Repo.get_by_repo_git(session, repo_git)
 
