@@ -146,7 +146,7 @@ def get_existing_commits_set(session, repo_id):
 def get_repo_weight_by_commit(logger,repo_git):
 	with FacadeSession(logger) as session:
 		repo = Repo.get_by_repo_git(session, repo_git)
-		status = repo.collection_status[0]
+		
 
 		absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
 		repo_loc = (f"{absolute_path}/.git")
@@ -155,7 +155,11 @@ def get_repo_weight_by_commit(logger,repo_git):
 		check_commit_count_cmd = check_output(["git","--git-dir",repo_loc, "rev-list", "--count", "HEAD"])
 
 		commit_count = int(check_commit_count_cmd)
-
-		time_factor = calculate_date_weight_from_timestamps(repo.repo_added, status.facade_data_last_collected)
+		
+		try:
+			status = repo.collection_status[0]
+			time_factor = calculate_date_weight_from_timestamps(repo.repo_added, status.facade_data_last_collected)
+		except IndexError:
+			time_factor = calculate_date_weight_from_timestamps(repo.repo_added, None)
 	
 	return max(0, commit_count - time_factor)
