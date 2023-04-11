@@ -130,7 +130,7 @@ def get_application_groups(application: ClientApplication):
 @app.route(f"/{AUGUR_API_VERSION}/application/groups/repos/", methods=['GET', 'POST'])
 @ssl_required
 @api_key_required
-def get_user_groups_and_repos(application: ClientApplication):
+def get_application_groups_and_repos(application: ClientApplication):
     """Get a list of user groups and their repos"""
     columns = request.args.get("columns")
     if not columns:
