@@ -144,12 +144,18 @@ def core_task_update_weight_util(issue_and_pr_nums,repo_git=None):
         return
     
     try: 
-        weight = get_repo_weight_core(logger,repo_git)
+        weight = sum(issue_and_pr_nums)#get_repo_weight_core(logger,repo_git)
     except Exception as e:
+        logger.error(f"{e}")
         weight = None
     
     logger.info(f"Repo {repo_git} has a weight of {weight}")
 
+    logger.info(f"Args: {issue_and_pr_nums} , {repo_git}")
+
+    if weight is None:
+        return
+    
     with DatabaseSession(logger,engine=engine) as session:
         repo = Repo.get_by_repo_git(session, repo_git)
 
