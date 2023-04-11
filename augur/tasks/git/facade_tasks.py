@@ -358,6 +358,8 @@ def git_update_commit_count_weight(repo_git):
 
     weight = get_repo_weight_by_commit(logger,repo_git)
 
+    logger.info(f"Repo {repo_git} has a weight of {weight}")
+
     with DatabaseSession(logger,engine=engine) as session:
         repo = Repo.get_by_repo_git(session, repo_git)
 
@@ -368,6 +370,7 @@ def git_update_commit_count_weight(repo_git):
         )
 
         session.execute(update_query)
+        session.commit()
 
 
 @celery.task

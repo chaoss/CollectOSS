@@ -192,8 +192,10 @@ def start_primary_collection(session,max_repo,days):
 
     limit = max_repo-active_repo_count
 
+    core_order = CollectionStatus.core_weight
+
     #Get repos for primary collection hook
-    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_erroed, not_collecting, or_(never_collected, old_collection)),limit,order=core_order)
 
     session.logger.info(f"Starting primary collection on {len(repo_git_identifiers)} repos")
     if len(repo_git_identifiers) == 0:
@@ -202,6 +204,8 @@ def start_primary_collection(session,max_repo,days):
     session.logger.info(f"Primary collection starting for: {tuple(repo_git_identifiers)}")
 
     primary_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=primary_enabled_phases)
+
+    primary_augur_collection.start_data_collection()
 
 
 def start_secondary_collection(session,max_repo,days):
@@ -234,7 +238,9 @@ def start_secondary_collection(session,max_repo,days):
 
     limit = max_repo-active_repo_count
 
-    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(primary_collected,not_erroed, not_collecting, or_(never_collected, old_collection)),limit)
+    secondary_order = CollectionStatus.core_weight
+
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(primary_collected,not_erroed, not_collecting, or_(never_collected, old_collection)),limit,order=secondary_order)
 
     session.logger.info(f"Starting secondary collection on {len(repo_git_identifiers)} repos")
     if len(repo_git_identifiers) == 0:
@@ -243,6 +249,8 @@ def start_secondary_collection(session,max_repo,days):
     session.logger.info(f"Secondary collection starting for: {tuple(repo_git_identifiers)}")
 
     secondary_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=secondary_enabled_phases,collection_hook="secondary")
+
+    secondary_augur_collection.start_data_collection()
 
 
 def start_facade_clone_update(session,max_repo,days):
@@ -282,7 +290,7 @@ def start_facade_clone_update(session,max_repo,days):
 
     facade_augur_collection.start_data_collection()
 
-def start_facade_collection(session,max_repo,days,max_collection_weight):
+def start_facade_collection(session,max_repo,days):
 
     #Deal with secondary collection
     facade_enabled_phases = []
@@ -307,7 +315,9 @@ def start_facade_collection(session,max_repo,days,max_collection_weight):
 
     limit = max_repo-active_repo_count
 
-    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing, or_(never_collected, old_collection)),limit)
+    facade_order = CollectionStatus.facade_weight
+
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing, or_(never_collected, old_collection)),limit,order=facade_order)
 
     session.logger.info(f"Starting facade collection on {len(repo_git_identifiers)} repos")
     if len(repo_git_identifiers) == 0:
@@ -316,6 +326,8 @@ def start_facade_collection(session,max_repo,days,max_collection_weight):
     session.logger.info(f"Facade collection starting for: {tuple(repo_git_identifiers)}")
 
     facade_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=facade_enabled_phases,collection_hook="facade")
+
+    facade_augur_collection.start_data_collection()
 
 
 @celery.task
