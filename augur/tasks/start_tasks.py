@@ -75,9 +75,6 @@ def primary_repo_collect_phase(repo_git):
     #A chain is needed for each repo.
     repo_info_task = collect_repo_info.si(repo_git)#collection_task_wrapper(self)
 
-    header = [collect_issues.si(repo_git),collect_pull_requests.si(repo_git)]
-    primary_chord = chord(header)
-
     primary_repo_jobs = group(
         collect_issues.si(repo_git),
         collect_pull_requests.si(repo_git)

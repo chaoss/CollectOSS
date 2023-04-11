@@ -8,7 +8,8 @@ from celery.result import AsyncResult
 from celery.result import allow_join_result
 
 from typing import Optional, List, Any, Tuple
-
+import datetime
+from datetime import timedelta
 
 def create_grouped_task_load(*args,processes=8,dataList=[],task=None):
     
@@ -99,6 +100,18 @@ def remove_duplicate_naturals(data, natural_keys):
     
     #print(new_data)
     return new_data
+
+def date_weight_factor(days_since_last_collection):
+    return (days_since_last_collection ** 3) / 25
+
+def calculate_date_weight_from_timestamps(added,last_collection):
+    #Get the time since last collection as well as when the repo was added.
+    if last_collection is None:
+        delta = datetime.now() - added
+    else:
+        delta = datetime.now() - last_collection
+    
+    return date_weight_factor(delta.days)
 
 
 

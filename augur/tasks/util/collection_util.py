@@ -22,6 +22,7 @@ from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepo
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.application.db.session import DatabaseSession
+from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
 
 # class syntax
@@ -149,7 +150,7 @@ def core_task_update_weight_util(issue_and_pr_nums,repo_git=None):
 
         try: 
             weight = sum(issue_and_pr_nums)#get_repo_weight_core(logger,repo_git)
-            
+
             weight -= calculate_date_weight_from_timestamps(repo.repo_added, status.core_data_last_collected)
         except Exception as e:
             logger.error(f"{e}")
@@ -171,10 +172,6 @@ def core_task_update_weight_util(issue_and_pr_nums,repo_git=None):
 
         session.execute(update_query)
         session.commit()
-
-
-#def date_weight_factor(days_since_last_collection):
-#    return (days_since_last_collection ** 3) / 25
 
 
 

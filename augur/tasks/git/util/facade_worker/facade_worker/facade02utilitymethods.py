@@ -41,6 +41,7 @@ import sqlalchemy as s
 from .facade01config import get_database_args_from_env
 from augur.application.db.models.augur_data import *
 from .facade01config import FacadeSession as FacadeSession
+from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 #from augur.tasks.git.util.facade_worker.facade
 
 def update_repo_log(session, repos_id,status):
@@ -142,12 +143,11 @@ def get_existing_commits_set(session, repo_id):
 
 	return set(existing_commits)
 
-def date_weight_factor(days_since_last_collection):
-    return (days_since_last_collection ** 3) / 25
-
 def get_repo_weight_by_commit(logger,repo_git):
 	with FacadeSession(logger) as session:
 		repo = Repo.get_by_repo_git(session, repo_git)
+		status = repo.collection_status[0]
+
 		absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
 		repo_loc = (f"{absolute_path}/.git")
 
@@ -155,5 +155,7 @@ def get_repo_weight_by_commit(logger,repo_git):
 		check_commit_count_cmd = check_output(["git","--git-dir",repo_loc, "rev-list", "--count", "HEAD"])
 
 		commit_count = int(check_commit_count_cmd)
+
+		time_factor = calculate_date_weight_from_timestamps(repo.repo_added, status.facade_data_last_collected)
 	
-	return commit_count
+	return commit_count - time_factor

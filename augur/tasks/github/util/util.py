@@ -4,23 +4,11 @@ from httpx import Response
 import logging
 import json
 import httpx
-import datetime
-from datetime import timedelta
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo
+from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
-def date_weight_factor(days_since_last_collection):
-    return (days_since_last_collection ** 3) / 25
-
-def calculate_date_weight_from_timestamps(added,last_collection):
-    #Get the time since last collection as well as when the repo was added.
-    if last_collection is None:
-        delta = datetime.now() - added
-    else:
-        delta = datetime.now() - last_collection
-    
-    return date_weight_factor(delta.days)
 
 # This function adds a key value pair to a list of dicts and returns the modified list of dicts back
 def add_key_value_pair_to_dicts(data: List[dict], key: str, value: Any) -> List[dict]:
