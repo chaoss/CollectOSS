@@ -1011,8 +1011,8 @@ class CollectionStatus(Base):
     facade_data_last_collected = Column(TIMESTAMP)
     facade_task_id = Column(String)
 
-    core_weight = Column(BigInteger,nullable=False, server_default=text("0"))
-    facade_weight = Column(BigInteger,nullable=False, server_default=text("0"))
+    core_weight = Column(BigInteger)
+    facade_weight = Column(BigInteger)
     
     repo = relationship("Repo", back_populates="collection_status")
 
@@ -1029,10 +1029,15 @@ class CollectionStatus(Base):
 
         collection_status_unique = ["repo_id"]
 
-        record = {"repo_id": repo_id, "core_weight": get_repo_weight_core(session.logger, repo_git), "facade_weight": get_repo_weight_by_commit(session.logger, repo_git)}
+        try:
+            core_weight = get_repo_weight_core(session.logger, repo_git)
+        except Exception as e:
+            core_weight = None
+
+        record = {"repo_id": repo_id, "core_weight": core_weight}
         result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)
 
-        session.logger.info(f"Trying to insert repo \n core weight: {record['core_weight']} \n facade_weight: {record['facade_weight']}")
+        session.logger.info(f"Trying to insert repo \n core weight: {record['core_weight']}")
 
         if not result:
             return False

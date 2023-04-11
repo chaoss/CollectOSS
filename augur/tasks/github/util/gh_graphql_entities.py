@@ -200,7 +200,11 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
             if type(response_data) == dict:
                 err = process_dict_response(self.logger, result, response_data)
-
+                
+                if err == GithubApiResult.REPO_NOT_FOUND:
+                    self.logger.error(f"Repo not found! \n response_data: {response_data}")
+                    return None
+                
                 if err and err != GithubApiResult.SUCCESS:
                     attempts += 1
                     self.logger.info(f"err: {err} \n response_data: {response_data}")
@@ -227,6 +231,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
                         #If we get an error message that's not None
                         if err and err != GithubApiResult.SUCCESS:
+                            attempts += 1
                             continue
                         
                         success = True
