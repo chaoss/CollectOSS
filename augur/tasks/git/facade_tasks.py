@@ -534,7 +534,8 @@ def facade_phase(repo_git):
             group(
                 chain(*facade_core_collection),
                 process_dependency_metrics.si(repo_git),
-                process_libyear_dependency_metrics.si(repo_git)
+                process_libyear_dependency_metrics.si(repo_git),
+                git_update_commit_count_weight.si(repo_git)
             )
         )
 
