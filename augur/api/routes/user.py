@@ -402,9 +402,6 @@ def get_user_groups_and_repos():
 
         valid_columns.append(column.strip())
 
-    print(valid_columns)
-
-
     data = []
     groups = current_user.groups
     for group in groups:
