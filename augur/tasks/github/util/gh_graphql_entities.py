@@ -203,7 +203,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
                 if err and err != GithubApiResult.SUCCESS:
                     attempts += 1
-                    self.logger.info(f"err: {err}")
+                    self.logger.info(f"err: {err} \n response_data: {response_data}")
                     continue
                 
                 success = True
