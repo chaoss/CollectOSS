@@ -20,8 +20,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.util.repo_load_controller import RepoLoadController
-from augur.api.util import get_bearer_token
-from augur.api.util import get_client_token
+from augur.api.util import api_key_required
+from augur.api.util import ssl_required
 
 from augur.application.db.models import User, UserRepo, UserGroup, UserSessionToken, ClientApplication, RefreshToken
 from augur.application.config import get_development_flag
@@ -34,50 +34,10 @@ Session = sessionmaker(bind=engine)
 
 from augur.api.routes import AUGUR_API_VERSION
 
-def api_key_required(fun):
-    # TODO Optionally rate-limit non authenticated users instead of rejecting requests
-    def wrapper(*args, **kwargs):
-
-        client_token = get_client_token()
-                    
-        # If valid:
-        if client_token:
-
-            session = Session()
-            try:
-                kwargs["application"] = session.query(ClientApplication).filter(ClientApplication.api_key == client_token).one()
-                return fun(*args, **kwargs)
-            except NoResultFound:
-                pass
-
-        return {"status": "Unauthorized client"}
-    
-    wrapper.__name__ = fun.__name__
-    return wrapper
-
-# usage:
-"""
-@app.route("/path")
-@api_key_required
-def priviledged_function():
-    stuff
-"""
-
-# TODO This should probably be available to all endpoints
-def generate_upgrade_request():
-    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/426
-    response = jsonify({"status": "SSL Required"})
-    response.headers["Upgrade"] = "TLS"
-    response.headers["Connection"] = "Upgrade"
-
-    return response, 426
 
 @app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
+@ssl_required
 def validate_user():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
-    
     username = request.args.get("username")
     password = request.args.get("password")
     if username is None or password is None:
@@ -102,11 +62,9 @@ def validate_user():
 
 
 @app.route(f"/{AUGUR_API_VERSION}/user/logout", methods=['POST'])
+@ssl_required
 @login_required
 def logout_user_func():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     if logout_user():
         return jsonify({"status": "Logged out"})
 
@@ -114,6 +72,7 @@ def logout_user_func():
 
 
 @app.route(f"/{AUGUR_API_VERSION}/user/authorize", methods=['POST', 'GET'])
+@ssl_required
 @login_required
 def user_authorize():
     code = secrets.token_hex()
@@ -124,13 +83,17 @@ def user_authorize():
     return jsonify({"status": "Validated", "code": code})
 
 @app.route(f"/{AUGUR_API_VERSION}/user/session/generate", methods=['POST'])
+@ssl_required
 @api_key_required
 def generate_session(application):
-    code = request.args.get("code")
+    # Some apps use form data instead of arguments
+    code = request.args.get("code") or request.form.get("code")
     if not code:
         return jsonify({"status": "Missing argument: code"})
     
-    if request.args.get("grant_type") != "code":
+    grant_type = request.args.get("grant_type") or request.form.get("grant_type")
+    
+    if "code" not in grant_type:
         return jsonify({"status": "Invalid grant type"})
 
     username = redis.get(code)
@@ -162,6 +125,7 @@ def generate_session(application):
     return response
 
 @app.route(f"/{AUGUR_API_VERSION}/user/session/refresh", methods=["GET", "POST"])
+@ssl_required
 @api_key_required
 def refresh_session(application):
     refresh_token_str = request.args.get("refresh_token")
@@ -195,10 +159,8 @@ def refresh_session(application):
 
 
 @app.route(f"/{AUGUR_API_VERSION}/user/query", methods=['POST'])
+@ssl_required
 def query_user():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     username = request.args.get("username")
     if username is None:
         return jsonify({"status": "Missing argument"}), 400
@@ -209,10 +171,8 @@ def query_user():
     return jsonify({"status": True})
 
 @app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['GET', 'POST'])
+@ssl_required
 def create_user():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     username = request.args.get("username")
     password = request.args.get("password")
     email = request.args.get("email")
@@ -226,21 +186,17 @@ def create_user():
 
 
 @app.route(f"/{AUGUR_API_VERSION}/user/remove", methods=['POST', 'DELETE'])
+@ssl_required
 @login_required
 def delete_user():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     status = current_user.delete()
     return jsonify(status)
 
 
 @app.route(f"/{AUGUR_API_VERSION}/user/update", methods=['POST'])
+@ssl_required
 @login_required
 def update_user():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     email = request.args.get("email")
     new_login_name = request.args.get("new_username")
     new_password = request.args.get("new_password")
@@ -276,11 +232,9 @@ def update_user():
 
 
 @app.route(f"/{AUGUR_API_VERSION}/user/repo/add", methods=['GET', 'POST'])
+@ssl_required
 @login_required
 def add_user_repo():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     repo = request.args.get("repo_url")
     group_name = request.args.get("group_name")
 
@@ -290,11 +244,9 @@ def add_user_repo():
 
 
 @app.route(f"/{AUGUR_API_VERSION}/user/group/add", methods=['GET', 'POST'])
+@ssl_required
 @login_required
 def add_user_group():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     group_name = request.args.get("group_name")
 
     result = current_user.add_group(group_name)
@@ -302,11 +254,9 @@ def add_user_group():
     return jsonify(result[1])
 
 @app.route(f"/{AUGUR_API_VERSION}/user/group/remove", methods=['GET', 'POST'])
+@ssl_required
 @login_required
 def remove_user_group():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     group_name = request.args.get("group_name")
 
     result = current_user.remove_group(group_name)
@@ -315,11 +265,9 @@ def remove_user_group():
 
 
 @app.route(f"/{AUGUR_API_VERSION}/user/org/add", methods=['GET', 'POST'])
+@ssl_required
 @login_required
 def add_user_org():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     org = request.args.get("org_url")
     group_name = request.args.get("group_name")
 
@@ -329,12 +277,9 @@ def add_user_org():
 
 
 @app.route(f"/{AUGUR_API_VERSION}/user/repo/remove", methods=['GET', 'POST'])
+@ssl_required
 @login_required
 def remove_user_repo():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
-
     group_name = request.args.get("group_name")
 
     try:
@@ -347,6 +292,7 @@ def remove_user_repo():
     return jsonify(result[1])
 
 @app.route(f"/{AUGUR_API_VERSION}/user/group/repos/", methods=['GET', 'POST'])
+@ssl_required
 @login_required
 def group_repos():
     """Select repos from a user group by name
@@ -369,10 +315,6 @@ def group_repos():
     list
         A list of dictionaries containing repos which match the given arguments
     """
-
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     group_name = request.args.get("group_name")
     page = request.args.get("page") or 0
     page_size = request.args.get("page_size") or 25
@@ -393,6 +335,7 @@ def group_repos():
     return jsonify(result_dict)
 
 @app.route(f"/{AUGUR_API_VERSION}/user/group/repos/count", methods=['GET', 'POST'])
+@ssl_required
 @login_required
 def group_repo_count():
     """Count repos from a user group by name
@@ -409,10 +352,6 @@ def group_repo_count():
     int
         A count of the repos in the given user group
     """
-
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     group_name = request.args.get("group_name")
 
     result = current_user.get_group_repo_count(group_name)
@@ -424,6 +363,7 @@ def group_repo_count():
     return jsonify(result_dict)
 
 @app.route(f"/{AUGUR_API_VERSION}/user/groups/names", methods=['GET', 'POST'])
+@ssl_required
 @login_required
 def get_user_groups():
     """Get a list of user groups by username
@@ -438,22 +378,15 @@ def get_user_groups():
     list
         A list of group names associated with the given username
     """
-
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     result = current_user.get_group_names()
 
     return jsonify({"status": "success", "group_names": result[0]})
 
 @app.route(f"/{AUGUR_API_VERSION}/user/groups/repos/", methods=['GET', 'POST'])
+@ssl_required
 @login_required
 def get_user_groups_and_repos():
     """Get a list of user groups and their repos"""
-
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     columns = request.args.get("columns")
     if not columns:
         return {"status": "Missing argument columns"}
@@ -497,6 +430,7 @@ def get_user_groups_and_repos():
 
 
 @app.route(f"/{AUGUR_API_VERSION}/user/group/favorite/toggle", methods=['GET', 'POST'])
+@ssl_required
 @login_required
 def toggle_user_group_favorite():
     """Toggle the favorite status on a group
@@ -506,10 +440,6 @@ def toggle_user_group_favorite():
     dict
         A dictionairy with key of 'status' that indicates the success or failure of the operation
     """
-
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     group_name = request.args.get("group_name")
 
     result = current_user.toggle_group_favorite(group_name)
@@ -517,6 +447,7 @@ def toggle_user_group_favorite():
     return jsonify(result[1])
 
 @app.route(f"/{AUGUR_API_VERSION}/user/groups/favorites", methods=['GET', 'POST'])
+@ssl_required
 @login_required
 def get_favorite_groups():
     """Get a list of a users favorite groups
@@ -526,10 +457,6 @@ def get_favorite_groups():
     list
         A list of group names
     """
-
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     result = current_user.get_favorite_groups()
     groups = result[0]
     if groups is None:

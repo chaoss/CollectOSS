@@ -55,8 +55,10 @@ def handle_upper_limit_dependency(dependency, data):
     if upper_limit not in release_list:
         upper_limit += '.0'
 
-
-    upper_index = release_list.index(upper_limit)
+    try:
+        upper_index = release_list.index(upper_limit)
+    except ValueError:
+        return None
     return release_list[upper_index -1]
     # return get_version(data, upper_limit, lt= True)
 
