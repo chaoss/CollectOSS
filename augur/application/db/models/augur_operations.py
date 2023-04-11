@@ -1019,7 +1019,6 @@ class CollectionStatus(Base):
     @staticmethod
     def insert(session, repo_id):
         from augur.tasks.github.util.util import get_repo_weight_core
-        from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_repo_weight_by_commit
 
         query = sql_text("""SELECT repo_git FROM repo
             WHERE repo_id=:value""").bindparams(value=repo_id)
