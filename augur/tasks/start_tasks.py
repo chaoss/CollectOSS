@@ -33,7 +33,6 @@ from enum import Enum
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.models import CollectionStatus, Repo
 from augur.tasks.util.collection_util import *
-from augur.tasks.util.redis_scalar import RedisScalar
 
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
