@@ -38,9 +38,9 @@ import getopt
 import xlsxwriter
 import configparser
 import sqlalchemy as s
-from .facade01config import get_database_args_from_env
+from .config import get_database_args_from_env
 from augur.application.db.models.augur_data import *
-from .facade01config import FacadeSession as FacadeSession
+from .config import FacadeSession as FacadeSession
 #from augur.tasks.git.util.facade_worker.facade
 
 def update_repo_log(session, repos_id,status):
