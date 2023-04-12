@@ -355,4 +355,32 @@ def augur_collection_monitor():
             start_facade_clone_update(session,max_repo=5,days=30)
 
 
+@celery.task
+def augur_collection_update_weights():
+
+    from augur.tasks.init.celery_app import engine
+
+    logger = logging.getLogger(augur_collection_update_weights.__name__)
+
+    logger.info("Updating stale collection weights")
+
+    with DatabaseSession(logger,engine) as session:
+
+        core_weight_update_repos = session.query(CollectionStatus).filter(CollectionStatus.core_weight != None).all()
+
+        for repo in core_weight_update_repos:
+            task_id = core_task_fetch_issues_prs_update_weight_util.si(repo.repo_git).apply_async().task_id
+
+            logger.info(f"Scheduling task {task_id} for repo {repo.repo_id} to update core weight")
+    
+        facade_not_pending = CollectionStatus.facade_status != CollectionState.PENDING.value
+        facade_not_failed = CollectionStatus.facade_status != CollectionState.FAILED_CLONE.value
+        facade_weight_not_null = CollectionStatus.facade_weight != None
+
+        facade_weight_update_repos = session.query(CollectionStatus).filter(and_(facade_not_pending,facade_not_failed,facade_weight_not_null)).all()
+
+        for repo in facade_weight_update_repos:
+            task_id = git_update_commit_count_weight.si(repo_git).apply_async().task_id
+
+            logger.info(f"Scheduling task {task_id} for repo {repo.repo_id} to update facade weight")
 
