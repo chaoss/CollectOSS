@@ -115,7 +115,16 @@ def git_repo_initialize(session, repo_git):
             return 
 
         # Create the prerequisite directories
-        pathlib.Path(repo_path).mkdir(parents=True, exist_ok=True)
+	try:
+        	pathlib.Path(repo_path).mkdir(parents=True, exist_ok=True)
+	except Exception as e:
+	    print("COULD NOT CREATE REPO DIRECTORY")
+
+            update_repo_log(session, row.repo_id,'Failed (mkdir)')
+            session.update_status(f"Failed (mkdir {repo_path})")
+            session.log_activity('Error',f"Could not create repo directory: {repo_path}" )
+	    
+	    raise e
 
         update_repo_log(session, row.repo_id,'New (cloning)')
 
