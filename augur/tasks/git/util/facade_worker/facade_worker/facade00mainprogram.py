@@ -31,7 +31,7 @@ import sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, 
 from multiprocessing import Process, Queue
 from .config import FacadeSession as FacadeSession
 from .utilitymethods import trim_commit, store_working_author, trim_author   
-from .facade03analyzecommit import analyze_commit
+from .analyzecommit import analyze_commit
 from .facade04postanalysiscleanup import git_repo_cleanup
 from .facade05repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
 #.facade06analyze analysis moved to facade_tasks.py - IM 10/12/22
