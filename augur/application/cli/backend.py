@@ -17,7 +17,7 @@ import uuid
 import traceback
 from urllib.parse import urlparse
 from sqlalchemy import update
-
+from datetime import datetime
 
 from augur import instance_id
 from augur.tasks.start_tasks import augur_collection_monitor, CollectionState
@@ -442,6 +442,22 @@ def order_repos(repos):
     repo_git_urls = [repos[index] for index in ordered_index_ints]
 
     return repo_git_urls
+
+@cli.command('reset-repo-age')
+@test_connection
+@test_db_connection
+def reset_repo_age():
+    
+    logger.info("resetting collection age on all repositories")
+
+    with DatabaseSession(logger) as session:
+        update_query = (
+            update(Repo)
+            .values(repo_added=datetime.now())
+        )
+
+        session.execute(update_query)
+        session.commit()
 
 # def initialize_components(augur_app, disable_housekeeper):
 #     master = None
