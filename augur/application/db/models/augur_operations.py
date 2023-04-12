@@ -1021,11 +1021,9 @@ class CollectionStatus(Base):
     def insert(session, repo_id):
         from augur.tasks.github.util.util import get_repo_weight_core
 
-        query = sql_text("""SELECT repo_git FROM repo
-            WHERE repo_id=:value""").bindparams(value=repo_id)
 
-        repo = session.execute_sql(query).fetchone()
-        repo_git = repo[0]
+        repo = Repo.get_by_id(session, repo_id)
+        repo_git = repo.repo_git
 
         collection_status_unique = ["repo_id"]
 
