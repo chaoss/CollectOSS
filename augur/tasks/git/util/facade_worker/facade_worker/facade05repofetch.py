@@ -37,7 +37,7 @@ import getopt
 import xlsxwriter
 import configparser
 import sqlalchemy as s
-from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author, get_absolute_repo_path
+from .utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author, get_absolute_repo_path
 from augur.application.db.models.augur_data import *
 from augur.application.db.models.augur_operations import CollectionStatus
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list
