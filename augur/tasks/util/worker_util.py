@@ -100,8 +100,10 @@ def remove_duplicate_naturals(data, natural_keys):
     #print(new_data)
     return new_data
 
+#4th root of 10,000 is 10
+#ten days for a 10,000 weight repo to reach zero.
 def date_weight_factor(days_since_last_collection):
-    return (days_since_last_collection ** 3) / 25
+    return days_since_last_collection ** 4
 
 def calculate_date_weight_from_timestamps(added,last_collection):
     #Get the time since last collection as well as when the repo was added.

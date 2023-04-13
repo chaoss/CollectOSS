@@ -162,4 +162,7 @@ def get_repo_weight_by_commit(logger,repo_git):
 		except IndexError:
 			time_factor = calculate_date_weight_from_timestamps(repo.repo_added, None)
 	
+	#Adjust for commits.
+	time_factor *= 1.2
+
 	return max(0, commit_count - time_factor)
