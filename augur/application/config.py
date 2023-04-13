@@ -1,4 +1,5 @@
 import sqlalchemy as s
+from sqlalchemy import or_, and_, update
 import json
 from typing import List, Any, Optional
 import os
@@ -275,7 +276,24 @@ class AugurConfig():
                 setting["type"] = None
 
         #print(f"\nsetting: {settings}")
-        self.session.insert_data(settings,Config, ["section_name", "setting_name"])
+        #self.session.insert_data(settings,Config, ["section_name", "setting_name"])
+
+            #Check if setting exists.
+            query = self.session.query(Config).filter(and_(Config.section_name == setting["section_name"],Config.setting_name == setting["setting_name"]) )
+
+            if execute_session_query(query, 'first') is None:
+                self.session.insert_data(setting,Config, ["section_name", "setting_name"])
+            else:
+                #If setting exists. use raw update to not increase autoincrement
+                update_query = (
+                    update(Config)
+                    .where(Config.section_name == setting["section_name"])
+                    .where(Config.setting_name == setting["setting_name"])
+                    .values(value=setting["value"])
+                )
+
+                self.session.execute(update_query)
+                self.session.commit()
        
 
     def add_section_from_json(self, section_name: str, json_data: dict) -> None:

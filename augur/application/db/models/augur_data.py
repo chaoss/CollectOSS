@@ -575,6 +575,18 @@ class RepoGroup(Base):
             return False
 
         return True
+    
+    @staticmethod
+    def get_by_name(session, rg_name):
+
+        query = session.query(RepoGroup).filter(RepoGroup.rg_name == rg_name)
+
+        try:
+            result = execute_session_query(query, 'one')
+        except NoResultFound:
+            return None
+        
+        return result
 
 
 t_repos_fetch_log = Table(
@@ -901,7 +913,7 @@ class Repo(Base):
 
                 return False, {"status": f"Github Error: {data['message']}"}
 
-            return True, {"status": "Valid repo"}
+            return True, {"status": "Valid repo", "repo_type": data["owner"]["type"]}
 
     @staticmethod
     def parse_github_repo_url(url: str) -> tuple:
@@ -913,13 +925,8 @@ class Repo(Base):
         Returns:
             Tuple of owner and repo. Or a tuple of None and None if the url is invalid.
         """
-
-        if url.endswith(".github") or url.endswith(".github.io") or url.endswith(".js"):
-
-            result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
-        else:
-
-            result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _]+)(.git)?\/?$", url)
+        
+        result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
 
         if not result:
             return None, None
@@ -952,7 +959,7 @@ class Repo(Base):
         return result.groups()[0]
 
     @staticmethod
-    def insert(session, url: str, repo_group_id: int, tool_source):
+    def insert(session, url: str, repo_group_id: int, tool_source, repo_type):
         """Add a repo to the repo table.
 
         Args:
@@ -963,11 +970,16 @@ class Repo(Base):
             If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
         """
 
-        if not isinstance(url, str) or not isinstance(repo_group_id, int) or not isinstance(tool_source, str):
+        if not isinstance(url, str) or not isinstance(repo_group_id, int) or not isinstance(tool_source, str) or not isinstance(repo_type, str):
             return None
 
         if not RepoGroup.is_valid_repo_group_id(session, repo_group_id):
             return None
+        
+        if url.endswith("/"):
+            url = url[:-1]
+        
+        url = url.lower()
         
         owner, repo = Repo.parse_github_repo_url(url)
         if not owner or not repo:
@@ -978,6 +990,7 @@ class Repo(Base):
             "repo_git": url,
             "repo_path": f"github.com/{owner}/",
             "repo_name": repo,
+            "repo_type": repo_type,
             "tool_source": tool_source,
             "tool_version": "1.0",
             "data_source": "Git"

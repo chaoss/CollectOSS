@@ -107,8 +107,8 @@ def start(disable_collection, development, port):
             os.remove("celerybeat-schedule.db")
 
         scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=14 -n core:{uuid.uuid4().hex}@%h"
-        secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=5 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=60 -n core:{uuid.uuid4().hex}@%h"
+        secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=10 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
         
         scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
         core_worker_process = subprocess.Popen(core_worker.split(" "))
@@ -154,10 +154,12 @@ def start(disable_collection, development, port):
             logger.info("Shutting down celery beat process")
             celery_beat_process.terminate()
 
-        try:
-            cleanup_after_collection_halt(logger)
-        except RedisConnectionError:
-            pass
+        if not disable_collection:
+
+            try:
+                cleanup_after_collection_halt(logger)
+            except RedisConnectionError:
+                pass
 
 
 @cli.command('stop')
@@ -166,9 +168,8 @@ def stop():
     Sends SIGTERM to all Augur server & worker processes
     """
     logger = logging.getLogger("augur.cli")
-    _broadcast_signal_to_processes(given_logger=logger)
 
-    cleanup_after_collection_halt(logger)
+    augur_stop(signal.SIGTERM, logger)
 
 @cli.command('kill')
 def kill():
@@ -176,9 +177,22 @@ def kill():
     Sends SIGKILL to all Augur server & worker processes
     """
     logger = logging.getLogger("augur.cli")
-    _broadcast_signal_to_processes(broadcast_signal=signal.SIGKILL, given_logger=logger)
+    augur_stop(signal.SIGKILL, logger)
 
-    cleanup_after_collection_halt(logger)
+
+def augur_stop(signal, logger):
+    """
+    Stops augur with the given signal, 
+    and cleans up collection if it was running
+    """
+
+    augur_processes = get_augur_processes()
+    _broadcast_signal_to_processes(augur_processes, broadcast_signal=signal, given_logger=logger)
+
+    # if celery is running, run the cleanup function
+    process_names = [process.name() for process in augur_processes]
+    if "celery" in process_names:
+        cleanup_after_collection_halt(logger)
 
 def cleanup_after_collection_halt(logger):
     clear_redis_caches()
@@ -299,24 +313,22 @@ def get_augur_processes():
                 if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in ''.join(process.info['cmdline'][:]).lower():
                     if process.pid != os.getpid():
                         augur_processes.append(process)
-            except KeyError:
+            except (KeyError, FileNotFoundError):
                 pass
     return augur_processes
 
-def _broadcast_signal_to_processes(broadcast_signal=signal.SIGTERM, given_logger=None):
+def _broadcast_signal_to_processes(processes, broadcast_signal=signal.SIGTERM, given_logger=None):
     if given_logger is None:
         _logger = logger
     else:
         _logger = given_logger
-    augur_processes = get_augur_processes()
-    if augur_processes:
-        for process in augur_processes:
-            if process.pid != os.getpid():
-                logger.info(f"Stopping process {process.pid}")
-                try:
-                    process.send_signal(broadcast_signal)
-                except psutil.NoSuchProcess:
-                    pass
+    for process in processes:
+        if process.pid != os.getpid():
+            logger.info(f"Stopping process {process.pid}")
+            try:
+                process.send_signal(broadcast_signal)
+            except psutil.NoSuchProcess:
+                pass
 
 
 def raise_open_file_limit(num_files):
