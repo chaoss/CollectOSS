@@ -368,9 +368,7 @@ def augur_collection_update_weights():
         core_weight_update_repos = session.query(CollectionStatus).filter(CollectionStatus.core_weight != None).all()
 
         for repo in core_weight_update_repos:
-            task_id = core_task_fetch_issues_prs_update_weight_util.si(repo.repo_git).apply_async().task_id
-
-            logger.info(f"Scheduling task {task_id} for repo {repo.repo_id} to update core weight")
+            core_task_fetch_issues_prs_update_weight_util(repo.repo_git)
     
         facade_not_pending = CollectionStatus.facade_status != CollectionState.PENDING.value
         facade_not_failed = CollectionStatus.facade_status != CollectionState.FAILED_CLONE.value
@@ -379,7 +377,5 @@ def augur_collection_update_weights():
         facade_weight_update_repos = session.query(CollectionStatus).filter(and_(facade_not_pending,facade_not_failed,facade_weight_not_null)).all()
 
         for repo in facade_weight_update_repos:
-            task_id = git_update_commit_count_weight.si(repo_git).apply_async().task_id
-
-            logger.info(f"Scheduling task {task_id} for repo {repo.repo_id} to update facade weight")
+            task_id = git_update_commit_count_weight(repo_git)
 
