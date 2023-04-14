@@ -83,14 +83,6 @@ def database():
     conn.close()
 
 
-
-
-
-
-
-
-
-    
 @pytest.fixture
 def test_db_engine():
 
@@ -129,4 +121,3 @@ def test_db_config(test_db_session):
 # def client(augur_app):
 #     flask_client = initialize_components(augur_app, disable_housekeeper=True).load()
 #     return flask_client.test_client()
-
