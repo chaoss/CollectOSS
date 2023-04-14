@@ -12,7 +12,7 @@ from sqlalchemy.pool import StaticPool
 
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
-from augur.application.db.engine import get_database_string, create_database_engine
+from augur.application.db.engine import get_database_string, create_database_engine, parse_database_string, execute_sql_file
 
 
 logger = logging.getLogger(__name__)
@@ -32,41 +32,39 @@ def create_full_routes(routes):
 @pytest.fixture
 def database():
 
-    test_db_name = "test_db_" + uuid.uuid4().hex
-
     db_string = get_database_string()
 
-    # remove database_name
-    db_string = db_string[:db_string.rfind("/")+1]
-    test_db_string = db_string + test_db_name
-
-    match = re.match(r"postgresql\+psycopg2:\/\/([a-zA-Z0-9_]+):([^@]+)@([^:]+):(\d+)\/", db_string)
+    user, password, host, port, _ = parse_database_string(db_string)
 
     # Connect to the default 'postgres' database
     conn = psycopg2.connect(
-        host=match.group(3),
-        port=match.group(4),
-        user=match.group(1),
-        password=match.group(2),
+        host=host,
+        port=port,
+        user=user,
+        password=password,
         dbname='postgres'
     )
 
+    # Set the isolation level to AUTOCOMMIT because CREATE DATABASE 
+    # cannot be executed in a transaction block
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cursor = conn.cursor()
+
+    test_db_name = "test_db_" + uuid.uuid4().hex
+
+    # remove database_name and add test_db_name
+    test_db_string = db_string[:db_string.rfind("/")+1] + test_db_name
     
-    print("Creating database")
+    # create the temporary database
     cursor.execute(sql.SQL("CREATE DATABASE {};").format(sql.Identifier(test_db_name)))
 
-    with open('tests/base_db.sql', 'r') as file:
-        sql = file.read()
-
-    cursor.execute(sql)
-
-    # Commit the changes to the database
+    # Commit changes
     conn.commit()
 
-    
-    print("Creating engine")
+    # Install schema
+    execute_sql_file("tests/entire_db.sql", test_db_name, user, password, host, port)
+
+    # create engine to connect to db
     engine = create_database_engine(test_db_string, poolclass=StaticPool)
 
     yield engine
@@ -77,9 +75,8 @@ def database():
     # ensure connections are removed
     cursor.execute(sql.SQL("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='{}';".format(test_db_name)))
 
-    # drop database
+    # drop temporary database
     cursor.execute(sql.SQL("DROP DATABASE {};").format(sql.Identifier(test_db_name)))
-
 
     # Close the cursor and the connection
     cursor.close()
