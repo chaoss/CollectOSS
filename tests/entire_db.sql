@@ -6668,13 +6668,13 @@ COPY augur_data.releases (release_id, repo_id, release_name, release_description
 --
 
 COPY augur_data.repo (repo_id, repo_group_id, repo_git, repo_path, repo_name, repo_added, repo_type, url, owner_id, description, primary_language, created_at, forked_from, updated_at, repo_archived_date_collected, repo_archived, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
-25452	10	https://github.com/chaoss/whitepaper	https://github.com/chaoss/whitepaper	github.com/chaoss/	2021-04-17 21:40:42		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:42
-24441	10	https://github.com/operate-first/operate-first-twitter	https://github.com/operate-first/operate-first-twitter	github.com/operate-first/	2021-08-25 16:47:47		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-08-25 16:47:47
-24442	10	https://github.com/operate-first/blueprint	https://github.com/operate-first/blueprint	github.com/operate-first/	2021-08-25 16:47:47		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-08-25 16:47:47
-25445	10	https://github.com/chaoss/grimoirelab-perceval-opnfv	https://github.com/chaoss/grimoirelab-perceval-opnfv	github.com/chaoss/	2020-04-17 21:40:39		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:39
-1	1	https://github.com/chaoss/augur	https://github.com/chaoss/augur	github.com/chaoss/	2021-08-10 14:28:44		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	data load	one	git	2021-06-05 18:41:14
-25430	10	https://github.com/SociallyCompute/update-test	https://github.com/SociallyCompute/update-test	github.com/SociallyCompute/	2021-10-07 08:50:13		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	\N	\N	\N	\N
-25450	10	https://github.com/chaoss/grimoirelab-hatstall	https://github.com/chaoss/grimoirelab-hatstall	github.com/chaoss/	2021-04-17 21:40:42		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:42
+25452	10	https://github.com/chaoss/whitepaper	github.com/chaoss/	whitepaper	2021-04-17 21:40:42		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:42
+24441	10	https://github.com/operate-first/operate-first-twitter	github.com/operate-first/	operate-first-twitter	2021-08-25 16:47:47		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-08-25 16:47:47
+24442	10	https://github.com/operate-first/blueprint	github.com/operate-first/	blueprint	2021-08-25 16:47:47		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-08-25 16:47:47
+25445	10	https://github.com/chaoss/grimoirelab-perceval-opnfv	github.com/chaoss/	grimoirelab-perceval-opnfv	2020-04-17 21:40:39		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:39
+1	1	https://github.com/chaoss/augur	github.com/chaoss/	augur	2021-08-10 14:28:44		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	data load	one	git	2021-06-05 18:41:14
+25430	10	https://github.com/SociallyCompute/update-test	github.com/SociallyCompute/	update-test	2021-10-07 08:50:13		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	\N	\N	\N	\N
+25450	10	https://github.com/chaoss/grimoirelab-hatstall	github.com/chaoss/	grimoirelab-hatstall	2021-04-17 21:40:42		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:42
 \.
 
 
