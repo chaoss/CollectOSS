@@ -36,6 +36,7 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+import pathlib
 import sqlalchemy as s
 from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author, get_absolute_repo_path
 from augur.application.db.models.augur_data import *
@@ -114,21 +115,16 @@ def git_repo_initialize(session, repo_git):
             return 
 
         # Create the prerequisite directories
-        return_code = subprocess.Popen([f"mkdir -p {repo_path}"],shell=True).wait()
-#        session.log_activity('Info','Return code value when making directors from facade05, line 120: {:d}'.format(return_code))
-
-
-
-        # Make sure it's ok to proceed
-        if return_code != 0:
-            print("COULD NOT CREATE REPO DIRECTORY")
+	try:
+        	pathlib.Path(repo_path).mkdir(parents=True, exist_ok=True)
+	except Exception as e:
+	    print("COULD NOT CREATE REPO DIRECTORY")
 
             update_repo_log(session, row.repo_id,'Failed (mkdir)')
             session.update_status(f"Failed (mkdir {repo_path})")
             session.log_activity('Error',f"Could not create repo directory: {repo_path}" )
-
-            raise Exception("Could not create git repo's prerequisite directories. "
-                " Do you have write access?")
+	    
+	    raise e
 
         update_repo_log(session, row.repo_id,'New (cloning)')
 
