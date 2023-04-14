@@ -10,6 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import text
 import re
+from augur.application.db.models import Repo
 
 
 # revision identifiers, used by Alembic.
@@ -26,12 +27,13 @@ def upgrade():
     if result:
 
         for row in result:
-            regex = re.search(r"https:\/\/(github\.com\/[A-Za-z0-9 \- _]+\/)([A-Za-z0-9 \- _ .]+)$", row.repo_git)
-            if not regex:
+
+            owner_name, repo_name = Repo.parse_github_repo_url(row.repo_git)
+            if not owner_name or not repo_name:
                 continue
-            
-            repo_path = regex[0]
-            repo_name = regex[1]
+
+            repo_path = f"github.com/{owner_name}/"
+        
             conn.execute(text(f"""
                 UPDATE "repo"
                 SET repo_path=:path,repo_name=:name
