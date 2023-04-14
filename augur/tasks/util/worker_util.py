@@ -109,11 +109,10 @@ def calculate_date_weight_from_timestamps(added,last_collection):
     #Get the time since last collection as well as when the repo was added.
     if last_collection is None:
         delta = datetime.now() - added
+        return date_weight_factor(delta.days)
     else:
         delta = datetime.now() - last_collection
-    
-    print(f"Days: {delta.days}")
-    return date_weight_factor(delta.days)
+        return date_weight_factor(delta.days - 30)
 
 
 
