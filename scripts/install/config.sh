@@ -162,7 +162,7 @@ function create_config(){
     echo
     echo "Found RABBITMQ_CONN_STRING environment variable with value $RABBITMQ_CONN_STRING"
     echo "Using it in the config" 
-    echo "Please unset RABBITMQ_CONN_STRING if you would like to be prompted for the facade repo directory"
+    echo "Please unset RABBITMQ_CONN_STRING if you would like to be prompted for the rabbit MQ connection string"
       rabbitmq_conn_string=$RABBITMQ_CONN_STRING
     fi
     
