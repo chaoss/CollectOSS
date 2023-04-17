@@ -74,36 +74,6 @@ def primary_repo_collect_phase(repo_git):
     #A chain is needed for each repo.
     repo_info_task = collect_repo_info.si(repo_git)#collection_task_wrapper(self)
 
-
-## I think this section is outdated
-# ### Section from traffic metric merge that may need to be changed
-
-#     with DatabaseSession(logger) as session:
-#         query = session.query(Repo)
-#         repos = execute_session_query(query, 'all')
-#         #Just use list comprehension for simple group
-#         repo_info_tasks = [collect_repo_info.si(repo.repo_git) for repo in repos]
-
-#         for repo in repos:
-#             first_tasks_repo = group(collect_issues.si(repo.repo_git),collect_pull_requests.si(repo.repo_git),collect_github_repo_clones_data.si(repo.repo_git))
-#             second_tasks_repo = group(collect_events.si(repo.repo_git),
-#                 collect_github_messages.si(repo.repo_git),process_pull_request_files.si(repo.repo_git), process_pull_request_commits.si(repo.repo_git))
-
-#             repo_chain = chain(first_tasks_repo,second_tasks_repo)
-#             issue_dependent_tasks.append(repo_chain)
-
-#         repo_task_group = group(
-#             *repo_info_tasks,
-#             chain(group(*issue_dependent_tasks),process_contributors.si()),
-#             generate_facade_chain(logger),
-#             collect_releases.si()
-#         )
-    
-#     chain(repo_task_group, refresh_materialized_views.si()).apply_async()
-
-# #### End of section from traffic metric merge that may need to be changed
-
-
     primary_repo_jobs = group(
         collect_issues.si(repo_git),
         collect_pull_requests.si(repo_git)
@@ -119,8 +89,9 @@ def primary_repo_collect_phase(repo_git):
         repo_info_task,
         chain(primary_repo_jobs,secondary_repo_jobs,process_contributors.si()),
         #facade_phase(logger,repo_git),
-        process_ossf_scorecard_metrics.si(repo_git),
-        collect_releases.si(repo_git)
+        
+        collect_releases.si(repo_git),
+        grab_comitters.si(repo_git)
     )
 
     return repo_task_group
@@ -134,6 +105,7 @@ def secondary_repo_collect_phase(repo_git):
     repo_task_group = group(
         process_pull_request_files.si(repo_git),
         process_pull_request_commits.si(repo_git),
+        process_ossf_scorecard_metrics.si(repo_git),
         chain(collect_pull_request_reviews.si(repo_git), collect_pull_request_review_comments.si(repo_git))
     )
 
@@ -200,8 +172,8 @@ def start_primary_collection(session,max_repo,days):
     if prelim_phase.__name__ in enabled_phase_names:
         primary_enabled_phases.append(prelim_phase)
     
-    if primary_repo_collect_phase.__name__ in enabled_phase_names:
-        primary_enabled_phases.append(primary_repo_collect_phase)
+    
+    primary_enabled_phases.append(primary_repo_collect_phase)
 
     #task success is scheduled no matter what the config says.
     def core_task_success_util_gen(repo_git):
@@ -245,8 +217,8 @@ def start_secondary_collection(session,max_repo,days):
     if prelim_phase.__name__ in enabled_phase_names:
         secondary_enabled_phases.append(prelim_phase_secondary)
 
-    if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-        secondary_enabled_phases.append(secondary_repo_collect_phase)
+    
+    secondary_enabled_phases.append(secondary_repo_collect_phase)
 
     def secondary_task_success_util_gen(repo_git):
         return secondary_task_success_util.si(repo_git)
@@ -363,15 +335,16 @@ def augur_collection_monitor():
         #Get list of enabled phases 
         enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
 
-
-        start_primary_collection(session, max_repo=50, days=30)
+        if primary_repo_collect_phase.__name__ in enabled_phase_names:
+            start_primary_collection(session, max_repo=40, days=30)
         
-        start_secondary_collection(session, max_repo=30, days=30)
+        if secondary_repo_collect_phase.__name__ in enabled_phase_names:
+            start_secondary_collection(session, max_repo=10, days=30)
 
         if facade_phase.__name__ in enabled_phase_names:
             #Schedule facade collection before clone/updates as that is a higher priority
-            start_facade_collection(session, max_repo=30, days=30)
-            start_facade_clone_update(session,max_repo=15,days=30)
+            start_facade_collection(session, max_repo=15, days=30)
+            start_facade_clone_update(session,max_repo=5,days=30)
 
 
 

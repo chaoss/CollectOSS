@@ -9,7 +9,17 @@ import types
 import sys
 import beaker
 
-from flask import request
+from flask import request, jsonify
+
+from .server import engine
+from functools import wraps
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
+from augur.application.config import get_development_flag
+from augur.application.db.models import User, UserRepo, UserGroup, UserSessionToken, ClientApplication, RefreshToken
+
+Session = sessionmaker(bind=engine)
+development = get_development_flag()
 
 __ROOT = os.path.abspath(os.path.dirname(__file__))
 def get_data_path(path):
@@ -98,5 +108,55 @@ def get_bearer_token():
     Extract Client token from request header
 """
 def get_client_token():
-    return get_token("Client")
+    token = get_token("Client") or request.args.get("client_secret")
+
+    # Apparently some client applications don't use the oauth standard recommendations
+    if not token:
+        form = request.form.to_dict()
+        token = form.get("client_secret")
     
+    return token
+
+
+# usage:
+"""
+@app.route("/path")
+@api_key_required
+def priviledged_function():
+    stuff
+"""
+def api_key_required(fun):
+    # TODO Optionally rate-limit non authenticated users instead of rejecting requests
+    @wraps(fun)
+    def wrapper(*args, **kwargs):
+        client_token = get_client_token()
+
+        # If valid:
+        if client_token:
+            session = Session()
+            try:
+                kwargs["application"] = session.query(ClientApplication).filter(ClientApplication.api_key == client_token).one()
+                return fun(*args, **kwargs)
+            except NoResultFound:
+                pass
+
+        return {"status": "Unauthorized client"}
+    
+    return wrapper
+
+def generate_upgrade_request():
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/426
+    response = jsonify({"status": "SSL Required"})
+    response.headers["Upgrade"] = "TLS"
+    response.headers["Connection"] = "Upgrade"
+
+    return response, 426
+
+def ssl_required(fun):
+    @wraps(fun)
+    def wrapper(*args, **kwargs):
+        if not development and not request.is_secure:
+            return generate_upgrade_request()
+        return fun(*args, **kwargs)
+    
+    return wrapper

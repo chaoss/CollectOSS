@@ -1,6 +1,6 @@
 ## Augur Setup
 
-# Ubuntu 22.x
+# Ubuntu 20.04.x
 We default to this version of Ubuntu for the moment because Augur does not yet support python3.10, which is the default version of python3.x distributed with Ubuntu 22.0x.x
 
 ## Git Platform Requirements (Things to have setup prior to initiating installation.)
@@ -20,7 +20,24 @@ sudo apt update &&
 sudo apt upgrade && 
 sudo apt install software-properties-common && 
 sudo apt install python3-dev && 
-sudo apt install python3.10-venv &&
+sudo apt install python3.8-venv &&
+sudo apt install postgresql postgresql-contrib postgresql-client && 
+sudo apt install build-essential && 
+sudo apt install redis-server &&  
+sudo apt install erlang && 
+sudo apt install rabbitmq-server && 
+sudo snap install go --classic && 
+sudo apt install nginx && 
+sudo apt install firefox-geckodriver
+```
+
+### Annotated
+```shell 
+sudo apt update && 
+sudo apt upgrade && 
+sudo apt install software-properties-common && 
+sudo apt install python3-dev && 
+sudo apt install python3.8-venv &&
 sudo apt install postgresql postgresql-contrib postgresql-client && 
 sudo apt install build-essential && 
 sudo apt install redis-server &&  # required 
@@ -28,22 +45,7 @@ sudo apt install erlang && # required
 sudo apt install rabbitmq-server && #required
 sudo snap install go --classic && #required: Go Needs to be version 1.19.x or higher. Snap is the package manager that gets you to the right version. Classic enables it to actually be installed at the correct version.
 sudo apt install nginx && # required for hosting
-sudo add-apt-repository ppa:mozillateam/firefox-next &&
-sudo apt install firefox=111.0~b8+build1-0ubuntu0.22.04.1 &&
-sudo apt install firefox-geckodriver
-
-# You will almost certainly need to reboot after this. 
-```
-
-### RabbitMQ Configuration
-The default timeout for RabbitMQ needs to be set on Ubuntu 22.x. 
-```shell
-sudo vi /etc/rabbitmq/advanced.config
-```
-
-Add this one line to that file (the period at the end matters): 
-```shell
-[ {rabbit, [ {consumer_timeout, undefined} ]} ].
+sudo apt install firefox-geckodriver # required for visualization API 
 ```
 
 ## Git Configuration
@@ -59,8 +61,8 @@ There are some Git configuration parameters that help when you are cloning repos
 ## Postgresql Configuration
 Create a PostgreSQL database for Augur to use
 ```shell
-sudo su - &&
-su - postgres &&
+sudo su -
+su - postgres
 psql
 ```
 
@@ -84,7 +86,7 @@ exit
 ## Rabbitmq Broker Configuration
 You have to setup a specific user, and broker host for your augur instance. You can accomplish this by running the below commands:
 ```shell
-sudo rabbitmqctl add_user augur password123 &&
+sudo rabbitmqctl add_user augur password123 ||
 sudo rabbitmqctl add_vhost augur_vhost &&
 sudo rabbitmqctl set_user_tags augur augurTag &&
 sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
@@ -98,7 +100,7 @@ If your setup of rabbitmq is successful your broker url should look like this:
 
 **During Augur installation, you will be prompted for this broker_url**
 
-## Proxying Augur through Nginx
+##  Proxying Augur through Nginx
 Assumes nginx is installed. 
 
 Then you create a file for the server you want Augur to run under in the location of your `sites-enabled` directory for nginx (In this example, Augur is running on port 5038: 
@@ -144,67 +146,6 @@ section_name='Redis'
 AND 
 setting_name='cache_group';
 ```
-
-
-**Edit** the `/etc/redis/redis.conf` file to ensure these parameters are configured in this way: 
-```shell
-supervised systemd
-databases 900
-maxmemory-samples 10
-maxmemory 20GB
-```
-
-**NOTE**: You may be able to have fewer databases and lower maxmemory settings. This is a function of how many repositories you are collecting data for at a given time. The more repositories you are managing data for, the close to these settings you will need to be. 
-
-**Consequences** : If the settings are too low for Redis, Augur's maintainer team has observed cases where collection appears to stall. (TEAM: This is a working theory as of 3/10/2023 for Ubuntu 22.x, based on EC2 experiments.)
-
-
-#### Possible EC2 Configuration Requirements
-
-With virtualization there may be issues associated with redis-server connections exceeding available memory. In these cases, the following workarounds help to resolve issues. 
-
-Specifically, you may find this error in your augur logs: 
-```shell
-redis.exceptions.ConnectionError: Error 111 connecting to 127.0.0.1:6379. Connection refused.
-```
-
-**INSTALL** `sudo apt install libhugetlbfs-bin`
-
-**COMMAND**: 
-```
-hugeadm --thp-never` &&
-echo never > /sys/kernel/mm/transparent_hugepage/enabled
-```
-
-
-```shell
-sudo vi /etc/rc.local
-```
-
-**paste** into `/etc/rc.local`
-```shell
-if test -f /sys/kernel/mm/transparent_hugepage/enabled; then
-   echo never > /sys/kernel/mm/transparent_hugepage/enabled
-fi
-```
-
-
-**EDIT** : `/etc/default/grub` add the following line: 
-```shell
-GRUB_DISABLE_OS_PROBER=true
-```
-
-
-## Postgresql Configuration
-Your postgresql instance should optimally allow 1,000 connections: 
-
-```shell
-max_connections = 1000                  # (change requires restart)
-shared_buffers = 8GB                    # min 128kB
-work_mem = 2GB                  # min 64kB
-```
-
-Augur will generally hold up to 150 simultaneous connections while collecting data. The 1,000 number is recommended to accommodate both collection and analysis on the same database. Use of PGBouncer or other utility may change these characteristics.  
 
 ## Augur Commands
 

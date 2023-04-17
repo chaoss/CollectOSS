@@ -36,6 +36,7 @@ import os
 import getopt
 import xlsxwriter
 import configparser
+import pathlib
 import sqlalchemy as s
 from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author, get_absolute_repo_path
 from augur.application.db.models.augur_data import *
@@ -104,30 +105,26 @@ def git_repo_initialize(session, repo_git):
         if os.path.isdir(f"{repo_path}{repo_name}"):#len(result):
 
             session.log_activity('Verbose',f"Identical repo detected, storing {git} in {repo_name}")
-            session.logger.error("Identical repo found in facade directory!")
+            session.logger.warning(f"Identical repo found in facade directory! Repo git: {git}")
             statusQuery = session.query(CollectionStatus).filter(CollectionStatus.repo_id == row.repo_id)
             collectionRecord = execute_session_query(statusQuery,'one')
             collectionRecord.facade_status = 'Update'
             collectionRecord.facade_task_id = None
             session.commit()
-            raise FileExistsError("Repo already found in facade directory! Cannot clone. Setting repo to Update state and exiting.")
+
+            return 
 
         # Create the prerequisite directories
-        return_code = subprocess.Popen([f"mkdir -p {repo_path}"],shell=True).wait()
-#        session.log_activity('Info','Return code value when making directors from facade05, line 120: {:d}'.format(return_code))
-
-
-
-        # Make sure it's ok to proceed
-        if return_code != 0:
-            print("COULD NOT CREATE REPO DIRECTORY")
+	try:
+        	pathlib.Path(repo_path).mkdir(parents=True, exist_ok=True)
+	except Exception as e:
+	    print("COULD NOT CREATE REPO DIRECTORY")
 
             update_repo_log(session, row.repo_id,'Failed (mkdir)')
             session.update_status(f"Failed (mkdir {repo_path})")
             session.log_activity('Error',f"Could not create repo directory: {repo_path}" )
-
-            raise Exception("Could not create git repo's prerequisite directories. "
-                " Do you have write access?")
+	    
+	    raise e
 
         update_repo_log(session, row.repo_id,'New (cloning)')
 

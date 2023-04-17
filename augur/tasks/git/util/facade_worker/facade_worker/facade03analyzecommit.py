@@ -38,7 +38,7 @@ import xlsxwriter
 import configparser
 import traceback 
 import sqlalchemy as s
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DataError
 
 def analyze_commit(session, repo_id, repo_loc, commit):
 
@@ -159,6 +159,28 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 
 		try:
 			session.execute_sql(store)
+		except DataError as e:
+			session.logger.error(f"Ran into bad data when trying to insert commit with values: \n {commit_record} \n Error: {e}")
+
+			#Check for improper utc timezone offset
+			#UTC timezone offset should be betwen -14:00 and +14:00
+
+			if "time zone displacement" in f"{e}":
+				commit_record['author_timestamp'] = placeholder_date
+				commit_record['committer_timestamp'] = placeholder_date
+
+				store = s.sql.text("""INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
+					cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,cmt_author_timestamp,
+					cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,cmt_committer_timestamp,
+					cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source)
+					VALUES (:repo_id,:commit,:filename,:author_name,:author_email_raw,:author_email,:author_date,:author_timestamp,
+					:committer_name,:committer_email_raw,:committer_email,:committer_date,:committer_timestamp,
+					:added,:removed,:whitespace,:committer_date,:tool_source,:tool_version,:data_source)
+					""").bindparams(**commit_record)
+				
+				session.execute_sql(store)
+			else:
+				raise e
 		except Exception as e:
 		
 			session.logger.error(f"Ran into issue when trying to insert commit with values: \n {commit_record} \n Error: {e}")

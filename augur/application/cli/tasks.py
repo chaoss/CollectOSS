@@ -15,7 +15,7 @@ from augur import instance_id
 from augur.application.logs import AugurLogger
 from augur.tasks.init.redis_connection import redis_connection
 from augur.application.cli import test_connection, test_db_connection 
-from augur.application.cli.backend import clear_redis_caches, raise_open_file_limit
+from augur.application.cli.backend import clear_rabbitmq_messages, raise_open_file_limit
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
 
@@ -31,30 +31,37 @@ def start():
 
     raise_open_file_limit(100000)
 
-    default_worker = None
-    cpu_worker = None
+    scheduling_worker_process = None
+    core_worker_process = None
+    secondary_worker_process = None
 
-    default_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -P eventlet -l info --concurrency=1000 -n {instance_id}@%h"
-    cpu_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n {uuid.uuid4().hex}@%h -Q cpu"
-    default_worker_process = subprocess.Popen(default_worker.split(" "))
-    cpu_worker_process = subprocess.Popen(cpu_worker.split(" "))
+    scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=14 -n core:{uuid.uuid4().hex}@%h"
+    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=5 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+    
+    scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
+    core_worker_process = subprocess.Popen(core_worker.split(" "))
+    secondary_worker_process = subprocess.Popen(secondary_worker.split(" "))
     time.sleep(5)
 
     try:
-        default_worker_process.wait()
+        scheduling_worker_process.wait()
     except KeyboardInterrupt:
 
-        if default_worker_process or cpu_worker_process:
+        if scheduling_worker_process or core_worker_process or secondary_worker_process:
             logger.info("Shutting down celery process")
 
-        if default_worker_process:
-            default_worker_process.terminate()
+        if scheduling_worker_process:
+            scheduling_worker_process.terminate()
 
-        if cpu_worker_process:
-            cpu_worker_process.terminate()
+        if core_worker_process:
+            core_worker_process.terminate()
+
+        if secondary_worker_process:
+            secondary_worker_process.terminate()
 
         try:
-            clear_redis_caches()
+            clear_rabbitmq_messages()
             
         except Exception as e:
             pass

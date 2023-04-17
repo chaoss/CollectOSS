@@ -50,13 +50,15 @@ def get_version(pypi_data, version, lt=False):
 def handle_upper_limit_dependency(dependency, data):
     versions = dependency['requirement'].split(',')
     upper_limit = clean_version(versions[0])
-    lower_limit = clean_version(versions[1])
     release_list = list(data['releases'])
 
     if upper_limit not in release_list:
         upper_limit += '.0'
-    # print('the upper limit and lower limit is %s and %s' %(upper_limit,lower_limit))
-    upper_index = release_list.index(upper_limit)
+
+    try:
+        upper_index = release_list.index(upper_limit)
+    except ValueError:
+        return None
     return release_list[upper_index -1]
     # return get_version(data, upper_limit, lt= True)
 
