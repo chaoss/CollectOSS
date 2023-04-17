@@ -112,7 +112,6 @@ def get_client_token():
     
     return token
 
-
 # usage:
 """
 @app.route("/path")
