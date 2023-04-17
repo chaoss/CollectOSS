@@ -1,7 +1,9 @@
 :root {
     --color-bg: #1A233A;
     --color-bg-light: #272E48;
+    --color-bg-contrast: #646683;
     --color-fg: white;
+    --color-fg-dark: #b0bdd6;
     --color-fg-contrast: black;
     --color-accent: #6f42c1;
     --color-accent-dark: #6134b3;
@@ -23,6 +25,26 @@ body {
     background-color: var(--color-bg-light);
     margin-top: 10px;
     margin-bottom: 10px;
+}
+
+.input-textbox {
+    color: var(--color-fg);
+    background-color: var(--color-bg);
+    border-color: var(--color-accent-dark);
+}
+
+.input-textbox::placeholder {
+    color: var(--color-fg-dark);
+}
+
+.input-textbox:focus {
+    color: var(--color-fg);
+    background-color: var(--color-bg);
+    border-color: var(--color-accent-dark);
+}
+
+.input-textbox:focus::placeholder {
+    color: var(--color-fg-dark);
 }
 
 .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
