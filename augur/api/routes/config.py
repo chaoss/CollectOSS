@@ -9,6 +9,7 @@ import sqlalchemy as s
 # Disable the requirement for SSL by setting env["AUGUR_DEV"] = True
 from augur.api.util import ssl_required, admin_required
 from augur.application.db.lib import get_session
+from augur.api.util import ssl_required
 from augur.application.db.models import Config
 from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession

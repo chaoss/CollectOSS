@@ -212,6 +212,47 @@
         })
     });
 
+document.getElementById("settings-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    var data = {};
+
+    for(var value of event.target.elements) { 
+        if(value.value != "") {
+            var section = value.getAttribute("section");
+            var setting = value.getAttribute("setting");
+            
+            if(!(section in data)) {
+                data[section] = {};
+            }
+            data[section][setting] = value.value;
+        }
+    }
+
+    fetch("{{ url_for('update_config') }}", {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.status == "success") {
+            window.location.replace("{{ url_for('dashboard_view') }}");
+        }
+    })
+    .catch(reason => {
+        alert("An error occurred: " + reason);
+    });
+});
+
+for(var box of document.getElementsByClassName("input-textbox")) {
+    box.addEventListener("dblclick", (event) => {
+        if(event.target.value == "") {
+            event.target.value = event.target.placeholder;
+        }
+    });
+}
+
     function getDivFromNavLink(navLink) {
         var href = navLink.getAttribute("href");
         var div_id = href.replace("#", "");
