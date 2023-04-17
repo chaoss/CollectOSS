@@ -377,7 +377,7 @@
         fetch("{{ url_for("toggle_user_group_favorite") }}?group_name=" + group)
             .then((response) => response.json())
             .then((data) => {
-                if (data.status == "Success") {
+                if(data.status == "Success") {
                     if (button.classList.contains("bi-star-fill")) {
                         button.classList.remove("bi-star-fill");
                         button.classList.add("bi-star");

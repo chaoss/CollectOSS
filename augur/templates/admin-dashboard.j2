@@ -77,7 +77,7 @@
                                 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                                     <div class="form-group">
                                         <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
-                                        <input type="text" class="form-control" id="{{ setting.id }}" placeholder="{{ setting.value }}">
+                                        <input type="text" class="form-control input-textbox" id="{{ setting.id }}" placeholder="{{ setting.value }}">
                                         <div class="form-text mb-1">{{ setting.description or "No description available" }}</div>
                                     </div>
                                 </div>
@@ -106,7 +106,7 @@
                                 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                                     <div class="form-group">
                                         <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
-                                        <input type="text" class="form-control" id="{{ setting.id }}" placeholder="{{ setting.value }}">
+                                        <input type="text" class="form-control input-textbox" id="{{ setting.id }}" placeholder="{{ setting.value }}">
                                         <div class="form-text mb-1">{{ setting.description or "No description available" }}</div>
                                     </div>
                                 </div>
@@ -123,6 +123,7 @@
                 </div>
                 <h1 id="config-section">Configuration</h1>
                 {# Start content card #}
+                <p>Double-click an empty input field to automatically populate it with the placeholder value</p>
                 <div class="card dashboard-content">
                     <div class="card-body">
                         <form id="settings-form">
@@ -135,7 +136,7 @@
                                 <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                                     <div class="form-group">
                                         <label for="config_{{ section[0] }}_{{ setting[0] }}" class="mb-1">{{ setting[0] }}</label>
-                                        <input type="text" class="form-control" id="config_{{ section[0] }}_{{ setting[0] }}" placeholder="{{ setting[1] }}">
+                                        <input type="text" section="{{ section[0] }}" setting="{{ setting[0] }}" class="form-control input-textbox" id="config_{{ section[0] }}_{{ setting[0] }}" placeholder="{{ setting[1] }}">
                                         <div class="form-text mb-1">No description available</div>
                                     </div>
                                 </div>
@@ -162,6 +163,47 @@ range(elements.length).forEach((i) => {
         setActive(elements[i]);
     })
 });
+
+document.getElementById("settings-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    var data = {};
+
+    for(var value of event.target.elements) { 
+        if(value.value != "") {
+            var section = value.getAttribute("section");
+            var setting = value.getAttribute("setting");
+            
+            if(!(section in data)) {
+                data[section] = {};
+            }
+            data[section][setting] = value.value;
+        }
+    }
+
+    fetch("{{ url_for('update_config') }}", {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.status == "success") {
+            window.location.replace("{{ url_for('dashboard_view') }}");
+        }
+    })
+    .catch(reason => {
+        alert("An error occurred: " + reason);
+    });
+});
+
+for(var box of document.getElementsByClassName("input-textbox")) {
+    box.addEventListener("dblclick", (event) => {
+        if(event.target.value == "") {
+            event.target.value = event.target.placeholder;
+        }
+    });
+}
 
 function setActive(navLink) {
     var elements = document.getElementsByClassName("nav-link");

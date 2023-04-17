@@ -320,8 +320,6 @@ def dashboard_view():
         ]}
     ]
 
-    backend_config = requestJson("config/get", False)
-
-    logger.info(backend_config)
+    backend_config = AugurConfig(logger, db_session).load_config()
 
     return render_template('admin-dashboard.j2', sections = empty, config = backend_config)

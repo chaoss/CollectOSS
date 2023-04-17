@@ -66,7 +66,7 @@ def admin_required(func):
         if current_user.admin:
             return func(*args, **kwargs)
         else:
-            forbidden(None)
+            return forbidden(None)
     return inner_function
 
 @login_manager.user_loader
