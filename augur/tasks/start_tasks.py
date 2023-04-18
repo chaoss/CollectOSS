@@ -200,7 +200,7 @@ def start_primary_collection(session,max_repo):
 
 
     #Now start old repos if there is space to do so.
-    limit -= len(collection_size)
+    limit -= collection_size
 
     collected_before = CollectionStatus.core_data_last_collected != None
 
