@@ -136,52 +136,53 @@ def core_task_success_util(repo_git):
 
         session.commit()
 
+def update_repo_core_weight(logger,session,repo_git,raw_sum):
+    repo = Repo.get_by_repo_git(session, repo_git)
+    status = repo.collection_status[0]
+
+    try: 
+        weight = raw_sum#get_repo_weight_core(logger,repo_git)
+
+        weight -= calculate_date_weight_from_timestamps(repo.repo_added, status.core_data_last_collected)
+    except Exception as e:
+        logger.error(f"{e}")
+        weight = None
+
+    logger.info(f"Repo {repo_git} has a weight of {weight}")
+
+    logger.info(f"Args: {raw_sum} , {repo_git}")
+
+    if weight is None:
+        return
+
+
+    update_query = (
+        update(CollectionStatus)
+        .where(CollectionStatus.repo_id == repo.repo_id)
+        .values(core_weight=weight,issue_pr_sum=raw_sum)
+    )
+
+    session.execute(update_query)
+    session.commit()
+
+
+
 #This task updates the weight with the issues and prs already passed in
 @celery.task
-def core_task_update_weight_util(issue_and_pr_nums,repo_git=None):
+def core_task_update_weight_util(issue_and_pr_nums,repo_git=None,session=None):
     from augur.tasks.init.celery_app import engine
     logger = logging.getLogger(core_task_update_weight_util.__name__)
 
     if repo_git is None:
         return
     
-    with DatabaseSession(logger,engine=engine) as session:
-        repo = Repo.get_by_repo_git(session, repo_git)
-        status = repo.collection_status[0]
-
-        try: 
-            weight = sum(issue_and_pr_nums)#get_repo_weight_core(logger,repo_git)
-
-            weight -= calculate_date_weight_from_timestamps(repo.repo_added, status.core_data_last_collected)
-        except Exception as e:
-            logger.error(f"{e}")
-            weight = None
-
-        logger.info(f"Repo {repo_git} has a weight of {weight}")
-
-        logger.info(f"Args: {issue_and_pr_nums} , {repo_git}")
-
-        if weight is None:
-            return
+    if session is not None:
+        update_repo_core_weight(logger, session, repo_git, sum(issue_and_pr_nums))
+    else:
+        with DatabaseSession(logger,engine=engine) as session:
+            update_repo_core_weight(logger,session,repo_git,sum(issue_and_pr_nums))
 
 
-        update_query = (
-            update(CollectionStatus)
-            .where(CollectionStatus.repo_id == repo.repo_id)
-            .values(core_weight=weight,issue_pr_sum=sum(issue_and_pr_nums))
-        )
-
-        session.execute(update_query)
-        session.commit()
-
-#Same as above just fetches the count with an api call before passing it into the above function.
-@celery.task
-def core_task_fetch_issues_prs_update_weight_util(repo_git):
-    logger = logging.getLogger(core_task_fetch_issues_prs_update_weight_util.__name__)
-    
-    raw_count = get_repo_weight_by_issue(logger,repo_git)
-
-    core_task_update_weight_util([int(raw_count)],repo_git=repo_git)
 
 @celery.task
 def secondary_task_success_util(repo_git):

@@ -10,7 +10,7 @@ import numpy as np
 #from celery.result import AsyncResult
 from celery import signature
 from celery import group, chain, chord, signature
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, update
 
 
 from augur.tasks.github import *
@@ -33,6 +33,7 @@ from enum import Enum
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.models import CollectionStatus, Repo
 from augur.tasks.util.collection_util import *
+from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_facade_weight_time_factor
 
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
@@ -358,8 +359,14 @@ def augur_collection_update_weights():
 
         core_weight_update_repos = session.query(CollectionStatus).filter(CollectionStatus.core_weight != None).all()
 
-        for repo in core_weight_update_repos:
-            core_task_fetch_issues_prs_update_weight_util(repo.repo_git)
+        for status in core_weight_update_repos:
+            repo = Repo.get_by_id(session, status.repo_id)
+
+            repo_git = repo.repo_git
+            status = repo.collection_status[0]
+            raw_count = status.issue_pr_sum
+
+            core_task_update_weight_util([int(raw_count)],repo_git=repo_git,session=session)
     
         facade_not_pending = CollectionStatus.facade_status != CollectionState.PENDING.value
         facade_not_failed = CollectionStatus.facade_status != CollectionState.FAILED_CLONE.value
@@ -367,6 +374,20 @@ def augur_collection_update_weights():
 
         facade_weight_update_repos = session.query(CollectionStatus).filter(and_(facade_not_pending,facade_not_failed,facade_weight_not_null)).all()
 
-        for repo in facade_weight_update_repos:
-            task_id = git_update_commit_count_weight(repo_git)
+        for status in facade_weight_update_repos:
+            repo = Repo.get_by_id(session, status.repo_id)
+
+            commit_count = status.commit_sum
+            date_factor = get_facade_weight_time_factor(session, repo.repo_git)
+            weight = commit_count - date_factor
+
+            update_query = (
+                update(CollectionStatus)
+                .where(CollectionStatus.repo_id == status.repo_id)
+                .values(facade_weight=weight)
+            )
+
+            session.execute(update_query)
+            session.commit()
+            #git_update_commit_count_weight(repo_git)
 
