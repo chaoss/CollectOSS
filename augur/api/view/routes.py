@@ -92,6 +92,7 @@ card:
 """
 @app.route('/repos/views/card')
 def repo_card_view():
+    raise Exception("Test")
     query = request.args.get('q')
     if current_user.is_authenticated:
         count = current_user.get_repo_count()[0]

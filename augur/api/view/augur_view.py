@@ -1,8 +1,9 @@
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify
 from flask_login import LoginManager
+from io import StringIO
 from .utils import *
-from .url_converters import *
 from .init import logger
+from .url_converters import *
 
 # from .server import User
 from ..server import app, db_session
@@ -10,7 +11,7 @@ from augur.application.db.models import User, UserSessionToken
 from augur.api.routes import AUGUR_API_VERSION
 from augur.api.util import get_bearer_token
 
-import time
+import time, traceback
 
 login_manager = LoginManager()
 
@@ -36,6 +37,24 @@ def unsupported_method(error):
         return jsonify({"status": "Unsupported method"}), 405
     
     return render_message("405 - Method not supported", "The resource you are trying to access does not support the request method used"), 405
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    if AUGUR_API_VERSION in str(request.path):
+        return jsonify({"status": error}), 500
+    error = error.original_exception
+    try:
+        errout = StringIO()
+        traceback.print_tb(error.__traceback__, file=errout)
+        # traceback.print_exception(error, file=errout)
+        stacktrace = errout.getvalue()
+        errout.close()
+    except Exception as e:
+        logger.error(e)
+
+    logger.info(stacktrace)
+    
+    return render_message("500 - Internal Server Error", "An error occurred while trying to service your request. Please try again, and if the issue persists, please file a GitHub issue with the below error message:", error=stacktrace, rows=stacktrace.count('\n'))
 
 @login_manager.unauthorized_handler
 def unauthorized():
@@ -80,8 +99,6 @@ def load_user(user_id):
 
 @login_manager.request_loader
 def load_user_request(request):
-
-    print(f"Current time of user request: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))}")
     token = get_bearer_token()
 
     current_time = int(time.time())
