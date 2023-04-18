@@ -144,9 +144,12 @@ def update_repo_core_weight(logger,session,repo_git,raw_sum):
         weight = raw_sum#get_repo_weight_core(logger,repo_git)
 
         weight -= calculate_date_weight_from_timestamps(repo.repo_added, status.core_data_last_collected)
+
+        secondary_tasks_weight = raw_sum - calculate_date_weight_from_timestamps(repo.repo_added, status.secondary_data_last_collected)
     except Exception as e:
         logger.error(f"{e}")
         weight = None
+        secondary_tasks_weight = None
 
     logger.info(f"Repo {repo_git} has a weight of {weight}")
 
@@ -159,7 +162,7 @@ def update_repo_core_weight(logger,session,repo_git,raw_sum):
     update_query = (
         update(CollectionStatus)
         .where(CollectionStatus.repo_id == repo.repo_id)
-        .values(core_weight=weight,issue_pr_sum=raw_sum)
+        .values(core_weight=weight,issue_pr_sum=raw_sum,secondary_weight=secondary_tasks_weight)
     )
 
     session.execute(update_query)
