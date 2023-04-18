@@ -34,6 +34,9 @@ def upgrade():
     schema='augur_operations'
     )
 
+    # add collection status for any existing repos
+    conn = op.get_bind()
+    
     conn.execute(text("""
         UPDATE augur_operations.config
         SET value = '600'
