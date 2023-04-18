@@ -204,11 +204,12 @@ def start_primary_collection(session,max_repo):
 
     collected_before = CollectionStatus.core_data_last_collected != None
 
-    start_block_of_repos(
-        session.logger, session,
-        and_(not_erroed, not_collecting,collected_before),
-        limit, primary_enabled_phases,sort=core_order
-    )
+    if limit > 0:
+        start_block_of_repos(
+            session.logger, session,
+            and_(not_erroed, not_collecting,collected_before),
+            limit, primary_enabled_phases,sort=core_order
+        )
 
 
 def start_secondary_collection(session,max_repo):
@@ -252,13 +253,14 @@ def start_secondary_collection(session,max_repo):
     limit -= collection_size
     collected_before = CollectionStatus.secondary_data_last_collected != None
 
-    start_block_of_repos(
-        session.logger, session, 
-        and_(primary_collected,not_erroed, not_collecting,collected_before), 
-        limit, secondary_enabled_phases,
-        hook="secondary",
-        sort=secondary_order
-    )
+    if limit > 0:
+        start_block_of_repos(
+            session.logger, session, 
+            and_(primary_collected,not_erroed, not_collecting,collected_before), 
+            limit, secondary_enabled_phases,
+            hook="secondary",
+            sort=secondary_order
+        )
 
 
 def start_facade_clone_update(session,max_repo,days):
@@ -335,13 +337,14 @@ def start_facade_collection(session,max_repo):
     limit -= collection_size
     collected_before = CollectionStatus.facade_data_last_collected != None
 
-    start_block_of_repos(
-        session.logger, session,
-        and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing,collected_before),
-        limit, facade_enabled_phases,
-        hook="facade",
-        sort=facade_order
-    )
+    if limit > 0:
+        start_block_of_repos(
+            session.logger, session,
+            and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing,collected_before),
+            limit, facade_enabled_phases,
+            hook="facade",
+            sort=facade_order
+        )
 
 
 @celery.task
