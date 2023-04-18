@@ -23,9 +23,9 @@ def get_dependency_analysis_module_tuples():
 	yield java_deps, 'java'
 	yield cpp_deps, 'C++'
 	yield c_deps, 'C'
-    yield go_deps, 'go'
-    yield kotlin_deps, 'kotlin'
-    yield rust_deps, 'rust'
+	yield go_deps, 'go'
+	yield kotlin_deps, 'kotlin'
+	yield rust_deps, 'rust'
 
 class Dep:
 	def __init__(self, name, language, count):
