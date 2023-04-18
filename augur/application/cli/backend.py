@@ -16,7 +16,6 @@ from celery import chain, signature, group
 import uuid
 import traceback
 from urllib.parse import urlparse
-from sqlalchemy import update
 from datetime import datetime
 
 from augur import instance_id

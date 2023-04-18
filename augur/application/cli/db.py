@@ -22,6 +22,9 @@ from augur.application.cli import test_connection, test_db_connection
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.db.engine import DatabaseEngine
+from sqlalchemy import update
+from datetime import datetime
+from augur.application.db.models import Repo
 
 logger = logging.getLogger(__name__)
 
@@ -373,7 +376,6 @@ def init_database(
 def test_db_connection():
     pass
 
-
 # TODO: Fix this function
 def run_psql_command_in_database(target_type, target):
     if target_type not in ["-f", "-c"]:
@@ -458,12 +460,11 @@ def check_pgpass_credentials(config):
             print("Credentials found in $HOME/.pgpass")
 
 
-@cli.command('reset-repo-age')
-@test_connection
-@test_db_connection
+#NOTE: For some reason when I try to add function decorators to this function 
+#click thinks it's an argument and tries to parse it but it errors since a function 
+#isn't an iterable. 
+@cli.command("reset-repo-age")
 def reset_repo_age():
-    
-    logger.info("resetting collection age on all repositories")
 
     with DatabaseSession(logger) as session:
         update_query = (
