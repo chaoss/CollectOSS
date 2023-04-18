@@ -1033,7 +1033,7 @@ class CollectionStatus(Base):
 
         try:
             pr_issue_count = get_repo_weight_by_issue(session.logger, repo_git)
-            session.logger.info(f"date weight: {calculate_date_weight_from_timestamps(repo.repo_added, None)}")
+            #session.logger.info(f"date weight: {calculate_date_weight_from_timestamps(repo.repo_added, None)}")
             github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
         except Exception as e:
             pr_issue_count = None

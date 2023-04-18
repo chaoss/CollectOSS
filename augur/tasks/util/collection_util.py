@@ -397,3 +397,17 @@ class AugurTaskRoutine:
             #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
             yield repo_git, task_id
 
+def start_block_of_repos(logger,session,condition,limit,phases,hook="core",sort=None):
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,condition,limit,order=sort)
+
+    logger.info(f"Starting new collection on {hook}: {len(repo_git_identifiers)} repos")
+    if len(repo_git_identifiers) == 0:
+        return 0
+    
+    logger.info(f"Collection starting for {hook}: {tuple(repo_git_identifiers)}")
+
+    routine = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=phases,collection_hook=hook)
+
+    routine.start_data_collection()
+
+    return len(repo_git_identifiers)
