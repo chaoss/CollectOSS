@@ -41,7 +41,7 @@ def unsupported_method(error):
 @app.errorhandler(500)
 def internal_server_error(error):
     if AUGUR_API_VERSION in str(request.path):
-        return jsonify({"status": error}), 500
+        return jsonify({"status": error.original_exception}), 500
     error = error.original_exception
     try:
         errout = StringIO()
@@ -51,10 +51,8 @@ def internal_server_error(error):
         errout.close()
     except Exception as e:
         logger.error(e)
-
-    logger.info(stacktrace)
     
-    return render_message("500 - Internal Server Error", "An error occurred while trying to service your request. Please try again, and if the issue persists, please file a GitHub issue with the below error message:", error=stacktrace, rows=stacktrace.count('\n'))
+    return render_message("500 - Internal Server Error", "An error occurred while trying to service your request. Please try again, and if the issue persists, please file a GitHub issue with the below error message:", error=stacktrace), 500
 
 @login_manager.unauthorized_handler
 def unauthorized():

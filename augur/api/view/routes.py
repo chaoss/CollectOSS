@@ -92,7 +92,6 @@ card:
 """
 @app.route('/repos/views/card')
 def repo_card_view():
-    raise Exception("Test")
     query = request.args.get('q')
     if current_user.is_authenticated:
         count = current_user.get_repo_count()[0]
@@ -302,6 +301,10 @@ def user_group_view():
 
     # return renderRepos("table", None, data, sort, rev, params.get("page"), True)
     return render_module("user-group-repos-table", title="Repos", repos=data, query_key=None, activePage=params["page"], pages=page_count, offset=pagination_offset, PS="user_group_view", reverse = rev, sorting = params.get("sort"), group=group)
+
+@app.route('/error')
+def throw_exception():
+    raise Exception("This Exception intentionally raised")
 
 """ ----------------------------------------------------------------
 Admin dashboard:
