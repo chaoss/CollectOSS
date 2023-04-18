@@ -443,21 +443,7 @@ def order_repos(repos):
 
     return repo_git_urls
 
-@cli.command('reset-repo-age')
-@test_connection
-@test_db_connection
-def reset_repo_age():
-    
-    logger.info("resetting collection age on all repositories")
 
-    with DatabaseSession(logger) as session:
-        update_query = (
-            update(Repo)
-            .values(repo_added=datetime.now())
-        )
-
-        session.execute(update_query)
-        session.commit()
 
 # def initialize_components(augur_app, disable_housekeeper):
 #     master = None

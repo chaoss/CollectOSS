@@ -456,3 +456,20 @@ def check_pgpass_credentials(config):
             pgpass_file.write(credentials_string + "\n")
         else:
             print("Credentials found in $HOME/.pgpass")
+
+
+@cli.command('reset-repo-age')
+@test_connection
+@test_db_connection
+def reset_repo_age():
+    
+    logger.info("resetting collection age on all repositories")
+
+    with DatabaseSession(logger) as session:
+        update_query = (
+            update(Repo)
+            .values(repo_added=datetime.now())
+        )
+
+        session.execute(update_query)
+        session.commit()

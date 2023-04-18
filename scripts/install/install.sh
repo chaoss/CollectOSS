@@ -88,7 +88,7 @@ scripts/install/config.sh $target
 # scripts/install/api_key.sh
 
 augur db check-pgpass
-
+augur db reset-repo-age
 
 echo "**********************************"
 echo "***** INSTALLATION COMPLETE *****"
