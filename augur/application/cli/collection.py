@@ -36,8 +36,6 @@ import sqlalchemy as s
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
 
-def get_page_count()
-
 
 def check_collection(owner, repo, key_manager, session):
 

@@ -20,7 +20,7 @@ platform_id = 1
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
-def collect_pull_requests(repo_git: str) -> None:
+def collect_pull_requests(repo_git: str) -> int:
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
@@ -36,8 +36,11 @@ def collect_pull_requests(repo_git: str) -> None:
 
         if pr_data:
             process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+
+            return len(pr_data)
         else:
             logger.info(f"{owner}/{repo} has no pull requests")
+            return 0
         
     
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers

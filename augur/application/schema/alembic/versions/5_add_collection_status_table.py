@@ -36,12 +36,7 @@ def upgrade():
 
     # add collection status for any existing repos
     conn = op.get_bind()
-    repos = conn.execute(text("""SELECT repo_id from repo""")).fetchall()
-
-    for repo in repos:
-        repo_id = repo[0]
-        conn.execute(text(f"""INSERT INTO "augur_operations"."collection_status" ("repo_id") VALUES ({repo_id});"""))
-
+    
     conn.execute(text("""
         UPDATE augur_operations.config
         SET value = '600'

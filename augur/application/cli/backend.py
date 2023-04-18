@@ -16,8 +16,7 @@ from celery import chain, signature, group
 import uuid
 import traceback
 from urllib.parse import urlparse
-from sqlalchemy import update
-
+from datetime import datetime
 
 from augur import instance_id
 from augur.tasks.start_tasks import augur_collection_monitor, CollectionState
@@ -187,12 +186,14 @@ def augur_stop(signal, logger):
     """
 
     augur_processes = get_augur_processes()
-    _broadcast_signal_to_processes(augur_processes, broadcast_signal=signal, given_logger=logger)
-
     # if celery is running, run the cleanup function
     process_names = [process.name() for process in augur_processes]
+
+    _broadcast_signal_to_processes(augur_processes, broadcast_signal=signal, given_logger=logger)
+
     if "celery" in process_names:
         cleanup_after_collection_halt(logger)
+
 
 def cleanup_after_collection_halt(logger):
     clear_redis_caches()
@@ -440,6 +441,8 @@ def order_repos(repos):
     repo_git_urls = [repos[index] for index in ordered_index_ints]
 
     return repo_git_urls
+
+
 
 # def initialize_components(augur_app, disable_housekeeper):
 #     master = None

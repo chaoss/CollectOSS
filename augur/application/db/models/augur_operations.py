@@ -10,11 +10,13 @@ from typing import List, Any, Dict
 
 import logging 
 import secrets
+import traceback
 import importlib
 
 from augur.application.db.models import Repo, RepoGroup
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models.base import Base
+
 
 
 FRONTEND_REPO_GROUP_NAME = "Frontend Repos"
@@ -1009,14 +1011,48 @@ class CollectionStatus(Base):
     facade_status = Column(String,nullable=False, server_default=text("'Pending'"))
     facade_data_last_collected = Column(TIMESTAMP)
     facade_task_id = Column(String)
+
+    core_weight = Column(BigInteger)
+    facade_weight = Column(BigInteger)
+    secondary_weight = Column(BigInteger)
+
+    issue_pr_sum = Column(BigInteger)
+    commit_sum = Column(BigInteger)
     
     repo = relationship("Repo", back_populates="collection_status")
 
     @staticmethod
     def insert(session, repo_id):
+        from augur.tasks.github.util.util import get_repo_weight_by_issue
+        from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
+
+        repo = Repo.get_by_id(session, repo_id)
+        repo_git = repo.repo_git
 
         collection_status_unique = ["repo_id"]
-        result = session.insert_data({"repo_id": repo_id}, CollectionStatus, collection_status_unique, on_conflict_update=False)
+
+        try:
+            pr_issue_count = get_repo_weight_by_issue(session.logger, repo_git)
+            #session.logger.info(f"date weight: {calculate_date_weight_from_timestamps(repo.repo_added, None)}")
+            github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
+        except Exception as e:
+            pr_issue_count = None
+            github_weight = None
+            session.logger.error(
+                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
+
+        
+        record = {
+            "repo_id": repo_id,
+            "issue_pr_sum": pr_issue_count,
+            "core_weight": github_weight,
+            "secondary_weight": github_weight
+        }
+
+        result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)
+
+        session.logger.info(f"Trying to insert repo \n issue and pr sum: {record['issue_pr_sum']}")
+
         if not result:
             return False
 

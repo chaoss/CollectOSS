@@ -24,10 +24,13 @@ from celery.signals import after_setup_logger
 from datetime import timedelta
 import sqlalchemy as s
 
+from sqlalchemy import or_, and_, update
 
 from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
+from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_facade_weight_time_factor, get_repo_commit_count
+
 from augur.tasks.github.facade_github.tasks import *
 
 from augur.tasks.util.worker_util import create_grouped_task_load
@@ -347,6 +350,31 @@ def git_repo_initialize_facade_task(repo_git):
 #    with FacadeSession(logger) as session:
 #        check_for_repo_updates(session, repo_git)
 
+@celery.task
+def git_update_commit_count_weight(repo_git):
+
+    from augur.tasks.init.celery_app import engine
+    logger = logging.getLogger(git_update_commit_count_weight.__name__)
+    
+    with FacadeSession(logger) as session:
+        commit_count = get_repo_commit_count(session, repo_git)
+        date_factor = get_facade_weight_time_factor(session, repo_git)
+    
+    weight = commit_count - date_factor
+    logger.info(f"Repo {repo_git} has a weight of {weight} and a commit count of {commit_count}")
+
+    with DatabaseSession(logger,engine=engine) as session:
+        repo = Repo.get_by_repo_git(session, repo_git)
+
+        update_query = (
+            update(CollectionStatus)
+            .where(CollectionStatus.repo_id == repo.repo_id)
+            .values(facade_weight=weight,commit_sum=commit_count)
+        )
+
+        session.execute(update_query)
+        session.commit()
+
 
 @celery.task
 def git_repo_updates_facade_task(repo_git):
@@ -460,7 +488,9 @@ def facade_clone_update_phase(repo_git):
 
         if not limited_run or (limited_run and pull_repos):
             facade_sequence.append(git_repo_updates_facade_task.si(repo_git))
-                
+        
+        facade_sequence.append(git_update_commit_count_weight.si(repo_git))
+
         return chain(*facade_sequence)
 
 
@@ -507,7 +537,8 @@ def facade_phase(repo_git):
             group(
                 chain(*facade_core_collection),
                 process_dependency_metrics.si(repo_git),
-                process_libyear_dependency_metrics.si(repo_git)
+                process_libyear_dependency_metrics.si(repo_git),
+                git_update_commit_count_weight.si(repo_git)
             )
         )
 
