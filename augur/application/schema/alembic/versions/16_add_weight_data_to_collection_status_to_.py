@@ -36,4 +36,8 @@ def downgrade():
     op.create_foreign_key('collection_status_repo_id_fk', 'collection_status', 'repo', ['repo_id'], ['repo_id'], source_schema='augur_operations')
     op.drop_column('collection_status', 'facade_weight', schema='augur_operations')
     op.drop_column('collection_status', 'core_weight', schema='augur_operations')
+    op.drop_column('collection_status', 'secondary_weight', schema='augur_operations')
+
+    op.drop_column('collection_status', 'issue_pr_sum', schema='augur_operations')
+    op.drop_column('collection_status', 'commit_sum', schema='augur_operations')
     # ### end Alembic commands ###
