@@ -29,7 +29,7 @@ from sqlalchemy import or_, and_, update
 from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
-from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_repo_weight_by_commit
+from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_facade_weight_time_factor, get_repo_commit_count
 
 from augur.tasks.github.facade_github.tasks import *
 
@@ -355,10 +355,13 @@ def git_update_commit_count_weight(repo_git):
 
     from augur.tasks.init.celery_app import engine
     logger = logging.getLogger(git_update_commit_count_weight.__name__)
-
-    weight = get_repo_weight_by_commit(logger,repo_git)
-
-    logger.info(f"Repo {repo_git} has a weight of {weight}")
+    
+    with FacadeSession(logger) as session:
+        commit_count = get_repo_commit_count(session, repo_git)
+        date_factor = get_facade_weight_time_factor(session, repo_git)
+    
+    weight = commit_count - date_factor
+    logger.info(f"Repo {repo_git} has a weight of {weight} and a commit count of {commit_count}")
 
     with DatabaseSession(logger,engine=engine) as session:
         repo = Repo.get_by_repo_git(session, repo_git)
@@ -366,7 +369,7 @@ def git_update_commit_count_weight(repo_git):
         update_query = (
             update(CollectionStatus)
             .where(CollectionStatus.repo_id == repo.repo_id)
-            .values(facade_weight=weight)
+            .values(facade_weight=weight,commit_sum=commit_count)
         )
 
         session.execute(update_query)

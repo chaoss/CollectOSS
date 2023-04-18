@@ -17,7 +17,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
 from augur.application.config import AugurConfig
-from augur.tasks.github.util.util import get_owner_repo, get_repo_weight_core, calculate_date_weight_from_timestamps, get_repo_weight_by_issue
+from augur.tasks.github.util.util import get_owner_repo, get_repo_weight_core, get_repo_weight_by_issue
 from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
@@ -153,8 +153,6 @@ def core_task_update_weight_util(issue_and_pr_nums,repo_git=None):
             weight = sum(issue_and_pr_nums)#get_repo_weight_core(logger,repo_git)
 
             weight -= calculate_date_weight_from_timestamps(repo.repo_added, status.core_data_last_collected)
-
-            weight = max(0,weight)
         except Exception as e:
             logger.error(f"{e}")
             weight = None
@@ -170,7 +168,7 @@ def core_task_update_weight_util(issue_and_pr_nums,repo_git=None):
         update_query = (
             update(CollectionStatus)
             .where(CollectionStatus.repo_id == repo.repo_id)
-            .values(core_weight=weight)
+            .values(core_weight=weight,issue_pr_sum=sum(issue_and_pr_nums))
         )
 
         session.execute(update_query)

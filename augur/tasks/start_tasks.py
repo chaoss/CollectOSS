@@ -230,7 +230,7 @@ def start_secondary_collection(session,max_repo):
 
     limit = max_repo-active_repo_count
 
-    secondary_order = CollectionStatus.core_weight
+    secondary_order = CollectionStatus.secondary_weight
 
     repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(primary_collected,not_erroed, not_collecting),limit,order=secondary_order)
 

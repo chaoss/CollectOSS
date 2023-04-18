@@ -1023,8 +1023,8 @@ class CollectionStatus(Base):
 
     @staticmethod
     def insert(session, repo_id):
-        from augur.tasks.github.util.util import get_repo_weight_core
-
+        from augur.tasks.github.util.util import get_repo_weight_by_issue
+        from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
         repo = Repo.get_by_id(session, repo_id)
         repo_git = repo.repo_git
@@ -1032,16 +1032,23 @@ class CollectionStatus(Base):
         collection_status_unique = ["repo_id"]
 
         try:
-            core_weight = get_repo_weight_core(session.logger, repo_git)
+            pr_issue_count = get_repo_weight_by_issue(session.logger, repo_git)
         except Exception as e:
-            core_weight = None
+            pr_issue_count = None
             session.logger.error(
                     ''.join(traceback.format_exception(None, e, e.__traceback__)))
 
-        record = {"repo_id": repo_id, "core_weight": core_weight}
+        github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
+        record = {
+            "repo_id": repo_id,
+            "issue_pr_sum": pr_issue_count,
+            "core_weight": github_weight,
+            "secondary_weight": github_weight
+        }
+
         result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)
 
-        session.logger.info(f"Trying to insert repo \n core weight: {record['core_weight']}")
+        session.logger.info(f"Trying to insert repo \n issue and pr sum: {record['issue_pr_sum']}")
 
         if not result:
             return False
