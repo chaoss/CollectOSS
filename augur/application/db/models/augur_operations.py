@@ -1014,6 +1014,10 @@ class CollectionStatus(Base):
 
     core_weight = Column(BigInteger)
     facade_weight = Column(BigInteger)
+    secondary_weight = Column(BigInteger)
+
+    issue_pr_sum = Column(BigInteger)
+    commit_sum = Column(BigInteger)
     
     repo = relationship("Repo", back_populates="collection_status")
 
