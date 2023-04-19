@@ -221,7 +221,7 @@ def clear_redis_caches():
     redis_connection.flushdb()
 
 def clear_all_message_queues(connection_string):
-    queues = ['celery','secondary','scheduling']
+    queues = ['celery','secondary','scheduling','facade']
 
     virtual_host_string = connection_string.split("/")[-1]
 
