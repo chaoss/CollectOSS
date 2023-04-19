@@ -79,14 +79,13 @@ def start(disable_collection, development, port):
     except FileNotFoundError:
         logger.error("\n\nPlease run augur commands in the root directory\n\n")
 
-    db_session = DatabaseSession(logger)
-    config = AugurConfig(logger, db_session)
-    host = config.get_value("Server", "host")
+    with DatabaseSession(logger) as db_session:
+        config = AugurConfig(logger, db_session)
+        host = config.get_value("Server", "host")
 
-    if not port:
-        port = config.get_value("Server", "port")
+        if not port:
+            port = config.get_value("Server", "port")
         
-    db_session.invalidate()
 
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app"
     server = subprocess.Popen(gunicorn_command.split(" "))
