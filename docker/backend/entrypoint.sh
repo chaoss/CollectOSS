@@ -33,7 +33,9 @@ else
     export redis_conn_string=$REDIS_CONN_STRING
 fi
 
-./scripts/install/config.sh $target
+if [ ! -v AUGUR_NO_CONFIG ]; then
+	./scripts/install/config.sh $target
+fi
 
 if [[ -f /repo_groups.csv ]]; then
     augur db add-repo-groups /repo_groups.csv
