@@ -48,20 +48,20 @@ def upgrade():
     op.create_check_constraint(
         constraint_name="facade_data_last_collected_check",
         table_name="collection_status",
-        condition="(facade_status = 'Error') OR "
+        condition="(facade_status IN ('Error','Collecting')) OR "
         "(facade_data_last_collected IS NOT NULL AND facade_status IN ('Success', 'Update')) OR "
-        "(facade_data_last_collected IS NULL AND facade_status = 'Pending')"
+        "(facade_data_last_collected IS NULL AND facade_status IN ('Pending','Initializing'))"
     )
     op.create_check_constraint(
         constraint_name="facade_task_id_check",
         table_name="collection_status",
         condition="(facade_task_id IS NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone')) OR "
-        "(facade_task_id IS NOT NULL AND facade_status = 'Collecting')"
+        "(facade_task_id IS NOT NULL AND facade_status IN ('Collecting','Initializing'))"
     )
     op.create_check_constraint(
         constraint_name="core_secondary_dependency_check",
         table_name="collection_status",
-        condition="(core_status = 'Success') OR "
+        condition="(core_status IN ('Success','Collecting')) OR "
         "(core_status IN ('Pending', 'Collecting', 'Error') AND secondary_status = 'Pending')"
     )
 

@@ -1022,18 +1022,18 @@ class CollectionStatus(Base):
         ),
         CheckConstraint(
             "(facade_data_last_collected IS NOT NULL AND facade_status IN ('Success', 'Update')) OR "
-            "(facade_data_last_collected IS NULL AND facade_status = 'Pending') OR "
+            "(facade_data_last_collected IS NULL AND facade_status IN ('Pending','Initializing')) OR "
             "(facade_status = 'Error') OR "
             "(facade_status = 'Collecting')",
             name='facade_data_last_collected_check'
         ),
         CheckConstraint(
             "(facade_task_id IS NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone')) OR "
-            "(facade_task_id IS NOT NULL AND facade_status = 'Collecting')",
+            "(facade_task_id IS NOT NULL AND facade_status IN ('Collecting','Initializing'))",
             name='facade_task_id_check'
         ),
         CheckConstraint(
-            "(core_status = 'Success') OR "
+            "(core_status IN ('Success','Collecting')) OR "
             "(core_status IN ('Pending', 'Collecting', 'Error') AND secondary_status = 'Pending')",
             name='core_secondary_dependency_check'
         ),
