@@ -1,7 +1,6 @@
 from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash
 from flask_login import current_user, login_required
 from augur.application.db.models import Repo
-# from augur.util.repo_load_controller import parse_org_url, parse_repo_url
 from .utils import *
 from ..server import app, db_session
 
