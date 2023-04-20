@@ -1017,8 +1017,8 @@ class CollectionStatus(Base):
             name='secondary_task_id_check'
         ),
         CheckConstraint(
-            "NOT (facade_data_last_collected IS NOT NULL AND facade_status IN ('Success', 'Update')) AND"
-            "NOT (facade_data_last_collected IS NULL AND facade_status IN ('Pending','Initializing'))",
+            "NOT (facade_data_last_collected IS NULL AND facade_status  = 'Success' ) AND"
+            "NOT (facade_data_last_collected IS NOT NULL AND facade_status IN ('Pending','Initializing'))",
             name='facade_data_last_collected_check'
         ),
         CheckConstraint(
