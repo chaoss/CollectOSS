@@ -105,12 +105,14 @@ def start(disable_collection, development, port):
             os.remove("celerybeat-schedule.db")
 
         scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=60 -n core:{uuid.uuid4().hex}@%h"
+        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=45 -n core:{uuid.uuid4().hex}@%h"
         secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=10 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
-        
+        facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=15 -n facade:{uuid.uuid4().hex}@%h -Q facade"
+
         scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
         core_worker_process = subprocess.Popen(core_worker.split(" "))
         secondary_worker_process = subprocess.Popen(secondary_worker.split(" "))
+        facade_worker_process = subprocess.Popen(facade_worker.split(" "))
 
         time.sleep(5)
 
@@ -147,6 +149,10 @@ def start(disable_collection, development, port):
         if secondary_worker_process:
             logger.info("Shutting down celery process: secondary")
             secondary_worker_process.terminate()
+        
+        if facade_worker_process:
+            logger.info("Shutting down celery process: facade")
+            facade_worker_process,terminate()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
@@ -214,7 +220,7 @@ def clear_redis_caches():
     redis_connection.flushdb()
 
 def clear_all_message_queues(connection_string):
-    queues = ['celery','secondary','scheduling']
+    queues = ['celery','secondary','scheduling','facade']
 
     virtual_host_string = connection_string.split("/")[-1]
 
