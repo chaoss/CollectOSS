@@ -38,7 +38,7 @@ import xlsxwriter
 import configparser
 import sqlalchemy as s
 from augur.application.db.util import execute_session_query
-from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_absolute_repo_path
+from .utilitymethods import get_absolute_repo_path
 from augur.application.db.models import *
 
 #Will delete repos passed and cleanup associated commit data.
