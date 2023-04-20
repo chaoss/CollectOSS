@@ -5,7 +5,6 @@ import numpy as np
 import warnings
 import datetime
 import pandas as pd
-import json
 from math import pi
 from flask import request, send_file, Response
 

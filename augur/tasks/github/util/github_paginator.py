@@ -134,6 +134,12 @@ def process_dict_response(logger: logging.Logger, response: httpx.Response, page
                 logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
                 time.sleep(key_reset_time)
                 return GithubApiResult.RATE_LIMIT_EXCEEDED
+            
+            err_type = error.get('type')
+
+            if err_type and 'NOT_FOUND' in err_type:
+                return GithubApiResult.REPO_NOT_FOUND
+
 
     return GithubApiResult.NEW_RESULT
 

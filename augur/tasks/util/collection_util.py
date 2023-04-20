@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import List
 import time
 import logging
-import json
 import os
 from enum import Enum
 import math
@@ -11,18 +10,19 @@ import datetime
 #from celery.result import AsyncResult
 from celery import signature
 from celery import group, chain, chord, signature
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, update
 from augur.application.logs import AugurLogger
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
 from augur.application.config import AugurConfig
-from augur.tasks.github.util.util import get_owner_repo
+from augur.tasks.github.util.util import get_owner_repo, get_repo_weight_core, get_repo_weight_by_issue
 from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.application.db.session import DatabaseSession
-from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_repo_weight_by_commit
+from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
+
 
 # class syntax
 class CollectionState(Enum):
@@ -46,8 +46,12 @@ def get_enabled_phase_names_from_config(logger, session):
 
 #Query db for CollectionStatus records that fit the desired condition.
 #Used to get CollectionStatus for differant collection hooks
-def get_collection_status_repo_git_from_filter(session,filter_condition,limit):
-    repo_status_list = session.query(CollectionStatus).filter(filter_condition).limit(limit).all()
+def get_collection_status_repo_git_from_filter(session,filter_condition,limit,order=None):
+
+    if order is not None:
+        repo_status_list = session.query(CollectionStatus).order_by(order).filter(filter_condition).limit(limit).all()
+    else:
+        repo_status_list = session.query(CollectionStatus).filter(filter_condition).limit(limit).all()
 
     return [status.repo.repo_git for status in repo_status_list]
 
@@ -131,42 +135,55 @@ def core_task_success_util(repo_git):
 
         session.commit()
 
-def date_weight_factor(days_since_last_collection):
-    return (days_since_last_collection ** 3) / 25
+def update_repo_core_weight(logger,session,repo_git,raw_sum):
+    repo = Repo.get_by_repo_git(session, repo_git)
+    status = repo.collection_status[0]
+
+    try: 
+        weight = raw_sum#get_repo_weight_core(logger,repo_git)
+
+        weight -= calculate_date_weight_from_timestamps(repo.repo_added, status.core_data_last_collected)
+
+        secondary_tasks_weight = raw_sum - calculate_date_weight_from_timestamps(repo.repo_added, status.secondary_data_last_collected)
+    except Exception as e:
+        logger.error(f"{e}")
+        weight = None
+        secondary_tasks_weight = None
+
+    logger.info(f"Repo {repo_git} has a weight of {weight}")
+
+    logger.info(f"Args: {raw_sum} , {repo_git}")
+
+    if weight is None:
+        return
 
 
-def get_repo_weight_by_issue(logger,repo_git,days_since_last_collection):
+    update_query = (
+        update(CollectionStatus)
+        .where(CollectionStatus.repo_id == repo.repo_id)
+        .values(core_weight=weight,issue_pr_sum=raw_sum,secondary_weight=secondary_tasks_weight)
+    )
+
+    session.execute(update_query)
+    session.commit()
 
 
-    owner,name = get_owner_repo(repo_git)
 
-    with GithubTaskManifest(logger) as manifest:
-        repo_graphql = GitHubRepoGraphql(logger, manifest.key_auth, owner, name)
-        number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
-    
-    return number_of_issues_and_prs - date_weight_factor(days_since_last_collection)
-
-
-#Get the weight for each repo for the core collection hook
-def get_repo_weight_core(logger,repo_git):
+#This task updates the weight with the issues and prs already passed in
+@celery.task
+def core_task_update_weight_util(issue_and_pr_nums,repo_git=None,session=None):
     from augur.tasks.init.celery_app import engine
+    logger = logging.getLogger(core_task_update_weight_util.__name__)
 
-    with DatabaseSession(logger,engine) as session:
-        repo = Repo.get_by_repo_git(session, repo_git)
-        if not repo:
-            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
+    if repo_git is None:
+        return
+    
+    if session is not None:
+        update_repo_core_weight(logger, session, repo_git, sum(issue_and_pr_nums))
+    else:
+        with DatabaseSession(logger,engine=engine) as session:
+            update_repo_core_weight(logger,session,repo_git,sum(issue_and_pr_nums))
 
-        status = repo.collection_status[0]
-
-        last_collected = status.core_data_last_collected
-
-        if last_collected:
-            time_delta = datetime.datetime.now() - last_collected
-            days = time_delta.days
-        else:
-            days = 0
-
-        return get_repo_weight_by_issue(logger, repo_git, days)
 
 
 @celery.task
@@ -237,24 +254,7 @@ def facade_task_success_util(repo_git):
 
         session.commit()
 
-def get_repo_weight_facade(logger,repo_git):
-    from augur.tasks.init.celery_app import engine
 
-    with DatabaseSession(logger,engine) as session:
-        repo = Repo.get_by_repo_git(session, repo_git)
-        if not repo:
-            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
-
-        status = repo.collection_status[0]
-        last_collected = status.facade_data_last_collected
-
-        if last_collected:
-            time_delta = datetime.datetime.now() - last_collected
-            days = time_delta.days
-        else:
-            days = 0
-
-        return get_repo_weight_by_commit(logger, repo_git, days)
 
 
 @celery.task
@@ -337,7 +337,7 @@ class AugurTaskRoutine:
         session: Database session to use
     """
     def __init__(self,session,repos: List[str]=[],collection_phases: List=[],collection_hook: str="core"):
-        self.logger = AugurLogger("data_collection_jobs").get_logger()
+        self.logger = session.logger
         #self.session = TaskSession(self.logger)
         self.collection_phases = collection_phases
         #self.disabled_collection_tasks = disabled_collection_tasks
@@ -377,8 +377,8 @@ class AugurTaskRoutine:
         
         for repo_git in self.repos:
 
-            repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
-            repo_id = repo.repo_id
+            #repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
+            #repo_id = repo.repo_id
 
             augur_collection_sequence = []
             for job in self.collection_phases:
@@ -391,98 +391,22 @@ class AugurTaskRoutine:
             augur_collection_chain = chain(*augur_collection_sequence)
             task_id = augur_collection_chain.apply_async(link_error=task_failed_util.s()).task_id
 
-            self.logger.info(f"Setting repo_id {repo_id} to collecting for repo: {repo_git}")
+            self.logger.info(f"Setting repo {self.collection_hook} status to collecting for repo: {repo_git}")
 
             #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
             yield repo_git, task_id
 
+def start_block_of_repos(logger,session,condition,limit,phases,hook="core",sort=None):
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,condition,limit,order=sort)
 
-class AugurWeightedTaskRoutine(AugurTaskRoutine):
-    """
-        class to keep track of various groups of collection tasks for a group of repos.
-        Intermediate class that takes into account relative weights of repos and stops after
-        a set limit of repos limited by their size.
-
-
-    Attributes:
-        logger (Logger): Get logger from AugurLogger
-        repos (List[str]): List of repo_ids to run collection on.
-        collection_phases (List[str]): List of phases to run in augur collection.
-        collection_hook (str): String determining the attributes to update when collection for a repo starts. e.g. core
-        session: Database session to use
-        total_repo_weight (AugurCollectionTotalRepoWeight): object that allows repo objects and repo_git strings to be subtracted from it
-    """
-    def __init__(self,session,repos: List[str]=[],collection_phases: List[str]=[],collection_hook: str="core",total_repo_weight=10000):
-        
-        #Define superclass vars
-        super().__init__(session,repos=repos,collection_phases=collection_phases,collection_hook=collection_hook)
-
-        #Define Total repo weight
-        if collection_hook == "core":
-            #Core collection hook has a repo weight of 
-            self.total_repo_weight = AugurCollectionTotalRepoWeight(total_repo_weight)
-        elif collection_hook == "secondary":
-            self.total_repo_weight = AugurCollectionTotalRepoWeight(total_repo_weight,weight_calculation=get_repo_weight_secondary)
-        elif collection_hook == "facade":
-            self.total_repo_weight = AugurCollectionTotalRepoWeight(total_repo_weight,weight_calculation=get_repo_weight_facade)
+    logger.info(f"Starting new collection on {hook}: {len(repo_git_identifiers)} repos")
+    if len(repo_git_identifiers) == 0:
+        return 0
     
+    logger.info(f"Collection starting for {hook}: {tuple(repo_git_identifiers)}")
 
-    #Overwrite super method
-    #now returns resulting weight after either reaching zero or 
-    #scheduling all repos assigned to the object.
-    def start_data_collection(self):
-        super().start_data_collection()
+    routine = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=phases,collection_hook=hook)
 
-        return self.total_repo_weight.value
+    routine.start_data_collection()
 
-    def send_messages(self):
-        augur_collection_list = []
-        
-        for repo_git in self.repos:
-            #Check total repo weight
-            if self.total_repo_weight.value == 0:
-                break
-            
-            #Subtract repo's weight
-            self.total_repo_weight = self.total_repo_weight - repo_git
-
-            repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
-            repo_id = repo.repo_id
-
-            augur_collection_sequence = []
-            for job in self.collection_phases:
-                #Add the phase to the sequence in order as a celery task.
-                #The preliminary task creates the larger task chain 
-                augur_collection_sequence.append(job(repo_git))
-
-            #augur_collection_sequence.append(core_task_success_util.si(repo_git))
-            #Link all phases in a chain and send to celery
-            augur_collection_chain = chain(*augur_collection_sequence)
-            task_id = augur_collection_chain.apply_async(link_error=task_failed_util.s()).task_id
-
-            self.logger.info(f"Setting repo_id {repo_id} to collecting for repo: {repo_git}")
-
-            #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
-            yield repo_git, task_id
-
-if __name__ == "__main__":
-    #Examples of using AugurCollectionTotalRepoWeight
-    weight = AugurCollectionTotalRepoWeight(10000)
-    print(f"Weight value: {weight.value}")
-
-    #Apply subtraction operation with string
-    weight = weight - "https://github.com/chaoss/augur"
-    print(f"Weight value: {weight.value}")
-
-    #Apply subtraction operation with orm object
-    with DatabaseSession(logging.getLogger()) as session:
-        repo = Repo.get_by_repo_git(session, 'https://github.com/operate-first/blueprint')
-        weight = weight - repo
-    
-    print(f"Weight value: {weight.value}")
-
-    #Use commit count instead of issues and pr count
-    commitWeight = AugurCollectionTotalRepoWeight(100000,weight_calculation=get_repo_weight_facade)
-    print(f"commit weight value: {commitWeight.value}")
-    #commitWeight = commitWeight - "https://github.com/eclipse/che-theia-activity-tracker"
-    #print(f"commit weight value: {commitWeight.value}")
+    return len(repo_git_identifiers)

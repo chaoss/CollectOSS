@@ -1,8 +1,9 @@
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify
 from flask_login import LoginManager, current_user, login_required
+from io import StringIO
 from .utils import *
-from .url_converters import *
 from .init import logger
+from .url_converters import *
 
 from functools import wraps
 
@@ -12,7 +13,7 @@ from augur.application.db.models import User, UserSessionToken
 from augur.api.routes import AUGUR_API_VERSION
 from augur.api.util import get_bearer_token
 
-import time
+import time, traceback
 
 login_manager = LoginManager()
 
@@ -45,6 +46,22 @@ def forbidden(error):
         return jsonify({"status": "Forbidden"}), 403
     
     return render_message("403 - Forbidden", "You do not have permission to view this page"), 403
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    if AUGUR_API_VERSION in str(request.path):
+        return jsonify({"status": error.original_exception}), 500
+    error = error.original_exception
+    try:
+        errout = StringIO()
+        traceback.print_tb(error.__traceback__, file=errout)
+        # traceback.print_exception(error, file=errout)
+        stacktrace = errout.getvalue()
+        errout.close()
+    except Exception as e:
+        logger.error(e)
+    
+    return render_message("500 - Internal Server Error", "An error occurred while trying to service your request. Please try again, and if the issue persists, please file a GitHub issue with the below error message:", error=stacktrace), 500
 
 @login_manager.unauthorized_handler
 def unauthorized():

@@ -303,6 +303,10 @@ def user_group_view():
     # return renderRepos("table", None, data, sort, rev, params.get("page"), True)
     return render_module("user-group-repos-table", title="Repos", repos=data, query_key=None, activePage=params["page"], pages=page_count, offset=pagination_offset, PS="user_group_view", reverse = rev, sorting = params.get("sort"), group=group)
 
+@app.route('/error')
+def throw_exception():
+    raise Exception("This Exception intentionally raised")
+
 """ ----------------------------------------------------------------
 Admin dashboard:
     View the admin dashboard.

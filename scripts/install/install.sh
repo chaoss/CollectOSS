@@ -89,7 +89,6 @@ scripts/install/config.sh $target
 
 augur db check-pgpass
 
-
 echo "**********************************"
 echo "***** INSTALLATION COMPLETE *****"
 echo "**********************************"
