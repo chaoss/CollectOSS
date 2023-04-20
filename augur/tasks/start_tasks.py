@@ -417,3 +417,17 @@ def augur_collection_update_weights():
             session.commit()
             #git_update_commit_count_weight(repo_git)
 
+@celery.task
+def create_collection_status_records():
+    from augur.tasks.init.celery_app import engine
+    logger = logging.getLogger(create_collection_status_records.__name__)
+
+    with DatabaseSession(logger,engine) as session:
+        query = s.sql.text("""
+        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.collection_status)
+        """)
+
+        repos = session.execute_sql(query).fetchall()
+
+        for repo in repos:
+            CollectionStatus.insert(session,repo[0])
