@@ -1,7 +1,6 @@
 #SPDX-License-Identifier: MIT
 
 import sys
-import json
 import time
 import traceback
 import logging

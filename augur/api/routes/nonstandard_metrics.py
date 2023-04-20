@@ -2,7 +2,6 @@
 import base64
 import sqlalchemy as s
 import pandas as pd
-import json
 from flask import Response
 
 from augur.api.metrics.repo_meta import license_files
