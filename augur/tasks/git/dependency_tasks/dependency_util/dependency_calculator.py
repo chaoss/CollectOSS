@@ -56,6 +56,9 @@ def get_language_deps(path, language, name,logger):
 		except IsADirectoryError as e:
 			logger.error(f"Given file's path is a directory!\n file: {f}\n path: {path}\n Error: {e}")
 			return []
+		except FileNotFoundError as e:
+			logger.error(f"Given file not found!\n file: {f}\n path: {path}\n Error: {e}")
+			return []
 
 		if f_deps is None:
 			continue
