@@ -435,7 +435,7 @@ class User(Base):
 
         return result
 
-    def remove_repo(self, session, group_name, repo_id):
+    def remove_repo(self, group_name, repo_id):
 
         with DatabaseSession(logger) as session:
             result = UserRepo.delete(session, repo_id, self.user_id, group_name)
