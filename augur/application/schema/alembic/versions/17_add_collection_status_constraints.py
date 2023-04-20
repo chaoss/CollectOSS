@@ -32,8 +32,8 @@ def upgrade():
     op.create_check_constraint(
         constraint_name="secondary_data_last_collected_check",
         table_name="collection_status",
-        condition="NOT (secondary_data_last_collected IS NOT NULL AND secondary_status = 'Success') AND "
-        "NOT (secondary_data_last_collected IS NULL AND secondary_status = 'Pending')"
+        condition="NOT (secondary_data_last_collected IS NULL AND secondary_status = 'Success') AND "
+        "NOT (secondary_data_last_collected IS NOT NULL AND secondary_status = 'Pending')"
     )
     op.create_check_constraint(
         constraint_name="secondary_task_id_check",
