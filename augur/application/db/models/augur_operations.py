@@ -997,44 +997,38 @@ class CollectionStatus(Base):
     __tablename__ = "collection_status"
     __table_args__ = (
         CheckConstraint(
-            "(core_data_last_collected IS NOT NULL AND core_status = 'Success') OR "
-            "(core_data_last_collected IS NULL AND core_status = 'Pending') OR "
-            "(core_status = 'Error') OR "
-            "(core_status = 'Collecting')",
+            "NOT (core_data_last_collected IS NULL AND core_status = 'Success') AND "
+            "NOT (core_data_last_collected IS NOT NULL AND core_status = 'Pending')",
             name='core_data_last_collected_check'
         ),
         CheckConstraint(
-            "(core_task_id IS NULL AND core_status IN ('Pending', 'Success', 'Error')) OR "
-            "(core_task_id IS NOT NULL AND core_status = 'Collecting')",
+            "NOT (core_task_id IS NOT NULL AND core_status IN ('Pending', 'Success', 'Error')) AND "
+            "NOT (core_task_id IS NULL AND core_status = 'Collecting')",
             name='core_task_id_check'
         ),
         CheckConstraint(
-            "(secondary_data_last_collected IS NOT NULL AND secondary_status = 'Success') OR "
-            "(secondary_data_last_collected IS NULL AND secondary_status = 'Pending') OR"
-            "(secondary_status = 'Error') OR "
-            "(secondary_status = 'Collecting')",
+            "NOT (secondary_data_last_collected IS NOT NULL AND secondary_status = 'Success') AND "
+            "NOT (secondary_data_last_collected IS NULL AND secondary_status = 'Pending')",
             name='secondary_data_last_collected_check'
         ),
         CheckConstraint(
-            "(secondary_task_id IS NULL AND secondary_status IN ('Pending', 'Success', 'Error')) OR "
-            "(secondary_task_id IS NOT NULL AND secondary_status = 'Collecting')",
+            "NOT (secondary_task_id IS NOT NULL AND secondary_status IN ('Pending', 'Success', 'Error')) AND "
+            "NOT (secondary_task_id IS NULL AND secondary_status = 'Collecting')",
             name='secondary_task_id_check'
         ),
         CheckConstraint(
-            "(facade_data_last_collected IS NOT NULL AND facade_status IN ('Success', 'Update')) OR "
-            "(facade_data_last_collected IS NULL AND facade_status IN ('Pending','Initializing')) OR "
-            "(facade_status = 'Error') OR "
-            "(facade_status = 'Collecting')",
+            "NOT (facade_data_last_collected IS NOT NULL AND facade_status IN ('Success', 'Update')) AND"
+            "NOT (facade_data_last_collected IS NULL AND facade_status IN ('Pending','Initializing'))",
             name='facade_data_last_collected_check'
         ),
         CheckConstraint(
-            "(facade_task_id IS NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone')) OR "
-            "(facade_task_id IS NOT NULL AND facade_status IN ('Collecting','Initializing'))",
+            "NOT (facade_task_id IS NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone')) AND "
+            "NOT (facade_task_id IS NOT NULL AND facade_status IN ('Collecting','Initializing'))",
             name='facade_task_id_check'
         ),
         CheckConstraint(
-            "(core_status IN ('Success','Collecting')) OR "
-            "(core_status IN ('Pending', 'Collecting', 'Error') AND secondary_status = 'Pending')",
+            "NOT (core_status IN ('Success','Collecting')) AND "
+            "NOT (core_status IN ('Pending', 'Collecting', 'Error') AND secondary_status = 'Pending')",
             name='core_secondary_dependency_check'
         ),
         {"schema": "augur_operations"}
