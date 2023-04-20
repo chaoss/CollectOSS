@@ -108,6 +108,7 @@ def start(disable_collection, development, port):
             clean_collection_status(session)
         
         create_collection_status_records.si().apply_async()
+        time.sleep(3)
         augur_collection_monitor.si().apply_async()
 
         celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
