@@ -20,49 +20,44 @@ def upgrade():
     op.create_check_constraint(
         constraint_name="core_data_last_collected_check",
         table_name="collection_status",
-        condition="(core_status = 'Error') OR "
-        "(core_status = 'Collecting') OR "
-        "(core_data_last_collected IS NOT NULL AND core_status = 'Success') OR "
-        "(core_data_last_collected IS NULL AND core_status = 'Pending')"
+        condition="NOT (core_data_last_collected IS NULL AND core_status = 'Success') AND "
+        "NOT (core_data_last_collected IS NOT NULL AND core_status = 'Pending')"
     )
     op.create_check_constraint(
         constraint_name="core_task_id_check",
         table_name="collection_status",
-        condition="(core_task_id IS NULL AND core_status IN ('Pending', 'Success', 'Error')) OR "
-        "(core_task_id IS NOT NULL AND core_status = 'Collecting')"
+        condition="NOT (core_task_id IS NOT NULL AND core_status IN ('Pending', 'Success', 'Error')) AND "
+        "NOT (core_task_id IS NULL AND core_status = 'Collecting')"
     )
     op.create_check_constraint(
         constraint_name="secondary_data_last_collected_check",
         table_name="collection_status",
-        condition="(secondary_status = 'Error') OR "
-        "(secondary_status = 'Collecting') OR "
-        "(secondary_data_last_collected IS NOT NULL AND secondary_status = 'Success') OR "
-        "(secondary_data_last_collected IS NULL AND secondary_status = 'Pending')"
+        condition="NOT (secondary_data_last_collected IS NOT NULL AND secondary_status = 'Success') AND "
+        "NOT (secondary_data_last_collected IS NULL AND secondary_status = 'Pending')"
     )
     op.create_check_constraint(
         constraint_name="secondary_task_id_check",
         table_name="collection_status",
-        condition="(secondary_task_id IS NULL AND secondary_status IN ('Pending', 'Success', 'Error')) OR "
-        "(secondary_task_id IS NOT NULL AND secondary_status = 'Collecting')"
+        condition="NOT (secondary_task_id IS NOT NULL AND secondary_status IN ('Pending', 'Success', 'Error')) AND "
+        "NOT (secondary_task_id IS NULL AND secondary_status = 'Collecting')"
     )
     op.create_check_constraint(
         constraint_name="facade_data_last_collected_check",
         table_name="collection_status",
-        condition="(facade_status IN ('Error','Collecting')) OR "
-        "(facade_data_last_collected IS NOT NULL AND facade_status IN ('Success', 'Update')) OR "
-        "(facade_data_last_collected IS NULL AND facade_status IN ('Pending','Initializing'))"
+        condition="NOT (facade_data_last_collected IS NOT NULL AND facade_status IN ('Success', 'Update')) AND"
+        "NOT (facade_data_last_collected IS NULL AND facade_status IN ('Pending','Initializing'))"
     )
     op.create_check_constraint(
         constraint_name="facade_task_id_check",
         table_name="collection_status",
-        condition="(facade_task_id IS NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone')) OR "
-        "(facade_task_id IS NOT NULL AND facade_status IN ('Collecting','Initializing'))"
+        condition="NOT (facade_task_id IS NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone')) AND "
+        "NOT (facade_task_id IS NOT NULL AND facade_status IN ('Collecting','Initializing'))"
     )
     op.create_check_constraint(
         constraint_name="core_secondary_dependency_check",
         table_name="collection_status",
-        condition="(core_status IN ('Success','Collecting')) OR "
-        "(core_status IN ('Pending', 'Collecting', 'Error') AND secondary_status = 'Pending')"
+        condition="NOT (core_status IN ('Success','Collecting')) AND "
+        "NOT (core_status IN ('Pending', 'Collecting', 'Error') AND secondary_status = 'Pending')"
     )
 
 
