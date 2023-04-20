@@ -1022,8 +1022,8 @@ class CollectionStatus(Base):
             name='facade_data_last_collected_check'
         ),
         CheckConstraint(
-            "NOT (facade_task_id IS NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone')) AND "
-            "NOT (facade_task_id IS NOT NULL AND facade_status IN ('Collecting','Initializing'))",
+            "NOT (facade_task_id IS NOT NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone')) AND "
+            "NOT (facade_task_id IS NULL AND facade_status IN ('Collecting','Initializing'))",
             name='facade_task_id_check'
         ),
         CheckConstraint(
