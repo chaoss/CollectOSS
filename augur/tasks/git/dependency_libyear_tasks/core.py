@@ -5,7 +5,6 @@ import re
 import os, subprocess
 import traceback
 import sqlalchemy as s
-from augur.application.db.data_parse import *
 from augur.application.db.models import *
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig

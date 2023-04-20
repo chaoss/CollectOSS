@@ -3,7 +3,6 @@ import logging
 
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api, retrieve_dict_from_endpoint
 from augur.tasks.github.util.github_task_session import GithubTaskSession, GithubTaskManifest
 from augur.tasks.github.util.util import get_owner_repo
