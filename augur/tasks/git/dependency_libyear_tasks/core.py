@@ -1,7 +1,6 @@
 from datetime import datetime
 import logging
 import requests
-import json
 import re
 import os, subprocess
 import traceback

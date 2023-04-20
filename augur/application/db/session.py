@@ -4,7 +4,6 @@ import time
 import sys
 import random
 import logging
-import json
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import OperationalError
