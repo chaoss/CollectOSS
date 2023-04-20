@@ -1027,8 +1027,7 @@ class CollectionStatus(Base):
             name='facade_task_id_check'
         ),
         CheckConstraint(
-            "NOT (core_status IN ('Success','Collecting')) AND "
-            "NOT (core_status IN ('Pending', 'Collecting', 'Error') AND secondary_status = 'Pending')",
+            "NOT (core_status = 'Pending' AND secondary_status = 'Collecting')",
             name='core_secondary_dependency_check'
         ),
         {"schema": "augur_operations"}
