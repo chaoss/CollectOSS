@@ -5,7 +5,6 @@ Creates routes for user functionality
 
 import logging
 import requests
-import json
 import os
 import base64
 import time

@@ -1,5 +1,4 @@
 from datetime import datetime
-import json
 import logging
 import requests
 import json
@@ -7,7 +6,6 @@ import os
 import subprocess
 import re
 import traceback
-from augur.application.db.data_parse import *
 from augur.application.db.models import *
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig

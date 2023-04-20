@@ -3,7 +3,6 @@ from flask import Response
 import sqlalchemy as s
 import pandas as pd
 from augur.api.util import metric_metadata
-import json
 import os
 import requests
 

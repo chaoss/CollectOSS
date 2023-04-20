@@ -5,7 +5,6 @@ Creates routes for user functionality
 
 import logging
 import requests
-import json
 import os
 import base64
 import time
@@ -462,4 +461,3 @@ def get_favorite_groups():
     group_names = [group.name for group in groups]
 
     return jsonify({"status": "success", "group_names": group_names})
-    

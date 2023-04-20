@@ -4,7 +4,6 @@ Creates routes for config functionality
 """
 import logging
 import requests
-import json
 import os
 from flask import request, jsonify, Response
 import sqlalchemy as s

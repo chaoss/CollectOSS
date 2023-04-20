@@ -1,9 +1,8 @@
 from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash
 from flask_login import current_user, login_required
 from augur.application.db.models import Repo
-# from augur.util.repo_load_controller import parse_org_url, parse_repo_url
 from .utils import *
-from ..server import app, db_session
+from ..server import app
 
 @app.route('/cache/file/')
 @app.route('/cache/file/<path:file>')
@@ -131,7 +130,7 @@ def user_remove_repo():
 
     repo = int(repo)
 
-    result = current_user.remove_repo(db_session, group, repo)[0]
+    result = current_user.remove_repo(group, repo)[0]
 
     if result:
         flash(f"Successfully removed repo {repo} from group {group}")

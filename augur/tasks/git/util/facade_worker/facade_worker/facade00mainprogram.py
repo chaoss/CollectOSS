@@ -29,13 +29,13 @@ from __future__ import annotations
 import traceback
 import sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser, logging
 from multiprocessing import Process, Queue
-from .facade01config import FacadeSession as FacadeSession#increment_db, update_db, migrate_database_config, database_connection, get_setting, update_status, log_activity          
-from .facade02utilitymethods import trim_commit, store_working_author, trim_author   
-from .facade03analyzecommit import analyze_commit
-from .facade04postanalysiscleanup import git_repo_cleanup
-from .facade05repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
+from .config import FacadeSession as FacadeSession
+from .utilitymethods import trim_commit, store_working_author, trim_author   
+from .analyzecommit import analyze_commit
+from .postanalysiscleanup import git_repo_cleanup
+from .repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
 #.facade06analyze analysis moved to facade_tasks.py - IM 10/12/22
-from .facade07rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
+from .rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
 

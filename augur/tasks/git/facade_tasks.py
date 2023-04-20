@@ -1,7 +1,6 @@
 #SPDX-License-Identifier: MIT
 
 import sys
-import json
 import time
 import traceback
 import logging
@@ -26,10 +25,10 @@ import sqlalchemy as s
 
 from sqlalchemy import or_, and_, update
 
-from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
-from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
-from augur.tasks.git.util.facade_worker.facade_worker.facade03analyzecommit import analyze_commit
-from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_facade_weight_time_factor, get_repo_commit_count
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
+from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor, get_repo_commit_count
 
 from augur.tasks.github.facade_github.tasks import *
 
@@ -39,7 +38,6 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 
 
-from augur.application.db import data_parse
 from augur.tasks.util.AugurUUID import GithubUUID, UnresolvableUUID
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo, CollectionStatus
 

@@ -37,7 +37,7 @@ import getopt
 import xlsxwriter
 import configparser
 import sqlalchemy as s
-from .facade02utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
+from .utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 # if platform.python_implementation() == 'PyPy':
 #   import pymysql
 # else:

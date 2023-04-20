@@ -2,7 +2,6 @@ import logging
 from typing import Dict, List, Tuple, Optional
 import traceback
 import sqlalchemy as s
-from augur.application.db.data_parse import *
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection, hit_api_graphql

@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import List
 import time
 import logging
-import json
 import os
 from enum import Enum
 import math
@@ -33,7 +32,7 @@ from enum import Enum
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.models import CollectionStatus, Repo
 from augur.tasks.util.collection_util import *
-from augur.tasks.git.util.facade_worker.facade_worker.facade02utilitymethods import get_facade_weight_time_factor
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
