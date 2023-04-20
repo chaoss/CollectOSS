@@ -2,7 +2,7 @@ import time
 import logging
 
 from augur.tasks.init.celery_app import celery_app as celery, engine
-from augur.application.db.data_parse import *
+from augur.application.db.data_parse import extract_needed_clone_history_data
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.util.worker_util import remove_duplicate_dicts
