@@ -32,7 +32,7 @@ Session = sessionmaker(bind=engine)
 
 from augur.api.routes import AUGUR_API_VERSION
 
-@app.route(f"/{AUGUR_API_VERSION}/application", methods=['POST'])
+@app.route(f"/{AUGUR_API_VERSION}/application", methods=['GET', 'POST'])
 @ssl_required
 @api_key_required
 def get_application_info(application: ClientApplication):
@@ -47,7 +47,7 @@ def get_application_info(application: ClientApplication):
 
     return info
 
-@app.route(f"/{AUGUR_API_VERSION}/application/group/repos", methods=['POST'])
+@app.route(f"/{AUGUR_API_VERSION}/application/group/repos", methods=['GET', 'POST'])
 @ssl_required
 @api_key_required
 def get_application_group_repos(application: ClientApplication):
