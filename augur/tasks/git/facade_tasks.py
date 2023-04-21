@@ -529,6 +529,7 @@ def facade_phase(repo_git):
         if not limited_run or (limited_run and run_facade_contributors):
             facade_core_collection.append(generate_contributor_sequence(logger,repo_git,session))
 
+        facade_core_collection.append(git_update_commit_count_weight.si(repo_git))
 
         #These tasks need repos to be cloned by facade before they can work.
         facade_sequence.append(
