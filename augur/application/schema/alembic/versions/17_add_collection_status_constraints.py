@@ -44,7 +44,7 @@ def upgrade():
     op.create_check_constraint(
         constraint_name="facade_data_last_collected_check",
         table_name="collection_status",
-        condition="NOT (facade_data_last_collected IS NULL AND facade_status  = 'Success' ) AND"
+        condition="NOT (facade_data_last_collected IS NULL AND facade_status  = 'Success' ) AND "
         "NOT (facade_data_last_collected IS NOT NULL AND facade_status IN ('Pending','Initializing'))"
     )
     op.create_check_constraint(
