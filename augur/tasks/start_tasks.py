@@ -194,7 +194,7 @@ def start_primary_collection(session,max_repo):
     collection_size = start_block_of_repos(
         session.logger, session,
         and_(not_erroed, not_collecting,never_collected),
-        limit, primary_enabled_phases,sort=core_order
+        limit, primary_enabled_phases, repos_type="new", sort=core_order
     )
 
 
@@ -207,7 +207,7 @@ def start_primary_collection(session,max_repo):
         start_block_of_repos(
             session.logger, session,
             and_(not_erroed, not_collecting,collected_before),
-            limit, primary_enabled_phases,sort=core_order
+            limit, primary_enabled_phases, repos_type="old", sort=core_order
         )
 
 
@@ -245,6 +245,7 @@ def start_secondary_collection(session,max_repo):
         session.logger, session, 
         and_(primary_collected,not_erroed, not_collecting,never_collected), 
         limit, secondary_enabled_phases,
+        repos_type="new",
         hook="secondary",
         sort=secondary_order
     )
@@ -257,6 +258,7 @@ def start_secondary_collection(session,max_repo):
             session.logger, session, 
             and_(primary_collected,not_erroed, not_collecting,collected_before), 
             limit, secondary_enabled_phases,
+            repos_type="old",
             hook="secondary",
             sort=secondary_order
         )
@@ -329,6 +331,7 @@ def start_facade_collection(session,max_repo):
         session.logger, session,
         and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing,never_collected),
         limit, facade_enabled_phases,
+        repos_type="new",
         hook="facade",
         sort=facade_order
     )
@@ -341,6 +344,7 @@ def start_facade_collection(session,max_repo):
             session.logger, session,
             and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing,collected_before),
             limit, facade_enabled_phases,
+            repos_type="old",
             hook="facade",
             sort=facade_order
         )
