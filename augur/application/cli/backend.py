@@ -247,16 +247,24 @@ def clear_rabbitmq_messages(connection_string):
 def clean_collection_status(session):
     session.execute_sql(s.sql.text("""
         UPDATE augur_operations.collection_status 
-        SET core_status='Pending'
-        WHERE core_status='Collecting';
+        SET core_status='Pending',core_task_id = NULL
+        WHERE core_status='Collecting' AND core_data_last_collected IS NULL;
+        UPDATE augur_operations.collection_status
+        SET core_status='Success',core_task_id = NULL
+        WHERE core_status='Collecting' AND core_data_last_collected IS NOT NULL;
         UPDATE augur_operations.collection_status 
-        SET secondary_status='Pending'
-        WHERE secondary_status='Collecting';
+        SET secondary_status='Pending',secondary_task_id = NULL
+        WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NULL;
+        UPDATE augur_operations.collection_status 
+        SET secondary_status='Success',secondary_task_id = NULL
+        WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NOT NULL;
+
         UPDATE augur_operations.collection_status 
         SET facade_status='Update', facade_task_id=NULL
         WHERE facade_status LIKE '%Collecting%';
+
         UPDATE augur_operations.collection_status
-        SET facade_status='Pending'
+        SET facade_status='Pending', facade_task_id=NULL
         WHERE facade_status='Failed Clone' OR facade_status='Initializing';
     """))
     #TODO: write timestamp for currently running repos.
@@ -288,16 +296,16 @@ def repo_reset(augur_app):
     """
     Refresh repo collection to force data collection
     """
-    augur_app.database.execute(s.sql.text("""UPDATE augur_operations.collection_status 
-        SET core_status='Pending';
+    augur_app.database.execute(s.sql.text("""
         UPDATE augur_operations.collection_status 
-        SET secondary_status='Pending';
+        SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
+
         UPDATE augur_operations.collection_status 
-        SET facade_status='Update'
-        WHERE facade_status='Collecting' OR facade_status='Success' OR facade_status='Error';
-        UPDATE augur_operations.collection_status
-        SET facade_status='Pending'
-        WHERE facade_status='Failed Clone' OR facade_status='Initializing';
+        SET secondary_status='Pending',secondary_task_id = NULL, secondary_data_last_collected = NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET facade_status='Pending', facade_task_id=NULL, facade_data_last_collected = NULL;
+
         TRUNCATE augur_data.commits CASCADE;
         """))
 

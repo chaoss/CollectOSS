@@ -155,7 +155,7 @@ def git_repo_initialize(session, repo_git):
             # If cloning failed, log it and set the status back to new
             update_repo_log(session, row.repo_id, f"Failed ({return_code})")
 
-            query = s.sql.text("""UPDATE augur_operations.collection_status SET facade_status='Failed Clone' WHERE repo_id=:repo_id
+            query = s.sql.text("""UPDATE augur_operations.collection_status SET facade_status='Failed Clone', facade_task_id=NULL WHERE repo_id=:repo_id
                 """).bindparams(repo_id=row.repo_id)
 
             session.execute_sql(query)
