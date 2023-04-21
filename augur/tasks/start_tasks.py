@@ -87,7 +87,7 @@ def primary_repo_collect_phase(repo_git):
 
     repo_task_group = group(
         repo_info_task,
-        chain(primary_repo_jobs | core_task_update_weight_util.s(repo_git=repo_git),secondary_repo_jobs,process_contributors.si()),
+        chain(primary_repo_jobs | issue_pr_task_update_weight_util.s(repo_git=repo_git),secondary_repo_jobs,process_contributors.si()),
         #facade_phase(logger,repo_git),
         
         collect_releases.si(repo_git),
@@ -313,6 +313,11 @@ def start_facade_collection(session,max_repo):
 
     facade_enabled_phases.append(facade_task_success_util_gen)
 
+    def facade_task_update_weight_util_gen(repo_git):
+        return git_update_commit_count_weight.si(repo_git)
+
+    facade_enabled_phases.append(facade_task_update_weight_util_gen)
+
     active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
 
     #cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
@@ -395,7 +400,7 @@ def augur_collection_update_weights():
             status = repo.collection_status[0]
             raw_count = status.issue_pr_sum
 
-            core_task_update_weight_util([int(raw_count)],repo_git=repo_git,session=session)
+            issue_pr_task_update_weight_util([int(raw_count)],repo_git=repo_git,session=session)
     
         facade_not_pending = CollectionStatus.facade_status != CollectionState.PENDING.value
         facade_not_failed = CollectionStatus.facade_status != CollectionState.FAILED_CLONE.value
