@@ -426,7 +426,8 @@ def create_collection_status_records():
         SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.collection_status)
         """)
 
-        repos = session.execute_sql(query).fetchall()
+        repo = session.execute_sql(query).first()
 
-        for repo in repos:
+        while repo is not None:
             CollectionStatus.insert(session,repo[0])
+            repo = session.execute_sql(query).first()
