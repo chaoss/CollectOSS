@@ -255,14 +255,51 @@ def repo_repo_view(id):
 """ ----------------------------------------------------------------
 default:
 table:
-    This route returns the default view of the application, which
-    is currently defined as the repository table view
+    This route returns the groups view for the logged in user.
 """
-@app.route('/user/group/')
+@app.route('/user/groups/')
 @login_required
-def user_group_view():
-    group = request.args.get("group")
+def user_groups_view():
+    params = {}
 
+    config = AugurConfig(logger, db_session)
+
+    pagination_offset = config.get_value("frontend", "pagination_offset")
+
+    rev = request.args.get('r')
+    query = request.args.get('q')
+    sort = request.args.get('s')
+
+    try:
+        activepage = int(request.args.get('p')) if 'p' in request.args else 0
+    except:
+        activepage = 0
+
+    (groups, status) = current_user.get_groups_info(search = query, sort = sort, reversed = bool(rev))
+
+    # if not groups and not query:
+    #     return render_message("No Groups Defined", "You do not have any groups defined, you can add groups on you profile page.")
+    # elif not groups:
+    #     return render_message("No Matching Groups", "Your search did not match any group names.")
+
+    page_count = len(groups)
+    page_count //= pagination_offset
+    current_page_start = activepage * pagination_offset
+    current_page_end = current_page_start + pagination_offset
+
+    groups = groups[current_page_start : current_page_end]
+
+    return render_module("groups-table", title="Groups", groups=groups, query_key=query, activePage=activepage, pages=page_count, offset=pagination_offset, PS="user_groups_view", reverse = rev, sorting = sort)
+
+
+""" ----------------------------------------------------------------
+default:
+table:
+    This route returns the groups view for the logged in user.
+"""
+@app.route('/user/group/<group>')
+@login_required
+def user_group_view(group = None):
     if not group:
         return render_message("No Group Specified", "You must specify a group to view this page.")
 
@@ -272,6 +309,10 @@ def user_group_view():
         params["page"] = int(request.args.get('p') or 0)
     except:
         params["page"] = 1
+    
+    query = request.args.get('q')
+    if query:
+        params["search"] = query
 
     if sort := request.args.get('s'):
         params["sort"] = sort
@@ -290,17 +331,17 @@ def user_group_view():
     pagination_offset = config.get_value("frontend", "pagination_offset")
 
     data = current_user.get_group_repos(group, **params)[0]
-    page_count = (current_user.get_group_repo_count(group)[0]) or 0
+    page_count = current_user.get_group_repo_count(group, search = query)[0] or 0
     page_count //= pagination_offset
 
-    if not data:
-        return render_message("Error Loading Group", "Either the group you requested does not exist, the group has no repos, or an unspecified error occurred.")
+    # if not data:
+    #     return render_message("Error Loading Group", "Either the group you requested does not exist, the group has no repos, or an unspecified error occurred.")
 
     #if not cacheFileExists("repos.json"):
     #    return renderLoading("repos/views/table", query, "repos.json")
 
     # return renderRepos("table", None, data, sort, rev, params.get("page"), True)
-    return render_module("user-group-repos-table", title="Repos", repos=data, query_key=None, activePage=params["page"], pages=page_count, offset=pagination_offset, PS="user_group_view", reverse = rev, sorting = params.get("sort"), group=group)
+    return render_module("user-group-repos-table", title="Repos", repos=data, query_key=query, activePage=params["page"], pages=page_count, offset=pagination_offset, PS="user_group_view", reverse = rev, sorting = params.get("sort"), group=group)
 
 @app.route('/error')
 def throw_exception():
