@@ -247,16 +247,24 @@ def clear_rabbitmq_messages(connection_string):
 def clean_collection_status(session):
     session.execute_sql(s.sql.text("""
         UPDATE augur_operations.collection_status 
-        SET core_status='Pending'
-        WHERE core_status='Collecting';
+        SET core_status='Pending',core_task_id = NULL
+        WHERE core_status='Collecting' AND core_data_last_collected IS NULL;
+        UPDATE augur_operations.collection_status
+        SET core_status='Success',core_task_id = NULL
+        WHERE core_status='Collecting' AND core_data_last_collected IS NOT NULL;
         UPDATE augur_operations.collection_status 
-        SET secondary_status='Pending'
-        WHERE secondary_status='Collecting';
+        SET secondary_status='Pending',secondary_task_id = NULL
+        WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NULL;
+        UPDATE augur_operations.collection_status 
+        SET secondary_status='Success',secondary_task_id = NULL
+        WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NOT NULL;
+
         UPDATE augur_operations.collection_status 
         SET facade_status='Update', facade_task_id=NULL
         WHERE facade_status LIKE '%Collecting%';
+
         UPDATE augur_operations.collection_status
-        SET facade_status='Pending'
+        SET facade_status='Pending', facade_task_id=NULL
         WHERE facade_status='Failed Clone' OR facade_status='Initializing';
     """))
     #TODO: write timestamp for currently running repos.
