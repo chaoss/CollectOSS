@@ -455,13 +455,39 @@ class User(Base):
 
         return self.groups, {"status": "success"}
 
-    def get_group_names(self):
+    def get_group_names(self, search=None, reversed=False):
 
         user_groups = self.get_groups()[0]
 
-        group_names = [group.name for group in user_groups]
+        if search is None:
+            group_names = [group.name for group in user_groups]
+        else:
+            group_names = [group.name for group in user_groups if search.lower() in group.name.lower()]
+            
+        group_names.sort(reverse = reversed)
 
         return group_names, {"status": "success"}
+    
+    def get_groups_info(self, search=None, reversed=False, sort="group_name"):
+        (groups, result) = self.get_groups()
+
+        if search is not None:
+            groups = [group for group in groups if search.lower() in group.name.lower()]
+        
+        for group in groups:
+            group.count = self.get_group_repo_count(group.name)[0]
+        
+        def sorting_function(group):
+            if sort == "group_name":
+                return group.name
+            elif sort == "repo_count":
+                return group.count
+            elif sort == "favorited":
+                return group.favorited
+        
+        groups = sorted(groups, key=sorting_function, reverse=reversed)
+
+        return groups, {"status": "success"}
 
 
     def get_repos(self, page=0, page_size=25, sort="repo_id", direction="ASC", search=None):
@@ -482,22 +508,22 @@ class User(Base):
         return result
 
 
-    def get_group_repos(self, group_name, page=0, page_size=25, sort="repo_id", direction="ASC"):
+    def get_group_repos(self, group_name, page=0, page_size=25, sort="repo_id", direction="ASC", search=None):
         from augur.util.repo_load_controller import RepoLoadController
 
         with DatabaseSession(logger) as session:
-            result = RepoLoadController(session).paginate_repos("group", page, page_size, sort, direction, user=self, group_name=group_name)
+            result = RepoLoadController(session).paginate_repos("group", page, page_size, sort, direction, user=self, group_name=group_name, search=search)
 
         return result
 
 
-    def get_group_repo_count(self, group_name):
+    def get_group_repo_count(self, group_name, search = None):
         from augur.util.repo_load_controller import RepoLoadController
 
         with DatabaseSession(logger) as session:
             controller = RepoLoadController(session)
 
-        result = controller.get_repo_count(source="group", group_name=group_name, user=self)
+        result = controller.get_repo_count(source="group", group_name=group_name, user=self, search=search)
 
         return result
 
@@ -996,45 +1022,64 @@ class RefreshToken(Base):
 class CollectionStatus(Base):
     __tablename__ = "collection_status"
     __table_args__ = (
+
+        #Constraint to prevent nonsensical relationship states between core_data_last_collected and core_status
+        #Disallow core_data_last_collected status to not be set when the core_status column indicates data has been collected
+        #Disallow core_data_last_collected status to be set when the core_status column indicates data has not been collected
         CheckConstraint(
-            "(core_data_last_collected IS NOT NULL AND core_status = 'Success') OR "
-            "(core_data_last_collected IS NULL AND core_status = 'Pending') OR "
-            "(core_status = 'Error') OR "
-            "(core_status = 'Collecting')",
+            "NOT (core_data_last_collected IS NULL AND core_status = 'Success') AND "
+            "NOT (core_data_last_collected IS NOT NULL AND core_status = 'Pending')",
             name='core_data_last_collected_check'
         ),
+
+        #Constraint to prevent nonsensical relationship states between core_task_id and core_status
+        #Disallow state where core_task_id is set but core_status indicates repo is not running
+        #Disallow state where core_task_id is not set but core_status indicates repo is running.
         CheckConstraint(
-            "(core_task_id IS NULL AND core_status IN ('Pending', 'Success', 'Error')) OR "
-            "(core_task_id IS NOT NULL AND core_status = 'Collecting')",
+            "NOT (core_task_id IS NOT NULL AND core_status IN ('Pending', 'Success', 'Error')) AND "
+            "NOT (core_task_id IS NULL AND core_status = 'Collecting')",
             name='core_task_id_check'
         ),
+
+        #Constraint to prevent nonsensical relationship states between secondary_data_last_collected and secondary_status
+        #Disallow secondary_data_last_collected to not be set when secondary_status indicates task has succeeded
+        #Disallow secondary_data_last_collected to be set when secondary_status indicates task hasn't started
         CheckConstraint(
-            "(secondary_data_last_collected IS NOT NULL AND secondary_status = 'Success') OR "
-            "(secondary_data_last_collected IS NULL AND secondary_status = 'Pending') OR"
-            "(secondary_status = 'Error') OR "
-            "(secondary_status = 'Collecting')",
+            "NOT (secondary_data_last_collected IS NULL AND secondary_status = 'Success') AND "
+            "NOT (secondary_data_last_collected IS NOT NULL AND secondary_status = 'Pending')",
             name='secondary_data_last_collected_check'
         ),
+
+        #Constraint to prevent nonsensical relationship states between secondary_task_id and secondary_status
+        #Disallow secondary_task_id to be set when secondary status indicates that task is not running
+        #Disallow secondary_task_id to not be set when secondary status indicates that task is running
         CheckConstraint(
-            "(secondary_task_id IS NULL AND secondary_status IN ('Pending', 'Success', 'Error')) OR "
-            "(secondary_task_id IS NOT NULL AND secondary_status = 'Collecting')",
+            "NOT (secondary_task_id IS NOT NULL AND secondary_status IN ('Pending', 'Success', 'Error')) AND "
+            "NOT (secondary_task_id IS NULL AND secondary_status = 'Collecting')",
             name='secondary_task_id_check'
         ),
+
+        #Constraint to prevent nonsensical relationship between facade_data_last_collected
+        #Disallow facade_data_last_collected to not be set when facade_status indicates task has been run
+        #Disallow facade_data_last_collected to be set when facade_status indicates task hasn't been run
         CheckConstraint(
-            "(facade_data_last_collected IS NOT NULL AND facade_status IN ('Success', 'Update')) OR "
-            "(facade_data_last_collected IS NULL AND facade_status = 'Pending') OR "
-            "(facade_status = 'Error') OR "
-            "(facade_status = 'Collecting')",
+            "NOT (facade_data_last_collected IS NULL AND facade_status  = 'Success' ) AND"
+            "NOT (facade_data_last_collected IS NOT NULL AND facade_status IN ('Pending','Initializing'))",
             name='facade_data_last_collected_check'
         ),
+
+        #Constraint to prevent nonsensical relationship between facade_task_id and facade_status
+        #Disallow facade_task_id to be set when facade_status indicates task isn't running
+        #Disallow facade_task_id to not be set when facade_status indicates task is running
         CheckConstraint(
-            "(facade_task_id IS NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone')) OR "
-            "(facade_task_id IS NOT NULL AND facade_status = 'Collecting')",
+            "NOT (facade_task_id IS NOT NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone')) AND "
+            "NOT (facade_task_id IS NULL AND facade_status IN ('Collecting','Initializing'))",
             name='facade_task_id_check'
         ),
+
+        #Disallow core_status to show core_status hasn't been run while secondary_status is running.
         CheckConstraint(
-            "(core_status = 'Success') OR "
-            "(core_status IN ('Pending', 'Collecting', 'Error') AND secondary_status = 'Pending')",
+            "NOT (core_status = 'Pending' AND secondary_status = 'Collecting')",
             name='core_secondary_dependency_check'
         ),
         {"schema": "augur_operations"}

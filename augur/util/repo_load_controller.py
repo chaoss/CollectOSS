@@ -196,8 +196,8 @@ class RepoLoadController:
             select = f"""    DISTINCT(augur_data.repo.repo_id),
                     augur_data.repo.description,
                     augur_data.repo.repo_git AS url,
-                    a.commits_all_time,
-                    b.issues_all_time,
+                    COALESCE(a.commits_all_time, 0) as commits_all_time,
+                    COALESCE(b.issues_all_time, 0) as issues_all_time,
                     rg_name,
                     (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name,
                     augur_data.repo.repo_group_id"""
