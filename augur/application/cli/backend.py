@@ -116,7 +116,7 @@ def start(disable_collection, development, port):
 
         time.sleep(5)
 
-        create_collection_status(logger)
+        #create_collection_status(logger)
         
         with DatabaseSession(logger) as session:
 

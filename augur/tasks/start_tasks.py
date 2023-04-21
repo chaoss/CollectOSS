@@ -311,6 +311,11 @@ def start_facade_collection(session,max_repo):
 
     facade_enabled_phases.append(facade_task_success_util_gen)
 
+    def facade_task_update_weight_util_gen(repo_git):
+        return git_update_commit_count_weight.si(repo_git)
+
+    facade_enabled_phases.append(facade_task_update_weight_util_gen)
+
     active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
 
     #cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
