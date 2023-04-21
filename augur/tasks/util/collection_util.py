@@ -111,7 +111,24 @@ def task_failed_util(request,exc,traceback):
         
         session.commit()
     
+
+
+#This task updates the core and secondary weight with the issues and prs already passed in
+@celery.task
+def issue_pr_task_update_weight_util(issue_and_pr_nums,repo_git=None,session=None):
+    from augur.tasks.init.celery_app import engine
+    logger = logging.getLogger(issue_pr_task_update_weight_util.__name__)
+
+    if repo_git is None:
+        return
     
+    if session is not None:
+        update_issue_pr_weights(logger, session, repo_git, sum(issue_and_pr_nums))
+    else:
+        with DatabaseSession(logger,engine=engine) as session:
+            update_issue_pr_weights(logger,session,repo_git,sum(issue_and_pr_nums))
+
+
 @celery.task
 def core_task_success_util(repo_git):
 
@@ -135,12 +152,20 @@ def core_task_success_util(repo_git):
 
         session.commit()
 
-def update_repo_core_weight(logger,session,repo_git,raw_sum):
+        repo_git = repo.repo_git
+        status = repo.collection_status[0]
+        raw_count = status.issue_pr_sum
+
+        #Update the values for core and secondary weight
+        issue_pr_task_update_weight_util([int(raw_count)],repo_git=repo_git,session=session)
+
+#Update the existing core and secondary weights as well as the raw sum of issues and prs
+def update_issue_pr_weights(logger,session,repo_git,raw_sum):
     repo = Repo.get_by_repo_git(session, repo_git)
     status = repo.collection_status[0]
 
     try: 
-        weight = raw_sum#get_repo_weight_core(logger,repo_git)
+        weight = raw_sum
 
         weight -= calculate_date_weight_from_timestamps(repo.repo_added, status.core_data_last_collected)
 
@@ -169,23 +194,6 @@ def update_repo_core_weight(logger,session,repo_git,raw_sum):
 
 
 
-#This task updates the weight with the issues and prs already passed in
-@celery.task
-def core_task_update_weight_util(issue_and_pr_nums,repo_git=None,session=None):
-    from augur.tasks.init.celery_app import engine
-    logger = logging.getLogger(core_task_update_weight_util.__name__)
-
-    if repo_git is None:
-        return
-    
-    if session is not None:
-        update_repo_core_weight(logger, session, repo_git, sum(issue_and_pr_nums))
-    else:
-        with DatabaseSession(logger,engine=engine) as session:
-            update_repo_core_weight(logger,session,repo_git,sum(issue_and_pr_nums))
-
-
-
 @celery.task
 def secondary_task_success_util(repo_git):
 
@@ -208,6 +216,13 @@ def secondary_task_success_util(repo_git):
         collection_status.secondary_task_id = None
 
         session.commit()
+
+        #Update the values for core and secondary weight
+        repo_git = repo.repo_git
+        status = repo.collection_status[0]
+        raw_count = status.issue_pr_sum
+
+        issue_pr_task_update_weight_util([int(raw_count)],repo_git=repo_git,session=session)
 
 #Get the weight for each repo for the secondary collection hook.
 def get_repo_weight_secondary(logger,repo_git):
