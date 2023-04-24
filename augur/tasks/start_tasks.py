@@ -159,7 +159,7 @@ def non_repo_domain_tasks():
         The below functions define augur's collection hooks.
         Each collection hook schedules tasks for a number of repos
     """
-def start_primary_collection(session,max_repo):
+def start_primary_collection(session,max_repo, days_until_collect_again = 1):
 
     #Get list of enabled phases 
     enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
@@ -201,17 +201,21 @@ def start_primary_collection(session,max_repo):
     #Now start old repos if there is space to do so.
     limit -= collection_size
 
-    collected_before = CollectionStatus.core_data_last_collected != None
-
     if limit > 0:
+        #only start repos older than the specified amount of days
+        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
+
+        collected_before = CollectionStatus.core_data_last_collected != None
+        old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
+
         start_block_of_repos(
             session.logger, session,
-            and_(not_erroed, not_collecting,collected_before),
+            and_(not_erroed, not_collecting,collected_before,old_enough),
             limit, primary_enabled_phases, repos_type="old", sort=core_order
         )
 
 
-def start_secondary_collection(session,max_repo):
+def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
 
     #Get list of enabled phases 
     enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
@@ -251,12 +255,16 @@ def start_secondary_collection(session,max_repo):
     )
 
     limit -= collection_size
-    collected_before = CollectionStatus.secondary_data_last_collected != None
 
     if limit > 0:
+        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
+
+        collected_before = CollectionStatus.secondary_data_last_collected != None
+        old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
+
         start_block_of_repos(
             session.logger, session, 
-            and_(primary_collected,not_erroed, not_collecting,collected_before), 
+            and_(primary_collected,not_erroed, not_collecting,collected_before,old_enough), 
             limit, secondary_enabled_phases,
             repos_type="old",
             hook="secondary",
@@ -301,7 +309,7 @@ def start_facade_clone_update(session,max_repo,days):
 
     facade_augur_collection.start_data_collection()
 
-def start_facade_collection(session,max_repo):
+def start_facade_collection(session,max_repo,days_until_collect_again = 1):
 
     #Deal with secondary collection
     facade_enabled_phases = []
@@ -342,12 +350,16 @@ def start_facade_collection(session,max_repo):
     )
 
     limit -= collection_size
-    collected_before = CollectionStatus.facade_data_last_collected != None
 
     if limit > 0:
+        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
+
+        collected_before = CollectionStatus.facade_data_last_collected != None
+        old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
+
         start_block_of_repos(
             session.logger, session,
-            and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing,collected_before),
+            and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing,collected_before,old_enough),
             limit, facade_enabled_phases,
             repos_type="old",
             hook="facade",
