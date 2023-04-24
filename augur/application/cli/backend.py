@@ -86,6 +86,7 @@ def start(disable_collection, development, port):
     core_worker_process = None
     secondary_worker_process = None
     celery_beat_process = None
+    facade_worker_process = None
     if not disable_collection:
 
         if os.path.exists("celerybeat-schedule.db"):
@@ -141,7 +142,7 @@ def start(disable_collection, development, port):
         
         if facade_worker_process:
             logger.info("Shutting down celery process: facade")
-            facade_worker_process,terminate()
+            facade_worker_process.terminate()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
