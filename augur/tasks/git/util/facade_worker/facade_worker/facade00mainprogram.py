@@ -41,7 +41,6 @@ from .rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate
 
 from augur.tasks.github.facade_github.contributor_interfaceable.contributor_interface import *
 
-from augur.tasks.github.util.github_task_session import GithubTaskSession
 from logging import Logger
 from sqlalchemy.sql.elements import TextClause
 

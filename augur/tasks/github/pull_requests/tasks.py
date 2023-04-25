@@ -200,7 +200,6 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
     logger = logging.getLogger(collect_pull_request_review_comments.__name__)
     logger.info(f"Collecting pull request review comments for {owner}/{repo}")
 
-    # define GithubTaskSession to handle insertions, and store oauth keys
     with GithubTaskManifest(logger) as manifest:
 
         augur_db = manifest.augur_db

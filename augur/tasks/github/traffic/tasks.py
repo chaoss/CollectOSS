@@ -15,7 +15,6 @@ def collect_github_repo_clones_data(repo_git: str) -> None:
     
     logger = logging.getLogger(collect_github_repo_clones_data.__name__)
 
-    # using GithubTaskSession to get our repo_obj for which we will store data of clones
     with GithubTaskManifest(logger) as manifest:
 
         query = manifest.augur_db.query(Repo).filter(Repo.repo_git == repo_git)

@@ -4,7 +4,7 @@ import logging
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api, retrieve_dict_from_endpoint
-from augur.tasks.github.util.github_task_session import GithubTaskSession, GithubTaskManifest
+from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
