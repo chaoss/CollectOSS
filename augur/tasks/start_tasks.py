@@ -274,7 +274,7 @@ def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
 
 
 
-def start_facade_collections(session, pipe_size, clone_percentage=0.6):
+def start_facade_processes(session, pipe_size, clone_percentage=0.6):
 
     # for facade collection we are maintaining a pipe size,
     # this is the number of messages that can be added to the queue at a time for facade
@@ -292,7 +292,7 @@ def start_facade_collections(session, pipe_size, clone_percentage=0.6):
 
     # start cloning tasks until the cloning_section is full. We passing cloning 
     # section size directly as the max repos because each clone task is counted as 1
-    pipe_space_left = start_facade_clone(session, max_repos=cloning_section_size)
+    pipe_space_left = start_facade_clone(session, max_repo=cloning_section_size)
 
     
 
@@ -325,8 +325,6 @@ def start_facade_clone(session,max_repo):
     facade_enabled_phases.append(facade_clone_success_util_gen)
 
     
-
-
     not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
     not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
     not_collecting = CollectionStatus.facade_status != str(CollectionState.COLLECTING.value)
@@ -334,13 +332,12 @@ def start_facade_clone(session,max_repo):
     never_collected = CollectionStatus.facade_status == CollectionState.PENDING.value
 
 
-    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_failed_clone,not_erroed, not_collecting, not_initializing, never_collected),limit)
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_failed_clone,not_erroed, not_collecting, not_initializing, never_collected),max_repo)
 
     session.logger.info(f"Starting facade clone/update on {len(repo_git_identifiers)} repos")
     if len(repo_git_identifiers) == 0:
-        return
+        return max_repo
 
-    
     session.logger.info(f"Facade clone/update starting for: {tuple(repo_git_identifiers)}")
 
     facade_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=facade_enabled_phases,collection_hook="facade")
@@ -348,6 +345,8 @@ def start_facade_clone(session,max_repo):
     facade_augur_collection.start_state = CollectionState.INITIALIZING.value
 
     facade_augur_collection.start_data_collection()
+
+    return max_repo - len(repo_git_identifiers)
 
 def start_facade_collection(session,max_repo,days_until_collect_again = 1):
 
@@ -366,8 +365,6 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
 
     facade_enabled_phases.append(facade_task_update_weight_util_gen)
 
-    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
-
     #cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
     not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
     not_pending = CollectionStatus.facade_status != str(CollectionState.PENDING.value)
@@ -376,7 +373,7 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
     not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
     never_collected = CollectionStatus.facade_data_last_collected == None
 
-    limit = max_repo-active_repo_count
+    limit = max_repo
 
     facade_order = CollectionStatus.facade_weight
 
@@ -429,7 +426,7 @@ def augur_collection_monitor():
         if facade_phase.__name__ in enabled_phase_names:
             #Schedule facade collection before clone/updates as that is a higher priority
 
-            start_facade_collections(session)
+            start_facade_processes(session, pipe_size=360, clone_percentage=0.3)
            
 
 
