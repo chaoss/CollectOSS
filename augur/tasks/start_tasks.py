@@ -273,7 +273,8 @@ def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
         )
 
 
-def start_facade_clone_update(session,max_repo,days):
+#clone new repos that don't have a weight yet.
+def start_facade_clone(session,max_repo):
     facade_enabled_phases = []
 
     facade_enabled_phases.append(facade_clone_update_phase)
@@ -285,17 +286,15 @@ def start_facade_clone_update(session,max_repo,days):
 
     active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.INITIALIZING.value).all())
 
-    cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
     not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
     not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
     not_collecting = CollectionStatus.facade_status != str(CollectionState.COLLECTING.value)
     not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
     never_collected = CollectionStatus.facade_status == CollectionState.PENDING.value
-    old_collection = CollectionStatus.facade_data_last_collected <= cutoff_date
 
     limit = max_repo-active_repo_count
 
-    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_failed_clone,not_erroed, not_collecting, not_initializing, or_(never_collected, old_collection)),limit)
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_failed_clone,not_erroed, not_collecting, not_initializing, never_collected),limit)
 
     session.logger.info(f"Starting facade clone/update on {len(repo_git_identifiers)} repos")
     if len(repo_git_identifiers) == 0:
@@ -388,9 +387,9 @@ def augur_collection_monitor():
             start_secondary_collection(session, max_repo=5)
 
         if facade_phase.__name__ in enabled_phase_names:
-            #Schedule facade collection before clone/updates as that is a higher priority
+            #Schedule facade collection before clones as that is a higher priority
             start_facade_collection(session, max_repo=15)
-            start_facade_clone_update(session,max_repo=5,days=30)
+            start_facade_clone(session,max_repo=5)
 
 
 @celery.task
