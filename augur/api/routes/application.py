@@ -17,7 +17,6 @@ from sqlalchemy.sql import text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from augur.application.db.session import DatabaseSession
-from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.util.repo_load_controller import RepoLoadController
 from augur.api.util import api_key_required, ssl_required
 
