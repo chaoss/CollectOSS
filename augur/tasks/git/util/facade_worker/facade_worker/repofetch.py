@@ -116,6 +116,12 @@ def git_repo_initialize(session, repo_git):
             collectionRecord.facade_task_id = None
             session.commit()
 
+            #Make sure repo in repo table reflects found path.
+            query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
+            repo_name=:nameParam WHERE repo_id=:idParam
+            """).bindparams(pathParam=repo_relative_path, nameParam=repo_name, idParam=row.repo_id)
+
+            session.execute_sql(query)
             return
 
         # Create the prerequisite directories
@@ -133,6 +139,7 @@ def git_repo_initialize(session, repo_git):
 
         update_repo_log(session, row.repo_id, 'New (cloning)')
 
+        #Make sure newly cloned repo path is recorded in repo table
         query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
             repo_name=:nameParam WHERE repo_id=:idParam
             """).bindparams(pathParam=repo_relative_path, nameParam=repo_name, idParam=row.repo_id)

@@ -273,35 +273,71 @@ def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
         )
 
 
-def start_facade_clone_update(session,max_repo,days):
+
+def start_facade_processes(session, pipe_size, clone_percentage=0.6):
+
+    # for facade collection we are maintaining a pipe size,
+    # this is the number of messages that can be added to the queue at a time for facade
+    # each clone task is counted for 1, each collection task is counted for 12 since those 
+    # are the number of messages they add to the queue
+    
+    # also the clone percentage determines how much of the pipe is dedicated to clone tasks
+    # after cloning is done, the rest of the pipe is filled with collection tasks
+
+    cloning_section_size = pipe_size * clone_percentage
+    cloning_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.INITIALIZING.value).all())
+
+    # remove the number of repos that are already being cloned from cloning_section_size
+    cloning_section_size = cloning_section_size - cloning_count
+
+    # start cloning tasks until the cloning_section is full. We passing cloning 
+    # section size directly as the max repos because each clone task is counted as 1
+    pipe_space_left = start_facade_clone(session, max_repo=cloning_section_size)
+
+    
+
+    collecting_section_size = pipe_size * (1-clone_percentage)
+    collecting_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
+
+    # remove the number of repos that are already being collected from collecting_section_size
+    collecting_section_size = collecting_section_size - collecting_count
+
+    # add the extra space that is left in the pipe after cloning to the collecting_section_size
+    collecting_section_size = collecting_section_size + pipe_space_left
+
+    # divide collecting_section_size by 12 because each collection task is counted as 12
+    collecting_repo_count = collecting_section_size//12
+
+    start_facade_collection(session, max_repo=collecting_repo_count)
+            
+
+# fills up to 60% of the pipe with cloning repos
+# each repo clone is counted as 1
+#clone new repos that don't have a weight yet.
+def start_facade_clone(session,max_repo):
     facade_enabled_phases = []
 
-    facade_enabled_phases.append(facade_clone_update_phase)
+    facade_enabled_phases.append(start_facade_clone_phase)
 
-    def facade_clone_update_success_util_gen(repo_git):
-        return facade_clone_update_success_util.si(repo_git)
+    def facade_clone_success_util_gen(repo_git):
+        return facade_clone_success_util.si(repo_git)
     
-    facade_enabled_phases.append(facade_clone_update_success_util_gen)
+    facade_enabled_phases.append(facade_clone_success_util_gen)
 
-    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.INITIALIZING.value).all())
-
-    cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
+    
     not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
     not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
     not_collecting = CollectionStatus.facade_status != str(CollectionState.COLLECTING.value)
     not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
     never_collected = CollectionStatus.facade_status == CollectionState.PENDING.value
-    old_collection = CollectionStatus.facade_data_last_collected <= cutoff_date
 
-    limit = max_repo-active_repo_count
 
-    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_failed_clone,not_erroed, not_collecting, not_initializing, or_(never_collected, old_collection)),limit)
+    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_failed_clone,not_erroed, not_collecting, not_initializing, never_collected),max_repo)
 
     session.logger.info(f"Starting facade clone/update on {len(repo_git_identifiers)} repos")
     if len(repo_git_identifiers) == 0:
-        return
+        return max_repo
 
-    
     session.logger.info(f"Facade clone/update starting for: {tuple(repo_git_identifiers)}")
 
     facade_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=facade_enabled_phases,collection_hook="facade")
@@ -309,6 +345,8 @@ def start_facade_clone_update(session,max_repo,days):
     facade_augur_collection.start_state = CollectionState.INITIALIZING.value
 
     facade_augur_collection.start_data_collection()
+
+    return max_repo - len(repo_git_identifiers)
 
 def start_facade_collection(session,max_repo,days_until_collect_again = 1):
 
@@ -327,8 +365,6 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
 
     facade_enabled_phases.append(facade_task_update_weight_util_gen)
 
-    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
-
     #cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
     not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
     not_pending = CollectionStatus.facade_status != str(CollectionState.PENDING.value)
@@ -337,7 +373,7 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
     not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
     never_collected = CollectionStatus.facade_data_last_collected == None
 
-    limit = max_repo-active_repo_count
+    limit = max_repo
 
     facade_order = CollectionStatus.facade_weight
 
@@ -389,8 +425,12 @@ def augur_collection_monitor():
 
         if facade_phase.__name__ in enabled_phase_names:
             #Schedule facade collection before clone/updates as that is a higher priority
-            start_facade_collection(session, max_repo=15)
-            start_facade_clone_update(session,max_repo=5,days=30)
+
+            start_facade_processes(session, pipe_size=360, clone_percentage=0.3)
+           
+
+
+# have a pipe of 180
 
 
 @celery.task

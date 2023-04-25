@@ -273,11 +273,11 @@ def facade_task_success_util(repo_git):
 
 
 @celery.task
-def facade_clone_update_success_util(repo_git):
+def facade_clone_success_util(repo_git):
 
     from augur.tasks.init.celery_app import engine
 
-    logger = logging.getLogger(facade_clone_update_success_util.__name__)
+    logger = logging.getLogger(facade_clone_success_util.__name__)
 
     logger.info(f"Repo '{repo_git}' succeeded through facade update/clone")
 
