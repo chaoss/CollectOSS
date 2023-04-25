@@ -18,8 +18,9 @@ logger = logging.getLogger(__name__)
 
 class RepoLoadController:
 
-    def __init__(self, gh_session):
-        self.session = gh_session
+    def __init__(self, augur_db, key_auth):
+        self.session = augur_db
+        self.key_auth = key_auth
 
 
     def add_cli_repo(self, repo_data: Dict[str, Any], from_org_list=False, repo_type=None):
@@ -41,7 +42,7 @@ class RepoLoadController:
 
         # if it is from not from an org list then we need to check its validity, and get the repo type
         if not from_org_list:
-            result = Repo.is_valid_github_repo(self.session, url)
+            result = Repo.is_valid_github_repo(self.key_auth, url)
             if not result[0]:
                 return False, {"status": result[1]["status"], "repo_url": url}
             
@@ -68,7 +69,7 @@ class RepoLoadController:
             org_data: dict with repo_group_id and org urls
         """
         
-        result = retrieve_owner_repos(self.session, org_name)
+        result = retrieve_owner_repos(self.session, self.key_auth, org_name)
         repos = result[0]
         type = result[1]["owner_type"]
         if not repos:

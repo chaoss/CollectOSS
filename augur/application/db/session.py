@@ -10,9 +10,11 @@ from sqlalchemy.exc import OperationalError
 
 from typing import Optional, List, Union
 from psycopg2.errors import DeadlockDetected
+from sqlalchemy.orm import sessionmaker
+from contextlib import contextmanager
 
 # from augur.tasks.util.random_key_auth import RandomKeyAuth
-from augur.application.db.engine import EngineConnection
+from augur.application.db.engine import EngineConnection, augur_engine
 from augur.tasks.util.worker_util import remove_duplicate_dicts, remove_duplicates_by_uniques
 
 
@@ -276,3 +278,20 @@ class DatabaseSession(Session):
 
 
         return return_data
+    
+
+
+@contextmanager
+def augur_session():
+
+    with augur_engine() as engine:
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        try:
+            yield session
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            session.close()

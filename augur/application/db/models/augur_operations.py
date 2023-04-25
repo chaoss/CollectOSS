@@ -22,7 +22,7 @@ from augur.application.db.models.base import Base
 FRONTEND_REPO_GROUP_NAME = "Frontend Repos"
 logger = logging.getLogger(__name__)
 
-def retrieve_owner_repos(session, owner: str) -> List[str]:
+def retrieve_owner_repos(session, key_auth, owner: str) -> List[str]:
     """Get the repos for an org.
 
     Note:
@@ -40,11 +40,11 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
     ORG_REPOS_ENDPOINT = f"https://api.github.com/orgs/{owner}/repos?per_page=100"
     USER_REPOS_ENDPOINT = f"https://api.github.com/users/{owner}/repos?per_page=100"
     
-    if not session.oauths.list_of_keys:
+    if not key_auth.list_of_keys:
         return None, {"status": "No valid github api keys to retrieve data with"}
     
     # determine whether the owner is a user or an organization
-    data, _ = retrieve_dict_from_endpoint(logger, session.oauths, OWNER_INFO_ENDPOINT)
+    data, _ = retrieve_dict_from_endpoint(logger, key_auth, OWNER_INFO_ENDPOINT)
     if not data:
         return None, {"status": "Invalid owner"}
     
@@ -61,7 +61,7 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
     
     # collect repo urls for the given owner
     repos = []
-    for page_data, page in GithubPaginator(url, session.oauths, logger).iter_pages():
+    for page_data, page in GithubPaginator(url, key_auth, logger).iter_pages():
 
         if page_data is None:
             break
@@ -428,10 +428,13 @@ class User(Base):
 
     def add_repo(self, group_name, repo_url):
         
-        from augur.tasks.github.util.github_task_session import GithubTaskSession
+        from augur.application.db.session import DatabaseSession
+        from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
-        with GithubTaskSession(logger) as session:
-            result = UserRepo.add(session, repo_url, self.user_id, group_name)
+
+        with DatabaseSession(logger) as session:
+            key_auth = GithubRandomKeyAuth(session, logger)
+            result = UserRepo.add(session, key_auth, repo_url, self.user_id, group_name)
 
         return result
 
@@ -444,10 +447,12 @@ class User(Base):
 
     def add_org(self, group_name, org_url):
 
-        from augur.tasks.github.util.github_task_session import GithubTaskSession
+        from augur.application.db.session import DatabaseSession
+        from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
-        with GithubTaskSession(logger) as session:
-            result = UserRepo.add_org_repos(session, org_url, self.user_id, group_name)
+        with DatabaseSession(logger) as session:
+            key_auth = GithubRandomKeyAuth(session, logger)
+            result = UserRepo.add_org_repos(session, key_auth, org_url, self.user_id, group_name)
 
         return result
 
@@ -737,7 +742,7 @@ class UserRepo(Base):
         return data[0]["group_id"] == group_id and data[0]["repo_id"] == repo_id
 
     @staticmethod
-    def add(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_type=None, repo_group_id=None) -> dict:
+    def add(session, key_auth, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_type=None, repo_group_id=None) -> dict:
         """Add repo to the user repo table
 
         Args:
@@ -770,7 +775,7 @@ class UserRepo(Base):
                 return False, {"status": "Invalid group name"}
             
         if not from_org_list:
-            result = Repo.is_valid_github_repo(session, url)
+            result = Repo.is_valid_github_repo(key_auth, url)
             if not result[0]:
                 return False, {"status": result[1]["status"], "repo_url": url}
             
@@ -827,7 +832,7 @@ class UserRepo(Base):
         return True, {"status": "Repo Removed"}
 
     @staticmethod
-    def add_org_repos(session, url: List[str], user_id: int, group_name: int):
+    def add_org_repos(session, key_auth, url: List[str], user_id: int, group_name: int):
         """Add list of orgs and their repos to a users repos.
 
         Args:
@@ -844,7 +849,7 @@ class UserRepo(Base):
         if not owner:
             return False, {"status": "Invalid owner url"}
 
-        result = retrieve_owner_repos(session, owner)
+        result = retrieve_owner_repos(session, key_auth, owner)
 
         # if the result is returns None or []
         if not result[0]:
@@ -876,7 +881,7 @@ class UserRepo(Base):
         failed_repos = []
         for repo in repos:
 
-            result = UserRepo.add(session, repo, user_id, group_id=group_id, from_org_list=True, repo_type=type, repo_group_id=repo_group_id)
+            result = UserRepo.add(session, key_auth, repo, user_id, group_id=group_id, from_org_list=True, repo_type=type, repo_group_id=repo_group_id)
 
             # keep track of all the repos that failed
             if not result[0]:

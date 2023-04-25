@@ -12,6 +12,9 @@ from sqlalchemy.engine.base import Engine
 from sqlalchemy.pool import NullPool
 from augur.application.db.util import catch_operational_error
 
+from sqlalchemy import create_engine
+from contextlib import contextmanager
+
 
 def parse_database_string(db_string) -> str:
     """Parse database string into the following components:
@@ -167,7 +170,19 @@ class EngineConnection():
 
         return catch_operational_error(func)
 
-        
+
+
+
+@contextmanager
+def augur_engine():
+    db_connection_string = get_database_string()
+    engine = create_engine(db_connection_string)
+    try:
+        yield engine
+    finally:
+        engine.dispose()
+
+
 
 
 
