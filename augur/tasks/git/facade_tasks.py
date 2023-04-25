@@ -449,7 +449,7 @@ def generate_contributor_sequence(logger,repo_git, session):
     return insert_facade_contributors.si(repo_id)
 
 
-def facade_clone_update_phase(repo_git):
+def start_facade_clone_phase(repo_git):
     logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
     logger.info(f"Generating sequence to update/clone repo {repo_git}")
 

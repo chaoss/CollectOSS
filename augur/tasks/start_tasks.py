@@ -277,12 +277,12 @@ def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
 def start_facade_clone(session,max_repo):
     facade_enabled_phases = []
 
-    facade_enabled_phases.append(facade_clone_update_phase)
+    facade_enabled_phases.append(start_facade_clone_phase)
 
-    def facade_clone_update_success_util_gen(repo_git):
-        return facade_clone_update_success_util.si(repo_git)
+    def facade_clone_success_util_gen(repo_git):
+        return facade_clone_success_util.si(repo_git)
     
-    facade_enabled_phases.append(facade_clone_update_success_util_gen)
+    facade_enabled_phases.append(facade_clone_success_util_gen)
 
     active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.INITIALIZING.value).all())
 
