@@ -449,7 +449,7 @@ def generate_contributor_sequence(logger,repo_git, session):
     return insert_facade_contributors.si(repo_id)
 
 
-def facade_clone_update_phase(repo_git):
+def start_facade_clone_phase(repo_git):
     logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
     logger.info(f"Generating sequence to update/clone repo {repo_git}")
 
@@ -472,10 +472,7 @@ def facade_clone_update_phase(repo_git):
         query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id)
 
         status = execute_session_query(query,'one')
-        
-        # Figure out what we need to do
-        limited_run = session.limited_run
-        pull_repos = session.pull_repos
+
 
         if 'Pending' in status.facade_status or 'Failed Clone' in status.facade_status:
             facade_sequence.append(git_repo_initialize_facade_task.si(repo_git))#git_repo_initialize(session,repo_git_identifiers)
@@ -483,9 +480,6 @@ def facade_clone_update_phase(repo_git):
         #TODO: alter this to work with current collection.
         #if not limited_run or (limited_run and check_updates):
         #    facade_sequence.append(check_for_repo_updates_facade_task.si(repo_git))#check_for_repo_updates(session,repo_git_identifiers)
-
-        if not limited_run or (limited_run and pull_repos):
-            facade_sequence.append(git_repo_updates_facade_task.si(repo_git))
         
         facade_sequence.append(git_update_commit_count_weight.si(repo_git))
 
@@ -515,11 +509,17 @@ def facade_phase(repo_git):
         # Figure out what we need to do
         limited_run = session.limited_run
         run_analysis = session.run_analysis
+        pull_repos = session.pull_repos
         #force_analysis = session.force_analysis
         run_facade_contributors = session.run_facade_contributors
 
         facade_sequence = []
         facade_core_collection = []
+
+        if not limited_run or (limited_run and pull_repos):
+            facade_core_collection.append(git_repo_updates_facade_task.si(repo_git))
+        
+        facade_core_collection.append(git_update_commit_count_weight.si(repo_git))
 
         #Generate commit analysis task order.
         if not limited_run or (limited_run and run_analysis):
@@ -529,15 +529,13 @@ def facade_phase(repo_git):
         if not limited_run or (limited_run and run_facade_contributors):
             facade_core_collection.append(generate_contributor_sequence(logger,repo_git,session))
 
-        #facade_core_collection.append(git_update_commit_count_weight.si(repo_git))
 
         #These tasks need repos to be cloned by facade before they can work.
         facade_sequence.append(
             group(
                 chain(*facade_core_collection),
                 process_dependency_metrics.si(repo_git),
-                process_libyear_dependency_metrics.si(repo_git),
-                git_update_commit_count_weight.si(repo_git)
+                process_libyear_dependency_metrics.si(repo_git)
             )
         )
 
