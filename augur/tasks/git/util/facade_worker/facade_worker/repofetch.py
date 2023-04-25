@@ -85,7 +85,7 @@ def git_repo_initialize(session, repo_git):
 
         # Get the name of repo
         repo_name = git[git.rfind('/', 0)+1:]
-        if repo_name.find('.git', 0) > -1:
+        if repo_name.endswith('.git'):
             repo_name = repo_name[:repo_name.find('.git', 0)]
             session.log_activity(
                 'Info', f"Repo Name from facade05, line 93: {repo_name}")
