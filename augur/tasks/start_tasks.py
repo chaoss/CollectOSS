@@ -180,6 +180,19 @@ def start_primary_collection(session,max_repo, days_until_collect_again = 1):
         return core_task_success_util.si(repo_git)
     
     primary_enabled_phases.append(core_task_success_util_gen)
+
+    #Split users that have new repos into four lists and randomize order
+    query = s.sql.text("""
+        SELECT  
+        user_id, core_data_last_collected, core_status, core_weight, secondary_data_last_collected, secondary_status, secondary_weight, facade_data_last_collected, facade_status, facade_weight
+        FROM augur_operations.user_groups 
+        JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
+        JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
+        JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
+        WHERE core_status='Pending'
+        GROUP BY user_id
+        """)
+
     
     active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
 
@@ -309,7 +322,6 @@ def start_facade_processes(session, pipe_size, clone_percentage=0.6):
     collecting_repo_count = collecting_section_size//12
 
     start_facade_collection(session, max_repo=collecting_repo_count)
-            
 
 # fills up to 60% of the pipe with cloning repos
 # each repo clone is counted as 1
