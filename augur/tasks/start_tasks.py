@@ -299,8 +299,8 @@ def start_facade_processes(session, pipe_size, clone_percentage=0.6):
     collecting_section_size = pipe_size * (1-clone_percentage)
     collecting_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
 
-    # remove the number of repos that are already being collected from collecting_section_size
-    collecting_section_size = collecting_section_size - collecting_count
+    # remove the number of repos that are already being collected multiplied by 12 from collecting_section_size
+    collecting_section_size = collecting_section_size - (collecting_count*12)
 
     # add the extra space that is left in the pipe after cloning to the collecting_section_size
     collecting_section_size = collecting_section_size + pipe_space_left
