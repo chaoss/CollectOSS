@@ -184,6 +184,9 @@ def start_primary_collection(session,max_repo, days_until_collect_again = 1):
 
     active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
 
+    not_erroed = CollectionStatus.core_status != str(CollectionState.ERROR.value)
+    not_collecting = CollectionStatus.core_status != str(CollectionState.COLLECTING.value)
+
     limit = max_repo-active_repo_count
 
     #Split users that have new repos into four lists and randomize order
@@ -222,8 +225,6 @@ def start_primary_collection(session,max_repo, days_until_collect_again = 1):
         valid_repos = session.execute_sql(repo_query).fetchall()
         valid_repo_git_ids = [repo[0] for repo in valid_repos]
 
-        not_erroed = CollectionStatus.core_status != str(CollectionState.ERROR.value)
-        not_collecting = CollectionStatus.core_status != str(CollectionState.COLLECTING.value)
         never_collected = CollectionStatus.core_data_last_collected == None
         make_sure_valid_repo = tuple_(CollectionStatus.repo_id).in_(valid_repo_git_ids)
 
@@ -278,7 +279,7 @@ def start_primary_collection(session,max_repo, days_until_collect_again = 1):
 
             collection_size = start_block_of_repos(
                 session.logger, session,
-                and_(not_erroed, not_collecting,collected_before,old_enough),
+                and_(not_erroed, not_collecting,collected_before,old_enough,make_sure_valid_repo),
                 limit, primary_enabled_phases, repos_type="old", sort=core_order
             )
 
