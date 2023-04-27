@@ -308,7 +308,17 @@ def start_facade_processes(session, pipe_size, clone_percentage=0.6):
     # divide collecting_section_size by 12 because each collection task is counted as 12
     collecting_repo_count = collecting_section_size//12
 
-    start_facade_collection(session, max_repo=collecting_repo_count)
+    # start collecting repos if there are slots available
+    # sometimes the collecting_repo_count can be negative
+    # because the collecting repos will fill the pipe if 
+    # there are no repos to clone. So when more repos are
+    # added and take up the clone space there is no longer
+    # the full pipe available for collecting so the count 
+    # ends up being negative because it is using more 
+    # than its section of the pipe
+    if collecting_repo_count > 0:
+
+        start_facade_collection(session, max_repo=collecting_repo_count)
             
 
 # fills up to 60% of the pipe with cloning repos
