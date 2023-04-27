@@ -367,7 +367,7 @@ def clone_repos():
             setattr(repoStatus,"facade_status", CollectionState.UPDATE.value)
             session.commit()
 
-        clone_repos.si().apply_async(countdown=60)
+        clone_repos.si().apply_async(countdown=60*5)
 
 
 
