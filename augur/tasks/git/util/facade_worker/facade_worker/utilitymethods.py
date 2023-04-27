@@ -39,7 +39,7 @@ import xlsxwriter
 import configparser
 import sqlalchemy as s
 from .config import get_database_args_from_env
-from augur.application.db.models.augur_data import *
+from augur.application.db.models import *
 from .config import FacadeSession as FacadeSession
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 #from augur.tasks.git.util.facade_worker.facade
@@ -193,7 +193,23 @@ def get_facade_weight_time_factor(session,repo_git):
 
 	return  time_factor
 
+def get_facade_weight_with_commit_count(session, repo_git, commit_count):
+	return commit_count - get_facade_weight_time_factor(session, repo_git)
+
 
 def get_repo_weight_by_commit(logger,repo_git):
 	with FacadeSession(logger) as session:
 		return get_repo_commit_count(session, repo_git) - get_facade_weight_time_factor(session, repo_git)
+	
+
+def update_facade_scheduling_fields(session, repo_git, weight, commit_count):
+	repo = Repo.get_by_repo_git(session, repo_git)
+
+	update_query = (
+		s.update(CollectionStatus)
+		.where(CollectionStatus.repo_id == repo.repo_id)
+		.values(facade_weight=weight,commit_sum=commit_count)
+	)
+
+	session.execute(update_query)
+	session.commit()
