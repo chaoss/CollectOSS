@@ -193,13 +193,12 @@ def setup_periodic_tasks(sender, **kwargs):
     from celery.schedules import crontab
     from augur.tasks.start_tasks import augur_collection_monitor, augur_collection_update_weights
     from augur.tasks.start_tasks import non_repo_domain_tasks
+    from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
     
     with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
 
         config = AugurConfig(logger, session)
-
-        print(augur_collection_monitor)
 
         collection_interval = config.get_value('Tasks', 'collection_interval')
         logger.info(f"Scheduling collection every {collection_interval/60} minutes")
