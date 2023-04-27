@@ -56,6 +56,12 @@ def get_collection_status_repo_git_from_filter(session,filter_condition,limit,or
     return [status.repo.repo_git for status in repo_status_list]
 
 
+def split_list_into_chunks(given_list, num_chunks):
+    #Split list up into four parts with python list comprehension
+    #variable n is the 
+    n = 1 + (len(given_list) // num_chunks)
+    return [given_list[i:i + n] for i in range(0, len(given_list),n)]
+
 
 @celery.task
 def task_failed_util(request,exc,traceback):

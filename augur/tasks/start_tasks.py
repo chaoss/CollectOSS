@@ -7,10 +7,11 @@ from enum import Enum
 import math
 import numpy as np
 import datetime
+import random
 #from celery.result import AsyncResult
 from celery import signature
 from celery import group, chain, chord, signature
-from sqlalchemy import or_, and_, update
+from sqlalchemy import or_, and_,tuple_, update
 
 
 from augur.tasks.github import *
@@ -181,52 +182,109 @@ def start_primary_collection(session,max_repo, days_until_collect_again = 1):
     
     primary_enabled_phases.append(core_task_success_util_gen)
 
+    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
+
+    limit = max_repo-active_repo_count
+
     #Split users that have new repos into four lists and randomize order
     query = s.sql.text("""
         SELECT  
-        user_id, core_data_last_collected, core_status, core_weight, secondary_data_last_collected, secondary_status, secondary_weight, facade_data_last_collected, facade_status, facade_weight
+        user_id
         FROM augur_operations.user_groups 
         JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
         JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
         JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
         WHERE core_status='Pending'
         GROUP BY user_id
-        """)
+    """)
 
-    
-    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
+    user_list = session.execute_sql(query).fetchall()
+    random.shuffle(user_list)
 
-    not_erroed = CollectionStatus.core_status != str(CollectionState.ERROR.value)
-    not_collecting = CollectionStatus.core_status != str(CollectionState.COLLECTING.value)
-    never_collected = CollectionStatus.core_data_last_collected == None
+    #Extract the user id from the randomized list and split into four chunks
+    split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
 
-    limit = max_repo-active_repo_count
+    for quarter_list in split_user_list:
+        if limit <= 0:
+            return
 
-    core_order = CollectionStatus.core_weight
+        repo_query = s.sql.text("""
+            SELECT
+	        repo.repo_id
+            FROM augur_operations.user_groups 
+            JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
+            JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
+            JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
+            WHERE user_id IN :list_of_user_ids
+            ORDER BY core_weight
+        """).bindparams(list_of_user_ids=tuple(quarter_list))
 
-    #Get repos for primary collection hook
-    collection_size = start_block_of_repos(
-        session.logger, session,
-        and_(not_erroed, not_collecting,never_collected),
-        limit, primary_enabled_phases, repos_type="new", sort=core_order
-    )
+        valid_repos = session.execute_sql(repo_query).fetchall()
+        valid_repo_git_ids = [repo[0] for repo in valid_repos]
 
+        not_erroed = CollectionStatus.core_status != str(CollectionState.ERROR.value)
+        not_collecting = CollectionStatus.core_status != str(CollectionState.COLLECTING.value)
+        never_collected = CollectionStatus.core_data_last_collected == None
+        make_sure_valid_repo = tuple_(CollectionStatus.repo_id).in_(valid_repo_git_ids)
+
+
+        core_order = CollectionStatus.core_weight
+
+        #Get repos for primary collection hook
+        collection_size = start_block_of_repos(
+            session.logger, session,
+            and_(not_erroed, not_collecting,never_collected,make_sure_valid_repo),
+            limit, primary_enabled_phases, repos_type="new", sort=core_order
+        )
+        
+        limit -= collection_size
 
     #Now start old repos if there is space to do so.
-    limit -= collection_size
+    query = s.sql.text("""
+        SELECT  
+        user_id
+        FROM augur_operations.users
+    """)
 
-    if limit > 0:
-        #only start repos older than the specified amount of days
-        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
+    user_list = session.execute_sql(query).fetchall()
+    random.shuffle(user_list)
 
-        collected_before = CollectionStatus.core_data_last_collected != None
-        old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
+    #Extract the user id from the randomized list and split into four chunks
+    split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
 
-        start_block_of_repos(
-            session.logger, session,
-            and_(not_erroed, not_collecting,collected_before,old_enough),
-            limit, primary_enabled_phases, repos_type="old", sort=core_order
-        )
+    for quarter_list in split_user_list:
+        if limit > 0:
+            repo_query = s.sql.text("""
+                SELECT
+	            repo.repo_id
+                FROM augur_operations.user_groups 
+                JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
+                JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
+                JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
+                WHERE user_id IN :list_of_user_ids
+                ORDER BY core_weight
+            """).bindparams(list_of_user_ids=tuple(quarter_list))
+
+            valid_repos = session.execute_sql(repo_query).fetchall()
+            valid_repo_git_ids = [repo[0] for repo in valid_repos]
+
+
+            #only start repos older than the specified amount of days
+            cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
+
+            collected_before = CollectionStatus.core_data_last_collected != None
+            make_sure_valid_repo = tuple_(CollectionStatus.repo_id).in_(valid_repo_git_ids)
+            old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
+
+            collection_size = start_block_of_repos(
+                session.logger, session,
+                and_(not_erroed, not_collecting,collected_before,old_enough),
+                limit, primary_enabled_phases, repos_type="old", sort=core_order
+            )
+
+            limit -= collection_size
+        else:
+            return
 
 
 def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
