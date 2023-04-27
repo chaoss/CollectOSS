@@ -215,10 +215,6 @@ def setup_periodic_tasks(sender, **kwargs):
         logger.info(f"Scheduling update of collection weights on midnight on even numbered days.")
         sender.add_periodic_task(crontab(0, 0,day_of_month='2-30/2'),augur_collection_update_weights.s())
 
-        cloning_interval = 5*60
-        logger.info(f"Scheduling collection every {cloning_interval/60} minutes")
-        sender.add_periodic_task(cloning_interval,clone_repos.s())
-
 
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):

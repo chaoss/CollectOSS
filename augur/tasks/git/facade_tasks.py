@@ -342,12 +342,10 @@ def clone_repos():
     # get first repo to process
 
     with FacadeSession(logger) as session:
-        try:
-            repo_git = get_collection_status_repo_git_from_filter(session, is_pending, 1)[0]
-        except IndexError:
-            return
 
-        while repo_git:
+        # process up to 1000 repos at a time
+        repo_git_identifiers = get_collection_status_repo_git_from_filter(session, is_pending, 999999)
+        for repo_git in repo_git_identifiers:
         
             # set repo to intializing
             repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
@@ -369,11 +367,7 @@ def clone_repos():
             setattr(repoStatus,"facade_status", CollectionState.UPDATE.value)
             session.commit()
 
-            # get next repo
-            try:
-                repo_git = get_collection_status_repo_git_from_filter(session, is_pending, 1)[0]
-            except IndexError:
-                return
+        clone_repos.si().apply_async(countdown=60)
 
 
 
