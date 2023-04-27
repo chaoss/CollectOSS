@@ -159,6 +159,10 @@ def get_repo_commit_count(session,repo_git):
 
 	return commit_count
 
+def count_branches(git_dir):
+    branches_dir = os.path.join(git_dir, 'refs', 'heads')
+    return sum(1 for _ in os.scandir(branches_dir))
+
 def get_repo_commit_count(session, repo_git):
     
 	repo = Repo.get_by_repo_git(session, repo_git)
@@ -166,12 +170,12 @@ def get_repo_commit_count(session, repo_git):
 	absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
 	repo_loc = (f"{absolute_path}/.git")
 
-	# Check if the absolute_path exists, raise an error if not
-	if not os.path.exists(absolute_path):
-		raise FileNotFoundError(f"The directory {absolute_path} does not exist.")
-
-	# If .git doens't exist, return 0
+	# Check if the .git directory exists
 	if not os.path.exists(repo_loc):
+		raise FileNotFoundError(f"The directory {absolute_path} does not exist.")
+	
+	# if there are no branches then the repo is empty
+	if count_branches(repo_loc) == 0:
 		return 0
 
 	check_commit_count_cmd = check_output(["git", "--git-dir", repo_loc, "rev-list", "--count", "HEAD"])
