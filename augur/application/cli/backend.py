@@ -20,6 +20,7 @@ from datetime import datetime
 
 from augur import instance_id
 from augur.tasks.start_tasks import augur_collection_monitor, CollectionState, create_collection_status_records
+from augur.tasks.git.facade_tasks import clone_repos
 from augur.tasks.init.redis_connection import redis_connection 
 from augur.application.db.models import Repo, CollectionStatus, UserRepo
 from augur.application.db.session import DatabaseSession
@@ -113,8 +114,13 @@ def start(disable_collection, development, port):
         
         create_collection_status_records.si().apply_async()
         time.sleep(3)
-        augur_collection_monitor.si().apply_async()
 
+        # start cloning repos when augur starts
+        clone_repos.si().apply_async()
+
+        augur_collection_monitor.si().apply_async()
+        
+        
         celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
         celery_beat_process = subprocess.Popen(celery_command.split(" "))    
 

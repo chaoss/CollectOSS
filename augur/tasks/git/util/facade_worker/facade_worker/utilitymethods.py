@@ -39,7 +39,7 @@ import xlsxwriter
 import configparser
 import sqlalchemy as s
 from .config import get_database_args_from_env
-from augur.application.db.models.augur_data import *
+from augur.application.db.models import *
 from .config import FacadeSession as FacadeSession
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 #from augur.tasks.git.util.facade_worker.facade
@@ -159,6 +159,30 @@ def get_repo_commit_count(session,repo_git):
 
 	return commit_count
 
+def count_branches(git_dir):
+    branches_dir = os.path.join(git_dir, 'refs', 'heads')
+    return sum(1 for _ in os.scandir(branches_dir))
+
+def get_repo_commit_count(session, repo_git):
+    
+	repo = Repo.get_by_repo_git(session, repo_git)
+
+	absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+	repo_loc = (f"{absolute_path}/.git")
+
+	# Check if the .git directory exists
+	if not os.path.exists(repo_loc):
+		raise FileNotFoundError(f"The directory {absolute_path} does not exist.")
+	
+	# if there are no branches then the repo is empty
+	if count_branches(repo_loc) == 0:
+		return 0
+
+	check_commit_count_cmd = check_output(["git", "--git-dir", repo_loc, "rev-list", "--count", "HEAD"])
+	commit_count = int(check_commit_count_cmd)
+
+	return commit_count
+
 def get_facade_weight_time_factor(session,repo_git):
 	repo = Repo.get_by_repo_git(session, repo_git)
 	
@@ -173,7 +197,23 @@ def get_facade_weight_time_factor(session,repo_git):
 
 	return  time_factor
 
+def get_facade_weight_with_commit_count(session, repo_git, commit_count):
+	return commit_count - get_facade_weight_time_factor(session, repo_git)
+
 
 def get_repo_weight_by_commit(logger,repo_git):
 	with FacadeSession(logger) as session:
 		return get_repo_commit_count(session, repo_git) - get_facade_weight_time_factor(session, repo_git)
+	
+
+def update_facade_scheduling_fields(session, repo_git, weight, commit_count):
+	repo = Repo.get_by_repo_git(session, repo_git)
+
+	update_query = (
+		s.update(CollectionStatus)
+		.where(CollectionStatus.repo_id == repo.repo_id)
+		.values(facade_weight=weight,commit_sum=commit_count)
+	)
+
+	session.execute(update_query)
+	session.commit()
