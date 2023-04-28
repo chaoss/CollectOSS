@@ -32,6 +32,7 @@ from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_
 
 from augur.tasks.github.facade_github.tasks import *
 from augur.tasks.util.collection_util import CollectionState, get_collection_status_repo_git_from_filter
+from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneError, git_repo_initialize
 
 
 from augur.tasks.util.worker_util import create_grouped_task_load
@@ -354,7 +355,12 @@ def clone_repos():
             session.commit()
 
             # clone repo
-            git_repo_initialize(session, repo_git)
+            try:
+                git_repo_initialize(session, repo_git)
+            except GitCloneError:
+                # continue to next repo, since we can't calculate 
+                # commit_count or weight without the repo cloned
+                continue
 
             # get the commit count
             commit_count = get_repo_commit_count(session, repo_git)
