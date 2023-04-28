@@ -297,7 +297,9 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
     not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
     never_collected = CollectionStatus.facade_data_last_collected == None
 
-    limit = max_repo
+    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
+
+    limit = max_repo - active_repo_count
 
     facade_order = CollectionStatus.facade_weight
 
