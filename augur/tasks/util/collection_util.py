@@ -11,6 +11,7 @@ import datetime
 #from celery.result import AsyncResult
 from celery import signature
 from celery import group, chain, chord, signature
+import sqlalchemy as s
 from sqlalchemy import or_, and_, update
 from augur.application.logs import AugurLogger
 from augur.tasks.init.celery_app import celery_app as celery
