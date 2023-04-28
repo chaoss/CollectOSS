@@ -182,113 +182,7 @@ def start_primary_collection(session,max_repo, days_until_collect_again = 1):
     
     primary_enabled_phases.append(core_task_success_util_gen)
 
-    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
-
-    not_erroed = CollectionStatus.core_status != str(CollectionState.ERROR.value)
-    not_collecting = CollectionStatus.core_status != str(CollectionState.COLLECTING.value)
-
-    limit = max_repo-active_repo_count
-
-    #Split users that have new repos into four lists and randomize order
-    query = s.sql.text("""
-        SELECT  
-        user_id
-        FROM augur_operations.user_groups 
-        JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
-        JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
-        JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-        WHERE core_status='Pending'
-        GROUP BY user_id
-    """)
-
-    user_list = session.execute_sql(query).fetchall()
-    random.shuffle(user_list)
-
-    #Extract the user id from the randomized list and split into four chunks
-    split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
-
-    session.logger.info(f"User_list: {split_user_list}")
-    for quarter_list in split_user_list:
-        if limit <= 0:
-            return
-
-        repo_query = s.sql.text("""
-            SELECT
-	        repo.repo_id
-            FROM augur_operations.user_groups 
-            JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
-            JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
-            JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-            WHERE user_id IN :list_of_user_ids
-            ORDER BY core_weight
-        """).bindparams(list_of_user_ids=tuple(quarter_list))
-
-        valid_repos = session.execute_sql(repo_query).fetchall()
-        valid_repo_git_ids = [repo[0] for repo in valid_repos]
-
-        session.logger.info(f"valid repo git ids: {tuple(valid_repo_git_ids)}")
-        never_collected = CollectionStatus.core_data_last_collected == None
-        make_sure_valid_repo = CollectionStatus.repo_id.in_(list(valid_repo_git_ids))
-
-
-        core_order = CollectionStatus.core_weight
-
-        #Get repos for primary collection hook
-        collection_size = start_block_of_repos(
-            session.logger, session,
-            and_(not_erroed, not_collecting,never_collected,make_sure_valid_repo),
-            limit, primary_enabled_phases, repos_type="new", sort=core_order
-        )
-        
-        limit -= collection_size
-
-    #Now start old repos if there is space to do so.
-    query = s.sql.text("""
-        SELECT  
-        user_id
-        FROM augur_operations.users
-    """)
-
-    user_list = session.execute_sql(query).fetchall()
-    random.shuffle(user_list)
-
-    #Extract the user id from the randomized list and split into four chunks
-    split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
-
-    for quarter_list in split_user_list:
-        if limit > 0:
-            repo_query = s.sql.text("""
-                SELECT
-	            repo.repo_id
-                FROM augur_operations.user_groups 
-                JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
-                JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
-                JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-                WHERE user_id IN :list_of_user_ids
-                ORDER BY core_weight
-            """).bindparams(list_of_user_ids=tuple(quarter_list))
-
-            valid_repos = session.execute_sql(repo_query).fetchall()
-            valid_repo_git_ids = [repo[0] for repo in valid_repos]
-
-
-            #only start repos older than the specified amount of days
-            cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
-
-            collected_before = CollectionStatus.core_data_last_collected != None
-            make_sure_valid_repo = CollectionStatus.repo_id.in_(list(valid_repo_git_ids))
-            old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
-
-            collection_size = start_block_of_repos(
-                session.logger, session,
-                and_(not_erroed, not_collecting,collected_before,old_enough,make_sure_valid_repo),
-                limit, primary_enabled_phases, repos_type="old", sort=core_order
-            )
-
-            limit -= collection_size
-        else:
-            return
-
+    start_repos_by_user(session, max_repo, primary_enabled_phases)
 
 def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
 
@@ -309,42 +203,12 @@ def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
 
     secondary_enabled_phases.append(secondary_task_success_util_gen)
 
-    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.secondary_status == CollectionState.COLLECTING.value).all())
-
-    not_erroed = CollectionStatus.secondary_status != str(CollectionState.ERROR.value)
-    not_collecting = CollectionStatus.secondary_status != str(CollectionState.COLLECTING.value)
-    primary_collected = CollectionStatus.core_status == str(CollectionState.SUCCESS.value)
-    never_collected = CollectionStatus.secondary_data_last_collected == None
-
-    limit = max_repo-active_repo_count
-
-    secondary_order = CollectionStatus.secondary_weight
-
-    collection_size = start_block_of_repos(
-        session.logger, session, 
-        and_(primary_collected,not_erroed, not_collecting,never_collected), 
-        limit, secondary_enabled_phases,
-        repos_type="new",
-        hook="secondary",
-        sort=secondary_order
+    conds = [CollectionStatus.core_status == str(CollectionState.SUCCESS.value)]
+    start_repos_by_user(
+        session, max_repo,
+        secondary_enabled_phases,hook="secondary",
+        additional_conditions=conds
     )
-
-    limit -= collection_size
-
-    if limit > 0:
-        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
-
-        collected_before = CollectionStatus.secondary_data_last_collected != None
-        old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
-
-        start_block_of_repos(
-            session.logger, session, 
-            and_(primary_collected,not_erroed, not_collecting,collected_before,old_enough), 
-            limit, secondary_enabled_phases,
-            repos_type="old",
-            hook="secondary",
-            sort=secondary_order
-        )
 
 def start_facade_collection(session,max_repo,days_until_collect_again = 1):
 
@@ -364,42 +228,17 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
     facade_enabled_phases.append(facade_task_update_weight_util_gen)
 
     #cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
-    not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
     not_pending = CollectionStatus.facade_status != str(CollectionState.PENDING.value)
     not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
-    not_collecting = CollectionStatus.facade_status != str(CollectionState.COLLECTING.value)
     not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
-    never_collected = CollectionStatus.facade_data_last_collected == None
 
-    limit = max_repo
+    conds = [not_pending,not_failed_clone,not_initializing]
 
-    facade_order = CollectionStatus.facade_weight
-
-    collection_size = start_block_of_repos(
-        session.logger, session,
-        and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing,never_collected),
-        limit, facade_enabled_phases,
-        repos_type="new",
-        hook="facade",
-        sort=facade_order
+    start_repos_by_user(
+        session, max_repo,
+        facade_enabled_phases,hook="facade",
+        new_status=CollectionState.UPDATE.value,additional_conditions=conds
     )
-
-    limit -= collection_size
-
-    if limit > 0:
-        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
-
-        collected_before = CollectionStatus.facade_data_last_collected != None
-        old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
-
-        start_block_of_repos(
-            session.logger, session,
-            and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing,collected_before,old_enough),
-            limit, facade_enabled_phases,
-            repos_type="old",
-            hook="facade",
-            sort=facade_order
-        )
 
 
 @celery.task
