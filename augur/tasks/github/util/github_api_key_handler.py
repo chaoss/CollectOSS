@@ -1,5 +1,6 @@
 import httpx
 import time
+import random
 
 from typing import Optional, List
 
@@ -34,6 +35,15 @@ class GithubApiKeyHandler():
         self.keys = self.get_api_keys()
 
         # self.logger.debug(f"Retrieved {len(self.keys)} github api keys for use")
+
+    def get_random_key(self):
+        """Retrieves a random key from the list of keys
+
+        Returns:
+            A random github api key
+        """
+
+        return random.choice(self.keys)
 
     def get_config_key(self) -> str:
         """Retrieves the users github api key from their config table

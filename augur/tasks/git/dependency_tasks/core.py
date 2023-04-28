@@ -9,6 +9,7 @@ import traceback
 from augur.application.db.models import *
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
+from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
 
@@ -81,9 +82,9 @@ def generate_scorecard(session,repo_id,path):
     #this is path where our scorecard project is located
     path_to_scorecard = os.environ['HOME'] + '/scorecard'
 
-    #setting the environmental variable which is required by scorecard  
-    config = AugurConfig(session.logger, session)
-    os.environ['GITHUB_AUTH_TOKEN'] = config.get_section("Keys")['github_api_key']#self.config['gh_api_key']
+    #setting the environmental variable which is required by scorecard
+    key_handler = GithubApiKeyHandler(session)       
+    os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
     
     p= subprocess.run(['./scorecard', command, '--format=json'], cwd= path_to_scorecard ,capture_output=True, text=True, timeout=None)
     session.logger.info('subprocess completed successfully... ')
