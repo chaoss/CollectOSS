@@ -566,6 +566,9 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
             cond_list = [not_erroed, not_collecting,collected_before,old_enough,make_sure_valid_repo]
 
 
+            #Order by the relevant weight for the collection hook
+            order = getattr(CollectionStatus,f"{hook}_weight" )
+            
             #Re-add the common additional conditions for this repo block
             if additional_conditions:
                 cond_list.extend(additional_conditions)
