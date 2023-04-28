@@ -43,6 +43,8 @@ from augur.application.db.models.augur_data import *
 from augur.application.db.models.augur_operations import CollectionStatus
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list
 
+class GitCloneError(Exception):
+    pass
 
 def git_repo_initialize(session, repo_git):
 
@@ -169,7 +171,7 @@ def git_repo_initialize(session, repo_git):
 
             session.log_activity('Error', f"Could not clone {git}")
 
-            raise Exception(f"Could not clone {git}")
+            raise GitCloneError(f"Could not clone {git}")
 
     session.log_activity('Info', f"Fetching new repos (complete)")
 
