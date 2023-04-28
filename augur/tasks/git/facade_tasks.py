@@ -333,14 +333,13 @@ def git_repo_cleanup_facade_task(repo_git):
     with FacadeSession(logger) as session:
         git_repo_cleanup(session, repo_git)
 
-@celery.task
+# retry this task indefinitely every 5 minutes if it errors. Since the only way it gets scheduled is by itself, so if it stops running no more clones will happen till the instance is restarted
+@celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
 def clone_repos():
 
     logger = logging.getLogger(clone_repos.__name__)
     
     is_pending = CollectionStatus.facade_status == CollectionState.PENDING.value
-
-    # get first repo to process
 
     with FacadeSession(logger) as session:
 
