@@ -95,9 +95,9 @@ def start(disable_collection, development, port):
             os.remove("celerybeat-schedule.db")
 
         scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=25 -n core:{uuid.uuid4().hex}@%h"
-        secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=5 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
-        facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=7 -n facade:{uuid.uuid4().hex}@%h -Q facade"
+        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=45 -n core:{uuid.uuid4().hex}@%h"
+        secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=10 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+        facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=15 -n facade:{uuid.uuid4().hex}@%h -Q facade"
 
         scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
         core_worker_process = subprocess.Popen(core_worker.split(" "))

@@ -262,8 +262,6 @@ def augur_collection_monitor():
 
         if facade_phase.__name__ in enabled_phase_names:
             start_facade_collection(session, max_repo=30)
-           
-
 
 # have a pipe of 180
 
