@@ -400,7 +400,8 @@ def augur_collection_update_weights():
             session.commit()
             #git_update_commit_count_weight(repo_git)
 
-@celery.task
+#Retry this task for every issue so that repos that were added manually get the chance to be added to the collection_status table.
+@celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
 def create_collection_status_records():
     from augur.tasks.init.celery_app import engine
     logger = logging.getLogger(create_collection_status_records.__name__)
