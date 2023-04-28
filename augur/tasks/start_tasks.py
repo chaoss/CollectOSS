@@ -207,6 +207,7 @@ def start_primary_collection(session,max_repo, days_until_collect_again = 1):
     #Extract the user id from the randomized list and split into four chunks
     split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
 
+    session.logger.info(f"User_list: {split_user_list}")
     for quarter_list in split_user_list:
         if limit <= 0:
             return
@@ -225,8 +226,9 @@ def start_primary_collection(session,max_repo, days_until_collect_again = 1):
         valid_repos = session.execute_sql(repo_query).fetchall()
         valid_repo_git_ids = [repo[0] for repo in valid_repos]
 
+        session.logger.info(f"valid repo git ids: {tuple(valid_repo_git_ids)}")
         never_collected = CollectionStatus.core_data_last_collected == None
-        make_sure_valid_repo = tuple_(CollectionStatus.repo_id).in_(valid_repo_git_ids)
+        make_sure_valid_repo = CollectionStatus.repo_id.in_(list(valid_repo_git_ids))
 
 
         core_order = CollectionStatus.core_weight
@@ -274,7 +276,7 @@ def start_primary_collection(session,max_repo, days_until_collect_again = 1):
             cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
 
             collected_before = CollectionStatus.core_data_last_collected != None
-            make_sure_valid_repo = tuple_(CollectionStatus.repo_id).in_(valid_repo_git_ids)
+            make_sure_valid_repo = CollectionStatus.repo_id.in_(list(valid_repo_git_ids))
             old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
 
             collection_size = start_block_of_repos(
@@ -417,10 +419,10 @@ def augur_collection_monitor():
             start_primary_collection(session, max_repo=40)
         
         if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-            start_secondary_collection(session, max_repo=10)
+            pass#start_secondary_collection(session, max_repo=10)
 
         if facade_phase.__name__ in enabled_phase_names:
-            start_facade_collection(session, max_repo=30)
+            pass#start_facade_collection(session, max_repo=30)
            
 
 
