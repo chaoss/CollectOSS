@@ -33,7 +33,6 @@ def collect_github_repo_clones_data(repo_git: str) -> None:
         else:
             logger.info(f"{owner}/{repo} has no clones")
 
-
 def retrieve_all_clones_data(repo_git: str, logger, key_auth):
     owner, repo = get_owner_repo(repo_git)
 
