@@ -261,7 +261,7 @@ def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
         cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
 
         collected_before = CollectionStatus.secondary_data_last_collected != None
-        old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
+        old_enough = CollectionStatus.secondary_data_last_collected <= cutoff_date
 
         start_block_of_repos(
             session.logger, session, 
@@ -318,7 +318,7 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
         cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
 
         collected_before = CollectionStatus.facade_data_last_collected != None
-        old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
+        old_enough = CollectionStatus.facade_data_last_collected <= cutoff_date
 
         start_block_of_repos(
             session.logger, session,
