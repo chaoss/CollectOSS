@@ -419,8 +419,7 @@ class AugurTaskRoutine:
             #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
             yield repo_git, task_id
 
-def start_block_of_repos(logger,session,condition,limit,phases,repos_type,hook="core",sort=None):
-    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,condition,limit,order=sort)
+def start_block_of_repos(logger,session,repo_git_identifiers,phases,repos_type,hook="core"):
 
     logger.info(f"Starting collection on {len(repo_git_identifiers)} {repos_type} {hook} repos")
     if len(repo_git_identifiers) == 0:
@@ -477,43 +476,32 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
             return
 
         #Query a set of valid repositories sorted by weight, also making sure that the repos are new
+        #Order by the relevant weight for the collection hook
         repo_query = s.sql.text(f"""
             SELECT
-	        repo.repo_id
+	        repo.repo_id, repo.repo_git
             FROM augur_operations.user_groups 
             JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
             JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
             JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-            WHERE user_id IN :list_of_user_ids AND {status_column}='{str(new_status)}'
+            WHERE user_id IN :list_of_user_ids AND {status_column}='{str(new_status)}' AND {status_column}!='{str(CollectionState.ERROR.value)}'
+            AND {additional_conditions if additional_conditions else 'TRUE'} AND augur_operations.collection_status.{hook}_data_last_collected IS NULL
+            AND {status_column}!='{str(CollectionState.COLLECTING.value)}'
             ORDER BY {hook}_weight
             LIMIT :limit_num
-        """).bindparams(list_of_user_ids=tuple(quarter_list),limit_num=(limit*2))
+        """).bindparams(list_of_user_ids=tuple(quarter_list),limit_num=limit)
 
         #Get a list of valid repo ids, limit set to 2 times the usual
         valid_repos = session.execute_sql(repo_query).fetchall()
-        valid_repo_git_ids = [repo[0] for repo in valid_repos]
+        valid_repo_git_list = [repo[1] for repo in valid_repos]
 
-        #Create conditions for this query of valid repos to make sure they are new and valid
-        session.logger.info(f"valid repo git ids: {tuple(valid_repo_git_ids)}")
-        never_collected = getattr(CollectionStatus,f"{hook}_data_last_collected" ) == None
-        make_sure_valid_repo = CollectionStatus.repo_id.in_(list(valid_repo_git_ids))
-
-        #Create a list of conditions and add any more if passed in
-        cond_list = [not_erroed, not_collecting,never_collected,make_sure_valid_repo]
-
-        if additional_conditions:
-            cond_list.extend(additional_conditions)
-
-        condition = and_(*cond_list)
-
-        #Order by the relevant weight for the collection hook
-        weight = getattr(CollectionStatus,f"{hook}_weight" )
-
+        session.logger.info(f"valid repo git list: {tuple(valid_repo_git_list)}")
+        
         #start repos for new primary collection hook
         collection_size = start_block_of_repos(
             session.logger, session,
-            condition,
-            limit, phase_list, repos_type="new", hook=hook,sort=weight
+            valid_repo_git_list,
+            phase_list, repos_type="new", hook=hook
         )
         
         #Update limit with amount of repos started
@@ -538,8 +526,9 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
 
         #Break out if limit has been reached
         if limit > 0:
-
+            #only start repos older than the specified amount of days
             #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
+            #Order by the relevant weight for the collection hook
             repo_query = s.sql.text(f"""
                 SELECT
 	            repo.repo_id, repo.repo_git
@@ -547,39 +536,23 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
                 JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
                 JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
                 JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-                WHERE user_id IN :list_of_user_ids AND {status_column}='Success'
+                WHERE user_id IN :list_of_user_ids AND {status_column}='Success' AND {status_column}!='{str(CollectionState.ERROR.value)}'
+                AND {additional_conditions if additional_conditions else 'TRUE'} AND augur_operations.collection_status.{hook}_data_last_collected IS NOT NULL
+                AND {status_column}!='{str(CollectionState.COLLECTING.value)}' AND {hook}_data_last_collected <= NOW() - INTERVAL '{days} DAYS'
                 ORDER BY {hook}_weight
                 LIMIT :limit_num
-            """).bindparams(list_of_user_ids=tuple(quarter_list),limit_num=(limit*2))
+            """).bindparams(list_of_user_ids=tuple(quarter_list),limit_num=limit)
 
             valid_repos = session.execute_sql(repo_query).fetchall()
-            valid_repo_git_ids = [repo[0] for repo in valid_repos]
-
-
-            #only start repos older than the specified amount of days
-            cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
+            valid_repo_git_list = [repo[1] for repo in valid_repos]
 
             #Create conditions for this query of valid repos to make sure they are old enough and valid
-            collected_before = getattr(CollectionStatus,f"{hook}_data_last_collected" ) != None
-            make_sure_valid_repo = CollectionStatus.repo_id.in_(list(valid_repo_git_ids))
-            old_enough = getattr(CollectionStatus,f"{hook}_data_last_collected" ) <= cutoff_date
-            cond_list = [not_erroed, not_collecting,collected_before,old_enough,make_sure_valid_repo]
-
-
-            #Order by the relevant weight for the collection hook
-            weight = getattr(CollectionStatus,f"{hook}_weight" )
-            
-            #Re-add the common additional conditions for this repo block
-            if additional_conditions:
-                cond_list.extend(additional_conditions)
-
-            condition = and_(*cond_list)
 
             #Start a block of old repos for this group of users
             collection_size = start_block_of_repos(
                 session.logger, session,
-                condition,
-                limit, phase_list, repos_type="old",hook=hook, sort=weight
+                valid_repo_git_list,
+                phase_list, repos_type="old",hook=hook
             )
 
             limit -= collection_size
