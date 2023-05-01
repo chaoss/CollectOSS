@@ -444,7 +444,7 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
     active_repo_count = len(session.query(CollectionStatus).filter(getattr(CollectionStatus,status_column ) == CollectionState.COLLECTING.value).all())
 
     #Will always disallow errored repos and repos that are already collecting
-    
+
     #The maximum amount of repos to schedule is affected by the existing repos running tasks
     limit = max_repo-active_repo_count
 
@@ -506,6 +506,8 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
         limit -= collection_size
 
     #Now start old repos if there is space to do so.
+    if limit <= 0:
+            return
 
     #Get a list of all users.
     query = s.sql.text("""
@@ -523,7 +525,9 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
     for quarter_list in split_user_list:
 
         #Break out if limit has been reached
-        if limit > 0:
+        if limit <= 0:
+            return
+        else:
             #only start repos older than the specified amount of days
             #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
             #Order by the relevant weight for the collection hook
@@ -554,5 +558,3 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
             )
 
             limit -= collection_size
-        else:
-            return
