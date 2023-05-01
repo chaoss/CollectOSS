@@ -57,7 +57,8 @@ class RepoLoadController:
 
         UserRepo.insert(self.session, repo_id)
 
-        CollectionStatus.insert(self.session, repo_id)
+        #collection_status records are now only added during collection -IM 5/1/23
+        #CollectionStatus.insert(self.session, repo_id)
 
         return True, {"status": "Repo added", "repo_url": url}
 
