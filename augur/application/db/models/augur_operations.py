@@ -794,9 +794,10 @@ class UserRepo(Base):
         if not result:
             return False, {"status": "repo_user insertion failed", "repo_url": url}
 
-        status = CollectionStatus.insert(session, repo_id)
-        if not status:
-            return False, {"status": "Failed to create status for repo", "repo_url": url}
+        #collection_status records are now only added during collection -IM 5/1/23
+        #status = CollectionStatus.insert(session, repo_id)
+        #if not status:
+        #    return False, {"status": "Failed to create status for repo", "repo_url": url}
 
         return True, {"status": "Repo Added", "repo_url": url}
 

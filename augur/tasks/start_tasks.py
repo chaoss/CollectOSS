@@ -402,7 +402,8 @@ def augur_collection_update_weights():
             session.commit()
             #git_update_commit_count_weight(repo_git)
 
-@celery.task
+#Retry this task for every issue so that repos that were added manually get the chance to be added to the collection_status table.
+@celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
 def create_collection_status_records():
     from augur.tasks.init.celery_app import engine
     logger = logging.getLogger(create_collection_status_records.__name__)
@@ -417,3 +418,6 @@ def create_collection_status_records():
         while repo is not None:
             CollectionStatus.insert(session,repo[0])
             repo = session.execute_sql(query).first()
+    
+    #Check for new repos every seven minutes to be out of step with the clone_repos task
+    create_collection_status_records.si().apply_async(countdown=60*7)
