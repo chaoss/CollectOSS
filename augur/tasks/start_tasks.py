@@ -418,3 +418,6 @@ def create_collection_status_records():
         while repo is not None:
             CollectionStatus.insert(session,repo[0])
             repo = session.execute_sql(query).first()
+    
+    #Check for new repos every seven minutes to be out of step with the clone_repos task
+    create_collection_status_records.si().apply_async(countdown=60*7)
