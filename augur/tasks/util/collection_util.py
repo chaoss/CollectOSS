@@ -441,12 +441,12 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
 
     #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
     #Get the count of repos that are currently running this collection hook
-    desired_status = f"{hook}_status"
-    active_repo_count = len(session.query(CollectionStatus).filter(getattr(CollectionStatus,desired_status ) == CollectionState.COLLECTING.value).all())
+    status_column = f"{hook}_status"
+    active_repo_count = len(session.query(CollectionStatus).filter(getattr(CollectionStatus,status_column ) == CollectionState.COLLECTING.value).all())
 
     #Will always disallow errored repos and repos that are already collecting
-    not_erroed = getattr(CollectionStatus,desired_status ) != str(CollectionState.ERROR.value)
-    not_collecting = getattr(CollectionStatus,desired_status ) != str(CollectionState.COLLECTING.value)
+    not_erroed = getattr(CollectionStatus,status_column ) != str(CollectionState.ERROR.value)
+    not_collecting = getattr(CollectionStatus,status_column ) != str(CollectionState.COLLECTING.value)
 
     #The maximum amount of repos to schedule is affected by the existing repos running tasks
     limit = max_repo-active_repo_count
@@ -459,7 +459,7 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
         JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
         JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
         JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-        WHERE {desired_status}='{str(new_status)}'
+        WHERE {status_column}='{str(new_status)}'
         GROUP BY user_id
     """)
 
@@ -484,7 +484,7 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
             JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
             JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
             JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-            WHERE user_id IN :list_of_user_ids AND {desired_status}='{str(new_status)}'
+            WHERE user_id IN :list_of_user_ids AND {status_column}='{str(new_status)}'
             ORDER BY {hook}_weight
             LIMIT :limit_num
         """).bindparams(list_of_user_ids=tuple(quarter_list),limit_num=(limit*2))
@@ -507,13 +507,13 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
         condition = and_(*cond_list)
 
         #Order by the relevant weight for the collection hook
-        order = getattr(CollectionStatus,f"{hook}_weight" )
+        weight = getattr(CollectionStatus,f"{hook}_weight" )
 
         #start repos for new primary collection hook
         collection_size = start_block_of_repos(
             session.logger, session,
             condition,
-            limit, phase_list, repos_type="new", hook=hook,sort=order
+            limit, phase_list, repos_type="new", hook=hook,sort=weight
         )
         
         #Update limit with amount of repos started
@@ -542,12 +542,12 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
             #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
             repo_query = s.sql.text(f"""
                 SELECT
-	            repo.repo_id
+	            repo.repo_id, repo.repo_git
                 FROM augur_operations.user_groups 
                 JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
                 JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
                 JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-                WHERE user_id IN :list_of_user_ids AND {desired_status}='Success'
+                WHERE user_id IN :list_of_user_ids AND {status_column}='Success'
                 ORDER BY {hook}_weight
                 LIMIT :limit_num
             """).bindparams(list_of_user_ids=tuple(quarter_list),limit_num=(limit*2))
@@ -567,7 +567,7 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
 
 
             #Order by the relevant weight for the collection hook
-            order = getattr(CollectionStatus,f"{hook}_weight" )
+            weight = getattr(CollectionStatus,f"{hook}_weight" )
             
             #Re-add the common additional conditions for this repo block
             if additional_conditions:
@@ -579,7 +579,7 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
             collection_size = start_block_of_repos(
                 session.logger, session,
                 condition,
-                limit, phase_list, repos_type="old",hook=hook, sort=order
+                limit, phase_list, repos_type="old",hook=hook, sort=weight
             )
 
             limit -= collection_size
