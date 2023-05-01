@@ -22,7 +22,7 @@ from augur import instance_id
 from augur.tasks.start_tasks import augur_collection_monitor, CollectionState, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
 from augur.tasks.init.redis_connection import redis_connection 
-from augur.application.db.models import Repo, CollectionStatus
+from augur.application.db.models import Repo, CollectionStatus, UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.db.util import execute_session_query
 from augur.application.logs import AugurLogger
@@ -110,6 +110,7 @@ def start(disable_collection, development, port):
         with DatabaseSession(logger) as session:
 
             clean_collection_status(session)
+            assign_orphan_repos_to_default_user(session)
         
         create_collection_status_records.si().apply_async()
         time.sleep(3)
@@ -271,6 +272,17 @@ def clean_collection_status(session):
         WHERE facade_status='Failed Clone' OR facade_status='Initializing';
     """))
     #TODO: write timestamp for currently running repos.
+
+def assign_orphan_repos_to_default_user(session):
+    query = s.sql.text("""
+        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.user_repos)
+    """)
+
+    repos = session.execute_sql(query).fetchall()
+
+    for repo in repos:
+        UserRepo.insert(session,repo[0],1)
+
 
 @cli.command('export-env')
 def export_env(config):
