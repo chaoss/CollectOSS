@@ -203,7 +203,7 @@ def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
 
     secondary_enabled_phases.append(secondary_task_success_util_gen)
 
-    conds = [CollectionStatus.core_status == str(CollectionState.SUCCESS.value)]
+    conds = f"augur_operations.collection_status.core_status = {str(CollectionState.SUCCESS.value)}"#[CollectionStatus.core_status == str(CollectionState.SUCCESS.value)]
     start_repos_by_user(
         session, max_repo,
         secondary_enabled_phases,hook="secondary",
@@ -228,11 +228,13 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
     facade_enabled_phases.append(facade_task_update_weight_util_gen)
 
     #cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
-    not_pending = CollectionStatus.facade_status != str(CollectionState.PENDING.value)
-    not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
-    not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
+    #not_pending = CollectionStatus.facade_status != str(CollectionState.PENDING.value)
+    #not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
+    #not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
 
-    conds = [not_pending,not_failed_clone,not_initializing]
+    conds = f"augur_operations.collection_status.facade_status != {str(CollectionState.PENDING.value)} "#[not_pending,not_failed_clone,not_initializing]
+    conds += f"AND augur_operations.collection_status.facade_status != {str(CollectionState.FAILED_CLONE.value)} "
+    conds += f"AND augur_operations.collection_status.facade_status != {str(CollectionState.INITIALIZING.value)}"
 
     start_repos_by_user(
         session, max_repo,
