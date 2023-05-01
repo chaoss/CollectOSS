@@ -461,6 +461,7 @@ def start_repos_from_given_group_of_users(session,limit,users,condition_string,h
         phase_list, repos_type=repos_type, hook=hook
     )
 
+    return collection_size
 
 """
     Generalized function for starting a phase of tasks for a given collection hook with options to add restrictive conditions
