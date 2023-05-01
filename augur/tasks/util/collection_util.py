@@ -507,7 +507,7 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
 
     #Now start old repos if there is space to do so.
     if limit <= 0:
-            return
+        return
 
     #Get a list of all users.
     query = s.sql.text("""
@@ -527,34 +527,34 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
         #Break out if limit has been reached
         if limit <= 0:
             return
-        else:
-            #only start repos older than the specified amount of days
-            #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
-            #Order by the relevant weight for the collection hook
-            repo_query = s.sql.text(f"""
-                SELECT
-	            repo.repo_id, repo.repo_git
-                FROM augur_operations.user_groups 
-                JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
-                JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
-                JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-                WHERE user_id IN :list_of_user_ids AND {status_column}='Success' AND {status_column}!='{str(CollectionState.ERROR.value)}'
-                AND {additional_conditions if additional_conditions else 'TRUE'} AND augur_operations.collection_status.{hook}_data_last_collected IS NOT NULL
-                AND {status_column}!='{str(CollectionState.COLLECTING.value)}' AND {hook}_data_last_collected <= NOW() - INTERVAL '{days} DAYS'
-                ORDER BY {hook}_weight
-                LIMIT :limit_num
-            """).bindparams(list_of_user_ids=tuple(quarter_list),limit_num=limit)
+        
+        #only start repos older than the specified amount of days
+        #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
+        #Order by the relevant weight for the collection hook
+        repo_query = s.sql.text(f"""
+            SELECT
+            repo.repo_id, repo.repo_git
+            FROM augur_operations.user_groups 
+            JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
+            JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
+            JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
+            WHERE user_id IN :list_of_user_ids AND {status_column}='Success' AND {status_column}!='{str(CollectionState.ERROR.value)}'
+            AND {additional_conditions if additional_conditions else 'TRUE'} AND augur_operations.collection_status.{hook}_data_last_collected IS NOT NULL
+            AND {status_column}!='{str(CollectionState.COLLECTING.value)}' AND {hook}_data_last_collected <= NOW() - INTERVAL '{days} DAYS'
+            ORDER BY {hook}_weight
+            LIMIT :limit_num
+        """).bindparams(list_of_user_ids=tuple(quarter_list),limit_num=limit)
 
-            valid_repos = session.execute_sql(repo_query).fetchall()
-            valid_repo_git_list = [repo[1] for repo in valid_repos]
+        valid_repos = session.execute_sql(repo_query).fetchall()
+        valid_repo_git_list = [repo[1] for repo in valid_repos]
 
-            #Create conditions for this query of valid repos to make sure they are old enough and valid
+        #Create conditions for this query of valid repos to make sure they are old enough and valid
 
-            #Start a block of old repos for this group of users
-            collection_size = start_block_of_repos(
-                session.logger, session,
-                valid_repo_git_list,
-                phase_list, repos_type="old",hook=hook
-            )
+        #Start a block of old repos for this group of users
+        collection_size = start_block_of_repos(
+            session.logger, session,
+            valid_repo_git_list,
+            phase_list, repos_type="old",hook=hook
+        )
 
-            limit -= collection_size
+        limit -= collection_size
