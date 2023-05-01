@@ -444,9 +444,7 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
     active_repo_count = len(session.query(CollectionStatus).filter(getattr(CollectionStatus,status_column ) == CollectionState.COLLECTING.value).all())
 
     #Will always disallow errored repos and repos that are already collecting
-    not_erroed = getattr(CollectionStatus,status_column ) != str(CollectionState.ERROR.value)
-    not_collecting = getattr(CollectionStatus,status_column ) != str(CollectionState.COLLECTING.value)
-
+    
     #The maximum amount of repos to schedule is affected by the existing repos running tasks
     limit = max_repo-active_repo_count
 
