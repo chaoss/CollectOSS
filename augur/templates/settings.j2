@@ -146,7 +146,7 @@
                                             <tbody>
                                                 {% for group in groups %}
                                                 <tr>
-                                                    <th scope="row"><a href="{{ url_for('user_group_view') }}?group={{ group.name }}">{{ group.name }}</a></th>
+                                                    <th scope="row"><a href="{{ url_for('user_group_view', group=group.name) }}">{{ group.name }}</a></th>
                                                     <td>{{ group.repos | length }}</td>
                                                     <td><i onclick="toggleFavorite(this, '{{ group.name }}')" class="bi {% if group.favorited %} bi-star-fill {% else %} bi-star {% endif %} cursor-pointer"></i></td>
                                                     <td><button class="btn btn-outline-primary btn-sm" onclick="delgroup(this, '{{ group.name }}')">Delete</button></td>

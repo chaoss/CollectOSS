@@ -19,9 +19,10 @@ from urllib.parse import urlparse
 from datetime import datetime
 
 from augur import instance_id
-from augur.tasks.start_tasks import augur_collection_monitor, CollectionState
+from augur.tasks.start_tasks import augur_collection_monitor, CollectionState, create_collection_status_records
+from augur.tasks.git.facade_tasks import clone_repos
 from augur.tasks.init.redis_connection import redis_connection 
-from augur.application.db.models import Repo, CollectionStatus
+from augur.application.db.models import Repo, CollectionStatus, UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.db.util import execute_session_query
 from augur.application.logs import AugurLogger
@@ -33,18 +34,6 @@ from sqlalchemy import or_, and_
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
 
-
-def create_collection_status(logger):
-
-    with DatabaseSession(logger) as session:
-        query = s.sql.text("""
-        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.collection_status)
-        """)
-
-        repos = session.execute_sql(query).fetchall()
-
-        for repo in repos:
-            CollectionStatus.insert(session,repo[0])
 
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
@@ -104,13 +93,14 @@ def start(disable_collection, development, port):
     core_worker_process = None
     secondary_worker_process = None
     celery_beat_process = None
+    facade_worker_process = None
     if not disable_collection:
 
         if os.path.exists("celerybeat-schedule.db"):
             logger.info("Deleting old task schedule")
             os.remove("celerybeat-schedule.db")
 
-        scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+        scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
         core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=45 -n core:{uuid.uuid4().hex}@%h"
         secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=10 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
         facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=15 -n facade:{uuid.uuid4().hex}@%h -Q facade"
@@ -122,14 +112,21 @@ def start(disable_collection, development, port):
 
         time.sleep(5)
 
-        create_collection_status(logger)
         
         with DatabaseSession(logger) as session:
 
             clean_collection_status(session)
+            assign_orphan_repos_to_default_user(session)
+        
+        create_collection_status_records.si().apply_async()
+        time.sleep(3)
+
+        # start cloning repos when augur starts
+        clone_repos.si().apply_async()
 
         augur_collection_monitor.si().apply_async()
-
+        
+        
         celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
         celery_beat_process = subprocess.Popen(celery_command.split(" "))    
 
@@ -158,7 +155,7 @@ def start(disable_collection, development, port):
         
         if facade_worker_process:
             logger.info("Shutting down celery process: facade")
-            facade_worker_process,terminate()
+            facade_worker_process.terminate()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
@@ -253,19 +250,45 @@ def clear_rabbitmq_messages(connection_string):
 def clean_collection_status(session):
     session.execute_sql(s.sql.text("""
         UPDATE augur_operations.collection_status 
-        SET core_status='Pending'
-        WHERE core_status='Collecting';
+        SET core_status='Pending',core_task_id = NULL
+        WHERE core_status='Collecting' AND core_data_last_collected IS NULL;
+
+        UPDATE augur_operations.collection_status
+        SET core_status='Success',core_task_id = NULL
+        WHERE core_status='Collecting' AND core_data_last_collected IS NOT NULL;
+
         UPDATE augur_operations.collection_status 
-        SET secondary_status='Pending'
-        WHERE secondary_status='Collecting';
+        SET secondary_status='Pending',secondary_task_id = NULL
+        WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET secondary_status='Success',secondary_task_id = NULL
+        WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NOT NULL;
+
         UPDATE augur_operations.collection_status 
         SET facade_status='Update', facade_task_id=NULL
-        WHERE facade_status LIKE '%Collecting%';
+        WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET facade_status='Success', facade_task_id=NULL
+        WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NOT NULL;
+
         UPDATE augur_operations.collection_status
-        SET facade_status='Pending'
+        SET facade_status='Pending', facade_task_id=NULL
         WHERE facade_status='Failed Clone' OR facade_status='Initializing';
     """))
     #TODO: write timestamp for currently running repos.
+
+def assign_orphan_repos_to_default_user(session):
+    query = s.sql.text("""
+        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.user_repos)
+    """)
+
+    repos = session.execute_sql(query).fetchall()
+
+    for repo in repos:
+        UserRepo.insert(session,repo[0],1)
+
 
 @cli.command('export-env')
 def export_env(config):
@@ -294,16 +317,16 @@ def repo_reset(augur_app):
     """
     Refresh repo collection to force data collection
     """
-    augur_app.database.execute(s.sql.text("""UPDATE augur_operations.collection_status 
-        SET core_status='Pending';
+    augur_app.database.execute(s.sql.text("""
         UPDATE augur_operations.collection_status 
-        SET secondary_status='Pending';
+        SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
+
         UPDATE augur_operations.collection_status 
-        SET facade_status='Update'
-        WHERE facade_status='Collecting' OR facade_status='Success' OR facade_status='Error';
-        UPDATE augur_operations.collection_status
-        SET facade_status='Pending'
-        WHERE facade_status='Failed Clone' OR facade_status='Initializing';
+        SET secondary_status='Pending',secondary_task_id = NULL, secondary_data_last_collected = NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET facade_status='Pending', facade_task_id=NULL, facade_data_last_collected = NULL;
+
         TRUNCATE augur_data.commits CASCADE;
         """))
 

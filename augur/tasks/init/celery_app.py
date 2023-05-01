@@ -128,6 +128,7 @@ celery_app.conf.task_routes = {
     'augur.tasks.github.pull_requests.commits_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.files_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.tasks.collect_pull_request_reviews': {'queue': 'secondary'},
+    'augur.tasks.github.pull_requests.tasks.collect_pull_request_review_comments': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.process_ossf_scorecard_metrics': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.process_dependency_metrics': {'queue': 'facade'},
     'augur.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'}
@@ -193,13 +194,12 @@ def setup_periodic_tasks(sender, **kwargs):
     from celery.schedules import crontab
     from augur.tasks.start_tasks import augur_collection_monitor, augur_collection_update_weights
     from augur.tasks.start_tasks import non_repo_domain_tasks
+    from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
     
     with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
 
         config = AugurConfig(logger, session)
-
-        print(augur_collection_monitor)
 
         collection_interval = config.get_value('Tasks', 'collection_interval')
         logger.info(f"Scheduling collection every {collection_interval/60} minutes")
@@ -213,8 +213,8 @@ def setup_periodic_tasks(sender, **kwargs):
         logger.info(f"Scheduling refresh materialized view every night at 1am CDT")
         sender.add_periodic_task(crontab(hour=1, minute=0), refresh_materialized_views.s())
 
-        logger.info(f"Scheduling update of collection weights on midnight on even numbered days.")
-        sender.add_periodic_task(crontab(0, 0,day_of_month='2-30/2'),augur_collection_update_weights.s())
+        logger.info(f"Scheduling update of collection weights on midnight each day")
+        sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
 
 
 @after_setup_logger.connect

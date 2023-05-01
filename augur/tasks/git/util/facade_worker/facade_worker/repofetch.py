@@ -43,6 +43,8 @@ from augur.application.db.models.augur_data import *
 from augur.application.db.models.augur_operations import CollectionStatus
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list
 
+class GitCloneError(Exception):
+    pass
 
 def git_repo_initialize(session, repo_git):
 
@@ -85,7 +87,7 @@ def git_repo_initialize(session, repo_git):
 
         # Get the name of repo
         repo_name = git[git.rfind('/', 0)+1:]
-        if repo_name.find('.git', 0) > -1:
+        if repo_name.endswith('.git'):
             repo_name = repo_name[:repo_name.find('.git', 0)]
             session.log_activity(
                 'Info', f"Repo Name from facade05, line 93: {repo_name}")
@@ -116,6 +118,12 @@ def git_repo_initialize(session, repo_git):
             collectionRecord.facade_task_id = None
             session.commit()
 
+            #Make sure repo in repo table reflects found path.
+            query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
+            repo_name=:nameParam WHERE repo_id=:idParam
+            """).bindparams(pathParam=repo_relative_path, nameParam=repo_name, idParam=row.repo_id)
+
+            session.execute_sql(query)
             return
 
         # Create the prerequisite directories
@@ -133,6 +141,7 @@ def git_repo_initialize(session, repo_git):
 
         update_repo_log(session, row.repo_id, 'New (cloning)')
 
+        #Make sure newly cloned repo path is recorded in repo table
         query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
             repo_name=:nameParam WHERE repo_id=:idParam
             """).bindparams(pathParam=repo_relative_path, nameParam=repo_name, idParam=row.repo_id)
@@ -155,14 +164,14 @@ def git_repo_initialize(session, repo_git):
             # If cloning failed, log it and set the status back to new
             update_repo_log(session, row.repo_id, f"Failed ({return_code})")
 
-            query = s.sql.text("""UPDATE augur_operations.collection_status SET facade_status='Failed Clone' WHERE repo_id=:repo_id
+            query = s.sql.text("""UPDATE augur_operations.collection_status SET facade_status='Failed Clone', facade_task_id=NULL WHERE repo_id=:repo_id
                 """).bindparams(repo_id=row.repo_id)
 
             session.execute_sql(query)
 
             session.log_activity('Error', f"Could not clone {git}")
 
-            raise Exception(f"Could not clone {git}")
+            raise GitCloneError(f"Could not clone {git}")
 
     session.log_activity('Info', f"Fetching new repos (complete)")
 

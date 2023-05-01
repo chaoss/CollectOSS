@@ -3,6 +3,7 @@ import multiprocessing
 import logging
 import os
 from pathlib import Path
+from glob import glob
 import shutil
 
 from augur.application.db.session import DatabaseSession
@@ -23,6 +24,7 @@ with DatabaseSession(logger) as session:
     workers = multiprocessing.cpu_count() * 2 + 1
     umask = 0o007
     reload = True
+    reload_extra_files = glob(str(Path.cwd() / '**/*.j2'), recursive=True)
 
     # set the log location for gunicorn    
     logs_directory = augur_config.get_value('Logging', 'logs_directory')

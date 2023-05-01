@@ -1,18 +1,18 @@
 {% if repos %}
 <!-- Top pagination menu start -->
-<h1>{{ group }}</h1>
+<h1>Group: {{ group }}</h1>
 <nav aria-label="Repository pagination menu" class="overflow-auto">
     <ul class="pagination">
         <li class="page-item {% if activePage == 0 %} disabled {% else %} w3-hover-purple {% endif %}">
-            <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage - 1), s=sorting, r=reverse, group=group)}}" {% if activePage == 0 %} tabindex="-1" {% endif %}>Previous</a>
+            <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage - 1), s=sorting, r=reverse, group = group)}}" {% if activePage == 0 %} tabindex="-1" {% endif %}>Previous</a>
         </li>
         {% for page in range(0, pages|int + 1) %}
         <li class="page-item">
-            <a class="page-link {% if page == activePage %} paginationActive {% else %} w3-hover-blue {% endif %}" href="{{ url_for(PS, q=query_key, p=page, s=sorting, r=reverse, group=group)}}">{{page + 1}}</a>
+            <a class="page-link {% if page == activePage %} paginationActive {% else %} w3-hover-blue {% endif %}" href="{{ url_for(PS, q=query_key, p=page, s=sorting, r=reverse, group = group)}}">{{page + 1}}</a>
         </li>
         {% endfor %}
         <li class="page-item {% if activePage == pages|int %} disabled {% endif %}">
-            <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage + 1), s=sorting, r=reverse, group=group)}}" {% if activePage == pages|int %} tabindex="-1" {% endif %}>Next</a>
+            <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage + 1), s=sorting, r=reverse, group = group)}}" {% if activePage == pages|int %} tabindex="-1" {% endif %}>Next</a>
         </li>
     </ul>
 </nav>
@@ -42,9 +42,9 @@
                 {%- for header in tableHeaders -%}
                 {% if header.key %}
                     {%- if sorting == header.key -%}
-                        {%- set sorting_link = url_for(PS, q=query_key, p=activePage, s=header.key, r= not reverse) -%}
+                        {%- set sorting_link = url_for(PS, q=query_key, p=activePage, s=header.key, r= not reverse, group = group) -%}
                     {%- else -%}
-                        {%- set sorting_link = url_for(PS, q=query_key, p=activePage, s=header.key) -%}
+                        {%- set sorting_link = url_for(PS, q=query_key, p=activePage, s=header.key, group = group) -%}
                     {%- endif -%}
                 <th scope="col"><a class="sorting-link" href="{{ sorting_link }}"> {{ header.title }}
                     {%- if sorting == header.key and reverse %} ▲ {% elif sorting == header.key %} ▼ {% endif %}</a></th>
@@ -85,11 +85,8 @@
         </li>
     </ul>
 </nav>
-{% elif query_key %}
+{% elif query_key and activePage == 0 %}
 <h1>Your search did not match any repositories</h1>
-{% elif current_user.is_authenticated %}
-<h1>No Repos Tracked</h1>
-<p>Add repos to your personal tracker in your <a href="{{ url_for('user_settings') }}">profile page</a></p>
 {% elif activePage != 0 %}
 <h1>Invalid Page</h1>
 <a href="{{ url_for(PS, q=query_key, s=sorting, r=reverse, group=group)}}">Click here to go back</a>
