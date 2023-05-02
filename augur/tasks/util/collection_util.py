@@ -437,7 +437,7 @@ def start_repos_from_given_group_of_users(session,limit,users,condition_string,p
     #Query a set of valid repositories sorted by weight, also making sure that the repos are new
     #Order by the relevant weight for the collection hook
     repo_query = s.sql.text(f"""
-        SELECT DISTINCT repo.repo_id, repo.repo_git, collection_status.core_weight
+        SELECT DISTINCT repo.repo_id, repo.repo_git, collection_status.{hook}_weight
         FROM augur_operations.user_groups 
         JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
         JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
