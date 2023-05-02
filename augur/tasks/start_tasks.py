@@ -232,9 +232,9 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
     #not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
     #not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
 
-    conds = f"augur_operations.collection_status.facade_status != {str(CollectionState.PENDING.value)} "#[not_pending,not_failed_clone,not_initializing]
-    conds += f"AND augur_operations.collection_status.facade_status != {str(CollectionState.FAILED_CLONE.value)} "
-    conds += f"AND augur_operations.collection_status.facade_status != {str(CollectionState.INITIALIZING.value)}"
+    conds = f"augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}' "#[not_pending,not_failed_clone,not_initializing]
+    conds += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}' "
+    conds += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'"
 
     start_repos_by_user(
         session, max_repo,
