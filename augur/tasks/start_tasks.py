@@ -203,7 +203,7 @@ def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
 
     secondary_enabled_phases.append(secondary_task_success_util_gen)
 
-    conds = f"augur_operations.collection_status.core_status = {str(CollectionState.SUCCESS.value)}"#[CollectionStatus.core_status == str(CollectionState.SUCCESS.value)]
+    conds = f"augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}'"#[CollectionStatus.core_status == str(CollectionState.SUCCESS.value)]
     start_repos_by_user(
         session, max_repo,
         secondary_enabled_phases,hook="secondary",
