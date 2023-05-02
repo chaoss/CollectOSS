@@ -444,7 +444,7 @@ def start_repos_from_given_group_of_users(session,limit,users,condition_string,h
         JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
         JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
         WHERE user_id IN :list_of_user_ids AND {condition_string}
-        ORDER BY {hook}_weight
+        ORDER BY augur_operations.collection_status.{hook}_weight
         LIMIT :limit_num
     """).bindparams(list_of_user_ids=users,limit_num=limit)
 
