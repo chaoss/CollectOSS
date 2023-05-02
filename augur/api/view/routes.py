@@ -266,16 +266,29 @@ def user_groups_view():
 
     pagination_offset = config.get_value("frontend", "pagination_offset")
 
+    params = {}
+    
+    if query := request.args.get('q'):
+        params["search"] = query
+
+    if sort := request.args.get('s'):
+        params["sort"] = sort
+
     rev = request.args.get('r')
-    query = request.args.get('q')
-    sort = request.args.get('s')
+    if rev is not None:
+        if rev == "False":
+            rev = False
+            params["direction"] = "ASC"
+        elif rev == "True":
+            rev = True
+            params["direction"] = "DESC"
 
     try:
         activepage = int(request.args.get('p')) if 'p' in request.args else 0
     except:
         activepage = 0
 
-    (groups, status) = current_user.get_groups_info(search = query, sort = sort, reversed = bool(rev))
+    (groups, status) = current_user.get_groups_info(**params)
 
     # if not groups and not query:
     #     return render_message("No Groups Defined", "You do not have any groups defined, you can add groups on you profile page.")
@@ -310,8 +323,7 @@ def user_group_view(group = None):
     except:
         params["page"] = 1
     
-    query = request.args.get('q')
-    if query:
+    if query := request.args.get('q'):
         params["search"] = query
 
     if sort := request.args.get('s'):
