@@ -446,7 +446,7 @@ def start_repos_from_given_group_of_users(session,limit,users,condition_string,h
         WHERE user_id IN :list_of_user_ids AND {condition_string}
         ORDER BY {hook}_weight
         LIMIT :limit_num
-    """).bindparams(list_of_user_ids=tuple(quarter_list),limit_num=limit)
+    """).bindparams(list_of_user_ids=users,limit_num=limit)
 
     #Get a list of valid repo ids, limit set to 2 times the usual
     valid_repos = session.execute_sql(repo_query).fetchall()
