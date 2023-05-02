@@ -166,7 +166,7 @@ def trim_commits_post_analysis_facade_task(repo_git):
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path)
         repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
@@ -242,7 +242,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path)
         repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
@@ -283,7 +283,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
             repo = execute_session_query(query,'one')
 
         logger.info(f"Got to analysis!")
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path)
         repo_loc = (f"{absoulte_path}/.git")
         
         for count, commitTuple in enumerate(queue):

@@ -113,9 +113,9 @@ def trim_author(session, email):
 
 	session.log_activity('Debug',f"Trimmed working author: {email}")
 
-def get_absolute_repo_path(repo_base_dir, repo_group_id, repo_path, repo_name):
+def get_absolute_repo_path(repo_base_dir, repo_id, repo_path):
 	
-	return f"{repo_base_dir}{repo_group_id}/{repo_path}{repo_name}"
+	return f"{repo_base_dir}{repo_id}-{repo_path}"
 
 def get_parent_commits_set(absolute_repo_path, start_date):
 	
@@ -144,21 +144,6 @@ def get_existing_commits_set(session, repo_id):
 	return set(existing_commits)
 
 
-def get_repo_commit_count(session,repo_git):
-	
-	repo = Repo.get_by_repo_git(session, repo_git)
-	
-
-	absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
-	repo_loc = (f"{absolute_path}/.git")
-
-	#git --git-dir <.git directory> rev-list --count HEAD
-	check_commit_count_cmd = check_output(["git","--git-dir",repo_loc, "rev-list", "--count", "HEAD"])
-
-	commit_count = int(check_commit_count_cmd)
-
-	return commit_count
-
 def count_branches(git_dir):
     branches_dir = os.path.join(git_dir, 'refs', 'heads')
     return sum(1 for _ in os.scandir(branches_dir))
@@ -167,7 +152,7 @@ def get_repo_commit_count(session, repo_git):
     
 	repo = Repo.get_by_repo_git(session, repo_git)
 
-	absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+	absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path)
 	repo_loc = (f"{absolute_path}/.git")
 
 	# Check if the .git directory exists

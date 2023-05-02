@@ -60,7 +60,7 @@ def git_repo_cleanup(session,repo_git):
 
 		# Remove the files on disk
 
-		absolute_path = get_absolute_repo_path(session.repo_base_directory, row.repo_group_id, row.repo_path, row.repo_name)
+		absolute_path = get_absolute_repo_path(session.repo_base_directory, row.repo_id, row.repo_path)
 
 		cmd = ("rm -rf %s"
 			% (absolute_path))
