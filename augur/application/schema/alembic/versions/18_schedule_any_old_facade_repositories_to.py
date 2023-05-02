@@ -30,9 +30,9 @@ def total_facade_reset():
     conn.execute(text(f"""
 
     UPDATE augur_operations.collection_status
-    SET facade_status='Pending', facade_task_id=NULL, facade_weight=NULL,commit_sum=NULL;
+    SET facade_status='Pending', facade_task_id=NULL, facade_weight=NULL,commit_sum=NULL,facade_data_last_collected=NULL;
 
-    UPDATE augur_data.repos
+    UPDATE repo
     SET repo_path=NULL,repo_name=NULL;
     """))
 
@@ -40,11 +40,22 @@ def total_facade_reset():
 
     try:
         with DatabaseSession(logger) as session:
-            config = AugurConfig(logger, session).get_section("Facade")
-            facade_base_dir = config['repo_directory']
+            config = AugurConfig(logger, session)
+            facade_base_dir = config.get_section("Facade")['repo_directory']
         
+        #remove path
         path = pathlib.Path(facade_base_dir)
         shutil.rmtree(path)
+
+        #Move credentials out
+        shutil.move(f"{facade_base_dir}.git-credentials","/tmp/.git-credentials")
+        #Create path
+        path.touch()
+        #Move credentials in
+        shutil.move("/tmp/.git-credentials",f"{facade_base_dir}.git-credentials")
+
+
+
     except:
         pass
 
