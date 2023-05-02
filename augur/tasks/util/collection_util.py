@@ -539,7 +539,7 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
         condition_concat_string = f"""
             {status_column}='Success' AND {status_column}!='{str(CollectionState.ERROR.value)}'
             AND {additional_conditions if additional_conditions else 'TRUE'} AND augur_operations.collection_status.{hook}_data_last_collected IS NOT NULL
-            AND {status_column}!='{str(CollectionState.COLLECTING.value)}' AND {hook}_data_last_collected <= NOW() - INTERVAL '{days} DAYS'
+            AND {status_column}!='{str(CollectionState.COLLECTING.value)}' AND {hook}_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
         """
 
         #only start repos older than the specified amount of days
