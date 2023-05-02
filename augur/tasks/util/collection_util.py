@@ -438,7 +438,7 @@ def start_repos_from_given_group_of_users(session,limit,users,condition_string,h
     #Order by the relevant weight for the collection hook
     repo_query = s.sql.text(f"""
         SELECT
-        DISTINCT ON (repo.repo_id) repo_id, repo.repo_git
+        DISTINCT repo.repo_id, repo.repo_git
         FROM augur_operations.user_groups 
         JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
         JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
