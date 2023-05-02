@@ -433,7 +433,7 @@ def start_block_of_repos(logger,session,repo_git_identifiers,phases,repos_type,h
 
     return len(repo_git_identifiers)
 
-def start_repos_from_given_group_of_users(session,limit,users,condition_string,hook="core",repos_type="new"):
+def start_repos_from_given_group_of_users(session,limit,users,condition_string,phases,hook="core",repos_type="new"):
     #Query a set of valid repositories sorted by weight, also making sure that the repos are new
     #Order by the relevant weight for the collection hook
     repo_query = s.sql.text(f"""
@@ -457,7 +457,7 @@ def start_repos_from_given_group_of_users(session,limit,users,condition_string,h
     collection_size = start_block_of_repos(
         session.logger, session,
         valid_repo_git_list,
-        phase_list, repos_type=repos_type, hook=hook
+        phases, repos_type=repos_type, hook=hook
     )
 
     return collection_size
@@ -508,7 +508,7 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
             AND {status_column}!='{str(CollectionState.COLLECTING.value)}'
         """
 
-        collection_size = start_repos_from_given_group_of_users(session,limit,tuple(quarter_list),condition_concat_string,hook=hook)
+        collection_size = start_repos_from_given_group_of_users(session,limit,tuple(quarter_list),condition_concat_string,phase_list,hook=hook)
         #Update limit with amount of repos started
         limit -= collection_size
 
@@ -544,6 +544,6 @@ def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again =
         #only start repos older than the specified amount of days
         #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
         #Order by the relevant weight for the collection hook
-        collection_size = start_repos_from_given_group_of_users(session,limit,tuple(quarter_list),condition_concat_string,hook=hook,repos_type="old")
+        collection_size = start_repos_from_given_group_of_users(session,limit,tuple(quarter_list),condition_concat_string,phase_list,hook=hook,repos_type="old")
 
         limit -= collection_size
