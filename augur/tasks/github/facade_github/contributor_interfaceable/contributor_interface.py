@@ -134,9 +134,9 @@ def create_endpoint_from_commit_sha(logger,db,commit_sha, repo_id):
     #session.logger.info(f"Result: {result}")
 
     split_git = result.repo_git.split('/')
-    repo_path = split_git[-2] + "/" + result.repo_name
+    repo_name_and_org = split_git[-2] + "/" + result.repo_name
 
-    url = "https://api.github.com/repos/" + repo_path + "/commits/" + commit_sha
+    url = "https://api.github.com/repos/" + repo_name_and_org + "/commits/" + commit_sha
 
     logger.info(f"Url: {url}")
 
