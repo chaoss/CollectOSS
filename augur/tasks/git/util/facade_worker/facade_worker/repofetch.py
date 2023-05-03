@@ -323,7 +323,7 @@ def git_repo_updates(session, repo_git):
     # default_branch = ''
 
     absolute_path = get_absolute_repo_path(
-        session.repo_base_directory, row["repo_id"], row['repo_path'])
+        session.repo_base_directory, row["repo_id"], row['repo_path'],row['repo_name'])
 
     while attempt < 2:
 

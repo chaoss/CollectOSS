@@ -113,9 +113,9 @@ def trim_author(session, email):
 
 	session.log_activity('Debug',f"Trimmed working author: {email}")
 
-def get_absolute_repo_path(repo_base_dir, repo_id, repo_path):
+def get_absolute_repo_path(repo_base_dir, repo_id, repo_path,repo_name):
 	
-	return f"{repo_base_dir}{repo_id}-{repo_path}"
+	return f"{repo_base_dir}{repo_id}-{repo_path}/{repo_name}"
 
 def get_parent_commits_set(absolute_repo_path, start_date):
 	
@@ -152,8 +152,11 @@ def get_repo_commit_count(session, repo_git):
     
 	repo = Repo.get_by_repo_git(session, repo_git)
 
-	absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path)
+	absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
 	repo_loc = (f"{absolute_path}/.git")
+
+	session.logger.info(f"loc: {repo_loc}")
+	session.logger.info(f"path: {repo.repo_path}")
 
 	# Check if the .git directory exists
 	if not os.path.exists(repo_loc):
