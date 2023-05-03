@@ -364,7 +364,7 @@ def clone_repos():
                 session.commit()
                 continue
             
-            logger.info("GOT HERE ISAAC")
+            #logger.info("GOT HERE ISAAC")
 
             # get the commit count
             commit_count = get_repo_commit_count(session, repo_git)
