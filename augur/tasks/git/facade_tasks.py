@@ -359,6 +359,9 @@ def clone_repos():
             except GitCloneError:
                 # continue to next repo, since we can't calculate 
                 # commit_count or weight without the repo cloned
+
+                setattr(repoStatus,"facade_status", CollectionState.FAILED_CLONE.value)
+                session.commit()
                 continue
 
             # get the commit count
