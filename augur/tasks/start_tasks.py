@@ -257,10 +257,10 @@ def augur_collection_monitor():
         enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
 
         if primary_repo_collect_phase.__name__ in enabled_phase_names:
-            start_primary_collection(session, max_repo=40)
+            pass#start_primary_collection(session, max_repo=40)
         
         if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-            start_secondary_collection(session, max_repo=10)
+            pass#start_secondary_collection(session, max_repo=10)
 
         if facade_phase.__name__ in enabled_phase_names:
             start_facade_collection(session, max_repo=30)
