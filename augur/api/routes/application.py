@@ -5,7 +5,6 @@ Creates routes for user functionality
 
 import logging
 import requests
-import json
 import os
 import base64
 import time
@@ -33,7 +32,7 @@ Session = sessionmaker(bind=engine)
 
 from augur.api.routes import AUGUR_API_VERSION
 
-@app.route(f"/{AUGUR_API_VERSION}/application", methods=['POST'])
+@app.route(f"/{AUGUR_API_VERSION}/application", methods=['GET', 'POST'])
 @ssl_required
 @api_key_required
 def get_application_info(application: ClientApplication):
@@ -48,7 +47,7 @@ def get_application_info(application: ClientApplication):
 
     return info
 
-@app.route(f"/{AUGUR_API_VERSION}/application/group/repos", methods=['POST'])
+@app.route(f"/{AUGUR_API_VERSION}/application/group/repos", methods=['GET', 'POST'])
 @ssl_required
 @api_key_required
 def get_application_group_repos(application: ClientApplication):
@@ -82,11 +81,11 @@ def get_application_group_repos(application: ClientApplication):
 
     result_dict = result[1]
     if result[0] is not None:
-        
+
         for repo in result[0]:
             repo["base64_url"] = str(repo["base64_url"].decode())
 
-        result_dict.update({"repos": result[0]})        
+        result_dict.update({"repos": result[0]})
 
     return jsonify(result_dict)
 
@@ -118,7 +117,7 @@ def get_application_group_repo_count(application: ClientApplication):
 
     return jsonify(result_dict)
 
-@app.route(f"/{AUGUR_API_VERSION}/application/groups/names", methods=['POST'])
+@app.route(f"/{AUGUR_API_VERSION}/application/groups/names", methods=['GET', 'POST'])
 @ssl_required
 @api_key_required
 def get_application_groups(application: ClientApplication):

@@ -21,7 +21,7 @@ from augur.application.db.util import execute_session_query
 development = get_development_flag()
 
 @celery.task(base=AugurCoreRepoCollectionTask)
-def collect_issues(repo_git : str) -> None:
+def collect_issues(repo_git : str) -> int:
 
 
     logger = logging.getLogger(collect_issues.__name__) 
@@ -39,14 +39,18 @@ def collect_issues(repo_git : str) -> None:
         
             issue_data = retrieve_all_issue_data(repo_git, logger, manifest.key_auth)
 
+
             if issue_data:
-            
+                total_issues = len(issue_data)
                 process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger, augur_db)
 
+                return total_issues
             else:
                 logger.info(f"{owner}/{repo} has no issues")
+                return 0
         except Exception as e:
             logger.error(f"Could not collect issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+            return -1
 
 
 

@@ -4,10 +4,51 @@ import json
 import sys
 import logging
 import inspect
+import re
+import subprocess
+
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.pool import NullPool
 from augur.application.db.util import catch_operational_error
+
+
+def parse_database_string(db_string) -> str:
+    """Parse database string into the following components:
+        username, password, host, port, database 
+    """
+
+    match = re.match(r"postgresql\+psycopg2:\/\/(?P<username>[a-zA-Z0-9_]+):(?P<password>[^@]+)@(?P<host>[^:]+):(?P<port>\d+)\/(?P<database>\w+)", db_string)
+
+    if not match:
+         raise ValueError("Invalid database string")
+
+    username = match.group("username")
+    password = match.group("password")
+    host = match.group("host")
+    port = match.group("port")
+    database = match.group("database")
+
+    return username, password, host, port, database
+
+
+def execute_sql_file(sql_file, dbname, username, password, host, port):
+    psql_command = [
+        "psql",
+        "-U", username,
+        "-h", host,
+        "-p", port,
+        "-d", dbname,
+        "-f", sql_file,
+    ]
+
+    # Set the PGPASSWORD environment variable to provide the password
+    env = dict(**os.environ, PGPASSWORD=password)
+
+    try:
+        subprocess.run(psql_command, env=env, check=True, stdout=subprocess.DEVNULL)
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while executing the SQL file: {e}")
 
 
 def get_database_string() -> str:

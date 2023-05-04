@@ -2,7 +2,7 @@ import time
 import logging
 
 from augur.tasks.init.celery_app import celery_app as celery, engine
-from augur.application.db.data_parse import *
+from augur.application.db.data_parse import extract_needed_clone_history_data
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
@@ -33,9 +33,7 @@ def collect_github_repo_clones_data(repo_git: str) -> None:
         else:
             logger.info(f"{owner}/{repo} has no clones")
 
-
-def retrieve_all_clones_data(repo_git: str, logger, key_auth
-                             ):
+def retrieve_all_clones_data(repo_git: str, logger, key_auth):
     owner, repo = get_owner_repo(repo_git)
 
     url = f"https://api.github.com/repos/{owner}/{repo}/traffic/clones"

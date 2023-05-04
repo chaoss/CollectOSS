@@ -16,13 +16,13 @@ from celery import chain, signature, group
 import uuid
 import traceback
 from urllib.parse import urlparse
-from sqlalchemy import update
-
+from datetime import datetime
 
 from augur import instance_id
-from augur.tasks.start_tasks import augur_collection_monitor, CollectionState
+from augur.tasks.start_tasks import augur_collection_monitor, CollectionState, create_collection_status_records
+from augur.tasks.git.facade_tasks import clone_repos
 from augur.tasks.init.redis_connection import redis_connection 
-from augur.application.db.models import Repo, CollectionStatus
+from augur.application.db.models import Repo, CollectionStatus, UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.db.util import execute_session_query
 from augur.application.logs import AugurLogger
@@ -34,18 +34,6 @@ from sqlalchemy import or_, and_
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
 
-
-def create_collection_status(logger):
-
-    with DatabaseSession(logger) as session:
-        query = s.sql.text("""
-        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.collection_status)
-        """)
-
-        repos = session.execute_sql(query).fetchall()
-
-        for repo in repos:
-            CollectionStatus.insert(session,repo[0])
 
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
@@ -80,14 +68,13 @@ def start(disable_collection, development, port):
     except FileNotFoundError:
         logger.error("\n\nPlease run augur commands in the root directory\n\n")
 
-    db_session = DatabaseSession(logger)
-    config = AugurConfig(logger, db_session)
-    host = config.get_value("Server", "host")
+    with DatabaseSession(logger) as db_session:
+        config = AugurConfig(logger, db_session)
+        host = config.get_value("Server", "host")
 
-    if not port:
-        port = config.get_value("Server", "port")
+        if not port:
+            port = config.get_value("Server", "port")
         
-    db_session.invalidate()
 
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app"
     server = subprocess.Popen(gunicorn_command.split(" "))
@@ -100,30 +87,40 @@ def start(disable_collection, development, port):
     core_worker_process = None
     secondary_worker_process = None
     celery_beat_process = None
+    facade_worker_process = None
     if not disable_collection:
 
         if os.path.exists("celerybeat-schedule.db"):
             logger.info("Deleting old task schedule")
             os.remove("celerybeat-schedule.db")
 
-        scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=60 -n core:{uuid.uuid4().hex}@%h"
+        scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=45 -n core:{uuid.uuid4().hex}@%h"
         secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=10 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
-        
+        facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=15 -n facade:{uuid.uuid4().hex}@%h -Q facade"
+
         scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
         core_worker_process = subprocess.Popen(core_worker.split(" "))
         secondary_worker_process = subprocess.Popen(secondary_worker.split(" "))
+        facade_worker_process = subprocess.Popen(facade_worker.split(" "))
 
         time.sleep(5)
 
-        create_collection_status(logger)
         
         with DatabaseSession(logger) as session:
 
             clean_collection_status(session)
+            assign_orphan_repos_to_default_user(session)
+        
+        create_collection_status_records.si().apply_async()
+        time.sleep(3)
+
+        # start cloning repos when augur starts
+        clone_repos.si().apply_async()
 
         augur_collection_monitor.si().apply_async()
-
+        
+        
         celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
         celery_beat_process = subprocess.Popen(celery_command.split(" "))    
 
@@ -149,6 +146,10 @@ def start(disable_collection, development, port):
         if secondary_worker_process:
             logger.info("Shutting down celery process: secondary")
             secondary_worker_process.terminate()
+        
+        if facade_worker_process:
+            logger.info("Shutting down celery process: facade")
+            facade_worker_process.terminate()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
@@ -187,12 +188,14 @@ def augur_stop(signal, logger):
     """
 
     augur_processes = get_augur_processes()
-    _broadcast_signal_to_processes(augur_processes, broadcast_signal=signal, given_logger=logger)
-
     # if celery is running, run the cleanup function
     process_names = [process.name() for process in augur_processes]
+
+    _broadcast_signal_to_processes(augur_processes, broadcast_signal=signal, given_logger=logger)
+
     if "celery" in process_names:
         cleanup_after_collection_halt(logger)
+
 
 def cleanup_after_collection_halt(logger):
     clear_redis_caches()
@@ -214,7 +217,7 @@ def clear_redis_caches():
     redis_connection.flushdb()
 
 def clear_all_message_queues(connection_string):
-    queues = ['celery','secondary','scheduling']
+    queues = ['celery','secondary','scheduling','facade']
 
     virtual_host_string = connection_string.split("/")[-1]
 
@@ -241,19 +244,45 @@ def clear_rabbitmq_messages(connection_string):
 def clean_collection_status(session):
     session.execute_sql(s.sql.text("""
         UPDATE augur_operations.collection_status 
-        SET core_status='Pending'
-        WHERE core_status='Collecting';
+        SET core_status='Pending',core_task_id = NULL
+        WHERE core_status='Collecting' AND core_data_last_collected IS NULL;
+
+        UPDATE augur_operations.collection_status
+        SET core_status='Success',core_task_id = NULL
+        WHERE core_status='Collecting' AND core_data_last_collected IS NOT NULL;
+
         UPDATE augur_operations.collection_status 
-        SET secondary_status='Pending'
-        WHERE secondary_status='Collecting';
+        SET secondary_status='Pending',secondary_task_id = NULL
+        WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET secondary_status='Success',secondary_task_id = NULL
+        WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NOT NULL;
+
         UPDATE augur_operations.collection_status 
         SET facade_status='Update', facade_task_id=NULL
-        WHERE facade_status LIKE '%Collecting%';
+        WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET facade_status='Success', facade_task_id=NULL
+        WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NOT NULL;
+
         UPDATE augur_operations.collection_status
-        SET facade_status='Pending'
+        SET facade_status='Pending', facade_task_id=NULL
         WHERE facade_status='Failed Clone' OR facade_status='Initializing';
     """))
     #TODO: write timestamp for currently running repos.
+
+def assign_orphan_repos_to_default_user(session):
+    query = s.sql.text("""
+        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.user_repos)
+    """)
+
+    repos = session.execute_sql(query).fetchall()
+
+    for repo in repos:
+        UserRepo.insert(session,repo[0],1)
+
 
 @cli.command('export-env')
 def export_env(config):
@@ -282,16 +311,16 @@ def repo_reset(augur_app):
     """
     Refresh repo collection to force data collection
     """
-    augur_app.database.execute(s.sql.text("""UPDATE augur_operations.collection_status 
-        SET core_status='Pending';
+    augur_app.database.execute(s.sql.text("""
         UPDATE augur_operations.collection_status 
-        SET secondary_status='Pending';
+        SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
+
         UPDATE augur_operations.collection_status 
-        SET facade_status='Update'
-        WHERE facade_status='Collecting' OR facade_status='Success' OR facade_status='Error';
-        UPDATE augur_operations.collection_status
-        SET facade_status='Pending'
-        WHERE facade_status='Failed Clone' OR facade_status='Initializing';
+        SET secondary_status='Pending',secondary_task_id = NULL, secondary_data_last_collected = NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET facade_status='Pending', facade_task_id=NULL, facade_data_last_collected = NULL;
+
         TRUNCATE augur_data.commits CASCADE;
         """))
 
@@ -349,97 +378,6 @@ def raise_open_file_limit(num_files):
 
     return
 
-
-def print_repos(repos):
-
-    for index, repo in enumerate(repos):
-
-        repo_git = repo.repo_git
-        print(f"\t{index}: {repo_git}")
-
-def remove_repos(repos):
-
-    print("Note: To remove multiple repos at once use the python slice syntax")
-    print("For example '0:3' removes repo 0, 1, and 2")
-
-    while True:
-        if len(repos) == 1:
-            print("Only one repo left returning..")
-            return
-
-        print_repos(repos)
-        user_input = input("To exit enter: -1. Enter index of repo or slice to remove multiple: ")
-
-        if user_input == "-1":
-            break
-
-        if ":" in user_input:
-            user_slice = slice(*map(lambda x: int(x.strip()) if x.strip() else None, user_input.split(':')))
-            try:
-                del repos[user_slice]
-            except IndexError:
-                print("Invalid input. Please input a number or slice")
-                continue
-
-        else: 
-            try:
-                user_input = int(user_input)
-            except ValueError:
-                print("Invalid input. Please input a number or slice")
-                continue
-
-            try:
-                del repos[user_input]
-            except IndexError:
-                print("Invalid input. Please input a number or slice")
-                continue
-
-
-def order_repos(repos):
-
-    print("\n\nPlease enter a comma indicating the order the repos should be collected")
-    print("If you would like to order some of them but randomize the rest just enter the order you would like and the rest will be randomized")
-    print("For example with 5 repos '3,4' would collect repo 3, then 4, and then repos 1, 2, and 5 would be randomly ordered")
-    print_repos(repos)
-
-    while True:
-        user_input = input("Order input: ")        
-
-        # creates a list of indexes in the order that the user wanted
-        ordered_index_strings = user_input.split(",")
-
-        try:
-            # convert list of strings to integers
-            ordered_index_ints = [int(i) for i in ordered_index_strings]
-        except ValueError:
-            print("Invalid input. Please input a comma separated list indicating the order")
-            continue
-
-        invalid_entry = False
-        for index in ordered_index_ints:
-            try:
-                repos[index]
-            except IndexError:
-                print(f"Invalid entry: {index}. Make sure your input is a comma separated list")
-                invalid_entry = True
-
-        if invalid_entry:
-            continue
-
-        break
-
-    # adds all the other indexes the user did not specify an order for
-    for index in range(0, len(repos)):
-
-        if index in ordered_index_ints:
-            continue
-
-        ordered_index_ints.append(index)
-
-    # converts list of indexes into list of repo git urls
-    repo_git_urls = [repos[index] for index in ordered_index_ints]
-
-    return repo_git_urls
 
 # def initialize_components(augur_app, disable_housekeeper):
 #     master = None

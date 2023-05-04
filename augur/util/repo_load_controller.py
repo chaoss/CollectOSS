@@ -15,57 +15,6 @@ from augur.application.db.util import execute_session_query
 
 logger = logging.getLogger(__name__)
 
-REPO_ENDPOINT = "https://api.github.com/repos/{}/{}"
-ORG_REPOS_ENDPOINT = "https://api.github.com/orgs/{}/repos?per_page=100"
-DEFAULT_REPO_GROUP_IDS = [1, 10]
-CLI_USER_ID = 1
-
-def parse_repo_url(url: str) -> tuple:
-    """ Gets the owner and repo from a url.
-
-    Args:
-        url: Github url
-
-    Returns:
-        Tuple of owner and repo. Or a tuple of None and None if the url is invalid.
-    """
-
-    if url.endswith(".github") or url.endswith(".io") or url.endswith(".js"):
-
-        result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
-    else:
-
-        result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _]+)(.git)?\/?$", url)
-
-    if not result:
-        return None, None
-
-    capturing_groups = result.groups()
-
-
-    owner = capturing_groups[0]
-    repo = capturing_groups[1]
-
-    return owner, repo
-
-def parse_org_url(url):
-    """ Gets the owner from a org url.
-
-    Args:
-        url: Github org url
-
-    Returns:
-        Org name. Or None if the url is invalid.
-    """
-
-    result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/?$", url)
-
-    if not result:
-        return None
-
-    # if the result is not None then the groups should be valid so we don't worry about index errors here
-    return result.groups()[0]
-
 
 class RepoLoadController:
 
@@ -108,7 +57,8 @@ class RepoLoadController:
 
         UserRepo.insert(self.session, repo_id)
 
-        CollectionStatus.insert(self.session, repo_id)
+        #collection_status records are now only added during collection -IM 5/1/23
+        #CollectionStatus.insert(self.session, repo_id)
 
         return True, {"status": "Repo added", "repo_url": url}
 
@@ -237,20 +187,22 @@ class RepoLoadController:
         return result[0]["count"], {"status": "success"}
 
     def generate_repo_query(self, source, count, **kwargs):
-
+        # TODO: need more flexible way of calculating count for variable column queries
         if count:
             # only query for repos ids so the query is faster for getting the count
             select = """    DISTINCT(augur_data.repo.repo_id),
-                (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name"""
+                (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name,
+                (regexp_match(augur_data.repo.repo_git, 'github\.com\/([A-Za-z0-9 \- _]+)\/[A-Za-z0-9 \- _ .]+$'))[1] as repo_owner"""
         else:
 
             select = f"""    DISTINCT(augur_data.repo.repo_id),
                     augur_data.repo.description,
                     augur_data.repo.repo_git AS url,
-                    a.commits_all_time,
-                    b.issues_all_time,
+                    COALESCE(a.commits_all_time, 0) as commits_all_time,
+                    COALESCE(b.issues_all_time, 0) as issues_all_time,
                     rg_name,
                     (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name,
+                    (regexp_match(augur_data.repo.repo_git, 'github\.com\/([A-Za-z0-9 \- _]+)\/[A-Za-z0-9 \- _ .]+$'))[1] as repo_owner,
                     augur_data.repo.repo_group_id"""
 
         query = f"""
@@ -298,7 +250,7 @@ class RepoLoadController:
         
         # implement sorting by query_key
         search = kwargs.get("search")
-        qkey = kwargs.get("query_key") or "repo_name"
+        qkey = kwargs.get("query_key") or ["repo_name", "repo_owner"]
 
         if search:
             # The WHERE clause cannot use a column alias created in the directly preceeding SELECT clause
@@ -307,10 +259,16 @@ class RepoLoadController:
             query = f"""\tSELECT * from (
                 {query}
             ) res\n"""
-            query += f"\tWHERE {qkey} ilike '%{search}%'\n"
             # This is done so repos with a NULL repo_name can still be sorted.
             # "res" here is a randomly chosen table alias, short for "result"
             # It is only included because it is required by the SQL syntax
+
+            if isinstance(qkey, list) and len(qkey) > 0:
+                query += f"\tWHERE {qkey.pop(0)} ilike '%{search}%'\n"
+                for key in qkey:
+                    query += f"OR {key} ilike '%{search}%'\n"
+            else:
+                query += f"\tWHERE {qkey} ilike '%{search}%'\n"
 
         if not count:
             order_by = kwargs.get("order_by") or "repo_id"

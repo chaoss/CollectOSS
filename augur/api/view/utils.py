@@ -434,8 +434,8 @@ def renderRepos(view, query, data, sorting = None, rev = False, page = None, fil
     Renders a simple page with the given message information, and optional page
     title and redirect
 """
-def render_message(messageTitle, messageBody = None, title = None, redirect = None, pause = None):
-    return render_module("notice", messageTitle=messageTitle, messageBody=messageBody, title=title, redirect=redirect, pause=pause)
+def render_message(messageTitle, messageBody = None, title = None, redirect = None, pause = None, **kwargs):
+    return render_module("notice", messageTitle=messageTitle, messageBody=messageBody, title=title, redirect=redirect, pause=pause, **kwargs)
 
 """ ----------------------------------------------------------------
 """

@@ -7,6 +7,9 @@ from augur.tasks.git.dependency_tasks.dependency_util import csharp_deps
 from augur.tasks.git.dependency_tasks.dependency_util import java_deps
 from augur.tasks.git.dependency_tasks.dependency_util import cpp_deps
 from augur.tasks.git.dependency_tasks.dependency_util import c_deps
+from augur.tasks.git.dependency_tasks.dependency_util import go_deps
+from augur.tasks.git.dependency_tasks.dependency_util import kotlin_deps
+from augur.tasks.git.dependency_tasks.dependency_util import rust_deps
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator
 
 #Returns generator iterable to tuples of modules and their names
@@ -20,6 +23,9 @@ def get_dependency_analysis_module_tuples():
 	yield java_deps, 'java'
 	yield cpp_deps, 'C++'
 	yield c_deps, 'C'
+	yield go_deps, 'go'
+	yield kotlin_deps, 'kotlin'
+	yield rust_deps, 'rust'
 
 class Dep:
 	def __init__(self, name, language, count):
@@ -49,6 +55,9 @@ def get_language_deps(path, language, name,logger):
 			return []
 		except IsADirectoryError as e:
 			logger.error(f"Given file's path is a directory!\n file: {f}\n path: {path}\n Error: {e}")
+			return []
+		except FileNotFoundError as e:
+			logger.error(f"Given file not found!\n file: {f}\n path: {path}\n Error: {e}")
 			return []
 
 		if f_deps is None:

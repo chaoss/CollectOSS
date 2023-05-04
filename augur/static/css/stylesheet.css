@@ -54,6 +54,13 @@ body {
     height: 35px;
 }
 
+.stacktrace {
+    background-color: var(--color-fg-contrast);
+    color: var(--color-fg);
+    border-radius: 15px;
+    border-color: var(--color-bg-light);
+}
+
 .content-column {
     overflow-y: scroll;
 }

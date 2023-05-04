@@ -1,20 +1,61 @@
-{#% if groups %}
+{% if groups %}
+<!-- Top pagination menu start -->
+<h1>Your Groups</h1>
+<nav aria-label="Group pagination menu" class="overflow-auto">
+    <ul class="pagination">
+        <li class="page-item {% if activePage == 0 %} disabled {% else %} w3-hover-purple {% endif %}">
+            <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage - 1), s=sorting, r=reverse, group=group)}}" {% if activePage == 0 %} tabindex="-1" {% endif %}>Previous</a>
+        </li>
+        {% for page in range(0, pages|int + 1) %}
+        <li class="page-item">
+            <a class="page-link {% if page == activePage %} paginationActive {% else %} w3-hover-blue {% endif %}" href="{{ url_for(PS, q=query_key, p=page, s=sorting, r=reverse, group=group)}}">{{page + 1}}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if activePage == pages|int %} disabled {% endif %}">
+            <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage + 1), s=sorting, r=reverse, group=group)}}" {% if activePage == pages|int %} tabindex="-1" {% endif %}>Next</a>
+        </li>
+    </ul>
+</nav>
+<!-- Table start -->
+{# Create the header row for the repo table:
+    Here we dynamically generate the header row by defining a dictionary list
+    which contains the titles of each column, accompanied by an optional "key"
+    item. If a column definition contains a "key" item, that column is assumed
+    to be sortable, sorting links for that data are generated using the given
+    key. It is done this way because the client does not receive the full data
+    each time they load the page, and instead the server sorts the full data.
+#}
+{# "title" : "Group", "key" : "rg_name"}, #}
+    {%- set tableHeaders =
+    [{"title" : "#"},
+    {"title" : "Group Name", "key" : "group_name"},
+    {"title" : "Repo Count", "key": "repo_count"},
+    {"title" : "Favorited", "key" : "favorited"}] -%}
     <div class="rounded display-table w3-animate-opacity">
         <table class="table table-striped table-bordered">
             <thead>
                 <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Group Name</th>
-                    <th scope="col">Data Collectio</th>
+                {%- for header in tableHeaders -%}
+                {% if header.key %}
+                    {%- if sorting == header.key -%}
+                        {%- set sorting_link = url_for(PS, q=query_key, p=activePage, s=header.key, r= not reverse) -%}
+                    {%- else -%}
+                        {%- set sorting_link = url_for(PS, q=query_key, p=activePage, s=header.key) -%}
+                    {%- endif -%}
+                <th scope="col"><a class="sorting-link" href="{{ sorting_link }}"> {{ header.title }}
+                    {%- if sorting == header.key and reverse %} ▲ {% elif sorting == header.key %} ▼ {% endif %}</a></th>
+                {% else -%}
+                <th scope="col">{{ header.title }}</th>
+                {% endif %} {%- endfor -%}
                 </tr>
             </thead>
             <tbody>
         {% for group in groups %}
                 <tr>
                     <th scope="row">{{loop.index}}</th>
-                    <td><a href="{{ url_for('repo_groups_view', group=group.repo_group_id) }}">{{ group.name }}</a></td>
-                    <td>{{ group.data_collection_date }}</td>
-                    <td>TODO</td>
+                    <td><a href="{{ url_for('user_group_view', group=group.name) }}">{{ group.name }}</a></td>
+                    <td>{{ group.count }}</td>
+                    <td><i onclick="toggleFavorite(this, '{{ group.name }}')" class="bi {% if group.favorited %} bi-star-fill {% else %} bi-star {% endif %} cursor-pointer"></i></td>
                 </tr>
         {% endfor %}
             </tbody>
@@ -24,4 +65,21 @@
     <h1>Your search did not match any results</h1>
 {% else %}
     <h1>Unable to load group information</h1>
-{% endif %#}
+{% endif %}
+<script>
+    var toggleFavorite = function(button, group) {
+        fetch("{{ url_for('toggle_user_group_favorite') }}?group_name=" + group)
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.status == "Success") {
+                    if (button.classList.contains("bi-star-fill")) {
+                        button.classList.remove("bi-star-fill");
+                        button.classList.add("bi-star");
+                    } else {
+                        button.classList.remove("bi-star");
+                        button.classList.add("bi-star-fill");
+                    }
+                }
+            });
+    }
+</script>

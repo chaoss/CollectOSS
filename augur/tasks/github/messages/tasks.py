@@ -198,7 +198,7 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
 
         ref = message_ref_mapping_data[platform_message_id]
         message_ref_data = ref["msg_ref_data"]
-        message_ref_data = ref["msg_id"] = augur_msg_id
+        message_ref_data["msg_id"] = augur_msg_id
 
         if ref["is_issue"] is True:
             issue_message_ref_dicts.append(message_ref_data)

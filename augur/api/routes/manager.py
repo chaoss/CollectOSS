@@ -12,7 +12,6 @@ import requests
 import sqlalchemy as s
 from sqlalchemy import exc
 from flask import request, Response
-import json
 # from augur.config import AugurConfig
 import os 
 import traceback 
