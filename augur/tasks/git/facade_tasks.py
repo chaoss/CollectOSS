@@ -166,7 +166,7 @@ def trim_commits_post_analysis_facade_task(repo_git):
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
         repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
@@ -242,7 +242,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
         repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
@@ -283,7 +283,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
             repo = execute_session_query(query,'one')
 
         logger.info(f"Got to analysis!")
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
         repo_loc = (f"{absoulte_path}/.git")
         
         for count, commitTuple in enumerate(queue):
@@ -346,7 +346,6 @@ def clone_repos():
         # process up to 1000 repos at a time
         repo_git_identifiers = get_collection_status_repo_git_from_filter(session, is_pending, 999999)
         for repo_git in repo_git_identifiers:
-        
             # set repo to intializing
             repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
             repoStatus = repo.collection_status[0]
@@ -356,6 +355,7 @@ def clone_repos():
             # clone repo
             try:
                 git_repo_initialize(session, repo_git)
+                session.commit()
             except GitCloneError:
                 # continue to next repo, since we can't calculate 
                 # commit_count or weight without the repo cloned
@@ -363,6 +363,8 @@ def clone_repos():
                 setattr(repoStatus,"facade_status", CollectionState.FAILED_CLONE.value)
                 session.commit()
                 continue
+            
+            #logger.info("GOT HERE ISAAC")
 
             # get the commit count
             commit_count = get_repo_commit_count(session, repo_git)
@@ -371,7 +373,6 @@ def clone_repos():
             update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
 
             # set repo to update
-            repoStatus = repo.collection_status[0]
             setattr(repoStatus,"facade_status", CollectionState.UPDATE.value)
             session.commit()
 
