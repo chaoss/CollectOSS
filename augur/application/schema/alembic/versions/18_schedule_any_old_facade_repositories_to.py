@@ -34,6 +34,10 @@ def total_facade_reset():
 
     UPDATE repo
     SET repo_path=NULL,repo_name=NULL;
+
+    UPDATE augur_operations.collection_status
+    SET core_status='Pending', secondary_status='Pending', core_data_last_collected=NULL,secondary_data_last_collected=NULL
+    WHERE issue_pr_sum IS NULL;
     """))
 
     
