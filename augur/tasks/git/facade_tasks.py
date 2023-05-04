@@ -279,14 +279,11 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
             if (count + 1) % quarterQueue == 0:
                 logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
 
-            query = session.query(Repo).filter(Repo.repo_id == repo_id)
-            repo = execute_session_query(query,'one')
 
-        logger.info(f"Got to analysis!")
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-        repo_loc = (f"{absoulte_path}/.git")
+            #logger.info(f"Got to analysis!")
+            absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
+            repo_loc = (f"{absoulte_path}/.git")
         
-        for count, commitTuple in enumerate(queue):
 
             analyze_commit(session, repo_id, repo_loc, commitTuple)
 
