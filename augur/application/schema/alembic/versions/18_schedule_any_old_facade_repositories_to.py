@@ -55,7 +55,7 @@ def total_facade_reset():
 
         shutil.rmtree(path)
         #Create path
-        path.touch()
+        path.mkdir()
         #Move credentials in
         shutil.move("/tmp/.git-credentials",f"{facade_base_dir}.git-credentials")
 
