@@ -374,9 +374,6 @@ def clone_repos():
                 setattr(repoStatus,"facade_status", CollectionState.ERROR.value)
                 session.commit()
 
-                #Raise exception to activate handling before retry of task.
-                raise e
-
         clone_repos.si().apply_async(countdown=60*5)
 
 
