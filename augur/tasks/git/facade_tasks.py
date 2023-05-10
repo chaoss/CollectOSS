@@ -353,25 +353,26 @@ def clone_repos():
             try:
                 git_repo_initialize(session, repo_git)
                 session.commit()
+
+                # get the commit count
+                commit_count = get_repo_commit_count(session, repo_git)
+                facade_weight = get_facade_weight_with_commit_count(session, repo_git, commit_count)
+
+                update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
+
+                # set repo to update
+                setattr(repoStatus,"facade_status", CollectionState.UPDATE.value)
+                session.commit()
             except GitCloneError:
                 # continue to next repo, since we can't calculate 
                 # commit_count or weight without the repo cloned
-
                 setattr(repoStatus,"facade_status", CollectionState.FAILED_CLONE.value)
                 session.commit()
-                continue
-            
-            #logger.info("GOT HERE ISAAC")
-
-            # get the commit count
-            commit_count = get_repo_commit_count(session, repo_git)
-            facade_weight = get_facade_weight_with_commit_count(session, repo_git, commit_count)
-
-            update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
-
-            # set repo to update
-            setattr(repoStatus,"facade_status", CollectionState.UPDATE.value)
-            session.commit()
+            except Exception as e:
+                logger.error(f"Ran into unexpected issue when cloning repositories \n Error: {e}")
+                # set repo to error
+                setattr(repoStatus,"facade_status", CollectionState.ERROR.value)
+                session.commit()
 
         clone_repos.si().apply_async(countdown=60*5)
 
