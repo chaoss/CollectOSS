@@ -369,7 +369,7 @@ def clone_repos():
                 setattr(repoStatus,"facade_status", CollectionState.FAILED_CLONE.value)
                 session.commit()
             except Exception as e:
-                logger.info(f"Ran into unexpected issue when cloning repositories \n Error: {e}")
+                logger.error(f"Ran into unexpected issue when cloning repositories \n Error: {e}")
                 # set repo to error
                 setattr(repoStatus,"facade_status", CollectionState.ERROR.value)
                 session.commit()
