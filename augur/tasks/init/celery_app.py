@@ -3,6 +3,7 @@ from celery.signals import worker_process_init, worker_process_shutdown, eventle
 import logging
 from typing import List, Dict
 import os
+import datetime
 from enum import Enum
 import traceback
 import celery
@@ -211,7 +212,7 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks.s())
 
         logger.info(f"Scheduling refresh materialized view every night at 1am CDT")
-        sender.add_periodic_task(crontab(hour=1, minute=0), refresh_materialized_views.s())
+        sender.add_periodic_task(datetime.timedelta(days=7), refresh_materialized_views.s())
 
         logger.info(f"Scheduling update of collection weights on midnight each day")
         sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
