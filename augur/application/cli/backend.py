@@ -142,10 +142,22 @@ def start(disable_collection, development, port):
 
 def start_celery_worker_processes():
 
+    #Calculate process scaling based on how much memory is available on the system in bytes.
+    #Each celery process takes ~500MB or 500 * 1024^2 bytes
+
+    available_memory_in_bytes = psutil.virtual_memory().available
+    available_memory_in_megabytes = available_memory_in_bytes / (1024 ** 2)
+    process_estimate = available_memory_in_megabytes // 500
+
+    #2 processes are always reserved as a baseline.
     scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=45 -n core:{uuid.uuid4().hex}@%h"
-    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=10 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
-    facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=15 -n facade:{uuid.uuid4().hex}@%h -Q facade"
+
+    #60% of estimate
+    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={round(process_estimate * .6)} -n core:{uuid.uuid4().hex}@%h"
+    #20% of estimate
+    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={round(process_estimate * .2)} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+    #15% of estimate
+    facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={round(process_estimate * .15)} -n facade:{uuid.uuid4().hex}@%h -Q facade"
 
     process_list = []
     process_list.append(subprocess.Popen(scheduling_worker.split(" ")))
