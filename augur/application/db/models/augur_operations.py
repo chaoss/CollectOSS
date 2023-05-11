@@ -430,8 +430,6 @@ class User(Base):
         
         from augur.tasks.github.util.github_task_session import GithubTaskSession
         from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
-
-        with GithubTaskSession(logger) as session:
         try:
             with GithubTaskSession(logger) as session:
                 result = UserRepo.add(session, repo_url, self.user_id, group_name)
