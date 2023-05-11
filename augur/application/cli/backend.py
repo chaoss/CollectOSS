@@ -147,22 +147,38 @@ def start_celery_worker_processes():
 
     available_memory_in_bytes = psutil.virtual_memory().available
     available_memory_in_megabytes = available_memory_in_bytes / (1024 ** 2)
-    process_estimate = available_memory_in_megabytes // 500
+    max_process_estimate = available_memory_in_megabytes // 500
+
+    #Get a subset of the maximum procesess available using a ratio, not exceeding a maximum value
+    def determine_worker_processes(ratio,maximum):
+        return min(round(max_process_estimate * ratio),maximum)
 
     #2 processes are always reserved as a baseline.
     scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
 
-    #60% of estimate
-    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={round(process_estimate * .6)} -n core:{uuid.uuid4().hex}@%h"
-    #20% of estimate
-    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={round(process_estimate * .2)} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
-    #15% of estimate
-    facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={round(process_estimate * .15)} -n facade:{uuid.uuid4().hex}@%h -Q facade"
+    core_num_processes = determine_worker_processes(.6, 45)
+    #60% of estimate, Maximum value of 45
+    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_num_processes} -n core:{uuid.uuid4().hex}@%h"
+
+    secondary_num_processes = determine_worker_processes(.2, 25)
+    #20% of estimate, Maximum value of 25
+    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_num_processes} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+
+    facade_num_processes = determine_worker_processes(.15, 20)
+    #15% of estimate, Maximum value of 20
+    facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={facade_num_processes} -n facade:{uuid.uuid4().hex}@%h -Q facade"
 
     process_list = []
+
     process_list.append(subprocess.Popen(scheduling_worker.split(" ")))
+
+    logger.info(f"Starting core worker processes with concurrency={core_num_processes}")
     process_list.append(subprocess.Popen(core_worker.split(" ")))
+
+    logger.info(f"Starting secondary worker processes with concurrency={secondary_num_processes}")
     process_list.append(subprocess.Popen(secondary_worker.split(" ")))
+
+    logger.info(f"Starting facade worker processes with concurrency={facade_num_processes}")
     process_list.append(subprocess.Popen(facade_worker.split(" ")))
 
     return process_list
