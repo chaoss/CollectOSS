@@ -429,9 +429,14 @@ class User(Base):
     def add_repo(self, group_name, repo_url):
         
         from augur.tasks.github.util.github_task_session import GithubTaskSession
+        from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
 
         with GithubTaskSession(logger) as session:
-            result = UserRepo.add(session, repo_url, self.user_id, group_name)
+        try:
+            with GithubTaskSession(logger) as session:
+                result = UserRepo.add(session, repo_url, self.user_id, group_name)
+        except NoValidKeysError:
+            return False, {"status": "No valid keys"}
 
         return result
 
@@ -445,9 +450,13 @@ class User(Base):
     def add_org(self, group_name, org_url):
 
         from augur.tasks.github.util.github_task_session import GithubTaskSession
+        from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
 
-        with GithubTaskSession(logger) as session:
-            result = UserRepo.add_org_repos(session, org_url, self.user_id, group_name)
+        try:
+            with GithubTaskSession(logger) as session:
+                result = UserRepo.add_org_repos(session, org_url, self.user_id, group_name)
+        except NoValidKeysError:
+            return False, {"status": "No valid keys"}
 
         return result
 
