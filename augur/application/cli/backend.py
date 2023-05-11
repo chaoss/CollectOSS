@@ -146,13 +146,13 @@ def start_celery_worker_processes():
     #Each celery process takes ~500MB or 500 * 1024^2 bytes
 
     #Cap memory usage to 30% of total virtual memory
-    available_memory_in_bytes = psutil.virtual_memory().total * .3
+    available_memory_in_bytes = psutil.virtual_memory().total * .4
     available_memory_in_megabytes = available_memory_in_bytes / (1024 ** 2)
     max_process_estimate = available_memory_in_megabytes // 500
 
     #Get a subset of the maximum procesess available using a ratio, not exceeding a maximum value
     def determine_worker_processes(ratio,maximum):
-        return min(round(max_process_estimate * ratio),maximum)
+        return max(min(round(max_process_estimate * ratio),maximum),1)
 
     #2 processes are always reserved as a baseline.
     scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
