@@ -384,6 +384,10 @@ class GithubPaginator(collections.abc.Sequence):
                 timeout = timeout * 1.1
                 num_attempts += 1
                 continue
+
+            # if api returns a status of 204 No Content then return empty list
+            if response.status_code == 204:
+                return [], response, GithubApiResult.SUCCESS
             
             
             page_data = parse_json_response(self.logger, response)
