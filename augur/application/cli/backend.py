@@ -146,7 +146,7 @@ def start_celery_worker_processes():
     #Each celery process takes ~500MB or 500 * 1024^2 bytes
 
     #Cap memory usage to 30% of total virtual memory
-    available_memory_in_bytes = psutil.virtual_memory().total * .4
+    available_memory_in_bytes = psutil.virtual_memory().total * .25
     available_memory_in_megabytes = available_memory_in_bytes / (1024 ** 2)
     max_process_estimate = available_memory_in_megabytes // 500
 
