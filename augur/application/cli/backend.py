@@ -156,6 +156,7 @@ def start_celery_worker_processes():
 
     #2 processes are always reserved as a baseline.
     scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+    max_process_estimate -= 2
 
     core_num_processes = determine_worker_processes(.6, 45)
     #60% of estimate, Maximum value of 45
@@ -165,7 +166,7 @@ def start_celery_worker_processes():
     #20% of estimate, Maximum value of 25
     secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_num_processes} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
 
-    facade_num_processes = determine_worker_processes(.15, 20)
+    facade_num_processes = determine_worker_processes(.2, 20)
     #15% of estimate, Maximum value of 20
     facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={facade_num_processes} -n facade:{uuid.uuid4().hex}@%h -Q facade"
 
