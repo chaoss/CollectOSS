@@ -83,26 +83,15 @@ def start(disable_collection, development, port):
     logger.info('Gunicorn webserver started...')
     logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
 
-    scheduling_worker_process = None
-    core_worker_process = None
-    secondary_worker_process = None
+
     celery_beat_process = None
-    facade_worker_process = None
     if not disable_collection:
 
         if os.path.exists("celerybeat-schedule.db"):
             logger.info("Deleting old task schedule")
             os.remove("celerybeat-schedule.db")
 
-        scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=45 -n core:{uuid.uuid4().hex}@%h"
-        secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=10 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
-        facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=15 -n facade:{uuid.uuid4().hex}@%h -Q facade"
-
-        scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
-        core_worker_process = subprocess.Popen(core_worker.split(" "))
-        secondary_worker_process = subprocess.Popen(secondary_worker.split(" "))
-        facade_worker_process = subprocess.Popen(facade_worker.split(" "))
+        processes = start_celery_worker_processes()
 
         time.sleep(5)
 
@@ -135,21 +124,10 @@ def start(disable_collection, development, port):
             logger.info("Shutting down server")
             server.terminate()
 
-        if core_worker_process:
-            logger.info("Shutting down celery process: core")
-            core_worker_process.terminate()
-
-        if scheduling_worker_process:
-            logger.info("Shutting down celery process: scheduling")
-            scheduling_worker_process.terminate()
-
-        if secondary_worker_process:
-            logger.info("Shutting down celery process: secondary")
-            secondary_worker_process.terminate()
-        
-        if facade_worker_process:
-            logger.info("Shutting down celery process: facade")
-            facade_worker_process.terminate()
+        logger.info("Shutting down all celery worker processes")
+        for p in processes:
+            if p:
+                p.terminate()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
@@ -161,6 +139,21 @@ def start(disable_collection, development, port):
                 cleanup_after_collection_halt(logger)
             except RedisConnectionError:
                 pass
+
+def start_celery_worker_processes():
+
+    scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=45 -n core:{uuid.uuid4().hex}@%h"
+    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=10 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+    facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=15 -n facade:{uuid.uuid4().hex}@%h -Q facade"
+
+    process_list = []
+    process_list.append(subprocess.Popen(scheduling_worker.split(" ")))
+    process_list.append(subprocess.Popen(core_worker.split(" ")))
+    process_list.append(subprocess.Popen(secondary_worker.split(" ")))
+    process_list.append(subprocess.Popen(facade_worker.split(" ")))
+
+    return process_list
 
 
 @cli.command('stop')
@@ -377,7 +370,6 @@ def raise_open_file_limit(num_files):
     resource.setrlimit(resource.RLIMIT_NOFILE, (num_files, current_hard))
 
     return
-
 
 # def initialize_components(augur_app, disable_housekeeper):
 #     master = None
