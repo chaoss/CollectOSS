@@ -66,7 +66,6 @@ default_config = {
                 "log_level": "INFO",
             },
             "Celery": {
-                "concurrency": 12,
                 "worker_process_vmem_cap": 0.25,
                 "refresh_materialized_views_interval_in_days": 7
             },
