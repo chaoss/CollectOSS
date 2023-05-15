@@ -26,8 +26,10 @@ def upgrade():
         config = AugurConfig(logger,session)
         config_dict = config.load_config()
         
+        #Update the missing fields of the celery section in the config
         section = config_dict.get("Celery")
 
+        #Just copy the default if section doesn't exist.
         if section:
             if 'worker_process_vmem_cap' not in section.keys():
                 section['worker_process_vmem_cap'] = 0.25
