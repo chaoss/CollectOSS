@@ -10,6 +10,7 @@ import sqlalchemy as sa
 from augur.application.db.session import DatabaseSession
 from augur.application.config import *
 from sqlalchemy.sql import text
+import logging
 
 # revision identifiers, used by Alembic.
 revision = '19'
