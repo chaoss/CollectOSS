@@ -45,7 +45,7 @@ def downgrade():
 
     conn = op.get_bind()
 
-    con.execute(text(f"""
+    conn.execute(text(f"""
         DELETE FROM augur_operations.config
         WHERE section_name='Celery' AND (setting_name='worker_process_vmem_cap' OR setting_name='refresh_materialized_views_interval_in_days');
     """))
