@@ -1,6 +1,7 @@
 from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash
 from flask_login import current_user, login_required
 from augur.application.db.models import Repo
+from augur.tasks.frontend import add_org_repo_list
 from .utils import *
 from ..server import app
 
@@ -33,45 +34,9 @@ def av_add_user_repo():
     if group == "None":
         group = current_user.login_name + "_default"
 
+    add_org_repo_list.si(current_user.user_id, group, urls).apply_async()
 
-    added_orgs = 0
-    added_repos = 0
-    for url in urls:
-
-        # matches https://github.com/{org}/ or htts://github.com/{org}
-        if Repo.parse_github_org_url(url):
-            added = current_user.add_org(group, url)[0]
-            if added:
-                added_orgs += 1
-
-        # matches https://github.com/{org}/{repo}/ or htts://github.com/{org}/{repo}
-        elif Repo.parse_github_repo_url(url)[0]:
-            print("Adding repo")
-            added = current_user.add_repo(group, url)[0]
-            if added:
-                print("Repo added")
-                added_repos += 1
-
-        # matches /{org}/{repo}/ or /{org}/{repo} or {org}/{repo}/ or {org}/{repo}
-        elif (match := re.match(r'^\/?([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$', url)):
-            org, repo = match.groups()
-            repo_url = f"https://github.com/{org}/{repo}/"
-            added = current_user.add_repo(group, repo_url)[0]
-            if added:
-                added_repos += 1
-
-        # matches /{org}/ or /{org} or {org}/ or {org}
-        elif (match := re.match(r'^\/?([a-zA-Z0-9_-]+)\/?$', url)):
-            org = match.group(1)
-            org_url = f"https://github.com/{org}/"
-            added = current_user.add_org(group, org_url)[0]
-            if added:
-                added_orgs += 1
-
-    if not added_orgs and not added_repos:
-        flash(f"Unable to add any repos or orgs")
-    else:
-        flash(f"Successfully added {added_repos} repos and {added_orgs} orgs")
+    flash("Adding repos and orgs in the background")
             
     return redirect(url_for("user_settings") + "?section=tracker")
 

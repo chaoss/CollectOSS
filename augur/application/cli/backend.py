@@ -158,6 +158,9 @@ def start_celery_worker_processes():
     scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
     max_process_estimate -= 2
 
+    frontend_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n frontend:{uuid.uuid4().hex}@%h -Q frontend"
+    max_process_estimate -= 1
+
     core_num_processes = determine_worker_processes(.6, 45)
     #60% of estimate, Maximum value of 45
     core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_num_processes} -n core:{uuid.uuid4().hex}@%h"
@@ -173,6 +176,7 @@ def start_celery_worker_processes():
     process_list = []
 
     process_list.append(subprocess.Popen(scheduling_worker.split(" ")))
+    process_list.append(subprocess.Popen(frontend_worker.split(" ")))
 
     logger.info(f"Starting core worker processes with concurrency={core_num_processes}")
     process_list.append(subprocess.Popen(core_worker.split(" ")))

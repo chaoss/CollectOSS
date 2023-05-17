@@ -62,10 +62,12 @@ data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
 
 materialized_view_tasks = ['augur.tasks.db.refresh_materialized_views']
 
+frontend_tasks = ['augur.tasks.frontend']
+
+tasks = start_tasks + github_tasks + git_tasks + materialized_view_tasks + frontend_tasks
+
 if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
-    tasks = start_tasks + github_tasks + git_tasks + materialized_view_tasks + data_analysis_tasks
-else:
-    tasks = start_tasks + github_tasks + git_tasks + materialized_view_tasks
+    tasks += data_analysis_tasks
 
 redis_db_number, redis_conn_string = get_redis_conn_values()
 
@@ -132,7 +134,8 @@ celery_app.conf.task_routes = {
     'augur.tasks.github.pull_requests.tasks.collect_pull_request_review_comments': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.process_ossf_scorecard_metrics': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.process_dependency_metrics': {'queue': 'facade'},
-    'augur.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'}
+    'augur.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'},
+    'augur.tasks.frontend.*': {'queue': 'frontend'}
 }
 
 #Setting to be able to see more detailed states of running tasks
