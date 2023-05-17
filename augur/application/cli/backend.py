@@ -75,6 +75,7 @@ def start(disable_collection, development, port):
         if not port:
             port = config.get_value("Server", "port")
         
+        worker_vmem_cap = config.get_value("Celery", 'worker_process_vmem_cap')
 
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app"
     server = subprocess.Popen(gunicorn_command.split(" "))
@@ -83,7 +84,7 @@ def start(disable_collection, development, port):
     logger.info('Gunicorn webserver started...')
     logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
 
-    processes = start_celery_worker_processes(disable_collection)
+    processes = start_celery_worker_processes(float(worker_vmem_cap), disable_collection)
     time.sleep(5)
     if os.path.exists("celerybeat-schedule.db"):
             logger.info("Deleting old task schedule")
@@ -135,7 +136,7 @@ def start(disable_collection, development, port):
             except RedisConnectionError:
                 pass
 
-def start_celery_worker_processes(disable_collection=False):
+def start_celery_worker_processes(vmem_cap_ratio, disable_collection=False):
 
     #Calculate process scaling based on how much memory is available on the system in bytes.
     #Each celery process takes ~500MB or 500 * 1024^2 bytes
@@ -143,7 +144,7 @@ def start_celery_worker_processes(disable_collection=False):
     process_list = []
 
     #Cap memory usage to 30% of total virtual memory
-    available_memory_in_bytes = psutil.virtual_memory().total * .25
+    available_memory_in_bytes = psutil.virtual_memory().total * vmem_cap_ratio
     available_memory_in_megabytes = available_memory_in_bytes / (1024 ** 2)
     max_process_estimate = available_memory_in_megabytes // 500
 
