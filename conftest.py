@@ -29,7 +29,7 @@ def create_full_routes(routes):
         full_routes.append(route)
     return full_routes
 
-@pytest.fixture
+
 def create_connection(dbname='postgres'):
     db_string = get_database_string()
     user, password, host, port, _ = parse_database_string(db_string)
@@ -57,6 +57,13 @@ def drop_database(cursor, db_name):
     # drop temporary database
     cursor.execute(sql.SQL("DROP DATABASE {};").format(sql.Identifier(db_name)))
 
+
+def create_template_db(template_name):
+
+    import time
+
+    start_time = time.time()
+
     db_string = get_database_string()
 
     user, password, host, port, _ = parse_database_string(db_string)
@@ -80,14 +87,7 @@ def drop_database(cursor, db_name):
     # remove database_name and add test_db_name
     test_db_string = db_string[:db_string.rfind("/")+1] + test_db_name
     
-    # create the temporary database
-    cursor.execute(sql.SQL("CREATE DATABASE {};").format(sql.Identifier(test_db_name)))
-
-    # Commit changes
-    conn.commit()
-
-    # Install schema
-    execute_sql_file("tests/entire_db.sql", test_db_name, user, password, host, port)
+    create_database(conn, cursor, test_db_name, template_name)
 
     # create engine to connect to db
     engine = create_database_engine(test_db_string, poolclass=StaticPool)
@@ -97,16 +97,75 @@ def drop_database(cursor, db_name):
     # dispose engine
     engine.dispose()
 
-    # ensure connections are removed
-    cursor.execute(sql.SQL("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='{}';".format(test_db_name)))
-
-    # drop temporary database
-    cursor.execute(sql.SQL("DROP DATABASE {};").format(sql.Identifier(test_db_name)))
+    drop_database(cursor, test_db_name)
 
     # Close the cursor and the connection
     cursor.close()
     conn.close()
 
+
+
+@pytest.fixture(scope='session')
+def db_template():
+
+    db_string = get_database_string()
+
+    user, password, host, port, _ = parse_database_string(db_string)
+
+    # Connect to the default 'postgres' database
+    conn = psycopg2.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        dbname='postgres'
+    )
+
+    # Set the isolation level to AUTOCOMMIT because CREATE DATABASE 
+    # cannot be executed in a transaction block
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    cursor = conn.cursor()
+
+
+    test_db_name = "test_db_template_" + uuid.uuid4().hex
+    create_database(conn, cursor, test_db_name)
+
+    # Install schema
+    execute_sql_file("tests/entire_db.sql", test_db_name, user, password, host, port)
+
+
+    # ensure connections are removed
+    cursor.execute(sql.SQL("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='{}';".format(test_db_name)))
+
+    # drop temporary database
+
+    yield test_db_name
+
+    drop_database(cursor, test_db_name)
+
+    # Close the cursor and the connection
+    cursor.close()
+    conn.close()
+
+
+
+@pytest.fixture(scope='session')
+def fresh_db_session(db_template):
+    print("Creating fresh db session from template")
+    yield from create_template_db(db_template)
+
+@pytest.fixture(scope='package')
+def fresh_db_package(db_template):
+    print("Creating fresh package level db")
+    yield from create_template_db(db_template)
+
+@pytest.fixture(scope='module')
+def fresh_db_module(db_template):
+    yield from create_template_db(db_template)
+
+@pytest.fixture(scope='function')
+def fresh_db_function(db_template):
+    yield from create_template_db(db_template)
 
 @pytest.fixture
 def test_db_engine():
