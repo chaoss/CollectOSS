@@ -196,3 +196,4 @@ postgres-data/
 sendgrid.env
 *sendgrid*.env
 ./sendgrid.env
+sendgrid.env
