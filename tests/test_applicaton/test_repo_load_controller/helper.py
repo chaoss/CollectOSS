@@ -4,10 +4,9 @@ import logging
 from augur.util.repo_load_controller import ORG_REPOS_ENDPOINT
 
 from augur.application.db.session import DatabaseSession
-from augur.application.db.models import Config
+from augur.application.db.models import Config, User
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.application.db.util import execute_session_query
-from werkzeug.security import generate_password_hash
 
 
 logger = logging.getLogger(__name__)
@@ -105,7 +104,7 @@ def get_repo_group_insert_statement(rg_id):
 
 def get_user_insert_statement(user_id, username="bil", email="default@gmail.com", password="pass"):
 
-    return """INSERT INTO "augur_operations"."users" ("user_id", "login_name", "login_hashword", "email", "first_name", "last_name", "admin") VALUES ({}, '{}', '{}', '{}', 'bill', 'bob', false);""".format(user_id, username, generate_password_hash(password), email)
+    return """INSERT INTO "augur_operations"."users" ("user_id", "login_name", "login_hashword", "email", "first_name", "last_name", "admin") VALUES ({}, '{}', '{}', '{}', 'bill', 'bob', false);""".format(user_id, username, User.compute_hashsed_password(password), email)
 
 def get_user_group_insert_statement(user_id, group_name, group_id=None):
 
