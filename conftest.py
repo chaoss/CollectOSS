@@ -30,7 +30,32 @@ def create_full_routes(routes):
     return full_routes
 
 @pytest.fixture
-def database():
+def create_connection(dbname='postgres'):
+    db_string = get_database_string()
+    user, password, host, port, _ = parse_database_string(db_string)
+    conn = psycopg2.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        dbname=dbname
+    )
+    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+    return conn, conn.cursor()
+
+
+def create_database(conn, cursor, db_name, template=None):
+    if template:
+        cursor.execute(sql.SQL("CREATE DATABASE {} WITH TEMPLATE {};").format(sql.Identifier(db_name), sql.Identifier(template)))
+    else:
+        cursor.execute(sql.SQL("CREATE DATABASE {};").format(sql.Identifier(db_name)))
+    conn.commit()
+
+def drop_database(cursor, db_name):
+    # ensure connections are removed
+    cursor.execute(sql.SQL("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='{}';".format(db_name)))
+    # drop temporary database
+    cursor.execute(sql.SQL("DROP DATABASE {};").format(sql.Identifier(db_name)))
 
     db_string = get_database_string()
 
