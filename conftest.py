@@ -167,6 +167,42 @@ def fresh_db_module(db_template):
 def fresh_db_function(db_template):
     yield from create_template_db(db_template)
 
+
+@pytest.fixture(scope='session')
+def read_only_db(fresh_db_session):
+
+    print("Creating read-only db")
+    print("Fresh db session type: " + str(type(fresh_db_session)))
+
+    database_name = fresh_db_session.url.database
+    test_username = "testuser"
+    test_password = "testpass"
+    schemas = ["public", "augur_data", "augur_operations"]
+
+    # create read-only user
+    fresh_db_session.execute(s.text(f"CREATE USER testuser WITH PASSWORD '{test_password}';"))
+    fresh_db_session.execute(s.text(f"GRANT CONNECT ON DATABASE {database_name} TO {test_username};"))
+    for schema in schemas:
+        fresh_db_session.execute(s.text(f"GRANT USAGE ON SCHEMA {schema} TO {test_username};"))
+        fresh_db_session.execute(s.text(f"GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO {test_username};"))
+
+    # create engine for read-only user
+    db_string = get_database_string()
+    _, _, host, port, _ = parse_database_string(db_string)
+    read_only_engine = s.create_engine(f'postgresql+psycopg2://{test_username}:{test_password}@{host}:{port}/{database_name}')
+        
+    yield read_only_engine
+
+    read_only_engine.dispose()
+
+    # remove read-only user
+    fresh_db_session.execute(s.text(f'REVOKE CONNECT ON DATABASE {database_name} FROM {test_username};'))
+    for schema in schemas:
+        fresh_db_session.execute(s.text(f'REVOKE USAGE ON SCHEMA {schema} FROM {test_username};'))
+        fresh_db_session.execute(s.text(f'REVOKE SELECT ON ALL TABLES IN SCHEMA {schema} FROM {test_username};'))
+    fresh_db_session.execute(s.text(f'DROP USER {test_username};'))
+    
+
 @pytest.fixture
 def test_db_engine():
 
