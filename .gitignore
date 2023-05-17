@@ -194,3 +194,5 @@ postgres-data/
 # Generated files from github
 .history/sendgrid.env
 sendgrid.env
+*sendgrid*.env
+./sendgrid.env
