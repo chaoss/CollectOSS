@@ -192,4 +192,4 @@ pgdata/
 postgres-data/
 
 # Generated files from github
-.history/
+.history/sendgrid.env
