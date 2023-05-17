@@ -83,19 +83,18 @@ def start(disable_collection, development, port):
     logger.info('Gunicorn webserver started...')
     logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
 
-
-    celery_beat_process = None
-    if not disable_collection:
-
-        if os.path.exists("celerybeat-schedule.db"):
+    processes = start_celery_worker_processes(disable_collection)
+    time.sleep(5)
+    if os.path.exists("celerybeat-schedule.db"):
             logger.info("Deleting old task schedule")
             os.remove("celerybeat-schedule.db")
 
-        processes = start_celery_worker_processes()
+    celery_beat_process = None
+    celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
+    celery_beat_process = subprocess.Popen(celery_command.split(" "))    
 
-        time.sleep(5)
+    if not disable_collection:
 
-        
         with DatabaseSession(logger) as session:
 
             clean_collection_status(session)
@@ -109,10 +108,6 @@ def start(disable_collection, development, port):
 
         augur_collection_monitor.si().apply_async()
         
-        
-        celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
-        celery_beat_process = subprocess.Popen(celery_command.split(" "))    
-
     else:
         logger.info("Collection disabled")   
     
@@ -140,10 +135,12 @@ def start(disable_collection, development, port):
             except RedisConnectionError:
                 pass
 
-def start_celery_worker_processes():
+def start_celery_worker_processes(disable_collection=False):
 
     #Calculate process scaling based on how much memory is available on the system in bytes.
     #Each celery process takes ~500MB or 500 * 1024^2 bytes
+
+    process_list = []
 
     #Cap memory usage to 30% of total virtual memory
     available_memory_in_bytes = psutil.virtual_memory().total * .25
@@ -153,39 +150,36 @@ def start_celery_worker_processes():
     #Get a subset of the maximum procesess available using a ratio, not exceeding a maximum value
     def determine_worker_processes(ratio,maximum):
         return max(min(round(max_process_estimate * ratio),maximum),1)
-
-    #2 processes are always reserved as a baseline.
-    scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-    max_process_estimate -= 2
-
+    
     frontend_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n frontend:{uuid.uuid4().hex}@%h -Q frontend"
     max_process_estimate -= 1
-
-    core_num_processes = determine_worker_processes(.6, 45)
-    #60% of estimate, Maximum value of 45
-    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_num_processes} -n core:{uuid.uuid4().hex}@%h"
-
-    secondary_num_processes = determine_worker_processes(.2, 25)
-    #20% of estimate, Maximum value of 25
-    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_num_processes} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
-
-    facade_num_processes = determine_worker_processes(.2, 20)
-    #15% of estimate, Maximum value of 20
-    facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={facade_num_processes} -n facade:{uuid.uuid4().hex}@%h -Q facade"
-
-    process_list = []
-
-    process_list.append(subprocess.Popen(scheduling_worker.split(" ")))
     process_list.append(subprocess.Popen(frontend_worker.split(" ")))
 
-    logger.info(f"Starting core worker processes with concurrency={core_num_processes}")
-    process_list.append(subprocess.Popen(core_worker.split(" ")))
+    if not disable_collection:
 
-    logger.info(f"Starting secondary worker processes with concurrency={secondary_num_processes}")
-    process_list.append(subprocess.Popen(secondary_worker.split(" ")))
+        #2 processes are always reserved as a baseline.
+        scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+        max_process_estimate -= 2
+        process_list.append(subprocess.Popen(scheduling_worker.split(" ")))
 
-    logger.info(f"Starting facade worker processes with concurrency={facade_num_processes}")
-    process_list.append(subprocess.Popen(facade_worker.split(" ")))
+        #60% of estimate, Maximum value of 45
+        core_num_processes = determine_worker_processes(.6, 45)
+        logger.info(f"Starting core worker processes with concurrency={core_num_processes}")
+        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_num_processes} -n core:{uuid.uuid4().hex}@%h"
+        process_list.append(subprocess.Popen(core_worker.split(" ")))
+
+        #20% of estimate, Maximum value of 25
+        secondary_num_processes = determine_worker_processes(.2, 25)
+        logger.info(f"Starting secondary worker processes with concurrency={secondary_num_processes}")
+        secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_num_processes} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+        process_list.append(subprocess.Popen(secondary_worker.split(" ")))
+
+        #15% of estimate, Maximum value of 20
+        facade_num_processes = determine_worker_processes(.2, 20)
+        logger.info(f"Starting facade worker processes with concurrency={facade_num_processes}")
+        facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={facade_num_processes} -n facade:{uuid.uuid4().hex}@%h -Q facade"
+        
+        process_list.append(subprocess.Popen(facade_worker.split(" ")))
 
     return process_list
 
