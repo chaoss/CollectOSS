@@ -174,7 +174,7 @@ Install Certbot:
 sudo apt update &&
 sudo apt upgrade &&
 sudo apt install certbot &&
-apt-get install python3-certbot-nginx
+sudo apt-get install python3-certbot-nginx
 ```
 
 Generate a certificate for the specific domain for which you have a file already in the sites-enabled directory for nginx (located at `/etc/nginx/sites-enabled` on Ubuntu): 
