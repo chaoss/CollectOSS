@@ -317,6 +317,17 @@ class User(Base):
             return user
         except NoResultFound:
             return None
+        
+    @staticmethod 
+    def get_by_id(session, user_id: int):
+
+        if not isinstance(user_id, int):
+            return None
+        try:
+            user = session.query(User).filter(User.user_id == user_id).one()
+            return user
+        except NoResultFound:
+            return None
                 
     @staticmethod
     def create_user(username: str, password: str, email: str, first_name:str, last_name:str, admin=False):
