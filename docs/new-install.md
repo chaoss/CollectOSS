@@ -171,9 +171,9 @@ server {
 ### Setting up SSL (https)
 Install Certbot: 
 ```
-sudo apt update
-sudo apt upgrade
-sudo apt install certbot
+sudo apt update &&
+sudo apt upgrade &&
+sudo apt install certbot &&
 apt-get install python3-certbot-nginx
 ```
 
