@@ -31,6 +31,11 @@ def create_full_routes(routes):
 
 
 def create_connection(dbname='postgres'):
+    """
+    Creates a connection to the postgres server specified in the database string and connects to the dbname specified.
+    Returns the connection and cursor objects.
+    """
+
     db_string = get_database_string()
     user, password, host, port, _ = parse_database_string(db_string)
     conn = psycopg2.connect(
@@ -45,6 +50,11 @@ def create_connection(dbname='postgres'):
 
 
 def create_database(conn, cursor, db_name, template=None):
+    """
+    Creates a database with the name db_name. 
+    If template is specified, the database will be created with the template specified.
+    """
+
     if template:
         cursor.execute(sql.SQL("CREATE DATABASE {} WITH TEMPLATE {};").format(sql.Identifier(db_name), sql.Identifier(template)))
     else:
@@ -52,17 +62,21 @@ def create_database(conn, cursor, db_name, template=None):
     conn.commit()
 
 def drop_database(cursor, db_name):
+    """
+    Drops the database with the name db_name.
+    """
+
     # ensure connections are removed
     cursor.execute(sql.SQL("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='{}';".format(db_name)))
     # drop temporary database
     cursor.execute(sql.SQL("DROP DATABASE {};").format(sql.Identifier(db_name)))
 
 
-def create_template_db(template_name):
-
-    import time
-
-    start_time = time.time()
+def generate_db_from_template(template_name):
+    """
+    Generator function that creates a new database from the template specified.
+    Yields the engine object for the database created.
+    """
 
     db_string = get_database_string()
 
@@ -104,9 +118,11 @@ def create_template_db(template_name):
     conn.close()
 
 
-
-@pytest.fixture(scope='session')
-def db_template():
+def generate_template_db(sql_file_path):
+    """
+    Generator function that creates a new database and install the sql file specified
+    Yields the name of the database created.
+    """
 
     db_string = get_database_string()
 
@@ -131,7 +147,7 @@ def db_template():
     create_database(conn, cursor, test_db_name)
 
     # Install schema
-    execute_sql_file("tests/entire_db.sql", test_db_name, user, password, host, port)
+    execute_sql_file(sql_file_path, test_db_name, user, password, host, port)
 
 
     # ensure connections are removed
@@ -150,41 +166,62 @@ def db_template():
 
 
 @pytest.fixture(scope='session')
-def fresh_db_session(db_template):
-    print("Creating fresh db session from template")
-    yield from create_template_db(db_template)
+def empty_db_template():
+    """ 
+    This fixture creates a template database with the entire schema installed.
+    Returns the name of the database created.
+    """
 
-@pytest.fixture(scope='package')
-def fresh_db_package(db_template):
-    print("Creating fresh package level db")
-    yield from create_template_db(db_template)
-
-@pytest.fixture(scope='module')
-def fresh_db_module(db_template):
-    yield from create_template_db(db_template)
-
-@pytest.fixture(scope='function')
-def fresh_db_function(db_template):
-    yield from create_template_db(db_template)
+    yield from generate_template_db("tests/entire_db.sql")
 
 
 @pytest.fixture(scope='session')
-def read_only_db(fresh_db_session):
+def populated_db_template():
+    """
+    This fixture creates a template database with the entire schema installed and populated with the test repo data.
+    Returns the name of the database created.
+    """
 
-    print("Creating read-only db")
-    print("Fresh db session type: " + str(type(fresh_db_session)))
+    yield from generate_template_db("tests/populated_db.sql")
 
-    database_name = fresh_db_session.url.database
+
+@pytest.fixture(scope='session')
+def empty_db(empty_db_template):
+    """
+    This fixture creates a database from the empty_db_template
+    """
+
+    yield from generate_db_from_template(empty_db_template)
+
+
+@pytest.fixture(scope='session')
+def populated_db(populated_db_template):
+    """
+    This fixture creates a database from the populated_db_template
+    Yields an engine object for the populated_db
+    """
+
+    yield from generate_db_from_template(populated_db_template)
+
+
+@pytest.fixture(scope='session')
+def read_only_db(populated_db):
+    """
+    This fixtture creates a read-only database from the populated_db_template.
+    Yields a read-only engine object for the populated_db.
+    """
+
+    database_name = populated_db.url.database
     test_username = "testuser"
     test_password = "testpass"
     schemas = ["public", "augur_data", "augur_operations"]
 
     # create read-only user
-    fresh_db_session.execute(s.text(f"CREATE USER testuser WITH PASSWORD '{test_password}';"))
-    fresh_db_session.execute(s.text(f"GRANT CONNECT ON DATABASE {database_name} TO {test_username};"))
+    populated_db.execute(s.text(f"CREATE USER testuser WITH PASSWORD '{test_password}';"))
+    populated_db.execute(s.text(f"GRANT CONNECT ON DATABASE {database_name} TO {test_username};"))
     for schema in schemas:
-        fresh_db_session.execute(s.text(f"GRANT USAGE ON SCHEMA {schema} TO {test_username};"))
-        fresh_db_session.execute(s.text(f"GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO {test_username};"))
+        populated_db.execute(s.text(f"GRANT USAGE ON SCHEMA {schema} TO {test_username};"))
+        populated_db.execute(s.text(f"GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO {test_username};"))
 
     # create engine for read-only user
     db_string = get_database_string()
@@ -196,11 +233,11 @@ def read_only_db(fresh_db_session):
     read_only_engine.dispose()
 
     # remove read-only user
-    fresh_db_session.execute(s.text(f'REVOKE CONNECT ON DATABASE {database_name} FROM {test_username};'))
+    populated_db.execute(s.text(f'REVOKE CONNECT ON DATABASE {database_name} FROM {test_username};'))
     for schema in schemas:
-        fresh_db_session.execute(s.text(f'REVOKE USAGE ON SCHEMA {schema} FROM {test_username};'))
-        fresh_db_session.execute(s.text(f'REVOKE SELECT ON ALL TABLES IN SCHEMA {schema} FROM {test_username};'))
-    fresh_db_session.execute(s.text(f'DROP USER {test_username};'))
+        populated_db.execute(s.text(f'REVOKE USAGE ON SCHEMA {schema} FROM {test_username};'))
+        populated_db.execute(s.text(f'REVOKE SELECT ON ALL TABLES IN SCHEMA {schema} FROM {test_username};'))
+    populated_db.execute(s.text(f'DROP USER {test_username};'))
     
 
 @pytest.fixture
