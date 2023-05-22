@@ -58,7 +58,8 @@ class RepoLoadController:
 
         UserRepo.insert(self.session, repo_id)
 
-        CollectionStatus.insert(self.session, repo_id)
+        #collection_status records are now only added during collection -IM 5/1/23
+        #CollectionStatus.insert(self.session, repo_id)
 
         return True, {"status": "Repo added", "repo_url": url}
 
@@ -187,11 +188,12 @@ class RepoLoadController:
         return result[0]["count"], {"status": "success"}
 
     def generate_repo_query(self, source, count, **kwargs):
-
+        # TODO: need more flexible way of calculating count for variable column queries
         if count:
             # only query for repos ids so the query is faster for getting the count
             select = """    DISTINCT(augur_data.repo.repo_id),
-                (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name"""
+                (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name,
+                (regexp_match(augur_data.repo.repo_git, 'github\.com\/([A-Za-z0-9 \- _]+)\/[A-Za-z0-9 \- _ .]+$'))[1] as repo_owner"""
         else:
 
             select = f"""    DISTINCT(augur_data.repo.repo_id),
@@ -201,6 +203,7 @@ class RepoLoadController:
                     COALESCE(b.issues_all_time, 0) as issues_all_time,
                     rg_name,
                     (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name,
+                    (regexp_match(augur_data.repo.repo_git, 'github\.com\/([A-Za-z0-9 \- _]+)\/[A-Za-z0-9 \- _ .]+$'))[1] as repo_owner,
                     augur_data.repo.repo_group_id"""
 
         query = f"""
@@ -248,7 +251,7 @@ class RepoLoadController:
         
         # implement sorting by query_key
         search = kwargs.get("search")
-        qkey = kwargs.get("query_key") or "repo_name"
+        qkey = kwargs.get("query_key") or ["repo_name", "repo_owner"]
 
         if search:
             # The WHERE clause cannot use a column alias created in the directly preceeding SELECT clause
@@ -257,10 +260,16 @@ class RepoLoadController:
             query = f"""\tSELECT * from (
                 {query}
             ) res\n"""
-            query += f"\tWHERE {qkey} ilike '%{search}%'\n"
             # This is done so repos with a NULL repo_name can still be sorted.
             # "res" here is a randomly chosen table alias, short for "result"
             # It is only included because it is required by the SQL syntax
+
+            if isinstance(qkey, list) and len(qkey) > 0:
+                query += f"\tWHERE {qkey.pop(0)} ilike '%{search}%'\n"
+                for key in qkey:
+                    query += f"OR {key} ilike '%{search}%'\n"
+            else:
+                query += f"\tWHERE {qkey} ilike '%{search}%'\n"
 
         if not count:
             order_by = kwargs.get("order_by") or "repo_id"

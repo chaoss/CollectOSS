@@ -45,13 +45,13 @@ def upgrade():
         constraint_name="facade_data_last_collected_check",
         table_name="collection_status",
         condition="NOT (facade_data_last_collected IS NULL AND facade_status  = 'Success' ) AND "
-        "NOT (facade_data_last_collected IS NOT NULL AND facade_status IN ('Pending','Initializing'))"
+        "NOT (facade_data_last_collected IS NOT NULL AND facade_status IN ('Pending','Initializing', 'Update'))"
     )
     op.create_check_constraint(
         constraint_name="facade_task_id_check",
         table_name="collection_status",
-        condition="NOT (facade_task_id IS NOT NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone')) AND "
-        "NOT (facade_task_id IS NULL AND facade_status IN ('Collecting','Initializing'))"
+        condition="NOT (facade_task_id IS NOT NULL AND facade_status IN ('Pending', 'Success', 'Error', 'Failed Clone', 'Initializing')) AND "
+        "NOT (facade_task_id IS NULL AND facade_status IN ('Collecting'))"
     )
     op.create_check_constraint(
         constraint_name="core_secondary_dependency_check",

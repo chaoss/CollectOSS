@@ -66,7 +66,8 @@ default_config = {
                 "log_level": "INFO",
             },
             "Celery": {
-                "concurrency": 12
+                "worker_process_vmem_cap": 0.25,
+                "refresh_materialized_views_interval_in_days": 7
             },
             "Redis": {
                 "cache_group": 0, 
@@ -76,7 +77,7 @@ default_config = {
                 "connection_string": "amqp://augur:password123@localhost:5672/augur_vhost"
             },
             "Tasks": {
-                "collection_interval": 60
+                "collection_interval": 30
             },
             "Message_Insights": {
                     "insight_days": 30,

@@ -1,11 +1,17 @@
 import httpx
 import time
+import random
 
 from typing import Optional, List
 
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
+
+
+class NoValidKeysError(Exception):
+    pass
+
 
 class GithubApiKeyHandler():
     """Handles Github API key retrieval from the database and redis
@@ -34,6 +40,15 @@ class GithubApiKeyHandler():
         self.keys = self.get_api_keys()
 
         # self.logger.debug(f"Retrieved {len(self.keys)} github api keys for use")
+
+    def get_random_key(self):
+        """Retrieves a random key from the list of keys
+
+        Returns:
+            A random github api key
+        """
+
+        return random.choice(self.keys)
 
     def get_config_key(self) -> str:
         """Retrieves the users github api key from their config table
@@ -111,6 +126,9 @@ class GithubApiKeyHandler():
 
         # add all the keys to redis
         self.redis_key_list.extend(valid_keys)
+
+        if not valid_keys:
+            raise NoValidKeysError("No valid github api keys found in the config or worker oauth table")
 
         return valid_keys
 

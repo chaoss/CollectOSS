@@ -28,9 +28,12 @@ from sqlalchemy import or_, and_, update
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor, get_repo_commit_count
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor, get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
 
 from augur.tasks.github.facade_github.tasks import *
+from augur.tasks.util.collection_util import CollectionState, get_collection_status_repo_git_from_filter
+from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneError, git_repo_initialize
+
 
 from augur.tasks.util.worker_util import create_grouped_task_load
 
@@ -163,7 +166,7 @@ def trim_commits_post_analysis_facade_task(repo_git):
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
         repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
@@ -239,7 +242,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
         repo = execute_session_query(query, 'one')
 
         #Get the huge list of commits to process.
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
         repo_loc = (f"{absoulte_path}/.git")
         # Grab the parents of HEAD
 
@@ -276,14 +279,11 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
             if (count + 1) % quarterQueue == 0:
                 logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
 
-            query = session.query(Repo).filter(Repo.repo_id == repo_id)
-            repo = execute_session_query(query,'one')
 
-        logger.info(f"Got to analysis!")
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_group_id, repo.repo_path, repo.repo_name)
-        repo_loc = (f"{absoulte_path}/.git")
+            #logger.info(f"Got to analysis!")
+            absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
+            repo_loc = (f"{absoulte_path}/.git")
         
-        for count, commitTuple in enumerate(queue):
 
             analyze_commit(session, repo_id, repo_loc, commitTuple)
 
@@ -330,13 +330,54 @@ def git_repo_cleanup_facade_task(repo_git):
     with FacadeSession(logger) as session:
         git_repo_cleanup(session, repo_git)
 
-@celery.task
-def git_repo_initialize_facade_task(repo_git):
+# retry this task indefinitely every 5 minutes if it errors. Since the only way it gets scheduled is by itself, so if it stops running no more clones will happen till the instance is restarted
+@celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
+def clone_repos():
 
-    logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
+    logger = logging.getLogger(clone_repos.__name__)
+    
+    is_pending = CollectionStatus.facade_status == CollectionState.PENDING.value
 
     with FacadeSession(logger) as session:
-        git_repo_initialize(session, repo_git)
+
+        # process up to 1000 repos at a time
+        repo_git_identifiers = get_collection_status_repo_git_from_filter(session, is_pending, 999999)
+        for repo_git in repo_git_identifiers:
+            # set repo to intializing
+            repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+            repoStatus = repo.collection_status[0]
+            setattr(repoStatus,"facade_status", CollectionState.INITIALIZING.value)
+            session.commit()
+
+            # clone repo
+            try:
+                git_repo_initialize(session, repo_git)
+                session.commit()
+
+                # get the commit count
+                commit_count = get_repo_commit_count(session, repo_git)
+                facade_weight = get_facade_weight_with_commit_count(session, repo_git, commit_count)
+
+                update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
+
+                # set repo to update
+                setattr(repoStatus,"facade_status", CollectionState.UPDATE.value)
+                session.commit()
+            except GitCloneError:
+                # continue to next repo, since we can't calculate 
+                # commit_count or weight without the repo cloned
+                setattr(repoStatus,"facade_status", CollectionState.FAILED_CLONE.value)
+                session.commit()
+            except Exception as e:
+                logger.error(f"Ran into unexpected issue when cloning repositories \n Error: {e}")
+                # set repo to error
+                setattr(repoStatus,"facade_status", CollectionState.ERROR.value)
+                session.commit()
+
+        clone_repos.si().apply_async(countdown=60*5)
+
+
+
 
 #@celery.task
 #def check_for_repo_updates_facade_task(repo_git):
@@ -356,22 +397,9 @@ def git_update_commit_count_weight(repo_git):
     
     with FacadeSession(logger) as session:
         commit_count = get_repo_commit_count(session, repo_git)
-        date_factor = get_facade_weight_time_factor(session, repo_git)
-    
-    weight = commit_count - date_factor
-    logger.info(f"Repo {repo_git} has a weight of {weight} and a commit count of {commit_count}")
+        facade_weight = get_facade_weight_with_commit_count(session, repo_git, commit_count)
 
-    with DatabaseSession(logger,engine=engine) as session:
-        repo = Repo.get_by_repo_git(session, repo_git)
-
-        update_query = (
-            update(CollectionStatus)
-            .where(CollectionStatus.repo_id == repo.repo_id)
-            .values(facade_weight=weight,commit_sum=commit_count)
-        )
-
-        session.execute(update_query)
-        session.commit()
+        update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
 
 
 @celery.task
@@ -449,45 +477,8 @@ def generate_contributor_sequence(logger,repo_git, session):
     return insert_facade_contributors.si(repo_id)
 
 
-def start_facade_clone_phase(repo_git):
-    logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
-    logger.info(f"Generating sequence to update/clone repo {repo_git}")
-
-    with FacadeSession(logger) as session:
-        
-        facade_sequence = []
-
-        #Get the repo_id
-        repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
-        WHERE repo_git=:value""").bindparams(value=repo_git)
-        repos = session.fetchall_data_from_sql_text(repo_list)
-
-        start_date = session.get_setting('start_date')
-
-        repo_ids = [repo['repo_id'] for repo in repos]
-
-        repo_id = repo_ids.pop(0)
-
-        #Get the collectionStatus
-        query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id)
-
-        status = execute_session_query(query,'one')
-
-
-        if 'Pending' in status.facade_status or 'Failed Clone' in status.facade_status:
-            facade_sequence.append(git_repo_initialize_facade_task.si(repo_git))#git_repo_initialize(session,repo_git_identifiers)
-
-        #TODO: alter this to work with current collection.
-        #if not limited_run or (limited_run and check_updates):
-        #    facade_sequence.append(check_for_repo_updates_facade_task.si(repo_git))#check_for_repo_updates(session,repo_git_identifiers)
-        
-        facade_sequence.append(git_update_commit_count_weight.si(repo_git))
-
-        return chain(*facade_sequence)
-
-
 def facade_phase(repo_git):
-    logger = logging.getLogger(git_repo_initialize_facade_task.__name__)
+    logger = logging.getLogger(facade_phase.__name__)
     logger.info("Generating facade sequence")
     with FacadeSession(logger) as session:
         #Get the repo_id

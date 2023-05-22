@@ -1,5 +1,5 @@
-Quickstart
-===============
+Augur Setup
+-----------
 
 Ubuntu 22.x
 ===========
@@ -486,5 +486,3 @@ Docker
    to run the database in a Docker Container or
    ``sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up``
    to connect to an already running database.
-
-

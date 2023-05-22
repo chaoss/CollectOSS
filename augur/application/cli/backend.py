@@ -20,8 +20,9 @@ from datetime import datetime
 
 from augur import instance_id
 from augur.tasks.start_tasks import augur_collection_monitor, CollectionState, create_collection_status_records
+from augur.tasks.git.facade_tasks import clone_repos
 from augur.tasks.init.redis_connection import redis_connection 
-from augur.application.db.models import Repo, CollectionStatus
+from augur.application.db.models import Repo, CollectionStatus, UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.db.util import execute_session_query
 from augur.application.logs import AugurLogger
@@ -74,6 +75,7 @@ def start(disable_collection, development, port):
         if not port:
             port = config.get_value("Server", "port")
         
+        worker_vmem_cap = config.get_value("Celery", 'worker_process_vmem_cap')
 
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app"
     server = subprocess.Popen(gunicorn_command.split(" "))
@@ -82,41 +84,31 @@ def start(disable_collection, development, port):
     logger.info('Gunicorn webserver started...')
     logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
 
-    scheduling_worker_process = None
-    core_worker_process = None
-    secondary_worker_process = None
-    celery_beat_process = None
-    facade_worker_process = None
-    if not disable_collection:
-
-        if os.path.exists("celerybeat-schedule.db"):
+    processes = start_celery_worker_processes(float(worker_vmem_cap), disable_collection)
+    time.sleep(5)
+    if os.path.exists("celerybeat-schedule.db"):
             logger.info("Deleting old task schedule")
             os.remove("celerybeat-schedule.db")
 
-        scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=45 -n core:{uuid.uuid4().hex}@%h"
-        secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=10 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
-        facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=15 -n facade:{uuid.uuid4().hex}@%h -Q facade"
+    celery_beat_process = None
+    celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
+    celery_beat_process = subprocess.Popen(celery_command.split(" "))    
 
-        scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
-        core_worker_process = subprocess.Popen(core_worker.split(" "))
-        secondary_worker_process = subprocess.Popen(secondary_worker.split(" "))
-        facade_worker_process = subprocess.Popen(facade_worker.split(" "))
+    if not disable_collection:
 
-        time.sleep(5)
-
-        
         with DatabaseSession(logger) as session:
 
             clean_collection_status(session)
+            assign_orphan_repos_to_default_user(session)
         
         create_collection_status_records.si().apply_async()
         time.sleep(3)
+
+        # start cloning repos when augur starts
+        clone_repos.si().apply_async()
+
         augur_collection_monitor.si().apply_async()
-
-        celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
-        celery_beat_process = subprocess.Popen(celery_command.split(" "))    
-
+        
     else:
         logger.info("Collection disabled")   
     
@@ -128,21 +120,10 @@ def start(disable_collection, development, port):
             logger.info("Shutting down server")
             server.terminate()
 
-        if core_worker_process:
-            logger.info("Shutting down celery process: core")
-            core_worker_process.terminate()
-
-        if scheduling_worker_process:
-            logger.info("Shutting down celery process: scheduling")
-            scheduling_worker_process.terminate()
-
-        if secondary_worker_process:
-            logger.info("Shutting down celery process: secondary")
-            secondary_worker_process.terminate()
-        
-        if facade_worker_process:
-            logger.info("Shutting down celery process: facade")
-            facade_worker_process.terminate()
+        logger.info("Shutting down all celery worker processes")
+        for p in processes:
+            if p:
+                p.terminate()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
@@ -154,6 +135,54 @@ def start(disable_collection, development, port):
                 cleanup_after_collection_halt(logger)
             except RedisConnectionError:
                 pass
+
+def start_celery_worker_processes(vmem_cap_ratio, disable_collection=False):
+
+    #Calculate process scaling based on how much memory is available on the system in bytes.
+    #Each celery process takes ~500MB or 500 * 1024^2 bytes
+
+    process_list = []
+
+    #Cap memory usage to 30% of total virtual memory
+    available_memory_in_bytes = psutil.virtual_memory().total * vmem_cap_ratio
+    available_memory_in_megabytes = available_memory_in_bytes / (1024 ** 2)
+    max_process_estimate = available_memory_in_megabytes // 500
+
+    #Get a subset of the maximum procesess available using a ratio, not exceeding a maximum value
+    def determine_worker_processes(ratio,maximum):
+        return max(min(round(max_process_estimate * ratio),maximum),1)
+    
+    frontend_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n frontend:{uuid.uuid4().hex}@%h -Q frontend"
+    max_process_estimate -= 1
+    process_list.append(subprocess.Popen(frontend_worker.split(" ")))
+
+    if not disable_collection:
+
+        #2 processes are always reserved as a baseline.
+        scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+        max_process_estimate -= 2
+        process_list.append(subprocess.Popen(scheduling_worker.split(" ")))
+
+        #60% of estimate, Maximum value of 45
+        core_num_processes = determine_worker_processes(.6, 45)
+        logger.info(f"Starting core worker processes with concurrency={core_num_processes}")
+        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_num_processes} -n core:{uuid.uuid4().hex}@%h"
+        process_list.append(subprocess.Popen(core_worker.split(" ")))
+
+        #20% of estimate, Maximum value of 25
+        secondary_num_processes = determine_worker_processes(.2, 25)
+        logger.info(f"Starting secondary worker processes with concurrency={secondary_num_processes}")
+        secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_num_processes} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+        process_list.append(subprocess.Popen(secondary_worker.split(" ")))
+
+        #15% of estimate, Maximum value of 20
+        facade_num_processes = determine_worker_processes(.2, 20)
+        logger.info(f"Starting facade worker processes with concurrency={facade_num_processes}")
+        facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={facade_num_processes} -n facade:{uuid.uuid4().hex}@%h -Q facade"
+        
+        process_list.append(subprocess.Popen(facade_worker.split(" ")))
+
+    return process_list
 
 
 @cli.command('stop')
@@ -239,25 +268,43 @@ def clean_collection_status(session):
         UPDATE augur_operations.collection_status 
         SET core_status='Pending',core_task_id = NULL
         WHERE core_status='Collecting' AND core_data_last_collected IS NULL;
+
         UPDATE augur_operations.collection_status
         SET core_status='Success',core_task_id = NULL
         WHERE core_status='Collecting' AND core_data_last_collected IS NOT NULL;
+
         UPDATE augur_operations.collection_status 
         SET secondary_status='Pending',secondary_task_id = NULL
         WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NULL;
+
         UPDATE augur_operations.collection_status 
         SET secondary_status='Success',secondary_task_id = NULL
         WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NOT NULL;
 
         UPDATE augur_operations.collection_status 
         SET facade_status='Update', facade_task_id=NULL
-        WHERE facade_status LIKE '%Collecting%';
+        WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET facade_status='Success', facade_task_id=NULL
+        WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NOT NULL;
 
         UPDATE augur_operations.collection_status
         SET facade_status='Pending', facade_task_id=NULL
         WHERE facade_status='Failed Clone' OR facade_status='Initializing';
     """))
     #TODO: write timestamp for currently running repos.
+
+def assign_orphan_repos_to_default_user(session):
+    query = s.sql.text("""
+        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.user_repos)
+    """)
+
+    repos = session.execute_sql(query).fetchall()
+
+    for repo in repos:
+        UserRepo.insert(session,repo[0],1)
+
 
 @cli.command('export-env')
 def export_env(config):
@@ -352,7 +399,6 @@ def raise_open_file_limit(num_files):
     resource.setrlimit(resource.RLIMIT_NOFILE, (num_files, current_hard))
 
     return
-
 
 # def initialize_components(augur_app, disable_housekeeper):
 #     master = None

@@ -7,10 +7,11 @@ from enum import Enum
 import math
 import numpy as np
 import datetime
+import random
 #from celery.result import AsyncResult
 from celery import signature
 from celery import group, chain, chord, signature
-from sqlalchemy import or_, and_, update
+from sqlalchemy import or_, and_,tuple_, update
 
 
 from augur.tasks.github import *
@@ -180,41 +181,8 @@ def start_primary_collection(session,max_repo, days_until_collect_again = 1):
         return core_task_success_util.si(repo_git)
     
     primary_enabled_phases.append(core_task_success_util_gen)
-    
-    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.core_status == CollectionState.COLLECTING.value).all())
 
-    not_erroed = CollectionStatus.core_status != str(CollectionState.ERROR.value)
-    not_collecting = CollectionStatus.core_status != str(CollectionState.COLLECTING.value)
-    never_collected = CollectionStatus.core_data_last_collected == None
-
-    limit = max_repo-active_repo_count
-
-    core_order = CollectionStatus.core_weight
-
-    #Get repos for primary collection hook
-    collection_size = start_block_of_repos(
-        session.logger, session,
-        and_(not_erroed, not_collecting,never_collected),
-        limit, primary_enabled_phases, repos_type="new", sort=core_order
-    )
-
-
-    #Now start old repos if there is space to do so.
-    limit -= collection_size
-
-    if limit > 0:
-        #only start repos older than the specified amount of days
-        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
-
-        collected_before = CollectionStatus.core_data_last_collected != None
-        old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
-
-        start_block_of_repos(
-            session.logger, session,
-            and_(not_erroed, not_collecting,collected_before,old_enough),
-            limit, primary_enabled_phases, repos_type="old", sort=core_order
-        )
-
+    start_repos_by_user(session, max_repo, primary_enabled_phases)
 
 def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
 
@@ -235,118 +203,12 @@ def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
 
     secondary_enabled_phases.append(secondary_task_success_util_gen)
 
-    active_repo_count = len(session.query(CollectionStatus).filter(CollectionStatus.secondary_status == CollectionState.COLLECTING.value).all())
-
-    not_erroed = CollectionStatus.secondary_status != str(CollectionState.ERROR.value)
-    not_collecting = CollectionStatus.secondary_status != str(CollectionState.COLLECTING.value)
-    primary_collected = CollectionStatus.core_status == str(CollectionState.SUCCESS.value)
-    never_collected = CollectionStatus.secondary_data_last_collected == None
-
-    limit = max_repo-active_repo_count
-
-    secondary_order = CollectionStatus.secondary_weight
-
-    collection_size = start_block_of_repos(
-        session.logger, session, 
-        and_(primary_collected,not_erroed, not_collecting,never_collected), 
-        limit, secondary_enabled_phases,
-        repos_type="new",
-        hook="secondary",
-        sort=secondary_order
+    conds = f"augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}'"#[CollectionStatus.core_status == str(CollectionState.SUCCESS.value)]
+    start_repos_by_user(
+        session, max_repo,
+        secondary_enabled_phases,hook="secondary",
+        additional_conditions=conds
     )
-
-    limit -= collection_size
-
-    if limit > 0:
-        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
-
-        collected_before = CollectionStatus.secondary_data_last_collected != None
-        old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
-
-        start_block_of_repos(
-            session.logger, session, 
-            and_(primary_collected,not_erroed, not_collecting,collected_before,old_enough), 
-            limit, secondary_enabled_phases,
-            repos_type="old",
-            hook="secondary",
-            sort=secondary_order
-        )
-
-
-
-def start_facade_processes(session, pipe_size, clone_percentage=0.6):
-
-    # for facade collection we are maintaining a pipe size,
-    # this is the number of messages that can be added to the queue at a time for facade
-    # each clone task is counted for 1, each collection task is counted for 12 since those 
-    # are the number of messages they add to the queue
-    
-    # also the clone percentage determines how much of the pipe is dedicated to clone tasks
-    # after cloning is done, the rest of the pipe is filled with collection tasks
-
-    cloning_section_size = pipe_size * clone_percentage
-    cloning_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.INITIALIZING.value).all())
-
-    # remove the number of repos that are already being cloned from cloning_section_size
-    cloning_section_size = cloning_section_size - cloning_count
-
-    # start cloning tasks until the cloning_section is full. We passing cloning 
-    # section size directly as the max repos because each clone task is counted as 1
-    pipe_space_left = start_facade_clone(session, max_repo=cloning_section_size)
-
-    
-
-    collecting_section_size = pipe_size * (1-clone_percentage)
-    collecting_count = len(session.query(CollectionStatus).filter(CollectionStatus.facade_status == CollectionState.COLLECTING.value).all())
-
-    # remove the number of repos that are already being collected from collecting_section_size
-    collecting_section_size = collecting_section_size - collecting_count
-
-    # add the extra space that is left in the pipe after cloning to the collecting_section_size
-    collecting_section_size = collecting_section_size + pipe_space_left
-
-    # divide collecting_section_size by 12 because each collection task is counted as 12
-    collecting_repo_count = collecting_section_size//12
-
-    start_facade_collection(session, max_repo=collecting_repo_count)
-            
-
-# fills up to 60% of the pipe with cloning repos
-# each repo clone is counted as 1
-#clone new repos that don't have a weight yet.
-def start_facade_clone(session,max_repo):
-    facade_enabled_phases = []
-
-    facade_enabled_phases.append(start_facade_clone_phase)
-
-    def facade_clone_success_util_gen(repo_git):
-        return facade_clone_success_util.si(repo_git)
-    
-    facade_enabled_phases.append(facade_clone_success_util_gen)
-
-    
-    not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
-    not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
-    not_collecting = CollectionStatus.facade_status != str(CollectionState.COLLECTING.value)
-    not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
-    never_collected = CollectionStatus.facade_status == CollectionState.PENDING.value
-
-
-    repo_git_identifiers = get_collection_status_repo_git_from_filter(session,and_(not_failed_clone,not_erroed, not_collecting, not_initializing, never_collected),max_repo)
-
-    session.logger.info(f"Starting facade clone/update on {len(repo_git_identifiers)} repos")
-    if len(repo_git_identifiers) == 0:
-        return max_repo
-
-    session.logger.info(f"Facade clone/update starting for: {tuple(repo_git_identifiers)}")
-
-    facade_augur_collection = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=facade_enabled_phases,collection_hook="facade")
-    #Change start state so cloning repos appear as initializing instead of collecting.
-    facade_augur_collection.start_state = CollectionState.INITIALIZING.value
-
-    facade_augur_collection.start_data_collection()
-
-    return max_repo - len(repo_git_identifiers)
 
 def start_facade_collection(session,max_repo,days_until_collect_again = 1):
 
@@ -366,42 +228,19 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
     facade_enabled_phases.append(facade_task_update_weight_util_gen)
 
     #cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
-    not_erroed = CollectionStatus.facade_status != str(CollectionState.ERROR.value)
-    not_pending = CollectionStatus.facade_status != str(CollectionState.PENDING.value)
-    not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
-    not_collecting = CollectionStatus.facade_status != str(CollectionState.COLLECTING.value)
-    not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
-    never_collected = CollectionStatus.facade_data_last_collected == None
+    #not_pending = CollectionStatus.facade_status != str(CollectionState.PENDING.value)
+    #not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
+    #not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
 
-    limit = max_repo
+    conds = f"augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}' "#[not_pending,not_failed_clone,not_initializing]
+    conds += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}' "
+    conds += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'"
 
-    facade_order = CollectionStatus.facade_weight
-
-    collection_size = start_block_of_repos(
-        session.logger, session,
-        and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing,never_collected),
-        limit, facade_enabled_phases,
-        repos_type="new",
-        hook="facade",
-        sort=facade_order
+    start_repos_by_user(
+        session, max_repo,
+        facade_enabled_phases,hook="facade",
+        new_status=CollectionState.UPDATE.value,additional_conditions=conds
     )
-
-    limit -= collection_size
-
-    if limit > 0:
-        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days_until_collect_again)
-
-        collected_before = CollectionStatus.facade_data_last_collected != None
-        old_enough = CollectionStatus.core_data_last_collected <= cutoff_date
-
-        start_block_of_repos(
-            session.logger, session,
-            and_(not_pending,not_failed_clone,not_erroed, not_collecting, not_initializing,collected_before,old_enough),
-            limit, facade_enabled_phases,
-            repos_type="old",
-            hook="facade",
-            sort=facade_order
-        )
 
 
 @celery.task
@@ -421,14 +260,10 @@ def augur_collection_monitor():
             start_primary_collection(session, max_repo=40)
         
         if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-            start_secondary_collection(session, max_repo=5)
+            start_secondary_collection(session, max_repo=10)
 
         if facade_phase.__name__ in enabled_phase_names:
-            #Schedule facade collection before clone/updates as that is a higher priority
-
-            start_facade_processes(session, pipe_size=360, clone_percentage=0.3)
-           
-
+            start_facade_collection(session, max_repo=30)
 
 # have a pipe of 180
 
@@ -478,7 +313,8 @@ def augur_collection_update_weights():
             session.commit()
             #git_update_commit_count_weight(repo_git)
 
-@celery.task
+#Retry this task for every issue so that repos that were added manually get the chance to be added to the collection_status table.
+@celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
 def create_collection_status_records():
     from augur.tasks.init.celery_app import engine
     logger = logging.getLogger(create_collection_status_records.__name__)
@@ -493,3 +329,6 @@ def create_collection_status_records():
         while repo is not None:
             CollectionStatus.insert(session,repo[0])
             repo = session.execute_sql(query).first()
+    
+    #Check for new repos every seven minutes to be out of step with the clone_repos task
+    create_collection_status_records.si().apply_async(countdown=60*7)
