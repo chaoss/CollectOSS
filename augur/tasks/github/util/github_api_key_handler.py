@@ -8,6 +8,11 @@ from augur.tasks.util.redis_list import RedisList
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 
+
+class NoValidKeysError(Exception):
+    pass
+
+
 class GithubApiKeyHandler():
     """Handles Github API key retrieval from the database and redis
 
@@ -121,6 +126,9 @@ class GithubApiKeyHandler():
 
         # add all the keys to redis
         self.redis_key_list.extend(valid_keys)
+
+        if not valid_keys:
+            raise NoValidKeysError("No valid github api keys found in the config or worker oauth table")
 
         return valid_keys
 

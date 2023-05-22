@@ -317,6 +317,17 @@ class User(Base):
             return user
         except NoResultFound:
             return None
+        
+    @staticmethod 
+    def get_by_id(session, user_id: int):
+
+        if not isinstance(user_id, int):
+            return None
+        try:
+            user = session.query(User).filter(User.user_id == user_id).one()
+            return user
+        except NoResultFound:
+            return None
                 
     @staticmethod
     def create_user(username: str, password: str, email: str, first_name:str, last_name:str, admin=False):
@@ -335,7 +346,7 @@ class User(Base):
                 return False, {"status": "A User already exists with that email"}
 
             try:
-                user = User(login_name = username, login_hashword = generate_password_hash(password), email = email, first_name = first_name, last_name = last_name, tool_source="User API", tool_version=None, data_source="API", admin=admin)
+                user = User(login_name = username, login_hashword = User.compute_hashsed_password(password), email = email, first_name = first_name, last_name = last_name, tool_source="User API", tool_version=None, data_source="API", admin=admin)
                 session.add(user)
                 session.commit()
 
@@ -373,7 +384,7 @@ class User(Base):
         if not check_password_hash(self.login_hashword, old_password):
             return False, {"status": "Password did not match users password"}
 
-        self.login_hashword = generate_password_hash(new_password)
+        self.login_hashword = User.compute_hashsed_password(new_password)
         session.commit()
 
         return True, {"status": "Password updated"}
@@ -429,9 +440,12 @@ class User(Base):
     def add_repo(self, group_name, repo_url):
         
         from augur.tasks.github.util.github_task_session import GithubTaskSession
-
-        with GithubTaskSession(logger) as session:
-            result = UserRepo.add(session, repo_url, self.user_id, group_name)
+        from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
+        try:
+            with GithubTaskSession(logger) as session:
+                result = UserRepo.add(session, repo_url, self.user_id, group_name)
+        except NoValidKeysError:
+            return False, {"status": "No valid keys"}
 
         return result
 
@@ -445,9 +459,13 @@ class User(Base):
     def add_org(self, group_name, org_url):
 
         from augur.tasks.github.util.github_task_session import GithubTaskSession
+        from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
 
-        with GithubTaskSession(logger) as session:
-            result = UserRepo.add_org_repos(session, org_url, self.user_id, group_name)
+        try:
+            with GithubTaskSession(logger) as session:
+                result = UserRepo.add_org_repos(session, org_url, self.user_id, group_name)
+        except NoValidKeysError:
+            return False, {"status": "No valid keys"}
 
         return result
 
@@ -578,6 +596,10 @@ class User(Base):
             return None, {"status": "Error when trying to get favorite groups"}
 
         return groups, {"status": "Success"}
+    
+    @staticmethod
+    def compute_hashsed_password(password):
+        return generate_password_hash(password, method='pbkdf2:sha512', salt_length=32)
 
 
 
