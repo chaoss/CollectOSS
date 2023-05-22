@@ -439,11 +439,13 @@ class User(Base):
 
     def add_repo(self, group_name, repo_url):
         
-        from augur.tasks.github.util.github_task_session import GithubTaskSession
+        from augur.application.db.session import DatabaseSession
+        from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
         from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
         try:
-            with GithubTaskSession(logger) as session:
-                result = UserRepo.add(session, repo_url, self.user_id, group_name)
+            with DatabaseSession(logger) as session:
+                key_auth = GithubRandomKeyAuth(session, session.logger)
+                result = UserRepo.add(session, key_auth, repo_url, self.user_id, group_name)
         except NoValidKeysError:
             return False, {"status": "No valid keys"}
 
@@ -458,12 +460,14 @@ class User(Base):
 
     def add_org(self, group_name, org_url):
 
-        from augur.tasks.github.util.github_task_session import GithubTaskSession
+        from augur.application.db.session import DatabaseSession
+        from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
         from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
 
         try:
-            with GithubTaskSession(logger) as session:
-                result = UserRepo.add_org_repos(session, org_url, self.user_id, group_name)
+            with DatabaseSession(logger) as session:
+                key_auth = GithubRandomKeyAuth(session, session.logger)
+                result = UserRepo.add_org_repos(session, key_auth, org_url, self.user_id, group_name)
         except NoValidKeysError:
             return False, {"status": "No valid keys"}
 
