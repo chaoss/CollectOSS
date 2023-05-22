@@ -176,16 +176,6 @@ def empty_db_template():
 
 
 @pytest.fixture(scope='session')
-def populated_db_template():
-    """
-    This fixture creates a template database with the entire schema installed and populated with the test repo data.
-    Returns the name of the database created.
-    """
-
-    yield from generate_template_db("tests/populated_db.sql")
-
-
-@pytest.fixture(scope='session')
 def empty_db(empty_db_template):
     """
     This fixture creates a database from the empty_db_template
@@ -194,34 +184,25 @@ def empty_db(empty_db_template):
     yield from generate_db_from_template(empty_db_template)
 
 
+# TODO: Add populated db template and populated db fixtures so this fixture is more useful
 @pytest.fixture(scope='session')
-def populated_db(populated_db_template):
-    """
-    This fixture creates a database from the populated_db_template
-    Yields an engine object for the populated_db
-    """
-
-    yield from generate_db_from_template(populated_db_template)
-
-
-@pytest.fixture(scope='session')
-def read_only_db(populated_db):
+def read_only_db(empty_db):
     """
     This fixtture creates a read-only database from the populated_db_template.
     Yields a read-only engine object for the populated_db.
     """
 
-    database_name = populated_db.url.database
+    database_name = empty_db.url.database
     test_username = "testuser"
     test_password = "testpass"
     schemas = ["public", "augur_data", "augur_operations"]
 
     # create read-only user
-    populated_db.execute(s.text(f"CREATE USER testuser WITH PASSWORD '{test_password}';"))
-    populated_db.execute(s.text(f"GRANT CONNECT ON DATABASE {database_name} TO {test_username};"))
+    empty_db.execute(s.text(f"CREATE USER testuser WITH PASSWORD '{test_password}';"))
+    empty_db.execute(s.text(f"GRANT CONNECT ON DATABASE {database_name} TO {test_username};"))
     for schema in schemas:
-        populated_db.execute(s.text(f"GRANT USAGE ON SCHEMA {schema} TO {test_username};"))
-        populated_db.execute(s.text(f"GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO {test_username};"))
+        empty_db.execute(s.text(f"GRANT USAGE ON SCHEMA {schema} TO {test_username};"))
+        empty_db.execute(s.text(f"GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO {test_username};"))
 
     # create engine for read-only user
     db_string = get_database_string()
@@ -233,11 +214,11 @@ def read_only_db(populated_db):
     read_only_engine.dispose()
 
     # remove read-only user
-    populated_db.execute(s.text(f'REVOKE CONNECT ON DATABASE {database_name} FROM {test_username};'))
+    empty_db.execute(s.text(f'REVOKE CONNECT ON DATABASE {database_name} FROM {test_username};'))
     for schema in schemas:
-        populated_db.execute(s.text(f'REVOKE USAGE ON SCHEMA {schema} FROM {test_username};'))
-        populated_db.execute(s.text(f'REVOKE SELECT ON ALL TABLES IN SCHEMA {schema} FROM {test_username};'))
-    populated_db.execute(s.text(f'DROP USER {test_username};'))
+        empty_db.execute(s.text(f'REVOKE USAGE ON SCHEMA {schema} FROM {test_username};'))
+        empty_db.execute(s.text(f'REVOKE SELECT ON ALL TABLES IN SCHEMA {schema} FROM {test_username};'))
+    empty_db.execute(s.text(f'DROP USER {test_username};'))
     
 
 @pytest.fixture
