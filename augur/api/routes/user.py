@@ -274,6 +274,18 @@ def add_user_org():
 
     return jsonify(result[1])
 
+@app.route(f"/{AUGUR_API_VERSION}/user/repo/remove", methods=['GET', 'POST'])
+@ssl_required
+@login_required
+def user_verify_otp():
+    otp = request.args.get("otp")
+
+    if otp == redis.get(current_user.email):
+        redis.delete(current_user.email)
+        current_user.email_verified = True
+        return jsonify()
+
+    return jsonify({"status": "Invalid OTP"})
 
 @app.route(f"/{AUGUR_API_VERSION}/user/repo/remove", methods=['GET', 'POST'])
 @ssl_required

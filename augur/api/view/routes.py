@@ -11,6 +11,9 @@ from augur.application.util import *
 from augur.application.config import AugurConfig
 from ..server import app, db_session
 
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+
 logger = logging.getLogger(__name__)
 
 
@@ -236,7 +239,48 @@ settings:
 @app.route('/account/settings')
 @login_required
 def user_settings():
+    if not current_user.email_verified:
+        return redirect(url_for("user_verify_email"))
+    
     return render_template("settings.j2")
+
+""" ----------------------------------------------------------------
+email verification:
+    Under development
+"""
+@app.route('/account/verify')
+@login_required
+def user_verify_email():
+    email_body = """<strong>This One Time Passcode expires in 5 minutes.</strong>
+
+    {}
+
+    <small>If you did not make this request, you can safely disregard this message.</small>"""
+    if not config.get_value("service", "email"):
+        return render_message("Email Verification Disabled", "Email verification has not been enabled on this instance.")
+    elif current_user.email_verified:
+        return redirect(url_for("user_settings"))
+    elif True: #not redis.get(current_user.email):
+        OTP = generate_OTP()
+
+        message = Mail(
+            from_email=config.get_value("email.service", "source_email"),
+            to_emails=current_user.email,
+            subject='Augur account verification',
+            html_content=email_body.format(OTP))
+        logger.info(str(message))
+        try:
+            sg = SendGridAPIClient(config.get_value("email.service", "provider_key"))
+            response = sg.send(message)
+            logger.info(response.status_code)
+            logger.info(response.body)
+            logger.info(response.headers)
+        except Exception as e:
+            logger.error(e.message)
+
+        redis.set(current_user.email, OTP, ex = 5 * 60)
+
+    return render_module("verify-email")
 
 """ ----------------------------------------------------------------
 report page:

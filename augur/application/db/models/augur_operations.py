@@ -237,11 +237,11 @@ class Config(Base):
 
 # add admit column to database
 class User(Base):
-
     user_id = Column(Integer, primary_key=True)
     login_name = Column(String, nullable=False)
     login_hashword = Column(String, nullable=False)
     email = Column(String, nullable=False)
+    email_verified = Column(Boolean, nullable=False, server_default="false")
     text_phone = Column(String)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)

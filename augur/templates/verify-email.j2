@@ -1,0 +1,45 @@
+<h1>Verify Your Email</h1>
+<p>We've sent a one-time passcode to {{current_user.email}}</p>
+<p>Please enter the code below. You may need to check your spam or junk folder.</p>
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <form id="verify-form" class="form-signin" style="width: 400px;" method="post" action="{{ url_for('user_login') }}">
+            <p>
+                <input type="text" id="otp" name="one_time_passcode" class="form-control" placeholder="Verification Code" required autofocus>
+            </p>
+            <div class="btn" style="background-color: var(--color-accent); padding: 0; margin: 0;">
+                <button id="verbtn" class="btn btn-outline-dark" style="color: white;" type="submit" name="signin">Verify</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function formError(event, message) {
+        event.preventDefault();
+        flashToast(message);
+    }
+
+    function submitForm(event) {
+        event.preventDefault();
+
+        otp = document.getElementById("otp").value;
+
+        fetch("{{ url_for("user_verify_otp") }}?otp=" + otp)
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.status == "Success") {
+                    if (button.classList.contains("bi-star-fill")) {
+                        button.classList.remove("bi-star-fill");
+                        button.classList.add("bi-star");
+                    } else {
+                        button.classList.remove("bi-star");
+                        button.classList.add("bi-star-fill");
+                    }
+                }
+            });
+    }
+
+    form = document.getElementById("verify-form");
+    form.addEventListener("submit", submitForm);
+</script>

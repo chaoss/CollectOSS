@@ -5,7 +5,7 @@ from .init import *
 from .server import User
 from ..server import app, db_session
 from augur.application.config import AugurConfig
-import urllib.request, urllib.error, json, os, math, yaml, urllib3, time, logging, re
+import urllib.request, urllib.error, json, os, math, yaml, urllib3, time, logging, re, random
 
 init_logging()
 
@@ -78,6 +78,14 @@ def validate_api_url(url):
 
     return status
 
+def generate_OTP():
+    OTP = ""
+    chars = "0123456789"
+ 
+    for i in range(6) :
+        OTP += random.choice(chars)
+ 
+    return OTP
 
 """ ----------------------------------------------------------------
 loadSettings:
