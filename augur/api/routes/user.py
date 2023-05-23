@@ -274,7 +274,7 @@ def add_user_org():
 
     return jsonify(result[1])
 
-@app.route(f"/{AUGUR_API_VERSION}/user/repo/remove", methods=['GET', 'POST'])
+@app.route(f"/{AUGUR_API_VERSION}/user/otp/verify", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def user_verify_otp():
