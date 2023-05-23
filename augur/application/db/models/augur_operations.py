@@ -886,7 +886,7 @@ class UserRepo(Base):
 
         # if it doesn't exist create one
         if not repo_group:
-            repo_group = RepoGroup(rg_name=owner, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
+            repo_group = RepoGroup(rg_name=owner.lower(), rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
                     tool_source="Loaded by user", tool_version="1.0", data_source="Git")
             session.add(repo_group)
             session.commit()
