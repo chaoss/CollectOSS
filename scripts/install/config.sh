@@ -98,6 +98,10 @@ function get_rabbitmq_broker_url(){
 
 function create_config(){
 
+    if test -f ".env"; then
+        source .env
+    fi
+
     if [[ -z "${AUGUR_GITHUB_API_KEY}" ]]
     then
         get_github_api_key

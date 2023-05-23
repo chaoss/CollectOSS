@@ -287,6 +287,16 @@ def user_verify_otp():
 
     return jsonify({"status": "Invalid OTP"})
 
+@app.route(f"/{AUGUR_API_VERSION}/user/password/reset", methods=['GET', 'POST'])
+@ssl_required
+@login_required
+def user_reset_password():
+    email = request.args.get("email")
+
+    # TODO: verify email exists and send reset link
+
+    return jsonify({"status": "request received"})
+
 @app.route(f"/{AUGUR_API_VERSION}/user/repo/remove", methods=['GET', 'POST'])
 @ssl_required
 @login_required

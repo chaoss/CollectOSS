@@ -255,7 +255,8 @@ def user_verify_email():
 
     {}
 
-    <small>If you did not make this request, you can safely disregard this message.</small>"""
+    <small>If you did not make this request, you can disregard this message.</small>"""
+
     if not config.get_value("service", "email"):
         return render_message("Email Verification Disabled", "Email verification has not been enabled on this instance.")
     elif current_user.email_verified:
@@ -281,6 +282,46 @@ def user_verify_email():
         redis.set(current_user.email, OTP, ex = 5 * 60)
 
     return render_module("verify-email")
+
+""" ----------------------------------------------------------------
+email verification:
+    Under development
+"""
+@app.route('/account/password/reset')
+def user_reset_password():
+    email_body = """<strong>This link expires in 5 minutes.</strong>
+
+    {}
+
+    <small>If you did not make this request, you can disregard this message.</small>"""
+
+    if not config.get_value("service", "email"):
+        return render_message("Email Service Disabled", "Email has not been enabled on this instance.")
+    elif key := request.args.get("key"):
+        return redirect(url_for("user_settings"))
+    elif True: #not redis.get(current_user.email):
+        OTP = secrets.token_hex()
+
+        # TODO: finish setup
+
+        message = Mail(
+            from_email=config.get_value("email.service", "source_email"),
+            to_emails=current_user.email,
+            subject='Augur password reset',
+            html_content=email_body.format(OTP))
+        logger.info(str(message))
+        try:
+            sg = SendGridAPIClient(config.get_value("email.service", "provider_key"))
+            response = sg.send(message)
+            logger.info(response.status_code)
+            logger.info(response.body)
+            logger.info(response.headers)
+        except Exception as e:
+            logger.error(e.message)
+
+        redis.set(current_user.email, OTP, ex = 5 * 60)
+
+    return render_module("reset-password")
 
 """ ----------------------------------------------------------------
 report page:
