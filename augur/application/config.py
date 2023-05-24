@@ -37,6 +37,7 @@ default_config = {
                 "github": "<gh_api_key>",
                 "gitlab": "<gl_api_key>"
             },
+            #TODO: a lot of these are deprecated.
             "Facade": {
                 "check_updates": 1,
                 "create_xlsx_summary_files": 1,
