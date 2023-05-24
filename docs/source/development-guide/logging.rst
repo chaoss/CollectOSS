@@ -3,8 +3,8 @@ Logging
 
 Augur's log output can be configured with some basic verbosity and log levels. If you are contributing to Augur,
 we recommend you set the ``debug`` flag in the ``Logging`` section of your config file to ``1``. This will
-turn the verbosity up, capture **all** logs of every level, and it will allow the workers to print their output to the screen
-if they are being run manually in a separate terminal (as is often the case when one is developing a worker).
+turn the verbosity up, capture **all** logs of every level, and it will allow the data collection tasks to print their output to the screen
+if they are being run manually in a separate terminal.
 
 The verbosity and minimum log level can be controlled with the ``verbose`` (boolean flag) and ``log_level``
 (one of ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, or ``CRITICAL``) options respectively. There is also
