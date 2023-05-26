@@ -302,6 +302,8 @@ def badges_model(logger,repo_git,repo_id,db):
     """
     cii_endpoint = "https://bestpractices.coreinfrastructure.org/projects.json?pq="
 
+    
+    #https://github.com/chaoss/grimoirelab-hatstall
     logger.info(f"Collecting badge data for {repo_git}")
     git_url_extension = quote(repo_git[0:-4])
 
@@ -318,7 +320,7 @@ def badges_model(logger,repo_git,repo_id,db):
 
     #Insert any data that was returned
     if len(response_data) > 0:
-        RepoBadging.insert(db, repo_id, data)
+        RepoBadging.insert(db, repo_id, response_data)
     else:
         logger.info(f"Could not find CII data for {repo_git}")
 

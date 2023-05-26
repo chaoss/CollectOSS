@@ -25,6 +25,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 import logging
 import re
 from typing import List, Any, Dict
+import json
 
 
 from augur.application.db.models.base import Base
@@ -1701,7 +1702,7 @@ class RepoBadging(Base):
             t_source="collect_linux_badge_info",
             t_version="0.50.3",
             d_source="OSSF CII",
-            data=data
+            data=json.dumps(data,indent=4)
         )
 
         session.execute_sql(insert_statement)
