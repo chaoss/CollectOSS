@@ -1691,6 +1691,21 @@ class RepoBadging(Base):
 
     repo = relationship("Repo")
 
+    @staticmethod
+    def insert(session, repo_id: int, data: dict) -> dict:
+
+        insert_statement = text("""INSERT INTO repo_badging (repo_id,tool_source,tool_version,data_source,data)
+        VALUES (:repo_id,:t_source,:t_version,:d_source,:data)
+        """).bindparams(
+            repo_id=repo_id,
+            t_source="collect_linux_badge_info",
+            t_version="0.50.3",
+            d_source="OSSF CII",
+            data=data
+        )
+
+        session.execute_sql(insert_statement)
+
 
 class RepoClusterMessage(Base):
     __tablename__ = "repo_cluster_messages"

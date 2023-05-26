@@ -22,7 +22,7 @@ from augur.tasks.github.releases.tasks import collect_releases
 from augur.tasks.github.repo_info.tasks import collect_repo_info
 from augur.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
-from augur.tasks.git.dependency_tasks.tasks import process_ossf_scorecard_metrics
+from augur.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
 from augur.tasks.github.traffic.tasks import collect_github_repo_clones_data
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.db.refresh_materialized_views import *
@@ -107,7 +107,7 @@ def secondary_repo_collect_phase(repo_git):
     repo_task_group = group(
         process_pull_request_files.si(repo_git),
         process_pull_request_commits.si(repo_git),
-        process_ossf_scorecard_metrics.si(repo_git),
+        process_ossf_dependency_metrics.si(repo_git),
         chain(collect_pull_request_reviews.si(repo_git), collect_pull_request_review_comments.si(repo_git))
     )
 
