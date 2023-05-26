@@ -19,7 +19,7 @@ if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
     from augur.tasks.data_analysis import *
 from augur.tasks.github.detect_move.tasks import detect_github_repo_move_core, detect_github_repo_move_secondary
 from augur.tasks.github.releases.tasks import collect_releases
-from augur.tasks.github.repo_info.tasks import collect_repo_info
+from augur.tasks.github.repo_info.tasks import collect_repo_info, collect_linux_badge_info
 from augur.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
 from augur.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
@@ -63,35 +63,30 @@ def prelim_phase_secondary(repo_git):
 
 
 #This is the phase that defines the message for core augur collection
+#A chain is needed for each repo.
 def primary_repo_collect_phase(repo_git):
     logger = logging.getLogger(primary_repo_collect_phase.__name__)
 
-    #Here the term issues also includes prs. This list is a bunch of chains that run in parallel to process issue data.
-    issue_dependent_tasks = []
-    #repo_info should run in a group
-    repo_info_tasks = []
 
-    np_clustered_array = []
-
-    #A chain is needed for each repo.
-    repo_info_task = collect_repo_info.si(repo_git)#collection_task_wrapper(self)
-
+    #Define primary group of jobs for the primary collect phase: issues and pull requests.
     primary_repo_jobs = group(
         collect_issues.si(repo_git),
         collect_pull_requests.si(repo_git)
     )
 
+    #Define secondary group that can't run until after primary jobs have finished.
     secondary_repo_jobs = group(
         collect_events.si(repo_git),#*create_grouped_task_load(dataList=first_pass, task=collect_events).tasks,
         collect_github_messages.si(repo_git), #*create_grouped_task_load(dataList=first_pass,task=collect_github_messages).tasks,
         collect_github_repo_clones_data.si(repo_git),
     )
 
+    #Other tasks that don't need other tasks to run before they do just put in final group.
     repo_task_group = group(
-        repo_info_task,
+        collect_repo_info.si(repo_git),
         chain(primary_repo_jobs | issue_pr_task_update_weight_util.s(repo_git=repo_git),secondary_repo_jobs,process_contributors.si()),
         #facade_phase(logger,repo_git),
-        
+        collect_linux_badge_info.si(repo_git),
         collect_releases.si(repo_git),
         grab_comitters.si(repo_git)
     )
