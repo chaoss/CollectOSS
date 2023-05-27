@@ -79,4 +79,4 @@ If we look at the Augur Schema, we can see that effort and cost are contained in
 
 .. note::
 
-   Augur uses https://github.com/boyter/scc to calculate information contained in the ``labor_value`` table, which is populated by the ``value_worker``. 
+   Augur uses https://github.com/boyter/scc to calculate information contained in the ``labor_value`` table, which is populated by the ``value_worker`` tasks. 

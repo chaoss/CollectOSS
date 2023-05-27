@@ -1,8 +1,8 @@
-Clustering Worker
+Clustering Task
 ==========================
 
-The worker analyzes the comments in issues and pull requests, and clusters the repositories based on contents of those messages.
-The worker also performs topic modeling using Latent Dirichlet allocation
+The task analyzes the comments in issues and pull requests, and clusters the repositories based on contents of those messages.
+The task also performs topic modeling using Latent Dirichlet allocation
 
 
 Clustering of text documents
@@ -11,9 +11,9 @@ Clustering of text documents
 Clustering is a type of unsupervised machine learning technique that involves grouping together similar data points. In case of textual data, it involves grouping together semantically similar documents.
 The document is a collection of sentences. In our case, document represents the collection of comments across issues and pull requests across a particular repository. Since, clustering algorithm works with numerical features, we need to first convert documents into vector representation.
 
-Worker Implementation
----------------------
-The worker performs two tasks — clustering of the repositories represented as documents (collection of all messages from issues and pull requests within the repository) and topic modeling. If the pre-trained model doesn’t exist in the worker folder, the data from all the repository in the connected database are used to train the model. After the training, the following model files are dumped in the worker folder
+Implementation
+--------------
+The task performs two tasks — clustering of the repositories represented as documents (collection of all messages from issues and pull requests within the repository) and topic modeling. If the pre-trained model doesn’t exist in the clustering task's folder, the data from all the repository in the connected database are used to train the model. After the training, the following model files are dumped in the clustering task's folder
 
 - vocabulary : the set of features obtained from TF-IDF vectorization on text data (required in prediction phase)
 - kmeans_repo_messages : trained kmeans clustering model on tfidf features
@@ -25,28 +25,14 @@ In addition, the training phase populates the ‘topic words’ database table w
 
 
 **Prediction**
-If the trained model exists in the worker directory, the prediction is made on the documents corresponding to the repositories in the repo groups specified in the configuration. The worker populates the following tables
+If the trained model exists in the task directory, the prediction is made on the documents corresponding to the repositories in the repo groups specified in the configuration. The task populates the following tables
 repo_topic : stores probability distribution over the topics for a particular repository
 repo_cluster_messages : stores clustering label assigned to a repository
 
 
-Worker Configuration
+Task Configuration
 --------------------
-Like standard worker configuration, we need to define delay, given, model and repo_group_id in housekeeper configuration block.
-
-{
-
-    "delay": 10000,
-
-    "given":["git_url"],
-
-    "model" : "clustering",
-
-    "repo_group_id" : 60003
-
-}
-
-Further, in workers configuration block, we need to define port, switch and number of workers.
+For this task's configuration, in workers configuration block, we need to define port, switch and number of workers.
 
 .. code-block:: json
 
@@ -60,7 +46,7 @@ Further, in workers configuration block, we need to define port, switch and numb
             "num_clusters" : 4
     }
 
-Additional Worker Parameters in `augur.config.json`:
+Additional Worker Parameters: 
 ------------------------------------------------------
 
 In addition to standard worker parameters, clustering worker requires some worker-specific parameters which are described below:
