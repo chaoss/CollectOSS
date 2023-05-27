@@ -132,7 +132,7 @@ celery_app.conf.task_routes = {
     'augur.tasks.github.pull_requests.files_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.tasks.collect_pull_request_reviews': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.tasks.collect_pull_request_review_comments': {'queue': 'secondary'},
-    'augur.tasks.git.dependency_tasks.tasks.process_ossf_scorecard_metrics': {'queue': 'secondary'},
+    'augur.tasks.git.dependency_tasks.tasks.process_ossf_dependency_metrics': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.process_dependency_metrics': {'queue': 'facade'},
     'augur.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'},
     'augur.tasks.frontend.*': {'queue': 'frontend'}

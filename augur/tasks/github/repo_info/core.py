@@ -12,7 +12,8 @@ from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.gh_graphql_entities import hit_api_graphql, request_graphql_dict
 from augur.application.db.models import *
 from augur.tasks.github.util.github_task_session import *
-
+from augur.application.db.models.augur_data import RepoBadging
+from urllib.parse import quote
 
 def query_committers_count(key_auth, logger, owner, repo):
 
@@ -290,5 +291,37 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
     augur_db.execute_sql(update_repo_data)
 
     logger.info(f"Inserted info for {owner}/{repo}\n")
+
+
+def badges_model(logger,repo_git,repo_id,db):
+    """ Data collection and storage method
+        Query the CII API and store the result in the DB for the badges model
+
+        This is a github task because it only covers github repos, this is not 
+        part of the regular repo info model because it uses a differant api + github.
+    """
+    cii_endpoint = "https://bestpractices.coreinfrastructure.org/projects.json?pq="
+
+    
+    #https://github.com/chaoss/grimoirelab-hatstall
+    logger.info(f"Collecting badge data for {repo_git}")
+    git_url_extension = quote(repo_git[0:-4])
+
+    url = cii_endpoint + git_url_extension
+    logger.debug(f"Hitting CII endpoint: {url}")
+
+    #Hit cii api with no api key.
+    response = hit_api(None, url, logger)
+
+    try:
+        response_data = response.json()
+    except:
+        response_data = json.loads(json.dumps(response.text))
+
+    #Insert any data that was returned
+    if len(response_data) > 0:
+        RepoBadging.insert(db, repo_id, response_data)
+    else:
+        logger.info(f"Could not find CII data for {repo_git}")
 
 
