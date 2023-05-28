@@ -59,3 +59,20 @@ def add_user(username, email, firstname, lastname, admin, phone_number, password
         engine.dispose()
         
         return 0
+
+@cli.command('password_reset', short_help="Reset a user's password")
+@click.argument("username")
+@click.password_option(help="New password")
+def reset_password(username, password):
+    session = Session()
+
+    user = session.query(User).filter(User.login_name == username).first()
+
+    if not user:
+        return click.echo("invalid username")
+    
+    password = User.compute_hashsed_password(password)
+    user.login_hashword = password
+    session.commit()
+
+    return click.echo("Password updated")

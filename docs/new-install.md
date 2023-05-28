@@ -84,7 +84,7 @@ exit
 ## Rabbitmq Broker Configuration
 You have to setup a specific user, and broker host for your augur instance. You can accomplish this by running the below commands:
 ```shell
-sudo rabbitmq-plugins enable rabbitmq_management
+sudo rabbitmq-plugins enable rabbitmq_management &&
 sudo rabbitmqctl add_user augur password123 &&
 sudo rabbitmqctl add_vhost augur_vhost &&
 sudo rabbitmqctl set_user_tags augur augurTag administrator &&
@@ -171,10 +171,10 @@ server {
 ### Setting up SSL (https)
 Install Certbot: 
 ```
-sudo apt update
-sudo apt upgrade
-sudo apt install certbot
-apt-get install python3-certbot-nginx
+sudo apt update &&
+sudo apt upgrade &&
+sudo apt install certbot &&
+sudo apt-get install python3-certbot-nginx
 ```
 
 Generate a certificate for the specific domain for which you have a file already in the sites-enabled directory for nginx (located at `/etc/nginx/sites-enabled` on Ubuntu): 

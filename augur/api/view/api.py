@@ -107,6 +107,7 @@ def av_add_user_repo():
                 invalid_urls.append(url)
 
     if urls:
+        urls = [url.lower() for url in urls]
         add_org_repo_list.si(current_user.user_id, group, urls).apply_async()
 
     flash("Adding repos and orgs in the background")
