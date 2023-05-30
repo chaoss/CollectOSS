@@ -317,12 +317,20 @@ Create a Python Virtual Environment
 Activate your Python Virtual Environment
 ``source ~/virtual-env-directory/bin/activate``
 
-From the root of the Augur Directory, type ``make install``
+From the root of the Augur Directory, type ``make install``. You will be
+prompted to provide:
 
-You will be prompted to provide your GitHub username and password, your
-GitLab username and password, and the postgresql database where you want
-to have the Augur Schema built. You will also be prompted to provide a
-directory where repositories will be clone into.
+- "User" is the PSQL database user, which is ``augur`` if you followed
+  instructions exactly
+- "Password" is the above user's password
+- "Host" is the domain used with nginx, e.g. ``ai.chaoss.io``
+- "Port" is 5432 unless you reconfigured something
+- "Database" is the name of the Augur database, which is ``augur`` if you
+  followed instructions exactly
+- The GitHub token created earlier
+- Then the username associated with it
+- Then the same for GitLab
+- and finally a directory to clone repositories to
 
 Post Installation of Augur
 --------------------------
