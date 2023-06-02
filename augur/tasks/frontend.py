@@ -5,6 +5,16 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.application.db.models import UserRepo, Repo, User
 
+def parse_org_name(string):
+
+    match = re.match(r'^\/?([a-zA-Z0-9_-]+)\/?$', string)
+    return match
+
+def parse_org_and_repo_name(string):
+
+    match = re.match(r'^\/?([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$', string)
+    return match
+
 
 @celery.task
 def add_org_repo_list(user_id, group_name, urls):
@@ -33,7 +43,7 @@ def add_org_repo_list(user_id, group_name, urls):
                 valid_repos.append(url)
 
         # matches /{org}/{repo}/ or /{org}/{repo} or {org}/{repo}/ or {org}/{repo}
-        elif (match := re.match(r'^\/?([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$', url)):
+        elif (match := parse_org_and_repo_name(url)):
             org, repo = match.groups()
             repo_url = f"https://github.com/{org}/{repo}/"
             added = user.add_repo(group_name, repo_url)[0]
@@ -41,7 +51,7 @@ def add_org_repo_list(user_id, group_name, urls):
                 valid_repos.append(url)
 
         # matches /{org}/ or /{org} or {org}/ or {org}
-        elif (match := re.match(r'^\/?([a-zA-Z0-9_-]+)\/?$', url)):
+        elif (match := parse_org_name(url)):
             org = match.group(1)
             org_url = f"https://github.com/{org}/"
             added = user.add_org(group_name, org_url)[0]
