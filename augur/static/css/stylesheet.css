@@ -104,12 +104,12 @@ body {
 .toast-container {
     top: 80px !important;
     right: 16px !important;
+    z-index: 100000;
 }
 
 .toast {
     background-color: var(--color-notice);
     color: var(--color-bg);
-    z-index: 100000;
 }
 
 #toast-placeholder {
