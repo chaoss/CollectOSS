@@ -1,9 +1,6 @@
 Quickstart
 ===============
 
-Augur Setup
------------
-
 Ubuntu 22.x
 ===========
 

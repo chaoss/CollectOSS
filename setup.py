@@ -34,6 +34,7 @@ setup(
     ],
     install_requires=[
         "wheel",
+        "sendgrid",
         "alembic==1.8.1", # 1.8.1
         "coloredlogs==15.0", # 15.0.1
         "Beaker==1.11.0", # 1.11.0

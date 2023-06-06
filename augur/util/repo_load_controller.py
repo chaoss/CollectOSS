@@ -131,19 +131,19 @@ class RepoLoadController:
         order_by = sort if sort else "repo_id"
         order_direction = direction if direction else "ASC"
 
-        query = self.generate_repo_query(source, count=False, order_by=order_by, direction=order_direction, 
+        query, query_args, result = self.generate_repo_query(source, count=False, order_by=order_by, direction=order_direction, 
                                     page=page, page_size=page_size, **kwargs)
-        if not query[0]:
-            return None, {"status": query[1]["status"]}
+        if not query:
+            return None, {"status": result["status"]}
 
-        if query[1]["status"] == "No data":
+        if result["status"] == "No data":
             return [], {"status": "No data"}
 
-        get_page_of_repos_sql = s.sql.text(query[0])
+        get_page_of_repos_sql = s.sql.text(query)
 
         with DatabaseEngine(connection_pool_size=1) as engine:
 
-            results = pd.read_sql(get_page_of_repos_sql, engine)
+            results = pd.read_sql(get_page_of_repos_sql, engine, params=query_args)
 
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
 
@@ -170,24 +170,27 @@ class RepoLoadController:
             print("Func: get_repo_count. Error: Invalid source")
             return None, {"status": "Invalid source"}
 
-        query = self.generate_repo_query(source, count=True, **kwargs)
-        if not query[0]:
-            return None, query[1]
+        query, query_args, result = self.generate_repo_query(source, count=True, **kwargs)
+        if not query:
+            return None, result
 
-        if query[1]["status"] == "No data":
+        if result["status"] == "No data":
             return 0, {"status": "No data"}
 
         # surround query with count query so we just get the count of the rows
-        final_query = f"SELECT count(*) FROM ({query[0]}) a;"
+        final_query = f"SELECT count(*) FROM ({query}) a;"
            
         get_page_of_repos_sql = s.sql.text(final_query)
 
-        result = self.session.fetchall_data_from_sql_text(get_page_of_repos_sql)
+        result = self.session.execute(get_page_of_repos_sql, query_args).fetchall()
             
         return result[0]["count"], {"status": "success"}
 
     def generate_repo_query(self, source, count, **kwargs):
         # TODO: need more flexible way of calculating count for variable column queries
+
+        query_args = {}
+
         if count:
             # only query for repos ids so the query is faster for getting the count
             select = """    DISTINCT(augur_data.repo.repo_id),
@@ -195,7 +198,7 @@ class RepoLoadController:
                 (regexp_match(augur_data.repo.repo_git, 'github\.com\/([A-Za-z0-9 \- _]+)\/[A-Za-z0-9 \- _ .]+$'))[1] as repo_owner"""
         else:
 
-            select = f"""    DISTINCT(augur_data.repo.repo_id),
+            select = """    DISTINCT(augur_data.repo.repo_id),
                     augur_data.repo.description,
                     augur_data.repo.repo_git AS url,
                     COALESCE(a.commits_all_time, 0) as commits_all_time,
@@ -226,7 +229,9 @@ class RepoLoadController:
 
             query += "\t\t    JOIN augur_operations.user_repos ON augur_data.repo.repo_id = augur_operations.user_repos.repo_id\n"
             query += "\t\t    JOIN augur_operations.user_groups ON augur_operations.user_repos.group_id = augur_operations.user_groups.group_id\n"
-            query += f"\t\t    WHERE augur_operations.user_groups.user_id = {user.user_id}\n"
+            query += "\t\t    WHERE augur_operations.user_groups.user_id = :user_id\n"
+
+            query_args["user_id"] = user.user_id
 
         elif source == "group":
 
@@ -246,7 +251,9 @@ class RepoLoadController:
                 return None, {"status": "Group does not exists"}
 
             query += "\t\t    JOIN augur_operations.user_repos ON augur_data.repo.repo_id = augur_operations.user_repos.repo_id\n"
-            query += f"\t\t    WHERE augur_operations.user_repos.group_id = {group_id}\n"
+            query += "\t\t    WHERE augur_operations.user_repos.group_id = :group_id \n"
+
+            query_args["group_id"] = group_id
         
         # implement sorting by query_key
         search = kwargs.get("search")
@@ -264,21 +271,41 @@ class RepoLoadController:
             # It is only included because it is required by the SQL syntax
 
             if isinstance(qkey, list) and len(qkey) > 0:
-                query += f"\tWHERE {qkey.pop(0)} ilike '%{search}%'\n"
-                for key in qkey:
-                    query += f"OR {key} ilike '%{search}%'\n"
+                query += f"\tWHERE :qkey_where ilike :search\n"
+                query_args["qkey_where"] = qkey.pop(0)
+
+                for i, key in enumerate(qkey):
+                    param_name = f"qkey_or_{i}"
+                    query += f"OR :{param_name} ilike :search\n"
+                    query_args[param_name] = key
             else:
-                query += f"\tWHERE {qkey} ilike '%{search}%'\n"
+                query += f"\tWHERE :qkey ilike :search\n"
+                query_args["qkey"] = qkey
+            
+            query_args["search"] = f'%{search}%'
+
 
         if not count:
             order_by = kwargs.get("order_by") or "repo_id"
-            direction = kwargs.get("direction") or "ASC"
             page = kwargs.get("page") or 0
             page_size = kwargs.get("page_size") or 25
+            direction = kwargs.get("direction") or "ASC"
+
+            if direction not in ["ASC", "DESC"]:
+                return None, None, {"status": "Invalid direction"}
+            
+            if order_by not in ["repo_id", "repo_name", "repo_owner", "commits_all_time", "issues_all_time"]:
+                return None, None, {"status": "Invalid order by"}
+
+            offset = page*page_size
 
             query += f"\tORDER BY {order_by} {direction}\n"
-            query += f"\tLIMIT {page_size}\n"
-            query += f"\tOFFSET {page*page_size};\n"
+            query += "\tLIMIT :page_size\n"
+            query += "\tOFFSET :offset;\n"
 
-        return query, {"status": "success"}
+            query_args["page_size"] = page_size
+            query_args["offset"] = offset
+            query_args["order_by"] = order_by
+
+        return query, query_args, {"status": "success"}
 

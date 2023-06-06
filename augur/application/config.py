@@ -37,6 +37,7 @@ default_config = {
                 "github": "<gh_api_key>",
                 "gitlab": "<gl_api_key>"
             },
+            #TODO: a lot of these are deprecated.
             "Facade": {
                 "check_updates": 1,
                 "create_xlsx_summary_files": 1,
@@ -66,7 +67,8 @@ default_config = {
                 "log_level": "INFO",
             },
             "Celery": {
-                "concurrency": 12
+                "worker_process_vmem_cap": 0.25,
+                "refresh_materialized_views_interval_in_days": 7
             },
             "Redis": {
                 "cache_group": 0, 
