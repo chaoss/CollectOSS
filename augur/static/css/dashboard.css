@@ -56,7 +56,8 @@ table {
 
 .toast {
     background-color: var(--color-notice);
-    color: var(--color-fg);
+    color: var(--color-bg);
+    z-index: 100000;
 }
 
 #toast-placeholder {
