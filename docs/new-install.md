@@ -308,8 +308,8 @@ redis.exceptions.ConnectionError: Error 111 connecting to 127.0.0.1:6379. Connec
 
 **COMMAND**: 
 ```
-hugeadm --thp-never` &&
-echo never > /sys/kernel/mm/transparent_hugepage/enabled
+sudo hugeadm --thp-never &&
+sudo echo never > /sys/kernel/mm/transparent_hugepage/enabled
 ```
 
 
