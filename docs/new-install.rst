@@ -100,13 +100,28 @@ Then, from within the resulting postgresql shell:
    CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
    GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
 
-Once you are successfully logged out, return to your user by exiting
-``psql``, then typing ``exit`` to exit the postgres user, and ``exit`` a
-SECOND time to exit the root user.
+**If you're using PostgreSQL 15 or later**, default database permissions will
+prevent Augur's installer from configuring the database. Add one last line
+after the above to fix this:
+
+.. code:: sql
+
+   GRANT ALL ON SCHEMA public TO augur;
+
+After that, return to your user by exiting ``psql``
 
 ::
 
    postgres=# \quit
+
+Here we want to start an SSL connection to the ``augur`` database on port 5432:
+
+.. code:: shell
+
+   psql -h localhost -U postgres -p 5432
+
+Now type ``exit`` to log off the postgres user, and ``exit`` a SECOND time to
+log off the root user.
 
 .. code:: shell
 
@@ -135,6 +150,12 @@ instance. You can accomplish this by running the below commands:
 
 NOTE: it is important to have a static hostname when using rabbitmq as
 it uses hostname to communicate with nodes.
+
+RabbitMQ's server can then be started from systemd:
+
+.. code:: shell
+
+   sudo systemctl start rabbitmq-server
 
 If your setup of rabbitmq is successful your broker url should look like
 this:
@@ -296,12 +317,20 @@ Create a Python Virtual Environment
 Activate your Python Virtual Environment
 ``source ~/virtual-env-directory/bin/activate``
 
-From the root of the Augur Directory, type ``make install``
+From the root of the Augur Directory, type ``make install``. You will be
+prompted to provide:
 
-You will be prompted to provide your GitHub username and password, your
-GitLab username and password, and the postgresql database where you want
-to have the Augur Schema built. You will also be prompted to provide a
-directory where repositories will be clone into.
+- "User" is the PSQL database user, which is ``augur`` if you followed
+  instructions exactly
+- "Password" is the above user's password
+- "Host" is the domain used with nginx, e.g. ``ai.chaoss.io``
+- "Port" is 5432 unless you reconfigured something
+- "Database" is the name of the Augur database, which is ``augur`` if you
+  followed instructions exactly
+- The GitHub token created earlier
+- Then the username associated with it
+- Then the same for GitLab
+- and finally a directory to clone repositories to
 
 Post Installation of Augur
 --------------------------
@@ -438,6 +467,12 @@ to handle these errors through additional retries. Starting Flower:
 NOTE: You can use any open port on your server, and access the dashboard
 in a browser with http://servername-or-ip:8400 in the example above
 (assuming you have access to that port, and its open on your network.)
+
+If you're using a virtual machine within Windows and you get an error about
+missing AVX instructions, you should kill Hyper-V. Even if it doesn't *appear*
+to be active, it might still be affecting your VM. Follow
+`these instructions <https://stackoverflow.com/a/68214280>`_ to disable
+Hyper-V, and afterward AVX should pass to the VM.
 
 Starting your Augur Instance
 ----------------------------

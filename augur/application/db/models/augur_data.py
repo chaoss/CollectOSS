@@ -25,6 +25,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 import logging
 import re
 from typing import List, Any, Dict
+import json
 
 
 from augur.application.db.models.base import Base
@@ -1690,6 +1691,21 @@ class RepoBadging(Base):
     data = Column(JSONB(astext_type=Text()))
 
     repo = relationship("Repo")
+
+    @staticmethod
+    def insert(session, repo_id: int, data: dict) -> dict:
+
+        insert_statement = text("""INSERT INTO repo_badging (repo_id,tool_source,tool_version,data_source,data)
+        VALUES (:repo_id,:t_source,:t_version,:d_source,:data)
+        """).bindparams(
+            repo_id=repo_id,
+            t_source="collect_linux_badge_info",
+            t_version="0.50.3",
+            d_source="OSSF CII",
+            data=json.dumps(data,indent=4)
+        )
+
+        session.execute_sql(insert_statement)
 
 
 class RepoClusterMessage(Base):

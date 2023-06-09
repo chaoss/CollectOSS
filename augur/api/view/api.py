@@ -1,9 +1,11 @@
 from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash
+import re
 from flask_login import current_user, login_required
-from augur.application.db.models import Repo
-from augur.tasks.frontend import add_org_repo_list
+from augur.application.db.models import Repo, RepoGroup, UserGroup, UserRepo
+from augur.tasks.frontend import add_org_repo_list, parse_org_and_repo_name, parse_org_name
 from .utils import *
-from ..server import app
+from ..server import app, engine
+from augur.application.db.session import DatabaseSession
 
 @app.route('/cache/file/')
 @app.route('/cache/file/<path:file>')
@@ -11,6 +13,36 @@ def cache(file=None):
     if file is None:
         return redirect(url_for('static', filename="cache"))
     return redirect(url_for('static', filename="cache/" + toCacheFilename(file, False)))
+
+
+def add_existing_repo_to_group(session, user_id, group_name, repo_id):
+
+    logger.info("Adding existing repo to group")
+
+    group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
+    if group_id is None:
+        return False
+    
+    result = UserRepo.insert(session, repo_id, group_id)
+    if not result:
+        return False
+    
+def add_existing_org_to_group(session, user_id, group_name, rg_id):
+
+    logger.info("Adding existing org to group")
+
+    group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
+    if group_id is None:
+        return False
+    
+    repos = session.query(Repo).filter(Repo.repo_group_id == rg_id).all()
+    logger.info("Length of repos in org: " + str(len(repos)))
+    for repo in repos:
+        result = UserRepo.insert(session, repo.repo_id, group_id)
+        if not result:
+            logger.info("Failed to add repo to group")
+    
+
 
 @app.route('/account/repos/add', methods = ['POST'])
 @login_required
@@ -34,7 +66,49 @@ def av_add_user_repo():
     if group == "None":
         group = current_user.login_name + "_default"
 
-    add_org_repo_list.si(current_user.user_id, group, urls).apply_async()
+    invalid_urls = []
+
+    with DatabaseSession(logger, engine) as session:
+        for url in urls:  
+
+            # matches https://github.com/{org}/ or htts://github.com/{org}
+            if (org_name := Repo.parse_github_org_url(url)):
+                rg_obj = RepoGroup.get_by_name(session, org_name)
+                if rg_obj:
+                    # add the orgs repos to the group
+                    add_existing_org_to_group(session, current_user.user_id, group, rg_obj.repo_group_id)
+
+            # matches https://github.com/{org}/{repo}/ or htts://github.com/{org}/{repo}
+            elif Repo.parse_github_repo_url(url)[0]:
+                org_name, repo_name = Repo.parse_github_repo_url(url)
+                repo_git = f"https://github.com/{org_name}/{repo_name}"
+                repo_obj = Repo.get_by_repo_git(session, repo_git)
+                if repo_obj:
+                    add_existing_repo_to_group(session, current_user.user_id, group, repo_obj.repo_id)
+
+            # matches /{org}/{repo}/ or /{org}/{repo} or {org}/{repo}/ or {org}/{repo}
+            elif (match := parse_org_and_repo_name(url)):
+                org, repo = match.groups()
+                repo_git = f"https://github.com/{org}/{repo}"
+                repo_obj = Repo.get_by_repo_git(session, repo_git)
+                if repo_obj:
+                    add_existing_repo_to_group(session, current_user.user_id, group, repo_obj.repo_id)
+            
+            # matches /{org}/ or /{org} or {org}/ or {org}
+            elif (match := parse_org_name(url)):
+                org_name = match.group(1)
+                rg_obj = RepoGroup.get_by_name(session, org_name)
+                logger.info(rg_obj)
+                if rg_obj:
+                    # add the orgs repos to the group
+                    add_existing_org_to_group(session, current_user.user_id, group, rg_obj.repo_group_id)
+            
+            else:
+                invalid_urls.append(url)
+
+    if urls:
+        urls = [url.lower() for url in urls]
+        add_org_repo_list.si(current_user.user_id, group, urls).apply_async()
 
     flash("Adding repos and orgs in the background")
             

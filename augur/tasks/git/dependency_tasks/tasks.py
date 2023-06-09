@@ -25,10 +25,10 @@ def process_dependency_metrics(repo_git):
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
-def process_ossf_scorecard_metrics(repo_git):
+def process_ossf_dependency_metrics(repo_git):
     from augur.tasks.init.celery_app import engine
     
-    logger = logging.getLogger(process_ossf_scorecard_metrics.__name__)
+    logger = logging.getLogger(process_ossf_dependency_metrics.__name__)
 
     with DatabaseSession(logger, engine) as session:
         logger.info(f"repo_git: {repo_git}")
