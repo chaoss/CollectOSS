@@ -10,9 +10,7 @@ from augur.tasks.init.redis_connection import redis_connection as redis
 from augur.application.util import *
 from augur.application.config import AugurConfig
 from ..server import app, db_session
-
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from augur.application.services.email import get_email_provider
 
 logger = logging.getLogger(__name__)
 
@@ -251,35 +249,14 @@ email verification:
 @app.route('/account/verify')
 @login_required
 def user_verify_email():
-    email_body = """<strong>This One Time Passcode expires in 5 minutes.</strong>
+    email = get_email_provider()
 
-    {}
-
-    <small>If you did not make this request, you can disregard this message.</small>"""
-
-    if not config.get_value("service", "email"):
+    if not email:
         return render_message("Email Verification Disabled", "Email verification has not been enabled on this instance.")
     elif current_user.email_verified:
         return redirect(url_for("user_settings"))
-    elif True: #not redis.get(current_user.email):
-        OTP = generate_OTP()
-
-        message = Mail(
-            from_email=config.get_value("email.service", "source_email"),
-            to_emails=current_user.email,
-            subject='Augur account verification',
-            html_content=email_body.format(OTP))
-        logger.info(str(message))
-        try:
-            sg = SendGridAPIClient(config.get_value("email.service", "provider_key"))
-            response = sg.send(message)
-            logger.info(response.status_code)
-            logger.info(response.body)
-            logger.info(response.headers)
-        except Exception as e:
-            logger.error(e.message)
-
-        redis.set(current_user.email, OTP, ex = 5 * 60)
+    
+    email.user_verify(current_user)
 
     return render_module("verify-email")
 
@@ -288,7 +265,7 @@ email verification:
     Under development
 """
 @app.route('/account/password/reset')
-def user_reset_password():
+def user_password_reset():
     email_body = """<strong>This link expires in 5 minutes.</strong>
 
     {}

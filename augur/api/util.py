@@ -8,6 +8,7 @@ import inspect
 import types
 import sys
 import beaker
+import random
 
 from flask import request, jsonify
 
@@ -117,6 +118,15 @@ def get_client_token():
     
     return token
 
+def generate_OTP():
+    """Generate a random string representing a 6-digit numeric one-time passcode"""
+    OTP = ""
+    chars = "0123456789"
+ 
+    for i in range(6) :
+        OTP += random.choice(chars)
+ 
+    return OTP
 
 # usage:
 """

@@ -29,9 +29,9 @@
             .then((response) => response.json())
             .then((data) => {
                 if (data.status == "Success") {
-                    window.location.replace("{{ url_for("user_settings") }}")
+                    window.location.replace("{{ url_for("user_settings") }}");
                 } else {
-                    flashToast(data.status)
+                    flashToast(data.status);
                 }
             });
     }

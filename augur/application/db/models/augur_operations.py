@@ -290,6 +290,10 @@ class User(Base):
     @is_anoymous.setter
     def is_anoymous(self, val):
         self._is_anoymous = val
+    
+    @property
+    def email_otp_key(self):
+        return f"{self.user_id}:email_verify"
 
     @staticmethod
     def exists(session, username):

@@ -102,9 +102,6 @@ def load_user_request(request):
     current_time = int(time.time())
     token = db_session.query(UserSessionToken).filter(UserSessionToken.token == token, UserSessionToken.expiration >= current_time).first()
     if token:
-
-        print("Valid user")
-
         user = token.user
         user._is_authenticated = True
         user._is_active = True
