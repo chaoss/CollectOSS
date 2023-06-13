@@ -106,9 +106,11 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
     if collection_hook == 'core':
         collectionRecord.core_status = CollectionState.PENDING.value
         collectionRecord.core_task_id = None
+        collectionRecord.core_data_last_collected = datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
     elif collection_hook == 'secondary':
         collectionRecord.secondary_status = CollectionState.PENDING.value
         collectionRecord.secondary_task_id = None
+        collectionRecord.secondary_data_last_collected = datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
 
     augur_db.session.commit()
 
