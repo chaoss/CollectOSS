@@ -64,7 +64,8 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
         'repo_git': repo.repo_git,
         'repo_path': None,
         'repo_name': None,
-        'description': f"During our check for this repo on {datetime.today().strftime('%Y-%m-%d')}, a 404 error was returned. The repository does not appear to have moved. Instead, it appears to be deleted"
+        'description': f"During our check for this repo on {datetime.today().strftime('%Y-%m-%d')}, a 404 error was returned. The repository does not appear to have moved. Instead, it appears to be deleted",
+        'data_collection_date': datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
         }
 
         update_repo_with_dict(current_repo_dict, repo_update_dict, logger, augur_db)
