@@ -38,7 +38,7 @@ def wait_child_tasks(ids_list):
 
 
 def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
-    """Removed duplicate dics from a list
+    """Remove duplicate dicts from a list
 
     Args:
         data: list of dicts that is being modified
