@@ -28,7 +28,7 @@ from augur.tasks.init.redis_connection import redis_connection as redis
 from ..server import app, engine
 
 logger = logging.getLogger(__name__)
-development = get_development_flag()
+current_user: User = current_user
 Session = sessionmaker(bind=engine)
 
 from augur.api.routes import AUGUR_API_VERSION
