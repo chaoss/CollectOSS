@@ -3,40 +3,30 @@
 Creates routes for user functionality
 """
 
-import os
-import time
-import base64
 import logging
 import secrets
-import requests
 import pandas as pd
-
+from flask import request, Response, jsonify, session
+from flask_login import login_user, logout_user, current_user, login_required
+from werkzeug.security import check_password_hash
 from sqlalchemy.sql import text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
-
-from augur.api.util import ssl_required
-from augur.api.util import api_key_required
-from augur.api.routes import AUGUR_API_VERSION
 from augur.application.db.session import DatabaseSession
-from augur.application.config import get_development_flag
-from augur.util.repo_load_controller import RepoLoadController
-from augur.tasks.init.redis_connection import redis_connection as redis
-from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.application.db.models import User, UserRepo, UserGroup, UserSessionToken, ClientApplication, RefreshToken
+from augur.api.util import api_key_required
+from augur.api.util import ssl_required
 
+from augur.application.db.models import User, UserRepo, UserGroup, UserSessionToken, ClientApplication, RefreshToken
+from augur.application.config import get_development_flag
+from augur.tasks.init.redis_connection import redis_connection as redis
 from ..server import app, engine
 
-from werkzeug.security import check_password_hash
-from flask import request, Response, jsonify, session
-from flask_login import login_user, logout_user, current_user, login_required
-
 logger = logging.getLogger(__name__)
-development = get_development_flag()
+current_user: User = current_user
 Session = sessionmaker(bind=engine)
 
-# Enable type-hinting for the current_user object
-current_user: User = current_user
+from augur.api.routes import AUGUR_API_VERSION
+
 
 @app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
 @ssl_required
