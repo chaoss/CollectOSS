@@ -16,7 +16,8 @@ from augur.application.db.models import User, ClientApplication, CollectionStatu
 from augur.application.config import get_development_flag
 from augur.tasks.init.redis_connection import redis_connection as redis
 from augur.tasks.github.util.util import get_repo_weight_by_issue
-from augur.tasks.util.collection_util import start_block_of_repos
+from augur.tasks.util.collection_util import start_block_of_repos, get_enabled_phase_names_from_config, core_task_success_util
+from augur.tasks.start_tasks import prelim_phase, primary_repo_collect_phase
 from ..server import app, engine
 
 logger = logging.getLogger(__name__)
@@ -67,10 +68,27 @@ def dei_track_repo(application: ClientApplication):
         "repo_id": repo_id
     }
 
-    session.insert_data(record, BadgingDEI, on_conflict_update=False)
-    start_block_of_repos(logger, session, [repo_id], ...) # Phases?
+    enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
 
-    # TODO reply with success status
+    #Primary collection hook.
+    primary_enabled_phases = []
+
+    #Primary jobs
+    if prelim_phase.__name__ in enabled_phase_names:
+        primary_enabled_phases.append(prelim_phase)
+    
+    primary_enabled_phases.append(primary_repo_collect_phase)
+
+    #task success is scheduled no matter what the config says.
+    def core_task_success_util_gen(repo_git):
+        return core_task_success_util.si(repo_git)
+    
+    primary_enabled_phases.append(core_task_success_util_gen)
+
+    session.insert_data(record, BadgingDEI, on_conflict_update=False)
+    start_block_of_repos(logger, session, [repo_id], primary_enabled_phases, "new")
+
+    return jsonify({"status": "Success"})
 
 @app.route(f"/{AUGUR_API_VERSION}/dei/report", methods=['POST'])
 @ssl_required
