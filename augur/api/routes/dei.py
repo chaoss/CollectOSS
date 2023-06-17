@@ -37,20 +37,20 @@ def dei_track_repo(application: ClientApplication):
     if not (dei_id and level and repo_url):
         return jsonify({"status": "Missing argument"}), 400
     
-    session = Session()
-    repo: Repo = session.query(Repo).filter(url=repo_url).first()
+    session = DatabaseSession(logger)
+    repo: Repo = session.query(Repo).filter(Repo.repo_git==repo_url).first()
     if repo:
         # Making the assumption that only new repos will be added with this endpoint
         return jsonify({"status": "Repo already exists"})
     
     frontend_repo_group: RepoGroup = session.query(RepoGroup).filter(RepoGroup.rg_name == FRONTEND_REPO_GROUP_NAME).first()
-    repo_id = Repo.insert(session, repo_url, frontend_repo_group.repo_group_id, "API.DEI")
+    repo_id = Repo.insert(session, repo_url, frontend_repo_group.repo_group_id, "API.DEI", repo_type="")
     if not repo_id:
         return jsonify({"status": "Error adding repo"})
     
     repo = Repo.get_by_id(session, repo_id)
     repo_git = repo.repo_git
-    pr_issue_count = get_repo_weight_by_issue(session.logger, repo_git)
+    pr_issue_count = get_repo_weight_by_issue(logger, repo_git)
 
     record = {
         "repo_id": repo_id,
@@ -68,7 +68,7 @@ def dei_track_repo(application: ClientApplication):
         "repo_id": repo_id
     }
 
-    enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
+    enabled_phase_names = get_enabled_phase_names_from_config(logger, session)
 
     #Primary collection hook.
     primary_enabled_phases = []
@@ -85,8 +85,11 @@ def dei_track_repo(application: ClientApplication):
     
     primary_enabled_phases.append(core_task_success_util_gen)
 
-    session.insert_data(record, BadgingDEI, on_conflict_update=False)
-    start_block_of_repos(logger, session, [repo_id], primary_enabled_phases, "new")
+    record = BadgingDEI(**record)
+    session.add(record)
+    start_block_of_repos(logger, session, [repo_url], primary_enabled_phases, "new")
+
+    session.close()
 
     return jsonify({"status": "Success"})
 
