@@ -133,7 +133,7 @@ def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id)
 
         
         #Executes an upsert with sqlalchemy 
-        cntrb_natural_keys = ['cntrb_login']
+        cntrb_natural_keys = ['cntrb_id']
         
         db.insert_data(cntrb,Contributor,cntrb_natural_keys)
 
