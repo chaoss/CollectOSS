@@ -31,6 +31,7 @@ import json
 from augur.application.db.models.base import Base
 from augur.application import requires_db_session
 from augur.application.db.util import execute_session_query
+from augur.tasks.github.util.github_api_key_manager import GithubApiKeyManager
 DEFAULT_REPO_GROUP_ID = 1
 
 metadata = Base.metadata
@@ -896,9 +897,11 @@ class Repo(Base):
 
         url = REPO_ENDPOINT.format(owner, repo)
 
+        key_manager = GithubApiKeyManager()
+
         attempts = 0
         while attempts < 10:
-            result = hit_api(gh_session.oauths, url, logger)
+            result = hit_api(key_manager, url, logger)
 
             # if result is None try again
             if not result:

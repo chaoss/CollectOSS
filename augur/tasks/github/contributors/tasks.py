@@ -24,6 +24,7 @@ def process_contributors():
     with GithubTaskManifest(logger) as manifest:
 
         augur_db = manifest.augur_db
+        key_manager = manifest.key_manager
 
         query = augur_db.session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at is None, Contributor.cntrb_last_used is None)
         contributors = execute_session_query(query, 'all')
@@ -46,7 +47,7 @@ def process_contributors():
 
             url = f"https://api.github.com/users/{contributor_dict['cntrb_login']}" 
 
-            data = retrieve_dict_data(url, manifest.key_auth, logger)
+            data = retrieve_dict_data(url, key_manager, logger)
 
             if data is None:
                 print(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
@@ -66,12 +67,12 @@ def process_contributors():
 
 
 
-def retrieve_dict_data(url: str, key_auth, logger):
+def retrieve_dict_data(url: str, key_manager, logger):
 
     num_attempts = 0
     while num_attempts <= 10:
 
-        response = hit_api(key_auth, url, logger)
+        response = hit_api(key_manager, url, logger)
 
         # increment attempts
         if response is None:

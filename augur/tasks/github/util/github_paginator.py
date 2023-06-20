@@ -1,6 +1,7 @@
 """Logic to paginate the Github API."""
 
 import collections
+from augur.tasks.github.util.github_api_key_manager import GithubApiKeyManager
 import httpx
 import time
 import json
@@ -26,12 +27,26 @@ def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, 
     """
     # self.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
 
+    github_key_header = "Authorization"
+    key_format = "token {0}"
+
     with httpx.Client() as client:
 
         try:
-            response = client.request(
-                method=method, url=url, auth=key_manager, timeout=timeout, follow_redirects=True)
+            attempts = 0
+            while attempts < 10:
 
+                headers = {github_key_header: key_format.format(key_manager.get_key())}
+                response = client.request(
+                    method=method, url=url, headers=headers, timeout=timeout, follow_redirects=True)
+                
+                if response.status_code == 403 and response.headers["X-RateLimit-Remaining"] == "0":
+                    logger.info("Rate limit exceeded. Getting a new key and trying again...\n")
+                    key_manager.invalidate_key()
+                    attempts += 1
+                else:
+                    break
+                
         except TimeoutError:
             logger.info(f"Request timed out. Sleeping {round(timeout)} seconds and trying again...\n")
             time.sleep(round(timeout))
@@ -190,7 +205,7 @@ class GithubPaginator(collections.abc.Sequence):
         url = add_query_params(url, params)
 
         self.url = url
-        self.key_manager = key_manager
+        self.key_manager = GithubApiKeyManager()
         self.logger = logger
 
         # get the logger from the key manager

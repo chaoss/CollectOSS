@@ -1,4 +1,5 @@
 from logging import Logger
+from augur.tasks.github.util.github_api_key_manager import GithubApiKeyManager
 
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.application.db.session import DatabaseSession
@@ -13,6 +14,7 @@ class GithubTaskManifest:
 
         self.augur_db = DatabaseSession(logger, engine)
         self.key_auth = GithubRandomKeyAuth(self.augur_db.session, logger)
+        self.key_manager = GithubApiKeyManager()
         self.logger = logger
         self.platform_id = 1
 

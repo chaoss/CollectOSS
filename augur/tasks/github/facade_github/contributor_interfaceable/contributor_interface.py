@@ -1,4 +1,5 @@
 from requests.api import head
+from augur.tasks.github.util.github_api_key_manager import GithubApiKeyManager
 from augur.tasks.github.util.github_task_session import *
 import logging
 from logging import FileHandler, Formatter, StreamHandler, log
@@ -41,9 +42,11 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
     response_data = None
     success = False
 
+    key_manager = GithubApiKeyManager()
+
     while attempts < 10:
         try:
-            response = hit_api(session.oauths, url, session.logger)
+            response = hit_api(key_manager, url, session.logger)
         except TimeoutError:
             session.logger.info(
                 f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")

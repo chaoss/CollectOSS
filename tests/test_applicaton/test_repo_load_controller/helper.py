@@ -1,5 +1,6 @@
 import sqlalchemy as s
 import logging
+from augur.tasks.github.util.github_api_key_manager import GithubApiKeyManager
 
 from augur.util.repo_load_controller import ORG_REPOS_ENDPOINT
 
@@ -142,9 +143,11 @@ def get_user_repos(connection):
 
 def get_org_repos(org_name, session):
 
+    key_manager = GithubApiKeyManager()
+
     attempts = 0
     while attempts < 10:
-        result = hit_api(session.oauths, ORG_REPOS_ENDPOINT.format(org_name), logger)
+        result = hit_api(key_manager, ORG_REPOS_ENDPOINT.format(org_name), logger)
 
         # if result is None try again
         if not result:

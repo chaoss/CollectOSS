@@ -30,8 +30,9 @@ def update_repo_with_dict(current_dict,new_dict,logger,db):
 
 
 
-def extract_owner_and_repo_from_endpoint(key_auth, url, logger):
-    response_from_gh = hit_api(key_auth, url, logger)
+def extract_owner_and_repo_from_endpoint(key_manager, url, logger):
+
+    response_from_gh = hit_api(key_manager, url, logger)
 
     page_data = parse_json_response(logger, response_from_gh)
 
@@ -41,7 +42,7 @@ def extract_owner_and_repo_from_endpoint(key_auth, url, logger):
 
     return splits[0], splits[-1]
 
-def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='core'):
+def ping_github_for_repo_move(augur_db, key_manager, repo, logger,collection_hook='core'):
 
     owner, name = get_owner_repo(repo.repo_git)
     url = f"https://api.github.com/repos/{owner}/{name}"
@@ -49,7 +50,7 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
 
     attempts = 0
     while attempts < 10:
-        response_from_gh = hit_api(key_auth, url, logger)
+        response_from_gh = hit_api(key_manager, url, logger)
 
         if response_from_gh and response_from_gh.status_code != 404:
             break
@@ -81,7 +82,7 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
         logger.info(f"Repo found at url: {url}")
         return
     
-    owner, name = extract_owner_and_repo_from_endpoint(key_auth, response_from_gh.headers['location'], logger)
+    owner, name = extract_owner_and_repo_from_endpoint(key_manager, response_from_gh.headers['location'], logger)
 
 
     try:

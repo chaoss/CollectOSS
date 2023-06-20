@@ -28,6 +28,8 @@ from augur.application.db.util import execute_session_query
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.cli import test_connection, test_db_connection 
+from augur.tasks.util.api_key_monitoring import find_new_github_api_keys, update_key_rate_limits
+
 import sqlalchemy as s
 from sqlalchemy import or_, and_
 
@@ -92,7 +94,11 @@ def start(disable_collection, development, port):
 
     celery_beat_process = None
     celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
-    celery_beat_process = subprocess.Popen(celery_command.split(" "))    
+    celery_beat_process = subprocess.Popen(celery_command.split(" "))
+
+    find_new_github_api_keys()
+    task = update_key_rate_limits.si().apply_async()
+    task.wait()
 
     if not disable_collection:
 
@@ -355,6 +361,12 @@ def processes():
     augur_processes = get_augur_processes()
     for process in augur_processes:
         logger.info(f"Found process {process.pid}")
+
+@cli.command('refresh-keys')
+def refresh_keys():
+   
+    find_new_github_api_keys()
+
 
 def get_augur_processes():
     augur_processes = []

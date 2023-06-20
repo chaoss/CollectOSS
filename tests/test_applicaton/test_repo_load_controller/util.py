@@ -1,5 +1,8 @@
 ######## Helper Functions to Get Delete statements #################
 
+from augur.tasks.github.util.github_api_key_manager import GithubApiKeyManager
+
+
 def get_delete_statement(schema, table):
 
     return """DELETE FROM "{}"."{}";""".format(schema, table)
@@ -124,9 +127,11 @@ def get_user_repos(connection):
 
 def get_org_repos(org_name, session):
 
+    key_manager = GithubApiKeyManager()
+
     attempts = 0
     while attempts < 10:
-        result = hit_api(session.oauths, ORG_REPOS_ENDPOINT.format(org_name), logger)
+        result = hit_api(key_manager, ORG_REPOS_ENDPOINT.format(org_name), logger)
 
         # if result is None try again
         if not result:

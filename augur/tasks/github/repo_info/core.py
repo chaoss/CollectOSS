@@ -43,11 +43,11 @@ def get_repo_data(logger, url, response):
     return data
 
 
-def is_forked(key_auth, logger, owner, repo): #/repos/:owner/:repo parent
+def is_forked(key_manager, logger, owner, repo): #/repos/:owner/:repo parent
     logger.info('Querying parent info to verify if the repo is forked\n')
     url = f'https://api.github.com/repos/{owner}/{repo}'
 
-    r = hit_api(key_auth, url, logger)#requests.get(url, headers=self.headers)
+    r = hit_api(key_manager, url, logger)#requests.get(url, headers=self.headers)
 
     data = get_repo_data(logger, url, r)
 
@@ -58,11 +58,11 @@ def is_forked(key_auth, logger, owner, repo): #/repos/:owner/:repo parent
 
     return False
 
-def is_archived(key_auth, logger, owner, repo):
+def is_archived(key_manager, logger, owner, repo):
     logger.info('Querying committers count\n')
     url = f'https://api.github.com/repos/{owner}/{repo}'
 
-    r = hit_api(key_auth, url, logger)#requests.get(url, headers=self.headers)
+    r = hit_api(key_manager, url, logger)#requests.get(url, headers=self.headers)
     #self.update_gh_rate_limit(r)
 
     data = get_repo_data(logger, url, r)
@@ -97,7 +97,7 @@ def grab_repo_info_from_graphql_endpoint(key_auth, logger, query):
     return data
     
 
-def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
+def repo_info_model(augur_db, key_manager, repo_orm_obj, logger):
     logger.info("Beginning filling the repo_info model for repo: " + repo_orm_obj.repo_git + "\n")
 
     owner, repo = get_owner_repo(repo_orm_obj.repo_git)
@@ -278,8 +278,8 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
     augur_db.execute_sql(insert_statement)
 
     # Note that the addition of information about where a repository may be forked from, and whether a repository is archived, updates the `repo` table, not the `repo_info` table.
-    forked = is_forked(key_auth, logger, owner, repo)
-    archived = is_archived(key_auth, logger, owner, repo)
+    forked = is_forked(key_manager, logger, owner, repo)
+    archived = is_archived(key_manager, logger, owner, repo)
     archived_date_collected = None
     if archived is not False:
         archived_date_collected = archived

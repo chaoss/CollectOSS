@@ -18,7 +18,7 @@ def collect_repo_info(repo_git: str):
         query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo = execute_session_query(query, 'one')
         
-        repo_info_model(augur_db, manifest.key_auth, repo, logger)
+        repo_info_model(augur_db, manifest.key_manager, repo, logger)
 
 
 #Task to get CII api data for linux badge info using github data.
