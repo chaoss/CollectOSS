@@ -81,7 +81,8 @@ setup(
         "pylint==2.15.5",
         "dnspython==2.2.1",
         'Werkzeug~=2.0.0',
-        "pylint==2.15.5"
+        "pylint==2.15.5",
+	"mdpdf==0.0.18"
     ],
     extras_require={
         "dev": [

@@ -2,22 +2,27 @@
 Creates routes for DEI badging functionality
 """
 
-import logging
-from flask import request, Response, jsonify
+import logging, subprocess, inspect
+
+from flask import request, Response, jsonify, render_template, send_file
+from pathlib import Path
+
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
-from augur.application.db.session import DatabaseSession
-from augur.tasks.github.util.github_task_session import GithubTaskSession
+
+from augur.api.util import api_key_required, ssl_required
 from augur.util.repo_load_controller import RepoLoadController
-from augur.api.util import api_key_required
-from augur.api.util import ssl_required
 
 from augur.application.db.models import User, ClientApplication, CollectionStatus, Repo, RepoGroup, BadgingDEI
-from augur.application.config import get_development_flag
-from augur.tasks.init.redis_connection import redis_connection as redis
-from augur.tasks.github.util.util import get_repo_weight_by_issue
+from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
+
 from augur.tasks.util.collection_util import start_block_of_repos, get_enabled_phase_names_from_config, core_task_success_util
 from augur.tasks.start_tasks import prelim_phase, primary_repo_collect_phase
+from augur.tasks.github.util.github_task_session import GithubTaskSession
+from augur.tasks.init.redis_connection import redis_connection as redis
+from augur.tasks.github.util.util import get_repo_weight_by_issue
+
 from ..server import app, engine
 
 logger = logging.getLogger(__name__)
@@ -37,7 +42,10 @@ def dei_track_repo(application: ClientApplication):
     if not (dei_id and level and repo_url):
         return jsonify({"status": "Missing argument"}), 400
     
+    repo_url = repo_url.lower()
+    
     session = DatabaseSession(logger)
+    session.autocommit = True
     repo: Repo = session.query(Repo).filter(Repo.repo_git==repo_url).first()
     if repo:
         # Making the assumption that only new repos will be added with this endpoint
@@ -102,6 +110,24 @@ def dei_report(application: ClientApplication):
     if not dei_id:
         return jsonify({"status": "Missing argument"}), 400
     
+    session = DatabaseSession(logger)
+
+    project: BadgingDEI = session.query(BadgingDEI).filter(BadgingDEI.badging_id==dei_id).first()
+
+    if not project:
+        return jsonify({"status": "Invalid ID"})
+    
+    md = render_template("dei-badging-report.j2", project=project)
+    cachePath = Path.cwd() / "augur" / "static" / "cache"
+
+    source = cachePath / f"{project.id}_badging_report.md"
+    report = cachePath / f"{project.id}_badging_report.pdf"
+    source.write_text(md)
+
+    command = f"mdpdf -o {str(report.resolve())} {str(source.resolve())}"
+    converter = subprocess.Popen(command.split())
+    converter.wait()
+    
     # TODO what goes in the report?
 
-    return jsonify({"status": "Endpoint not implemented"})
+    return send_file(report.resolve())
