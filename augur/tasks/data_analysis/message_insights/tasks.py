@@ -16,12 +16,13 @@ from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, MessageAnalysis, MessageAnalysisSummary
 from augur.application.db.util import execute_session_query
+from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 
 #SPDX-License-Identifier: MIT
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
-@celery.task
+@celery.task(base=AugurMlRepoCollectionTask)
 def message_insight_task(repo_git):
 
     logger = logging.getLogger(message_insight_task.__name__)

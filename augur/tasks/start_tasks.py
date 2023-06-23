@@ -127,16 +127,6 @@ def non_repo_domain_tasks():
 
         enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
 
-        #Disable augur from running these tasks more than once unless requested
-        query = s.sql.text("""
-            UPDATE augur_operations.config
-            SET value=0
-            WHERE section_name='Task_Routine'
-            AND setting_name='machine_learning_phase'
-        """)
-
-        session.execute_sql(query)
-
     enabled_tasks = []
 
     enabled_tasks.extend(generate_non_repo_domain_facade_tasks(logger))
@@ -239,6 +229,24 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
         new_status=CollectionState.UPDATE.value,additional_conditions=conds
     )
 
+def start_ml_collection(session,max_repo, days_until_collect_again=7):
+    ml_enabled_phases = []
+
+    ml_enabled_phases.append(machine_learning_phase)
+
+    def ml_task_success_util_gen(repo_git):
+        return ml_task_success_util.si(repo_git)
+
+    ml_enabled_phases.append(ml_task_success_util_gen)
+
+    conds = f"augur_operations.collection_status.secondary_status = '{str(CollectionState.SUCCESS.value)}'"
+
+    start_repos_by_user(
+        session,max_repo,
+        ml_enabled_phases,hook="ml",
+        new_status=CollectionState.COLLECTING.value,additional_conditions=conds
+    )
+
 
 @celery.task
 def augur_collection_monitor():     
@@ -261,6 +269,9 @@ def augur_collection_monitor():
 
         if facade_phase.__name__ in enabled_phase_names:
             start_facade_collection(session, max_repo=30)
+        
+        if machine_learning_phase.__name__ in enabled_phase_names:
+            start_ml_collection(session,max_repo=5)
 
 # have a pipe of 180
 

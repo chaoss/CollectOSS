@@ -18,11 +18,12 @@ from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, ChaossMetricStatus, RepoInsight, RepoInsightsRecord
 from augur.application.db.util import execute_session_query
+from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 
 warnings.filterwarnings('ignore')
 
 
-@celery.task
+@celery.task(base=AugurMlRepoCollectionTask)
 def insight_task(repo_git):
 
     logger = logging.getLogger(insight_task.__name__)
