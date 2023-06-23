@@ -32,18 +32,13 @@ ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.d
 DISCOURSE_ANALYSIS_DIR = f"{ROOT_AUGUR_DIRECTORY}/tasks/data_analysis/discourse_analysis/"
 
 @celery.task
-def discourse_analysis_task():
+def discourse_analysis_task(repo_git):
 
     logger = logging.getLogger(discourse_analysis_task.__name__)
     from augur.tasks.init.celery_app import engine
 
     with DatabaseSession(logger, engine) as session:
-        query = session.query(Repo)
-        repos = execute_session_query(query, 'all')
-    
-
-    for repo in repos:
-        discourse_analysis_model(repo.repo_git, logger, engine)
+        discourse_analysis_model(repo_git, logger, engine)
 
 
 def discourse_analysis_model(repo_git: str,logger,engine) -> None:
