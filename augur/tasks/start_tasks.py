@@ -243,8 +243,7 @@ def start_ml_collection(session,max_repo, days_until_collect_again=7):
 
     start_repos_by_user(
         session,max_repo,
-        ml_enabled_phases,hook="ml",
-        new_status=CollectionState.COLLECTING.value,additional_conditions=conds
+        ml_enabled_phases,hook="ml",additional_conditions=conds
     )
 
 
