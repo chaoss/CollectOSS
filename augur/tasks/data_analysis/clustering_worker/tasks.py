@@ -24,26 +24,21 @@ from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, RepoClusterMessage, RepoTopic, TopicWord
 from augur.application.db.util import execute_session_query
+from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 
 
 MODEL_FILE_NAME = "kmeans_repo_messages"
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
 
 
-@celery.task
-def clustering_task():
+@celery.task(base=AugurMlRepoCollectionTask)
+def clustering_task(repo_git):
 
     logger = logging.getLogger(clustering_model.__name__)
     from augur.tasks.init.celery_app import engine
 
     with DatabaseSession(logger, engine) as session:
-        query = session.query(Repo)
-        repos = execute_session_query(query, 'all')
-    
-
-        for repo in repos:
-            clustering_model(repo.repo_git, logger, engine, session)
-
+        clustering_model(repo_git, logger, engine, session)
 
 def clustering_model(repo_git: str,logger,engine, session) -> None:
 

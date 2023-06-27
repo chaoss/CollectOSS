@@ -77,7 +77,7 @@ def start(disable_collection, development, port):
         
         worker_vmem_cap = config.get_value("Celery", 'worker_process_vmem_cap')
 
-    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app"
+    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file gunicorn.log"
     server = subprocess.Popen(gunicorn_command.split(" "))
 
     time.sleep(3)

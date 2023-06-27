@@ -85,10 +85,10 @@ def get_repos_in_repo_group(repo_group_id):
         FROM
             repo
             left outer join
-            (select repo_id, COUNT ( distinct commits.cmt_commit_hash ) AS commits_all_time from commits group by repo_id ) a on
+            (select * from api_get_all_repos_commits) a on
             repo.repo_id = a.repo_id
             left outer join
-            (select repo_id, count ( issues.issue_id) as issues_all_time from issues where issues.pull_request IS NULL group by repo_id) b
+            (select * from api_get_all_repos_issues) b
             on
             repo.repo_id = b.repo_id
             left outer join 

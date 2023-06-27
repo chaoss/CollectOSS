@@ -118,6 +118,10 @@ class AugurFacadeRepoCollectionTask(AugurCoreRepoCollectionTask):
         repo_git = args[0]
         self.augur_handle_task_failure(exc, task_id, repo_git, "facade_task_failure",collection_hook='facade')
 
+class AugurMlRepoCollectionTask(AugurCoreRepoCollectionTask):
+    def on_failure(self,exc,task_id,args,kwargs,einfo):
+        repo_git = args[0]
+        self.augur_handle_task_failure(exc,task_id,repo_git, "ml_task_failure", collection_hook='ml')
 
 #task_cls='augur.tasks.init.celery_app:AugurCoreRepoCollectionTask'
 celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)

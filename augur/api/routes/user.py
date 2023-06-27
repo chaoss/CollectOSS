@@ -32,7 +32,7 @@ from flask import request, Response, jsonify, session
 from flask_login import login_user, logout_user, current_user, login_required
 
 logger = logging.getLogger(__name__)
-development = get_development_flag()
+current_user: User = current_user
 Session = sessionmaker(bind=engine)
 
 # Enable type-hinting for the current_user object
@@ -92,7 +92,7 @@ def generate_session(application):
     # Some apps use form data instead of arguments
     code = request.args.get("code") or request.form.get("code")
     if not code:
-        return jsonify({"status": "Missing argument: code"})
+        return jsonify({"status": "Missing argument: code"}), 400
     
     grant_type = request.args.get("grant_type") or request.form.get("grant_type")
     
@@ -134,7 +134,7 @@ def refresh_session(application):
     refresh_token_str = request.args.get("refresh_token")
 
     if not refresh_token_str:
-        return jsonify({"status": "Invalid refresh token"})
+        return jsonify({"status": "Missing argument: refresh_token"}), 400
     
     if request.args.get("grant_type") != "refresh_token":
         return jsonify({"status": "Invalid grant type"})
@@ -145,8 +145,8 @@ def refresh_session(application):
         if not refresh_token:
             return jsonify({"status": "Invalid refresh token"})
 
-        if refresh_token.user_session.application == application:
-            return jsonify({"status": "Applications do not match"})
+        if refresh_token.user_session.application != application:
+            return jsonify({"status": "Invalid application"})
 
         user_session = refresh_token.user_session
         user = user_session.user
@@ -158,8 +158,10 @@ def refresh_session(application):
         session.delete(user_session)
         session.commit()
 
-    return jsonify({"status": "Validated", "refresh_token": new_refresh_token_id, "access_token": new_user_session_token, "expires": 86400})
+        response = jsonify({"status": "Validated", "refresh_token": new_refresh_token_id, "access_token": new_user_session_token, "expires": 86400})
+        response.headers["Cache-Control"] = "no-store"
 
+    return response
 
 @app.route(f"/{AUGUR_API_VERSION}/user/query", methods=['POST'])
 @ssl_required

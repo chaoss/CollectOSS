@@ -146,10 +146,11 @@ def api_key_required(fun):
             session = Session()
             try:
                 kwargs["application"] = session.query(ClientApplication).filter(ClientApplication.api_key == client_token).one()
-                return fun(*args, **kwargs)
-            except NoResultFound:
-                pass
+            except NoResultFound as e:
+                return {"status": "Unauthorized client"}
 
+            return fun(*args, **kwargs)
+        
         return {"status": "Unauthorized client"}
     
     return wrapper
