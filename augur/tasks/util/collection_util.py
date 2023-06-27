@@ -178,6 +178,8 @@ def update_issue_pr_weights(logger,session,repo_git,raw_sum):
         weight -= calculate_date_weight_from_timestamps(repo.repo_added, status.core_data_last_collected)
 
         secondary_tasks_weight = raw_sum - calculate_date_weight_from_timestamps(repo.repo_added, status.secondary_data_last_collected)
+
+        ml_tasks_weight = raw_sum - calculate_date_weight_from_timestamps(repo.repo_added,status.ml_data_last_collected)
     except Exception as e:
         logger.error(f"{e}")
         weight = None
@@ -194,7 +196,7 @@ def update_issue_pr_weights(logger,session,repo_git,raw_sum):
     update_query = (
         update(CollectionStatus)
         .where(CollectionStatus.repo_id == repo.repo_id)
-        .values(core_weight=weight,issue_pr_sum=raw_sum,secondary_weight=secondary_tasks_weight)
+        .values(core_weight=weight,issue_pr_sum=raw_sum,secondary_weight=secondary_tasks_weight,ml_weight=ml_tasks_weight)
     )
 
     session.execute(update_query)
@@ -277,6 +279,27 @@ def facade_task_success_util(repo_git):
 
         session.commit()
 
+@celery.task
+def ml_task_success_util(repo_git):
+    from augur.tasks.init.celery_app import engine
+
+    logger = logging.getLogger(facade_task_success_util.__name__)
+
+    logger.info(f"Repo '{repo_git}' succeeded through machine learning task collection")
+
+    with DatabaseSession(logger, engine) as session:
+
+        repo = Repo.get_by_repo_git(session, repo_git)
+        if not repo:
+            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
+
+        collection_status = repo.collection_status[0]
+
+        collection_status.ml_status = CollectionState.SUCCESS.value
+        collection_status.ml_data_last_collected = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        collection_status.ml_task_id = None
+
+        session.commit()
 
 
 
@@ -412,7 +435,7 @@ class AugurTaskRoutine:
             #augur_collection_sequence.append(core_task_success_util.si(repo_git))
             #Link all phases in a chain and send to celery
             augur_collection_chain = chain(*augur_collection_sequence)
-            task_id = augur_collection_chain.apply_async(link_error=task_failed_util.s()).task_id
+            task_id = augur_collection_chain.apply_async().task_id
 
             self.logger.info(f"Setting repo {self.collection_hook} status to collecting for repo: {repo_git}")
 
