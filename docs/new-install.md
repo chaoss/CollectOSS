@@ -29,7 +29,7 @@ sudo apt install rabbitmq-server && #required
 sudo snap install go --classic && #required: Go Needs to be version 1.19.x or higher. Snap is the package manager that gets you to the right version. Classic enables it to actually be installed at the correct version.
 sudo apt install nginx && # required for hosting
 sudo add-apt-repository ppa:mozillateam/firefox-next &&
-sudo apt install firefox=111.0~b8+build1-0ubuntu0.22.04.1 &&
+sudo apt install firefox=115.0~b2+build1-0ubuntu0.22.04.1 &&
 sudo apt install firefox-geckodriver
 
 # You will almost certainly need to reboot after this. 
@@ -308,8 +308,8 @@ redis.exceptions.ConnectionError: Error 111 connecting to 127.0.0.1:6379. Connec
 
 **COMMAND**: 
 ```
-hugeadm --thp-never` &&
-echo never > /sys/kernel/mm/transparent_hugepage/enabled
+sudo hugeadm --thp-never &&
+sudo echo never > /sys/kernel/mm/transparent_hugepage/enabled
 ```
 
 
