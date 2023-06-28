@@ -260,10 +260,16 @@ def user_verify_email():
     elif current_user.email_verified:
         return redirect(url_for("user_settings"))
     elif new_email:
+        user = db_session.query(User).filter(User.user_id==current_user.user_id).one()
+        user.email = new_email
+
+        # The view will not be updated to show the new email unless we also do this
         current_user.email = new_email
+        # Why? I have no idea
+        
         db_session.commit()
     
-    email.user_verify(current_user)
+    # email.user_verify(current_user)
 
     return render_module("verify-email")
 
