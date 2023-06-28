@@ -310,6 +310,10 @@ class User(Base):
     @property
     def email_otp_key(self):
         return f"{self.user_id}:email_verify"
+    
+    @property
+    def password_reset_key(self):
+        return f"{self.user_id}:password_reset"
 
     @staticmethod
     def exists(session, username):

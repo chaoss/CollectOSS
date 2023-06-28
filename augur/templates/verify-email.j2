@@ -1,17 +1,19 @@
 <h1>Verify Your Email</h1>
-<p>We've sent a one-time passcode to {{current_user.email}}</p>
+<p>We've sent a one-time passcode to <strong>{{current_user.email}}</strong></p>
 <p>Please enter the code below. You may need to check your spam or junk folder.</p>
 <div class="container-fluid mt-4">
     <div class="row justify-content-center">
         <form id="verify-form" class="form-signin" style="width: 400px;" method="post" action="#">
             <p>
-                <input type="text" id="otp" name="one_time_passcode" class="form-control" placeholder="Verification Code" required autofocus>
+                <input type="text" id="otp" name="remail" class="form-control" placeholder="Verification Code" required autofocus>
             </p>
             <div class="btn" style="background-color: var(--color-accent); padding: 0; margin: 0;">
                 <button id="verbtn" class="btn btn-outline-dark" style="color: white;" type="submit" name="signin">Verify</button>
             </div>
         </form>
     </div>
+    <div class="form-spacer"></div>
+    <p><a href="#" id="change-email-link" onclick="switch_form(event)" xaction="update">Need to update your email?</a></p>
 </div>
 
 <script type="text/javascript">
@@ -21,6 +23,11 @@
     }
 
     function submitForm(event) {
+        link = document.getElementById("change-email-link");
+        if(link.getAttribute("xaction") == "cancel") {
+            return;
+        }
+
         event.preventDefault();
 
         otp = document.getElementById("otp").value;
@@ -38,4 +45,26 @@
 
     form = document.getElementById("verify-form");
     form.addEventListener("submit", submitForm);
+
+    function switch_form(event) {
+        link = document.getElementById("change-email-link");
+        event.preventDefault();
+        input = document.getElementById("otp")
+        button = document.getElementById("verbtn");
+
+        if(link.getAttribute("xaction") == "update") {
+            link.innerHTML = "Cancel";
+            link.setAttribute("xaction", "cancel");
+            input.setAttribute("placeholder", "New email");
+            input.setAttribute("type", "email");
+            button.innerHTML = "Submit";
+        } else {
+            link.innerHTML = "Need to update your email?";
+            link.setAttribute("xaction", "update");
+            input.setAttribute("placeholder", "Verification Code");
+            input.setAttribute("type", "text");
+            button.innerHTML = "Verify"
+        }
+
+    }
 </script>

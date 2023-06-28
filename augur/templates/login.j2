@@ -7,10 +7,10 @@
                 <input type="text" id="username" name="username" class="form-control" placeholder="User ID" required
                     autofocus>
             </p>
-            <p>
-                <small id="passwordHelpInline" class="text-muted registration hidden">
-                    Must be 8-20 characters long.
-                </small>
+            <p></p>
+            <small id="passwordHelpInline" class="text-muted registration hidden">
+                Must be 8-20 characters long.
+            </small>
             <div class="input-group mb-3">
                 <input type="password" id="password" name="password" class="form-control" placeholder="Password"
                     required>
@@ -31,7 +31,6 @@
                     </div>
                 </div>
             </div>
-            </p>
             <div id="registration-div" class="registration hidden">
                 <p>
                     <input type="email" id="email" name="email" class="form-control" placeholder="Email Address">
@@ -43,13 +42,12 @@
                     <input type="text" id="last_name" name="last_name" class="form-control" placeholder="Last Name">
                 </p>
             </div>
-            <p>
+            <p></p>
             <div class="checkbox mb-3">
                 <label>
-                    <input type="checkbox" name="remember" value="remember-me"> Remember me</input>
+                    <input type="checkbox" name="remember" value="remember-me"> Remember me
                 </label>
             </div>
-            </p>
             <div class="btn" style="background-color: var(--color-accent); padding: 0; margin: 0;">
                 <button id="sigbtn" class="btn btn-outline-dark" style="color: white;" type="submit" name="signin">Sign in</button>
             </div>
@@ -57,6 +55,8 @@
                 <button id="regbtn" class="btn btn-outline-dark" style="color: white;" onclick="registration()" name="register">Register</button>
             </div>
         </form>
+        <div class="form-spacer"></div>
+        <p><a href="{{ url_for('user_password_reset') }}">Forgot password?</a></p>
     </div>
 </div>
 <script type="text/javascript">

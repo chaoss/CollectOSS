@@ -14,6 +14,8 @@ from augur.application.services.email import get_email_provider
 
 logger = logging.getLogger(__name__)
 
+current_user: User = current_user
+
 
 # ROUTES -----------------------------------------------------------------------
 
@@ -246,15 +248,20 @@ def user_settings():
 email verification:
     Under development
 """
-@app.route('/account/verify')
+@app.route('/account/verify', methods = ["POST", "GET"])
 @login_required
 def user_verify_email():
     email = get_email_provider()
 
+    new_email = request.form.get("remail")
+
     if not email:
-        return render_message("Email Verification Disabled", "Email verification has not been enabled on this instance.")
+        return render_message("Email Verification Disabled", "Email verification has not been enabled on this instance. If you were sent to this page automatically, please reach out to your instance admin for assistance.")
     elif current_user.email_verified:
         return redirect(url_for("user_settings"))
+    elif new_email:
+        current_user.email = new_email
+        db_session.commit()
     
     email.user_verify(current_user)
 
@@ -264,39 +271,38 @@ def user_verify_email():
 email verification:
     Under development
 """
-@app.route('/account/password/reset')
+@app.route('/account/password/reset', methods = ['GET', 'POST'])
 def user_password_reset():
-    email_body = """<strong>This link expires in 5 minutes.</strong>
+    email = get_email_provider()
 
-    {}
+    user_email = request.form.get("email")
+    reset_key = request.args.get("rk")
+    password = request.form.get("password")
 
-    <small>If you did not make this request, you can disregard this message.</small>"""
-
-    if not config.get_value("service", "email"):
-        return render_message("Email Service Disabled", "Email has not been enabled on this instance.")
-    elif key := request.args.get("key"):
-        return redirect(url_for("user_settings"))
-    elif True: #not redis.get(current_user.email):
-        OTP = secrets.token_hex()
-
-        # TODO: finish setup
-
-        message = Mail(
-            from_email=config.get_value("email.service", "source_email"),
-            to_emails=current_user.email,
-            subject='Augur password reset',
-            html_content=email_body.format(OTP))
-        logger.info(str(message))
+    if not email:
+        return render_message("Email Service Disabled", "Email has not been enabled on this instance. Please reach out to your instance admin for help changing your password.")
+    elif reset_key:
+        UID = redis.get(reset_key)
+        print(UID, reset_key)
         try:
-            sg = SendGridAPIClient(config.get_value("email.service", "provider_key"))
-            response = sg.send(message)
-            logger.info(response.status_code)
-            logger.info(response.body)
-            logger.info(response.headers)
-        except Exception as e:
-            logger.error(e.message)
-
-        redis.set(current_user.email, OTP, ex = 5 * 60)
+            UID = int(UID)
+        except:
+            pass
+        user: User = User.get_by_id(db_session, UID)
+        if not user:
+            return render_message("Invalid Request", "This request is either expired, or does not exist.")
+        elif password:
+            user.login_hashword = User.compute_hashsed_password(password)
+            redis.delete(reset_key, user.password_reset_key)
+            db_session.commit()
+            flash("Password updated")
+            return redirect(url_for("user_login"))
+        return render_module("reset-password", user = user)
+    elif user_email:
+        user: User = db_session.query(User).filter(User.email == user_email).first()
+        if user:
+            email.user_password_reset(user)
+        return render_message("Password Reset", "If this email is associated with an account and verified, a password reset link will be sent.")
 
     return render_module("reset-password")
 

@@ -101,6 +101,10 @@ body {
     background-color: var(--color-accent);
 }
 
+.form-spacer {
+    min-height: 30px;
+}
+
 .toast-container {
     top: 80px !important;
     right: 16px !important;
