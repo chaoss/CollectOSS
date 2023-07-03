@@ -38,7 +38,7 @@ setup(
         "alembic==1.8.1", # 1.8.1
         "coloredlogs==15.0", # 15.0.1
         "Beaker==1.11.0", # 1.11.0
-        "SQLAlchemy==1.3.23", # 1.4.40
+        "SQLAlchemy==2.0.17", # 1.4.40
         "itsdangerous==2.0.1", # 2.1.2
         'Jinja2~=3.0.3',
         "Flask==2.0.2", # 2.2.2
