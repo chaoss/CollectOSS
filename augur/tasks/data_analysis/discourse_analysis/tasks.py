@@ -11,6 +11,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, DiscourseInsight
 from augur.application.db.util import execute_session_query
+from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 
 #import os, sys, time, requests, json
 # from sklearn.model_selection import train_test_split
@@ -31,19 +32,14 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 DISCOURSE_ANALYSIS_DIR = f"{ROOT_AUGUR_DIRECTORY}/tasks/data_analysis/discourse_analysis/"
 
-@celery.task
-def discourse_analysis_task():
+@celery.task(base=AugurMlRepoCollectionTask)
+def discourse_analysis_task(repo_git):
 
     logger = logging.getLogger(discourse_analysis_task.__name__)
     from augur.tasks.init.celery_app import engine
 
     with DatabaseSession(logger, engine) as session:
-        query = session.query(Repo)
-        repos = execute_session_query(query, 'all')
-    
-
-    for repo in repos:
-        discourse_analysis_model(repo.repo_git, logger, engine)
+        discourse_analysis_model(repo_git, logger, engine)
 
 
 def discourse_analysis_model(repo_git: str,logger,engine) -> None:

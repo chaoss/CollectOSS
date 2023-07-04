@@ -221,6 +221,22 @@ t_working_commits = Table(
     comment="For future use when we move all working tables to the augur_operations schema. ",
 )
 
+class BadgingDEI(Base):
+    id = Column(Integer, primary_key=True, nullable=False)
+    badging_id = Column(Integer, nullable=False)
+    level = Column(String, nullable=False)
+
+    repo_id = Column(
+        ForeignKey("augur_data.repo.repo_id", name="user_repo_user_id_fkey"), primary_key=True, nullable=False
+    )
+
+    repo = relationship("Repo")
+
+    __tablename__ = 'dei_badging'
+    __table_args__ = (
+        {"schema": "augur_data"}
+    )
+
 
 class Config(Base):
     id = Column(SmallInteger, primary_key=True, nullable=False)
@@ -1046,6 +1062,8 @@ class CollectionStatus(Base):
     __tablename__ = "collection_status"
     __table_args__ = (
 
+        #TODO: normalize this table to have a record per repo and collection hook instead of just being per repo.
+
         #Constraint to prevent nonsensical relationship states between core_data_last_collected and core_status
         #Disallow core_data_last_collected status to not be set when the core_status column indicates data has been collected
         #Disallow core_data_last_collected status to be set when the core_status column indicates data has not been collected
@@ -1121,9 +1139,14 @@ class CollectionStatus(Base):
     facade_data_last_collected = Column(TIMESTAMP)
     facade_task_id = Column(String)
 
+    ml_status = Column(String,nullable=False, server_default=text("'Pending'"))
+    ml_data_last_collected = Column(TIMESTAMP)
+    ml_task_id = Column(String)
+
     core_weight = Column(BigInteger)
     facade_weight = Column(BigInteger)
     secondary_weight = Column(BigInteger)
+    ml_weight = Column(BigInteger)
 
     issue_pr_sum = Column(BigInteger)
     commit_sum = Column(BigInteger)
@@ -1155,7 +1178,8 @@ class CollectionStatus(Base):
             "repo_id": repo_id,
             "issue_pr_sum": pr_issue_count,
             "core_weight": github_weight,
-            "secondary_weight": github_weight
+            "secondary_weight": github_weight,
+            "ml_weight": github_weight
         }
 
         result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)
