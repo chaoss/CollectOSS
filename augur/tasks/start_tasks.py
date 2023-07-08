@@ -88,7 +88,8 @@ def primary_repo_collect_phase(repo_git):
         #facade_phase(logger,repo_git),
         collect_linux_badge_info.si(repo_git),
         collect_releases.si(repo_git),
-        grab_comitters.si(repo_git)
+        grab_comitters.si(repo_git),
+        process_ossf_dependency_metrics.si(repo_git)
     )
 
     return repo_task_group
@@ -102,7 +103,6 @@ def secondary_repo_collect_phase(repo_git):
     repo_task_group = group(
         process_pull_request_files.si(repo_git),
         process_pull_request_commits.si(repo_git),
-        process_ossf_dependency_metrics.si(repo_git),
         chain(collect_pull_request_reviews.si(repo_git), collect_pull_request_review_comments.si(repo_git))
     )
 
