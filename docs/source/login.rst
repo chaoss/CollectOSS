@@ -6,6 +6,10 @@ Augur implements the Oauth 2.0 specification, and each Augur instance is capable
 Prerequisites
 --------------
 
+If your Augur instance is running behind Nginx or Apache, make sure this parameter (or its Apache equivalent) is set in your ``sites-enabled`` configuration::
+
+    proxy_set_header X-Forwarded-Proto $scheme;
+
 Registering a user account on the desired Augur instance is a requirement for creating a Client Application. The developer of the application must follow the below steps:
 
 1. Navigate to the home page of the desired Augur instance.
@@ -18,9 +22,8 @@ Once you have registered an account, follow the below steps to create a new Clie
 2. Click "Profile".
 3. Click "Applications"
 4. In the create application form, fill out the application name and redirect URL
-    - The redirect URL is relative to the user-agent (IE: the user's browser), and **must** be accessible to the user-agent.
-    - If you are testing an application locally, you may use ``http://127.0.0.1/`` as the host for the redirect URL. The authorization server will *not* prevent redirection if the redirect url is unreachable.
-        - In this case, it would be beneficial to run Augur with the ``AUGUR_DEV`` environment variable set. This will disable SSL requirements for authorization, allowing ``localhost`` clients to use the OAuth flow. Execute Augur with ``(nohup env AUGUR_DEV=1 augur backend start &)`` for this.
+    - The redirect URL is relative to the user-agent (i.e. the user's browser), and **must** be accessible to the user-agent.
+    - If you are testing an application locally, you may use ``http://127.0.0.1/`` or ``http://localho.st`` as the host for the redirect URL. The authorization server will *not* prevent redirection if the redirect url is unreachable.
 
 Once the application has been created, note the Application ID and Client Secret, as you will need them for application authentication requests.
 
