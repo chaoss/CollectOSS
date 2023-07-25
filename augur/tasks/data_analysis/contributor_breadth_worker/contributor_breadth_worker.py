@@ -4,7 +4,7 @@ import pandas as pd
 import sqlalchemy as s
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.session import DatabaseSession
+from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.application.db.models import ContributorRepo
 
@@ -65,12 +65,7 @@ def contributor_breadth_model() -> None:
     #### Available for duplicate checking
     ########################################################
 
-    action_map = {
-        'insert': {
-            'source': ['id'],
-            'augur': ['event_id']
-        }
-    }
+
 
     # Eliminate any duplicate event_ids from what will be inserted
     # Because of Bulk Insert
@@ -80,44 +75,51 @@ def contributor_breadth_model() -> None:
     # Query for existing event ids to avoid duplication
     ########################################################
 
-    dup_query = s.sql.text("""
-        SELECT DISTINCT event_id 
-        FROM augur_data.contributor_repo
-        WHERE 1 = 1
-    """)
+    # dup_query = s.sql.text("""
+    #     SELECT DISTINCT event_id 
+    #     FROM augur_data.contributor_repo
+    #     WHERE 1 = 1
+    # """)
 
-    current_event_ids = json.loads(pd.read_sql(dup_query, engine, params={}).to_json(orient="records"))
+    #current_event_ids = json.loads(pd.read_sql(dup_query, engine, params={}).to_json(orient="records"))
 
     #Convert list of dictionaries to regular list of 'event_ids'.
     #The only values that the sql query returns are event_ids so
     #it makes no sense to be a list of many dicts of one key.
-    current_event_ids = [value for elem in current_event_ids for value in elem.values()]
+    #current_event_ids = [value for elem in current_event_ids for value in elem.values()]
 
-    logger.info(f"current event ids are: {current_event_ids}")
+    #logger.info(f"current event ids are: {current_event_ids}")
 
-    for cntrb in current_cntrb_logins:
+    with GithubTaskManifest(logger) as manifest:
 
-        repo_cntrb_url = f"https://api.github.com/users/{cntrb['gh_login']}/events"
-        # source_cntrb_repos seemed like not exactly what the variable is for; its a list of actions for
-        # each Github gh_login value already in our database
+        for cntrb in current_cntrb_logins:
 
-        with DatabaseSession(logger, engine) as session:
+            repo_cntrb_url = f"https://api.github.com/users/{cntrb['gh_login']}/events"
+            # source_cntrb_repos seemed like not exactly what the variable is for; its a list of actions for
+            # each Github gh_login value already in our database
+
             cntrb_events = []
-            for page_data, page in GithubPaginator(repo_cntrb_url, session.oauths, logger).iter_pages():
+            for page_data, page in GithubPaginator(repo_cntrb_url, manifest.key_auth, logger).iter_pages():
 
                 if page_data:
                     cntrb_events += page_data
 
-        process_contributor_events(cntrb, cntrb_events, current_event_ids, logger)
+            if not len(cntrb_events) == 0:
+                continue
+
+            events = process_contributor_events(cntrb, cntrb_events, logger, tool_source, tool_version, data_source)
+
+            natural_keys = ["event_id"]
+            manifest.augur_db.insert_data(events, ContributorRepo, natural_keys)
 
         # source_cntrb_events = self.paginate_endpoint(repo_cntrb_url, action_map=action_map,
         #      table=self.contributor_repo_table)
 
-def process_contributor_events(cntrb, cntrb_events, current_event_ids, logger):
+def process_contributor_events(cntrb, cntrb_events, logger, tool_source, tool_version, data_source):
 
     if not cntrb_events:
         logger.info("There are no events, or new events for this user.\n")
-        return
+        return []
 
     ## current_event_ids are the ones ALREADY IN THE AUGUR DB. SKIP THOSE.
     ## source_cntrb_events are the ones the API pulls.
@@ -125,8 +127,8 @@ def process_contributor_events(cntrb, cntrb_events, current_event_ids, logger):
     for event_id_api in cntrb_events:
         logger.info(f"Keys of event_id_api: {event_id_api.keys()}")
         #logger.info(f"Keys of current_event_ids: {current_event_ids.keys()}")
-        if int(event_id_api['id']) in current_event_ids:
-            continue
+        # if int(event_id_api['id']) in current_event_ids:
+        #     continue
 
 
         cntrb_repos_insert.append({
@@ -138,10 +140,9 @@ def process_contributor_events(cntrb, cntrb_events, current_event_ids, logger):
             "repo_name": event_id_api['repo']['name'],
             "gh_repo_id": event_id_api['repo']['id'],
             "cntrb_category": event_id_api['type'],
-            "event_id": event_id_api['id'],
+            "event_id": int(event_id_api['id']),
             "created_at": event_id_api['created_at']
         })
-
 
 
         # else:
@@ -155,6 +156,9 @@ def process_contributor_events(cntrb, cntrb_events, current_event_ids, logger):
     #cntrb_repos_insert = []
     #cntrb_ids_idx = pd.Index(cntrb_ids, name=contributors)
 
-    cntrb_repo_insert_result, cntrb_repo_update_result = self.bulk_insert(self.contributor_repo_table,
-                 unique_columns='event_id', insert=cntrb_repos_insert)
+    # cntrb_repo_insert_result, cntrb_repo_update_result = self.bulk_insert(self.contributor_repo_table,
+    #              unique_columns='event_id', insert=cntrb_repos_insert)
+
+    
+
 
