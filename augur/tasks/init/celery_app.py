@@ -58,7 +58,8 @@ data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
                        'augur.tasks.data_analysis.clustering_worker.tasks',
                        'augur.tasks.data_analysis.discourse_analysis.tasks',
                        'augur.tasks.data_analysis.pull_request_analysis_worker.tasks',
-                       'augur.tasks.data_analysis.insight_worker.tasks']
+                       'augur.tasks.data_analysis.insight_worker.tasks',
+                       'augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker']
 
 materialized_view_tasks = ['augur.tasks.db.refresh_materialized_views']
 
@@ -139,7 +140,8 @@ celery_app.conf.task_routes = {
     'augur.tasks.git.dependency_tasks.tasks.process_ossf_dependency_metrics': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.process_dependency_metrics': {'queue': 'facade'},
     'augur.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'},
-    'augur.tasks.frontend.*': {'queue': 'frontend'}
+    'augur.tasks.frontend.*': {'queue': 'frontend'},
+    'augur.tasks.data_analysis.contributor_breadth_worker.*': {'queue': 'secondary'},
 }
 
 #Setting to be able to see more detailed states of running tasks

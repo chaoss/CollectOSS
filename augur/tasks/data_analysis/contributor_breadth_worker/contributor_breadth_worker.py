@@ -44,14 +44,15 @@ def contributor_breadth_model() -> None:
         WHERE gh_login IS NOT NULL
     """)
 
-    
-    current_cntrb_logins = json.loads(pd.read_sql(cntrb_login_query, engine, params={}).to_json(orient="records"))
+    result = engine.execute(cntrb_login_query)
+
+    current_cntrb_logins = [dict(row) for row in result]
 
     ## We need a list of all contributors so we can iterate through them to gather events
     ## We need a list of event ids to avoid insertion of duplicate events. We ignore the event
     ## If it already exists
 
-    logger.info(f"Contributor Logins are: {current_cntrb_logins}")
+    # logger.info(f"Contributor Logins are: {current_cntrb_logins}")
 
     ########################################################
     #### List of existing contributor ids and their corresponding gh_login
@@ -92,7 +93,12 @@ def contributor_breadth_model() -> None:
 
     with GithubTaskManifest(logger) as manifest:
 
+        index = 1
+        total = len(current_cntrb_logins)
         for cntrb in current_cntrb_logins:
+
+            print(f"Processing cntrb {index} of {total}")
+            index += 1
 
             repo_cntrb_url = f"https://api.github.com/users/{cntrb['gh_login']}/events"
             # source_cntrb_repos seemed like not exactly what the variable is for; its a list of actions for
@@ -104,28 +110,25 @@ def contributor_breadth_model() -> None:
                 if page_data:
                     cntrb_events += page_data
 
-            if not len(cntrb_events) == 0:
+            if len(cntrb_events) == 0:
+                logger.info("There are no events, or new events for this user.\n")
                 continue
 
             events = process_contributor_events(cntrb, cntrb_events, logger, tool_source, tool_version, data_source)
 
-            natural_keys = ["event_id"]
-            manifest.augur_db.insert_data(events, ContributorRepo, natural_keys)
+            logger.info(f"Inserting {len(events)} events")
+            natural_keys = ["event_id", "tool_version"]
+            manifest.augur_db.insert_data(events, ContributorRepo, natural_keys)            
 
         # source_cntrb_events = self.paginate_endpoint(repo_cntrb_url, action_map=action_map,
         #      table=self.contributor_repo_table)
 
 def process_contributor_events(cntrb, cntrb_events, logger, tool_source, tool_version, data_source):
 
-    if not cntrb_events:
-        logger.info("There are no events, or new events for this user.\n")
-        return []
-
     ## current_event_ids are the ones ALREADY IN THE AUGUR DB. SKIP THOSE.
     ## source_cntrb_events are the ones the API pulls.
     cntrb_repos_insert = []
     for event_id_api in cntrb_events:
-        logger.info(f"Keys of event_id_api: {event_id_api.keys()}")
         #logger.info(f"Keys of current_event_ids: {current_event_ids.keys()}")
         # if int(event_id_api['id']) in current_event_ids:
         #     continue
@@ -143,6 +146,8 @@ def process_contributor_events(cntrb, cntrb_events, logger, tool_source, tool_ve
             "event_id": int(event_id_api['id']),
             "created_at": event_id_api['created_at']
         })
+
+    return cntrb_repos_insert
 
 
         # else:
