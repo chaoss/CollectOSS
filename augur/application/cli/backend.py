@@ -21,6 +21,7 @@ from datetime import datetime
 from augur import instance_id
 from augur.tasks.start_tasks import augur_collection_monitor, CollectionState, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
+from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.tasks.init.redis_connection import redis_connection 
 from augur.application.db.models import Repo, CollectionStatus, UserRepo
 from augur.application.db.session import DatabaseSession
@@ -103,6 +104,8 @@ def start(disable_collection, development, port):
         
         create_collection_status_records.si().apply_async()
         time.sleep(3)
+
+        contributor_breadth_model.si().apply_async()
 
         # start cloning repos when augur starts
         #clone_repos.si().apply_async()
