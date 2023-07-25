@@ -206,6 +206,7 @@ def setup_periodic_tasks(sender, **kwargs):
     from augur.tasks.start_tasks import non_repo_domain_tasks
     from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
+    from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
     
     with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
 
@@ -226,6 +227,10 @@ def setup_periodic_tasks(sender, **kwargs):
 
         logger.info(f"Scheduling update of collection weights on midnight each day")
         sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
+
+        logger.info(f"Scheduling contributor breadth every 30 days")
+        thirty_days_in_seconds = 30*24*60*60
+        sender.add_periodic_task(thirty_days_in_seconds, contributor_breadth_model.s())
 
 
 @after_setup_logger.connect

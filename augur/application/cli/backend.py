@@ -85,7 +85,7 @@ def start(disable_collection, development, port):
     logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
 
     processes = start_celery_worker_processes(float(worker_vmem_cap), disable_collection)
-    time.sleep(5)
+    time.sleep(10)
     if os.path.exists("celerybeat-schedule.db"):
             logger.info("Deleting old task schedule")
             os.remove("celerybeat-schedule.db")
