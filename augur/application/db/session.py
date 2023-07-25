@@ -95,8 +95,8 @@ class DatabaseSession(Session):
 
         with self.engine.connect() as connection:
 
-            result = connection.execute(sql_text).fetchall()
-        return [dict(zip(row.keys(), row)) for row in result]
+            result = connection.execute(sql_text)
+        return [dict(row) for row in result.mappings()]
 
     def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
 

@@ -275,7 +275,8 @@ class User(Base):
         {"schema": "augur_operations"}
     )
 
-    groups = relationship("UserGroup")
+    # Redundant.
+    #groups = relationship("UserGroup")
     tokens = relationship("UserSessionToken")
     applications = relationship("ClientApplication")
 
