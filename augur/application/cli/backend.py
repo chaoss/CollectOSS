@@ -108,9 +108,9 @@ def start(disable_collection, development, port):
         contributor_breadth_model.si().apply_async()
 
         # start cloning repos when augur starts
-        #clone_repos.si().apply_async()
+        clone_repos.si().apply_async()
 
-        #augur_collection_monitor.si().apply_async()
+        augur_collection_monitor.si().apply_async()
         
     else:
         logger.info("Collection disabled")   
