@@ -68,7 +68,7 @@ def contributor_breadth_model() -> None:
 
             repo_cntrb_url = f"https://api.github.com/users/{cntrb['gh_login']}/events"
 
-            newest_event_in_db = "1970"
+            newest_event_in_db = datetime(1970, 1, 1)
             if cntrb["gh_login"] in cntrb_newest_events_map:
                 newest_event_in_db = cntrb_newest_events_map[cntrb["gh_login"]]
                 
