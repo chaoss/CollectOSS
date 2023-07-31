@@ -67,7 +67,7 @@ The Client Application must make the following request in order to facilitate th
     URL: https://augur.example.com/api/unstable/user/session/generate
     arguments:
         code: [the temporary authorization code]
-        grand_type: "code"
+        grant_type: "code"
     headers:
         Authorization: Client [your client secret]
 
@@ -101,7 +101,7 @@ The application may also attempt automatic reauthorization using the previously 
     URL: https://augur.example.com/api/unstable/user/session/refresh
     arguments:
         refresh_token: [the previously provided refresh token]
-        grand_type: "refresh_token"
+        grant_type: "refresh_token"
     headers:
         Authorization: Client [your client secret]
 
