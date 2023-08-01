@@ -995,11 +995,12 @@ class ClientApplication(Base):
     sessions = relationship("UserSessionToken")
     subscriptions = relationship("Subscription")
 
+    def __eq__(self, other):
+        return str(self.id) == str(other.id)
+
     @staticmethod
     def get_by_id(session, client_id):
-
         return session.query(ClientApplication).filter(ClientApplication.id == client_id).first()
-
 
 class Subscription(Base):
     __tablename__ = "subscriptions"

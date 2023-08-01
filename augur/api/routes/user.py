@@ -127,10 +127,10 @@ def refresh_session(application):
 
         refresh_token = session.query(RefreshToken).filter(RefreshToken.id == refresh_token_str).first()
         if not refresh_token:
-            return jsonify({"status": "Invalid refresh token"})
+            return jsonify({"status": "Invalid refresh token"}), 400
 
         if refresh_token.user_session.application != application:
-            return jsonify({"status": "Invalid application"})
+            return jsonify({"status": "Invalid application"}), 400
 
         user_session = refresh_token.user_session
         user = user_session.user
@@ -424,7 +424,7 @@ def toggle_user_group_favorite():
     Returns
     -------
     dict
-        A dictionairy with key of 'status' that indicates the success or failure of the operation
+        A dictionary with key of 'status' that indicates the success or failure of the operation
     """
     group_name = request.args.get("group_name")
 
