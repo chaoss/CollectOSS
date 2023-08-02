@@ -602,7 +602,7 @@ class User(Base):
     def get_favorite_groups(self, session):
 
         try:
-            groups = session.query(UserGroup).filter(UserGroup.user_id == self.user_id, bool(UserGroup.favorited)).all()
+            groups = session.query(UserGroup).filter(UserGroup.user_id == self.user_id, UserGroup.favorited == True).all()
         except Exception as e:
             print(f"Error while trying to get favorite groups: {e}")
             return None, {"status": "Error when trying to get favorite groups"}
