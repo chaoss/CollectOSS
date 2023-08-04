@@ -996,7 +996,7 @@ class ClientApplication(Base):
     subscriptions = relationship("Subscription")
 
     def __eq__(self, other):
-        return str(self.id) == str(other.id)
+        return isinstance(other, ClientApplication) and str(self.id) == str(other.id)
 
     @staticmethod
     def get_by_id(session, client_id):
