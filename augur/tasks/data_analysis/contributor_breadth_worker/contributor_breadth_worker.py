@@ -33,7 +33,8 @@ def contributor_breadth_model() -> None:
         WHERE gh_login IS NOT NULL
     """)
 
-    result = engine.execute(cntrb_login_query)
+    with engine.connect() as connection:
+        result = connection.execute(cntrb_login_query)
 
     current_cntrb_logins = [dict(row) for row in result]
 
@@ -45,7 +46,9 @@ def contributor_breadth_model() -> None:
         GROUP BY c.gh_login;
     """)
 
-    cntrb_newest_events_list = engine.execute(cntrb_newest_events_query)
+    with engine.connect() as connection:
+        cntrb_newest_events_list = connection.execute(cntrb_newest_events_query)
+    
     cntrb_newest_events_list = [dict(row) for row in cntrb_newest_events_list]
 
     cntrb_newest_events_map = {}
