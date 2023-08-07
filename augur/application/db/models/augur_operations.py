@@ -740,7 +740,8 @@ class UserRepo(Base):
         ForeignKey("augur_data.repo.repo_id", name="user_repo_user_id_fkey"), primary_key=True, nullable=False
     )
 
-    repo = relationship("Repo")
+    #made redundant by user_repo relationship in Repo orm class.
+    #repo = relationship("Repo")
     group = relationship("UserGroup")
 
     @staticmethod
