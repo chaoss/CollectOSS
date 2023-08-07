@@ -85,7 +85,7 @@ class DatabaseSession(Session):
     
     def execute_sql(self, sql_text):
 
-        with self.engine.connect() as connection:
+        with self.engine.begin() as connection:
 
             return_data = connection.execute(sql_text)  
 
@@ -93,7 +93,7 @@ class DatabaseSession(Session):
 
     def fetchall_data_from_sql_text(self,sql_text):
 
-        with self.engine.connect() as connection:
+        with self.engine.begin() as connection:
 
             result = connection.execute(sql_text)
         return [dict(row) for row in result.mappings()]

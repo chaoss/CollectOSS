@@ -300,8 +300,9 @@ def change_cntrb_id_to_uuid_5(upgrade=True):
                 """
                     INSERT INTO "augur_data"."contributors"("cntrb_id", "cntrb_login", "cntrb_email", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:cntrb_uuid, 'not-provided', NULL, NULL, '2019-06-13 11:33:39', NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 'nobody', 'http://fake.me', 'http://fake.me', 'x', 'http://fake.me', NULL, 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', 'http://fake.me', NULL, NULL, NULL, NULL, NULL, NULL, '2019-06-13 16:35:25');
                 """
-            ),
-            cntrb_uuid=UnresolvableUUID().to_UUID()
+            ).bindparams(
+                cntrb_uuid=UnresolvableUUID().to_UUID()
+            )
         )
 
         conn.execute(
@@ -309,8 +310,9 @@ def change_cntrb_id_to_uuid_5(upgrade=True):
                 """
                     INSERT INTO "augur_data"."contributors" ("cntrb_id", "cntrb_login", "cntrb_email", "cntrb_full_name", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "cntrb_last_used", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "gl_web_url", "gl_avatar_url", "gl_state", "gl_username", "gl_full_name", "gl_id", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:cntrb_uuid, 'nan', 'kannayoshihiro@gmail.com', 'KANNA Yoshihiro', 'UTMC', '2009-04-17 12:43:58', NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 'kannayoshihiro@gmail.com', '2021-01-28 21:56:10-06', 74832, 'nan', 'https://api.github.com/users/nan', 'https://github.com/nan', 'MDQ6VXNlcjc0ODMy', 'https://avatars.githubusercontent.com/u/74832?v=4', '', 'https://api.github.com/users/nan/followers', 'https://api.github.com/users/nan/following{/other_user}', 'https://api.github.com/users/nan/gists{/gist_id}', 'https://api.github.com/users/nan/starred{/owner}{/repo}', 'https://api.github.com/users/nan/subscriptions', 'https://api.github.com/users/nan/orgs', 'https://api.github.com/users/nan/repos', 'https://api.github.com/users/nan/events{/privacy}', 'https://api.github.com/users/nan/received_events', 'User', 'false', NULL, NULL, NULL, NULL, NULL, NULL, 'GitHub API Worker', '1.0.0', 'GitHub API', '2021-10-28 15:23:46');
                 """
-            ),
-            cntrb_uuid=GithubUUID().to_UUID()
+            ).bindparams(
+                cntrb_uuid=GithubUUID().to_UUID()
+            )
         )
 
     else:
