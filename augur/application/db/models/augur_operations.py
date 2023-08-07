@@ -1,23 +1,19 @@
-# coding: utf-8
+# encoding: utf-8
 from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey, update, CheckConstraint
-from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
+from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import text as sql_text
 from werkzeug.security import generate_password_hash, check_password_hash
-from typing import List, Any, Dict
+from typing import List
 
-import logging 
+import logging
 import secrets
 import traceback
-import importlib
 
 from augur.application.db.models import Repo, RepoGroup
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models.base import Base
-
-
 
 FRONTEND_REPO_GROUP_NAME = "Frontend Repos"
 logger = logging.getLogger(__name__)
@@ -39,15 +35,15 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
     OWNER_INFO_ENDPOINT = f"https://api.github.com/users/{owner}"
     ORG_REPOS_ENDPOINT = f"https://api.github.com/orgs/{owner}/repos?per_page=100"
     USER_REPOS_ENDPOINT = f"https://api.github.com/users/{owner}/repos?per_page=100"
-    
+
     if not session.oauths.list_of_keys:
         return None, {"status": "No valid github api keys to retrieve data with"}
-    
+
     # determine whether the owner is a user or an organization
     data, _ = retrieve_dict_from_endpoint(logger, session.oauths, OWNER_INFO_ENDPOINT)
     if not data:
         return None, {"status": "Invalid owner"}
-    
+
     owner_type = data["type"]
 
 
@@ -57,11 +53,11 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
         url = ORG_REPOS_ENDPOINT
     else:
         return None, {"status": f"Invalid owner type: {owner_type}"}
-    
-    
+
+
     # collect repo urls for the given owner
     repos = []
-    for page_data, page in GithubPaginator(url, session.oauths, logger).iter_pages():
+    for page_data in GithubPaginator(url, session.oauths, logger).iter_pages():
 
         if page_data is None:
             break
@@ -72,7 +68,7 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
 
     return repo_urls, {"status": "success", "owner_type": owner_type}
 
-    
+
 metadata = Base.metadata
 
 t_all = Table(
@@ -266,7 +262,7 @@ class User(Base):
     tool_version = Column(String)
     data_source = Column(String)
     data_collection_date = Column(TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP"))
-    
+
     __tablename__ = 'users'
     __table_args__ = (
         UniqueConstraint('email', name='user-unique-email'),
@@ -334,8 +330,8 @@ class User(Base):
             return user
         except NoResultFound:
             return None
-        
-    @staticmethod 
+
+    @staticmethod
     def get_by_id(session, user_id: int):
 
         if not isinstance(user_id, int):
@@ -345,12 +341,12 @@ class User(Base):
             return user
         except NoResultFound:
             return None
-                
+
     @staticmethod
     def create_user(username: str, password: str, email: str, first_name:str, last_name:str, admin=False):
 
         if username is None or password is None or email is None or first_name is None or last_name is None:
-            return False, {"status": "Missing field"} 
+            return False, {"status": "Missing field"}
 
         with DatabaseSession(logger) as session:
 
@@ -372,7 +368,7 @@ class User(Base):
                     return False, {"status": "Failed to add default group for the user"}
 
                 return True, {"status": "Account successfully created"}
-            except AssertionError as exception_message: 
+            except AssertionError as exception_message:
                 return False, {"Error": f"{exception_message}."}
 
     def delete(self, session):
@@ -411,7 +407,7 @@ class User(Base):
         if not new_email:
             print("Need new email to update the email")
             return False, {"status": "Missing argument"}
-        
+
 
         existing_user = session.query(User).filter(User.email == new_email).first()
         if existing_user is not None:
@@ -455,7 +451,7 @@ class User(Base):
         return result
 
     def add_repo(self, group_name, repo_url):
-        
+
         from augur.tasks.github.util.github_task_session import GithubTaskSession
         from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
         try:
@@ -498,20 +494,20 @@ class User(Base):
             group_names = [group.name for group in user_groups]
         else:
             group_names = [group.name for group in user_groups if search.lower() in group.name.lower()]
-            
+
         group_names.sort(reverse = reversed)
 
         return group_names, {"status": "success"}
-    
+
     def get_groups_info(self, search=None, reversed=False, sort="group_name"):
         (groups, result) = self.get_groups()
 
         if search is not None:
             groups = [group for group in groups if search.lower() in group.name.lower()]
-        
+
         for group in groups:
             group.count = self.get_group_repo_count(group.name)[0]
-        
+
         def sorting_function(group):
             if sort == "group_name":
                 return group.name
@@ -519,7 +515,7 @@ class User(Base):
                 return group.count
             elif sort == "favorited":
                 return group.favorited
-        
+
         groups = sorted(groups, key=sorting_function, reverse=reversed)
 
         return groups, {"status": "success"}
@@ -613,7 +609,7 @@ class User(Base):
             return None, {"status": "Error when trying to get favorite groups"}
 
         return groups, {"status": "Success"}
-    
+
     @staticmethod
     def compute_hashsed_password(password):
         return generate_password_hash(password, method='pbkdf2:sha512', salt_length=32)
@@ -622,7 +618,7 @@ class User(Base):
 
 class UserGroup(Base):
     group_id = Column(BigInteger, primary_key=True)
-    user_id = Column(Integer, 
+    user_id = Column(Integer,
                     ForeignKey("augur_operations.users.user_id", name="user_group_user_id_fkey")
     )
     name = Column(String, nullable=False)
@@ -798,7 +794,7 @@ class UserRepo(Base):
 
         if not group_name and not group_id:
             return False, {"status": "Need group name or group id to add a repo"}
-        
+
         if from_org_list and not repo_type:
             return False, {"status": "Repo type must be passed if the repo is from an organization's list of repos"}
 
@@ -807,21 +803,21 @@ class UserRepo(Base):
             group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
             if group_id is None:
                 return False, {"status": "Invalid group name"}
-            
+
         if not from_org_list:
             result = Repo.is_valid_github_repo(session, url)
             if not result[0]:
                 return False, {"status": result[1]["status"], "repo_url": url}
-            
+
             repo_type = result[1]["repo_type"]
-            
+
         # if no repo_group_id is passed then assign the repo to the frontend repo group
         if repo_group_id is None:
 
             frontend_repo_group = session.query(RepoGroup).filter(RepoGroup.rg_name == FRONTEND_REPO_GROUP_NAME).first()
             if not frontend_repo_group:
-                return False, {"status": "Could not find repo group with name 'Frontend Repos'", "repo_url": url} 
-            
+                return False, {"status": "Could not find repo group with name 'Frontend Repos'", "repo_url": url}
+
             repo_group_id = frontend_repo_group.repo_group_id
 
 
@@ -878,7 +874,7 @@ class UserRepo(Base):
         group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
         if group_id is None:
             return False, {"status": "Invalid group name"}
-        
+
         # parse github owner url to get owner name
         owner = Repo.parse_github_org_url(url)
         if not owner:
@@ -889,10 +885,10 @@ class UserRepo(Base):
         # if the result is returns None or []
         if not result[0]:
             return False, result[1]
-        
+
         repos = result[0]
         type = result[1]["owner_type"]
-        
+
         # get repo group if it exists
         try:
             repo_group = RepoGroup.get_by_name(session, owner)
@@ -922,7 +918,7 @@ class UserRepo(Base):
             if not result[0]:
                 failed_repos.append(repo)
 
-        # Update repo group id to new org's repo group id if the repo 
+        # Update repo group id to new org's repo group id if the repo
         # is a part of the org and existed before org added
         update_stmt = (
             update(Repo)
@@ -932,7 +928,7 @@ class UserRepo(Base):
         )
         session.execute(update_stmt)
         session.commit()
-  
+
         failed_count = len(failed_repos)
         if failed_count > 0:
             # this should never happen because an org should never return invalid repos
@@ -960,11 +956,11 @@ class UserSessionToken(Base):
 
     @staticmethod
     def create(session, user_id, application_id, seconds_to_expire=86400):
-        import time 
+        import time
 
         user_session_token = secrets.token_hex()
         expiration = int(time.time()) + seconds_to_expire
-        
+
         user_session = UserSessionToken(token=user_session_token, user_id=user_id, application_id = application_id, expiration=expiration)
 
         session.add(user_session)
@@ -1000,11 +996,12 @@ class ClientApplication(Base):
     sessions = relationship("UserSessionToken")
     subscriptions = relationship("Subscription")
 
+    def __eq__(self, other):
+        return isinstance(other, ClientApplication) and str(self.id) == str(other.id)
+
     @staticmethod
     def get_by_id(session, client_id):
-
         return session.query(ClientApplication).filter(ClientApplication.id == client_id).first()
-
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
@@ -1151,7 +1148,7 @@ class CollectionStatus(Base):
 
     issue_pr_sum = Column(BigInteger)
     commit_sum = Column(BigInteger)
-    
+
     repo = relationship("Repo", back_populates="collection_status")
 
     @staticmethod
@@ -1174,7 +1171,7 @@ class CollectionStatus(Base):
             session.logger.error(
                     ''.join(traceback.format_exception(None, e, e.__traceback__)))
 
-        
+
         record = {
             "repo_id": repo_id,
             "issue_pr_sum": pr_issue_count,
