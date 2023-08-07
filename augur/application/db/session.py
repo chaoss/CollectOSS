@@ -217,7 +217,7 @@ class DatabaseSession(Session):
         while attempts < 10:
             try:
                 with self.engine.begin() as connection:
-                    return_data_tuples = connection.execute(stmnt).fetchall()
+                    return_data_tuples = connection.execute(stmnt)
                     break
             except OperationalError as e:
                 if isinstance(e.orig, DeadlockDetected):
