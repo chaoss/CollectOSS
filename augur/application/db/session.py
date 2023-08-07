@@ -174,7 +174,9 @@ class DatabaseSession(Session):
 
             while attempts < 10:
                 try:
-                    with EngineConnection(self.engine) as connection:
+                    #begin keyword is needed for sqlalchemy 2.x
+                    #this is because autocommit support was removed in 2.0
+                    with EngineConnection(self.engine).begin() as connection:
                         connection.execute(stmnt)
                         break
                 except OperationalError as e:
