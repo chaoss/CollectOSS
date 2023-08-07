@@ -36,7 +36,7 @@ def contributor_breadth_model() -> None:
     with engine.connect() as connection:
         result = connection.execute(cntrb_login_query)
 
-    current_cntrb_logins = [dict(row) for row in result]
+    current_cntrb_logins = [dict(row) for row in result.mappings()]
 
 
     cntrb_newest_events_query = s.sql.text("""

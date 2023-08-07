@@ -176,7 +176,7 @@ class DatabaseSession(Session):
                 try:
                     #begin keyword is needed for sqlalchemy 2.x
                     #this is because autocommit support was removed in 2.0
-                    with EngineConnection(self.engine).begin() as connection:
+                    with self.engine.begin() as connection:
                         connection.execute(stmnt)
                         break
                 except OperationalError as e:
@@ -193,14 +193,15 @@ class DatabaseSession(Session):
                     raise e
 
                 except Exception as e:
+                    #self.logger.info(e)
                     if(len(data) == 1):
                         raise e
                     else:
                         first_half = data[:len(data)//2]
                         second_half = data[len(data)//2:]
 
-                        self.insert_data(first_half, natural_keys, return_columns, string_fields, on_conflict_update)
-                        self.insert_data(second_half, natural_keys, return_columns, string_fields, on_conflict_update)
+                        self.insert_data(first_half, table,natural_keys, return_columns, string_fields, on_conflict_update)
+                        self.insert_data(second_half,table, natural_keys, return_columns, string_fields, on_conflict_update)
 
             else:
                 self.logger.error("Unable to insert data in 10 attempts")
@@ -215,7 +216,7 @@ class DatabaseSession(Session):
         # othewise it gets the requested return columns and returns them as a list of dicts
         while attempts < 10:
             try:
-                with EngineConnection(self.engine) as connection:
+                with self.engine.begin() as connection:
                     return_data_tuples = connection.execute(stmnt).fetchall()
                     break
             except OperationalError as e:
@@ -246,9 +247,11 @@ class DatabaseSession(Session):
         if deadlock_detected is True:
             self.logger.error("Made it through even though Deadlock was detected")
 
-        return_data = []
-        for data_tuple in return_data_tuples:
-            return_data.append(dict(data_tuple))
+        return_data = [dict(row) for row in return_data_tuples.mappings()]
+        
+        #no longer working in sqlalchemy 2.x
+        #for data_tuple in return_data_tuples:
+        #    return_data.append(dict(data_tuple))
 
         # using on confilict do nothing does not return the 
         # present values so this does gets the return values
