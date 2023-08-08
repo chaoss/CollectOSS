@@ -103,7 +103,7 @@ paths:
       responses:
         '200':
           description: OK
-          scema:
+          schema:
             items:
               properties:
                 base64_url:
