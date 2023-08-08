@@ -98,7 +98,7 @@ paths:
       - utility
   /repos/:id:
     get:
-      description: Get a downloaded repo by its ID in Augur.
+      description: Get a downloaded repo by its ID in Augur. The schema block below says it is an array, but it is not.
       operationId: Get Repo By ID
       responses:
         '200':
@@ -136,7 +136,7 @@ paths:
                 url:
                   description: 'URL of this repository, sans leading protocol. Example: github.com/3scale/3scale-operator-metadata'
                   type: string
-            type: object
+            type: array
       tags:
       - utility
   /owner/:owner/repo/:repo:
