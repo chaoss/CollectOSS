@@ -1,50 +1,102 @@
+:root {
+    --color-bg: #1A233A;
+    --color-bg-light: #272E48;
+    --color-bg-contrast: #646683;
+    --color-fg: white;
+    --color-fg-dark: #b0bdd6;
+    --color-fg-contrast: black;
+    --color-accent: #6f42c1;
+    --color-accent-dark: #6134b3;
+    --color-notice: #00ddff;
+    --color-notice-contrast: #006979;
+}
+
 body{
     margin-top:20px;
-    color: #bcd0f7;
-    background: #1A233A;
+    background-color: var(--color-bg);
+    color: var(--color-fg);
 }
+
 h1 {
     font-size: 2rem;
 }
+
 .sidebar .sidebar-top {
     margin: 0 0 1rem 0;
     padding-bottom: 1rem;
     text-align: center;
 }
+
 .sidebar .sidebar-top .brand-logo {
     margin: 0 0 1rem 0;
 }
+
 .sidebar .sidebar-top .brand-logo img {
     height: 90px;
     -webkit-border-radius: 100px;
     -moz-border-radius: 100px;
     border-radius: 100px;
 }
+
 .sidebar .about {
     margin: 1rem 0 0 0;
     font-size: 0.8rem;
     text-align: center;
 }
+
+.subtitle {
+    color: var(--color-fg-dark);
+    margin-bottom: .5rem;
+    margin-left: 15px;
+}
+
+.no-margin-bottom {
+    margin-bottom: 0;
+}
+
 .card {
-    background: #272E48;
+    background: var(--color-bg-light);
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
     border-radius: 5px;
     border: 0;
     margin-bottom: 1rem;
 }
+
 .form-control {
     border: 1px solid #596280;
     -webkit-border-radius: 2px;
     -moz-border-radius: 2px;
     border-radius: 2px;
     font-size: .825rem;
-    background: #1A233A;
-    color: #bcd0f7;
+    background: var(--color-bg-light);
+    color: var(--color-fg);
 }
+
+.input-textbox {
+    color: var(--color-fg);
+    background-color: var(--color-bg);
+    border-color: var(--color-accent-dark);
+}
+
+.input-textbox::placeholder {
+    color: var(--color-fg-dark);
+}
+
+.input-textbox:focus {
+    color: var(--color-fg);
+    background-color: var(--color-bg);
+    border-color: var(--color-accent-dark);
+}
+
+.input-textbox:focus::placeholder {
+    color: var(--color-fg-dark);
+}
+
 .modal-content {
-    color: black;
+    color: var(--color-fg-contrast);
 }
+
 .editor-container {
     height: 300px !important;
 }

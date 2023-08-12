@@ -49,33 +49,40 @@ else
   export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 fi
 
-if [ -d "$HOME/scorecard" ]; then
-  echo " Scorecard already exists, skipping cloning ..."
-  echo " Updating Scorecard ... "
-  rm -rf $HOME/scorecard 
-  echo "Cloning OSSF Scorecard to generate scorecard data ..."
-  git clone https://github.com/ossf/scorecard $HOME/scorecard
-  cd $HOME/scorecard
-  CURRENT_DIR=$PWD;
-  cd $CURRENT_DIR
-  cd $HOME/scorecard;
-  go build;
-  echo "scorecard build done"
-  cd $CURRENT_DIR
-  #CURRENT_DIR=$PWD;
-  #cd $HOME/scorecard; 
-  #git pull;
-  #go mod tidy; 
-  #go build; 
-  #echo "Scorecard build done."
-  #cd $CURRENT_DIR
+SCORECARD_DIR="$HOME/scorecard"
+
+# read -r -p "What directory would you like to use for OSSF Scorecard? [$HOME/scorecard] " response
+# TODO: scorecard directory must be configurable
+
+if [ -d "$SCORECARD_DIR" ]; then
+  echo " Scorecard directory already exists, would you like to skip cloning and building?"
+  echo " Only do this if Scorecard has been cloned and built in this directory before."
+  read -r -p "If you choose NO (the default), Everything in $SCORECARD_DIR will be DELETED [y/N]: " response
+  case "$response" in
+    [yY][eE][sS]|[yY])
+      echo " Skipping scorecard build"
+      ;;
+    *)
+      echo " Cloning Scorecard ... "
+      rm -rf $SCORECARD_DIR 
+      echo "Cloning OSSF Scorecard to generate scorecard data ..."
+      git clone https://github.com/ossf/scorecard $SCORECARD_DIR
+      cd $SCORECARD_DIR
+      CURRENT_DIR=$PWD;
+      cd $CURRENT_DIR
+      cd $SCORECARD_DIR;
+      go build;
+      echo "scorecard build done"
+      cd $CURRENT_DIR
+      ;;
+  esac
 else
   echo "Cloning OSSF Scorecard to generate scorecard data ..."
-  git clone https://github.com/ossf/scorecard $HOME/scorecard
-  cd $HOME/scorecard
+  git clone https://github.com/ossf/scorecard $SCORECARD_DIR
+  cd $SCORECARD_DIR
   CURRENT_DIR=$PWD;
   cd $CURRENT_DIR
-  cd $HOME/scorecard;
+  cd $SCORECARD_DIR;
   go build;
   echo "scorecard build done"
   cd $CURRENT_DIR
