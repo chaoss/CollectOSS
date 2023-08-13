@@ -29,7 +29,7 @@ def page_not_found(error):
     if AUGUR_API_VERSION in str(request.path):
         return jsonify({"status": "Not Found"}), 404
 
-    return render_template('index.j2', title='404', api_url=getSetting('serving')), 404
+    return render_template('index.j2', title='404'), 404
 
 @app.errorhandler(405)
 def unsupported_method(error):
