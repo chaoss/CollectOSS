@@ -2,37 +2,25 @@
 """
 Creates routes for user functionality
 """
+from augur.api.routes import AUGUR_API_VERSION
 
 import logging
-import requests
-import os
-import base64
-import time
 import secrets
-import pandas as pd
-from flask import request, Response, jsonify, session
+from flask import request, jsonify, session
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash
-from sqlalchemy.sql import text
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.exc import NoResultFound
 from augur.application.db.session import DatabaseSession
-from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.util.repo_load_controller import RepoLoadController
 from augur.api.util import api_key_required
 from augur.api.util import ssl_required
 
-from augur.application.db.models import User, UserRepo, UserGroup, UserSessionToken, ClientApplication, RefreshToken
-from augur.application.config import get_development_flag
+from augur.application.db.models import User, UserSessionToken, RefreshToken
 from augur.tasks.init.redis_connection import redis_connection as redis
 from ..server import app, engine
 
 logger = logging.getLogger(__name__)
 current_user: User = current_user
 Session = sessionmaker(bind=engine)
-
-from augur.api.routes import AUGUR_API_VERSION
-
 
 @app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
 @ssl_required
@@ -51,7 +39,7 @@ def validate_user():
         return jsonify({"status": "Invalid username"})
 
     checkPassword = check_password_hash(user.login_hashword, password)
-    if checkPassword == False:
+    if not checkPassword:
         return jsonify({"status": "Invalid password"})
 
 
@@ -89,9 +77,9 @@ def generate_session(application):
     code = request.args.get("code") or request.form.get("code")
     if not code:
         return jsonify({"status": "Missing argument: code"}), 400
-    
+
     grant_type = request.args.get("grant_type") or request.form.get("grant_type")
-    
+
     if "code" not in grant_type:
         return jsonify({"status": "Invalid grant type"})
 
@@ -131,7 +119,7 @@ def refresh_session(application):
 
     if not refresh_token_str:
         return jsonify({"status": "Missing argument: refresh_token"}), 400
-    
+
     if request.args.get("grant_type") != "refresh_token":
         return jsonify({"status": "Invalid grant type"})
 
@@ -139,17 +127,17 @@ def refresh_session(application):
 
         refresh_token = session.query(RefreshToken).filter(RefreshToken.id == refresh_token_str).first()
         if not refresh_token:
-            return jsonify({"status": "Invalid refresh token"})
+            return jsonify({"status": "Invalid refresh token"}), 400
 
         if refresh_token.user_session.application != application:
-            return jsonify({"status": "Invalid application"})
+            return jsonify({"status": "Invalid application"}), 400
 
         user_session = refresh_token.user_session
         user = user_session.user
 
         new_user_session_token = UserSessionToken.create(session, user.user_id, user_session.application.id).token
         new_refresh_token_id = RefreshToken.create(session, new_user_session_token).id
-        
+
         session.delete(refresh_token)
         session.delete(user_session)
         session.commit()
@@ -327,11 +315,11 @@ def group_repos():
 
     result_dict = result[1]
     if result[0] is not None:
-        
+
         for repo in result[0]:
             repo["base64_url"] = str(repo["base64_url"].decode())
 
-        result_dict.update({"repos": result[0]})        
+        result_dict.update({"repos": result[0]})
 
     return jsonify(result_dict)
 
@@ -436,7 +424,7 @@ def toggle_user_group_favorite():
     Returns
     -------
     dict
-        A dictionairy with key of 'status' that indicates the success or failure of the operation
+        A dictionary with key of 'status' that indicates the success or failure of the operation
     """
     group_name = request.args.get("group_name")
 

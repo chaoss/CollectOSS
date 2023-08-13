@@ -39,10 +39,8 @@
     {% include 'navbar.j2' %}
     <!-- body-content -->
     <div class="content">
-        {% if invalid %}
-        <h1>Invalid API URL</h1>
-        <p>The API URL [{{ api_url or 'unspecified'}}] is invalid</p>
-        {% elif body %}
+        {% if body %}
+        {# Load the provided module #}
         {% include '%s.j2' % body ignore missing %}
         {% else %}
         <h1>404 - Page Not Found</h1>
@@ -54,7 +52,6 @@
         <div class="d-flex flex-fill align-content-between flex-wrap">
             <div class="order-1 flex-grow-1">
                 <p style="color: white;">This is a beta build of Augur-View. Experimental frontend features may not be fully functional.</p>
-                {# <p style="color: white;">Currently serving: {{api_url or 'api_url unspecified'}}</p> #}
             </div>
             <div class="order-2">
                 <a href="https://chaoss.community/">

@@ -11,9 +11,9 @@ class ListConverter(BaseConverter):
 
 class BoolConverter(BaseConverter):
     def to_python(self, value):
-        if value == "False":
+        if value.lower() in ["false", "f", "n", "0"]:
             return False
-        elif value == "True":
+        elif value.lower() in ["true", "t", "y", "1"]:
             return True
 
     def to_url(self, value):
