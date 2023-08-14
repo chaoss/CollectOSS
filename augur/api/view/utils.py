@@ -74,7 +74,7 @@ def getSetting(key, section = "View"):
 
 loadSettings()
 
-version_check(settings)
+#version_check(settings)
 
 """ ----------------------------------------------------------------
 """
