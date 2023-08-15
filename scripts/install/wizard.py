@@ -221,9 +221,7 @@ def first_time(setup_key, port = 5000):
         update_complete.wait()
     except KeyboardInterrupt as e:
         # Shutdown gracefully on interrupt and abort relaunch
-        global autorestart
-        if autorestart:
-            return True
+        print("Shutting down on keyboard interrupt")
     except Exception as e:
         # On an unexpected exception, reraise after shutting down
         raise e
@@ -233,11 +231,8 @@ def first_time(setup_key, port = 5000):
 
 if __name__ == "__main__":
     import sys
-    autorestart = False
-    if len(sys.argv) > 1:
-        autorestart = True
     port = input("Enter the port to use for the configuration interface [8075]: ") or "8075"
-    setup_key = "5" #token_hex()
+    setup_key = token_hex()
     print("-" * 40)
     print("The configuration interface is starting up")
     print("You'll need the following key to unlock the interface:", setup_key)
