@@ -7,6 +7,8 @@ import click
 import json
 import logging
 
+from pathlib import Path
+
 from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
@@ -32,7 +34,7 @@ def cli():
 @test_connection
 @test_db_connection
 def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_conn_string, rabbitmq_conn_string):
-
+    print(__file__, ROOT_AUGUR_DIRECTORY, "\n", Path.cwd())
     if not github_api_key:
 
         github_api_key = str(input("Please enter a valid github api key: "))
@@ -155,13 +157,19 @@ def add_section(section_name, file):
 @click.option('--section', required=True)
 @click.option('--setting', required=True)
 @click.option('--value', required=True)
-@click.option('--data-type', required=True)
+@click.option('--data-type')
 @test_connection
 @test_db_connection
 def config_set(section, setting, value, data_type):
 
     with DatabaseSession(logger) as session:
         config = AugurConfig(logger, session)
+        
+        if not data_type:
+            result = session.query(Config).filter(Config.section_name == section, Config.setting_name == setting).all()
+            if not result:
+                return click.echo("You must specify a data-type if the setting does not already exist")
+            data_type = result[0].type
 
         if data_type not in config.accepted_types:
             print(f"Error invalid type for config. Please use one of these types: {config.accepted_types}")
@@ -208,6 +216,22 @@ def config_get(section, setting):
 
             else:
                 print(f"Error: {section} section not found in config")
+
+@cli.command('get_all_json')
+def config_get_all_json():
+    data = {}
+    try:
+        with DatabaseSession(logger) as session:
+            sections = session.query(Config.section_name).distinct().all()
+            for section in sections:
+                data[section[0]] = {}
+
+            for row in session.query(Config).all():
+                data[row.section_name][row.setting_name] = row.value
+    except:
+        pass
+    
+    print(json.dumps(data, indent=4))
 
 @cli.command('clear')
 @test_connection

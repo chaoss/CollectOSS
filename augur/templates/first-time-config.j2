@@ -34,12 +34,21 @@
                                 <h1 class="mb-2 text-primary">First Time Setup</h1>
                                 <p>Take a moment to create or update the configuration for your instance.</p>
                                 <br>
-                                <p>Default values are shown. When you are done updating, click the continue button to
-                                    continue to the primary configuration setup</p>
+                                <p>Default values are shown. When you are done updating, click the restart button to
+                                    save the settings and bring the primary server up, or click the exit button to
+                                    save the settings and quit the startup wizard.</p>
                                 <p>Double-click an empty input field to automatically populate it with the placeholder
                                     value</p>
+                                <p>The full config currently in the database (if it exists) is hidden by default. Click
+                                    the button below to reveal it. The full config cannot be updated via this form,
+                                    but you can make changes to the config after installation. Some values may be
+                                    overwritten during initialization (the next step). If you wish to retain the below
+                                    settings, you can download a copy below.</p>
+                                <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#settings-form" aria-expanded="false" aria-controls="settings-form">
+                                    Show DB Config
+                                </button>
                             </div>
-
                         </div>
                     </div>
                     <div class="card-footer text-muted">
@@ -55,7 +64,46 @@
             <div class="col-xl-9 col-lg-9 col-md-12 col-sm-12 col-12 mb-3">
                 <div class="card h-100">
                     <div class="card-body">
-                        <form id="settings-form">
+                        <form id="essentials-form">
+                            <div class="row mb-3">
+                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 mb-2">
+                                    <h6 class="text-primary no-margin-bottom">{{ essential_config.title }}</h6>
+                                    <small class="subtitle">{{ essential_config.subtitle }}</small>
+                                </div>
+                                {% for setting in essential_config.settings %}
+                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                                    <div class="form-group">
+                                        <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
+                                        <input type="text" class="form-control input-textbox" id="{{ setting.id }}"
+                                            placeholder="{{ setting.value }}">
+                                        <div class="form-text mb-1">{{ setting.description }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="row mb-3">
+                                <div class="d-flex justify-content-end" style="column-gap: 10px;">
+                                    <button type="submit" id="Restart" name="submit" class="btn btn-primary">Restart</button>
+                                    <button type="submit" id="Exit" name="submit" class="btn btn-primary">Exit</button>
+                                </div>
+                            </div>
+                        </form>
+                        {% if not sections %}
+                            <div id="settings-form" class="collapse">
+                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                    <h6 class="mb-3 text-primary">Full Database Config</h6>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="d-flex justify-content-start">
+                                        <p>No database config exists</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                        <form id="settings-form" class="collapse">
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                <h6 class="mb-3 text-primary">Full Database Config</h6>
+                            </div>
                             {% for section in sections %}
                             <div class="row mb-3">
                                 <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 mb-2">
@@ -78,62 +126,24 @@
                                 {% endfor %}
                             </div>
                             {% endfor %}
-                            <div class="row">
+                            <div class="row mb-3">
                                 <div class="d-flex justify-content-end">
-                                    <button type="submit" id="submit" name="submit"
-                                        class="btn btn-primary">Apply</button>
+                                    <button type="submit" id="submit" name="submit" class="btn btn-primary">Download Config</button>
                                 </div>
                             </div>
                         </form>
-                        <div class="row mb-3">
-                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                <h6 class="mb-3 text-primary">Test Database Settings</h6>
-                            </div>
-                            <div class="d-flex">
-                                <div class="input-group editor-container">
-                                    <div id="db-output" class="form-control"></div>
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-start" style="margin-top: 10px; column-gap: 10px;">
-                                <button id="dbtest_button" name="dbtest_button"
-                                    class="btn btn-primary">Check connection</button>
-                                <button id="dbversions_button" name="dbversions_button"
-                                    class="btn btn-primary">List Revisions</button>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                <h6 class="mb-3 text-primary">Configuration</h6>
-                            </div>
-                            <div class="d-flex justify-content-start" style="margin-top: 10px; column-gap: 10px;">
-                                <p>Once you've verified and/or applied your database connection settings, click here to continue to the configuration page.</p>
-                            </div>
-                            <div class="d-flex justify-content-end">
-                                <a href="{{ url_for('config')}}"
-                                class="btn btn-primary" onclick="loadingModal.show()">Continue</a>
-                            </div>
-                        </div>
-                        {# <div class="row mb-3">
-                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                <h6 class="mb-3 text-primary">Gunicorn Settings</h6>
-                            </div>
-                            <div class="d-flex">
-                                <div class="input-group editor-container">
-                                    <div id="gunicorn-settings" class="form-control" aria-label="gunicorn config input">
-                                        {{ gunicorn_placeholder }}</div>
-                                </div>
-                            </div>
-                        </div> #}
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    </div>
     <div class="modal fade" id="error-modal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Error</h5>
+                    <h5 id="modal-title" class="modal-title">Error</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -161,44 +171,6 @@
     <script>
         var loadingModal = new bootstrap.Modal(document.getElementById('loading-modal'));
 
-        // set up the code editor
-        var editor = ace.edit("db-output");
-        editor.setTheme("ace/theme/one_dark");
-        editor.session.setMode("ace/mode/text");
-        editor.setOptions({
-            enableBasicAutocompletion: true,
-            enableSnippets: true,
-            showPrintMargin: false,
-            readOnly: true
-        });
-
-        async function test_db(event) {
-            event.preventDefault();
-            editor.session.setValue("Loading...");
-            var result = await fetch("{{ url_for("test_db") }}");
-            var text = await result.text();
-            if (result.status == 200) {
-                result = await fetch("{{ url_for("version_db") }}");
-                text += "\nDatabase version: " + await result.text();
-            }
-            editor.session.setValue(text)
-        }
-
-        async function versions_db(event) {
-            event.preventDefault();
-            editor.session.setValue("Loading...");
-            var result = await fetch("{{ url_for("versions_db") }}");
-            var text = await result.text();
-            editor.session.setValue(text)
-        }
-
-        test_db_btn = document.getElementById("dbtest_button");
-        test_db_btn.addEventListener("click", test_db);
-
-        versions_db_btn = document.getElementById("dbversions_button");
-        versions_db_btn.addEventListener("click", versions_db);
-
-        
         function submit_form(event) {
             // Stop the form from submitting so we can execute a request instead
             event.preventDefault();
@@ -216,46 +188,34 @@
             elements.forEach((element) => {
                 if (element.value != "") {
                     config[element.id] = element.value;
+                } else {
+                    config[element.id] = element.placeholder;
                 }
             });
 
-            {# // Submit the gunicorn configuration to the server
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", "{{ url_for('update_gunicorn') }}", true);
-            xhr.setRequestHeader('Content-Type', 'text/plain');
-            xhr.send(editor.getValue()); #}
-
             // Submit the form dictionary to the server
             xhr = new XMLHttpRequest();
-            xhr.open("POST", "{{ url_for('update_db') }}", true);
+            xhr.open("POST", "{{ url_for('update_config_db') }}", true);
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify(config));
 
-            // Check the response
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState == XMLHttpRequest.DONE) {
-                    if (xhr.status != 200) {
-                        if (xhr.status) {
-                            // The first time setup server returned an error
-                            displayError(xhr.responseText);
-                        } else {
-                            // The first time setup server did not respond
-                            displayError("The first time setup server is unreachable");
-                        }
-                    } else {
-                        // Display a loading indicator while starting up the production server
-                        {# window.location.replace(window.location); #}
-                        {# window.location.reload; #}
-                        loadingModal.show();
-                        window.location.href = window.location.href;
-                        {# waitToReload(xhr.responseText); #}
-                    }
-                }
+            var url;
+            if(event.submitter.id == "Exit") {
+                url = "{{ url_for('shutdown') }}";
+            } else {
+                url = "{{ url_for('shutdown', continue = 'True') }}";
             }
+
+            fetch(url).then(async () => {
+                modal = document.getElementById("modal-title");
+                modal.innerHTML = "Finished"
+                displayError("The first time setup server has been shut down.")
+            })
         }
 
-       
+
         async function waitToReload(new_url) {
+            console.log("Navigating to " + new_url)
             // Shut down the temp server and wait for primary to initialize
             fetch("{{ url_for('shutdown') }}").then(async () => {
                 // The response from the config endpoint is the new approot
@@ -291,9 +251,15 @@
             });
         }
 
+        const essentials = document.getElementById("essentials-form");
+        essentials.addEventListener("submit", submit_form);
+
         // Have the settings-form call submit_form when submitted
-        const loginForm = document.getElementById("settings-form");
-        loginForm.addEventListener("submit", submit_form);
+        const form = document.getElementById("settings-form");
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            window.open("{{ url_for('get_config_db')}}", "_blank");
+        });
     </script>
 </body>
 

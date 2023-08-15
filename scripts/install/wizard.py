@@ -7,12 +7,14 @@ from secrets import token_hex
 from functools import wraps
 from pathlib import Path
 
-import threading, json, subprocess
+import threading, json, subprocess, re
 
 top = Path.cwd()
 template_dir = top / "augur/templates/"
 static_dir = top / "augur/static/"
 dbfile = top / "db.config.json"
+
+config_script = top / "scripts/install/config.sh"
 
 def requires_key(func):
     global app
@@ -25,6 +27,11 @@ def requires_key(func):
         return func(*args, **kwargs)
     
     return wrapper
+
+def get_db_config() -> dict[str, dict[str, str]]:
+    out = subprocess.Popen("augur config get_all_json".split(), text=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    result = out.communicate()[0]
+    return json.loads(result)
 
 def render_section(template, **kwargs):
     global app
@@ -86,7 +93,46 @@ def first_time(setup_key, port = 5000):
             return render_template("first-time-key.j2")
         
         session["key"] = key
-        return render_template("first-time.j2", sections = sections, version = __version__, gunicorn_placeholder = "")
+        return render_template("first-time.j2", sections = sections, version = __version__)
+    
+    @app.route("/config")
+    @requires_key
+    def config():
+        sections = []
+        config = get_db_config()
+        facade_dir = ""
+        
+        for section_name, section_dict in config.items():
+            temp_section = {"title": section_name, "settings": []}
+            for setting_name, value in section_dict.items():
+                temp_section["settings"].append({
+                    "id": f"{section_name}.{setting_name}",
+                    "display_name": setting_name.replace("_", " ").title(),
+                    "value": value,
+                    "description": ""
+                })
+                
+                if section_name == "Facade" and setting_name == "repo_directory":
+                    facade_dir = value
+                    
+            sections.append(temp_section)
+
+        credentials = {}
+        if facade_dir:
+            try:
+                credential_file = Path(facade_dir) / ".git-credentials"
+                for line in credential_file.read_text().splitlines():
+                    match = re.match("https://(.*?):(.*?)@(.*?)\\.\\w+", line)
+                    groups = match.groups()
+                    if groups[2] not in credentials:
+                        credentials[groups[2]] = groups[0]
+            except:
+                credentials.clear()
+                
+        gh_name, gl_name = credentials.get("github"), credentials.get("gitlab")
+        essential_config = json.loads(render_template("json/essential_config.json.j2", conf=config, gh_name=gh_name, gl_name=gl_name))
+
+        return render_template("first-time-config.j2", essential_config=essential_config, sections = sections, version = __version__)
     
     @app.route("/db/test")
     @requires_key
@@ -113,41 +159,44 @@ def first_time(setup_key, port = 5000):
         result = out.communicate()[0]
         return result or "Error"
     
-    @app.route("/db/config/load")
+    @app.route("/db/config/load", methods=["POST"])
     @requires_key
-    def config_db():
-        # try:
-        dbstring = env["AUGUR_DB"] or get_db_string(dbconf)
-        conn = create_engine(dbstring)
-        meta = MetaData()
-        meta.reflect(bind=conn, schema="augur_operations")
-        config: Table = meta.tables["augur_operations.config"]
-        session = Session(conn)
-        result = session.query(config).all()
-        desired = []
-        for row in result:
-            if row[2] in ["github_api_key", "gitlab_api_key", "repo_directory", "connection_string"]:
-                print(row)
-                desired.append(row)
+    def update_config_db():
+        data = request.get_json()
         
-        session.close()
-        return "Success!"
+        result = subprocess.Popen("augur db create-schema".split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result.wait()
+
+        for key, value in data.items():
+            env[key] = value
+        result = subprocess.Popen(f"{config_script}", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            result.wait(10)
+        except:
+            return "Timeout reached waiting for database update to complete", 500
+
+        return "https://www.google.com"
     
-    @app.route("/db/update")
+    @app.route("/db/config/download")
+    @requires_key
+    def get_config_db():
+        out = subprocess.Popen("augur config get_all_json".split(), text=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        result = out.communicate()[0]
+        return Response(result, 
+            mimetype='application/json',
+            headers={'Content-Disposition':'attachment;filename=config.json'})
+    
+    @app.route("/db/update", methods=["GET", "POST"])
     @requires_key
     def update_db():
         if dbstring := request.args.get("dbstring"):
             env["AUGUR_DB"] = dbstring
         else:
-            dbconf = {
-                "user": request.args.get("user"), 
-                "password": request.args.get("password"), 
-                "host": request.args.get("host"), 
-                "port": request.args.get("port"), 
-                "database_name": request.args.get("database_name")
-            }
-        
+            data = request.get_json()
+            dbconf.update(data)
             json.dump(dbconf, dbfile.open("w"), indent=4)
+            sections.clear()
+            sections.append(render_section("db.json", dbconf=dbconf, subtitle="Updated config"))
         
         return redirect(url_for("root"))
 
@@ -155,6 +204,8 @@ def first_time(setup_key, port = 5000):
     @requires_key
     def shutdown():
         # Notify the primary thread that the temp server is going down
+        global do_continue
+        do_continue = request.args.get("continue")
         update_complete.acquire()
         update_complete.notify_all()
         update_complete.release()
@@ -193,9 +244,13 @@ if __name__ == "__main__":
     print("If you're hosting Augur locally, you can open this link to access the interface:")
     print(f"http://127.0.0.1:{port}?key={setup_key}")
     
-    while first_time(setup_key, port):
-        global app
-        del app
+    first_time(setup_key, port)
+    
+    print("First time setup exiting")
+    
+    global do_continue
+    if do_continue:
+        augur = subprocess.Popen("nohup augur backend start --disable-collection".split())
 
     #     if not settings:
     #         # First time setup was aborted, so just quit
