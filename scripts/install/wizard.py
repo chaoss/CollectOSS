@@ -48,7 +48,7 @@ def first_time(setup_key, port = 5000):
     env = Environment()
     global app
     app = Flask(__name__, static_folder=static_dir, template_folder=template_dir)
-    app.secret_key = setup_key
+    app.secret_key = token_hex()
     sections = []
     
     dbconf = {
@@ -233,16 +233,20 @@ def first_time(setup_key, port = 5000):
 
 if __name__ == "__main__":
     import sys
-    autorestart = False
     if len(sys.argv) > 1:
-        autorestart = True
-    port = input("Enter the port to use for the configuration interface [8075]: ") or "8075"
-    setup_key = "5" #token_hex()
-    print("-" * 40)
-    print("The configuration interface is starting up")
-    print("You'll need the following key to unlock the interface:", setup_key)
-    print("If you're hosting Augur locally, you can open this link to access the interface:")
-    print(f"http://127.0.0.1:{port}?key={setup_key}")
+        port = sys.argv[1]
+    else:
+        port = input("Enter the port to use for the configuration interface [8075]: ") or "8075"
+    global setup_key
+    if len(sys.argv) < 3:
+        setup_key = token_hex()
+        print("-" * 40)
+        print("The configuration interface is starting up")
+        print("You'll need the following key to unlock the interface:", setup_key)
+        print("If you're hosting Augur locally, you can open this link to access the interface:")
+        print(f"http://127.0.0.1:{port}?key={setup_key}")
+    else:
+        setup_key = None
     
     first_time(setup_key, port)
     
@@ -250,29 +254,4 @@ if __name__ == "__main__":
     
     global do_continue
     if do_continue:
-        augur = subprocess.Popen("nohup augur backend start --disable-collection".split())
-
-    #     if not settings:
-    #         # First time setup was aborted, so just quit
-    #         os._exit(1)
-
-    #     with open(config_location, "w") as config_file:
-    #         yaml.dump(settings, config_file)
-
-    # if not env["DEVELOPMENT"] and not gunicorn_location.is_file():
-    #     with open(gunicorn_location, "w") as gunicorn_py:
-    #         gunicorn_py.write(gunicorn_conf)
-
-    # if env["DEVELOPMENT"]:
-    #     from augur_view import app
-    #     server = ServerThread(app, port = server_port, address = host_address, reraise = True)
-    #     server.start()
-    # else:
-    #     server = subprocess.Popen(["gunicorn", "-c", str(gunicorn_location), "-b", f"{host_address}:{server_port}", "augur_view:app"])
-
-    # try:
-    #     server.wait()
-    # except KeyboardInterrupt:
-    #     # Shutdown gracefully on interrupt
-    #     server.terminate()
-    #     print("\nShutting down gracefully")
+        augur = subprocess.Popen("nohup augur backend start".split())

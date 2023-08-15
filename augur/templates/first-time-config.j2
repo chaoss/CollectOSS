@@ -222,9 +222,9 @@
                         // Display a loading indicator while starting up the production server
                         fetch(url).then(async () => {
                             modal = document.getElementById("modal-title");
-                            modal.innerHTML = "Finished"
-                            displayError("The first time setup server has been shut down.")
-                        })
+                            modal.innerHTML = "Finished";
+                            displayError("The first time setup server has been shut down.");
+                        });
                     }
                 }
             }

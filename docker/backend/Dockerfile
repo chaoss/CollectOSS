@@ -1,5 +1,7 @@
 #SPDX-License-Identifier: MIT
-FROM python:3.8.11-slim-buster
+ARG target
+
+FROM python:3.10-bullseye AS base
 
 LABEL maintainer="outdoors@acm.org"
 LABEL version="0.51.1"
@@ -41,6 +43,12 @@ RUN ./scripts/docker/install-go.sh
 
 RUN mkdir -p repos/ logs/ /augur/facade/
 
+FROM base AS install-default
 COPY ./docker/backend/entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT /entrypoint.sh
+
+FROM base AS install-graphical
+COPY ./docker/backend/graphical.sh /
+RUN chmod +x /graphical.sh
+ENTRYPOINT /graphical
