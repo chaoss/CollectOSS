@@ -2,10 +2,10 @@ name: Build Docker images
 on:
   push:
     branches:
-      - main
+      - startup-wizard
   pull_request:
     branches:
-      - main
+      - startup-wizard
   release:
     types:
       - published
@@ -21,7 +21,7 @@ jobs:
     name: Build image
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main
+      - name: Checkout startup-wizard
         uses: actions/checkout@v2
       - name: Run the build
         run: |
