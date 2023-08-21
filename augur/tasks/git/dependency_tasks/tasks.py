@@ -6,6 +6,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask, AugurCoreRepoCollectionTask
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
+from augur.application.config import AugurConfig
 
 
 @celery.task(base=AugurFacadeRepoCollectionTask)
