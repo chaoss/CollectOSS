@@ -26,6 +26,9 @@ def process_dependency_metrics(repo_git):
         config = AugurConfig(session.logger, session)
     
         absolute_repo_path = get_absolute_repo_path(config.get_section("Facade")['repo_directory'],repo.repo_id,repo.repo_path,repo.repo_name)
+
+        session.logger.debug(f"This is the deps model repo: {repo_git}.")
+
         generate_deps_data(session,repo.repo_id,absolute_repo_path)
 
 
