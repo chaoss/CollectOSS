@@ -30,4 +30,27 @@ def value_model(session,repo_id, path):
     session.logger.info('adding scc data to database... ')
     session.logger.debug(f"output: {required_output}")
 
+    to_insert = []
+    for record in required_output:
+        for file in record['Files']:
+            repo_labor = {
+                'repo_id': repo_id,
+                'rl_analysis_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                'programming_language': file['Language'],
+                'file_path': file['Location'],
+                'file_name': file['Filename'],
+                'total_lines': file['Lines'],
+                'code_lines': file['Code'],
+                'comment_lines': file['Comment'],
+                'blank_lines': file['Blank'],
+                'code_complexity': file['Complexity'],
+                'tool_source': 'value_model',
+                'data_source': 'Git',
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+
+            to_insert.append(repo_labor)
     
+    session.insert_data(to_insert, RepoLabor, ["repo_id", "rl_analysis_date", "file_path", "file_name" ])
+
+    session.logger.info(f"Done generating scc data for repo {repo_id} from path {path}")
