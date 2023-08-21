@@ -14,7 +14,7 @@ from augur.application.db.util import execute_session_query
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
 
 def generate_deps_data(session, repo_id, path):
-        """Runs scc on repo and stores data in database
+        """Run dependency logic on repo and stores data in database
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
