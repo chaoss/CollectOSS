@@ -12,7 +12,6 @@ from augur.application.config import AugurConfig
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
-from augut.tasks.git.utilitymethods import get_absolute_repo_path
 
 def generate_deps_data(session, repo_id, path):
         """Run dependency logic on repo and stores data in database

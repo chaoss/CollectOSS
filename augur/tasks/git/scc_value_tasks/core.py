@@ -15,8 +15,11 @@ from augur.application.db.util import execute_session_query
 def value_model(session,repo_id, path):
     """Runs scc on repo and stores data in database
         :param repo_id: Repository ID
-        :param path: URL path of the Repostiory
+        :param path: absolute file path of the Repostiory
     """
 
     session.logger.info('Generating value data for repo')
     session.logger.info(f"Repo ID: {repo_id}, Path: {path}")
+    session.logger.info('Running scc...')
+
+    
