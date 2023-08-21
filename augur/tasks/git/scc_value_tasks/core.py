@@ -22,4 +22,19 @@ def value_model(session,repo_id, path):
     session.logger.info(f"Repo ID: {repo_id}, Path: {path}")
     session.logger.info('Running scc...')
 
+    path_to_scc = os.environ['HOME'] + '/scc'
+
+    p = subprocess.run(['./scc', '-f','json', path], cwd=path_to_scc, capture_output=True, text=True, timeout=None)
+    session.logger.info('scc has completed... ')
+    output = p.stdout
+
+    try:
+        required_data = json.loads(output)
+    except json.decoder.JSONDecodeError as e:
+        session.logger.error(f"Could not parse required output! \n output: {output} \n Error: {e}")
+        return
+    
+    session.logger.info('adding scc data to database... ')
+    session.logger.debug(f"output: {required_output}")
+
     
