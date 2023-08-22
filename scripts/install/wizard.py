@@ -2,19 +2,33 @@ from flask import Flask, request, session, render_template, url_for, redirect, s
 from sqlalchemy import MetaData, Table, create_engine
 from bootstrap import ServerThread, Environment
 from sqlalchemy.orm import Session
-from metadata import __version__
 from secrets import token_hex
 from functools import wraps
 from pathlib import Path
 
-import threading, json, subprocess, re
+import threading, json, subprocess, re, importlib.util, sys
 
+env = Environment()
+
+# Assuming the script is run from the root project directory
+# (IE: where the makefile is located)
 top = Path.cwd()
 template_dir = top / "augur/templates/"
 static_dir = top / "augur/static/"
 dbfile = top / "db.config.json"
 
 config_script = top / "scripts/install/config.sh"
+
+print(top)
+
+if "metadata" not in sys.modules:
+    # Docker build changes module hierarchy for some reason
+    spec = importlib.util.spec_from_file_location("metadata", top / "metadata.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["metadata"] = module
+    spec.loader.exec_module(module)
+
+from metadata import __version__
 
 def requires_key(func):
     global app
@@ -45,7 +59,6 @@ def first_time(setup_key, port = 5000):
     """
     Run first time setup for this instance.
     """
-    env = Environment()
     global app
     app = Flask(__name__, static_folder=static_dir, template_folder=template_dir)
     app.secret_key = setup_key
@@ -131,6 +144,10 @@ def first_time(setup_key, port = 5000):
                 
         gh_name, gl_name = credentials.get("github"), credentials.get("gitlab")
         essential_config = json.loads(render_template("json/essential_config.json.j2", conf=config, gh_name=gh_name, gl_name=gl_name))
+        
+        for setting in essential_config["settings"]:
+            if env[setting["id"]]:
+                setting["value"] = env[setting["id"]]
 
         return render_template("first-time-config.j2", essential_config=essential_config, sections = sections, version = __version__)
     
@@ -230,8 +247,11 @@ def first_time(setup_key, port = 5000):
         update_complete.release()
 
 if __name__ == "__main__":
-    import sys
-    port = input("Enter the port to use for the configuration interface [8075]: ") or "8075"
+    if len(sys.argv) > 1:
+        port = sys.argv[1]
+    else:
+        port = input("Enter the port to use for the configuration interface [8075]: ") or "8075"
+    
     setup_key = token_hex()
     print("-" * 40)
     print("The configuration interface is starting up")
@@ -245,7 +265,11 @@ if __name__ == "__main__":
     
     global do_continue
     if do_continue:
-        augur = subprocess.Popen("nohup augur backend start --disable-collection".split())
+        if env["AUGUR_DOCKER_DEPLOY"]:
+            augur = subprocess.Popen(f"augur backend start {env['AUGUR_FLAGS'] or ''}".split())
+            augur.wait()
+        else:
+            subprocess.Popen(f"nohup augur backend start {env['AUGUR_FLAGS'] or ''}".split())
 
     #     if not settings:
     #         # First time setup was aborted, so just quit

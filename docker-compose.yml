@@ -21,7 +21,7 @@ services:
     image: augur-new:latest
     build:
       context: .
-      dockerfile: ./docker/backend/Dockerfile
+      dockerfile: ./docker/backend/${AUGUR_TARGET:-Dockerfile}
     volumes:
       - facade:/augur/facade
     restart: unless-stopped
@@ -32,11 +32,12 @@ services:
     environment:
       - "AUGUR_DB=postgresql+psycopg2://${AUGUR_DB_USER:-augur}:${AUGUR_DB_PASSWORD:-augur}@augur-db:5432/augur"
       - "AUGUR_DB_SCHEMA_BUILD=1"
+      - "AUGUR_FLAGS=$AUGUR_FLAGS"
       - "AUGUR_GITHUB_API_KEY=${AUGUR_GITHUB_API_KEY}"
       - "AUGUR_GITLAB_API_KEY=${AUGUR_GITLAB_API_KEY}"
       - "AUGUR_GITHUB_USERNAME=${AUGUR_GITHUB_USERNAME}"
       - "AUGUR_GITLAB_USERNAME=${AUGUR_GITLAB_USERNAME}"
-      - REDIS_CONN_STRING=redis://redis:6379
+      - "REDIS_CONN_STRING=redis://redis:6379"
     depends_on:
       - augur-db
       - redis
