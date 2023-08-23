@@ -1,4 +1,4 @@
-"""Fix Keeys and materialized view
+"""Fix Keys and materialized view
 
 Revision ID: 22
 Revises: 21
