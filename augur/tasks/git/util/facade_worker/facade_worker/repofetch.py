@@ -477,5 +477,6 @@ def git_repo_updates(session, repo_git):
 
         update_repo_log(session, row['repo_id'], f"Failed ({return_code})")
         session.log_activity('Error', f"Could not update {row['repo_git']}")
+        raise GitCloneError(f"Could not update {row['repo_git']}")
 
     session.log_activity('Info', 'Updating existing repos (complete)')
