@@ -42,5 +42,7 @@ RUN ./scripts/docker/install-go.sh
 RUN mkdir -p repos/ logs/ /augur/facade/
 
 COPY ./docker/backend/entrypoint.sh /
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT /entrypoint.sh
+COPY ./docker/backend/init.sh /
+RUN chmod +x /entrypoint.sh /init.sh
+ENTRYPOINT ["/entrypoint.sh"]
+CMD /init.sh
