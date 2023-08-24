@@ -1,6 +1,6 @@
 ## Augur Setup
 
-# OSX: Note: This has **ONLY** been tested on Apple Silicon with Python 3.11 at this time
+# OSX: Note: This has **MOSTLY** been tested on Apple Silicon with Python 3.11 at this time, however, one user has been successful with Intel based Apple computers.
 ## For OSX You Need to make sure to install XCode Command line tools: 
 ```shell
 xcode-select --install
