@@ -47,22 +47,16 @@ def generate_deps_data(session, repo_id, path):
         
         session.logger.info(f"Inserted {len(deps)} dependencies for repo {repo_id}")
 
+"""
+def deps_model(session, repo_id,repo_git,repo_path,repo_name):
+    # Data collection and storage method
 
-def deps_model(session, repo_id,repo_git,repo_group_id):
-    """ Data collection and storage method
-    """
     session.logger.info(f"This is the deps model repo: {repo_git}.")
 
     
 
-    #result = session.execute_sql(repo_path_sql)
-    result = re.search(r"https:\/\/(github\.com\/[A-Za-z0-9 \- _]+\/)([A-Za-z0-9 \- _ .]+)$", repo_git).groups()
-    
-    relative_repo_path = f"{repo_group_id}/{result[0]}{result[1]}"
-    config = AugurConfig(session.logger, session)
-    absolute_repo_path = config.get_section("Facade")['repo_directory'] + relative_repo_path
-
     generate_deps_data(session,repo_id, absolute_repo_path)
+"""
 
 def generate_scorecard(session,repo_id,path):
     """Runs scorecard on repo and stores data in database
