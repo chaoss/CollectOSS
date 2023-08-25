@@ -52,7 +52,8 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
 
 git_tasks = ['augur.tasks.git.facade_tasks',
             'augur.tasks.git.dependency_tasks.tasks',
-            'augur.tasks.git.dependency_libyear_tasks.tasks']
+            'augur.tasks.git.dependency_libyear_tasks.tasks',
+            'augur.tasks.git.scc_value_tasks.tasks']
 
 data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
                        'augur.tasks.data_analysis.clustering_worker.tasks',
@@ -139,6 +140,7 @@ celery_app.conf.task_routes = {
     'augur.tasks.github.pull_requests.tasks.collect_pull_request_review_comments': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.process_ossf_dependency_metrics': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.process_dependency_metrics': {'queue': 'facade'},
+    'augur.tasks.git.scc_value_tasks.tasks.process_scc_value_metrics' : {'queue': 'facade'},
     'augur.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'},
     'augur.tasks.frontend.*': {'queue': 'frontend'},
     'augur.tasks.data_analysis.contributor_breadth_worker.*': {'queue': 'secondary'},
