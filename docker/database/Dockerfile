@@ -2,7 +2,7 @@
 FROM postgres:12
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.51.1"
+LABEL version="0.52.0"
 
 ENV POSTGRES_DB "test"
 ENV POSTGRES_USER "augur"
