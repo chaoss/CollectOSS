@@ -12,9 +12,10 @@ from augur.application.config import AugurConfig
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
+from augur.tasks.util.worker_util import parse_json_from_subprocess_call
 
 def generate_deps_data(session, repo_id, path):
-        """Runs deps modules on repo and stores data in database
+        """Run dependency logic on repo and stores data in database
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
@@ -80,16 +81,8 @@ def generate_scorecard(session,repo_id,path):
     key_handler = GithubApiKeyHandler(session)       
     os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
     
-    p= subprocess.run(['./scorecard', command, '--format=json'], cwd= path_to_scorecard ,capture_output=True, text=True, timeout=None)
-    session.logger.info('subprocess completed successfully... ')
-    output = p.stdout
-
-    try:
-        required_output = json.loads(output)
-    except json.decoder.JSONDecodeError as e:
-        session.logger.error(f"Could not parse required output! \n output: {output} \n Error: {e}")
-        return
-
+    required_output = parse_json_from_subprocess_call(session.logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
+    
     session.logger.info('adding to database...')
     session.logger.debug(f"output: {required_output}")
 
