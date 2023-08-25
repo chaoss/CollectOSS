@@ -1,7 +1,7 @@
 """Alter repo labor unique
 
-Revision ID: 22
-Revises: 21
+Revision ID: 24
+Revises: 23
 Create Date: 2023-08-25 18:17:22.651191
 
 """
@@ -12,8 +12,8 @@ from sqlalchemy.sql import text
 import re
 
 # revision identifiers, used by Alembic.
-revision = '22'
-down_revision = '21'
+revision = '24'
+down_revision = '23'
 branch_labels = None
 depends_on = None
 
