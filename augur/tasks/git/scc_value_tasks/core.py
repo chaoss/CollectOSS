@@ -25,7 +25,7 @@ def value_model(session,repo_id, path):
 
     path_to_scc = os.environ['HOME'] + '/scc'
 
-    required_output = parse_json_from_subprocess_call(session.logger,['./scc', '-f','json', path], cwd=path_to_scc)
+    required_output = parse_json_from_subprocess_call(session.logger,['./scc', '-f','json','--by-file', path], cwd=path_to_scc)
     
     session.logger.info('adding scc data to database... ')
     session.logger.debug(f"output: {required_output}")
