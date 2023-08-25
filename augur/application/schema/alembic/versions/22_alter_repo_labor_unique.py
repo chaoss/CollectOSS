@@ -1,4 +1,4 @@
-"""Add ml tasks
+"""Alter repo labor unique
 
 Revision ID: 22
 Revises: 21
