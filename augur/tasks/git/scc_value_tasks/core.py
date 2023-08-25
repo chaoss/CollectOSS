@@ -13,7 +13,7 @@ from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.application.db.util import execute_session_query
 from augur.tasks.util.worker_util import parse_json_from_subprocess_call
 
-def value_model(session,repo_id, path):
+def value_model(session,repo_git,repo_id, path):
     """Runs scc on repo and stores data in database
         :param repo_id: Repository ID
         :param path: absolute file path of the Repostiory
@@ -44,6 +44,7 @@ def value_model(session,repo_id, path):
                 'comment_lines': file['Comment'],
                 'blank_lines': file['Blank'],
                 'code_complexity': file['Complexity'],
+                'repo_url': repo_git,
                 'tool_source': 'value_model',
                 'data_source': 'Git',
                 'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')

@@ -25,4 +25,4 @@ def process_scc_value_metrics(repo_git):
         config = AugurConfig(session.logger, session)        
         absolute_repo_path = get_absolute_repo_path(config.get_section("Facade")['repo_directory'],repo.repo_id,repo.repo_path,repo.repo_name)
 
-        value_model(session,repo.repo_id, absolute_repo_path)
+        value_model(session,repo_git,repo.repo_id, absolute_repo_path)
