@@ -80,3 +80,20 @@ else
   echo "scorecard build done"
   cd $CURRENT_DIR
 fi
+
+#Do the same thing for scc for value worker
+if [ -d "$HOME/scc" ]; then
+  echo " Scc already exists, skipping cloning ..."
+  echo " Updating Scc ... "
+  rm -rf $HOME/scc  
+fi
+
+echo "Cloning Sloc Cloc and Code (SCC) to generate value data ..."
+git clone https://github.com/boyter/scc $HOME/scc
+cd $HOME/scc
+CURRENT_DIR=$PWD;
+cd $CURRENT_DIR
+cd $HOME/scc;
+go build;
+echo "scc build done"
+cd $CURRENT_DIR

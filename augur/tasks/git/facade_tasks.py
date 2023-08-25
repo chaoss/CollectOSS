@@ -46,6 +46,7 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 
 from augur.tasks.git.dependency_tasks.tasks import process_dependency_metrics
 from augur.tasks.git.dependency_libyear_tasks.tasks import process_libyear_dependency_metrics
+from augur.tasks.git.scc_value_tasks.tasks import process_scc_value_metrics
 
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.gh_graphql_entities import PullRequest
@@ -526,7 +527,8 @@ def facade_phase(repo_git):
             group(
                 chain(*facade_core_collection),
                 process_dependency_metrics.si(repo_git),
-                process_libyear_dependency_metrics.si(repo_git)
+                process_libyear_dependency_metrics.si(repo_git),
+                process_scc_value_metrics.si(repo_git)
             )
         )
 
