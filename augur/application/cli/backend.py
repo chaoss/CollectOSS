@@ -170,7 +170,7 @@ def start_celery_worker_processes(vmem_cap_ratio, disable_collection=False):
         sleep_time += 6
 
         #60% of estimate, Maximum value of 45
-        core_num_processes = determine_worker_processes(.6, 80)
+        core_num_processes = determine_worker_processes(.6, 160)
         logger.info(f"Starting core worker processes with concurrency={core_num_processes}")
         core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_num_processes} -n core:{uuid.uuid4().hex}@%h"
         process_list.append(subprocess.Popen(core_worker.split(" ")))
