@@ -43,6 +43,7 @@ class RandomKeyAuth(Auth):
                 
             # set the headers of the request with the new key
             request.headers[self.header_name] = key_string
+            self.logger.info(f"List of Keys: {self.list_of_keys}")
 
         else:
             self.logger.error(f"There are no valid keys to make a request with: {self.list_of_keys}")

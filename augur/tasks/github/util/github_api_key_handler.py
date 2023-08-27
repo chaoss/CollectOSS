@@ -39,7 +39,7 @@ class GithubApiKeyHandler():
 
         self.keys = self.get_api_keys()
 
-        # self.logger.debug(f"Retrieved {len(self.keys)} github api keys for use")
+        self.logger.info(f"Retrieved {len(self.keys)} github api keys for use")
 
     def get_random_key(self):
         """Retrieves a random key from the list of keys
