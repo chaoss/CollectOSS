@@ -29,7 +29,7 @@ def collect_issues(repo_git : str) -> int:
 
         augur_db = manifest.augur_db
 
-        logger.info(f'this is the manifest.key_auth value: {manifest.key_auth}')
+        logger.info(f'this is the manifest.key_auth value: {str(manifest.key_auth)}')
 
         try:
         
