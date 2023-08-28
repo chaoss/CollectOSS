@@ -40,7 +40,7 @@ def collect_issues(repo_git : str) -> int:
 
             #try this
             try: 
-                randomon = GithubApiKeyHandler()
+                randomon = GithubApiKeyHandler(augur_db.session)
                 the_key = randomon.get_random_key()
                 logger.info(f'The Random Key {the_key}')
             except Exception as e: 
