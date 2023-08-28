@@ -40,9 +40,12 @@ def collect_issues(repo_git : str) -> int:
 
             #try this
             try: 
-                the_key = GithubApiKeyHandler.get_random_key(manifest.key_auth)
+                randomon = GithubApiKeyHandler()
+                the_key = randomon.get_random_key()
+                logger.info(f'The Random Key {the_key}')
             except Exception as e: 
-                self.logger.info(f'error: {e}')
+                logger.info(f'error: {e}')
+                pass 
 
             owner, repo = get_owner_repo(repo_git)
         
