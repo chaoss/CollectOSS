@@ -7,6 +7,7 @@ from typing import Optional, List
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
+from sqlalchemy import func 
 
 
 class NoValidKeysError(Exception):
