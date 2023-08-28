@@ -138,7 +138,7 @@ class GithubApiKeyHandler():
         valid_now = valid_keys
         try: 
             self.logger.info(f'valid keys before shuffle: {valid_keys}')
-            valid_keys = random.shuffle(valid_keys)
+            valid_keys = random.sample(valid_keys, len(valid_keys))
             self.logger.info(f'valid keys AFTER shuffle: {valid_keys}')
         except Exception as e: 
             self.logger.info(f'{e}')
