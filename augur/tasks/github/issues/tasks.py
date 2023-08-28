@@ -5,6 +5,7 @@ import re
 
 from sqlalchemy.exc import IntegrityError
 
+from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
@@ -37,10 +38,13 @@ def collect_issues(repo_git : str) -> int:
             repo_obj = execute_session_query(query, 'one')
             repo_id = repo_obj.repo_id
 
+            #try this
+            the_key = GithubApiKeyHandler.get_random_key(manifest.key_auth)
+
             owner, repo = get_owner_repo(repo_git)
         
-            issue_data = retrieve_all_issue_data(repo_git, logger, manifest.key_auth)
-
+            #issue_data = retrieve_all_issue_data(repo_git, logger, manifest.key_auth)
+            issue_data = retrieve_all_issue_data(repo_git, logger, the_key)
 
             if issue_data:
                 total_issues = len(issue_data)
