@@ -135,7 +135,13 @@ class GithubApiKeyHandler():
 
 
         # shuffling the keys so not all processes get the same keys in the same order
-        valid_keys = random.shuffle(valid_keys)
+        try: 
+            self.logger.info(f'valid keys before shuffle: {valid_keys}')
+            valid_keys = random.shuffle(valid_keys)
+            self.logger.info(f'valid keys AFTER shuffle: {valid_keys}')
+        except Exception as e: 
+            self.logger.info(f'{e}')
+            pass 
 
         return valid_keys
 
