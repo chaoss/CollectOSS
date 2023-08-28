@@ -133,6 +133,10 @@ class GithubApiKeyHandler():
         if not valid_keys:
             raise NoValidKeysError("No valid github api keys found in the config or worker oauth table")
 
+
+        # shuffling the keys so not all processes get the same keys in the same order
+        valid_keys = random.shuffle(valid_keys)
+
         return valid_keys
 
     def is_bad_api_key(self, client: httpx.Client, oauth_key: str) -> bool:
