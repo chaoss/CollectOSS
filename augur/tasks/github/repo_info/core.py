@@ -248,7 +248,7 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
         'security_audit_file': None,
         'status': None,
         'keywords': None,
-        'commit_count': data['ref']['target']['history']['totalCount'] if data['ref'] else None,
+        'commit_count': data['defaultBranchRef']['target']['history']['totalCount'] if data['defaultBranchRef'] else None,
         'issues_count': data['issue_count']['totalCount'] if data['issue_count'] else None,
         'issues_closed': data['issues_closed']['totalCount'] if data['issues_closed'] else None,
         'pull_request_count': data['pr_count']['totalCount'] if data['pr_count'] else None,
