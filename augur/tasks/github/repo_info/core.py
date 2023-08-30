@@ -150,10 +150,10 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
                 pr_merged: pullRequests(states: MERGED) {
                     totalCount
                 }
-                ref(qualifiedName: "master") {
+                defaultBranchRef {
                     target {
                         ... on Commit {
-                            history(first: 0){
+                            history {
                                 totalCount
                             }
                         }
@@ -256,7 +256,7 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
         'pull_requests_closed': data['pr_closed']['totalCount'] if data['pr_closed'] else None,
         'pull_requests_merged': data['pr_merged']['totalCount'] if data['pr_merged'] else None,
         'tool_source': 'Repo_info Model',
-        'tool_version': '0.42',
+        'tool_version': '0.50.0',
         'data_source': "Github"
     }
 
