@@ -226,7 +226,7 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
     start_repos_by_user(
         session, max_repo,
         facade_enabled_phases,hook="facade",
-        new_status=CollectionState.UPDATE.value,additional_conditions=conds
+        additional_conditions=conds
     )
 
 def start_ml_collection(session,max_repo, days_until_collect_again=7):

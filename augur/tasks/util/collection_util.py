@@ -488,8 +488,12 @@ def start_repos_from_given_group_of_users(session,limit,users,condition_string,p
 """
     Generalized function for starting a phase of tasks for a given collection hook with options to add restrictive conditions
 """
-def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again = 1, hook="core",new_status=CollectionState.PENDING.value,additional_conditions=None):
+def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again = 1, hook="core",additional_conditions=None):
 
+    if hook == "facade":
+        new_status = CollectionState.UPDATE.value
+    else:
+        new_status = CollectionState.PENDING.value
     #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
     #Get the count of repos that are currently running this collection hook
     status_column = f"{hook}_status"
