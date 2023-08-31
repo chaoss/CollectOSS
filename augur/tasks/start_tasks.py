@@ -253,16 +253,80 @@ def augur_collection_monitor():
         #Get list of enabled phases 
         enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
 
+        enabled_collection_hooks = []
+
         if primary_repo_collect_phase.__name__ in enabled_phase_names:
-            start_primary_collection(session, max_repo=40)
+            #Add all required tasks to a list and pass it to the CollectionHook
+            primary_enabled_phases = []
+
+            #Primary jobs
+            if prelim_phase.__name__ in enabled_phase_names:
+                primary_enabled_phases.append(prelim_phase)
+
+            primary_enabled_phases.append(primary_repo_collect_phase)
+
+            #task success is scheduled no matter what the config says.
+            def core_task_success_util_gen(repo_git):
+                return core_task_success_util.si(repo_git)
+
+            primary_enabled_phases.append(core_task_success_util_gen)
+
+
+            primary_hook = CollectionHook("core",primary_enabled_phases,40)
+            enabled_collection_hooks.append(primary_hook)
         
         if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-            start_secondary_collection(session, max_repo=10)
+            #Deal with secondary collection
+            secondary_enabled_phases = []
+
+            if prelim_phase.__name__ in enabled_phase_names:
+                secondary_enabled_phases.append(prelim_phase_secondary)
+
+
+            secondary_enabled_phases.append(secondary_repo_collect_phase)
+
+            def secondary_task_success_util_gen(repo_git):
+                return secondary_task_success_util.si(repo_git)
+
+            secondary_enabled_phases.append(secondary_task_success_util_gen)
+            secondary_hook = CollectionHook("secondary",secondary_enabled_phases,10)
+
+            secondary_hook.additional_conditions = f"augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}'"
+            #start_secondary_collection(session, max_repo=10)
 
         if facade_phase.__name__ in enabled_phase_names:
-            start_facade_collection(session, max_repo=30)
+            #Deal with secondary collection
+            facade_enabled_phases = []
+
+            facade_enabled_phases.append(facade_phase)
+
+            def facade_task_success_util_gen(repo_git):
+                return facade_task_success_util.si(repo_git)
+
+            facade_enabled_phases.append(facade_task_success_util_gen)
+
+            def facade_task_update_weight_util_gen(repo_git):
+                return git_update_commit_count_weight.si(repo_git)
+
+            facade_enabled_phases.append(facade_task_update_weight_util_gen)
+
+            facade_hook = CollectionHook("facade",facade_enabled_phases,30)
+            facade_hook.new_status = CollectionState.UPDATE.value
+            facade_hook.additional_conditions = f"augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}' "#[not_pending,not_failed_clone,not_initializing]
+            facade_hook.additional_conditions += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}' "
+            facade_hook.additional_conditions += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'"
+
+            #start_facade_collection(session, max_repo=30)
         
         if machine_learning_phase.__name__ in enabled_phase_names:
+            ml_enabled_phases = []
+
+            ml_enabled_phases.append(machine_learning_phase)
+        
+            def ml_task_success_util_gen(repo_git):
+                return ml_task_success_util.si(repo_git)
+        
+            ml_enabled_phases.append(ml_task_success_util_gen)
             start_ml_collection(session,max_repo=5)
 
 # have a pipe of 180

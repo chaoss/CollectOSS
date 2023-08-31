@@ -36,6 +36,16 @@ class CollectionState(Enum):
     UPDATE = "Update"
     FAILED_CLONE = "Failed Clone"
 
+
+class CollectionHook:
+    def __init__(self,name,phases,max_repo,new_status = CollectionState.PENDING.value,additional_conditions = None,days_until_collect_again = 1):
+        self.name = name
+        self.phases = phases
+        self.max_repo = max_repo
+        self.days_until_collect_again = days_until_collect_again
+        self.additional_conditions = None
+        self.new_status = new_status
+
 def get_enabled_phase_names_from_config(logger, session):
 
     config = AugurConfig(logger, session)
@@ -488,7 +498,7 @@ def start_repos_from_given_group_of_users(session,limit,users,condition_string,p
 """
     Generalized function for starting a phase of tasks for a given collection hook with options to add restrictive conditions
 """
-def start_repos_by_user(session, max_repo,phase_list, days_until_collect_again = 1, hook="core"):
+def start_repos_by_user(session, collection_hooks):
 
     # derive the status that a repo has to be for it to start along with
     # any additional conditions. 
