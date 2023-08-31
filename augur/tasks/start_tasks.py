@@ -190,11 +190,9 @@ def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
 
     secondary_enabled_phases.append(secondary_task_success_util_gen)
 
-    conds = f"augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}'"#[CollectionStatus.core_status == str(CollectionState.SUCCESS.value)]
     start_repos_by_user(
         session, max_repo,
-        secondary_enabled_phases,hook="secondary",
-        additional_conditions=conds
+        secondary_enabled_phases,hook="secondary"
     )
 
 def start_facade_collection(session,max_repo,days_until_collect_again = 1):
@@ -219,14 +217,9 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
     #not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
     #not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
 
-    conds = f"augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}' "#[not_pending,not_failed_clone,not_initializing]
-    conds += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}' "
-    conds += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'"
-
     start_repos_by_user(
         session, max_repo,
-        facade_enabled_phases,hook="facade",
-        additional_conditions=conds
+        facade_enabled_phases,hook="facade"
     )
 
 def start_ml_collection(session,max_repo, days_until_collect_again=7):
@@ -239,11 +232,11 @@ def start_ml_collection(session,max_repo, days_until_collect_again=7):
 
     ml_enabled_phases.append(ml_task_success_util_gen)
 
-    conds = f"augur_operations.collection_status.secondary_status = '{str(CollectionState.SUCCESS.value)}'"
+    #conds = f"augur_operations.collection_status.secondary_status = '{str(CollectionState.SUCCESS.value)}'"
 
     start_repos_by_user(
         session,max_repo,
-        ml_enabled_phases,hook="ml",additional_conditions=conds
+        ml_enabled_phases,hook="ml"
     )
 
 
