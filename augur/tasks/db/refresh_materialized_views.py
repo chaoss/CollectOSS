@@ -16,15 +16,15 @@ def refresh_materialized_views():
     logger = logging.getLogger(refresh_materialized_views.__name__)
 
     refresh_view_query = s.sql.text("""    
-                REFRESH MATERIALIZED VIEW augur_data.api_get_all_repos_issues with data;
-                REFRESH MATERIALIZED VIEW augur_data.explorer_commits_and_committers_daily_count with data;
+                REFRESH MATERIALIZED VIEW concurrently augur_data.api_get_all_repo_prs with data;
                 REFRESH MATERIALIZED VIEW augur_data.api_get_all_repos_commits with data;
+                REFRESH MATERIALIZED VIEW augur_data.api_get_all_repos_issues with data;
                 REFRESH MATERIALIZED VIEW augur_data.augur_new_contributors with data;
-                REFRESH MATERIALIZED VIEW augur_data.explorer_contributor_actions with data;
-                REFRESH MATERIALIZED VIEW augur_data.explorer_libyear_all with data;
-                REFRESH MATERIALIZED VIEW augur_data.explorer_libyear_detail with data;
+                REFRESH MATERIALIZED VIEW augur_data.explorer_commits_and_committers_daily_count with data;
                 REFRESH MATERIALIZED VIEW augur_data.explorer_new_contributors with data;
-                REFRESH MATERIALIZED VIEW augur_data.explorer_libyear_summary with data;
+                REFRESH MATERIALIZED VIEW augur_data.explorer_entry_list with data;
+                REFRESH MATERIALIZED VIEW augur_data.explorer_new_contributors with data;
+                REFRESH MATERIALIZED VIEW augur_data.explorer_entry_list with data;
     """)
 
     with DatabaseSession(logger, engine) as session:
