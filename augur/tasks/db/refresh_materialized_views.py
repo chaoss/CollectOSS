@@ -24,7 +24,7 @@ def refresh_materialized_views():
                 REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_new_contributors with data;
                 REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_entry_list with data;
                 REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_new_contributors with data;
-                REFRESH MATERIALIZED VIEW augur_data.explorer_contributor_actions with data;
+                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_contributor_actions with data;
     """)
 
     with DatabaseSession(logger, engine) as session:
