@@ -68,7 +68,10 @@ def add_fix_keys_25(upgrade=True):
           drop MATERIALIZED VIEW if exists augur_data.explorer_libyear_detail;
           drop MATERIALIZED VIEW if exists augur_data.explorer_libyear_summary; 
           drop MATERIALIZED VIEW if exists augur_data.explorer_contributor_actions; 
+          """)
 
+      conn = op.get_bind()
+      conn.execute(text("""
           create materialized view augur_data.explorer_contributor_actions as 
           SELECT a.id AS cntrb_id,
               a.created_at,
