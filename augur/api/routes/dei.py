@@ -17,7 +17,7 @@ from augur.application.db.models import User, ClientApplication, CollectionStatu
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 
-from augur.tasks.util.collection_util import CollectionHook,AugurTaskRoutine, get_enabled_phase_names_from_config, core_task_success_util
+from augur.tasks.util.collection_util import CollectionRequest,AugurTaskRoutine, get_enabled_phase_names_from_config, core_task_success_util
 from augur.tasks.start_tasks import prelim_phase, primary_repo_collect_phase
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.init.redis_connection import redis_connection as redis
@@ -97,7 +97,7 @@ def dei_track_repo(application: ClientApplication):
     record = BadgingDEI(**record)
     session.add(record)
     
-    deiHook = CollectionHook("core",primary_enabled_phases)
+    deiHook = CollectionRequest("core",primary_enabled_phases)
     deiHook.repo_list = [repo_url]
 
     singleRoutine = AugurTaskRoutine(session,[deiHook])

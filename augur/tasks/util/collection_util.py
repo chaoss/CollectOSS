@@ -37,7 +37,80 @@ class CollectionState(Enum):
     FAILED_CLONE = "Failed Clone"
 
 
-class CollectionHook:
+def get_required_conditions_for_core_repos(allow_collected_before = False, days_until_collect_again = 1):
+
+    if not allow_collected_before:
+        condition_concat_string = f"""
+            core_status='{str(CollectionState.PENDING.value)}' AND core_status!='{str(CollectionState.ERROR.value)}'
+            AND augur_operations.collection_status.core_data_last_collected IS NULL
+            AND core_status!='{str(CollectionState.COLLECTING.value)}'
+        """
+    else:
+        condition_concat_string = f"""
+            core_status='Success' AND core_status!='{str(CollectionState.ERROR.value)}'
+            AND augur_operations.collection_status.core_data_last_collected IS NOT NULL
+            AND core_status!='{str(CollectionState.COLLECTING.value)}'
+            AND core_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
+        """
+
+def get_required_conditions_for_secondary_repos(allow_collected_before = False, days_until_collect_again = 1):
+
+    if not allow_collected_before:
+        condition_concat_string = f"""
+            secondary_status='{str(CollectionState.PENDING.value)}' AND secondary_status!='{str(CollectionState.ERROR.value)}'
+            AND augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}' 
+            AND augur_operations.collection_status.secondary_data_last_collected IS NULL
+            AND secondary_status!='{str(CollectionState.COLLECTING.value)}'
+        """
+    else:
+        condition_concat_string = f"""
+            secondary_status='Success' AND secondary_status!='{str(CollectionState.ERROR.value)}'
+            AND augur_operations.collection_status.secondary_data_last_collected IS NOT NULL
+            AND augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}'
+            AND secondary_status!='{str(CollectionState.COLLECTING.value)}'
+            AND secondary_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
+        """
+
+def get_required_conditions_for_facade_repos(allow_collected_before = False, days_until_collect_again = 1):
+
+    if not allow_collected_before:
+        condition_concat_string = f"""
+            facade_status='{str(CollectionState.UPDATE.value)}' AND facade_status!='{str(CollectionState.ERROR.value)}'
+            AND augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}'
+            AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}'
+            AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'
+            AND augur_operations.collection_status.facade_data_last_collected IS NULL
+            AND facade_status!='{str(CollectionState.COLLECTING.value)}'
+        """
+    else:
+        condition_concat_string = f"""
+            facade_status='Success' AND facade_status!='{str(CollectionState.ERROR.value)}'
+            AND augur_operations.collection_status.facade_data_last_collected IS NOT NULL
+            AND augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}'
+            AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}'
+            AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'
+            AND facade_status!='{str(CollectionState.COLLECTING.value)}'
+            AND facade_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
+        """
+
+def get_required_conditions_for_ml_repos(allow_collected_before = False, days_until_collect_again = 1):
+
+    if not allow_collected_before:
+        condition_concat_string = f"""
+            ml_status='{str(CollectionState.PENDING.value)}' AND ml_status!='{str(CollectionState.ERROR.value)}'
+            AND augur_operations.collection_status.secondary_status = '{str(CollectionState.SUCCESS.value)}'
+            AND augur_operations.collection_status.ml_data_last_collected IS NULL
+            AND ml_status!='{str(CollectionState.COLLECTING.value)}'
+        """
+    else:
+        condition_concat_string = f"""
+            ml_status='Success' AND ml_status!='{str(CollectionState.ERROR.value)}'
+            AND augur_operations.collection_status.ml_data_last_collected IS NOT NULL
+            AND ml_status!='{str(CollectionState.COLLECTING.value)}'
+            AND ml_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
+        """
+
+class CollectionRequest:
     def __init__(self,name,phases,max_repo = 10,new_status = CollectionState.PENDING.value,additional_conditions = None,days_until_collect_again = 1):
         self.name = name
         self.phases = phases
@@ -49,28 +122,72 @@ class CollectionHook:
 
         self.status_column = f"{name}_status"
 
-        if name == "secondary":
-            self.additional_conditions = f"augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}'"
-        elif name == "facade":
+
+        if name == "facade":
             self.new_status = CollectionState.UPDATE.value
-            self.additional_conditions = f"augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}' "#[not_pending,not_failed_clone,not_initializing]
-            self.additional_conditions += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}' "
-            self.additional_conditions += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'"
-        elif name == "ml":
-            self.additional_conditions = f"augur_operations.collection_status.secondary_status = '{str(CollectionState.SUCCESS.value)}'"
 
+
+    #Get repo urls based on passed in info.
+    def get_valid_repos(self):
+        #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
+        #Get the count of repos that are currently running this collection hook
+        #status_column = f"{hook}_status"
+        active_repo_count = len(session.query(CollectionStatus).filter(getattr(CollectionStatus,f"{self.name}_status" ) == CollectionState.COLLECTING.value).all())
+
+        #Will always disallow errored repos and repos that are already collecting
+
+        #The maximum amount of repos to schedule is affected by the existing repos running tasks
+        limit = self.max_repo-active_repo_count
+
+
+        user_list = split_random_users_list(session,f"{self.name}_status",self.new_status)
+
+        #Extract the user id from the randomized list and split into four chunks
+        split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
+
+        session.logger.info(f"User_list: {split_user_list}")
+
+        #Iterate through each fourth of the users fetched
+        for quarter_list in split_user_list:
+            if limit <= 0:
+                return
+
+            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),hook=collection_hook.name, days_to_wait_until_next_collection=self.days_until_collect_again)
+
+            self.repo_list.extend(collection_list)
+            #Update limit with amount of repos started
+            limit -= len(collection_list)
+
+        #Now start old repos if there is space to do so.
+        if limit <= 0:
+            return
+
+        #Get a list of all users.
+        query = s.sql.text("""
+            SELECT  
+            user_id
+            FROM augur_operations.users
+        """)
+
+        user_list = session.execute_sql(query).fetchall()
+        random.shuffle(user_list)
+
+        #Extract the user id from the randomized list and split into four chunks
+        split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
+
+        for quarter_list in split_user_list:
         
-        self.condition_concat_string = f"""
-            {self.status_column}='{str(new_status)}' AND {self.status_column}!='{str(CollectionState.ERROR.value)}'
-            AND {self.additional_conditions if self.additional_conditions else 'TRUE'} AND augur_operations.collection_status.{self.name}_data_last_collected IS NULL
-            AND {self.status_column}!='{str(CollectionState.COLLECTING.value)}'
-        """
+            #Break out if limit has been reached
+            if limit <= 0:
+                return
 
-        self.condition_concat_string_old_repos = f"""
-            {self.status_column}='Success' AND {self.status_column}!='{str(CollectionState.ERROR.value)}'
-            AND {self.additional_conditions if self.additional_conditions else 'TRUE'} AND augur_operations.collection_status.{self.name}_data_last_collected IS NOT NULL
-            AND {self.status_column}!='{str(CollectionState.COLLECTING.value)}' AND {self.name}_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
-        """
+            #only start repos older than the specified amount of days
+            #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
+            #Order by the relevant weight for the collection hook
+            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),allow_old_repos=True,hook=collection_hook.name, days_to_wait_until_next_collection=self.days_until_collect_again)
+
+            self.repo_list.extend(collection_list)
+            limit -= len(collection_list)
 
 
 def get_enabled_phase_names_from_config(logger, session):
@@ -424,68 +541,6 @@ class AugurTaskRoutine:
 
         self.collection_hooks = collection_hooks
 
-    def get_valid_repos_for_each_hook(self):
-        for collection_hook in self.collection_hooks:
-            #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
-            #Get the count of repos that are currently running this collection hook
-            #status_column = f"{hook}_status"
-            active_repo_count = len(session.query(CollectionStatus).filter(getattr(CollectionStatus,collection_hook.status_column ) == CollectionState.COLLECTING.value).all())
-
-            #Will always disallow errored repos and repos that are already collecting
-
-            #The maximum amount of repos to schedule is affected by the existing repos running tasks
-            limit = collection_hook.max_repo-active_repo_count
-
-
-            user_list = split_random_users_list(session,collection_hook.status_column,collection_hook.new_status)
-
-            #Extract the user id from the randomized list and split into four chunks
-            split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
-
-            session.logger.info(f"User_list: {split_user_list}")
-
-            #Iterate through each fourth of the users fetched
-            for quarter_list in split_user_list:
-                if limit <= 0:
-                    return
-
-                collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),collection_hook.condition_concat_string,hook=collection_hook.name)
-
-                collection_hook.valid_repos = collection_list
-                #Update limit with amount of repos started
-                limit -= len(collection_list)
-
-            #Now start old repos if there is space to do so.
-            if limit <= 0:
-                return
-
-            #Get a list of all users.
-            query = s.sql.text("""
-                SELECT  
-                user_id
-                FROM augur_operations.users
-            """)
-
-            user_list = session.execute_sql(query).fetchall()
-            random.shuffle(user_list)
-
-            #Extract the user id from the randomized list and split into four chunks
-            split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
-
-            for quarter_list in split_user_list:
-            
-                #Break out if limit has been reached
-                if limit <= 0:
-                    return
-
-                #only start repos older than the specified amount of days
-                #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
-                #Order by the relevant weight for the collection hook
-                collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),collection_hook.condition_concat_string_old_repos,hook=collection_hook.name)
-
-                collection_hook.valid_repos.extend(collection_list)
-                limit -= len(collection_list)
-
     def update_status_and_id(self,repo_git, task_id):
         repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
 
@@ -496,18 +551,6 @@ class AugurTaskRoutine:
         setattr(repoStatus,f"{self.collection_hook}_status",self.start_state)
         self.session.commit()
 
-    def start_routine_data_collection(self):
-        """Get all valid repos for a hook, start all tasks for those repos, and return.
-
-            This is the routine method that gets the repos for you and then starts them.
-            The regular start data collection does the same thing but assumes you provided 
-            specific repo url yourself. 
-        """
-
-        self.get_valid_repos_for_each_hook()
-
-        self.start_data_collection()
-    
 
     def start_data_collection(self):
         """Start all task items and return.
@@ -565,7 +608,19 @@ class AugurTaskRoutine:
 #
 #    return len(repo_git_identifiers)
 
-def get_valid_repos_for_users(session,limit,users,condition_string,hook="core"):
+def get_valid_repos_for_users(session,limit,users,allow_old_repos = False,hook="core",days_to_wait_until_next_collection = 1):
+
+    condition_string = "1"
+
+    if hook == "core":
+        condition_string = get_required_conditions_for_core_repos(allow_collected_before=allow_old_repos,days_until_collect_again= days_to_wait_until_next_collection)
+    elif hook == "secondary":
+        condition_string = get_required_conditions_for_secondary_repos(allow_collected_before=allow_old_repos,days_until_collect_again = days_to_wait_until_next_collection)
+    elif hook == "facade":
+        condition_string = get_required_conditions_for_facade_repos(allow_collected_before=allow_old_repos,days_until_collect_again = days_to_wait_until_next_collection)
+    elif hook == "ml":
+        condition_string = get_required_conditions_for_ml_repos(allow_collected_before=allow_old_repos,days_until_collect_again = days_to_wait_until_next_collection)
+
     #Query a set of valid repositories sorted by weight, also making sure that the repos are new
     #Order by the relevant weight for the collection hook
     repo_query = s.sql.text(f"""
