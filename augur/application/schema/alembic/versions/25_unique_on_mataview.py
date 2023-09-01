@@ -58,8 +58,8 @@ def add_fix_keys_25(upgrade=True):
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.explorer_entry_list(repo_id); """)) 
 
-       conn = op.get_bind()
-       conn.execute(text("""
+      conn = op.get_bind()
+      conn.execute(text("""
          CREATE  UNIQUE INDEX ON augur_data.explorer_contributor_actions(cntrb_id,created_at,repo_id, action, repo_name,login, rank); """)) 
 
       conn = op.get_bind()
