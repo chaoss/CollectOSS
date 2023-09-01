@@ -67,8 +67,7 @@ def add_fix_keys_25(upgrade=True):
           drop MATERIALIZED VIEW if exists augur_data.explorer_libyear_all;
           drop MATERIALIZED VIEW if exists augur_data.explorer_libyear_detail;
           drop MATERIALIZED VIEW if exists augur_data.explorer_libyear_summary; 
-          drop MATERIALIZED VIEW if exists augur_data.explorer_contributor_actions; 
-          """)
+          drop MATERIALIZED VIEW if exists augur_data.explorer_contributor_actions; """)
 
       conn = op.get_bind()
       conn.execute(text("""
@@ -173,5 +172,4 @@ def add_fix_keys_25(upgrade=True):
             
              CREATE  UNIQUE INDEX ON augur_data.explorer_contributor_actions(cntrb_id,created_at,repo_id, action, repo_name,login, rank);
 
-             update augur_operations.config set value='1' where setting_name = 'refresh_materialized_views_interval_in_days';
-         """))
+             update augur_operations.config set value='1' where setting_name = 'refresh_materialized_views_interval_in_days';"""))
