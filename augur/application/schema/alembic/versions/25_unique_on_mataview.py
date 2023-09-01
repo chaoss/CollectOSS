@@ -19,15 +19,15 @@ depends_on = None
 
 def upgrade():
 
-    add_uniques_onMV()
+    add_fix_keys_25()
 
 def downgrade():
 
     upgrade=False
 
-    add_uniques_onMV(upgrade)
+    add_fix_keys_25(upgrade)
 
-def add_fix_keys_22(upgrade=True):
+def add_fix_keys_25(upgrade=True):
 
    if upgrade:
 
