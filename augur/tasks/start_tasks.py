@@ -291,7 +291,7 @@ def augur_collection_monitor():
             secondary_enabled_phases.append(secondary_task_success_util_gen)
             secondary_hook = CollectionHook("secondary",secondary_enabled_phases,10)
 
-            secondary_hook.additional_conditions = f"augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}'"
+            enabled_collection_hooks.append(secondary_hook)
             #start_secondary_collection(session, max_repo=10)
 
         if facade_phase.__name__ in enabled_phase_names:
@@ -311,23 +311,26 @@ def augur_collection_monitor():
             facade_enabled_phases.append(facade_task_update_weight_util_gen)
 
             facade_hook = CollectionHook("facade",facade_enabled_phases,30)
-            facade_hook.new_status = CollectionState.UPDATE.value
-            facade_hook.additional_conditions = f"augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}' "#[not_pending,not_failed_clone,not_initializing]
-            facade_hook.additional_conditions += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}' "
-            facade_hook.additional_conditions += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'"
 
             #start_facade_collection(session, max_repo=30)
+            enabled_collection_hooks.append(facade_hook)
         
         if machine_learning_phase.__name__ in enabled_phase_names:
             ml_enabled_phases = []
 
             ml_enabled_phases.append(machine_learning_phase)
-        
+
             def ml_task_success_util_gen(repo_git):
                 return ml_task_success_util.si(repo_git)
-        
+
             ml_enabled_phases.append(ml_task_success_util_gen)
-            start_ml_collection(session,max_repo=5)
+
+            ml_hook = CollectionHook("ml",ml_enabled_phases,5)
+            
+            enabled_collection_hooks.append(ml_hook)
+            #start_ml_collection(session,max_repo=5)
+        
+        start_repos_by_user(session,enabled_collection_hooks)
 
 # have a pipe of 180
 

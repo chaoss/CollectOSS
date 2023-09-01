@@ -46,6 +46,26 @@ class CollectionHook:
         self.additional_conditions = None
         self.new_status = new_status
 
+        self.status_column = f"{name}_status"
+
+        if name == "secondary":
+            self.additional_conditions = f"augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}'"
+        elif name == "facade":
+            self.new_status = CollectionState.UPDATE.value
+            self.additional_conditions = f"augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}' "#[not_pending,not_failed_clone,not_initializing]
+            self.additional_conditions += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}' "
+            self.additional_conditions += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'"
+        elif name == "ml":
+            self.additional_conditions = f"augur_operations.collection_status.secondary_status = '{str(CollectionState.SUCCESS.value)}'"
+
+        
+        self.condition_concat_string = f"""
+            {self.status_column}='{str(new_status)}' AND {self.status_column}!='{str(CollectionState.ERROR.value)}'
+            AND {self.additional_conditions if self.additional_conditions else 'TRUE'} AND augur_operations.collection_status.{self.name}_data_last_collected IS NULL
+            AND {self.status_column}!='{str(CollectionState.COLLECTING.value)}'
+        """
+
+
 def get_enabled_phase_names_from_config(logger, session):
 
     config = AugurConfig(logger, session)
@@ -495,37 +515,7 @@ def start_repos_from_given_group_of_users(session,limit,users,condition_string,p
 
     return collection_size
 
-"""
-    Generalized function for starting a phase of tasks for a given collection hook with options to add restrictive conditions
-"""
-def start_repos_by_user(session, collection_hooks):
-
-    # derive the status that a repo has to be for it to start along with
-    # any additional conditions. 
-    new_status = CollectionState.PENDING.value
-    additional_conditions = None
-
-
-    if hook == "secondary":
-        additional_conditions = f"augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}'"
-    elif hook == "facade":
-        new_status = CollectionState.UPDATE.value
-        additional_conditions = f"augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}' "#[not_pending,not_failed_clone,not_initializing]
-        additional_conditions += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}' "
-        additional_conditions += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'"
-    elif hook == "ml":
-        additional_conditions = f"augur_operations.collection_status.secondary_status = '{str(CollectionState.SUCCESS.value)}'"
-
-    #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
-    #Get the count of repos that are currently running this collection hook
-    status_column = f"{hook}_status"
-    active_repo_count = len(session.query(CollectionStatus).filter(getattr(CollectionStatus,status_column ) == CollectionState.COLLECTING.value).all())
-
-    #Will always disallow errored repos and repos that are already collecting
-
-    #The maximum amount of repos to schedule is affected by the existing repos running tasks
-    limit = max_repo-active_repo_count
-
+def split_random_users_list(session,status_col, status_new):
     #Split all users that have new repos into four lists and randomize order
     query = s.sql.text(f"""
         SELECT  
@@ -534,32 +524,48 @@ def start_repos_by_user(session, collection_hooks):
         JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
         JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
         JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-        WHERE {status_column}='{str(new_status)}'
+        WHERE {status_col}='{str(status_new)}'
         GROUP BY user_id
     """)
 
     user_list = session.execute_sql(query).fetchall()
     random.shuffle(user_list)
 
-    #Extract the user id from the randomized list and split into four chunks
-    split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
+    return user_list
 
-    session.logger.info(f"User_list: {split_user_list}")
 
-    #Iterate through each fourth of the users fetched
-    for quarter_list in split_user_list:
-        if limit <= 0:
-            return
+"""
+    Generalized function for starting a phase of tasks for a given collection hook with options to add restrictive conditions
+"""
+def start_repos_by_user(session, collection_hooks):
 
-        condition_concat_string = f"""
-            {status_column}='{str(new_status)}' AND {status_column}!='{str(CollectionState.ERROR.value)}'
-            AND {additional_conditions if additional_conditions else 'TRUE'} AND augur_operations.collection_status.{hook}_data_last_collected IS NULL
-            AND {status_column}!='{str(CollectionState.COLLECTING.value)}'
-        """
+    for collection_hook in collection_hooks:
+        #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
+        #Get the count of repos that are currently running this collection hook
+        #status_column = f"{hook}_status"
+        active_repo_count = len(session.query(CollectionStatus).filter(getattr(CollectionStatus,collection_hook.status_column ) == CollectionState.COLLECTING.value).all())
 
-        collection_size = start_repos_from_given_group_of_users(session,limit,tuple(quarter_list),condition_concat_string,phase_list,hook=hook)
-        #Update limit with amount of repos started
-        limit -= collection_size
+        #Will always disallow errored repos and repos that are already collecting
+
+        #The maximum amount of repos to schedule is affected by the existing repos running tasks
+        limit = collection_hook.max_repo-active_repo_count
+
+
+        user_list = split_random_users_list(session,collection_hook.status_column,collection_hook.new_status)
+
+        #Extract the user id from the randomized list and split into four chunks
+        split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
+
+        session.logger.info(f"User_list: {split_user_list}")
+
+        #Iterate through each fourth of the users fetched
+        for quarter_list in split_user_list:
+            if limit <= 0:
+                return
+
+            collection_size = start_repos_from_given_group_of_users(session,limit,tuple(quarter_list),collection_hook.condition_concat_string,phase_list,hook=hook)
+            #Update limit with amount of repos started
+            limit -= collection_size
 
     #Now start old repos if there is space to do so.
     if limit <= 0:
