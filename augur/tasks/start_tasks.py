@@ -143,103 +143,6 @@ def non_repo_domain_tasks():
     tasks.apply_async()
 
 
-
-    """
-        The below functions define augur's collection hooks.
-        Each collection hook schedules tasks for a number of repos
-    """
-def start_primary_collection(session,max_repo, days_until_collect_again = 1):
-
-    #Get list of enabled phases 
-    enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
-
-    #Primary collection hook.
-    primary_enabled_phases = []
-
-    #Primary jobs
-    if prelim_phase.__name__ in enabled_phase_names:
-        primary_enabled_phases.append(prelim_phase)
-    
-    
-    primary_enabled_phases.append(primary_repo_collect_phase)
-
-    #task success is scheduled no matter what the config says.
-    def core_task_success_util_gen(repo_git):
-        return core_task_success_util.si(repo_git)
-    
-    primary_enabled_phases.append(core_task_success_util_gen)
-
-    start_repos_by_user(session, max_repo, primary_enabled_phases)
-
-def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
-
-    #Get list of enabled phases 
-    enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
-
-    #Deal with secondary collection
-    secondary_enabled_phases = []
-
-    if prelim_phase.__name__ in enabled_phase_names:
-        secondary_enabled_phases.append(prelim_phase_secondary)
-
-    
-    secondary_enabled_phases.append(secondary_repo_collect_phase)
-
-    def secondary_task_success_util_gen(repo_git):
-        return secondary_task_success_util.si(repo_git)
-
-    secondary_enabled_phases.append(secondary_task_success_util_gen)
-
-    start_repos_by_user(
-        session, max_repo,
-        secondary_enabled_phases,hook="secondary"
-    )
-
-def start_facade_collection(session,max_repo,days_until_collect_again = 1):
-
-    #Deal with secondary collection
-    facade_enabled_phases = []
-    
-    facade_enabled_phases.append(facade_phase)
-
-    def facade_task_success_util_gen(repo_git):
-        return facade_task_success_util.si(repo_git)
-
-    facade_enabled_phases.append(facade_task_success_util_gen)
-
-    def facade_task_update_weight_util_gen(repo_git):
-        return git_update_commit_count_weight.si(repo_git)
-
-    facade_enabled_phases.append(facade_task_update_weight_util_gen)
-
-    #cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
-    #not_pending = CollectionStatus.facade_status != str(CollectionState.PENDING.value)
-    #not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
-    #not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
-
-    start_repos_by_user(
-        session, max_repo,
-        facade_enabled_phases,hook="facade"
-    )
-
-def start_ml_collection(session,max_repo, days_until_collect_again=7):
-    ml_enabled_phases = []
-
-    ml_enabled_phases.append(machine_learning_phase)
-
-    def ml_task_success_util_gen(repo_git):
-        return ml_task_success_util.si(repo_git)
-
-    ml_enabled_phases.append(ml_task_success_util_gen)
-
-    #conds = f"augur_operations.collection_status.secondary_status = '{str(CollectionState.SUCCESS.value)}'"
-
-    start_repos_by_user(
-        session,max_repo,
-        ml_enabled_phases,hook="ml"
-    )
-
-
 @celery.task
 def augur_collection_monitor():     
 
@@ -330,7 +233,10 @@ def augur_collection_monitor():
             enabled_collection_hooks.append(ml_hook)
             #start_ml_collection(session,max_repo=5)
         
-        start_repos_by_user(session,enabled_collection_hooks)
+        logger.info(f"Starting collection phases: {[h.name for h in enabled_collection_hooks]}")
+        main_routine = AugurTaskRoutine(session,enabled_collection_hooks)
+
+        main_routine.start_data_collection()
 
 # have a pipe of 180
 
