@@ -169,4 +169,6 @@ def add_fix_keys_22(upgrade=True):
             ORDER BY a.created_at DESC;
             
              CREATE  UNIQUE INDEX ON augur_data.explorer_contributor_actions(cntrb_id,created_at,repo_id, action, repo_name,login, rank);
+
+             update augur_operations.config set value=str(1) where setting_name = 'refresh_materialized_views_interval_in_days';
          """))
