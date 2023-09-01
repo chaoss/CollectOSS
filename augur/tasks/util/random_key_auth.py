@@ -33,7 +33,7 @@ class RandomKeyAuth(Auth):
         
         if self.list_of_keys:
             key_value = choice(self.list_of_keys)
-
+            self.logger.debug(f'Key value used: {key_value}')
             # formats the key string into a format GitHub will accept
 
             if self.key_format: 
@@ -43,6 +43,7 @@ class RandomKeyAuth(Auth):
                 
             # set the headers of the request with the new key
             request.headers[self.header_name] = key_string
+            #self.logger.info(f"List of Keys: {self.list_of_keys}")
 
         else:
             self.logger.error(f"There are no valid keys to make a request with: {self.list_of_keys}")

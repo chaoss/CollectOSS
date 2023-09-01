@@ -168,8 +168,10 @@ class RedisList(MutableSequence):
         """
 
         if index is None:
-
+            # This will get a random index from the list and remove it, 
+            # decreasing the likelihood of everyone using the same key all the time
             redis.rpop(self.redis_list_key)
+            #redis.spop(self.redis_list_key)
 
         else:
             # calls __delitem__
