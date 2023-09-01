@@ -33,7 +33,7 @@ class RandomKeyAuth(Auth):
         
         if self.list_of_keys:
             key_value = choice(self.list_of_keys)
-
+            self.logger.info(f'Key value used: {key_value}')
             # formats the key string into a format GitHub will accept
 
             if self.key_format: 
