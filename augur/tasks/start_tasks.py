@@ -175,7 +175,7 @@ def augur_collection_monitor():
             primary_enabled_phases.append(core_task_success_util_gen)
 
 
-            primary_hook = CollectionHook("core",primary_enabled_phases,40)
+            primary_hook = CollectionHook("core",primary_enabled_phases,max_repo=40)
             enabled_collection_hooks.append(primary_hook)
         
         if secondary_repo_collect_phase.__name__ in enabled_phase_names:
@@ -192,7 +192,7 @@ def augur_collection_monitor():
                 return secondary_task_success_util.si(repo_git)
 
             secondary_enabled_phases.append(secondary_task_success_util_gen)
-            secondary_hook = CollectionHook("secondary",secondary_enabled_phases,10)
+            secondary_hook = CollectionHook("secondary",secondary_enabled_phases,max_repo=10)
 
             enabled_collection_hooks.append(secondary_hook)
             #start_secondary_collection(session, max_repo=10)
@@ -213,7 +213,7 @@ def augur_collection_monitor():
 
             facade_enabled_phases.append(facade_task_update_weight_util_gen)
 
-            facade_hook = CollectionHook("facade",facade_enabled_phases,30)
+            facade_hook = CollectionHook("facade",facade_enabled_phases,max_repo=30)
 
             #start_facade_collection(session, max_repo=30)
             enabled_collection_hooks.append(facade_hook)
@@ -228,7 +228,7 @@ def augur_collection_monitor():
 
             ml_enabled_phases.append(ml_task_success_util_gen)
 
-            ml_hook = CollectionHook("ml",ml_enabled_phases,5)
+            ml_hook = CollectionHook("ml",ml_enabled_phases,max_repo=5)
             
             enabled_collection_hooks.append(ml_hook)
             #start_ml_collection(session,max_repo=5)
@@ -236,7 +236,7 @@ def augur_collection_monitor():
         logger.info(f"Starting collection phases: {[h.name for h in enabled_collection_hooks]}")
         main_routine = AugurTaskRoutine(session,enabled_collection_hooks)
 
-        main_routine.start_data_collection()
+        main_routine.start_routine_data_collection()
 
 # have a pipe of 180
 

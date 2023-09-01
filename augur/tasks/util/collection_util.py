@@ -38,7 +38,7 @@ class CollectionState(Enum):
 
 
 class CollectionHook:
-    def __init__(self,name,phases,max_repo,new_status = CollectionState.PENDING.value,additional_conditions = None,days_until_collect_again = 1):
+    def __init__(self,name,phases,max_repo = 10,new_status = CollectionState.PENDING.value,additional_conditions = None,days_until_collect_again = 1):
         self.name = name
         self.phases = phases
         self.max_repo = max_repo
@@ -496,6 +496,19 @@ class AugurTaskRoutine:
         setattr(repoStatus,f"{self.collection_hook}_status",self.start_state)
         self.session.commit()
 
+    def start_routine_data_collection(self):
+        """Get all valid repos for a hook, start all tasks for those repos, and return.
+
+            This is the routine method that gets the repos for you and then starts them.
+            The regular start data collection does the same thing but assumes you provided 
+            specific repo url yourself. 
+        """
+
+        self.get_valid_repos_for_each_hook()
+
+        self.start_data_collection()
+    
+
     def start_data_collection(self):
         """Start all task items and return.
 
@@ -505,7 +518,6 @@ class AugurTaskRoutine:
             is generalized.
         """
 
-        self.get_valid_repos_for_each_hook()
         #Send messages starts each repo and yields its running info
         #to concurrently update the correct field in the database.
         for repo_git, task_id in self.send_messages():
