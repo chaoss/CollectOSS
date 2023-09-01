@@ -68,7 +68,7 @@ default_config = {
             },
             "Celery": {
                 "worker_process_vmem_cap": 0.25,
-                "refresh_materialized_views_interval_in_days": 7
+                "refresh_materialized_views_interval_in_days": 1
             },
             "Redis": {
                 "cache_group": 0, 
