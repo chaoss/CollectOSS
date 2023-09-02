@@ -8,6 +8,8 @@ from augur.tasks.util.redis_list import RedisList
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 
+RATE_LIMIT_URL = "https://api.github.com/rate_limit"
+
 
 class NoValidKeysError(Exception):
     pass
@@ -143,12 +145,9 @@ class GithubApiKeyHandler():
             True if key is bad. False if the key is good
         """
 
-        # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
-        url = "https://api.github.com/rate_limit"
-
         headers = {'Authorization': f'token {oauth_key}'}
 
-        data = client.request(method="GET", url=url, headers=headers, timeout=180).json()
+        data = client.request(method="GET", url=RATE_LIMIT_URL, headers=headers, timeout=180).json()
 
         try:
             if data["message"] == "Bad credentials":
@@ -157,3 +156,24 @@ class GithubApiKeyHandler():
             pass
 
         return False
+    
+    @staticmethod
+    def get_key_rate_limit(client, github_key):
+
+        headers = {'Authorization': f'token {github_key}'}
+
+        data = client.request(method="GET", url=RATE_LIMIT_URL, headers=headers, timeout=180).json()
+
+        if "message" in data:
+            return None, None
+        
+        def convert_rate_limit_request(data):
+            return {
+            "requests_remaining": data["remaining"],
+            "reset_epoch": data["reset"]
+            }
+        
+        core_data = convert_rate_limit_request(data["resources"]["core"])
+        graphql_data = convert_rate_limit_request(data["resources"]["graphql"])
+
+        return core_data, graphql_data
