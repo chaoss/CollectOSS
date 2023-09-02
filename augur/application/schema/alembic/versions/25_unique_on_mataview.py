@@ -67,8 +67,6 @@ def add_fix_keys_25(upgrade=True):
             ----
             DROP MATERIALIZED VIEW if exists "augur_data"."augur_new_contributors";
 
-                DROP MATERIALIZED VIEW if exists "augur_data"."augur_new_contributors";
-
                 CREATE MATERIALIZED VIEW "augur_data"."augur_new_contributors"
                 AS
                 SELECT a.id AS cntrb_id,
