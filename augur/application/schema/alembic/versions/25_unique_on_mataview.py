@@ -33,26 +33,28 @@ def add_fix_keys_25(upgrade=True):
 
       conn = op.get_bind() 
       conn.execute(text("""CREATE UNIQUE INDEX ON augur_data.api_get_all_repo_prs(repo_id);"""))
+      conn.commit()
 
       conn = op.get_bind()
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.api_get_all_repos_commits(repo_id); """)) 
+      conn.commit()
 
       conn = op.get_bind()
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.api_get_all_repos_issues(repo_id); """)) 
+      conn.commit()
+
 
       conn = op.get_bind()
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.explorer_commits_and_committers_daily_count( repo_id, cmt_committer_date); """)) 
-
-      conn = op.get_bind()
-      conn.execute(text("""
-        CREATE  UNIQUE INDEX ON augur_data.explorer_new_contributors(cntrb_id, created_at, month, year, repo_id, login, rank); """)) 
+      conn.commit()
 
       conn = op.get_bind()
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.explorer_entry_list(repo_id); """)) 
+      conn.commit()
 
       conn = op.get_bind()
       conn.execute(text("""
@@ -169,14 +171,6 @@ def add_fix_keys_25(upgrade=True):
 
                 ALTER MATERIALIZED VIEW "augur_data"."augur_new_contributors" OWNER TO "augur";
 
-                CREATE UNIQUE INDEX "augur_new_contributors_cntrb_id_repo_id_month_login_year_ra_idx" ON "augur_data"."augur_new_contributors" USING btree (
-                  "cntrb_id" "pg_catalog"."uuid_ops" ASC NULLS LAST,
-                  "repo_id" "pg_catalog"."int8_ops" ASC NULLS LAST,
-                  "month" "pg_catalog"."float8_ops" ASC NULLS LAST,
-                  "login" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST,
-                  "year" "pg_catalog"."float8_ops" ASC NULLS LAST,
-                  "rank" "pg_catalog"."int8_ops" ASC NULLS LAST
-                );
             ----
           create materialized view augur_data.explorer_contributor_actions as 
           SELECT a.id AS cntrb_id,
@@ -280,8 +274,15 @@ def add_fix_keys_25(upgrade=True):
              update augur_operations.config set value='1' where setting_name = 'refresh_materialized_views_interval_in_days';
              CREATE  UNIQUE INDEX ON augur_data.explorer_contributor_actions(cntrb_id,created_at,repo_id, action, repo_name,login, rank);"""))
 
+      conn.commit()
+
       conn = op.get_bind()
       conn.execute(text("""
-        CREATE  UNIQUE INDEX ON augur_data.augur_new_contributors( cntrb_id, repo_id, month, login, year, rank); """)) 
-
+        CREATE  UNIQUE INDEX ON augur_data.augur_new_contributors( cntrb_id, created_at, repo_id, month, login, year, rank); """)) 
+      conn.commit()
+      
+      conn = op.get_bind()
+      conn.execute(text("""
+        CREATE  UNIQUE INDEX ON augur_data.explorer_new_contributors(cntrb_id, created_at, month, year, repo_id, login, rank); """)) 
+      conn.commit()
 
