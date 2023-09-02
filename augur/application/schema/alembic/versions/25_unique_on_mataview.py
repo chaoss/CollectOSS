@@ -1,4 +1,4 @@
-"""a unique index on a materialized view allows it to be refreshed concurrently, preventing blocking behavior
+""" THIS WILL TAKE LONGER ON A LARGE SET OF REPOSITORIES : a unique index on a materialized view allows it to be refreshed concurrently, preventing blocking behavior
 
 Revision ID: 25
 Revises: 24
