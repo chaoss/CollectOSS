@@ -283,6 +283,6 @@ def add_fix_keys_25(upgrade=True):
 
       conn = op.get_bind()
       conn.execute(text("""
-        CREATE  UNIQUE INDEX ON augur_data.explorer_new_contributors(cntrb_id, created_at, repo_id, repo_name, login, rank); """)) 
+        CREATE  UNIQUE INDEX ON augur_data.explorer_new_contributors(cntrb_id, created_at, month, year, repo_id, repo_name, login, rank); """)) 
       conn.execute(text("""COMMIT;"""))
 
