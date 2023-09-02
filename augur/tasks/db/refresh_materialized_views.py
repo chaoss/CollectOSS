@@ -17,6 +17,7 @@ def refresh_materialized_views():
     from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(refresh_materialized_views.__name__)
+    self.logger = logging.getLogger(refresh_materialized_views.__name__)
 
     mv1_refresh = s.sql.text("""    
                 REFRESH MATERIALIZED VIEW concurrently augur_data.api_get_all_repo_prs with data;
