@@ -307,7 +307,7 @@ def add_fix_keys_25(upgrade=True):
                                         a.full_name,
                                         a.login,
                                         a.action,
-                                        row_number() OVER (PARTITION BY a.id, a.repo_id ORDER BY a.created_at) AS rank
+                                        row_number() OVER (PARTITION BY a.id, a.repo_id ORDER BY a.created_at desc) AS rank
                                        FROM ( SELECT canonical_full_names.canonical_id AS id,
                                                 issues.created_at,
                                                 issues.repo_id,
