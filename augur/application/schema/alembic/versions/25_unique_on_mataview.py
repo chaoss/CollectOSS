@@ -33,28 +33,28 @@ def add_fix_keys_25(upgrade=True):
 
       conn = op.get_bind() 
       conn.execute(text("""CREATE UNIQUE INDEX ON augur_data.api_get_all_repo_prs(repo_id);"""))
-      conn.commit()
+      conn.execute(text("""COMMIT;"""))
 
       conn = op.get_bind()
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.api_get_all_repos_commits(repo_id); """)) 
-      conn.commit()
+      conn.execute(text("""COMMIT;"""))
 
       conn = op.get_bind()
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.api_get_all_repos_issues(repo_id); """)) 
-      conn.commit()
+      conn.execute(text("""COMMIT;"""))
 
 
       conn = op.get_bind()
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.explorer_commits_and_committers_daily_count( repo_id, cmt_committer_date); """)) 
-      conn.commit()
+      conn.execute(text("""COMMIT;"""))
 
       conn = op.get_bind()
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.explorer_entry_list(repo_id); """)) 
-      conn.commit()
+      conn.execute(text("""COMMIT;"""))
 
       conn = op.get_bind()
       conn.execute(text("""
@@ -274,15 +274,15 @@ def add_fix_keys_25(upgrade=True):
              update augur_operations.config set value='1' where setting_name = 'refresh_materialized_views_interval_in_days';
              CREATE  UNIQUE INDEX ON augur_data.explorer_contributor_actions(cntrb_id,created_at,repo_id, action, repo_name,login, rank);"""))
 
-      conn.commit()
+      conn.execute(text("""COMMIT;"""))
 
       conn = op.get_bind()
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.augur_new_contributors( cntrb_id, created_at, repo_id, month, login, year, rank); """)) 
-      conn.commit()
-      
+      conn.execute(text("""COMMIT;"""))
+
       conn = op.get_bind()
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.explorer_new_contributors(cntrb_id, created_at, month, year, repo_id, login, rank); """)) 
-      conn.commit()
+      conn.execute(text("""COMMIT;"""))
 
