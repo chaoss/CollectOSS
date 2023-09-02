@@ -271,14 +271,19 @@ def add_fix_keys_25(upgrade=True):
             WHERE (a.repo_id = repo.repo_id)
             ORDER BY a.created_at DESC;
             
-             update augur_operations.config set value='1' where setting_name = 'refresh_materialized_views_interval_in_days';
-             CREATE  UNIQUE INDEX ON augur_data.explorer_contributor_actions(cntrb_id,created_at,repo_id, action, repo_name,login, rank);"""))
+             update augur_operations.config set value='1' where setting_name = 'refresh_materialized_views_interval_in_days';"""))
 
       conn.execute(text("""COMMIT;"""))
 
       conn = op.get_bind()
       conn.execute(text("""
         CREATE  UNIQUE INDEX ON augur_data.augur_new_contributors( cntrb_id, created_at, repo_id, repo_name, login, rank); """)) 
+      conn.execute(text("""COMMIT;"""))
+
+
+      conn = op.get_bind()
+      conn.execute(text("""
+        CREATE  UNIQUE INDEX ON augur_data.explorer_contributor_actions(cntrb_id,created_at,repo_id, action, repo_name,login, rank); """)) 
       conn.execute(text("""COMMIT;"""))
 
       conn = op.get_bind()
