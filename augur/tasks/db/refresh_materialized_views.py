@@ -12,6 +12,8 @@ from augur.application.logs import AugurLogger
 @celery.task
 def refresh_materialized_views():
 
+    self.logger = AugurLogger("data_collection_jobs").get_logger()
+
     from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(refresh_materialized_views.__name__)
@@ -62,7 +64,7 @@ def refresh_materialized_views():
         with DatabaseSession(logger, engine) as session:
             session.execute_sql(mv1_refresh)
     except Exception as e: 
-        AugurLogger.logger.info(f"error is {e}")
+        self.logger.info(f"error is {e}")
         pass 
 
 
@@ -70,56 +72,56 @@ def refresh_materialized_views():
         with DatabaseSession(logger, engine) as session:
             session.execute_sql(mv1_refresh)
     except Exception as e: 
-        AugurLogger.logger.info(f"error is {e}")
+        self.logger.info(f"error is {e}")
         pass 
 
     try: 
         with DatabaseSession(logger, engine) as session:
             session.execute_sql(mv2_refresh)
     except Exception as e: 
-        AugurLogger.logger.info(f"error is {e}")
+        self.logger.info(f"error is {e}")
         pass 
 
     try: 
         with DatabaseSession(logger, engine) as session:
             session.execute_sql(mv3_refresh)
     except Exception as e: 
-        AugurLogger.logger.info(f"error is {e}")
+        self.logger.info(f"error is {e}")
         pass 
 
     try: 
         with DatabaseSession(logger, engine) as session:
             session.execute_sql(mv4_refresh)
     except Exception as e: 
-        AugurLogger.logger.info(f"error is {e}")
+        self.logger.info(f"error is {e}")
         pass 
 
     try: 
         with DatabaseSession(logger, engine) as session:
             session.execute_sql(mv5_refresh)
     except Exception as e: 
-        AugurLogger.logger.info(f"error is {e}")
+        self.logger.info(f"error is {e}")
         pass 
 
     try: 
         with DatabaseSession(logger, engine) as session:
             session.execute_sql(mv6_refresh)
     except Exception as e: 
-        AugurLogger.logger.info(f"error is {e}")
+        self.logger.info(f"error is {e}")
         pass 
 
     try: 
         with DatabaseSession(logger, engine) as session:
             session.execute_sql(mv7_refresh)
     except Exception as e: 
-        AugurLogger.logger.info(f"error is {e}")
+        self.logger.info(f"error is {e}")
         pass 
 
     try: 
         with DatabaseSession(logger, engine) as session:
             session.execute_sql(mv8_refresh)
     except Exception as e: 
-        AugurLogger.logger.info(f"error is {e}")
+        self.logger.info(f"error is {e}")
         pass 
 
 
