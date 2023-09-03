@@ -534,6 +534,7 @@ class AugurTaskRoutine:
     """
         class to keep track of various groups of collection tasks for a group of repos.
         Simple version to just schedule a number of repos not worrying about repo weight.
+        The repo weight matters when constructing the CollectionRequest through get_valid_repos
         Used when scheduling repo clones/updates.
 
 
