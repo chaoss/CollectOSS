@@ -128,7 +128,7 @@ class CollectionRequest:
 
 
     #Get repo urls based on passed in info.
-    def get_valid_repos(self):
+    def get_valid_repos(self,session):
         #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
         #Get the count of repos that are currently running this collection hook
         #status_column = f"{hook}_status"
