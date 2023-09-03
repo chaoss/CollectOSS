@@ -52,6 +52,8 @@ def get_required_conditions_for_core_repos(allow_collected_before = False, days_
             AND core_status!='{str(CollectionState.COLLECTING.value)}'
             AND core_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
         """
+    
+    return condition_concat_string
 
 def get_required_conditions_for_secondary_repos(allow_collected_before = False, days_until_collect_again = 1):
 
@@ -70,6 +72,8 @@ def get_required_conditions_for_secondary_repos(allow_collected_before = False, 
             AND secondary_status!='{str(CollectionState.COLLECTING.value)}'
             AND secondary_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
         """
+    
+    return condition_concat_string
 
 def get_required_conditions_for_facade_repos(allow_collected_before = False, days_until_collect_again = 1):
 
@@ -92,6 +96,8 @@ def get_required_conditions_for_facade_repos(allow_collected_before = False, day
             AND facade_status!='{str(CollectionState.COLLECTING.value)}'
             AND facade_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
         """
+    
+    return condition_concat_string
 
 def get_required_conditions_for_ml_repos(allow_collected_before = False, days_until_collect_again = 1):
 
@@ -109,6 +115,8 @@ def get_required_conditions_for_ml_repos(allow_collected_before = False, days_un
             AND ml_status!='{str(CollectionState.COLLECTING.value)}'
             AND ml_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
         """
+    
+    return condition_concat_string
 
 class CollectionRequest:
     def __init__(self,name,phases,max_repo = 10,new_status = CollectionState.PENDING.value,additional_conditions = None,days_until_collect_again = 1):
@@ -540,15 +548,16 @@ class AugurTaskRoutine:
         self.logger = session.logger
 
         self.collection_hooks = collection_hooks
+        self.session = session
 
-    def update_status_and_id(self,repo_git, task_id):
+    def update_status_and_id(self,repo_git, task_id, name):
         repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
 
         #Set status in database to collecting
         repoStatus = repo.collection_status[0]
         #
-        setattr(repoStatus,f"{self.collection_hook}_task_id",task_id)
-        setattr(repoStatus,f"{self.collection_hook}_status",self.start_state)
+        setattr(repoStatus,f"{name}_task_id",task_id)
+        setattr(repoStatus,f"{name}_status", CollectionState.COLLECTING.value)
         self.session.commit()
 
 
@@ -563,8 +572,8 @@ class AugurTaskRoutine:
 
         #Send messages starts each repo and yields its running info
         #to concurrently update the correct field in the database.
-        for repo_git, task_id in self.send_messages():
-            self.update_status_and_id(repo_git,task_id)
+        for repo_git, task_id, hook_name in self.send_messages():
+            self.update_status_and_id(repo_git,task_id,hook_name)
     
     def send_messages(self):
         augur_collection_list = []
@@ -592,7 +601,7 @@ class AugurTaskRoutine:
                 self.logger.info(f"Setting repo {col_hook.name} status to collecting for repo: {repo_git}")
 
                 #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
-                yield repo_git, task_id
+                yield repo_git, task_id, col_hook.name
 
 #def start_block_of_repos(logger,session,repo_git_identifiers,phases,repos_type,hook="core"):
 #
