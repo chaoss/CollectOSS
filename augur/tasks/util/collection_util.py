@@ -152,7 +152,7 @@ class CollectionRequest:
             if limit <= 0:
                 return
 
-            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),hook=collection_hook.name, days_to_wait_until_next_collection=self.days_until_collect_again)
+            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
 
             self.repo_list.extend(collection_list)
             #Update limit with amount of repos started
@@ -184,7 +184,7 @@ class CollectionRequest:
             #only start repos older than the specified amount of days
             #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
             #Order by the relevant weight for the collection hook
-            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),allow_old_repos=True,hook=collection_hook.name, days_to_wait_until_next_collection=self.days_until_collect_again)
+            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),allow_old_repos=True,hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
 
             self.repo_list.extend(collection_list)
             limit -= len(collection_list)
