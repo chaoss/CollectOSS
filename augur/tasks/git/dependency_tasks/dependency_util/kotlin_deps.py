@@ -6,7 +6,7 @@ def get_files(path):
     files = list(p.glob('**/*.kt'))
     return files
 
-def get_imports_for_file(path):
+def get_deps_for_file(path):
     with open(path, 'r') as f:
         content = f.read()
         matches = re.findall('import\s+(.*?)(?:;|\n)', content, re.DOTALL)
