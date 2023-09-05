@@ -1,4 +1,4 @@
-Augur Setup
+OSX Setup
 ===========
 
 **NOTE**: Currently, our machine learning dependencies allow Augur to
@@ -6,9 +6,6 @@ only fully support python 3.8 to python 3.10. Python 3.11 will sometimes
 work, but often there are libraries at the operating system level that
 have not yet been updated to support machine learning libraries at
 python 3.11.
-
-OSX: Note: This has **MOSTLY** been tested on Apple Silicon with Python 3.11 at this time, however, one user has been successful with Intel based Apple computers.
-==================================================================================================================================================================
 
 For OSX You Need to make sure to install XCode Command line tools:
 ------------------------------------------------------------------

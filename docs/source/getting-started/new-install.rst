@@ -1,8 +1,5 @@
-Augur Setup
-===========
-
-Ubuntu 22.x
-===========
+Ubuntu 22.x Setup
+=================
 
 We default to this version of Ubuntu for the moment because Augur does
 not yet support python3.10, which is the default version of python3.x
