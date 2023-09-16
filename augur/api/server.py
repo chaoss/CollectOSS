@@ -10,6 +10,7 @@ import os
 import base64
 import logging
 import importlib
+import graphene
 
 from typing import Optional, List, Any, Tuple
 
@@ -22,12 +23,17 @@ from beaker.util import parse_cache_config_options
 from beaker.cache import CacheManager, Cache
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
+from flask_graphql import GraphQLView
+from graphene_sqlalchemy import SQLAlchemyObjectType
+
 
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import get_database_string, create_database_engine
 from metadata import __version__ as augur_code_version
+from augur.application.db.models.augur_data import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release
+
 
 # from augur.api.routes import AUGUR_API_VERSION
 AUGUR_API_VERSION = "api/unstable"
@@ -327,6 +333,241 @@ engine = create_database_engine(url, poolclass=StaticPool)
 db_session = DatabaseSession(logger, engine)
 augur_config = AugurConfig(logger, db_session)
 
+
+class RepoType(SQLAlchemyObjectType):
+    class Meta:
+        model = Repo
+        use_connection = True
+
+    issues = graphene.List(lambda: IssueType)
+    prs = graphene.List(lambda: PullRequestType)
+    messages = graphene.List(lambda: MessageType)
+    releases = graphene.List(lambda: ReleaseType)
+
+    def resolve_issues(self, info):
+        return self.issues
+    
+    def resolve_prs(self, info):
+        return self.prs
+    
+    def resolve_messages(self, info):
+        return self.messages
+    
+    def resolve_releases(self, info):
+        return self.releases
+    
+class IssueType(SQLAlchemyObjectType):
+    class Meta:
+        model = Issue
+        use_connection = True
+
+    repo = graphene.Field(RepoType)
+    messages = graphene.List(lambda: MessageType)
+    labels = graphene.List(lambda: IssueLabelType)
+    assignees = graphene.List(lambda: IssueAssigneeType)
+
+    def resolve_repo(self, info):
+        return self.repo
+    
+    def resolve_messages(self, info):
+        messages = [ref.message for ref in self.message_refs]
+        return messages
+    
+    def resolve_labels(self, info):
+        return self.labels
+    
+    def resolve_assignees(self, info):
+        return self.assignees
+
+class PullRequestType(SQLAlchemyObjectType):
+    class Meta:
+        model = PullRequest
+        use_connection = True
+
+    repo = graphene.Field(RepoType)
+    messages = graphene.List(lambda: MessageType)
+    reviews = graphene.List(lambda: PullRequestReviewType)
+    labels = graphene.List(lambda: PrLabelType)
+    assignees = graphene.List(lambda: PullRequestAssigneeType)
+    files = graphene.List(lambda: PullRequestFileType)
+
+    def resolve_repo(self, info):
+        return self.repo
+    
+    def resolve_messages(self, info):
+        messages = [ref.message for ref in self.message_refs]
+        return messages
+    
+    def resolve_reviews(self, info):
+        return self.reviews
+    
+    def resolve_labels(self, info):
+        return self.labels
+    
+    def resolve_assignees(self, info):
+        return self.assignees
+    
+    def resolve_files(self, info):
+        return self.files
+    
+
+    
+class PullRequestReviewType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = PullRequestReview
+        use_connection = True
+
+class MessageType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Message
+        use_connection = True
+
+    def resolve_repo(self, info):
+        return self.repo
+    
+class CommitType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Commit
+        use_connection = True
+
+    messages = graphene.List(MessageType)
+
+    def resolve_repo(self, info):
+        return self.repo
+    
+    
+class IssueAssigneeType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = IssueAssignee
+        use_connection = True
+
+class PullRequestAssigneeType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = PullRequestAssignee
+        use_connection = True
+
+class IssueLabelType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = IssueLabel
+        use_connection = True
+
+class PrLabelType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = PullRequestLabel
+        use_connection = True
+
+class ReleaseType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Release
+        use_connection = True
+
+class ContributorType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Contributor
+        use_connection = True
+    
+    issues_opened = graphene.List(lambda: IssueType)
+    pull_requests = graphene.List(lambda: PullRequestType)
+    pull_request_reviews = graphene.List(lambda: PullRequestReviewType)
+    commits = graphene.List(lambda: CommitType)
+
+    def resolve_issues_opened(self, info):
+        return self.issues_opened
+    
+    def resolve_pull_requests(self, info):
+        return self.pull_requests
+
+    def resolve_pull_request_reviews(self, info):
+        return self.pull_request_reviews
+    
+    def resolve_commits(self, info):
+        return self.commits
+    
+
+class PullRequestFileType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = PullRequestFile
+        use_connection = True
+
+class PullRequestCommitType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = PullRequestCommit
+        use_connection = True
+
+class ContributorAliasType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = ContributorsAlias
+        use_connection = True
+
+
+class Query(graphene.ObjectType):
+
+    repos = graphene.List(RepoType)
+    repo = graphene.Field(RepoType, id=graphene.Int())
+
+    issues = graphene.List(IssueType)
+    issue = graphene.Field(IssueType, id=graphene.Int())
+
+    prs = graphene.List(PullRequestType)
+    pr = graphene.List(PullRequestType, id=graphene.Int())
+
+    messages = graphene.List(MessageType)
+    commits = graphene.List(CommitType)
+
+    contributors = graphene.List(ContributorType)
+    contributor = graphene.Field(ContributorType, id=graphene.UUID())
+
+
+    def resolve_repos(self, info):
+        return db_session.query(Repo).all()
+    
+    def resolve_repo(self, info, id):
+        return db_session.query(Repo).filter(Repo.repo_id==id).first()
+
+
+    def resolve_issues(self, info):
+        return db_session.query(Issue).all()
+    
+    def resolve_issue(self, info, id):
+        return db_session.query(Issue).filter(Issue.issue_id==id).first()
+
+
+    def resolve_prs(self, info):
+        return db_session.query(PullRequest).all()
+    
+    def resolve_pr(self, info, id):
+        return db_session.query(PullRequest).filter(PullRequest.pull_request_id==id).first()
+    
+
+    def resolve_messages(self, info):
+        return db_session.query(Message).all()
+    
+    def resolve_commits(self, info):
+        return db_session.query(Commit).all()
+    
+    def resolve_contributors(self, info):
+        print("Contributors")
+        return db_session.query(Contributor).all()
+    
+    def resolve_contributor(self, info, id):
+        print(id)
+        return db_session.query(Contributor).filter(Contributor.cntrb_id==id).first()
+    
+
+
+
 template_dir = str(Path(__file__).parent.parent / "templates")
 static_dir = str(Path(__file__).parent.parent / "static")
 
@@ -370,6 +611,15 @@ def status():
     return Response(response=json.dumps(status),
                     status=200,
                     mimetype="application/json")
+
+
+schema = graphene.Schema(query=Query)
+
+app.add_url_rule(f'/{app.augur_api_version}/graphql', view_func=GraphQLView.as_view(
+    'graphql',
+    schema=schema,
+    graphiql=True
+))
 
 from .routes import *
 
