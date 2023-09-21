@@ -366,8 +366,8 @@ class RepoType(SQLAlchemyObjectType):
         model = Repo
         use_connection = True
 
-    issues = graphene.List(lambda: IssueType)
-    prs = graphene.List(lambda: PullRequestType)
+    issues = graphene.Field(lambda: IssueConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
+    prs = graphene.Field(lambda: PullRequestConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     messages = graphene.List(lambda: MessageType)
     releases = graphene.List(lambda: ReleaseType)
     cursor = graphene.String()
@@ -375,11 +375,15 @@ class RepoType(SQLAlchemyObjectType):
     def resolve_cursor(self, info):
         return str(self.repo_id)
 
-    def resolve_issues(self, info):
-        return self.issues
+    def resolve_issues(self, info, after=None, limit=None):
+
+        issue_connection = get_connection(Issue, "issue_id", IssueConnection, after, limit)
+        return issue_connection
     
-    def resolve_prs(self, info):
-        return self.prs
+    def resolve_prs(self, info, after=None, limit=None):
+
+        pr_connection = get_connection(PullRequest, "pull_request_id", PullRequestConnection, after, limit)
+        return pr_connection
     
     def resolve_messages(self, info):
         return self.messages
@@ -447,6 +451,10 @@ class PullRequestType(SQLAlchemyObjectType):
     labels = graphene.List(lambda: PrLabelType)
     assignees = graphene.List(lambda: PullRequestAssigneeType)
     files = graphene.List(lambda: PullRequestFileType)
+    cursor = graphene.String()
+
+    def resolve_cursor(self, info):
+        return str(self.pull_request_id)
 
     def resolve_repo(self, info):
         return self.repo
