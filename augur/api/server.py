@@ -368,7 +368,7 @@ class RepoType(SQLAlchemyObjectType):
 
     issues = graphene.Field(lambda: IssueConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     prs = graphene.Field(lambda: PullRequestConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
-    messages = graphene.List(lambda: MessageType)
+    messages = graphene.Field(lambda: MessageConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     releases = graphene.List(lambda: ReleaseType)
     cursor = graphene.String()
 
@@ -376,17 +376,16 @@ class RepoType(SQLAlchemyObjectType):
         return str(self.repo_id)
 
     def resolve_issues(self, info, after=None, limit=None):
-
         issue_connection = get_connection(Issue, "issue_id", IssueConnection, after, limit)
         return issue_connection
     
     def resolve_prs(self, info, after=None, limit=None):
-
         pr_connection = get_connection(PullRequest, "pull_request_id", PullRequestConnection, after, limit)
         return pr_connection
     
-    def resolve_messages(self, info):
-        return self.messages
+    def resolve_messages(self, info, after=None, limit=None):
+        messages_connection = get_connection(Message, "msg_id", MessageConnection, after, limit)
+        return messages_connection
     
     def resolve_releases(self, info):
         return self.releases
@@ -619,8 +618,6 @@ class Query(graphene.ObjectType):
     contributor = graphene.Field(ContributorType, id=graphene.UUID())
 
     def resolve_repos(self, info, after=None, limit=None):
-        # Starting with a basic query for all repos
-
         repo_connection = get_connection(Repo, "repo_id", RepoConnection, after, limit)
         return repo_connection
 
@@ -628,7 +625,6 @@ class Query(graphene.ObjectType):
         return db_session.query(Repo).filter(Repo.repo_id==id).first()
 
     def resolve_issues(self, info, after=None, limit=None):
-
         issue_connection = get_connection(Issue, "issue_id", IssueConnection, after, limit)
         return issue_connection
     
@@ -642,14 +638,11 @@ class Query(graphene.ObjectType):
     def resolve_pr(self, info, id):
         return db_session.query(PullRequest).filter(PullRequest.pull_request_id==id).first()
     
-
     def resolve_messages(self, info, after=None, limit=None):
-
         messages_connection = get_connection(Message, "msg_id", MessageConnection, after, limit)
         return messages_connection
     
     def resolve_commits(self, info, after=None, limit=None):
-
         commit_connection = get_connection(Commit, "cmt_id", CommitConnection, after, limit)
         return commit_connection
     
