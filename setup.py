@@ -33,6 +33,7 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     install_requires=[
+        "graphene",
         "wheel",
         "sendgrid",
         "alembic==1.8.1", # 1.8.1
