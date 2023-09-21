@@ -334,15 +334,18 @@ db_session = DatabaseSession(logger, engine)
 augur_config = AugurConfig(logger, db_session)
 
 
-def get_connection(table, cursor_field_name, connection_class, after, limit):
+def get_connection(table, cursor_field_name, connection_class, after, limit, extra_condition=False):
 
     cursor_field = getattr(table, cursor_field_name)
-    print(cursor_field)
     query = db_session.query(table).order_by(cursor_field)
 
     if after:
         cursor_id = after
         query = query.filter(cursor_field > cursor_id)
+
+    if extra_condition:
+            field = getattr(table, extra_condition["field_name"])
+            query = query.filter(field == extra_condition["value"])
 
     # get one more item to determine if there is a next page
     items = query.limit(limit + 1).all()
@@ -371,20 +374,23 @@ class RepoType(SQLAlchemyObjectType):
     messages = graphene.Field(lambda: MessageConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     releases = graphene.List(lambda: ReleaseType)
     cursor = graphene.String()
-
+        
     def resolve_cursor(self, info):
         return str(self.repo_id)
 
     def resolve_issues(self, info, after=None, limit=None):
-        issue_connection = get_connection(Issue, "issue_id", IssueConnection, after, limit)
+        condition = {"field_name": "repo_id", "value": self.repo_id}
+        issue_connection = get_connection(Issue, "issue_id", IssueConnection, after, limit, condition)
         return issue_connection
     
     def resolve_prs(self, info, after=None, limit=None):
-        pr_connection = get_connection(PullRequest, "pull_request_id", PullRequestConnection, after, limit)
+        condition = {"field_name": "repo_id", "value": self.repo_id}
+        pr_connection = get_connection(PullRequest, "pull_request_id", PullRequestConnection, after, limit, condition)
         return pr_connection
     
     def resolve_messages(self, info, after=None, limit=None):
-        messages_connection = get_connection(Message, "msg_id", MessageConnection, after, limit)
+        condition = {"field_name": "repo_id", "value": self.repo_id}
+        messages_connection = get_connection(Message, "msg_id", MessageConnection, after, limit,condition)
         return messages_connection
     
     def resolve_releases(self, info):
