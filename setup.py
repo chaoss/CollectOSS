@@ -34,6 +34,7 @@ setup(
     ],
     install_requires=[
         "graphene",
+        "flask_graphql",
         "wheel",
         "sendgrid",
         "alembic==1.8.1", # 1.8.1
