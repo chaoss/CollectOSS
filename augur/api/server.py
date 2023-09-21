@@ -519,6 +519,10 @@ class ContributorType(SQLAlchemyObjectType):
     pull_requests = graphene.List(lambda: PullRequestType)
     pull_request_reviews = graphene.List(lambda: PullRequestReviewType)
     commits = graphene.List(lambda: CommitType)
+    cursor = graphene.String()
+
+    def resolve_cursor(self, info):
+        return str(self.cntrb_id)
 
     def resolve_issues_opened(self, info):
         return self.issues_opened
@@ -549,6 +553,11 @@ class MessageType(SQLAlchemyObjectType):
 
     def resolve_repo(self, info):
         return self.repo
+    
+    cursor = graphene.String()
+
+    def resolve_cursor(self, info):
+        return str(self.msg_id)
     
 class CommitType(SQLAlchemyObjectType):
 
@@ -584,6 +593,12 @@ class PullRequestConnection(GenericConnection):
 class CommitConnection(GenericConnection):
     items = graphene.List(CommitType)
 
+class ContributorConnection(GenericConnection):
+    items = graphene.List(ContributorType)
+
+class MessageConnection(GenericConnection):
+    items = graphene.List(MessageType)
+
 
 ############### Base Query object ##############
 class Query(graphene.ObjectType):
@@ -597,10 +612,10 @@ class Query(graphene.ObjectType):
     prs = graphene.Field(PullRequestConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     pr = graphene.List(PullRequestType, id=graphene.Int())
 
-    messages = graphene.List(MessageType)
+    messages = graphene.Field(MessageConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     commits = graphene.Field(CommitConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
 
-    contributors = graphene.List(ContributorType)
+    contributors = graphene.Field(ContributorConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     contributor = graphene.Field(ContributorType, id=graphene.UUID())
 
     def resolve_repos(self, info, after=None, limit=None):
@@ -628,20 +643,19 @@ class Query(graphene.ObjectType):
         return db_session.query(PullRequest).filter(PullRequest.pull_request_id==id).first()
     
 
-    def resolve_messages(self, info):
-        return db_session.query(Message).all()
+    def resolve_messages(self, info, after=None, limit=None):
+
+        messages_connection = get_connection(Message, "msg_id", MessageConnection, after, limit)
+        return messages_connection
     
     def resolve_commits(self, info, after=None, limit=None):
-
-        commit_limit = 1000
-        if limit > commit_limit:
-            raise Exception(f"Requested limit of {limit} exceeds the maximum allowed limit of {commit_limit}.")
 
         commit_connection = get_connection(Commit, "cmt_id", CommitConnection, after, limit)
         return commit_connection
     
-    def resolve_contributors(self, info):
-        return db_session.query(Contributor).all()
+    def resolve_contributors(self, info, after=None, limit=None):
+        contributors_connection = get_connection(Contributor, "cntrb_id", ContributorConnection, after, limit)
+        return contributors_connection
     
     def resolve_contributor(self, info, id):
         return db_session.query(Contributor).filter(Contributor.cntrb_id==id).first()
