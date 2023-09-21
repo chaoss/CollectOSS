@@ -581,6 +581,9 @@ class IssueConnection(GenericConnection):
 class PullRequestConnection(GenericConnection):
     items = graphene.List(PullRequestType)
 
+class CommitConnection(GenericConnection):
+    items = graphene.List(CommitType)
+
 
 ############### Base Query object ##############
 class Query(graphene.ObjectType):
@@ -595,7 +598,7 @@ class Query(graphene.ObjectType):
     pr = graphene.List(PullRequestType, id=graphene.Int())
 
     messages = graphene.List(MessageType)
-    commits = graphene.List(CommitType)
+    commits = graphene.Field(CommitConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
 
     contributors = graphene.List(ContributorType)
     contributor = graphene.Field(ContributorType, id=graphene.UUID())
@@ -628,15 +631,19 @@ class Query(graphene.ObjectType):
     def resolve_messages(self, info):
         return db_session.query(Message).all()
     
-    def resolve_commits(self, info):
-        return db_session.query(Commit).all()
+    def resolve_commits(self, info, after=None, limit=None):
+
+        commit_limit = 1000
+        if limit > commit_limit:
+            raise Exception(f"Requested limit of {limit} exceeds the maximum allowed limit of {commit_limit}.")
+
+        commit_connection = get_connection(Commit, "cmt_id", CommitConnection, after, limit)
+        return commit_connection
     
     def resolve_contributors(self, info):
-        print("Contributors")
         return db_session.query(Contributor).all()
     
     def resolve_contributor(self, info, id):
-        print(id)
         return db_session.query(Contributor).filter(Contributor.cntrb_id==id).first()
     
 
