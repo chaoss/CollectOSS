@@ -334,6 +334,33 @@ db_session = DatabaseSession(logger, engine)
 augur_config = AugurConfig(logger, db_session)
 
 
+def get_connection(table, cursor_field_name, connection_class, after, limit):
+
+    cursor_field = getattr(table, cursor_field_name)
+    print(cursor_field)
+    query = db_session.query(table).order_by(cursor_field)
+
+    if after:
+        cursor_id = after
+        query = query.filter(cursor_field > cursor_id)
+
+    # get one more item to determine if there is a next page
+    items = query.limit(limit + 1).all()
+    has_next_page = len(items) > limit
+    items = items[:limit]
+
+    
+    if items:
+        next_cursor = getattr(items[-1], cursor_field_name)
+    else:
+        next_cursor = None
+
+    return connection_class(items=items, page_info=PageInfoType(next_cursor=next_cursor, has_next_page=has_next_page))
+
+
+
+
+########### Repo Types ##################
 class RepoType(SQLAlchemyObjectType):
     class Meta:
         model = Repo
@@ -360,6 +387,14 @@ class RepoType(SQLAlchemyObjectType):
     def resolve_releases(self, info):
         return self.releases
     
+class ReleaseType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Release
+        use_connection = True
+
+
+############### Issue Objects #############
 class IssueType(SQLAlchemyObjectType):
     class Meta:
         model = Issue
@@ -386,7 +421,21 @@ class IssueType(SQLAlchemyObjectType):
     
     def resolve_assignees(self, info):
         return self.assignees
+    
+class IssueAssigneeType(SQLAlchemyObjectType):
 
+    class Meta:
+        model = IssueAssignee
+        use_connection = True
+
+class IssueLabelType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = IssueLabel
+        use_connection = True
+
+
+################ Pull Request Objects ############
 class PullRequestType(SQLAlchemyObjectType):
     class Meta:
         model = PullRequest
@@ -418,51 +467,16 @@ class PullRequestType(SQLAlchemyObjectType):
     def resolve_files(self, info):
         return self.files
     
-
-    
-class PullRequestReviewType(SQLAlchemyObjectType):
-
-    class Meta:
-        model = PullRequestReview
-        use_connection = True
-
-class MessageType(SQLAlchemyObjectType):
-
-    class Meta:
-        model = Message
-        use_connection = True
-
-    def resolve_repo(self, info):
-        return self.repo
-    
-class CommitType(SQLAlchemyObjectType):
-
-    class Meta:
-        model = Commit
-        use_connection = True
-
-    messages = graphene.List(MessageType)
-
-    def resolve_repo(self, info):
-        return self.repo
-    
-    
-class IssueAssigneeType(SQLAlchemyObjectType):
-
-    class Meta:
-        model = IssueAssignee
-        use_connection = True
-
 class PullRequestAssigneeType(SQLAlchemyObjectType):
 
     class Meta:
         model = PullRequestAssignee
         use_connection = True
-
-class IssueLabelType(SQLAlchemyObjectType):
+    
+class PullRequestReviewType(SQLAlchemyObjectType):
 
     class Meta:
-        model = IssueLabel
+        model = PullRequestReview
         use_connection = True
 
 class PrLabelType(SQLAlchemyObjectType):
@@ -471,12 +485,22 @@ class PrLabelType(SQLAlchemyObjectType):
         model = PullRequestLabel
         use_connection = True
 
-class ReleaseType(SQLAlchemyObjectType):
+
+class PullRequestFileType(SQLAlchemyObjectType):
 
     class Meta:
-        model = Release
+        model = PullRequestFile
         use_connection = True
 
+class PullRequestCommitType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = PullRequestCommit
+        use_connection = True
+
+
+
+########### Contributor Types #############
 class ContributorType(SQLAlchemyObjectType):
 
     class Meta:
@@ -500,29 +524,43 @@ class ContributorType(SQLAlchemyObjectType):
     def resolve_commits(self, info):
         return self.commits
     
-
-class PullRequestFileType(SQLAlchemyObjectType):
-
-    class Meta:
-        model = PullRequestFile
-        use_connection = True
-
-class PullRequestCommitType(SQLAlchemyObjectType):
-
-    class Meta:
-        model = PullRequestCommit
-        use_connection = True
-
 class ContributorAliasType(SQLAlchemyObjectType):
 
     class Meta:
         model = ContributorsAlias
         use_connection = True
 
+
+
+########### Other Types ################
+class MessageType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Message
+        use_connection = True
+
+    def resolve_repo(self, info):
+        return self.repo
+    
+class CommitType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Commit
+        use_connection = True
+
+    messages = graphene.List(MessageType)
+
+    def resolve_repo(self, info):
+        return self.repo
+
 class PageInfoType(graphene.ObjectType):
     next_cursor = graphene.String()
     has_next_page = graphene.Boolean()
 
+
+
+
+########### Connection Objects #############
 class GenericConnection(graphene.ObjectType):
     page_info = graphene.Field(PageInfoType)
 
@@ -532,31 +570,11 @@ class RepoConnection(GenericConnection):
 class IssueConnection(GenericConnection):
     items = graphene.List(IssueType)
 
-
-def get_connection(table, cursor_field_name, connection_class, after, limit):
-
-    cursor_field = getattr(table, cursor_field_name)
-    print(cursor_field)
-    query = db_session.query(table).order_by(cursor_field)
-
-    if after:
-        cursor_id = after
-        query = query.filter(cursor_field > cursor_id)
-
-    # get one more item to determine if there is a next page
-    items = query.limit(limit + 1).all()
-    has_next_page = len(items) > limit
-    items = items[:limit]
-
-    
-    if items:
-        next_cursor = getattr(items[-1], cursor_field_name)
-    else:
-        next_cursor = None
-
-    return connection_class(items=items, page_info=PageInfoType(next_cursor=next_cursor, has_next_page=has_next_page))
+class PullRequestConnection(GenericConnection):
+    items = graphene.List(PullRequestType)
 
 
+############### Base Query object ##############
 class Query(graphene.ObjectType):
 
     repos = graphene.Field(RepoConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
@@ -565,7 +583,7 @@ class Query(graphene.ObjectType):
     issues = graphene.Field(IssueConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     issue = graphene.Field(IssueType, id=graphene.Int())
 
-    prs = graphene.List(PullRequestType)
+    prs = graphene.Field(PullRequestConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     pr = graphene.List(PullRequestType, id=graphene.Int())
 
     messages = graphene.List(MessageType)
@@ -583,7 +601,6 @@ class Query(graphene.ObjectType):
     def resolve_repo(self, info, id):
         return db_session.query(Repo).filter(Repo.repo_id==id).first()
 
-
     def resolve_issues(self, info, after=None, limit=None):
 
         issue_connection = get_connection(Issue, "issue_id", IssueConnection, after, limit)
@@ -592,9 +609,9 @@ class Query(graphene.ObjectType):
     def resolve_issue(self, info, id):
         return db_session.query(Issue).filter(Issue.issue_id==id).first()
 
-
-    def resolve_prs(self, info):
-        return db_session.query(PullRequest).all()
+    def resolve_prs(self, info, after=None, limit=None):
+        pr_connection = get_connection(PullRequest, "pull_request_id", PullRequestConnection, after, limit)
+        return pr_connection
     
     def resolve_pr(self, info, id):
         return db_session.query(PullRequest).filter(PullRequest.pull_request_id==id).first()
