@@ -343,6 +343,10 @@ class RepoType(SQLAlchemyObjectType):
     prs = graphene.List(lambda: PullRequestType)
     messages = graphene.List(lambda: MessageType)
     releases = graphene.List(lambda: ReleaseType)
+    cursor = graphene.String()
+
+    def resolve_cursor(self, info):
+        return str(self.repo_id)
 
     def resolve_issues(self, info):
         return self.issues
@@ -511,10 +515,18 @@ class ContributorAliasType(SQLAlchemyObjectType):
         model = ContributorsAlias
         use_connection = True
 
+class PageInfoType(graphene.ObjectType):
+    next_cursor = graphene.String()
+    has_next_page = graphene.Boolean()
+
+class RepoConnection(graphene.ObjectType):
+    items = graphene.List(RepoType)
+    page_info = graphene.Field(PageInfoType)
+
 
 class Query(graphene.ObjectType):
 
-    repos = graphene.List(RepoType)
+    repos = graphene.Field(RepoConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     repo = graphene.Field(RepoType, id=graphene.Int())
 
     issues = graphene.List(IssueType)
@@ -529,10 +541,22 @@ class Query(graphene.ObjectType):
     contributors = graphene.List(ContributorType)
     contributor = graphene.Field(ContributorType, id=graphene.UUID())
 
+    def resolve_repos(self, info, after=None, limit=None):
+        # Starting with a basic query for all repos
+        query = db_session.query(Repo).order_by(Repo.repo_id)
 
-    def resolve_repos(self, info):
-        return db_session.query(Repo).all()
-    
+        if after:
+            cursor_id = after
+            query = query.filter(Repo.repo_id > cursor_id)
+
+        items = query.limit(limit + 1).all()
+        has_next_page = len(items) > limit
+        items = items[:limit]
+
+        next_cursor = items[-1].repo_id if items else None
+
+        return RepoConnection(items=items, page_info=PageInfoType(next_cursor=next_cursor, has_next_page=has_next_page))
+
     def resolve_repo(self, info, id):
         return db_session.query(Repo).filter(Repo.repo_id==id).first()
 
