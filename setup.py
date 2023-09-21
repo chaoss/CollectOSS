@@ -34,6 +34,7 @@ setup(
     ],
     install_requires=[
         "graphene",
+        "graphene_sqlalchemy",
         "flask_graphql",
         "wheel",
         "sendgrid",
