@@ -369,6 +369,10 @@ class IssueType(SQLAlchemyObjectType):
     messages = graphene.List(lambda: MessageType)
     labels = graphene.List(lambda: IssueLabelType)
     assignees = graphene.List(lambda: IssueAssigneeType)
+    cursor = graphene.String()
+
+    def resolve_cursor(self, info):
+        return str(self.issue_id)
 
     def resolve_repo(self, info):
         return self.repo
@@ -519,9 +523,38 @@ class PageInfoType(graphene.ObjectType):
     next_cursor = graphene.String()
     has_next_page = graphene.Boolean()
 
-class RepoConnection(graphene.ObjectType):
-    items = graphene.List(RepoType)
+class GenericConnection(graphene.ObjectType):
     page_info = graphene.Field(PageInfoType)
+
+class RepoConnection(GenericConnection):
+    items = graphene.List(RepoType)
+
+class IssueConnection(GenericConnection):
+    items = graphene.List(IssueType)
+
+
+def get_connection(table, cursor_field_name, connection_class, after, limit):
+
+    cursor_field = getattr(table, cursor_field_name)
+    print(cursor_field)
+    query = db_session.query(table).order_by(cursor_field)
+
+    if after:
+        cursor_id = after
+        query = query.filter(cursor_field > cursor_id)
+
+    # get one more item to determine if there is a next page
+    items = query.limit(limit + 1).all()
+    has_next_page = len(items) > limit
+    items = items[:limit]
+
+    
+    if items:
+        next_cursor = getattr(items[-1], cursor_field_name)
+    else:
+        next_cursor = None
+
+    return connection_class(items=items, page_info=PageInfoType(next_cursor=next_cursor, has_next_page=has_next_page))
 
 
 class Query(graphene.ObjectType):
@@ -529,7 +562,7 @@ class Query(graphene.ObjectType):
     repos = graphene.Field(RepoConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     repo = graphene.Field(RepoType, id=graphene.Int())
 
-    issues = graphene.List(IssueType)
+    issues = graphene.Field(IssueConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
     issue = graphene.Field(IssueType, id=graphene.Int())
 
     prs = graphene.List(PullRequestType)
@@ -543,26 +576,18 @@ class Query(graphene.ObjectType):
 
     def resolve_repos(self, info, after=None, limit=None):
         # Starting with a basic query for all repos
-        query = db_session.query(Repo).order_by(Repo.repo_id)
 
-        if after:
-            cursor_id = after
-            query = query.filter(Repo.repo_id > cursor_id)
-
-        items = query.limit(limit + 1).all()
-        has_next_page = len(items) > limit
-        items = items[:limit]
-
-        next_cursor = items[-1].repo_id if items else None
-
-        return RepoConnection(items=items, page_info=PageInfoType(next_cursor=next_cursor, has_next_page=has_next_page))
+        repo_connection = get_connection(Repo, "repo_id", RepoConnection, after, limit)
+        return repo_connection
 
     def resolve_repo(self, info, id):
         return db_session.query(Repo).filter(Repo.repo_id==id).first()
 
 
-    def resolve_issues(self, info):
-        return db_session.query(Issue).all()
+    def resolve_issues(self, info, after=None, limit=None):
+
+        issue_connection = get_connection(Issue, "issue_id", IssueConnection, after, limit)
+        return issue_connection
     
     def resolve_issue(self, info, id):
         return db_session.query(Issue).filter(Issue.issue_id==id).first()
