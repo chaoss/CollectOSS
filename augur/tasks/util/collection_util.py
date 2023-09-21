@@ -36,6 +36,17 @@ class CollectionState(Enum):
     UPDATE = "Update"
     FAILED_CLONE = "Failed Clone"
 
+def get_list_of_all_users(session):
+    #Get a list of all users.
+    query = s.sql.text("""
+        SELECT  
+        user_id
+        FROM augur_operations.users
+    """)
+
+    users = session.execute_sql(query).fetchall()
+    return users
+
 
 def get_required_conditions_for_core_repos(allow_collected_before = False, days_until_collect_again = 1):
 
@@ -118,14 +129,15 @@ def get_required_conditions_for_ml_repos(allow_collected_before = False, days_un
     
     return condition_concat_string
 
+
+
 class CollectionRequest:
-    def __init__(self,name,phases,max_repo = 10,new_status = CollectionState.PENDING.value,additional_conditions = None,days_until_collect_again = 1):
+    def __init__(self,name,phases,max_repo = 10,days_until_collect_again = 1):
         self.name = name
         self.phases = phases
         self.max_repo = max_repo
         self.days_until_collect_again = days_until_collect_again
-        self.additional_conditions = None
-        self.new_status = new_status
+        self.new_status = CollectionState.PENDING.value
         self.repo_list = []
 
         self.status_column = f"{name}_status"
@@ -134,24 +146,23 @@ class CollectionRequest:
         if name == "facade":
             self.new_status = CollectionState.UPDATE.value
 
+    def get_active_repo_count(self):
+        return len(session.query(CollectionStatus).filter(getattr(CollectionStatus,f"{self.name}_status" ) == CollectionState.COLLECTING.value).all())
 
     #Get repo urls based on passed in info.
     def get_valid_repos(self,session):
         #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
         #Get the count of repos that are currently running this collection hook
         #status_column = f"{hook}_status"
-        active_repo_count = len(session.query(CollectionStatus).filter(getattr(CollectionStatus,f"{self.name}_status" ) == CollectionState.COLLECTING.value).all())
+        active_repo_count = self.get_active_repo_count()
 
         #Will always disallow errored repos and repos that are already collecting
 
         #The maximum amount of repos to schedule is affected by the existing repos running tasks
         limit = self.max_repo-active_repo_count
 
-
-        user_list = split_random_users_list(session,f"{self.name}_status",self.new_status)
-
         #Extract the user id from the randomized list and split into four chunks
-        split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
+        split_user_list = split_random_users_list(session,f"{self.name}_status",self.new_status)
 
         session.logger.info(f"User_list: {split_user_list}")
 
@@ -170,14 +181,8 @@ class CollectionRequest:
         if limit <= 0:
             return
 
-        #Get a list of all users.
-        query = s.sql.text("""
-            SELECT  
-            user_id
-            FROM augur_operations.users
-        """)
 
-        user_list = session.execute_sql(query).fetchall()
+        user_list = get_list_of_all_users(session)
         random.shuffle(user_list)
 
         #Extract the user id from the randomized list and split into four chunks
@@ -675,5 +680,8 @@ def split_random_users_list(session,status_col, status_new):
     user_list = session.execute_sql(query).fetchall()
     random.shuffle(user_list)
 
-    return user_list
+    #Extract the user id from the randomized list and split into four chunks
+    split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
+
+    return split_user_list
 
