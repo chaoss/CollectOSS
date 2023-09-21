@@ -1,5 +1,7 @@
 ## Augur Setup
 
+**NOTE**: Currently, our machine learning dependencies allow Augur to only fully support python 3.8 to python 3.10. Python 3.11 will sometimes work, but often there are libraries at the operating system level that have not yet been updated to support machine learning libraries at python 3.11. 
+
 # OSX: Note: This has **MOSTLY** been tested on Apple Silicon with Python 3.11 at this time, however, one user has been successful with Intel based Apple computers.
 ## For OSX You Need to make sure to install XCode Command line tools: 
 ```shell
@@ -37,6 +39,19 @@ export PKG_CONFIG_PATH="/opt/homebrew/opt/openblas/lib/pkgconfig"
 
 ## Pre-Requisite Operating System Level Packages
 Here we ensure your system is up to date, install required python libraries, install postgresql, and install our queuing infrastrucutre, which is composed of redis-server and rabbitmq-server
+
+### Updating your Path: Necessary for rabbitmq on OSX
+#### for macOS Intel
+`export PATH=$PATH:/usr/local/sbin`
+#### for Apple Silicon
+`export PATH=$PATH:/opt/homebrew/sbin`
+
+***These should be added to your .zshrc or other environment file loaded when you open a terminal***
+
+#### for macOS Intel
+`export PATH=$PATH:/usr/local/sbin:$PATH`
+#### for Apple Silicon
+`export PATH=$PATH:/opt/homebrew/sbin:$PATH`
 
 ### Executable
 ```shell 
@@ -76,19 +91,6 @@ rabbitmqctl add_vhost augur_vhost;
 rabbitmqctl set_user_tags augur augurTag administrator;
 rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*";
 ```
-
-### Updating your Path: Necessary for rabbitmq on OSX
-#### for macOS Intel
-`export PATH=$PATH:/usr/local/sbin`
-#### for Apple Silicon
-`export PATH=$PATH:/opt/homebrew/sbin`
-
-***These should be added to your .zshrc or other environment file loaded when you open a terminal***
-
-#### for macOS Intel
-`export PATH=$PATH:/usr/local/sbin:$PATH`
-#### for Apple Silicon
-`export PATH=$PATH:/opt/homebrew/sbin:$PATH`
 
 - We need rabbitmq_management so we can purge our own queues with an API call 
 - We need a user

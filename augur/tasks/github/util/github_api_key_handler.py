@@ -76,8 +76,8 @@ class GithubApiKeyHandler():
         #select.order_by(func.random())
         where = [WorkerOauth.access_token != self.config_key, WorkerOauth.platform == 'github']
 
-        #return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).order_by(func.random()).all()]
-        return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).all()]
+        return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).order_by(func.random()).all()]
+        #return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).all()]
 
 
     def get_api_keys(self) -> List[str]:
