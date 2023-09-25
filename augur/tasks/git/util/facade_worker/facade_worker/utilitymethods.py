@@ -60,19 +60,27 @@ def update_repo_log(session, repos_id,status):
 		session.logger.error(f"Ran into error in update_repo_log: {e}")
 		pass
 
-def trim_commit(session, repo_id,commit):
+def trim_commits(session, repo_id,commits):
 
 # Quickly remove a given commit
 
 	remove_commit = s.sql.text("""DELETE FROM commits
 		WHERE repo_id=:repo_id
-		AND cmt_commit_hash=:hash""").bindparams(repo_id=repo_id,hash=commit)
+		AND cmt_commit_hash IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
 
-	 
-	 
+
 	session.execute_sql(remove_commit)
 
-	session.log_activity('Debug',f"Trimmed commit: {commit}")
+	# Remove the working commit.
+	remove_commit = s.sql.text("""DELETE FROM working_commits
+	    WHERE repos_id = :repo_id AND 
+	    working_commit IN :hashes""").bindparams(repo_id=repo_id,commit=tuple(commits))
+	
+	session.execute_sql(remove_commit)
+
+	for commit in commits:
+		session.log_activity('Debug',f"Trimmed commit: {commit}")
+		session.log_activity('Debug',f"Removed working commit: {commit}")
 
 def store_working_author(session, email):
 

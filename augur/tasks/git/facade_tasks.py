@@ -125,16 +125,9 @@ def trim_commits_facade_task(repo_git):
 
         # If there's a commit still there, the previous run was interrupted and
         # the commit data may be incomplete. It should be trimmed, just in case.
-        for commit in working_commits:
-            trim_commit(session, repo_id,commit['working_commit'])
-
-            # Remove the working commit.
-            remove_commit = s.sql.text("""DELETE FROM working_commits
-                WHERE repos_id = :repo_id AND 
-                working_commit = :commit""").bindparams(repo_id=repo_id,commit=commit['working_commit'])
-            session.execute_sql(remove_commit)
-            session.log_activity('Debug',f"Removed working commit: {commit['working_commit']}")
-
+        commits_to_trim = [commit['working_commit'] for commit in working_commits]
+        
+        trim_commits(session,repo_id,commits_to_trim)
         # Start the main analysis
 
         update_analysis_log(repo_id,'Collecting data')
@@ -194,8 +187,8 @@ def trim_commits_post_analysis_facade_task(repo_git):
 
 
 
-        for commit in trimmed_commits:
-            trim_commit(session,repo_id,commit)
+        #for commit in trimmed_commits:
+        trim_commits(session,repo_id,trimmed_commits)
         
 
         update_analysis_log(repo_id,'Commit trimming complete')
