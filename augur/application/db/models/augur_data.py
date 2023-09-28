@@ -1126,6 +1126,8 @@ class Commit(Base):
         Index("committer_raw_email", "cmt_committer_raw_email"),
         Index("repo_id,commit", "repo_id", "cmt_commit_hash"),
 
+        UniqueConstraint("repo_id","cmt_commit_hash","cmt_filename", "cmt_committer_date", name="cmt_unique_bulk"),
+
         {
             "schema": "augur_data",
             "comment": "Commits.\nEach row represents changes to one FILE within a single commit. So you will encounter multiple rows per commit hash in many cases. ",

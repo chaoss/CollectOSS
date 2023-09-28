@@ -262,7 +262,11 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
             return
 
         logger.info(f"Got to analysis!")
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
+        repo_loc = (f"{absoulte_path}/.git")
         
+        pendingCommitRecordsToInsert = []
+
         for count, commitTuple in enumerate(queue):
             quarterQueue = int(len(queue) / 4)
 
@@ -275,13 +279,39 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
 
 
             #logger.info(f"Got to analysis!")
-            absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-            repo_loc = (f"{absoulte_path}/.git")
+            commitRecord = analyze_commit(session, repo_id, repo_loc, commitTuple)
+            if commitRecord:
+                pendingCommitRecordsToInsert.append(commitRecord)
+
+    try:
+        session.insert_data(pendingCommitRecordsToInsert, Commit,["repo_id","cmt_commit_hash","cmt_filename", "cmt_committer_date"],on_conflict_update=False)
+    except DataError as e:
+        session.logger.error(f"Ran into bad data when trying to insert commit with values: \n {commit_record} \n Error: {e}")
+
+        #Check for improper utc timezone offset
+        #UTC timezone offset should be betwen -14:00 and +14:00
         
+        for commit_record in pendingCommitRecordsToInsert:
+            if "time zone displacement" in f"{e}":
+                commit_record['author_timestamp'] = placeholder_date
+                commit_record['committer_timestamp'] = placeholder_date
+            else:
+                raise e
+    except Exception as e:
 
-            analyze_commit(session, repo_id, repo_loc, commitTuple)
+        session.logger.error(f"Ran into issue when trying to insert commit with values: \n {commit_record} \n Error: {e}")
+        raise e
 
-        logger.info("Analysis complete")
+
+    # Remove the working commit.
+    remove_commit = s.sql.text("""DELETE FROM working_commits 
+    	WHERE repos_id = :repo_id AND working_commit IN :hashes
+    	""").bindparams(repo_id=repo_id,hashes=tuple(queue))
+    session.execute_sql(remove_commit)  
+    #session.log_activity('Debug',f"Completed and removed working commit: {commit}")
+
+	# If multithreading, clean up the local database
+    logger.info("Analysis complete")
     return
 
 @celery.task
