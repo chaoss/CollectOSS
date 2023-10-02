@@ -281,7 +281,11 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
             #logger.info(f"Got to analysis!")
             commitRecord = analyze_commit(session, repo_id, repo_loc, commitTuple)
             if commitRecord:
-                pendingCommitRecordsToInsert.append(commitRecord)
+                if len(pendingCommitRecordsToInsert) > 10000:
+                    pendingCommitRecordsToInsert.append(commitRecord)
+                else:
+                    session.insert_data(pendingCommitRecordsToInsert, Commit,["repo_id","cmt_commit_hash","cmt_filename", "cmt_committer_date"],on_conflict_update=False)
+                    pendingCommitRecordsToInsert = []
 
     try:
         session.insert_data(pendingCommitRecordsToInsert, Commit,["repo_id","cmt_commit_hash","cmt_filename", "cmt_committer_date"],on_conflict_update=False)
