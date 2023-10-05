@@ -16,7 +16,7 @@ from typing import Optional, List, Any, Tuple
 
 from pathlib import Path
 
-from flask import Flask, request, Response, redirect
+from flask import Flask, request, Response, redirect, jsonify
 from flask_cors import CORS
 import pandas as pd
 from beaker.util import parse_cache_config_options
@@ -32,7 +32,7 @@ from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import get_database_string, create_database_engine
 from metadata import __version__ as augur_code_version
-from augur.application.db.models.augur_data import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release
+from augur.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
 
 
 # from augur.api.routes import AUGUR_API_VERSION
@@ -706,14 +706,24 @@ def status():
                     status=200,
                     mimetype="application/json")
 
+schema = graphene.Schema(query=Query)
+
+class AuthenticatedGraphQLView(GraphQLView):
+    def dispatch_request(self):
+        
+        api_key = request.headers.get('x-api-key')
+
+        client_applications = db_session.query(ClientApplication).all()
+        api_keys = [app.api_key for app in client_applications]
+        
+        if not api_key or api_key not in api_keys:
+            return jsonify(error="Invalid or missing API key"), 403
+        
+        return super().dispatch_request()
 
 schema = graphene.Schema(query=Query)
 
-app.add_url_rule(f'/{app.augur_api_version}/graphql', view_func=GraphQLView.as_view(
-    'graphql',
-    schema=schema,
-    graphiql=True
-))
+app.add_url_rule(f'/{app.augur_api_version}/graphql', view_func=AuthenticatedGraphQLView.as_view('graphql', schema=schema, graphiql=True))
 
 from .routes import *
 
