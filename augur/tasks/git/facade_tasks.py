@@ -23,7 +23,7 @@ from celery.signals import after_setup_logger
 from datetime import timedelta
 import sqlalchemy as s
 
-from sqlalchemy import or_, and_, update
+from sqlalchemy import or_, and_, update, insert
 
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
@@ -264,7 +264,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
         logger.info(f"Got to analysis!")
         absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
         repo_loc = (f"{absoulte_path}/.git")
-        
+
         pendingCommitRecordsToInsert = []
 
         for count, commitTuple in enumerate(queue):
@@ -284,27 +284,37 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
                 if len(pendingCommitRecordsToInsert) > 10000:
                     pendingCommitRecordsToInsert.append(commitRecord)
                 else:
-                    session.insert_data(pendingCommitRecordsToInsert, Commit,["repo_id","cmt_commit_hash","cmt_filename", "cmt_committer_date"],on_conflict_update=False)
+
+                    session.excute(
+                        insert(Commit),
+                        pendingCommitRecordsToInsert,
+                    )
+                    session.commit()
+                    #session.insert_data(pendingCommitRecordsToInsert, Commit,["repo_id","cmt_commit_hash","cmt_filename", "cmt_committer_date"],on_conflict_update=False)
                     pendingCommitRecordsToInsert = []
 
-    try:
-        session.insert_data(pendingCommitRecordsToInsert, Commit,["repo_id","cmt_commit_hash","cmt_filename", "cmt_committer_date"],on_conflict_update=False)
-    except DataError as e:
-        session.logger.error(f"Ran into bad data when trying to insert commit with values: \n {commit_record} \n Error: {e}")
+        try:
+            session.excute(
+                    insert(Commit),
+                    pendingCommitRecordsToInsert,
+                )
+            session.commit()
+        except DataError as e:
+            session.logger.error(f"Ran into bad data when trying to insert commit with values: \n {commit_record} \n Error: {e}")
 
-        #Check for improper utc timezone offset
-        #UTC timezone offset should be betwen -14:00 and +14:00
+            #Check for improper utc timezone offset
+            #UTC timezone offset should be betwen -14:00 and +14:00
+
+            for commit_record in pendingCommitRecordsToInsert:
+                if "time zone displacement" in f"{e}":
+                    commit_record['author_timestamp'] = placeholder_date
+                    commit_record['committer_timestamp'] = placeholder_date
+                else:
+                    raise e
+        except Exception as e:
         
-        for commit_record in pendingCommitRecordsToInsert:
-            if "time zone displacement" in f"{e}":
-                commit_record['author_timestamp'] = placeholder_date
-                commit_record['committer_timestamp'] = placeholder_date
-            else:
-                raise e
-    except Exception as e:
-
-        session.logger.error(f"Ran into issue when trying to insert commit with values: \n {commit_record} \n Error: {e}")
-        raise e
+            session.logger.error(f"Ran into issue when trying to insert commit with values: \n {commit_record} \n Error: {e}")
+            raise e
 
 
     # Remove the working commit.
