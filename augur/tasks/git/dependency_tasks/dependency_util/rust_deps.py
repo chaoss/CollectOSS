@@ -9,7 +9,8 @@ def get_files(path):
     files = list(p.glob('**/*.rs'))
     return files
 
-def get_imports_for_file(path):
+def get_deps_for_file(path):
+    #gets imports in specified file path.
     with open(path, 'r') as f:
         content = f.read()
         matches = re.findall(r'use\s+([\w:]+)(\s+as\s+([\w:]+))?(\s*\*\s*)?(;|\n)', content)
@@ -18,4 +19,3 @@ def get_imports_for_file(path):
             import_path = m[0]
             imports.append(import_path)
         return imports
- 

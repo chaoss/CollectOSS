@@ -5,8 +5,6 @@ Welcome!
 ~~~~~~~~
 ~~~~~~~~
 
-Augur's documentation; (pronounced awe-grrr) [ˈɔːɡɚ], is split into seven (7) parts. If you’re new to the project you can find out more on the software `here <https://github.com/chaoss/augur#readme>`_. We recommend giving it a once-over as a gentle introduction, otherwise, feel free to hop right into the docs!
-
 .. toctree::
    :maxdepth: 2
 
