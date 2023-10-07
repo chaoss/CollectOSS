@@ -11,6 +11,53 @@ from augur.api.util import register_metric
 from ..server import engine
 
 @register_metric()
+def pull_requests_new(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
+    """
+    Returns a time series of the number of new Pull Requests opened during a certain period.
+
+    :param repo_id: The repository's id
+    :param repo_group_id: The repository's group id
+    :param period: To set the periodicity to 'day', 'week', 'month' or 'year', defaults to 'day'
+    :param begin_date: Specifies the begin date, defaults to '1970-1-1 00:00:01'
+    :param end_date: Specifies the end date, defaults to datetime.now()
+    :return: DataFrame of new Pull Requests/period
+    """
+    if not begin_date:
+        begin_date = '1970-1-1 00:00:01'
+    if not end_date:
+        end_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    if repo_id:
+        new_pull_requests_query = s.sql.text("""
+            SELECT DATE_TRUNC(:period, pr_created_at) AS created_date,
+                   COUNT(pr_id) AS new_pull_requests
+            FROM pull_requests
+            WHERE repo_id = :repo_id
+            AND pr_created_at BETWEEN :begin_date AND :end_date
+            GROUP BY created_date
+        """)
+
+        results = pd.read_sql(new_pull_requests_query, engine, params={'repo_id': repo_id, 'period': period,
+                                                                       'begin_date': begin_date,
+                                                                       'end_date': end_date})
+    else:
+        new_pull_requests_query = s.sql.text("""
+            SELECT DATE_TRUNC(:period, pr_created_at) AS created_date,
+                   COUNT(pr_id) AS new_pull_requests
+            FROM pull_requests
+            WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
+            AND pr_created_at BETWEEN :begin_date AND :end_date
+            GROUP BY created_date
+        """)
+
+        results = pd.read_sql(new_pull_requests_query, engine,
+                              params={'repo_group_id': repo_group_id, 'period': period,
+                                      'begin_date': begin_date,
+                                      'end_date': end_date})
+
+    return results
+
+@register_metric()
 def pull_requests_merge_contributor_new(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
     """
     Returns a timeseries of the count of persons contributing with an accepted commit for the first time.
