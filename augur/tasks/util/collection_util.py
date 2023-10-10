@@ -146,7 +146,7 @@ class CollectionRequest:
         if name == "facade":
             self.new_status = CollectionState.UPDATE.value
 
-    def get_active_repo_count(self):
+    def get_active_repo_count(self,session):
         return len(session.query(CollectionStatus).filter(getattr(CollectionStatus,f"{self.name}_status" ) == CollectionState.COLLECTING.value).all())
 
     #Get repo urls based on passed in info.
@@ -154,7 +154,7 @@ class CollectionRequest:
         #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
         #Get the count of repos that are currently running this collection hook
         #status_column = f"{hook}_status"
-        active_repo_count = self.get_active_repo_count()
+        active_repo_count = self.get_active_repo_count(session)
 
         #Will always disallow errored repos and repos that are already collecting
 
