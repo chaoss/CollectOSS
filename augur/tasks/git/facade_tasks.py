@@ -25,7 +25,7 @@ import sqlalchemy as s
 
 from sqlalchemy import or_, and_, update, insert
 
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import update_repo_log, trim_commits, store_working_author, trim_author
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor, get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
@@ -280,12 +280,13 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
 
             #logger.info(f"Got to analysis!")
             commitRecord = analyze_commit(session, repo_id, repo_loc, commitTuple)
+            #logger.debug(commitRecord)
             if commitRecord:
-                if len(pendingCommitRecordsToInsert) > 10000:
+                if len(pendingCommitRecordsToInsert) < 10000:
                     pendingCommitRecordsToInsert.append(commitRecord)
                 else:
 
-                    session.excute(
+                    session.execute(
                         insert(Commit),
                         pendingCommitRecordsToInsert,
                     )
@@ -294,7 +295,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
                     pendingCommitRecordsToInsert = []
 
         try:
-            session.excute(
+            session.execute(
                     insert(Commit),
                     pendingCommitRecordsToInsert,
                 )

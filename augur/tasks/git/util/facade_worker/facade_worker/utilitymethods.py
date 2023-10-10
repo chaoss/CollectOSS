@@ -62,21 +62,22 @@ def update_repo_log(session, repos_id,status):
 
 def trim_commits(session, repo_id,commits):
 
-# Quickly remove a given commit
+	# Quickly remove a given commit
 
-	remove_commit = s.sql.text("""DELETE FROM commits
-		WHERE repo_id=:repo_id
-		AND cmt_commit_hash IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
-
-
-	session.execute_sql(remove_commit)
-
-	# Remove the working commit.
-	remove_commit = s.sql.text("""DELETE FROM working_commits
-	    WHERE repos_id = :repo_id AND 
-	    working_commit IN :hashes""").bindparams(repo_id=repo_id,commit=tuple(commits))
+	if len(commits):
+		remove_commit = s.sql.text("""DELETE FROM commits
+			WHERE repo_id=:repo_id
+			AND cmt_commit_hash IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
 	
-	session.execute_sql(remove_commit)
+	
+		session.execute_sql(remove_commit)
+	
+		# Remove the working commit.
+		remove_commit = s.sql.text("""DELETE FROM working_commits
+		    WHERE repos_id = :repo_id AND 
+		    working_commit IN :hashes""").bindparams(repo_id=repo_id,commit=tuple(commits))
+		
+		session.execute_sql(remove_commit)
 
 	for commit in commits:
 		session.log_activity('Debug',f"Trimmed commit: {commit}")
