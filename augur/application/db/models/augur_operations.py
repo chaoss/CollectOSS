@@ -57,7 +57,7 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
 
     # collect repo urls for the given owner
     repos = []
-    for page_data in GithubPaginator(url, session.oauths, logger).iter_pages():
+    for page_data, _ in GithubPaginator(url, session.oauths, logger).iter_pages():
 
         if page_data is None:
             break

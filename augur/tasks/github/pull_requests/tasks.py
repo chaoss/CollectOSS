@@ -333,7 +333,7 @@ def collect_pull_request_reviews(repo_git: str) -> None:
 
         pr_count = len(prs)
 
-        all_raw_pr_reviews = []
+        all_pr_reviews = {}
         for index, pr in enumerate(prs):
 
             pr_number = pr.pr_src_number
@@ -343,9 +343,9 @@ def collect_pull_request_reviews(repo_git: str) -> None:
 
             pr_review_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
 
-            pr_reviews = GithubPaginator(pr_review_url, manifest.key_auth, logger)
-
-            for page_data, page in pr_reviews.iter_pages():
+            pr_reviews = []
+            pr_reviews_generator = GithubPaginator(pr_review_url, manifest.key_auth, logger)
+            for page_data, page in pr_reviews_generator.iter_pages():
 
                 if page_data is None:
                     break
@@ -353,38 +353,40 @@ def collect_pull_request_reviews(repo_git: str) -> None:
                 if len(page_data) == 0:
                     break
 
-                all_raw_pr_reviews.extend(page_data)
+                pr_reviews.extend(page_data)
+            
+            if pr_reviews:
+                all_pr_reviews[pull_request_id] = pr_reviews
 
-        if not all_raw_pr_reviews:
+        if not list(all_pr_reviews.keys()):
             logger.info(f"{owner}/{repo} No pr reviews for repo")
             return
 
         contributors = []
-        for raw_pr_review in all_raw_pr_reviews:
-            contributor = process_pull_request_review_contributor(raw_pr_review, tool_source, tool_version, data_source)
-            if contributor:
-                contributors.append(contributor)
+        for pull_request_id in all_pr_reviews.keys():
+
+            reviews = all_pr_reviews[pull_request_id]
+            for review in reviews:
+                contributor = process_pull_request_review_contributor(review, tool_source, tool_version, data_source)
+                if contributor:
+                    contributors.append(contributor)
 
         logger.info(f"{owner}/{repo} Pr reviews: Inserting {len(contributors)} contributors")
         augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
 
 
         pr_reviews = []
-        for raw_pr_review in all_raw_pr_reviews:
+        for pull_request_id in all_pr_reviews.keys():
 
-            logger.info(f"Pr review type: {type(raw_pr_review)}")
-            logger.info(raw_pr_review)
-
-            if "cntrb_id" in raw_pr_review:
-                pr_reviews.append(extract_needed_pr_review_data(raw_pr_review, pull_request_id, repo_id, platform_id, tool_source, tool_version))
+            reviews = all_pr_reviews[pull_request_id]
+            for review in reviews:
+                
+                if "cntrb_id" in review:
+                    pr_reviews.append(extract_needed_pr_review_data(review, pull_request_id, repo_id, platform_id, tool_source, tool_version))
 
         logger.info(f"{owner}/{repo}: Inserting pr reviews of length: {len(pr_reviews)}")
         pr_review_natural_keys = ["pr_review_src_id",]
         augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys)
-
-
-
-
 
 
 
