@@ -183,7 +183,7 @@ def build_secondary_repo_collect_request(session,enabled_phase_names, days_until
     return request
 
 
-def build_facade_repo_collect_requst(session,enabled_phase_names, days_until_collect_again = 1):
+def build_facade_repo_collect_request(session,enabled_phase_names, days_until_collect_again = 1):
     #Deal with facade collection
     facade_enabled_phases = []
 
@@ -242,7 +242,7 @@ def augur_collection_monitor():
 
         if facade_phase.__name__ in enabled_phase_names:
             #start_facade_collection(session, max_repo=30)
-            enabled_collection_hooks.append(build_facade_repo_collect_requst(session,enabled_phase_names))
+            enabled_collection_hooks.append(build_facade_repo_collect_request(session,enabled_phase_names))
         
         if machine_learning_phase.__name__ in enabled_phase_names:
             enabled_collection_hooks.append(build_ml_repo_collect_request(session,enabled_phase_names))
