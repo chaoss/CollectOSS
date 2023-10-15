@@ -100,9 +100,9 @@ def secondary_repo_collect_phase(repo_git):
     logger = logging.getLogger(secondary_repo_collect_phase.__name__)
 
     repo_task_group = group(
-        process_pull_request_files.si(repo_git),
-        process_pull_request_commits.si(repo_git),
-        process_ossf_dependency_metrics.si(repo_git),
+        #process_pull_request_files.si(repo_git),
+        #process_pull_request_commits.si(repo_git),
+        #process_ossf_dependency_metrics.si(repo_git),
         chain(collect_pull_request_reviews.si(repo_git), collect_pull_request_review_comments.si(repo_git))
     )
 
