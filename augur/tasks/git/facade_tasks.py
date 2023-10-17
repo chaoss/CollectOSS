@@ -249,17 +249,13 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
         missing_commits = parent_commits - existing_commits
 
         session.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
-        
-        queue = []
-        if len(missing_commits) > 0:
-            #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
 
-            #encode the repo_id with the commit.
-            commits = list(missing_commits)
-            #Get all missing commits into one large list to split into task pools
-            queue.extend(commits)
-        else:
+        
+        if not len(missing_commits):
+            #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
             return
+        
+        queue = list(missing_commits)
 
         logger.info(f"Got to analysis!")
         absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
@@ -279,13 +275,11 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
 
 
             #logger.info(f"Got to analysis!")
-            commitRecord = analyze_commit(session, repo_id, repo_loc, commitTuple)
+            commitRecords = analyze_commit(session, repo_id, repo_loc, commitTuple)
             #logger.debug(commitRecord)
-            if commitRecord:
-                if len(pendingCommitRecordsToInsert) < 10000:
-                    pendingCommitRecordsToInsert.append(commitRecord)
-                else:
-
+            if len(commitRecords):
+                pendingCommitRecordsToInsert.extend(commitRecords)
+                if len(pendingCommitRecordsToInsert) >= 10000:
                     session.execute(
                         insert(Commit),
                         pendingCommitRecordsToInsert,
@@ -300,21 +294,10 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
                     pendingCommitRecordsToInsert,
                 )
             session.commit()
-        except DataError as e:
-            session.logger.error(f"Ran into bad data when trying to insert commit with values: \n {commit_record} \n Error: {e}")
 
-            #Check for improper utc timezone offset
-            #UTC timezone offset should be betwen -14:00 and +14:00
-
-            for commit_record in pendingCommitRecordsToInsert:
-                if "time zone displacement" in f"{e}":
-                    commit_record['author_timestamp'] = placeholder_date
-                    commit_record['committer_timestamp'] = placeholder_date
-                else:
-                    raise e
         except Exception as e:
         
-            session.logger.error(f"Ran into issue when trying to insert commit with values: \n {commit_record} \n Error: {e}")
+            session.logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
             raise e
 
 

@@ -159,7 +159,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 	removed = 0
 	whitespace = 0
 
-	recordToInsert = None
+	recordsToInsert = []
 
 	# Go get the contributors (committers) for this repo here: 
 	# curl https://api.github.com/repos/chaoss/augur/contributors
@@ -259,10 +259,10 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 
 				if not header:
 
-					recordToInsert = generate_commit_record(repo_id,commit,filename,
+					recordsToInsert.append(generate_commit_record(repo_id,commit,filename,
 						author_name,author_email,author_date,author_timestamp,
 						committer_name,committer_email,committer_date,committer_timestamp,
-						added,removed,whitespace)
+						added,removed,whitespace))
 
 				header = False
 
@@ -318,10 +318,10 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 					whitespaceCheck.append(line[1:].strip())
 
 	# Store the last stats from the git log
-	recordToInsert = generate_commit_record(repo_id,commit,filename,
+	recordsToInsert.append(generate_commit_record(repo_id,commit,filename,
 		author_name,author_email,author_date,author_timestamp,
 		committer_name,committer_email,committer_date,committer_timestamp,
-		added,removed,whitespace)
+		added,removed,whitespace))
 
 
-	return recordToInsert
+	return recordsToInsert
