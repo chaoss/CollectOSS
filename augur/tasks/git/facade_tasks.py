@@ -28,7 +28,7 @@ from sqlalchemy import or_, and_, update, insert
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import update_repo_log, trim_commits, store_working_author, trim_author
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor, get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor, get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count, facade_bulk_insert_commits
 
 from augur.tasks.github.facade_github.tasks import *
 from augur.tasks.util.collection_util import CollectionState, get_collection_status_repo_git_from_filter
@@ -280,25 +280,13 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
             if len(commitRecords):
                 pendingCommitRecordsToInsert.extend(commitRecords)
                 if len(pendingCommitRecordsToInsert) >= 10000:
-                    session.execute(
-                        insert(Commit),
-                        pendingCommitRecordsToInsert,
-                    )
-                    session.commit()
-                    #session.insert_data(pendingCommitRecordsToInsert, Commit,["repo_id","cmt_commit_hash","cmt_filename", "cmt_committer_date"],on_conflict_update=False)
+                    facade_bulk_insert_commits(session,pendingCommitRecordsToInsert)
                     pendingCommitRecordsToInsert = []
 
-        try:
-            session.execute(
-                    insert(Commit),
-                    pendingCommitRecordsToInsert,
-                )
-            session.commit()
-
-        except Exception as e:
         
-            session.logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
-            raise e
+        facade_bulk_insert_commits(session,pendingCommitRecordsToInsert)
+
+        
 
 
     # Remove the working commit.
