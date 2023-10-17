@@ -238,7 +238,7 @@ def facade_bulk_insert_commits(session,records):
 
 				session.execute(
 					s.insert(Commit),
-					records,
+					[commit_record],
 				)
 				session.commit()
 			else:

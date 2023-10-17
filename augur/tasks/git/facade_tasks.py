@@ -279,7 +279,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
             #logger.debug(commitRecord)
             if len(commitRecords):
                 pendingCommitRecordsToInsert.extend(commitRecords)
-                if len(pendingCommitRecordsToInsert) >= 10000:
+                if len(pendingCommitRecordsToInsert) >= 1000:
                     facade_bulk_insert_commits(session,pendingCommitRecordsToInsert)
                     pendingCommitRecordsToInsert = []
 
