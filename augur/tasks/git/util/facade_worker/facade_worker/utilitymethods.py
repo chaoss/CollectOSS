@@ -38,6 +38,7 @@ import getopt
 import xlsxwriter
 import configparser
 import sqlalchemy as s
+from sqlalchemy.exc import IntegrityError, DataError
 from .config import get_database_args_from_env
 from augur.application.db.models import *
 from .config import FacadeSession as FacadeSession
@@ -221,7 +222,7 @@ def facade_bulk_insert_commits(session,records):
 		commit_record = records[0]
 		try:
 			session.execute(
-					insert(Commit),
+					s.insert(Commit),
 					records,
 				)
 			session.commit()
@@ -236,7 +237,7 @@ def facade_bulk_insert_commits(session,records):
 				commit_record['committer_timestamp'] = placeholder_date
 
 				session.execute(
-					insert(Commit),
+					s.insert(Commit),
 					records,
 				)
 				session.commit()
@@ -248,7 +249,7 @@ def facade_bulk_insert_commits(session,records):
 	else:
 		try:
 			session.execute(
-					insert(Commit),
+					s.insert(Commit),
 					records,
 				)
 			session.commit()
