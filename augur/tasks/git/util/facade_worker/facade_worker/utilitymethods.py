@@ -76,7 +76,7 @@ def trim_commits(session, repo_id,commits):
 		# Remove the working commit.
 		remove_commit = s.sql.text("""DELETE FROM working_commits
 		    WHERE repos_id = :repo_id AND 
-		    working_commit IN :hashes""").bindparams(repo_id=repo_id,commit=tuple(commits))
+		    working_commit IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
 		
 		session.execute_sql(remove_commit)
 
