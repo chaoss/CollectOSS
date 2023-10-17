@@ -243,10 +243,8 @@ def facade_bulk_insert_commits(session,records):
 			else:
 				raise e
 		except Exception as e:
-        
-            session.logger.error(f"Ran into issue when trying to insert commit: {commit_record} \n Error: {e}")
-            raise e
-			
+			session.logger.error(f"Ran into issue when trying to insert commit: {commit_record} \n Error: {e}")
+			raise e
 	else:
 		try:
 			session.execute(
