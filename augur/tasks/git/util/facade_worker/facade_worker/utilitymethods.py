@@ -220,6 +220,9 @@ def facade_bulk_insert_commits(session,records):
 
 	if len(records) == 1:
 		commit_record = records[0]
+		#replace incomprehensible dates with epoch.
+		#2021-10-11 11:57:46 -0500
+		placeholder_date = "1970-01-01 00:00:15 -0500"
 		try:
 			session.execute(
 					s.insert(Commit),

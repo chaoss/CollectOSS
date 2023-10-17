@@ -118,10 +118,6 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 		author_email = strip_extra_amp(author_email)
 		committer_email = strip_extra_amp(committer_email)
 
-		#replace incomprehensible dates with epoch.
-		#2021-10-11 11:57:46 -0500
-		placeholder_date = "1970-01-01 00:00:15 -0500"
-
 
 		#session.logger.info(f"Timestamp: {author_timestamp}")
 		commit_record = {
