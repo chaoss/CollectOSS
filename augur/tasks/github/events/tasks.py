@@ -208,7 +208,7 @@ def update_issue_closed_cntrbs_from_events(engine, repo_id):
             WHERE "action" = 'closed'
         )
                                             
-        SELECT issue_id, cntrb_id from RankedIssues where rn=1 and repo_id={repo_id}
+        SELECT issue_id, cntrb_id from RankedIssues where rn=1 and repo_id={repo_id} and cntrb_id is not NULL
     """)
     result = engine.execute(get_ranked_issues).fetchall()
 
