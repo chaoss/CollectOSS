@@ -289,14 +289,12 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
         
 
 
-    # Remove the working commit.
-    remove_commit = s.sql.text("""DELETE FROM working_commits 
-    	WHERE repos_id = :repo_id AND working_commit IN :hashes
-    	""").bindparams(repo_id=repo_id,hashes=tuple(queue))
-    session.execute_sql(remove_commit)  
-    #session.log_activity('Debug',f"Completed and removed working commit: {commit}")
-
-	# If multithreading, clean up the local database
+        # Remove the working commit.
+        remove_commit = s.sql.text("""DELETE FROM working_commits 
+        	WHERE repos_id = :repo_id AND working_commit IN :hashes
+        	""").bindparams(repo_id=repo_id,hashes=tuple(queue))
+        session.execute_sql(remove_commit)  
+    
     logger.info("Analysis complete")
     return
 
