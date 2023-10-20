@@ -218,19 +218,28 @@ def update_facade_scheduling_fields(session, repo_git, weight, commit_count):
 
 def facade_bulk_insert_commits(session,records):
 
-	if len(records) == 1:
-		commit_record = records[0]
-		#replace incomprehensible dates with epoch.
-		#2021-10-11 11:57:46 -0500
-		placeholder_date = "1970-01-01 00:00:15 -0500"
-		try:
-			session.execute(
-					s.insert(Commit),
-					records,
-				)
-			session.commit()
-		except DataError as e:
-			session.logger.error(f"Ran into bad data when trying to insert commit with values: \n {commit_record} \n Error: {e}")
+	try:
+		session.execute(
+				s.insert(Commit),
+				records,
+			)
+		session.commit()
+	except Exception as e:
+		
+		if len(records) > 1:
+			session.logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
+
+			#split list into halves and retry insert until we isolate offending record
+			firsthalfRecords = records[:len(records)//2]
+			secondhalfRecords = records[len(records)//2:]
+
+			facade_bulk_insert_commits(session,firsthalfRecords)
+			facade_bulk_insert_commits(session,secondhalfRecords)
+		else if records == 1 and isinstance(e,DataError):
+			commit_record = records[0]
+			#replace incomprehensible dates with epoch.
+			#2021-10-11 11:57:46 -0500
+			placeholder_date = "1970-01-01 00:00:15 -0500"
 
 			#Check for improper utc timezone offset
 			#UTC timezone offset should be betwen -14:00 and +14:00
@@ -245,25 +254,8 @@ def facade_bulk_insert_commits(session,records):
 				)
 				session.commit()
 			else:
+				session.logger.error(f"Ran into issue when trying to insert commit: {commit_record} \n Error: {e}")
 				raise e
-		except Exception as e:
-			session.logger.error(f"Ran into issue when trying to insert commit: {commit_record} \n Error: {e}")
+		else:
 			raise e
-	else:
-		try:
-			session.execute(
-					s.insert(Commit),
-					records,
-				)
-			session.commit()
-		except Exception as e:
-		
-			session.logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
-
-			#split list into halves and retry insert until we isolate offending record
-			firsthalfRecords = records[:len(records)//2]
-			secondhalfRecords = records[len(records)//2:]
-
-			facade_bulk_insert_commits(session,firsthalfRecords)
-			facade_bulk_insert_commits(session,secondhalfRecords)
 
