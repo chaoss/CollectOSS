@@ -38,6 +38,7 @@ import getopt
 import xlsxwriter
 import configparser
 import sqlalchemy as s
+from sqlalchemy.exc import IntegrityError, DataError
 from .config import get_database_args_from_env
 from augur.application.db.models import *
 from .config import FacadeSession as FacadeSession
@@ -60,19 +61,28 @@ def update_repo_log(session, repos_id,status):
 		session.logger.error(f"Ran into error in update_repo_log: {e}")
 		pass
 
-def trim_commit(session, repo_id,commit):
+def trim_commits(session, repo_id,commits):
 
-# Quickly remove a given commit
+	# Quickly remove a given commit
 
-	remove_commit = s.sql.text("""DELETE FROM commits
-		WHERE repo_id=:repo_id
-		AND cmt_commit_hash=:hash""").bindparams(repo_id=repo_id,hash=commit)
+	if len(commits):
+		remove_commit = s.sql.text("""DELETE FROM commits
+			WHERE repo_id=:repo_id
+			AND cmt_commit_hash IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
+	
+	
+		session.execute_sql(remove_commit)
+	
+		# Remove the working commit.
+		remove_commit = s.sql.text("""DELETE FROM working_commits
+		    WHERE repos_id = :repo_id AND 
+		    working_commit IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
+		
+		session.execute_sql(remove_commit)
 
-	 
-	 
-	session.execute_sql(remove_commit)
-
-	session.log_activity('Debug',f"Trimmed commit: {commit}")
+	for commit in commits:
+		session.log_activity('Debug',f"Trimmed commit: {commit}")
+		session.log_activity('Debug',f"Removed working commit: {commit}")
 
 def store_working_author(session, email):
 
@@ -205,3 +215,47 @@ def update_facade_scheduling_fields(session, repo_git, weight, commit_count):
 
 	session.execute(update_query)
 	session.commit()
+
+def facade_bulk_insert_commits(session,records):
+
+	try:
+		session.execute(
+				s.insert(Commit),
+				records,
+			)
+		session.commit()
+	except Exception as e:
+		
+		if len(records) > 1:
+			session.logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
+
+			#split list into halves and retry insert until we isolate offending record
+			firsthalfRecords = records[:len(records)//2]
+			secondhalfRecords = records[len(records)//2:]
+
+			facade_bulk_insert_commits(session,firsthalfRecords)
+			facade_bulk_insert_commits(session,secondhalfRecords)
+		else if records == 1 and isinstance(e,DataError):
+			commit_record = records[0]
+			#replace incomprehensible dates with epoch.
+			#2021-10-11 11:57:46 -0500
+			placeholder_date = "1970-01-01 00:00:15 -0500"
+
+			#Check for improper utc timezone offset
+			#UTC timezone offset should be betwen -14:00 and +14:00
+
+			if "time zone displacement" in f"{e}":
+				commit_record['author_timestamp'] = placeholder_date
+				commit_record['committer_timestamp'] = placeholder_date
+
+				session.execute(
+					s.insert(Commit),
+					[commit_record],
+				)
+				session.commit()
+			else:
+				session.logger.error(f"Ran into issue when trying to insert commit: {commit_record} \n Error: {e}")
+				raise e
+		else:
+			raise e
+
