@@ -235,7 +235,7 @@ def facade_bulk_insert_commits(session,records):
 
 			facade_bulk_insert_commits(session,firsthalfRecords)
 			facade_bulk_insert_commits(session,secondhalfRecords)
-		else if records == 1 and isinstance(e,DataError):
+		elif records == 1 and isinstance(e,DataError):
 			commit_record = records[0]
 			#replace incomprehensible dates with epoch.
 			#2021-10-11 11:57:46 -0500
