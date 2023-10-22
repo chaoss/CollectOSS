@@ -25,7 +25,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 from flask_graphql import GraphQLView
 from graphene_sqlalchemy import SQLAlchemyObjectType
-
+from graphql import parse
 
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
@@ -710,6 +710,8 @@ schema = graphene.Schema(query=Query)
 
 class AuthenticatedGraphQLView(GraphQLView):
     def dispatch_request(self):
+
+        max_depth = 5
         
         api_key = request.headers.get('x-api-key')
 
@@ -718,8 +720,30 @@ class AuthenticatedGraphQLView(GraphQLView):
         
         if not api_key or api_key not in api_keys:
             return jsonify(error="Invalid or missing API key"), 403
+                
+        data = json.loads(request.data.decode('utf-8'))
+        query = data["query"]
+        try:
+            ast = parse(query)
+        except Exception:
+            return jsonify(error="Invalid syntax in query"), 403
+        
+        selection_set = ast.definitions[0].selection_set
+
+        depth = self.measure_depth(selection_set)
+        if depth > max_depth:
+            return jsonify(error=f"Query exceeds max depth of {max_depth}"), 403
         
         return super().dispatch_request()
+    
+    def measure_depth(self, selection_set, level=1):
+        max_depth = level
+        for field in selection_set.selections:
+            if field.selection_set:
+                new_depth = self.measure_depth(field.selection_set, level=level + 1)
+                if new_depth > max_depth:
+                    max_depth = new_depth
+        return max_depth
 
 schema = graphene.Schema(query=Query)
 
