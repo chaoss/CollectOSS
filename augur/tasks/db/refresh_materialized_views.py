@@ -53,7 +53,7 @@ def refresh_materialized_views():
                 COMMIT; 
     """)
 
-    mv_8_refresh = s.sql.text("""    
+    mv8_refresh = s.sql.text("""    
 
                 REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_contributor_actions with data;
                 COMMIT; 
