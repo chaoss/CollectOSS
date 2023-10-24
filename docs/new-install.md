@@ -12,7 +12,7 @@ We default to this version of Ubuntu for the moment because Augur does not yet s
 2. Clone your fork. We recommend creating a `github` directory in your user's base directory. 
 
 ## Pre-Requisite Operating System Level Packages
-Here we ensure your system is up to date, install required python libraries, install postgresql, and install our queuing infrastrucutre, which is composed of redis-server and rabbitmq-server
+Here we ensure your system is up to date, install required python libraries, install postgresql, and install our queuing infrastructure, which is composed of redis-server and rabbitmq-server
 
 ### Executable
 ```shell 
