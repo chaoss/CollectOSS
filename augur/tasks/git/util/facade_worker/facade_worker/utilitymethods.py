@@ -235,7 +235,7 @@ def facade_bulk_insert_commits(session,records):
 
 			facade_bulk_insert_commits(session,firsthalfRecords)
 			facade_bulk_insert_commits(session,secondhalfRecords)
-		else if records == 1 and isinstance(e,DataError):
+		elif len(records) == 1 and isinstance(e,DataError) and "time zone displacement" in f"{e}":
 			commit_record = records[0]
 			#replace incomprehensible dates with epoch.
 			#2021-10-11 11:57:46 -0500
@@ -244,18 +244,14 @@ def facade_bulk_insert_commits(session,records):
 			#Check for improper utc timezone offset
 			#UTC timezone offset should be betwen -14:00 and +14:00
 
-			if "time zone displacement" in f"{e}":
-				commit_record['author_timestamp'] = placeholder_date
-				commit_record['committer_timestamp'] = placeholder_date
+			commit_record['author_timestamp'] = placeholder_date
+			commit_record['committer_timestamp'] = placeholder_date
 
-				session.execute(
-					s.insert(Commit),
-					[commit_record],
-				)
-				session.commit()
-			else:
-				session.logger.error(f"Ran into issue when trying to insert commit: {commit_record} \n Error: {e}")
-				raise e
+			session.execute(
+				s.insert(Commit),
+				[commit_record],
+			)
+			session.commit()
 		else:
 			raise e
 
