@@ -305,7 +305,6 @@ class RepoLoadController:
 
             query_args["page_size"] = page_size
             query_args["offset"] = offset
-            query_args["order_by"] = order_by
 
         return query, query_args, {"status": "success"}
 

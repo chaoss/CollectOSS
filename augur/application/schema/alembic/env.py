@@ -60,7 +60,7 @@ def run_migrations_online():
 
     """
 
-    with DatabaseEngine() as connectable, connectable.connect() as connection:
+    with DatabaseEngine() as connectable, connectable.begin() as connection:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,

@@ -4,7 +4,15 @@ from flask import render_template, flash, url_for, Flask
 from .init import *
 from ..server import app, db_session
 from augur.application.config import AugurConfig
-import urllib.request, urllib.error, json, os, math, yaml, urllib3, time, logging, re
+import urllib.request, urllib.error, json, os, math, yaml, urllib3, time, logging, re, math
+
+from augur.application.db.session import DatabaseSession
+from augur.application.db.engine import DatabaseEngine
+from augur.application.db.models import User, Repo, RepoGroup, UserGroup, UserRepo
+from sqlalchemy import Column, Table, Integer, MetaData, or_, Label
+from sqlalchemy.sql.operators import ilike_op, distinct_op
+from sqlalchemy.sql.functions import coalesce
+from augur.application.db.models.base import Base
 
 init_logging()
 
@@ -65,6 +73,8 @@ def getSetting(key, section = "View"):
         return config.get_value(section, key)
 
 loadSettings()
+
+#version_check(settings)
 
 """ ----------------------------------------------------------------
 """
@@ -298,3 +308,68 @@ def render_message(messageTitle, messageBody = None, title = None, redirect = No
 def render_module(module, **args):
     args.setdefault("body", module)
     return render_template('index.j2', **args)
+
+""" ----------------------------------------------------------------
+    No longer used
+"""
+# My attempt at a loading page
+def renderLoading(dest, query, request):
+    cache_files_requested.append(request)
+    return render_template('index.j2', body="loading", title="Loading", d=dest, query_key=query, api_url=getSetting('serving'))
+
+with DatabaseEngine() as engine:
+    augur_data_schema = MetaData(schema = "augur_data")
+    augur_data_schema.reflect(bind = engine, views = True)
+    
+    commits_materialized_view: Table = augur_data_schema.tables["augur_data.api_get_all_repos_commits"]
+    issues_materialized_view: Table = augur_data_schema.tables["augur_data.api_get_all_repos_issues"]
+
+""" ----------------------------------------------------------------
+"""
+def load_repos_test(count = False, source = None, **kwargs):
+    columns: list[Label] = [
+        Repo.repo_id.distinct().label("repo_id"),
+        Repo.description.label("description"),
+        Repo.repo_git.label("url"),
+        coalesce(commits_materialized_view.columns.commits_all_time, 0).label("commits_all_time"),
+        coalesce(issues_materialized_view.columns.issues_all_time, 0).label("issues_all_time"),
+        RepoGroup.rg_name.label("rg_name"),
+        Repo.repo_git.regexp_replace('.*github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$', "\\1").label("repo_name"),
+        Repo.repo_git.regexp_replace('.*github\.com\/([A-Za-z0-9 \- _]+)\/[A-Za-z0-9 \- _ .]+$', "\\1").label("repo_owner"),
+        RepoGroup.repo_group_id.label("repo_group_id")
+    ]
+    
+    def get_colum_by_label(label: str)-> Label:
+        for column in columns:
+            if column.name == label:
+                return column
+    
+    repos = db_session.query(*columns)\
+        .outerjoin(commits_materialized_view, Repo.repo_id == commits_materialized_view.columns.repo_id)\
+        .outerjoin(issues_materialized_view, Repo.repo_id == issues_materialized_view.columns.repo_id)\
+        .join(RepoGroup, Repo.repo_group_id == RepoGroup.repo_group_id)
+    
+    user: User = kwargs.get("user")
+    if user:
+        repos = repos.join(UserRepo, Repo.repo_id == UserRepo.repo_id)\
+            .join(UserGroup, UserGroup.group_id == UserRepo.group_id)\
+            .filter(UserGroup.user_id == user.user_id)
+    
+    search = kwargs.get("search")
+    qkey = kwargs.get("query_key") or ["repo_name", "repo_owner"]
+    if search:
+        if isinstance(qkey, list) and len(qkey) > 0:
+            repos = repos.filter(or_(ilike_op(get_colum_by_label(filter_column), f"%{search}%") for filter_column in qkey))
+        else:
+            repos = repos.filter(ilike_op(get_colum_by_label(qkey), f"%{search}%"))
+    
+    page_size: int = kwargs.get("page_size") or 25
+    if count:
+        c = repos.count()
+        return math.ceil(c / page_size) - 1
+            
+    page: int = kwargs.get("page") or 0
+    offset = page * page_size
+    
+    return repos.slice(offset, offset + page_size)
+
