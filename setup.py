@@ -33,6 +33,9 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     install_requires=[
+        "graphene",
+        "graphene_sqlalchemy",
+        "flask_graphql",
         "wheel",
         "sendgrid",
         "alembic==1.8.1", # 1.8.1
