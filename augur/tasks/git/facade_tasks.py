@@ -397,7 +397,7 @@ def clone_repos():
 #    with FacadeSession(logger) as session:
 #        check_for_repo_updates(session, repo_git)
 
-@celery.task
+@celery.task(base=AugurFacadeRepoCollectionTask)
 def git_update_commit_count_weight(repo_git):
 
     from augur.tasks.init.celery_app import engine
@@ -410,7 +410,7 @@ def git_update_commit_count_weight(repo_git):
         update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
 
 
-@celery.task
+@celery.task(base=AugurFacadeRepoCollectionTask)
 def git_repo_updates_facade_task(repo_git):
 
     logger = logging.getLogger(git_repo_updates_facade_task.__name__)
