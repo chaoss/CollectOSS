@@ -3,6 +3,7 @@ import logging
 
 
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api, retrieve_dict_from_endpoint
 from augur.tasks.github.util.github_task_session import GithubTaskSession, GithubTaskManifest
 from augur.tasks.github.util.util import get_owner_repo
@@ -198,7 +199,7 @@ def link_commits_to_contributor(session,contributorQueue):
 
 
 # Update the contributors table from the data facade has gathered.
-@celery.task
+@celery.task(base=AugurFacadeRepoCollectionTask)
 def insert_facade_contributors(repo_id):
 
     from augur.tasks.init.celery_app import engine
