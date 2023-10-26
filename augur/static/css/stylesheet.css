@@ -377,6 +377,15 @@ img[id^="report_image_"]:hover {
     justify-content: center;
 }
 
+.circle-opaque {
+    border-radius: 50%;          /* Make it a circle */
+    display: inline-block;       
+    position: absolute;          /* Able to position it, overlaying the other image */
+    left:0px;                    /* Customise the position, but make sure it */
+    top:0px;                     /* is the same as .circle-transparent */
+    z-index: -1;                 /* Makes the image sit *behind* .circle-transparent */
+}
+
 @-webkit-keyframes rotator {
     0% {
         transform: rotate(0deg);
