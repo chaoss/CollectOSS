@@ -3,7 +3,7 @@ import traceback
 from augur.application.db.session import DatabaseSession
 from augur.tasks.git.dependency_tasks.core import *
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask, AugurCoreRepoCollectionTask
+from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask, AugurCoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 from augur.application.config import AugurConfig
@@ -33,7 +33,7 @@ def process_dependency_metrics(repo_git):
         generate_deps_data(session,repo.repo_id,absolute_repo_path)
 
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=AugurSecondaryRepoCollectionTask)
 def process_ossf_dependency_metrics(repo_git):
     from augur.tasks.init.celery_app import engine
     
