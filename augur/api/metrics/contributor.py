@@ -125,7 +125,7 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
             ORDER BY total DESC
         """)
 
-        results = pd.read_sql(contributorsSQL, engine, params={'repo_id': repo_id, 'period': period,
+        results = pd.read_sql(contributorsSQL, engine.connect(), params={'repo_id': repo_id, 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
     else:
         contributorsSQL = s.sql.text("""
@@ -211,7 +211,7 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
             ORDER BY total DESC
         """)
 
-        results = pd.read_sql(contributorsSQL, engine, params={'repo_group_id': repo_group_id, 'period': period,
+        results = pd.read_sql(contributorsSQL, engine.connect(), params={'repo_group_id': repo_group_id, 'period': period,
                                                             'begin_date': begin_date, 'end_date': end_date})
     return results
 
@@ -281,7 +281,7 @@ def contributors_new(repo_group_id, repo_id=None, period='day', begin_date=None,
             GROUP BY date, repo.repo_id, repo_name
             """)
 
-        results = pd.read_sql(contributorsNewSQL, engine, params={'repo_id': repo_id, 'period': period,
+        results = pd.read_sql(contributorsNewSQL, engine.connect(), params={'repo_id': repo_id, 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
     else:
         contributorsNewSQL = s.sql.text("""
@@ -330,7 +330,7 @@ def contributors_new(repo_group_id, repo_id=None, period='day', begin_date=None,
             GROUP BY date, repo.repo_id, repo_name
             """)
 
-        results = pd.read_sql(contributorsNewSQL, engine, params={'repo_group_id': repo_group_id, 'period': period,
+        results = pd.read_sql(contributorsNewSQL, engine.connect(), params={'repo_group_id': repo_group_id, 'period': period,
                                                                    'begin_date': begin_date, 'end_date': end_date})
     return results
     
@@ -351,7 +351,7 @@ def lines_changed_by_author(repo_group_id, repo_id=None):
             GROUP BY commits.repo_id, date_trunc('week', cmt_author_date::date), cmt_author_affiliation, cmt_author_email, repo_name
             ORDER BY date_trunc('week', cmt_author_date::date) ASC;
         """)
-        results = pd.read_sql(linesChangedByAuthorSQL, engine, params={"repo_id": repo_id})
+        results = pd.read_sql(linesChangedByAuthorSQL, engine.connect(), params={"repo_id": repo_id})
         return results
     else:
         linesChangedByAuthorSQL = s.sql.text("""
@@ -362,7 +362,7 @@ def lines_changed_by_author(repo_group_id, repo_id=None):
             GROUP BY repo_id, date_trunc('week', cmt_author_date::date), cmt_author_affiliation, cmt_author_email
             ORDER BY date_trunc('week', cmt_author_date::date) ASC;
         """)
-        results = pd.read_sql(linesChangedByAuthorSQL, engine, params={"repo_group_id": repo_group_id})
+        results = pd.read_sql(linesChangedByAuthorSQL, engine.connect(), params={"repo_group_id": repo_group_id})
         return results
 
 @register_metric()
@@ -420,7 +420,7 @@ def contributors_code_development(repo_group_id, repo_id=None, period='all', beg
             GROUP BY a.email, a.repo_id, repo_name
         """)
 
-        results = pd.read_sql(contributorsSQL, engine, params={'repo_id': repo_id, 'period': period,
+        results = pd.read_sql(contributorsSQL, engine.connect(), params={'repo_id': repo_id, 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
     else:
         contributorsSQL = s.sql.text("""
@@ -455,6 +455,6 @@ def contributors_code_development(repo_group_id, repo_id=None, period='all', beg
             ORDER BY commits desc, email
         """)
 
-        results = pd.read_sql(contributorsSQL, engine, params={'repo_group_id': repo_group_id, 'period': period,
+        results = pd.read_sql(contributorsSQL, engine.connect(), params={'repo_group_id': repo_group_id, 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
     return results

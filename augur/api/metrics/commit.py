@@ -90,7 +90,7 @@ def committers(repo_group_id, repo_id=None, begin_date=None, end_date=None, peri
             """
         )
 
-    results = pd.read_sql(committersSQL, engine, params={'repo_id': repo_id, 
+    results = pd.read_sql(committersSQL, engine.connect(), params={'repo_id': repo_id, 
         'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date, 'period':period})
 
     return results
@@ -167,7 +167,7 @@ def annual_commit_count_ranked_by_new_repo_in_repo_group(repo_group_id, repo_id=
             ORDER BY YEAR ASC
         """.format(table, period))
 
-    results = pd.read_sql(cdRgNewrepRankedCommitsSQL, engine, params={'repo_id': repo_id, 
+    results = pd.read_sql(cdRgNewrepRankedCommitsSQL, engine.connect(), params={'repo_id': repo_id, 
         'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date})
     return results
 
@@ -265,7 +265,7 @@ def annual_commit_count_ranked_by_repo_in_repo_group(repo_group_id, repo_id=None
                 LIMIT 10
             """)
 
-    results = pd.read_sql(cdRgTpRankedCommitsSQL, engine, params={ "repo_group_id": repo_group_id,
+    results = pd.read_sql(cdRgTpRankedCommitsSQL, engine.connect(), params={ "repo_group_id": repo_group_id,
     "repo_id": repo_id})
     return results
 
@@ -296,7 +296,7 @@ def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
                 ORDER BY patches DESC) a
         """)
 
-        results = pd.read_sql(total_commits_SQL, engine,
+        results = pd.read_sql(total_commits_SQL, engine.connect(),
                             params={'year': year, 'repo_group_id': repo_group_id})
     else:
         total_commits_SQL = s.sql.text("""
@@ -308,7 +308,7 @@ def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
                 ORDER BY patches DESC) a
         """)
 
-        results = pd.read_sql(total_commits_SQL, engine,
+        results = pd.read_sql(total_commits_SQL, engine.connect(),
                             params={'year': year, 'repo_id': repo_id})
 
     if not results.iloc[0]['sum']:
@@ -334,7 +334,7 @@ def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
             ORDER BY commits DESC
         """)
 
-        results = pd.read_sql(committers_SQL, engine,
+        results = pd.read_sql(committers_SQL, engine.connect(),
                             params={'year': year, 'repo_group_id': repo_group_id})
     else:
         committers_SQL = s.sql.text("""
@@ -353,7 +353,7 @@ def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
             ORDER BY commits DESC
         """)
 
-        results = pd.read_sql(committers_SQL, engine,
+        results = pd.read_sql(committers_SQL, engine.connect(),
                             params={'year': year, 'repo_id': repo_id})
 
     cumsum = 0

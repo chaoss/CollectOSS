@@ -140,7 +140,7 @@ def pull_request_data_collection(repo_id, start_date, end_date):
                 ORDER BY
                     merged_count DESC
                     """)
-    pr_all = pd.read_sql(pr_query,  engine)
+    pr_all = pd.read_sql(pr_query,  engine.connect())
 
     pr_all[['assigned_count',
             'review_requested_count',

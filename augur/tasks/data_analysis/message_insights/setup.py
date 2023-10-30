@@ -34,7 +34,7 @@ setup(
         'scikit-learn==1.1.3', #0.24.2',
         'numpy==1.22.0',
         'nltk==3.6.6',
-        'pandas==1.3.5',
+        'pandas==1.5.3',
         'emoji==1.2.0',
         'Keras==2.13.1',
         'Keras-Preprocessing',

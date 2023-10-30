@@ -30,7 +30,7 @@ setup(
         'sklearn==0.0',
         'nltk==3.6.6',
         'numpy==1.22.0',
-        'pandas==1.3.5',
+        'pandas==1.5.3',
         'emoji==1.2.0',
         'joblib==1.0.1',
         'xgboost==1.4.2',

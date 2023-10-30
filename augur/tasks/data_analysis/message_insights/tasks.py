@@ -414,7 +414,7 @@ def send_insight(repo_id, insights, logger, engine):
             WHERE repo_id = {}
         """.format(repo_id))
 
-        repo = pd.read_sql(repoSQL, engine, params={}).iloc[0]
+        repo = pd.read_sql(repoSQL, engine.connect(), params={}).iloc[0]
 
         to_send = {
             'message_insight': True,
@@ -449,7 +449,7 @@ def get_max_id(table, column, logger, engine, default=25150):
         SELECT max({0}.{1}) AS {1}
         FROM {0}
     """.format(table, column))
-    rs = pd.read_sql(max_id_sql, engine, params={})
+    rs = pd.read_sql(max_id_sql, engine.connect(), params={})
     if rs.iloc[0][column] is not None:
         max_id = int(rs.iloc[0][column]) + 1
         logger.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))

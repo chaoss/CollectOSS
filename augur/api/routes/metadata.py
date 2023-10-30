@@ -47,7 +47,7 @@ def get_repo_info():
         ORDER BY
             repo.repo_name;
     """)
-    results = pd.read_sql(repo_info_sql,  engine)
+    results = pd.read_sql(repo_info_sql,  engine.connect())
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     parsed_data = json.loads(data)
     return Response(response=data,
@@ -61,7 +61,7 @@ def contributions_count():
         group by repo_git 
         order by contributions desc;
     """)
-    results = pd.read_sql(repo_info_sql,  engine)
+    results = pd.read_sql(repo_info_sql,  engine.connect())
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     parsed_data = json.loads(data)
     return Response(response=data,
@@ -75,7 +75,7 @@ def contributors_count():
         group by repo_git 
         order by contributors desc;  
     """)
-    results = pd.read_sql(repo_info_sql,  engine)
+    results = pd.read_sql(repo_info_sql,  engine.connect())
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     parsed_data = json.loads(data)
     return Response(response=data,

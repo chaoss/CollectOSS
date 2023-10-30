@@ -29,5 +29,5 @@ def top_insights(repo_group_id, num_repos=6):
             LIMIT :num_repos
         )
     """)
-    results = pd.read_sql(topInsightsSQL, engine, params={'repo_group_id': repo_group_id, 'num_repos': num_repos})
+    results = pd.read_sql(topInsightsSQL, engine.connect(), params={'repo_group_id': repo_group_id, 'num_repos': num_repos})
     return results

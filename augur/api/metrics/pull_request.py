@@ -40,7 +40,7 @@ def pull_requests_merge_contributor_new(repo_group_id, repo_id=None, period='day
         """)
         
 
-        results = pd.read_sql(commitNewContributor, engine, params={'repo_id': repo_id, 'period': period,
+        results = pd.read_sql(commitNewContributor, engine.connect(), params={'repo_id': repo_id, 'period': period,
                                                                         'begin_date': begin_date,
                                                                         'end_date': end_date})
     else:
@@ -59,7 +59,7 @@ def pull_requests_merge_contributor_new(repo_group_id, repo_id=None, period='day
         """)
 
         
-        results = pd.read_sql(commitNewContributor, engine,
+        results = pd.read_sql(commitNewContributor, engine.connect(),
                                 params={'repo_group_id': repo_group_id, 'period': period,
                                         'begin_date': begin_date,
                                         'end_date': end_date})
@@ -96,7 +96,7 @@ def pull_requests_closed_no_merge(repo_group_id, repo_id=None, period='day', beg
 
         
 
-        results = pd.read_sql(closedNoMerge, engine, params={'repo_id': repo_id, 'period': period,
+        results = pd.read_sql(closedNoMerge, engine.connect(), params={'repo_id': repo_id, 'period': period,
                                                                         'begin_date': begin_date,
                                                                         'end_date': end_date})
 
@@ -111,7 +111,7 @@ def pull_requests_closed_no_merge(repo_group_id, repo_id=None, period='day', beg
         """)
 
         
-        results = pd.read_sql(closedNoMerge, engine,
+        results = pd.read_sql(closedNoMerge, engine.connect(),
                                 params={'repo_group_id': repo_group_id, 'period': period,
                                         'begin_date': begin_date,
                                         'end_date': end_date})
@@ -151,7 +151,7 @@ def reviews(repo_group_id, repo_id=None, period='day', begin_date=None, end_date
         """)
 
         
-        results = pd.read_sql(reviews_SQL, engine,
+        results = pd.read_sql(reviews_SQL, engine.connect(),
                                 params={'period': period, 'repo_group_id': repo_group_id,
                                         'begin_date': begin_date, 'end_date': end_date })
         return results
@@ -172,7 +172,7 @@ def reviews(repo_group_id, repo_id=None, period='day', begin_date=None, end_date
         """)
 
         
-        results = pd.read_sql(reviews_SQL, engine,
+        results = pd.read_sql(reviews_SQL, engine.connect(),
                             params={'period': period, 'repo_id': repo_id,
                                         'begin_date': begin_date, 'end_date': end_date})
         return results
@@ -212,7 +212,7 @@ def reviews_accepted(repo_group_id, repo_id=None, period='day', begin_date=None,
         """)
 
         
-        results = pd.read_sql(reviews_accepted_SQL, engine,
+        results = pd.read_sql(reviews_accepted_SQL, engine.connect(),
                                 params={'period': period, 'repo_group_id': repo_group_id,
                                         'begin_date': begin_date, 'end_date': end_date})
         return results
@@ -232,7 +232,7 @@ def reviews_accepted(repo_group_id, repo_id=None, period='day', begin_date=None,
             ORDER BY date
         """)
 
-        results = pd.read_sql(reviews_accepted_SQL, engine,
+        results = pd.read_sql(reviews_accepted_SQL, engine.connect(),
                             params={'period': period, 'repo_id': repo_id,
                                     'begin_date': begin_date, 'end_date': end_date})
         return results
@@ -272,7 +272,7 @@ def reviews_declined(repo_group_id, repo_id=None, period='day', begin_date=None,
         """)
 
         
-        results = pd.read_sql(reviews_declined_SQL, engine,
+        results = pd.read_sql(reviews_declined_SQL, engine.connect(),
                                 params={'period': period, 'repo_group_id': repo_group_id,
                                         'begin_date': begin_date, 'end_date': end_date })
         return results
@@ -292,7 +292,7 @@ def reviews_declined(repo_group_id, repo_id=None, period='day', begin_date=None,
             ORDER BY date
         """)
 
-        results = pd.read_sql(reviews_declined_SQL, engine,
+        results = pd.read_sql(reviews_declined_SQL, engine.connect(),
                             params={'period': period, 'repo_id': repo_id,
                                     'begin_date': begin_date, 'end_date': end_date})
         return results
@@ -332,7 +332,7 @@ def review_duration(repo_group_id, repo_id=None, begin_date=None, end_date=None)
         """)
 
         
-        results = pd.read_sql(review_duration_SQL, engine,
+        results = pd.read_sql(review_duration_SQL, engine.connect(),
                                 params={'repo_group_id': repo_group_id,
                                         'begin_date': begin_date,
                                         'end_date': end_date})
@@ -355,7 +355,7 @@ def review_duration(repo_group_id, repo_id=None, begin_date=None, end_date=None)
             ORDER BY pull_requests.repo_id, pull_request_id
         """)
 
-        results = pd.read_sql(review_duration_SQL, engine,
+        results = pd.read_sql(review_duration_SQL, engine.connect(),
                             params={'repo_id': repo_id,
                                     'begin_date': begin_date,
                                     'end_date': end_date})
@@ -408,7 +408,7 @@ def pull_request_acceptance_rate(repo_group_id, repo_id=None, begin_date=None, e
             ON opened.date_created = accepted.accepted_on
         """)
         
-        results = pd.read_sql(prAccRateSQL, engine, params={'repo_group_id': repo_group_id, 'group_by': group_by,
+        results = pd.read_sql(prAccRateSQL, engine.connect(), params={'repo_group_id': repo_group_id, 'group_by': group_by,
                                                         'begin_date': begin_date, 'end_date': end_date})
         return results
     else:
@@ -441,7 +441,7 @@ def pull_request_acceptance_rate(repo_group_id, repo_id=None, begin_date=None, e
             ON opened.date_created = accepted.accepted_on
         """)
         
-        results = pd.read_sql(prAccRateSQL, engine, params={'repo_id': repo_id, 'group_by': group_by,
+        results = pd.read_sql(prAccRateSQL, engine.connect(), params={'repo_id': repo_id, 'group_by': group_by,
                                                             'begin_date': begin_date, 'end_date': end_date})
         return results
 
@@ -546,7 +546,7 @@ def pull_request_average_time_to_close(repo_group_id, repo_id=None, group_by='mo
 
     
 
-        pr_all = pd.read_sql(pr_all_SQL, engine,
+        pr_all = pd.read_sql(pr_all_SQL, engine.connect(),
             params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                     'begin_date': begin_date, 'end_date': end_date})
     if not repo_id:
@@ -658,7 +658,7 @@ def pull_request_merged_status_counts(repo_group_id, repo_id=None, begin_date='1
         """)
 
     
-        pr_all = pd.read_sql(pr_all_SQL, engine,
+        pr_all = pd.read_sql(pr_all_SQL, engine.connect(),
             params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                     'begin_date': begin_date, 'end_date': end_date})
     if not repo_id:
@@ -768,7 +768,7 @@ def pull_request_average_commit_counts(repo_group_id, repo_id=None, group_by='mo
         """)
 
     
-        pr_all = pd.read_sql(pr_all_SQL, engine,
+        pr_all = pd.read_sql(pr_all_SQL, engine.connect(),
             params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                     'begin_date': begin_date, 'end_date': end_date})
     if not repo_id:
@@ -927,7 +927,7 @@ def pull_request_average_event_counts(repo_group_id, repo_id=None, group_by='mon
         """)
 
     
-        pr_all = pd.read_sql(pr_all_SQL, engine,
+        pr_all = pd.read_sql(pr_all_SQL, engine.connect(),
             params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                     'begin_date': begin_date, 'end_date': end_date})
 
@@ -1050,7 +1050,7 @@ def pull_request_average_time_to_responses_and_close(repo_group_id, repo_id=None
         GROUP BY closed_year, merged_status, response_times.first_response_time, response_times.last_response_time, response_times.pr_created_at, response_times.pr_closed_at
         """)
 
-    pr_all = pd.read_sql(pr_all_SQL, engine,
+    pr_all = pd.read_sql(pr_all_SQL, engine.connect(),
         params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                 'begin_date': begin_date, 'end_date': end_date})
 
@@ -1133,7 +1133,7 @@ def pull_request_merged_status_counts(repo_group_id, repo_id=None, begin_date='1
         """)
 
     
-        pr_all = pd.read_sql(pr_all_sql, engine, params={'repo_group_id': repo_group_id, 
+        pr_all = pd.read_sql(pr_all_sql, engine.connect(), params={'repo_group_id': repo_group_id, 
             'repo_id': repo_id, 'begin_date': begin_date, 'end_date': end_date})
 
     if not repo_id:

@@ -45,7 +45,7 @@ def deps(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=No
             AND repo_dependencies.repo_id = :repo_id
             """)
 
-        results = pd.read_sql(depsSQL, engine)    	
+        results = pd.read_sql(depsSQL, engine.connect())    	
 
     else:
 
@@ -69,7 +69,7 @@ def deps(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=No
             AND repo.repo_group_id = :repo_group_id
             """)
 
-        results = pd.read_sql(depsSQL, engine)
+        results = pd.read_sql(depsSQL, engine.connect())
     return results
 
 
