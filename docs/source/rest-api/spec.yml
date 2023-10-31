@@ -1678,6 +1678,90 @@ paths:
             type: array
       tags:
       - experimental
+  /repo-groups/:repo_group_id/pull-requests-new:
+   get:
+      description: Returns a time series of the number of new Pull Requests opened during a certain period for a specific repository group.
+      operationId: Pull Requests New (Repo Group)
+      parameters:
+        - name: repo_group_id
+          in: path
+          description: The repository group's id.
+          required: true
+          schema:
+            type: string
+        - name: period
+          in: query
+          description: Sets the periodicity to 'day', 'week', 'month', or 'year'.
+          schema:
+            type: string
+        - name: begin_date
+          in: query
+          description: Specifies the begin date.
+          schema:
+            type: string
+        - name: end_date
+          in: query
+          description: Specifies the end date.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created_date:
+                    type: string
+                    description: Date in the format 'YYYY-MM-DD'.
+                  new_pull_requests:
+                    type: integer
+                    description: The number of new pull requests opened on the date.
+      tags:
+        - experimental
+  /repo-groups/:repo_id/pull-requests-new:
+    get:
+      description: Returns a time series of the number of new Pull Requests opened during a certain period for a specific repository.
+      operationId: Pull Requests New (Repo)
+      parameters:
+        - name: repo_id
+          in: path
+          description: The repository's id.
+          required: true
+          schema:
+            type: string
+        - name: period
+          in: query
+          description: Sets the periodicity to 'day', 'week', 'month', or 'year'.
+          schema:
+            type: string
+        - name: begin_date
+          in: query
+          description: Specifies the begin date.
+          schema:
+            type: string
+        - name: end_date
+          in: query
+          description: Specifies the end date.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created_date:
+                    type: string
+                    description: Date in the format 'YYYY-MM-DD'.
+                  new_pull_requests:
+                    type: integer
+                    description: The number of new pull requests opened on the date.
+      tags:
+        - experimental
   /repo-groups/:repo_group_id/pull-requests-closed-no-merge:
     get:
       description: Timeseries of pull request which were closed but not merged
