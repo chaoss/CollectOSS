@@ -419,7 +419,7 @@ def send_insight(repo_id, insights, logger, engine):
         to_send = {
             'message_insight': True,
             'repo_git': repo['repo_git'],
-            'insight_begin_date': begin_date.strftime("%Y-%m-%d %H:%M:%S"),
+            'insight_begin_date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             # date from when insights are calculated
             'sentiment': insights[0],  # sentiment insight dict
             'novelty': insights[1],  # novelty insight dict
@@ -455,7 +455,6 @@ def get_max_id(table, column, logger, engine, default=25150):
         logger.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
     else:
         max_id = default
-        logger.warning("Could not find max id for {} column in the {} table... " +
-            "using default set to: {}\n".format(column, table, max_id))
+        logger.warning(f"Could not find max id for {column} column in the {table} table... using default set to: {max_id}\n")
 
     return max_id

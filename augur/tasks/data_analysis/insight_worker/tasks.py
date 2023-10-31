@@ -257,7 +257,7 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
                         repo_insight_record_obj.ri_id))
 
                 # Send insight to Jonah for slack bot
-                send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean), logger)
+                send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean), logger,engine)
 
                 insight_count += 1
             else:

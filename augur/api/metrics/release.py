@@ -155,5 +155,5 @@ def tag_only_releases(repo_group_id, repo_id=None, period='day', begin_date=None
                                     'begin_date': begin_date, 'end_date': end_date})
         return results
 
-def create_release_metrics(metrics):
-    add_metrics(metrics, __name__)
+#def create_release_metrics(metrics):
+#    add_metrics(metrics, __name__)
