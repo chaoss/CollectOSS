@@ -9,10 +9,12 @@ import urllib.request, urllib.error, json, os, math, yaml, urllib3, time, loggin
 from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import DatabaseEngine
 from augur.application.db.models import User, Repo, RepoGroup, UserGroup, UserRepo
-from sqlalchemy import Column, Table, Integer, MetaData, or_, Label
+from sqlalchemy import Column, Table, Integer, MetaData, or_
 from sqlalchemy.sql.operators import ilike_op, distinct_op
 from sqlalchemy.sql.functions import coalesce
 from augur.application.db.models.base import Base
+
+from sqlalchemy.orm import Query
 
 init_logging()
 
@@ -327,7 +329,7 @@ with DatabaseEngine() as engine:
 """ ----------------------------------------------------------------
 """
 def load_repos_test(count = False, source = None, **kwargs):
-    columns: list[Label] = [
+    columns: list[Column] = [
         Repo.repo_id.distinct().label("repo_id"),
         Repo.description.label("description"),
         Repo.repo_git.label("url"),
@@ -339,21 +341,43 @@ def load_repos_test(count = False, source = None, **kwargs):
         RepoGroup.repo_group_id.label("repo_group_id")
     ]
     
-    def get_colum_by_label(label: str)-> Label:
+    def get_colum_by_label(label: str)-> Column:
         for column in columns:
             if column.name == label:
                 return column
     
-    repos = db_session.query(*columns)\
+    repos: Query = db_session.query(*columns)\
         .outerjoin(commits_materialized_view, Repo.repo_id == commits_materialized_view.columns.repo_id)\
         .outerjoin(issues_materialized_view, Repo.repo_id == issues_materialized_view.columns.repo_id)\
         .join(RepoGroup, Repo.repo_group_id == RepoGroup.repo_group_id)
     
-    user: User = kwargs.get("user")
-    if user:
+    if source == "user":
+        user: User = kwargs.get("user")
+        
+        if not user:
+            return None, {"status": "User not passed when trying to get user repos"}
+        if not user.groups:
+            return None, {"status": "No data"}
+        
         repos = repos.join(UserRepo, Repo.repo_id == UserRepo.repo_id)\
             .join(UserGroup, UserGroup.group_id == UserRepo.group_id)\
             .filter(UserGroup.user_id == user.user_id)
+    
+    elif source == "group":
+        user: User = kwargs.get("user")
+        
+        if not user:
+            return None, {"status": "User not specified"}
+        group_name = kwargs.get("group_name")
+        if not group_name:
+            return None, {"status": "Group name not specified"}
+        
+        group_id = ... # UserGroup.convert_group_name_to_id(self.session, user.user_id, group_name)
+        if group_id is None:
+            return None, {"status": "Group does not exists"}
+        
+        repos = repos.join(UserRepo, Repo.repo_id == UserRepo.repo_id)\
+            .filter(UserRepo.group_id == group_id)
     
     search = kwargs.get("search")
     qkey = kwargs.get("query_key") or ["repo_name", "repo_owner"]
@@ -367,9 +391,22 @@ def load_repos_test(count = False, source = None, **kwargs):
     if count:
         c = repos.count()
         return math.ceil(c / page_size) - 1
-            
-    page: int = kwargs.get("page") or 0
-    offset = page * page_size
+    else: 
+        page: int = kwargs.get("page") or 0
+        offset = page * page_size
+        direction = kwargs.get("direction") or "ASC"
+        order_by = kwargs.get("order_by") or "repo_id"
+        
+        if direction not in ["ASC", "DESC"]:
+            return None, None, {"status": "Invalid direction"}
+        
+        if order_by not in ["repo_id", "repo_name", "repo_owner", "commits_all_time", "issues_all_time"]:
+            return None, None, {"status": "Invalid order by"}
+        
+        # Find the column named in the 'order_by', and get its asc() or desc() method 
+        directive: function = getattr(get_colum_by_label(order_by), direction.lower())
+        
+        repos = repos.order_by(directive())
     
     return repos.slice(offset, offset + page_size)
 
