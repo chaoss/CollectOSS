@@ -74,11 +74,19 @@ def repo_table_view():
     pagination_offset = config.get_value("frontend", "pagination_offset")
     
     if current_user.is_authenticated:
-        data = current_user.get_repos(page = page, sort = sorting, direction = direction, search=query)[0]
-        page_count = (current_user.get_repo_count(search = query)[0] or 0) // pagination_offset
+        data = load_repos_test(user = current_user, search = query, page = page, sort = sorting, direction = direction, source = "user")
+        page_count = load_repos_test(user = current_user, search = query, count = True, source = "user")
+        # data = current_user.get_repos(page = page, sort = sorting, direction = direction, search=query)[0]
+        # page_count = (current_user.get_repo_count(search = query)[0] or 0) // pagination_offset
     else:
-        data = get_all_repos(page = page, sort = sorting, direction = direction, search=query)[0]
-        page_count = (get_all_repos_count(search = query)[0] or 0) // pagination_offset
+        data = load_repos_test(search = query, page = page, sort = sorting, direction = direction)
+        page_count = load_repos_test(search = query, count = True)
+        # data = get_all_repos(page = page, sort = sorting, direction = direction, search=query)[0]
+        # page_count = (get_all_repos_count(search = query)[0] or 0) // pagination_offset
+    
+    if not data.count():
+        data = None
+
 
     return render_module("repos-table", title="Repos", repos=data, query_key=query, activePage=page, pages=page_count, offset=pagination_offset, PS="repo_table_view", reverse = rev, sorting = sorting)
 

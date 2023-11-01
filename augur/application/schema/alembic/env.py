@@ -5,7 +5,9 @@ from sqlalchemy import pool
 
 from alembic import context
 from augur.application.db.models.base import Base
-from augur.application.db.engine import DatabaseEngine
+from augur.application.db.engine import DatabaseEngine, get_database_string
+from sqlalchemy import create_engine, event
+from sqlalchemy.pool import NullPool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -59,8 +61,20 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
+    url = get_database_string()
+    engine = create_engine(url)
 
-    with DatabaseEngine() as connectable, connectable.connect() as connection:
+    @event.listens_for(engine, "connect", insert=True)
+    def set_search_path(dbapi_connection, connection_record):
+        existing_autocommit = dbapi_connection.autocommit
+        dbapi_connection.autocommit = True
+        cursor = dbapi_connection.cursor()
+        cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
+        cursor.close()
+        dbapi_connection.autocommit = existing_autocommit
+
+
+    with engine.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,

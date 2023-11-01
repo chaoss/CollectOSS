@@ -25,7 +25,7 @@ def upgrade():
     conn = op.get_bind()
     result = conn.execute(text(f"""SELECT * FROM "augur_data"."repo_groups" WHERE rg_name='{repo_group_name}';""")).fetchall()
     if len(result) == 0:
-        conn.execute(f"""INSERT INTO "augur_data"."repo_groups" ("rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES ('{repo_group_name}', 'DO NOT DELETE OR FRONTEND REPOS WILL BREAK', '', 0, '2023-02-17 15:00:00', NULL, NULL, NULL, NULL, NULL);""")
+        conn.execute(text(f"""INSERT INTO "augur_data"."repo_groups" ("rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES ('{repo_group_name}', 'DO NOT DELETE OR FRONTEND REPOS WILL BREAK', '', 0, '2023-02-17 15:00:00', NULL, NULL, NULL, NULL, NULL);"""))
 
 
     # ### end Alembic commands ###

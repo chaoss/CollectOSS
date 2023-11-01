@@ -141,9 +141,9 @@ class RepoLoadController:
 
         get_page_of_repos_sql = s.sql.text(query)
 
-        with DatabaseEngine(connection_pool_size=1) as engine:
+        with DatabaseEngine(connection_pool_size=1).connect() as conn:
 
-            results = pd.read_sql(get_page_of_repos_sql, engine, params=query_args)
+            results = pd.read_sql(get_page_of_repos_sql, conn, params=query_args)
 
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
 
@@ -305,7 +305,6 @@ class RepoLoadController:
 
             query_args["page_size"] = page_size
             query_args["offset"] = offset
-            query_args["order_by"] = order_by
 
         return query, query_args, {"status": "success"}
 
