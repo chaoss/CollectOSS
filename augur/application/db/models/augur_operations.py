@@ -628,7 +628,7 @@ class UserGroup(Base):
         {"schema": "augur_operations"}
     )
 
-    #user = relationship("User")
+    user = relationship("User")
     repos = relationship("UserRepo")
 
     @staticmethod

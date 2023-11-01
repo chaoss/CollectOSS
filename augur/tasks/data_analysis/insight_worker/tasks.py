@@ -134,7 +134,9 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
             WHERE repo_insights.ri_metric = to_delete.ri_metric
             AND repo_insights.ri_field = to_delete.ri_field
     """)
-    result = engine.connect().execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
+
+    with engine.connect as conn:
+        result = conn.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
 
     # get table values to check for dupes later on
 
@@ -566,7 +568,8 @@ def clear_insights(repo_id, new_endpoint, new_field, logger):
                 AND ri_field = '{}'
     """.format(repo_id, new_endpoint, new_field)
     try:
-        result = engine.connect().execute(deleteSQL)
+        with engine.connect() as conn:
+            result = conn.execute(deleteSQL)
     except Exception as e:
         logger.info("Error occured deleting insight slot: {}".format(e))
 
@@ -583,7 +586,8 @@ def clear_insights(repo_id, new_endpoint, new_field, logger):
                 AND ri_field = '{}'
     """.format(repo_id, new_endpoint, new_field)
     try:
-        result = engine.connect().execute(deleteSQL)
+        with engine.connect() as conn:
+            result = conn.execute(deleteSQL)
     except Exception as e:
         logger.info("Error occured deleting insight slot: {}".format(e))
 
@@ -625,7 +629,8 @@ def clear_insight(repo_id, new_score, new_metric, new_field, logger):
                             AND ri_field = '{}'
                 """.format(record['repo_id'], record['ri_metric'], record['ri_field'])
                 try:
-                    result = engine.connect().execute(deleteSQL)
+                    with engine.connect() as conn:
+                        result = conn.execute(deleteSQL)
                 except Exception as e:
                     logger.info("Error occured deleting insight slot: {}".format(e))
     else:

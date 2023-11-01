@@ -60,7 +60,7 @@ def pull_requests_merge_contributor_new(repo_group_id, repo_id=None, period='day
         """)
 
         with engine.connect() as conn:
-            results = pd.read_sql(commitNewContributor, engine.connect(),
+            results = pd.read_sql(commitNewContributor, conn,
                                     params={'repo_group_id': repo_group_id, 'period': period,
                                             'begin_date': begin_date,
                                             'end_date': end_date})
