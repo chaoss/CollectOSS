@@ -57,8 +57,9 @@ def toss_pull_request_acceptance_rate(repo_id, begin_date=None, end_date=None, g
             ) opened ON merged.repo_id = opened.repo_id
     """)
     
-    results = pd.read_sql(pr_acceptance_rate_sql, engine.connect(), params={'repo_id': repo_id, 'group_by': group_by,
-                                                    'begin_date': begin_date, 'end_date': end_date})
+    with engine.connect() as conn:
+        results = pd.read_sql(pr_acceptance_rate_sql, conn, params={'repo_id': repo_id, 'group_by': group_by,
+                                                        'begin_date': begin_date, 'end_date': end_date})
     return results
 
 
@@ -89,8 +90,9 @@ def toss_review_duration(repo_id, begin_date=None, end_date=None):
             AND :end_date
     """)
     
-    results = pd.read_sql(pr_acceptance_rate_sql, engine.connect(), params={'repo_id': repo_id,
-                                                        'begin_date': begin_date, 'end_date': end_date})
+    with engine.connect() as conn:
+        results = pd.read_sql(pr_acceptance_rate_sql, conn, params={'repo_id': repo_id,
+                                                            'begin_date': begin_date, 'end_date': end_date})
     if results.iloc[0]['duration'] is None:
         results.iloc[0]['duration'] = -1
     else:
@@ -120,5 +122,6 @@ def toss_repo_info(repo_id):
     LIMIT 1;
     """)
     
-    results = pd.read_sql(license_file_sql, engine.connect(), params={'repo_id': repo_id})
+    with engine.connect() as conn:
+        results = pd.read_sql(license_file_sql, conn, params={'repo_id': repo_id})
     return results

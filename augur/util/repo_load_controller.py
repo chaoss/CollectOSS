@@ -141,9 +141,9 @@ class RepoLoadController:
 
         get_page_of_repos_sql = s.sql.text(query)
 
-        with DatabaseEngine(connection_pool_size=1) as engine:
+        with DatabaseEngine(connection_pool_size=1).connect() as conn:
 
-            results = pd.read_sql(get_page_of_repos_sql, engine.connect(), params=query_args)
+            results = pd.read_sql(get_page_of_repos_sql, conn, params=query_args)
 
         results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
 

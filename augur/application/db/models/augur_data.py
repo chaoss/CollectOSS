@@ -1208,6 +1208,10 @@ class Commit(Base):
         primaryjoin="Commit.cmt_author_platform_username == Contributor.cntrb_login",
         back_populates="commits"
     )
+    #contributor1 = relationship(
+    #    "Contributor",
+    #    primaryjoin="Commit.cmt_author_platform_username == Contributor.cntrb_login",
+    #)
     repo = relationship("Repo", back_populates="commits")
     message_ref = relationship("CommitCommentRef", back_populates="cmt")
 
