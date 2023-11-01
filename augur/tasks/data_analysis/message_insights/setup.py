@@ -41,7 +41,7 @@ setup(
         'tensorflow==2.13.1',
         'h5py==3.10.0',
         'scikit-image==0.19.1',
-        'joblib==1.0.1',
+        'joblib==1.2.0',
         'xgboost',
         'bs4==0.0.1',
         'xlrd==2.0.1',
