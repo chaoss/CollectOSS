@@ -116,7 +116,9 @@ def clustering_model(repo_git: str,logger,engine, session) -> None:
             """
     )
     # result = db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
-    msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, engine, params={"repo_id": repo_id})
+
+    with engine.connect() as conn:
+        msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, conn, params={"repo_id": repo_id})
     logger.info(msg_df_cur_repo.head())
     logger.debug(f"Repo message df size: {len(msg_df_cur_repo.index)}")
 
@@ -303,7 +305,9 @@ def train_model(logger, engine, session, max_df, min_df, max_features, ngram_ran
         AND prmr.msg_id=m.msg_id
         """
     )
-    msg_df_all = pd.read_sql(get_messages_sql, engine, params={})
+
+    with engine.connect() as conn:
+        msg_df_all = pd.read_sql(get_messages_sql, conn, params={})
 
     # select only highly active repos
     logger.debug("Selecting highly active repos")

@@ -210,9 +210,11 @@ def update_issue_closed_cntrbs_from_events(engine, repo_id):
                                             
         SELECT issue_id, cntrb_id from RankedIssues where rn=1 and repo_id={repo_id} and cntrb_id is not NULL
     """)
-    result = engine.execute(get_ranked_issues).fetchall()
 
-    update_data = [{'issue_id': row['issue_id'], 'cntrb_id': row['cntrb_id'], 'repo_id': repo_id} for row in result]
+    with engine.connect() as conn:
+        result = conn.execute(get_ranked_issues).fetchall()
+
+    update_data = [{'issue_id': row[0], 'cntrb_id': row[1], 'repo_id': repo_id} for row in result]
     with engine.connect() as connection:
         update_stmt = s.text("""
             UPDATE issues

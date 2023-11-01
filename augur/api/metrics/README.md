@@ -26,7 +26,8 @@ from augur.application.db.engine import engine
 4. Define any queries with the structure show below
 ```py
 repo_sql = s.sql.text(""" SELECT repo.repo_name FROM repo WHERE repo.repo_id = :repo_id """)
-results = pd.read_sql(repo_sql, engine, params={'repo_id': repo_id})
+with engine.connect() as conn:
+    results = pd.read_sql(repo_sql, conn, params={'repo_id': repo_id})
 ```
 5. Return either a pandas dataframe, dict, or json.
     - Note: If you return a pandas dataframe or dict it will be automatically converted into json

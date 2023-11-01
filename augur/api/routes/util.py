@@ -23,7 +23,9 @@ def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
         FROM repo_groups
         ORDER BY rg_name
     """)
-    results = pd.read_sql(repoGroupsSQL,  engine)
+
+    with engine.connect() as conn:
+        results = pd.read_sql(repoGroupsSQL,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
                     status=200,
@@ -58,7 +60,9 @@ def get_all_repos():
             JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
         order by repo_name
     """)
-    results = pd.read_sql(get_all_repos_sql,  engine)
+
+    with engine.connect() as conn:
+        results = pd.read_sql(get_all_repos_sql,  conn)
     results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
 
     b64_urls = []
@@ -100,7 +104,8 @@ def get_repos_in_repo_group(repo_group_id):
         ORDER BY repo.repo_git
     """)
 
-    results = pd.read_sql(repos_in_repo_groups_SQL, engine, params={'repo_group_id': repo_group_id})
+    with engine.connect() as conn:
+        results = pd.read_sql(repos_in_repo_groups_SQL, conn, params={'repo_group_id': repo_group_id})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
                     status=200,
@@ -116,7 +121,8 @@ def get_repo_by_git_name(owner, repo):
         GROUP BY repo_id, rg_name
     """)
 
-    results = pd.read_sql(get_repo_by_git_name_sql, engine, params={'owner': '%{}_'.format(owner), 'repo': repo,})
+    with engine.connect() as conn:
+        results = pd.read_sql(get_repo_by_git_name_sql, conn, params={'owner': '%{}%'.format(owner), 'repo': repo,})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
                     status=200,
@@ -132,7 +138,9 @@ def get_repo_by_name(rg_name, repo_name):
         AND LOWER(rg_name) = LOWER(:rg_name)
         AND LOWER(repo_name) = LOWER(:repo_name)
     """)
-    results = pd.read_sql(get_repo_by_name_sql, engine, params={'rg_name': rg_name, 'repo_name': repo_name})
+
+    with engine.connect() as conn:
+        results = pd.read_sql(get_repo_by_name_sql, conn, params={'rg_name': rg_name, 'repo_name': repo_name})
     results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -146,7 +154,9 @@ def get_group_by_name(rg_name):
         FROM repo_groups
         WHERE lower(rg_name) = lower(:rg_name)
     """)
-    results = pd.read_sql(groupSQL, engine, params={'rg_name': rg_name})
+
+    with engine.connect() as conn:
+        results = pd.read_sql(groupSQL, conn, params={'rg_name': rg_name})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
                     status=200,
@@ -160,7 +170,8 @@ def get_repos_for_dosocs():
         WHERE a.setting='repo_directory'
     """)
 
-    results = pd.read_sql(get_repos_for_dosocs_SQL,  engine)
+    with engine.connect() as conn:
+        results = pd.read_sql(get_repos_for_dosocs_SQL,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
                     status=200,
@@ -188,7 +199,9 @@ def get_issues(repo_group_id, repo_id=None):
             GROUP BY issues.issue_id
             ORDER by OPEN_DAY DESC
         """)
-        results = pd.read_sql(get_issues_sql, engine, params={'repo_group_id': repo_group_id})
+
+        with engine.connect() as conn:
+            results = pd.read_sql(get_issues_sql, conn, params={'repo_group_id': repo_group_id})
     else:
         get_issues_sql = s.sql.text("""
             SELECT issue_title,
@@ -208,7 +221,9 @@ def get_issues(repo_group_id, repo_id=None):
             GROUP BY issues.issue_id, repo_name
             ORDER by OPEN_DAY DESC
         """)
-        results = pd.read_sql(get_issues_sql, engine, params={'repo_id': repo_id})
+
+        with engine.connect() as conn:
+            results = pd.read_sql(get_issues_sql, conn, params={'repo_id': repo_id})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
                     status=200,

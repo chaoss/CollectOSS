@@ -41,14 +41,14 @@ setup(
         "alembic==1.8.1", # 1.8.1
         "coloredlogs==15.0", # 15.0.1
         "Beaker==1.11.0", # 1.11.0
-        "SQLAlchemy==1.3.23", # 1.4.40
+        "SQLAlchemy==2.0.22", # 1.4.40
         "itsdangerous==2.0.1", # 2.1.2
         'Jinja2~=3.0.3',
         "Flask==2.0.2", # 2.2.2
         "Flask-Cors==3.0.10",
         "Flask-Login==0.5.0",
         "Flask-WTF==1.0.0",
-        "pandas==1.3.5", # 1.4.3
+        "pandas==1.5.3", # 1.4.3
         "numpy==1.22", # 1.23.2
         "requests==2.28.0", # 2.28.1
         "psycopg2-binary==2.9.3", #2.9.3 what is pscopg-binary 3.0.16
@@ -65,7 +65,7 @@ setup(
         "partd >= 0.3.10", # 1.3.0
         "distributed >= 2021.03.0", # 2022.8.1
         "nltk==3.6.6", # 3.7
-        "h5py~=3.6.0", # 3.7
+        "h5py==3.10.0", # 3.7
         "scipy==1.7.3", # 1.9.0
         "blinker==1.4", # 1.5
         "protobuf<3.22", # 4.21.5

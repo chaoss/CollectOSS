@@ -47,7 +47,9 @@ def create_routes(server):
                 WHERE augur_data.repo.repo_id = e.repo_id
                 ORDER BY e.repo_id
         """)
-        results = pd.read_sql(project_languages_sql,  server.engine)
+
+        with server.engine.connect() as conn:         
+            results = pd.read_sql(project_languages_sql,  conn)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                     status=200,
@@ -84,7 +86,9 @@ def create_routes(server):
                 WHERE augur_data.repo.repo_id = e.repo_id
                 ORDER BY e.repo_id
         """)
-        results = pd.read_sql(project_files_sql,  server.engine)
+
+        with server.engine.connect() as conn:
+            results = pd.read_sql(project_files_sql,  conn)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                     status=200,
@@ -124,7 +128,9 @@ def create_routes(server):
                 WHERE augur_data.repo.repo_id = e.repo_id
                 ORDER BY e.repo_id   
         """)
-        results = pd.read_sql(project_lines_sql,  server.engine)
+
+        with server.engine.connect() as conn:
+            results = pd.read_sql(project_lines_sql,  conn)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                     status=200,
@@ -164,7 +170,9 @@ def create_routes(server):
                 WHERE augur_data.repo.repo_id = e.repo_id
                 ORDER BY e.repo_id
         """)
-        results = pd.read_sql(comment_lines_sql,  server.engine)
+
+        with server.engine.connect() as conn:
+            results = pd.read_sql(comment_lines_sql,  conn)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                     status=200,
@@ -204,7 +212,9 @@ def create_routes(server):
                 WHERE augur_data.repo.repo_id = e.repo_id
                 ORDER BY e.repo_id
             """)
-        results = pd.read_sql(blank_lines_sql,  server.engine)
+
+        with server.engine.connect() as conn:
+            results = pd.read_sql(blank_lines_sql,  conn)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                     status=200,
@@ -245,7 +255,9 @@ def create_routes(server):
                 WHERE augur_data.repo.repo_id = e.repo_id
                 ORDER BY e.repo_id
             """)
-        results = pd.read_sql(project_file_complexity_sql,  server.engine)
+        
+        with server.engine.connect() as conn:
+            results = pd.read_sql(project_file_complexity_sql,  conn)
         data = results.to_json(orient="records", date_format='iso', date_unit='ms')
         return Response(response=data,
                     status=200,

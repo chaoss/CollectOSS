@@ -99,7 +99,7 @@ def add_repo_groups(filename):
     """
     Create new repo groups in Augur's database
     """
-    with DatabaseEngine() as engine, engine.connect() as connection:
+    with DatabaseEngine() as engine, engine.begin() as connection:
 
         df = pd.read_sql(
             s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"),
@@ -248,7 +248,7 @@ def update_api_key(api_key):
     """
     )
 
-    with DatabaseEngine() as engine, engine.connect() as connection:
+    with DatabaseEngine() as engine, engine.begin() as connection:
 
         connection.execute(update_api_key_sql, api_key=api_key)
         logger.info(f"Updated Augur API key to: {api_key}")

@@ -56,9 +56,10 @@ def contributor_breadth_model() -> None:
                 ) b
     """)
 
-    result = engine.execute(cntrb_login_query)
+    with engine.connect() as connection:
+        result = connection.execute(cntrb_login_query)
 
-    current_cntrb_logins = [dict(row) for row in result]
+    current_cntrb_logins = [dict(row) for row in result.mappings()]
 
 
     cntrb_newest_events_query = s.sql.text("""
@@ -68,8 +69,10 @@ def contributor_breadth_model() -> None:
         GROUP BY c.gh_login;
     """)
 
-    cntrb_newest_events_list = engine.execute(cntrb_newest_events_query)
-    cntrb_newest_events_list = [dict(row) for row in cntrb_newest_events_list]
+    with engine.connect() as connection:
+        cntrb_newest_events_list = connection.execute(cntrb_newest_events_query)
+    
+    cntrb_newest_events_list = [dict(row) for row in cntrb_newest_events_list.mappings()]
 
     cntrb_newest_events_map = {}
     for cntrb_event in cntrb_newest_events_list:
