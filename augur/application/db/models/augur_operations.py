@@ -629,7 +629,7 @@ class UserGroup(Base):
     )
 
     user = relationship("User", back_populates="groups")
-    user_repos = relationship("UserRepo", back_populates="group")
+    repos = relationship("UserRepo", back_populates="group")
 
     @staticmethod
     def insert(session, user_id:int, group_name:str) -> dict:
@@ -740,7 +740,7 @@ class UserRepo(Base):
     )
 
     repo = relationship("Repo", back_populates="user_repo")
-    group = relationship("UserGroup", back_populates="user_repos")
+    group = relationship("UserGroup", back_populates="repos")
 
     @staticmethod
     def insert(session, repo_id: int, group_id:int = 1) -> bool:
