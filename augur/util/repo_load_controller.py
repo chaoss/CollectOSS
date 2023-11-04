@@ -12,8 +12,21 @@ from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, Us
 from augur.application.db.models.augur_operations import retrieve_owner_repos
 from augur.application.db.util import execute_session_query
 
+from sqlalchemy import Column, Table, MetaData, or_
+from sqlalchemy.sql.operators import ilike_op
+from sqlalchemy.sql.functions import coalesce
+from sqlalchemy.orm import Query
+
 
 logger = logging.getLogger(__name__)
+
+
+with DatabaseEngine() as engine:
+    augur_data_schema = MetaData(schema = "augur_data")
+    augur_data_schema.reflect(bind = engine, views = True)
+    
+    commits_materialized_view: Table = augur_data_schema.tables["augur_data.api_get_all_repos_commits"]
+    issues_materialized_view: Table = augur_data_schema.tables["augur_data.api_get_all_repos_issues"]
 
 
 class RepoLoadController:
@@ -131,34 +144,33 @@ class RepoLoadController:
         order_by = sort if sort else "repo_id"
         order_direction = direction if direction else "ASC"
 
-        query, query_args, result = self.generate_repo_query(source, count=False, order_by=order_by, direction=order_direction, 
+
+        query, result = self.generate_repo_query(source, count=False, order_by=order_by, direction=order_direction, 
                                     page=page, page_size=page_size, **kwargs)
+
+
+        # query, query_args, result = self.generate_repo_query(source, count=False, order_by=order_by, direction=order_direction, 
+        #                             page=page, page_size=page_size, **kwargs)
         if not query:
             return None, {"status": result["status"]}
 
         if result["status"] == "No data":
             return [], {"status": "No data"}
 
-        get_page_of_repos_sql = s.sql.text(query)
+        # get_page_of_repos_sql = s.sql.text(query)
 
-        with DatabaseEngine(connection_pool_size=1).connect() as conn:
+        # with DatabaseEngine(connection_pool_size=1).connect() as conn:
 
-            results = pd.read_sql(get_page_of_repos_sql, conn, params=query_args)
+        #     results = pd.read_sql(get_page_of_repos_sql, conn, params=query_args)
 
-        results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
+        results = [dict(x._mapping) for x in query]
 
-        b64_urls = []
-        for i in results.index:
-            b64_urls.append(base64.b64encode((results.at[i, 'url']).encode()))
-        results['base64_url'] = b64_urls
+        for row in results:
 
-        data = results.to_dict(orient="records")
+            row["url"] = row["url"].split('//')[1]
+            row["base64_url"] = base64.b64encode(row["url"].encode())
 
-        # The SELECT statement in generate_repo_query has been updated to include `repo_name`
-        # for row in data:
-        #     row["repo_name"] = re.search(r"github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$", row["url"]).groups()[0]
-
-        return data, {"status": "success"}
+        return results, {"status": "success"}
 
     def get_repo_count(self, source, **kwargs):
 
@@ -169,142 +181,97 @@ class RepoLoadController:
         if source not in ["all", "user", "group"]:
             print("Func: get_repo_count. Error: Invalid source")
             return None, {"status": "Invalid source"}
-
-        query, query_args, result = self.generate_repo_query(source, count=True, **kwargs)
+        
+        query, result = self.generate_repo_query(source, count=True, **kwargs)
         if not query:
             return None, result
 
         if result["status"] == "No data":
             return 0, {"status": "No data"}
-
-        # surround query with count query so we just get the count of the rows
-        final_query = f"SELECT count(*) FROM ({query}) a;"
-           
-        get_page_of_repos_sql = s.sql.text(final_query)
-
-        result = self.session.execute(get_page_of_repos_sql, query_args).fetchall()
+        
+        count = query.count()
             
-        return result[0]["count"], {"status": "success"}
+        return count, {"status": "success"}
 
     def generate_repo_query(self, source, count, **kwargs):
-        # TODO: need more flexible way of calculating count for variable column queries
-
-        query_args = {}
-
-        if count:
-            # only query for repos ids so the query is faster for getting the count
-            select = """    DISTINCT(augur_data.repo.repo_id),
-                (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name,
-                (regexp_match(augur_data.repo.repo_git, 'github\.com\/([A-Za-z0-9 \- _]+)\/[A-Za-z0-9 \- _ .]+$'))[1] as repo_owner"""
-        else:
-
-            select = """    DISTINCT(augur_data.repo.repo_id),
-                    augur_data.repo.description,
-                    augur_data.repo.repo_git AS url,
-                    COALESCE(a.commits_all_time, 0) as commits_all_time,
-                    COALESCE(b.issues_all_time, 0) as issues_all_time,
-                    rg_name,
-                    (regexp_match(augur_data.repo.repo_git, 'github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$'))[1] as repo_name,
-                    (regexp_match(augur_data.repo.repo_git, 'github\.com\/([A-Za-z0-9 \- _]+)\/[A-Za-z0-9 \- _ .]+$'))[1] as repo_owner,
-                    augur_data.repo.repo_group_id"""
-
-        query = f"""
-            SELECT
-                {select}
-            FROM
-                    augur_data.repo
-                    LEFT OUTER JOIN augur_data.api_get_all_repos_commits a ON augur_data.repo.repo_id = a.repo_id
-                    LEFT OUTER JOIN augur_data.api_get_all_repos_issues b ON augur_data.repo.repo_id = b.repo_id
-                    JOIN augur_data.repo_groups ON augur_data.repo.repo_group_id = augur_data.repo_groups.repo_group_id\n"""
-
+        
+        columns: list[Column] = [
+            Repo.repo_id.distinct().label("repo_id"),
+            Repo.description.label("description"),
+            Repo.repo_git.label("url"),
+            coalesce(commits_materialized_view.columns.commits_all_time, 0).label("commits_all_time"),
+            coalesce(issues_materialized_view.columns.issues_all_time, 0).label("issues_all_time"),
+            RepoGroup.rg_name.label("rg_name"),
+            Repo.repo_git.regexp_replace('.*github\.com\/[A-Za-z0-9 \- _]+\/([A-Za-z0-9 \- _ .]+)$', "\\1").label("repo_name"),
+            Repo.repo_git.regexp_replace('.*github\.com\/([A-Za-z0-9 \- _]+)\/[A-Za-z0-9 \- _ .]+$', "\\1").label("repo_owner"),
+            RepoGroup.repo_group_id.label("repo_group_id")
+        ]
+    
+        def get_colum_by_label(label: str)-> Column:
+            for column in columns:
+                if column.name == label:
+                    return column
+        
+        repos: Query = self.session.query(*columns)\
+            .outerjoin(commits_materialized_view, Repo.repo_id == commits_materialized_view.columns.repo_id)\
+            .outerjoin(issues_materialized_view, Repo.repo_id == issues_materialized_view.columns.repo_id)\
+            .join(RepoGroup, Repo.repo_group_id == RepoGroup.repo_group_id)
+        
         if source == "user":
+            user: User = kwargs.get("user")
             
-            user = kwargs.get("user")
             if not user:
-                print("Func: generate_repo_query. Error: User not passed when trying to get user repos")
                 return None, {"status": "User not passed when trying to get user repos"}
-                
             if not user.groups:
                 return None, {"status": "No data"}
-
-            query += "\t\t    JOIN augur_operations.user_repos ON augur_data.repo.repo_id = augur_operations.user_repos.repo_id\n"
-            query += "\t\t    JOIN augur_operations.user_groups ON augur_operations.user_repos.group_id = augur_operations.user_groups.group_id\n"
-            query += "\t\t    WHERE augur_operations.user_groups.user_id = :user_id\n"
-
-            query_args["user_id"] = user.user_id
-
+            
+            repos = repos.join(UserRepo, Repo.repo_id == UserRepo.repo_id)\
+                .join(UserGroup, UserGroup.group_id == UserRepo.group_id)\
+                .filter(UserGroup.user_id == user.user_id)
+        
         elif source == "group":
-
-            user = kwargs.get("user")
+            user: User = kwargs.get("user")
+            
             if not user:
-                print("Func: generate_repo_query. Error: User not specified")
                 return None, {"status": "User not specified"}
-
             group_name = kwargs.get("group_name")
             if not group_name:
-                print("Func: generate_repo_query. Error: Group name not specified")
                 return None, {"status": "Group name not specified"}
-
+            
             group_id = UserGroup.convert_group_name_to_id(self.session, user.user_id, group_name)
             if group_id is None:
-                print("Func: generate_repo_query. Error: Group does not exist")
                 return None, {"status": "Group does not exists"}
-
-            query += "\t\t    JOIN augur_operations.user_repos ON augur_data.repo.repo_id = augur_operations.user_repos.repo_id\n"
-            query += "\t\t    WHERE augur_operations.user_repos.group_id = :group_id \n"
-
-            query_args["group_id"] = group_id
+            
+            repos = repos.join(UserRepo, Repo.repo_id == UserRepo.repo_id)\
+                .filter(UserRepo.group_id == group_id)
         
-        # implement sorting by query_key
         search = kwargs.get("search")
         qkey = kwargs.get("query_key") or ["repo_name", "repo_owner"]
-
         if search:
-            # The WHERE clause cannot use a column alias created in the directly preceeding SELECT clause
-            # We must wrap the query in an additional SELECT with a table alias
-            # This way, we can use WHERE with the computed repo_name column alias
-            query = f"""\tSELECT * from (
-                {query}
-            ) res\n"""
-            # This is done so repos with a NULL repo_name can still be sorted.
-            # "res" here is a randomly chosen table alias, short for "result"
-            # It is only included because it is required by the SQL syntax
-
             if isinstance(qkey, list) and len(qkey) > 0:
-                query += f"\tWHERE :qkey_where ilike :search\n"
-                query_args["qkey_where"] = qkey.pop(0)
-
-                for i, key in enumerate(qkey):
-                    param_name = f"qkey_or_{i}"
-                    query += f"OR :{param_name} ilike :search\n"
-                    query_args[param_name] = key
+                repos = repos.filter(or_(ilike_op(get_colum_by_label(filter_column), f"%{search}%") for filter_column in qkey))
             else:
-                query += f"\tWHERE :qkey ilike :search\n"
-                query_args["qkey"] = qkey
-            
-            query_args["search"] = f'%{search}%'
-
-
-        if not count:
-            order_by = kwargs.get("order_by") or "repo_id"
-            page = kwargs.get("page") or 0
-            page_size = kwargs.get("page_size") or 25
+                repos = repos.filter(ilike_op(get_colum_by_label(qkey), f"%{search}%"))
+        
+        page_size: int = kwargs.get("page_size") or 25
+        if count:
+            return repos, {"status": "success"}
+        else: 
+            page: int = kwargs.get("page") or 0
+            offset = page * page_size
             direction = kwargs.get("direction") or "ASC"
-
+            order_by = kwargs.get("order_by") or "repo_id"
+            
             if direction not in ["ASC", "DESC"]:
-                return None, None, {"status": "Invalid direction"}
+                return None, {"status": "Invalid direction"}
             
             if order_by not in ["repo_id", "repo_name", "repo_owner", "commits_all_time", "issues_all_time"]:
-                return None, None, {"status": "Invalid order by"}
+                return None, {"status": "Invalid order by"}
+            
+            # Find the column named in the 'order_by', and get its asc() or desc() method 
+            directive: function = getattr(get_colum_by_label(order_by), direction.lower())
+            
+            repos = repos.order_by(directive())
 
-            offset = page*page_size
-
-            query += f"\tORDER BY {order_by} {direction}\n"
-            query += "\tLIMIT :page_size\n"
-            query += "\tOFFSET :offset;\n"
-
-            query_args["page_size"] = page_size
-            query_args["offset"] = offset
-
-        return query, query_args, {"status": "success"}
+        return repos.slice(offset, offset + page_size), {"status": "success"}
 

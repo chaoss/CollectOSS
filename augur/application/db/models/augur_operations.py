@@ -271,9 +271,9 @@ class User(Base):
         {"schema": "augur_operations"}
     )
 
-    groups = relationship("UserGroup")
-    tokens = relationship("UserSessionToken")
-    applications = relationship("ClientApplication")
+    groups = relationship("UserGroup", back_populates="user")
+    tokens = relationship("UserSessionToken", back_populates="user")
+    applications = relationship("ClientApplication", back_populates="user")
 
     _is_authenticated = False
     _is_active = True
@@ -628,8 +628,8 @@ class UserGroup(Base):
         {"schema": "augur_operations"}
     )
 
-    user = relationship("User")
-    repos = relationship("UserRepo")
+    user = relationship("User", back_populates="groups")
+    user_repos = relationship("UserRepo", back_populates="group")
 
     @staticmethod
     def insert(session, user_id:int, group_name:str) -> dict:
@@ -739,8 +739,8 @@ class UserRepo(Base):
         ForeignKey("augur_data.repo.repo_id", name="user_repo_user_id_fkey"), primary_key=True, nullable=False
     )
 
-    repo = relationship("Repo")
-    group = relationship("UserGroup")
+    repo = relationship("Repo", back_populates="user_repo")
+    group = relationship("UserGroup", back_populates="user_repos")
 
     @staticmethod
     def insert(session, repo_id: int, group_id:int = 1) -> bool:
@@ -949,9 +949,9 @@ class UserSessionToken(Base):
     application_id = Column(ForeignKey("augur_operations.client_applications.id", name="user_session_token_application_id_fkey"), nullable=False)
     created_at = Column(BigInteger)
 
-    user = relationship("User")
-    application = relationship("ClientApplication")
-    refresh_tokens = relationship("RefreshToken")
+    user = relationship("User", back_populates="tokens")
+    application = relationship("ClientApplication", back_populates="sessions")
+    refresh_tokens = relationship("RefreshToken", back_populates="user_session")
 
     @staticmethod
     def create(session, user_id, application_id, seconds_to_expire=86400):
@@ -991,9 +991,9 @@ class ClientApplication(Base):
     redirect_url = Column(String, nullable=False)
     api_key = Column(String, nullable=False)
 
-    user = relationship("User")
+    user = relationship("User", back_populates="applications")
     sessions = relationship("UserSessionToken")
-    subscriptions = relationship("Subscription")
+    subscriptions = relationship("Subscription", back_populates="application")
 
     def __eq__(self, other):
         return isinstance(other, ClientApplication) and str(self.id) == str(other.id)
@@ -1013,8 +1013,8 @@ class Subscription(Base):
     application_id = Column(ForeignKey("augur_operations.client_applications.id", name="subscriptions_application_id_fkey"), primary_key=True)
     type_id = Column(ForeignKey("augur_operations.subscription_types.id", name="subscriptions_type_id_fkey"), primary_key=True)
 
-    application = relationship("ClientApplication")
-    type = relationship("SubscriptionType")
+    application = relationship("ClientApplication", back_populates="subscriptions")
+    type = relationship("SubscriptionType", back_populates="subscriptions")
 
 class SubscriptionType(Base):
     __tablename__ = "subscription_types"
@@ -1027,7 +1027,7 @@ class SubscriptionType(Base):
     id = Column(BigInteger, primary_key=True)
     name = Column(String, nullable=False)
 
-    subscriptions = relationship("Subscription")
+    subscriptions = relationship("Subscription", back_populates="type")
 
 
 class RefreshToken(Base):
@@ -1040,7 +1040,7 @@ class RefreshToken(Base):
     id = Column(String, primary_key=True)
     user_session_token = Column(ForeignKey("augur_operations.user_session_tokens.token", name="refresh_token_session_token_id_fkey"), nullable=False)
 
-    user_session = relationship("UserSessionToken")
+    user_session = relationship("UserSessionToken", back_populates="refresh_tokens")
 
     @staticmethod
     def create(session, user_session_token_id):
