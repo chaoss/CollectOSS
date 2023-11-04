@@ -564,6 +564,8 @@ class RepoGroup(Base):
     data_source = Column(String)
     data_collection_date = Column(TIMESTAMP(precision=0))
 
+    repo = relationship("Repo", back_populates="repo_group")
+
     @staticmethod
     def is_valid_repo_group_id(session, repo_group_id: int) -> bool:
         """Deterime is repo_group_id exists.
@@ -866,8 +868,8 @@ class Repo(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    repo_group = relationship("RepoGroup")
-    user_repo = relationship("UserRepo")
+    repo_group = relationship("RepoGroup", back_populates="repo")
+    user_repo = relationship("UserRepo", back_populates="repo")
     collection_status = relationship("CollectionStatus", back_populates="repo")
     issues = relationship("Issue", back_populates="repo")
     prs = relationship("PullRequest", back_populates="repo")
@@ -1207,10 +1209,6 @@ class Commit(Base):
         "Contributor",
         primaryjoin="Commit.cmt_author_platform_username == Contributor.cntrb_login",
         back_populates="commits"
-    )
-    contributor1 = relationship(
-        "Contributor",
-        primaryjoin="Commit.cmt_author_platform_username == Contributor.cntrb_login",
     )
     repo = relationship("Repo", back_populates="commits")
     message_ref = relationship("CommitCommentRef", back_populates="cmt")
