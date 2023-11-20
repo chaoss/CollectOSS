@@ -66,7 +66,7 @@ setup(
         "distributed >= 2021.03.0", # 2022.8.1
         "nltk==3.6.6", # 3.7
         "h5py==3.10.0", # 3.7
-        "scipy==1.7.3", # 1.9.0
+        "scipy==1.10.0", # 1.9.0
         "blinker==1.4", # 1.5
         "protobuf<3.22", # 4.21.5
         "slack==0.0.2", # 0.0.2
@@ -80,7 +80,7 @@ setup(
         "httpx==0.23.0", # 0.23.0
         "eventlet==0.33.3", 
         "flower==1.2.0",
-        "tornado==6.1", # added because it sometimes errors when tornado is not 6.1 even though nothing we install depends on it
+        "tornado==6.3.3", # added because it sometimes errors when tornado is not 6.1 even though nothing we install depends on it
         "pylint==2.15.5",
         "dnspython==2.2.1",
         'Werkzeug~=2.0.0',
