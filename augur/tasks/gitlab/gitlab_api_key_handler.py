@@ -14,8 +14,8 @@ class NoValidKeysError(Exception):
     pass
 
 
-class GithubApiKeyHandler():
-    """Handles Github API key retrieval from the database and redis
+class GitlabApiKeyHandler():
+    """Handles Gitlab API key retrieval from the database and redis
 
     Attributes:
         session (DatabaseSession): Database connection
@@ -32,7 +32,7 @@ class GithubApiKeyHandler():
         self.logger = session.logger
         self.config = AugurConfig(self.logger, session)
 
-        self.oauth_redis_key = "github_oauth_keys_list"
+        self.oauth_redis_key = "gitlab_oauth_keys_list"
 
         self.redis_key_list = RedisList(self.oauth_redis_key)
 
@@ -40,7 +40,7 @@ class GithubApiKeyHandler():
 
         self.keys = self.get_api_keys()
 
-        self.logger.info(f"Retrieved {len(self.keys)} github api keys for use")
+        self.logger.info(f"Retrieved {len(self.keys)} gitlab api keys for use")
 
     def get_random_key(self):
         """Retrieves a random key from the list of keys
@@ -58,6 +58,7 @@ class GithubApiKeyHandler():
             Github API key from config table
         """
 
+        # TODO: Change to get the gitlab api key
         return self.config.get_value("Keys", "github_api_key")
 
     def get_api_keys_from_database(self) -> List[str]:
@@ -74,6 +75,7 @@ class GithubApiKeyHandler():
         select = WorkerOauth.access_token
         # randomizing the order at db time
         #select.order_by(func.random())
+        # TODO: Change to get gitlab api keys
         where = [WorkerOauth.access_token != self.config_key, WorkerOauth.platform == 'github']
 
         return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).order_by(func.random()).all()]
@@ -148,6 +150,7 @@ class GithubApiKeyHandler():
 
         return valid_keys
 
+    # TODO: Change to use gitlab rate limit api
     def is_bad_api_key(self, client: httpx.Client, oauth_key: str) -> bool:
         """Determines if a Github API is bad
 

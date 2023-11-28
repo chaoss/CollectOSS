@@ -449,17 +449,30 @@ class User(Base):
 
         return result
 
-    def add_repo(self, group_name, repo_url):
+    def add_github_repo(self, group_name, repo_url):
 
         from augur.tasks.github.util.github_task_session import GithubTaskSession
         from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
         try:
             with GithubTaskSession(logger) as session:
-                result = UserRepo.add(session, repo_url, self.user_id, group_name)
+                result = UserRepo.add_github_repo(session, repo_url, self.user_id, group_name)
         except NoValidKeysError:
             return False, {"status": "No valid keys"}
 
         return result
+    
+    def add_gitlab_repo(self, group_name, repo_url):
+        
+        from augur.tasks.gitlab.gitlab_task_session import GitLabTaskSession
+        from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
+        try:
+            with GitLabTaskSession(logger) as session:
+                result = UserRepo.add_gitlab_repo(session, repo_url, self.user_id, group_name)
+        except NoValidKeysError:
+            return False, {"status": "No valid keys"}
+
+        return result
+
 
     def remove_repo(self, group_name, repo_id):
 
@@ -468,7 +481,7 @@ class User(Base):
 
         return result
 
-    def add_org(self, group_name, org_url):
+    def add_github_org(self, group_name, org_url):
 
         from augur.tasks.github.util.github_task_session import GithubTaskSession
         from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
@@ -771,7 +784,7 @@ class UserRepo(Base):
         return data[0]["group_id"] == group_id and data[0]["repo_id"] == repo_id
 
     @staticmethod
-    def add(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_type=None, repo_group_id=None) -> dict:
+    def add_github_repo(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_type=None, repo_group_id=None) -> dict:
         """Add repo to the user repo table
 
         Args:
@@ -911,7 +924,7 @@ class UserRepo(Base):
         failed_repos = []
         for repo in repos:
 
-            result = UserRepo.add(session, repo, user_id, group_id=group_id, from_org_list=True, repo_type=type, repo_group_id=repo_group_id)
+            result = UserRepo.add_github_repo(session, repo, user_id, group_id=group_id, from_org_list=True, repo_type=type, repo_group_id=repo_group_id)
 
             # keep track of all the repos that failed
             if not result[0]:

@@ -953,6 +953,30 @@ class Repo(Base):
         repo = capturing_groups[1]
 
         return owner, repo
+    
+    @staticmethod
+    def parse_gitlab_repo_url(url: str) -> tuple:
+        """ Gets the owner and repo from a gitlab url.
+
+        Args:
+            url: Gitlab url
+
+        Returns:
+            Tuple of owner and repo. Or a tuple of None and None if the url is invalid.
+        """
+        
+        result = re.search(r"https?:\/\/gitlab\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
+
+        if not result:
+            return None, None
+
+        capturing_groups = result.groups()
+
+
+        owner = capturing_groups[0]
+        repo = capturing_groups[1]
+
+        return owner, repo
 
     @staticmethod
     def parse_github_org_url(url):
