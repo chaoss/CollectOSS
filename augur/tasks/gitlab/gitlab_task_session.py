@@ -23,8 +23,7 @@ class GitlabTaskManifest:
 
         self.augur_db.close()
 
-
-class GithubTaskSession(DatabaseSession):
+class GitlabTaskSession(DatabaseSession):
     """ORM session used in gitlab tasks.
         This class adds the platform_id and the gitlab key authentication class,
         to the already existing DatabaseSession so there is a central location to access

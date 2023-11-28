@@ -14,14 +14,13 @@ class GitlabRandomKeyAuth(RandomKeyAuth):
         """Creates a GitlabRandomKeyAuth object and initializes the RandomKeyAuth parent class"""
 
     
-        # gets the github api keys from the database via the GithubApiKeyHandler
-        github_api_keys = GitlabApiKeyHandler(session).keys
-        #github_api_keys = random.sample(github_api_keys, len(github_api_keys))
+        # gets the gitlab api keys from the database via the GitlabApiKeyHandler
+        gitlab_api_keys = GitlabApiKeyHandler(session).keys
 
-        if not github_api_keys:
+        if not gitlab_api_keys:
             print("Failed to find github api keys. This is usually because your key has expired")
 
         header_name = "Authorization"
         key_format = "Bearer {0}"
 
-        super().__init__(github_api_keys, header_name, session.logger, key_format)
+        super().__init__(gitlab_api_keys, header_name, session.logger, key_format)
