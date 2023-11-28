@@ -941,6 +941,8 @@ class Repo(Base):
         Returns:
             True if repo URL is valid, False otherwise
         """
+        from augur.tasks.github.util.github_paginator import hit_api
+
         REPO_ENDPOINT = "https://gitlab.com/api/v4/projects/{}/{}"
 
         owner, repo = Repo.parse_gitlab_repo_url(url)
@@ -953,19 +955,15 @@ class Repo(Base):
 
         attempts = 0
         while attempts < 10:
-            response = gl_session.get(url)
-
-            if response.status_code != 200:
-                attempts += 1
-                continue
+            response = hit_api(gl_session.oauths, url, logger)
 
             if response.status_code == 404:
                 return False, {"status": "Invalid repo"}
 
-            if response.status_code != 200:
-                return False, {"status": f"GitLab Error: {response.json().get('message', 'Unknown error')}"}
+            if response.status_code == 200:
+                return True, {"status": "Valid repo"}
 
-            return True, {"status": "Valid repo"}
+            attempts += 1
 
         return False, {"status": "Failed to validate repo after multiple attempts"}
 
@@ -987,7 +985,6 @@ class Repo(Base):
             return None, None
 
         capturing_groups = result.groups()
-
 
         owner = capturing_groups[0]
         repo = capturing_groups[1]
