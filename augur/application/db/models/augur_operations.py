@@ -784,7 +784,7 @@ class UserRepo(Base):
         return data[0]["group_id"] == group_id and data[0]["repo_id"] == repo_id
     
     @staticmethod
-    def add_gitlab_repo(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_type=None, repo_group_id=None) -> dict:
+    def add_gitlab_repo(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_group_id=None) -> dict:
         """Add repo to the user repo table
 
         Args:
@@ -807,9 +807,6 @@ class UserRepo(Base):
         if not group_name and not group_id:
             return False, {"status": "Need group name or group id to add a repo"}
 
-        if from_org_list and not repo_type:
-            return False, {"status": "Repo type must be passed if the repo is from an organization's list of repos"}
-
         if group_id is None:
 
             group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
@@ -821,8 +818,6 @@ class UserRepo(Base):
             if not result[0]:
                 return False, {"status": result[1]["status"], "repo_url": url}
 
-            repo_type = result[1]["repo_type"]
-
         # if no repo_group_id is passed then assign the repo to the frontend repo group
         if repo_group_id is None:
 
@@ -833,7 +828,7 @@ class UserRepo(Base):
             repo_group_id = frontend_repo_group.repo_group_id
 
 
-        repo_id = Repo.insert_gitlab_repo(session, url, repo_group_id, "Frontend", repo_type)
+        repo_id = Repo.insert_gitlab_repo(session, url, repo_group_id, "Frontend")
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
