@@ -52,7 +52,7 @@ def dei_track_repo(application: ClientApplication):
         return jsonify({"status": "Repo already exists"})
     
     frontend_repo_group: RepoGroup = session.query(RepoGroup).filter(RepoGroup.rg_name == FRONTEND_REPO_GROUP_NAME).first()
-    repo_id = Repo.insert(session, repo_url, frontend_repo_group.repo_group_id, "API.DEI", repo_type="")
+    repo_id = Repo.insert_github_repo(session, repo_url, frontend_repo_group.repo_group_id, "API.DEI", repo_type="")
     if not repo_id:
         return jsonify({"status": "Error adding repo"})
     

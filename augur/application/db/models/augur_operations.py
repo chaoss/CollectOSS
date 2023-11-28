@@ -488,7 +488,7 @@ class User(Base):
 
         try:
             with GithubTaskSession(logger) as session:
-                result = UserRepo.add_org_repos(session, org_url, self.user_id, group_name)
+                result = UserRepo.add_github_org_repos(session, org_url, self.user_id, group_name)
         except NoValidKeysError:
             return False, {"status": "No valid keys"}
 
@@ -782,6 +782,71 @@ class UserRepo(Base):
             return False
 
         return data[0]["group_id"] == group_id and data[0]["repo_id"] == repo_id
+    
+    @staticmethod
+    def add_gitlab_repo(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_type=None, repo_group_id=None) -> dict:
+        """Add repo to the user repo table
+
+        Args:
+            urls: list of repo urls
+            user_id: id of user_id from users table
+            group_name: name of group to add repo to.
+            group_id: id of the group
+            valid_repo: boolean that indicates whether the repo has already been validated
+
+        Note:
+            Either the group_name or group_id can be passed not both
+
+        Returns:
+            Dict that contains the key "status" and additional useful data
+        """
+
+        if group_name and group_id:
+            return False, {"status": "Pass only the group name or group id not both"}
+
+        if not group_name and not group_id:
+            return False, {"status": "Need group name or group id to add a repo"}
+
+        if from_org_list and not repo_type:
+            return False, {"status": "Repo type must be passed if the repo is from an organization's list of repos"}
+
+        if group_id is None:
+
+            group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
+            if group_id is None:
+                return False, {"status": "Invalid group name"}
+
+        if not from_org_list:
+            result = Repo.is_valid_gitlab_repo(session, url)
+            if not result[0]:
+                return False, {"status": result[1]["status"], "repo_url": url}
+
+            repo_type = result[1]["repo_type"]
+
+        # if no repo_group_id is passed then assign the repo to the frontend repo group
+        if repo_group_id is None:
+
+            frontend_repo_group = session.query(RepoGroup).filter(RepoGroup.rg_name == FRONTEND_REPO_GROUP_NAME).first()
+            if not frontend_repo_group:
+                return False, {"status": "Could not find repo group with name 'Frontend Repos'", "repo_url": url}
+
+            repo_group_id = frontend_repo_group.repo_group_id
+
+
+        repo_id = Repo.insert_gitlab_repo(session, url, repo_group_id, "Frontend", repo_type)
+        if not repo_id:
+            return False, {"status": "Repo insertion failed", "repo_url": url}
+
+        result = UserRepo.insert(session, repo_id, group_id)
+        if not result:
+            return False, {"status": "repo_user insertion failed", "repo_url": url}
+
+        #collection_status records are now only added during collection -IM 5/1/23
+        #status = CollectionStatus.insert(session, repo_id)
+        #if not status:
+        #    return False, {"status": "Failed to create status for repo", "repo_url": url}
+
+        return True, {"status": "Repo Added", "repo_url": url}
 
     @staticmethod
     def add_github_repo(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_type=None, repo_group_id=None) -> dict:
@@ -833,7 +898,7 @@ class UserRepo(Base):
             repo_group_id = frontend_repo_group.repo_group_id
 
 
-        repo_id = Repo.insert(session, url, repo_group_id, "Frontend", repo_type)
+        repo_id = Repo.insert_github_repo(session, url, repo_group_id, "Frontend", repo_type)
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
@@ -875,7 +940,7 @@ class UserRepo(Base):
         return True, {"status": "Repo Removed"}
 
     @staticmethod
-    def add_org_repos(session, url: List[str], user_id: int, group_name: int):
+    def add_github_org_repos(session, url: List[str], user_id: int, group_name: int):
         """Add list of orgs and their repos to a users repos.
 
         Args:

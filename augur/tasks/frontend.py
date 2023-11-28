@@ -61,7 +61,7 @@ def add_org_repo_list(user_id, group_name, urls):
         # matches https://gitlab.com/{org}/{repo}/ or http://gitlab.com/{org}/{repo}
         elif Repo.parse_gitlab_repo_url(url)[0]:
 
-            #added = user.add_github_repo(group_name, url)[0]
+            added = user.add_gitlab_repo(group_name, url)[0]
             if added:
                 valid_repos.append(url)
 
@@ -93,6 +93,6 @@ def add_org(user_id, group_name, org_url):
     logger = logging.getLogger(add_org.__name__) 
 
     with GithubTaskSession(logger) as session:
-            result = UserRepo.add_org_repos(session, org_url, user_id, group_name)
+            result = UserRepo.add_github_org_repos(session, org_url, user_id, group_name)
 
     print(org_url, result)
