@@ -930,49 +930,45 @@ class Repo(Base):
 
             return True, {"status": "Valid repo", "repo_type": data["owner"]["type"]}
         
-    # TODO: Change to use gitlab api
     @staticmethod
     def is_valid_gitlab_repo(gl_session, url: str) -> bool:
-        """Determine whether repo url is valid.
+        """Determine whether a GitLab repo URL is valid.
 
         Args:
-            url: repo_url
+            gl_session: GitLab session object with API key
+            url: Repository URL
 
-        Returns
-            True if repo url is valid and False if not
+        Returns:
+            True if repo URL is valid, False otherwise
         """
-        from augur.tasks.github.util.github_paginator import hit_api
-
-        REPO_ENDPOINT = "https://api.github.com/repos/{}/{}"
-
-        if not gl_session.oauths.list_of_keys:
-            return False, {"status": "No valid github api keys to retrieve data with"}
+        REPO_ENDPOINT = "https://gitlab.com/api/v4/projects/{}/{}"
 
         owner, repo = Repo.parse_gitlab_repo_url(url)
         if not owner or not repo:
-            return False, {"status":"Invalid repo url"}
+            return False, {"status": "Invalid repo URL"}
 
-        url = REPO_ENDPOINT.format(owner, repo)
+        # Encode namespace and project name for the API request
+        project_identifier = f"{owner}%2F{repo}"
+        url = REPO_ENDPOINT.format(project_identifier)
 
         attempts = 0
         while attempts < 10:
-            result = hit_api(gl_session.oauths, url, logger)
+            response = gl_session.get(url)
 
-            # if result is None try again
-            if not result:
-                attempts+=1
+            if response.status_code != 200:
+                attempts += 1
                 continue
 
-            data = result.json()
-            # if there was an error return False
-            if "message" in data.keys():
+            if response.status_code == 404:
+                return False, {"status": "Invalid repo"}
 
-                if data["message"] == "Not Found":
-                    return False, {"status": "Invalid repo"}
+            if response.status_code != 200:
+                return False, {"status": f"GitLab Error: {response.json().get('message', 'Unknown error')}"}
 
-                return False, {"status": f"Gitlab Error: {data['message']}"}
+            return True, {"status": "Valid repo"}
 
-            return True, {"status": "Valid repo", "repo_type": data["owner"]["type"]}
+        return False, {"status": "Failed to validate repo after multiple attempts"}
+
 
     @staticmethod
     def parse_github_repo_url(url: str) -> tuple:
