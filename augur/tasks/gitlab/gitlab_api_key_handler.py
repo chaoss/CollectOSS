@@ -57,9 +57,7 @@ class GitlabApiKeyHandler():
         Returns:
             Github API key from config table
         """
-
-        # TODO: Change to get the gitlab api key
-        return self.config.get_value("Keys", "github_api_key")
+        return self.config.get_value("Keys", "gitlab_api_key")
 
     def get_api_keys_from_database(self) -> List[str]:
         """Retieves all github api keys from database
@@ -75,8 +73,7 @@ class GitlabApiKeyHandler():
         select = WorkerOauth.access_token
         # randomizing the order at db time
         #select.order_by(func.random())
-        # TODO: Change to get gitlab api keys
-        where = [WorkerOauth.access_token != self.config_key, WorkerOauth.platform == 'github']
+        where = [WorkerOauth.access_token != self.config_key, WorkerOauth.platform == 'gitlab']
 
         return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).order_by(func.random()).all()]
         #return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).all()]
@@ -150,9 +147,8 @@ class GitlabApiKeyHandler():
 
         return valid_keys
 
-    # TODO: Change to use gitlab rate limit api
     def is_bad_api_key(self, client: httpx.Client, oauth_key: str) -> bool:
-        """Determines if a Github API is bad
+        """Determines if a Gitlab API key is bad
 
         Args:
             client: makes the http requests
@@ -162,17 +158,12 @@ class GitlabApiKeyHandler():
             True if key is bad. False if the key is good
         """
 
-        # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
         url = "https://api.github.com/rate_limit"
 
-        headers = {'Authorization': f'token {oauth_key}'}
+        headers = {'Authorization': f'Bearer {oauth_key}'}
 
-        data = client.request(method="GET", url=url, headers=headers, timeout=180).json()
-
-        try:
-            if data["message"] == "Bad credentials":
-                return True
-        except KeyError:
-            pass
-
+        response = client.request(method="GET", url=url, headers=headers, timeout=180)
+        if response.status_code == 401:
+            return True
+        
         return False

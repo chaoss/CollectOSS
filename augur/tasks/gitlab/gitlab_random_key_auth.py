@@ -21,8 +21,7 @@ class GitlabRandomKeyAuth(RandomKeyAuth):
         if not github_api_keys:
             print("Failed to find github api keys. This is usually because your key has expired")
 
-        # TODO: Change to set key headers how gitlab expects
         header_name = "Authorization"
-        key_format = "token {0}"
+        key_format = "Bearer {0}"
 
         super().__init__(github_api_keys, header_name, session.logger, key_format)
