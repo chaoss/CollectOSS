@@ -36,7 +36,7 @@ setup(
         'nltk==3.6.6',
         'pandas==1.5.3',
         'emoji==1.2.0',
-        'Keras==2.13.1',
+        'keras>=2.15.0',
         'Keras-Preprocessing',
         'tensorflow==2.15.0',
         'h5py==3.10.0',
