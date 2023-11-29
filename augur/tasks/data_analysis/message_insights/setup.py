@@ -38,7 +38,7 @@ setup(
         'emoji==1.2.0',
         'Keras==2.13.1',
         'Keras-Preprocessing',
-        'tensorflow==2.13.1',
+        'tensorflow==2.15.0',
         'h5py==3.10.0',
         'scikit-image==0.19.1',
         'joblib==1.2.0',
