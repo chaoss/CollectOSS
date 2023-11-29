@@ -62,7 +62,7 @@ class RepoLoadController:
 
 
         # if the repo doesn't exist it adds it
-        repo_id = Repo.insert(self.session, url, repo_group_id, "CLI", repo_type)
+        repo_id = Repo.insert_github_repo(self.session, url, repo_group_id, "CLI", repo_type)
 
         if not repo_id:
             logger.warning(f"Invalid repo group id specified for {url}, skipping.")

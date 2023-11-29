@@ -14,8 +14,8 @@ class NoValidKeysError(Exception):
     pass
 
 
-class GithubApiKeyHandler():
-    """Handles Github API key retrieval from the database and redis
+class GitlabApiKeyHandler():
+    """Handles Gitlab API key retrieval from the database and redis
 
     Attributes:
         session (DatabaseSession): Database connection
@@ -32,7 +32,7 @@ class GithubApiKeyHandler():
         self.logger = session.logger
         self.config = AugurConfig(self.logger, session)
 
-        self.oauth_redis_key = "github_oauth_keys_list"
+        self.oauth_redis_key = "gitlab_oauth_keys_list"
 
         self.redis_key_list = RedisList(self.oauth_redis_key)
 
@@ -40,7 +40,7 @@ class GithubApiKeyHandler():
 
         self.keys = self.get_api_keys()
 
-        self.logger.info(f"Retrieved {len(self.keys)} github api keys for use")
+        self.logger.info(f"Retrieved {len(self.keys)} gitlab api keys for use")
 
     def get_random_key(self):
         """Retrieves a random key from the list of keys
@@ -57,8 +57,7 @@ class GithubApiKeyHandler():
         Returns:
             Github API key from config table
         """
-
-        return self.config.get_value("Keys", "github_api_key")
+        return self.config.get_value("Keys", "gitlab_api_key")
 
     def get_api_keys_from_database(self) -> List[str]:
         """Retieves all github api keys from database
@@ -74,7 +73,7 @@ class GithubApiKeyHandler():
         select = WorkerOauth.access_token
         # randomizing the order at db time
         #select.order_by(func.random())
-        where = [WorkerOauth.access_token != self.config_key, WorkerOauth.platform == 'github']
+        where = [WorkerOauth.access_token != self.config_key, WorkerOauth.platform == 'gitlab']
 
         return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).order_by(func.random()).all()]
         #return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).all()]
@@ -149,7 +148,7 @@ class GithubApiKeyHandler():
         return valid_keys
 
     def is_bad_api_key(self, client: httpx.Client, oauth_key: str) -> bool:
-        """Determines if a Github API is bad
+        """Determines if a Gitlab API key is bad
 
         Args:
             client: makes the http requests
@@ -159,17 +158,12 @@ class GithubApiKeyHandler():
             True if key is bad. False if the key is good
         """
 
-        # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
-        url = "https://api.github.com/rate_limit"
+        url = "https://gitlab.com/api/v4/user"
 
-        headers = {'Authorization': f'token {oauth_key}'}
+        headers = {'Authorization': f'Bearer {oauth_key}'}
 
-        data = client.request(method="GET", url=url, headers=headers, timeout=180).json()
-
-        try:
-            if data["message"] == "Bad credentials":
-                return True
-        except KeyError:
-            pass
-
+        response = client.request(method="GET", url=url, headers=headers, timeout=180)
+        if response.status_code == 401:
+            return True
+        
         return False
