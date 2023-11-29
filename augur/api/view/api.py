@@ -102,7 +102,18 @@ def av_add_user_repo():
                 if rg_obj:
                     # add the orgs repos to the group
                     add_existing_org_to_group(session, current_user.user_id, group, rg_obj.repo_group_id)
-            
+
+            # matches https://gitlab.com/{org}/{repo}/ or http://gitlab.com/{org}/{repo}
+            elif Repo.parse_gitlab_repo_url(url)[0]:
+
+                org_name, repo_name = Repo.parse_github_repo_url(url)
+                repo_git = f"https://gitlab.com/{org_name}/{repo_name}"
+
+                # TODO: gitlab ensure the whole repo git is inserted so it can be found here
+                repo_obj = Repo.get_by_repo_git(session, repo_git)
+                if repo_obj:
+                    add_existing_repo_to_group(session, current_user.user_id, group, repo_obj.repo_id)
+                
             else:
                 invalid_urls.append(url)
 

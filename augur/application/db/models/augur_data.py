@@ -943,7 +943,7 @@ class Repo(Base):
         """
         from augur.tasks.github.util.github_paginator import hit_api
 
-        REPO_ENDPOINT = "https://gitlab.com/api/v4/projects/{}/{}"
+        REPO_ENDPOINT = "https://gitlab.com/api/v4/projects/{}/"
 
         owner, repo = Repo.parse_gitlab_repo_url(url)
         if not owner or not repo:
@@ -1046,7 +1046,7 @@ class Repo(Base):
             If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
         """
 
-        if not isinstance(url, str) or not isinstance(repo_group_id, int) or not isinstance(tool_source, str) or not isinstance(repo_type, str):
+        if not isinstance(url, str) or not isinstance(repo_group_id, int) or not isinstance(tool_source, str):
             return None
 
         if not RepoGroup.is_valid_repo_group_id(session, repo_group_id):

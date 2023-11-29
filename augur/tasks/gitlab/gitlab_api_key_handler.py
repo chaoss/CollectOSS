@@ -158,7 +158,7 @@ class GitlabApiKeyHandler():
             True if key is bad. False if the key is good
         """
 
-        url = "https://api.github.com/rate_limit"
+        url = "https://gitlab.com/api/v4/user"
 
         headers = {'Authorization': f'Bearer {oauth_key}'}
 

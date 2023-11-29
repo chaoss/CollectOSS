@@ -463,10 +463,10 @@ class User(Base):
     
     def add_gitlab_repo(self, group_name, repo_url):
         
-        from augur.tasks.gitlab.gitlab_task_session import GitLabTaskSession
+        from augur.tasks.gitlab.gitlab_task_session import GitlabTaskSession
         from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
         try:
-            with GitLabTaskSession(logger) as session:
+            with GitlabTaskSession(logger) as session:
                 result = UserRepo.add_gitlab_repo(session, repo_url, self.user_id, group_name)
         except NoValidKeysError:
             return False, {"status": "No valid keys"}
