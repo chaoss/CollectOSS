@@ -29,7 +29,7 @@ setup(
         'psycopg2-binary==2.9.3',
         'sklearn==0.0',
         'nltk==3.6.6',
-        'numpy==1.27.0',
+        'numpy==1.26.0',
         'pandas==1.5.3',
         'emoji==1.2.0',
         'joblib==1.2.0',
