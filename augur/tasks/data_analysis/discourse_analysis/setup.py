@@ -28,13 +28,13 @@ setup(
         'requests==2.28.0',
         'psycopg2-binary==2.9.3',
         'click==8.0.3', 
-        'scipy==1.10.0',
+        'scipy>=1.10.0',
         'nltk==3.6.6',
         'pandas==1.5.3',
         'scikit-learn==1.1.3',
         'textblob==0.15.3', 
-        'python-crfsuite==0.9.8',
-        'sklearn-crfsuite==0.3.6',
+        'python-crfsuite>=0.9.8',
+        'sklearn-crfsuite>=0.3.6',
         'tabulate==0.8.9'
     ], # python-crfsuite-0.9.8 sklearn-crfsuite-0.3.6 tabulate-0.8.9
     entry_points={
