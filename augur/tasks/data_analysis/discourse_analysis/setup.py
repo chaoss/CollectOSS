@@ -33,8 +33,8 @@ setup(
         'pandas==1.5.3',
         'scikit-learn==1.1.3',
         'textblob==0.15.3', 
-        'python-crfsuite==0.9.8',
-        'sklearn-crfsuite==0.3.6',
+        'python-crfsuite>=0.9.8',
+        'sklearn-crfsuite>=0.3.6',
         'tabulate==0.8.9'
     ], # python-crfsuite-0.9.8 sklearn-crfsuite-0.3.6 tabulate-0.8.9
     entry_points={

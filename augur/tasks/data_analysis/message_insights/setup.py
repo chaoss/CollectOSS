@@ -45,7 +45,7 @@ setup(
         'xgboost',
         'bs4==0.0.1',
         'xlrd==2.0.1',
-        'gensim==4.2.0'
+        'gensim>=4.2.0'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
