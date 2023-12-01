@@ -94,80 +94,80 @@ def process_dict_response(logger: logging.Logger, response: httpx.Response, page
 
         return GitlabApiResult.RATE_LIMIT_EXCEEDED
 
-    message = page_data.get('message')
-    errors = page_data.get('errors')
+    # message = page_data.get('message')
+    # errors = page_data.get('errors')
 
-    if not message and not errors:
-        return GitlabApiResult.SUCCESS
+    # if not message and not errors:
+    #     return GitlabApiResult.SUCCESS
 
-    if message == "Not Found":
-        logger.error(
-            "Gitlab repo was not found or does not exist for endpoint: "
-            f"{response.url}"
-        )
-        return GitlabApiResult.REPO_NOT_FOUND
+    # if message == "Not Found":
+    #     logger.error(
+    #         "Gitlab repo was not found or does not exist for endpoint: "
+    #         f"{response.url}"
+    #     )
+    #     return GitlabApiResult.REPO_NOT_FOUND
 
-    if message and "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in message:
+    # if message and "You have exceeded a secondary rate limit. Please wait a few minutes before you try again" in message:
 
-        # sleeps for the specified amount of time that github says to retry after
-        retry_after = int(response.headers["Retry-After"])
-        logger.info(
-            f'\n\n\n\nSleeping for {retry_after} seconds due to secondary rate limit issue.\n\n\n\n')
-        time.sleep(retry_after)
+    #     # sleeps for the specified amount of time that github says to retry after
+    #     retry_after = int(response.headers["Retry-After"])
+    #     logger.info(
+    #         f'\n\n\n\nSleeping for {retry_after} seconds due to secondary rate limit issue.\n\n\n\n')
+    #     time.sleep(retry_after)
 
-        return GitlabApiResult.SECONDARY_RATE_LIMIT
-        # return "do_not_increase_attempts"
+    #     return GitlabApiResult.SECONDARY_RATE_LIMIT
+    #     # return "do_not_increase_attempts"
     
-    if message and "API rate limit exceeded for user" in message:
+    # if message and "API rate limit exceeded for user" in message:
 
-        current_epoch = int(time.time())
-        epoch_when_key_resets = int(response.headers["X-RateLimit-Reset"])
-        key_reset_time =  epoch_when_key_resets - current_epoch
+    #     current_epoch = int(time.time())
+    #     epoch_when_key_resets = int(response.headers["X-RateLimit-Reset"])
+    #     key_reset_time =  epoch_when_key_resets - current_epoch
         
-        if key_reset_time < 0:
-            logger.error(f"Key reset time was less than 0 setting it to 0.\nThe current epoch is {current_epoch} and the epoch that the key resets at is {epoch_when_key_resets}")
-            key_reset_time = 0
+    #     if key_reset_time < 0:
+    #         logger.error(f"Key reset time was less than 0 setting it to 0.\nThe current epoch is {current_epoch} and the epoch that the key resets at is {epoch_when_key_resets}")
+    #         key_reset_time = 0
             
-        logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
-        time.sleep(key_reset_time)
+    #     logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
+    #     time.sleep(key_reset_time)
 
-        return GitlabApiResult.RATE_LIMIT_EXCEEDED
+    #     return GitlabApiResult.RATE_LIMIT_EXCEEDED
 
-    if message and "You have triggered an abuse detection mechanism." in message:
-        # self.update_rate_limit(response, temporarily_disable=True,platform=platform)
+    # if message and "You have triggered an abuse detection mechanism." in message:
+    #     # self.update_rate_limit(response, temporarily_disable=True,platform=platform)
         
 
-        # sleeps for the specified amount of time that github says to retry after
-        retry_after = int(response.headers["Retry-After"])
-        logger.info(f"Abuse mechanism detected sleeping for {retry_after} seconds")
-        time.sleep(retry_after)
+    #     # sleeps for the specified amount of time that github says to retry after
+    #     retry_after = int(response.headers["Retry-After"])
+    #     logger.info(f"Abuse mechanism detected sleeping for {retry_after} seconds")
+    #     time.sleep(retry_after)
 
-        return GitlabApiResult.ABUSE_MECHANISM_TRIGGERED
+    #     return GitlabApiResult.ABUSE_MECHANISM_TRIGGERED
 
-    if message == "Bad credentials":
-        logger.error("\n\n\n\n\n\n\n Bad Token Detected \n\n\n\n\n\n\n")
-        # self.update_rate_limit(response, bad_credentials=True, platform=platform)
-        return GitlabApiResult.BAD_CREDENTIALS
+    # if message == "Bad credentials":
+    #     logger.error("\n\n\n\n\n\n\n Bad Token Detected \n\n\n\n\n\n\n")
+    #     # self.update_rate_limit(response, bad_credentials=True, platform=platform)
+    #     return GitlabApiResult.BAD_CREDENTIALS
     
-    if errors:
-        for error in errors:
-            if "API rate limit exceeded for user" in error['message']:
-                current_epoch = int(time.time())
-                epoch_when_key_resets = int(response.headers["X-RateLimit-Reset"])
-                key_reset_time =  epoch_when_key_resets - current_epoch
+    # if errors:
+    #     for error in errors:
+    #         if "API rate limit exceeded for user" in error['message']:
+    #             current_epoch = int(time.time())
+    #             epoch_when_key_resets = int(response.headers["X-RateLimit-Reset"])
+    #             key_reset_time =  epoch_when_key_resets - current_epoch
                 
-                if key_reset_time < 0:
-                    logger.error(f"Key reset time was less than 0 setting it to 0.\nThe current epoch is {current_epoch} and the epoch that the key resets at is {epoch_when_key_resets}")
-                    key_reset_time = 0
+    #             if key_reset_time < 0:
+    #                 logger.error(f"Key reset time was less than 0 setting it to 0.\nThe current epoch is {current_epoch} and the epoch that the key resets at is {epoch_when_key_resets}")
+    #                 key_reset_time = 0
                     
-                logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
-                time.sleep(key_reset_time)
-                return GitlabApiResult.RATE_LIMIT_EXCEEDED
+    #             logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
+    #             time.sleep(key_reset_time)
+    #             return GitlabApiResult.RATE_LIMIT_EXCEEDED
             
-            err_type = error.get('type')
+    #         err_type = error.get('type')
 
-            if err_type and 'NOT_FOUND' in err_type:
-                return GitlabApiResult.REPO_NOT_FOUND
+    #         if err_type and 'NOT_FOUND' in err_type:
+    #             return GitlabApiResult.REPO_NOT_FOUND
 
 
     return GitlabApiResult.NEW_RESULT
