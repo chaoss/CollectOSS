@@ -25,6 +25,7 @@ from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_re
 from augur.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
 from augur.tasks.github.traffic.tasks import collect_github_repo_clones_data
 from augur.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests
+from augur.tasks.gitlab.issues_task import collect_gitlab_issues
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.db.refresh_materialized_views import *
 # from augur.tasks.data_analysis import *
@@ -99,7 +100,8 @@ def primary_gitlab_repo_collect_phase(repo_git):
     logger = logging.getLogger(primary_gitlab_repo_collect_phase.__name__)
 
     jobs = group(
-        collect_gitlab_merge_requests.si(repo_git)
+        collect_gitlab_merge_requests.si(repo_git),
+        collect_gitlab_issues.si(repo_git)
     )
 
     return jobs

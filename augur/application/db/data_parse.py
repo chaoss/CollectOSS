@@ -560,9 +560,34 @@ def extract_needed_pr_data_from_gitlab_merge_request(pr, repo_id, tool_source, t
     return pr_dict
 
 
+def extract_needed_issue_data_from_gitlab_issue(issue: dict, repo_id: int, tool_source: str, tool_version: str, data_source: str):
 
+    issue_dict = {
+            "repo_id": repo_id,
+            "reporter_id": None,
+            "pull_request": None,
+            "pull_request_id": None,
+            "created_at": issue['created_at'],
+            "issue_title": issue['title'],
+            "issue_body": issue['description'] if 'description' in issue else None,
+            "comment_count": issue['user_notes_count'],
+            "updated_at": issue['updated_at'],
+            "closed_at": issue['closed_at'],
+            "repository_url": issue['_links']['project'],
+            "issue_url": issue['_links']['self'],
+            "labels_url": None,
+            "comments_url": issue['_links']['notes'],
+            "events_url": None,
+            "html_url": issue['_links']['self'],
+            "issue_state": issue['state'],
+            "issue_node_id": None,
+            "gh_issue_id": issue['id'],
+            "gh_issue_number": issue['iid'],
+            "gh_user_id": issue['author']['id'],
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source
+    }
 
+    return issue_dict
     
-
-
-

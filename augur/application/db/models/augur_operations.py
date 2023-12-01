@@ -1234,8 +1234,6 @@ class CollectionStatus(Base):
         collection_status_unique = ["repo_id"]
         pr_issue_count = 0
         github_weight = 0
-
-
         if "github" in repo_git:
 
             try:
@@ -1248,6 +1246,16 @@ class CollectionStatus(Base):
                 session.logger.error(
                         ''.join(traceback.format_exception(None, e, e.__traceback__)))
                 
+        try:
+            pr_issue_count = 0
+            github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
+        except Exception as e:
+            pr_issue_count = None
+            github_weight = None
+            session.logger.error(
+                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
+
+
         record = {
             "repo_id": repo_id,
             "issue_pr_sum": pr_issue_count,

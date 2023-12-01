@@ -50,7 +50,8 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.pull_requests.commits_model.tasks',
                 'augur.tasks.github.traffic.tasks']
 
-gitlab_tasks = ['augur.tasks.gitlab.merge_request_task']
+gitlab_tasks = ['augur.tasks.gitlab.merge_request_task',
+                'augur.tasks.gitlab.issues_task']
 
 git_tasks = ['augur.tasks.git.facade_tasks',
             'augur.tasks.git.dependency_tasks.tasks',
