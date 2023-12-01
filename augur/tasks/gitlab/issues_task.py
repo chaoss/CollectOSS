@@ -1,4 +1,5 @@
 import logging
+import traceback
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
@@ -6,30 +7,9 @@ from augur.tasks.gitlab.gitlab_paginator import GitlabPaginator
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
 from augur.application.db.data_parse import extract_needed_issue_data_from_gitlab_issue
 from augur.tasks.github.util.util import get_owner_repo
-
-
-import time
-import logging
-import traceback
-import re
-
-from sqlalchemy.exc import IntegrityError
-
-from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
-
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
-from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
-from augur.application.db.session import DatabaseSession
-from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
-from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import Issue, Repo
-from augur.application.config import get_development_flag
 from augur.application.db.util import execute_session_query
 
-development = get_development_flag()
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_gitlab_issues(repo_git : str) -> int:

@@ -9,8 +9,6 @@ from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import PullRequest, Repo
 
 
-
-
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_gitlab_merge_requests(repo_git: str) -> int:
 
