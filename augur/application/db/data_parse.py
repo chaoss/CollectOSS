@@ -313,7 +313,7 @@ def extract_needed_pr_message_ref_data(comment: dict, pull_request_id: int, repo
 def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
     
 
-    pr_dict = {
+    pr = {
         'repo_id': repo_id,
         'pr_url': pr['url'],
         # 1-22-2022 inconsistent casting; sometimes int, sometimes float in bulk_insert
@@ -367,7 +367,7 @@ def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
         'data_source': 'GitHub API'
     }
 
-    return pr_dict
+    return pr
 
 def extract_needed_issue_data(issue: dict, repo_id: int, tool_source: str, tool_version: str, data_source: str):
 
@@ -513,8 +513,81 @@ def extract_needed_pr_review_data(review, pull_request_id, repo_id, platform_id,
 
     return review_row
 
+def extract_needed_pr_data_from_gitlab_merge_request(pr, repo_id, tool_source, tool_version):
 
-                
+    pr_dict = {
+        'repo_id': repo_id,
+        'pr_url': pr['web_url'],
+        'pr_src_id': pr['id'],
+        'pr_src_node_id': None,
+        'pr_html_url': pr['web_url'],
+        'pr_diff_url': None,
+        'pr_patch_url': None,
+        'pr_issue_url': None,
+        'pr_augur_issue_id': None,
+        'pr_src_number': pr['iid'],
+        'pr_src_state': pr['state'],
+        'pr_src_locked': pr['discussion_locked'],
+        'pr_src_title': pr['title'],
+        # TODO: Add contributor logic for gitlab
+        'pr_augur_contributor_id': None,
+        'pr_body': pr['description'],
+        'pr_created_at': pr['created_at'],
+        'pr_updated_at': pr['updated_at'],
+        'pr_closed_at': pr['closed_at'],
+        'pr_merged_at': pr['merged_at'],
+        'pr_merge_commit_sha': pr['merge_commit_sha'],
+        'pr_teams': None,
+        'pr_milestone': pr['milestone'].get('title') if pr['milestone'] else None,
+        'pr_commits_url': None,
+        'pr_review_comments_url': None,
+        'pr_review_comment_url': None,
+        'pr_comments_url': None,
+        'pr_statuses_url': None,
+        'pr_meta_head_id': None,
+        'pr_meta_base_id': None,
+        'pr_src_issue_url': None,
+        'pr_src_comments_url': None,  
+        'pr_src_review_comments_url': None,  
+        'pr_src_commits_url': None, 
+        'pr_src_statuses_url': None,
+        'pr_src_author_association': None,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': 'Gitlab API'
+    }
+
+    return pr_dict
 
 
+def extract_needed_issue_data_from_gitlab_issue(issue: dict, repo_id: int, tool_source: str, tool_version: str, data_source: str):
 
+    issue_dict = {
+            "repo_id": repo_id,
+            "reporter_id": None,
+            "pull_request": None,
+            "pull_request_id": None,
+            "created_at": issue['created_at'],
+            "issue_title": issue['title'],
+            "issue_body": issue['description'] if 'description' in issue else None,
+            "comment_count": issue['user_notes_count'],
+            "updated_at": issue['updated_at'],
+            "closed_at": issue['closed_at'],
+            "repository_url": issue['_links']['project'],
+            "issue_url": issue['_links']['self'],
+            "labels_url": None,
+            "comments_url": issue['_links']['notes'],
+            "events_url": None,
+            "html_url": issue['_links']['self'],
+            "issue_state": issue['state'],
+            "issue_node_id": None,
+            "gh_issue_id": issue['id'],
+            "gh_issue_number": issue['iid'],
+            "gh_user_id": issue['author']['id'],
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source
+    }
+
+    return issue_dict
+    

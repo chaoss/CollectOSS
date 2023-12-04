@@ -132,9 +132,10 @@ def get_required_conditions_for_ml_repos(allow_collected_before = False, days_un
 
 
 class CollectionRequest:
-    def __init__(self,name,phases,max_repo = 10,days_until_collect_again = 1):
+    def __init__(self,name,phases,max_repo = 10,days_until_collect_again = 1, gitlab_phases=None):
         self.name = name
         self.phases = phases
+        self.gitlab_phases = gitlab_phases
         self.max_repo = max_repo
         self.days_until_collect_again = days_until_collect_again
         self.new_status = CollectionState.PENDING.value
@@ -603,12 +604,28 @@ class AugurTaskRoutine:
                     augur_collection_chain = chain(*augur_collection_sequence)
                     task_id = augur_collection_chain.apply_async().task_id
 
-                    self.logger.info(f"Setting repo {col_hook.name} status to collecting for repo: {repo_git}")
+                    self.logger.info(f"Setting github repo {col_hook.name} status to collecting for repo: {repo_git}")
 
                     #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
                     yield repo_git, task_id, col_hook.name
                 else:
-                    print(f"Unable to start collection for {repo.repo_git}")
+                    if col_hook.gitlab_phases is not None:
+                        
+                        augur_collection_sequence = []
+                        for job in col_hook.gitlab_phases:
+                            #Add the phase to the sequence in order as a celery task.
+                            #The preliminary task creates the larger task chain 
+                            augur_collection_sequence.append(job(repo_git))
+
+                        #augur_collection_sequence.append(core_task_success_util.si(repo_git))
+                        #Link all phases in a chain and send to celery
+                        augur_collection_chain = chain(*augur_collection_sequence)
+                        task_id = augur_collection_chain.apply_async().task_id
+
+                        self.logger.info(f"Setting gitlab repo {col_hook.name} status to collecting for repo: {repo_git}")
+
+                        #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
+                        yield repo_git, task_id, col_hook.name
 
 #def start_block_of_repos(logger,session,repo_git_identifiers,phases,repos_type,hook="core"):
 #

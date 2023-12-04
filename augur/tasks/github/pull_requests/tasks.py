@@ -74,7 +74,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth) -> None:
 
     return all_data
 
-    
+
 def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
 
     tool_source = "Pr Task"

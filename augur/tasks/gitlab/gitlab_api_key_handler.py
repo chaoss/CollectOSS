@@ -20,7 +20,7 @@ class GitlabApiKeyHandler():
     Attributes:
         session (DatabaseSession): Database connection
         logger (logging.Logger): Handles all logs
-        oauth_redis_key (str): The key where the github api keys are cached in redis
+        oauth_redis_key (str): The key where the gitlab api keys are cached in redis
         redis_key_list (RedisList): Acts like a python list, and interacts directly with the redis cache
         config_key (str): The api key that is stored in the users config table
         key: (List[str]): List of keys retrieve from database or cache
@@ -46,13 +46,13 @@ class GitlabApiKeyHandler():
         """Retrieves a random key from the list of keys
 
         Returns:
-            A random github api key
+            A random gitlab api key
         """
 
         return random.choice(self.keys)
 
     def get_config_key(self) -> str:
-        """Retrieves the users github api key from their config table
+        """Retrieves the users gitlab api key from their config table
 
         Returns:
             Github API key from config table
@@ -60,7 +60,7 @@ class GitlabApiKeyHandler():
         return self.config.get_value("Keys", "gitlab_api_key")
 
     def get_api_keys_from_database(self) -> List[str]:
-        """Retieves all github api keys from database
+        """Retieves all gitlab api keys from database
 
         Note:
             It retrieves all the keys from the database except the one defined in the users config
@@ -131,7 +131,7 @@ class GitlabApiKeyHandler():
         self.redis_key_list.extend(valid_keys)
 
         if not valid_keys:
-            raise NoValidKeysError("No valid github api keys found in the config or worker oauth table")
+            raise NoValidKeysError("No valid gitlab api keys found in the config or worker oauth table")
 
 
         # shuffling the keys so not all processes get the same keys in the same order
@@ -152,7 +152,7 @@ class GitlabApiKeyHandler():
 
         Args:
             client: makes the http requests
-            oauth_key: github api key that is being tested
+            oauth_key: gitlab api key that is being tested
 
         Returns:
             True if key is bad. False if the key is good

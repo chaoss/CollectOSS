@@ -1232,10 +1232,22 @@ class CollectionStatus(Base):
         repo_git = repo.repo_git
 
         collection_status_unique = ["repo_id"]
+        pr_issue_count = 0
+        github_weight = 0
+        if "github" in repo_git:
 
+            try:
+                pr_issue_count = get_repo_weight_by_issue(session.logger, repo_git)
+                #session.logger.info(f"date weight: {calculate_date_weight_from_timestamps(repo.repo_added, None)}")
+                github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
+            except Exception as e:
+                pr_issue_count = None
+                github_weight = None
+                session.logger.error(
+                        ''.join(traceback.format_exception(None, e, e.__traceback__)))
+                
         try:
-            pr_issue_count = get_repo_weight_by_issue(session.logger, repo_git)
-            #session.logger.info(f"date weight: {calculate_date_weight_from_timestamps(repo.repo_added, None)}")
+            pr_issue_count = 0
             github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
         except Exception as e:
             pr_issue_count = None
@@ -1251,6 +1263,7 @@ class CollectionStatus(Base):
             "secondary_weight": github_weight,
             "ml_weight": github_weight
         }
+     
 
         result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)
 

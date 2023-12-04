@@ -54,7 +54,7 @@ def parse_json_response(logger: logging.Logger, response: httpx.Response) -> dic
     try:
         return response.json()
     except json.decoder.JSONDecodeError as e:
-        logger.warning(f"invalid return from GitHub. Response was: {response.text}. Exception: {e}")
+        logger.warning(f"invalid return. Response was: {response.text}. Exception: {e}")
         return json.loads(json.dumps(response.text))
 
 def get_repo_weight_by_issue(logger,repo_git):

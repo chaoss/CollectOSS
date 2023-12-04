@@ -50,6 +50,9 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.pull_requests.commits_model.tasks',
                 'augur.tasks.github.traffic.tasks']
 
+gitlab_tasks = ['augur.tasks.gitlab.merge_request_task',
+                'augur.tasks.gitlab.issues_task']
+
 git_tasks = ['augur.tasks.git.facade_tasks',
             'augur.tasks.git.dependency_tasks.tasks',
             'augur.tasks.git.dependency_libyear_tasks.tasks',
@@ -66,7 +69,7 @@ materialized_view_tasks = ['augur.tasks.db.refresh_materialized_views']
 
 frontend_tasks = ['augur.tasks.frontend']
 
-tasks = start_tasks + github_tasks + git_tasks + materialized_view_tasks + frontend_tasks
+tasks = start_tasks + github_tasks + gitlab_tasks + git_tasks + materialized_view_tasks + frontend_tasks
 
 if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
     tasks += data_analysis_tasks

@@ -24,6 +24,8 @@ from augur.tasks.github.pull_requests.files_model.tasks import process_pull_requ
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
 from augur.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
 from augur.tasks.github.traffic.tasks import collect_github_repo_clones_data
+from augur.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests
+from augur.tasks.gitlab.issues_task import collect_gitlab_issues
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.db.refresh_materialized_views import *
 # from augur.tasks.data_analysis import *
@@ -93,6 +95,17 @@ def primary_repo_collect_phase(repo_git):
 
     return repo_task_group
 
+def primary_gitlab_repo_collect_phase(repo_git):
+
+    logger = logging.getLogger(primary_gitlab_repo_collect_phase.__name__)
+
+    jobs = group(
+        collect_gitlab_merge_requests.si(repo_git),
+        collect_gitlab_issues.si(repo_git)
+    )
+
+    return jobs
+
 
 #This phase creates the message for secondary collection tasks.
 #These are less important and have their own worker.
@@ -146,20 +159,23 @@ def non_repo_domain_tasks():
 def build_primary_repo_collect_request(session,enabled_phase_names, days_until_collect_again = 1):
     #Add all required tasks to a list and pass it to the CollectionRequest
     primary_enabled_phases = []
+    primary_gitlab_enabled_phases = []
 
     #Primary jobs
     if prelim_phase.__name__ in enabled_phase_names:
         primary_enabled_phases.append(prelim_phase)
 
     primary_enabled_phases.append(primary_repo_collect_phase)
+    primary_gitlab_enabled_phases.append(primary_gitlab_repo_collect_phase)
 
     #task success is scheduled no matter what the config says.
     def core_task_success_util_gen(repo_git):
         return core_task_success_util.si(repo_git)
 
     primary_enabled_phases.append(core_task_success_util_gen)
+    primary_gitlab_enabled_phases.append(core_task_success_util_gen)
 
-    primary_request = CollectionRequest("core",primary_enabled_phases,max_repo=40, days_until_collect_again=7)
+    primary_request = CollectionRequest("core",primary_enabled_phases,max_repo=40, days_until_collect_again=7, gitlab_phases=primary_gitlab_enabled_phases)
     primary_request.get_valid_repos(session)
     return primary_request
 
