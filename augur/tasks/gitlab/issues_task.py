@@ -50,7 +50,7 @@ def retrieve_all_gitlab_issue_data(repo_git, logger, key_auth) -> None:
 
     logger.info(f"Collecting gitlab issues for {owner}/{repo}")
 
-    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/issues"
+    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/issues?with_labels_details=True"
     issues = GitlabPaginator(url, key_auth, logger)
 
     all_data = []
