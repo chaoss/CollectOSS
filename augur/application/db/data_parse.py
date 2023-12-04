@@ -247,6 +247,28 @@ def extract_needed_issue_assignee_data(assignees: List[dict], repo_id: int, tool
 
     return assignee_dicts
 
+def extract_needed_gitlab_issue_assignee_data(assignees: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    if len(assignees) == 0:
+        return []
+
+    assignee_dicts = []
+    for assignee in assignees:
+
+        assignee_dict = {
+            "cntrb_id": None,
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source,
+            "issue_assignee_src_id": assignee['id'],
+            "issue_assignee_src_node": None,
+            "repo_id": repo_id
+        }
+
+        assignee_dicts.append(assignee_dict)
+
+    return assignee_dicts
+
 
 
 # retrieve only the needed data for pr labels from the api response
@@ -271,6 +293,33 @@ def extract_needed_issue_label_data(labels: List[dict], repo_id: int, tool_sourc
         }
 
         # label_obj = PullRequestLabels(**label_dict)
+
+        label_dicts.append(label_dict)
+
+    return label_dicts
+
+
+def extract_needed_gitlab_issue_label_data(labels: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    if len(labels) == 0:
+        return []
+
+    label_dicts = []
+    for label in labels:
+
+        print(f"Processing repo id for issue label: {repo_id}")
+
+        label_dict = {
+            "label_text": label["name"],
+            "label_description": label.get("description", None),
+            "label_color": label['color'],
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source,
+            "label_src_id": label['id'],
+            "label_src_node_id": None, 
+            "repo_id": repo_id
+        }
 
         label_dicts.append(label_dict)
 

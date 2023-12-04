@@ -195,7 +195,7 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
         issue_assignee_dicts += add_key_value_pair_to_dicts(other_issue_data["assignees"], "issue_id", issue_id)
 
 
-    logger.info(f"{task_name}: Inserting other issue data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
+    logger.info(f"{task_name}: Inserting other github issue data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
 
     # inserting issue labels
     # we are using label_src_id and issue_id to determine if the label is already in the database.
