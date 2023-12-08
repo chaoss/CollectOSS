@@ -1245,15 +1245,15 @@ class CollectionStatus(Base):
                 github_weight = None
                 session.logger.error(
                         ''.join(traceback.format_exception(None, e, e.__traceback__)))
-                
-        try:
-            #pr_issue_count = 0
-            github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
-        except Exception as e:
-            pr_issue_count = None
-            github_weight = None
-            session.logger.error(
-                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
+        else:   
+            try:
+                pr_issue_count = 0
+                github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
+            except Exception as e:
+                pr_issue_count = None
+                github_weight = None
+                session.logger.error(
+                        ''.join(traceback.format_exception(None, e, e.__traceback__)))
 
 
         record = {

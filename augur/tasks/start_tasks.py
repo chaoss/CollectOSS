@@ -95,9 +95,9 @@ def primary_repo_collect_phase(repo_git):
 
     return repo_task_group
 
-def primary_gitlab_repo_collect_phase(repo_git):
+def primary_repo_collect_phase_gitlab(repo_git):
 
-    logger = logging.getLogger(primary_gitlab_repo_collect_phase.__name__)
+    logger = logging.getLogger(primary_repo_collect_phase_gitlab.__name__)
 
     jobs = group(
         collect_gitlab_merge_requests.si(repo_git),
@@ -166,7 +166,7 @@ def build_primary_repo_collect_request(session,enabled_phase_names, days_until_c
         primary_enabled_phases.append(prelim_phase)
 
     primary_enabled_phases.append(primary_repo_collect_phase)
-    primary_gitlab_enabled_phases.append(primary_gitlab_repo_collect_phase)
+    primary_gitlab_enabled_phases.append(primary_repo_collect_phase_gitlab)
 
     #task success is scheduled no matter what the config says.
     def core_task_success_util_gen(repo_git):

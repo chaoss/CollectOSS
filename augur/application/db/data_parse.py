@@ -37,6 +37,34 @@ def extract_needed_pr_label_data(labels: List[dict], repo_id: int, tool_source: 
 
     return label_dicts
 
+
+def extract_needed_mr_label_data(labels: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    if len(labels) == 0:
+        return []
+
+    label_dicts = []
+    for label in labels:
+
+        label_dict = {
+            'pr_src_id': label['id'],
+            'pr_src_node_id': None,
+            'pr_src_url': None,
+            'pr_src_description': label['name'],
+            'pr_src_color': label['color'],
+            # TODO: Populate this by making an api call for each label
+            'pr_src_default_bool': None,
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source,
+            'repo_id': repo_id
+        }
+
+        label_dicts.append(label_dict)
+
+    return label_dicts
+
+
 # retrieve only the needed data for pr assignees from the api response
 def extract_needed_pr_assignee_data(assignees: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
 
@@ -48,7 +76,6 @@ def extract_needed_pr_assignee_data(assignees: List[dict], repo_id: int, tool_so
     for assignee in assignees:
 
         assignee_dict = {
-            # store the pr_url data on in the pr assignee data for now so we can relate it back to a pr later
             'contrib_id': assignee["cntrb_id"],
             'pr_assignee_src_id': int(assignee['id']),
             'tool_source': tool_source,
@@ -60,6 +87,30 @@ def extract_needed_pr_assignee_data(assignees: List[dict], repo_id: int, tool_so
         assignee_dicts.append(assignee_dict)
  
     return assignee_dicts
+
+def extract_needed_merge_request_assignee_data(assignees: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    if len(assignees) == 0:
+        return []
+
+    assignee_dicts = []
+    for assignee in assignees:
+
+        assignee_dict = {
+                'contrib_id': None,
+                'repo_id': repo_id,
+                # TODO: Temporarily setting this to id which the id of the contributor, unitl we can get the contrib_id set and create a unique on the contrib_id and the pull_request_id
+                'pr_assignee_src_id': assignee["id"],
+                'tool_source': tool_source,
+                'tool_version': tool_version,
+                'data_source': data_source
+            }
+
+        assignee_dicts.append(assignee_dict)
+ 
+    return assignee_dicts
+
+
 
 # retrieve only the needed data for pr reviewers from the api response
 def extract_needed_pr_reviewer_data(reviewers: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
@@ -306,8 +357,6 @@ def extract_needed_gitlab_issue_label_data(labels: List[dict], repo_id: int, too
 
     label_dicts = []
     for label in labels:
-
-        print(f"Processing repo id for issue label: {repo_id}")
 
         label_dict = {
             "label_text": label["name"],
@@ -640,3 +689,5 @@ def extract_needed_issue_data_from_gitlab_issue(issue: dict, repo_id: int, tool_
 
     return issue_dict
     
+
+
