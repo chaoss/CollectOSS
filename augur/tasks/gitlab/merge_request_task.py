@@ -128,41 +128,63 @@ def process_merge_requests(data, task_name, repo_id, logger, augur_db):
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_comments(mr_ids, repo_git) -> int:
 
-    print("Collect merge request comments")
+    owner, repo = get_owner_repo(repo_git)
+    id = mr_ids[0]
+
+    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/notes"
     # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
-def collect_merge_request_events(mr_ids, repo_git) -> int:
-    pass
+def collect_merge_request_events(repo_git) -> int:
+
+    owner, repo = get_owner_repo(repo_git)
+
+    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/events?target_type=merge_request"
     #print("Collect merge request events")
     # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_metadata(mr_ids, repo_git) -> int:
-    pass
+    
+    owner, repo = get_owner_repo(repo_git)
+    id = mr_ids[0]
+
+    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}"
     #print("Collect merge request metadata")
     # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
-    pass
+    
+    owner, repo = get_owner_repo(repo_git)
+    id = mr_ids[0]
+
+    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/approvals"
     #print("Collect merge request reviewers")
     # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_commits(mr_ids, repo_git) -> int:
-    pass
+    
+    owner, repo = get_owner_repo(repo_git)
+    id = mr_ids[0]
+
+    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/commits"
     #print("Collect merge request commits")
     # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_files(mr_ids, repo_git) -> int:
-    pass
+    
+    owner, repo = get_owner_repo(repo_git)
+    id = mr_ids[0]
+
+    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/cahnges"
     #print("Collect merge request files")
     # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 

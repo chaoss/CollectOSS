@@ -218,7 +218,7 @@ def retrieve_all_gitlab_issue_event_data(repo_git, logger, key_auth) -> None:
 
     logger.info(f"Collecting gitlab issue events for {owner}/{repo}")
 
-    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/events?target_type=issue&per_page=100"
+    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/events?target_type=issue"
     events = GitlabPaginator(url, key_auth, logger)
 
     all_data = []
