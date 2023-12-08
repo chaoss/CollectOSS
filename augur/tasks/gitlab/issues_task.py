@@ -31,13 +31,12 @@ def collect_gitlab_issues(repo_git : str) -> int:
             issue_data = retrieve_all_gitlab_issue_data(repo_git, logger, manifest.key_auth)
 
             if issue_data:
-                total_issues = len(issue_data)
-                process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+                issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
 
-                return total_issues
+                return issue_ids
             else:
                 logger.info(f"{owner}/{repo} has no issues")
-                return 0
+                return []
         except Exception as e:
             logger.error(f"Could not collect gitlab issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
             return -1
@@ -80,8 +79,11 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
     data_source = "Gitlab API"
 
     issue_dicts = []
+    issue_ids = []
     issue_mapping_data = {}
     for issue in issues:
+
+        issue_ids.append(issue["iid"])
 
         issue_dicts.append(
             extract_needed_issue_data_from_gitlab_issue(issue, repo_id, tool_source, tool_version, data_source)
@@ -143,3 +145,18 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
     # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
     issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
     augur_db.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
+
+    return issue_ids
+
+
+
+@celery.task(base=AugurCoreRepoCollectionTask)
+def collect_issue_comments(issue_ids, repo_git) -> int:
+
+    print(f"Collect issue comments. Repo git: {repo_git}. Len ids: {issue_ids}")
+
+
+@celery.task(base=AugurCoreRepoCollectionTask)
+def collect_issue_events(issue_ids, repo_git) -> int:
+
+    print(f"Collect issue events. Repo git: {repo_git}. Len ids: {issue_ids}")
