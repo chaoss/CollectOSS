@@ -151,12 +151,91 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
-def collect_issue_comments(issue_ids, repo_git) -> int:
+def collect_gitlab_issue_comments(issue_ids, repo_git) -> int:
 
-    print(f"Collect issue comments. Repo git: {repo_git}. Len ids: {issue_ids}")
+    owner, repo = get_owner_repo(repo_git)
+
+    logger = logging.getLogger(collect_gitlab_issues.__name__) 
+    with GitlabTaskManifest(logger) as manifest:
+
+        comments = retrieve_all_gitlab_issue_comments(manifest.key_auth, logger, issue_ids, repo_git)
+
+        if comments:
+            logger.info(f"Length of comments: {len(comments)}")
+            #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+        else:
+            logger.info(f"{owner}/{repo} has no gitlab issue comments")
+           
+
+def retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git):
+
+    owner, repo = get_owner_repo(repo_git)
+
+    all_comments = []
+    issue_count = len(issue_ids)
+    index = 1
+    for id in issue_ids:
+
+        print(f"Collecting {owner}/{repo} gitlab issue comments for issue {index} of {issue_count}")
+
+        url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/issues/{id}/notes"
+        comments = GitlabPaginator(url, key_auth, logger)
+
+        for page_data, page in comments.iter_pages():
+
+            if page_data is None or len(page_data) == 0:
+                break
+
+            all_comments += page_data
+        
+        index += 1
+
+    return all_comments
+
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
-def collect_issue_events(issue_ids, repo_git) -> int:
+def collect_gitlab_issue_events(repo_git) -> int:
 
-    print(f"Collect issue events. Repo git: {repo_git}. Len ids: {issue_ids}")
+    owner, repo = get_owner_repo(repo_git)
+
+    logger = logging.getLogger(collect_gitlab_issues.__name__) 
+    with GitlabTaskManifest(logger) as manifest:
+
+        events = retrieve_all_gitlab_issue_event_data(repo_git, logger, manifest.key_auth)
+
+        if events:
+            logger.info(f"Length of events: {len(events)}")
+            #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+        else:
+            logger.info(f"{owner}/{repo} has no gitlab issue events")
+           
+
+
+def retrieve_all_gitlab_issue_event_data(repo_git, logger, key_auth) -> None:
+
+    owner, repo = get_owner_repo(repo_git)
+
+    logger.info(f"Collecting gitlab issue events for {owner}/{repo}")
+
+    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/events?target_type=issue&per_page=100"
+    events = GitlabPaginator(url, key_auth, logger)
+
+    all_data = []
+    num_pages = events.get_num_pages()
+    for page_data, page in events.iter_pages():
+
+        if page_data is None:
+            return all_data
+
+        if len(page_data) == 0:
+            logger.debug(
+                f"{owner}/{repo}: Gitlab Issue Events Page {page} contains no data...returning")
+            logger.info(f"{owner}/{repo}: Issue Events Page {page} of {num_pages}")
+            return all_data
+
+        logger.info(f"{owner}/{repo}: Gitlab Issue Events Page {page} of {num_pages}")
+
+        all_data += page_data
+
+    return all_data

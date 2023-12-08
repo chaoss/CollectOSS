@@ -134,36 +134,36 @@ def collect_merge_request_comments(mr_ids, repo_git) -> int:
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_events(mr_ids, repo_git) -> int:
-
-    print("Collect merge request events")
+    pass
+    #print("Collect merge request events")
     # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_metadata(mr_ids, repo_git) -> int:
-
-    print("Collect merge request metadata")
+    pass
+    #print("Collect merge request metadata")
     # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
-
-    print("Collect merge request reviewers")
+    pass
+    #print("Collect merge request reviewers")
     # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_commits(mr_ids, repo_git) -> int:
-
-    print("Collect merge request commits")
+    pass
+    #print("Collect merge request commits")
     # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_files(mr_ids, repo_git) -> int:
-
-    print("Collect merge request files")
+    pass
+    #print("Collect merge request files")
     # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 
 
