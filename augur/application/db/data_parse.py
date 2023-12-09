@@ -756,7 +756,7 @@ def extract_needed_pr_reviewer_data(data: List[dict], pull_request_id, repo_id: 
     return reviewer_dicts
 
 
-def extract_needed_pr_commit_data(commit, repo_id, pull_request_id, tool_source, tool_version, data_source):
+def extract_needed_mr_commit_data(commit, repo_id, pull_request_id, tool_source, tool_version, data_source):
 
     commit = {
         'pull_request_id': pull_request_id,
@@ -799,6 +799,46 @@ def extract_needed_mr_file_data(gitlab_file_data, repo_id, pull_request_id, tool
         files.append(file_dict)
 
     return files
+
+
+def extract_needed_mr_metadata(mr_dict, repo_id, pull_request_id, tool_source, tool_version, data_source):
+
+    head = {'sha': mr_dict['diff_refs']['head_sha'],
+            'ref': mr_dict['target_branch'],
+            'label': str(mr_dict['target_project_id']) + ':' + mr_dict['target_branch'],
+            'author': mr_dict['author']['username'],
+            'repo': str(mr_dict['target_project_id'])
+            }
+
+    base = {'sha': mr_dict['diff_refs']['base_sha'],
+            'ref': mr_dict['source_branch'],
+            'label': str(mr_dict['source_project_id']) + ':' + mr_dict['source_branch'],
+            'author': mr_dict['author']['username'],
+            'repo': str(mr_dict['source_project_id'])
+            }
+
+    pr_meta_dict = {
+        'head': head,
+        'base': base
+    }
+    all_meta = []
+    for pr_side, pr_meta_data in pr_meta_dict.items():
+        pr_meta = {
+            'pull_request_id': pull_request_id,
+            'repo_id': repo_id,
+            'pr_head_or_base': pr_side,
+            'pr_src_meta_label': pr_meta_data['label'],
+            'pr_src_meta_ref': pr_meta_data['ref'],
+            'pr_sha': pr_meta_data['sha'],
+            'cntrb_id': None,
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source
+        }
+        all_meta.append(pr_meta)
+
+    return all_meta
+
 
 
 

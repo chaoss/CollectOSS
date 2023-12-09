@@ -4,9 +4,9 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
-from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_pr_reviewer_data, extract_needed_pr_commit_data, extract_needed_mr_file_data
+from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_pr_reviewer_data, extract_needed_mr_commit_data, extract_needed_mr_file_data, extract_needed_mr_metadata
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
-from augur.application.db.models import PullRequest, PullRequestAssignee, PullRequestLabel, PullRequestReviewer, PullRequestCommit, PullRequestFile, Repo
+from augur.application.db.models import PullRequest, PullRequestAssignee, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestCommit, PullRequestFile, Repo
 from augur.application.db.util import execute_session_query
 
 
@@ -156,17 +156,44 @@ def collect_merge_request_metadata(mr_ids, repo_git) -> int:
     logger = logging.getLogger(collect_merge_request_metadata.__name__) 
     with GitlabTaskManifest(logger) as manifest:
 
+        augur_db = manifest.augur_db
+
+        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_obj = execute_session_query(query, 'one')
+        repo_id = repo_obj.repo_id
+
         url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}".format(owner=owner, repo=repo, id="{id}")
         metadata_list = retrieve_merge_request_data(mr_ids, url, "metadata", owner, repo, manifest.key_auth, logger, response_type="dict")
 
         if metadata_list:
             logger.info(f"Length of merge request metadata: {len(metadata_list)}")
-            logger.info(f"Mr metadata: {metadata_list[0]}")
-            #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+            process_mr_metadata(metadata_list, f"{owner}/{repo}: Mr metadata task", repo_id, logger, augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request metadata")
-    
 
+def process_mr_metadata(data, task_name, repo_id, logger, augur_db):
+
+    tool_source = "Mr Metadata Task"
+    tool_version = "2.0"
+    data_source = "Gitlab API"
+
+    # create mapping from mr number to pull request id of current mrs
+    mr_number_to_id_map = {}
+    mrs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    for mr in mrs:
+        mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
+
+    all_metadata = []
+    for id, metadata in data.items():
+
+        pull_request_id = mr_number_to_id_map[id]
+
+        all_metadata.extend(extract_needed_mr_metadata(metadata, repo_id, pull_request_id, tool_source, tool_version, data_source))
+
+    logger.info(f"{task_name}: Inserting {len(all_metadata)} merge request metadata")
+    pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
+    augur_db.insert_data(all_metadata, PullRequestMeta, pr_metadata_natural_keys)
+    
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
@@ -261,7 +288,7 @@ def process_mr_commits(data, task_name, repo_id, logger, augur_db):
 
         for commit in values:
 
-            all_commits.append(extract_needed_pr_commit_data(commit, repo_id, pull_request_id, tool_source, tool_version, data_source))
+            all_commits.append(extract_needed_mr_commit_data(commit, repo_id, pull_request_id, tool_source, tool_version, data_source))
 
 
     logger.info(f"{task_name}: Inserting {len(all_commits)} merge request commits")

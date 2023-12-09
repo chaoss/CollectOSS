@@ -24,7 +24,7 @@ from augur.tasks.github.pull_requests.files_model.tasks import process_pull_requ
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
 from augur.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
 from augur.tasks.github.traffic.tasks import collect_github_repo_clones_data
-from augur.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests, collect_merge_request_comments, collect_merge_request_events, collect_merge_request_metadata, collect_merge_request_reviewers, collect_merge_request_commits, collect_merge_request_files
+from augur.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests, collect_merge_request_comments, collect_merge_request_metadata, collect_merge_request_reviewers, collect_merge_request_commits, collect_merge_request_files
 from augur.tasks.gitlab.issues_task import collect_gitlab_issues, collect_gitlab_issue_comments
 from augur.tasks.gitlab.events_task import collect_gitlab_issue_events, collect_gitlab_merge_request_events
 from augur.tasks.git.facade_tasks import *
