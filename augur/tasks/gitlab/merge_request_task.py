@@ -6,7 +6,8 @@ from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
 from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_pr_reviewer_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
-from augur.application.db.models import PullRequest, PullRequestAssignee, PullRequestLabel, Repo
+from augur.application.db.models import PullRequest, PullRequestAssignee, PullRequestLabel, PullRequestReviewer, Repo
+from augur.application.db.util import execute_session_query
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
@@ -175,12 +176,18 @@ def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
     logger = logging.getLogger(collect_merge_request_reviewers.__name__) 
     with GitlabTaskManifest(logger) as manifest:
 
+        augur_db = manifest.augur_db
+
+        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_obj = execute_session_query(query, 'one')
+        repo_id = repo_obj.repo_id
+
         url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/approvals".format(owner=owner, repo=repo, id="{id}")
         reviewers = retrieve_merge_request_data(mr_ids, url, "reviewers", owner, repo, manifest.key_auth, logger, response_type="dict")
 
         if reviewers:
             logger.info(f"Length of merge request reviewers: {len(reviewers)}")
-            #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+            process_mr_reviewers(reviewers, f"{owner}/{repo}: Mr reviewer task", repo_id, logger, augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request reviewers")
 
@@ -196,14 +203,20 @@ def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
     for mr in mrs:
         mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
 
+    all_reviewers = []
     for id, values in data.items():
 
         pull_request_id = mr_number_to_id_map[id]
 
         reviewers = extract_needed_pr_reviewer_data(values, pull_request_id, repo_id, tool_source, tool_version, data_source)
 
-        for review in reviewers:
-            print(review["pull_request_id"])
+        all_reviewers += reviewers
+
+    # TODO: Need to add unique key with pull_request_id and cntrb_id to insert gitlab reviewers
+    # pr_reviewer_natural_keys = ["pull_request_id", "cntrb_id"]
+    # augur_db.insert_data(all_reviewers, PullRequestReviewer, pr_reviewer_natural_keys)
+
+
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_commits(mr_ids, repo_git) -> int:
