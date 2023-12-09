@@ -869,3 +869,19 @@ def extract_needed_gitlab_message_data(comment: dict, platform_id: int, repo_id:
     }
 
     return comment_dict
+
+# retrieve only the needed data for pr labels from the api response
+def extract_needed_gitlab_mr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    pr_msg_ref = {
+        'pull_request_id': pull_request_id,
+        'pr_message_ref_src_comment_id': comment['id'],
+        'repo_id': repo_id,
+        'pr_message_ref_src_node_id': None,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source
+    }
+                
+    return pr_msg_ref 
+
