@@ -171,6 +171,8 @@ class GitlabApiHandler():
 
             response = hit_api(self.key_manager, url, self.logger, timeout)
 
+            num_attempts += 1
+
             if response is None:
                 if timeout_count == 10:
                     self.logger.error(f"Request timed out 10 times for {url}")
@@ -211,6 +213,7 @@ class GitlabApiHandler():
                 return page_data, response, GitlabApiResult.SUCCESS
             
             self.logger.warning(f"Unhandled gitlab response. Status code: {response.status_code}. Body: {response.json()}")
+
             
 
         self.logger.error("Unable to collect data in 10 attempts")
