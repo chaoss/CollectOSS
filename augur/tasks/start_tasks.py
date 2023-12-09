@@ -102,7 +102,7 @@ def primary_repo_collect_phase_gitlab(repo_git):
 
     jobs = group(
         chain(collect_gitlab_merge_requests.si(repo_git), group(
-                                                                collect_merge_request_comments.s(repo_git), 
+                                                                #collect_merge_request_comments.s(repo_git), 
                                                                 #collect_merge_request_reviewers.s(repo_git),
                                                                 collect_merge_request_metadata.s(repo_git),
                                                                 collect_merge_request_commits.s(repo_git),
