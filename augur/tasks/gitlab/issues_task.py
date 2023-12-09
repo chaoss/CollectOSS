@@ -3,7 +3,7 @@ import traceback
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
-from augur.tasks.gitlab.gitlab_paginator import GitlabPaginator
+from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
 from augur.application.db.data_parse import extract_needed_issue_data_from_gitlab_issue, extract_needed_gitlab_issue_label_data, extract_needed_gitlab_issue_assignee_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
@@ -50,11 +50,11 @@ def retrieve_all_gitlab_issue_data(repo_git, logger, key_auth) -> None:
     logger.info(f"Collecting gitlab issues for {owner}/{repo}")
 
     url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/issues?with_labels_details=True"
-    issues = GitlabPaginator(url, key_auth, logger)
+    issues = GitlabApiHandler(key_auth, logger)
 
     all_data = []
-    num_pages = issues.get_num_pages()
-    for page_data, page in issues.iter_pages():
+    num_pages = issues.get_num_pages(url)
+    for page_data, page in issues.iter_pages(url):
 
         if page_data is None:
             return all_data
@@ -179,9 +179,9 @@ def retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git):
         print(f"Collecting {owner}/{repo} gitlab issue comments for issue {index} of {issue_count}")
 
         url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/issues/{id}/notes"
-        comments = GitlabPaginator(url, key_auth, logger)
+        comments = GitlabApiHandler(key_auth, logger)
 
-        for page_data, page in comments.iter_pages():
+        for page_data, page in comments.iter_pages(url):
 
             if page_data is None or len(page_data) == 0:
                 break
@@ -219,11 +219,11 @@ def retrieve_all_gitlab_issue_event_data(repo_git, logger, key_auth) -> None:
     logger.info(f"Collecting gitlab issue events for {owner}/{repo}")
 
     url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/events?target_type=issue"
-    events = GitlabPaginator(url, key_auth, logger)
+    events = GitlabApiHandler(key_auth, logger)
 
     all_data = []
-    num_pages = events.get_num_pages()
-    for page_data, page in events.iter_pages():
+    num_pages = events.get_num_pages(url)
+    for page_data, page in events.iter_pages(url):
 
         if page_data is None:
             return all_data
