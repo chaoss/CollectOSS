@@ -6,7 +6,7 @@ from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
 from augur.application.db.data_parse import extract_gitlab_mr_event_data, extract_gitlab_issue_event_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
-from augur.application.db.models import Repo, Issue, IssueEvent, PullRequest
+from augur.application.db.models import Repo, Issue, IssueEvent, PullRequest, PullRequestEvent
 from augur.application.db.util import execute_session_query
 
 platform_id = 2
@@ -42,11 +42,17 @@ def collect_gitlab_merge_request_events(repo_git) -> int:
     logger = logging.getLogger(collect_gitlab_issue_events.__name__) 
     with GitlabTaskManifest(logger) as manifest:
 
+        augur_db = manifest.augur_db
+
+        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_obj = execute_session_query(query, 'one')
+        repo_id = repo_obj.repo_id
+
         events = retrieve_all_gitlab_event_data("merge_request", repo_git, logger, manifest.key_auth)
 
         if events:
             logger.info(f"Length of gitlab merge request events: {len(events)}")
-            #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+            process_mr_events(events, f"{owner}/{repo}: Gitlab MR Events task", repo_id, logger, augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request events")
 
@@ -81,7 +87,7 @@ def retrieve_all_gitlab_event_data(type, repo_git, logger, key_auth) -> None:
 
 def process_issue_events(events, task_name, repo_id, logger, augur_db):
     
-    tool_source = "Gitlab events task"
+    tool_source = "Gitlab issue events task"
     tool_version = "2.0"
     data_source = "Gitlab API"
    
@@ -113,5 +119,42 @@ def process_issue_events(events, task_name, repo_id, logger, augur_db):
     logger.info(f"{task_name}: Inserting {len(issue_event_dicts)} gitlab issue events")
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
     augur_db.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
+
+
+def process_mr_events(events, task_name, repo_id, logger, augur_db):
+    
+    tool_source = "Gitlab mr events task"
+    tool_version = "2.0"
+    data_source = "Gitlab API"
+   
+    mr_event_dicts = []
+
+    # create mapping from mr number to pull request id of current mrs
+    mr_number_to_id_map = {}
+    mrs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    for mr in mrs:
+        mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
+
+    for event in events:
+
+        mr_number = event["target_iid"]
+
+        try:
+            issue_id = mr_number_to_id_map[mr_number]
+        except KeyError:
+            logger.info(f"{task_name}: Could not find related mr")
+            logger.info(f"{task_name}: We were searching for an mr with number {mr_number} in repo {repo_id}")
+            logger.info(f"{task_name}: Skipping")
+            continue
+
+        mr_event_dicts.append(
+            extract_gitlab_mr_event_data(event, issue_id, platform_id, repo_id,
+                                    tool_source, tool_version, data_source)
+        )
+
+    # TODO: Add unique key for this
+    logger.info(f"{task_name}: Inserting {len(mr_event_dicts)} gitlab mr events")
+    mr_event_natural_keys = ["pull_request_id", "issue_event_src_id"]
+    augur_db.insert_data(mr_event_dicts, PullRequestEvent, mr_event_natural_keys)
 
 
