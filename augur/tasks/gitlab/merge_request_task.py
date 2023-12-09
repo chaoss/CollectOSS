@@ -4,9 +4,9 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
-from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_pr_reviewer_data
+from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_pr_reviewer_data, extract_needed_pr_commit_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
-from augur.application.db.models import PullRequest, PullRequestAssignee, PullRequestLabel, PullRequestReviewer, Repo
+from augur.application.db.models import PullRequest, PullRequestAssignee, PullRequestLabel, PullRequestReviewer, PullRequestCommit, Repo
 from augur.application.db.util import execute_session_query
 
 
@@ -226,15 +226,47 @@ def collect_merge_request_commits(mr_ids, repo_git) -> int:
     logger = logging.getLogger(collect_merge_request_comments.__name__) 
     with GitlabTaskManifest(logger) as manifest:
 
+        augur_db = manifest.augur_db
+
+        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo_obj = execute_session_query(query, 'one')
+        repo_id = repo_obj.repo_id
+
         url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/commits".format(owner=owner, repo=repo, id="{id}")
         commits = retrieve_merge_request_data(mr_ids, url, "commits", owner, repo, manifest.key_auth, logger, response_type="list")
 
         if commits:
             logger.info(f"Length of merge request commits: {len(commits)}")
-            logger.info(f"Mr commit: {commits[0]}")
-            #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+            process_mr_commits(commits, f"{owner}/{repo}: Mr commit task", repo_id, logger, augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request commits")
+
+
+def process_mr_commits(data, task_name, repo_id, logger, augur_db):
+
+    tool_source = "Mr Commit Task"
+    tool_version = "2.0"
+    data_source = "Gitlab API"
+
+    # create mapping from mr number to pull request id of current mrs
+    mr_number_to_id_map = {}
+    mrs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    for mr in mrs:
+        mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
+
+    all_commits = []
+    for id, values in data.items():
+
+        pull_request_id = mr_number_to_id_map[id]
+
+        for commit in values:
+
+            all_commits.append(extract_needed_pr_commit_data(commit, repo_id, pull_request_id, tool_source, tool_version, data_source))
+
+
+    pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
+    augur_db.insert_data(all_commits,PullRequestCommit,pr_commits_natural_keys)
+            
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)

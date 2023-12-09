@@ -756,6 +756,22 @@ def extract_needed_pr_reviewer_data(data: List[dict], pull_request_id, repo_id: 
     return reviewer_dicts
 
 
+def extract_needed_pr_commit_data(commit, repo_id, pull_request_id, tool_source, tool_version, data_source):
+
+    commit = {
+        'pull_request_id': pull_request_id,
+        'pr_cmt_sha': commit['id'],
+        'pr_cmt_node_id': None,
+        'pr_cmt_message': commit['message'],
+        'repo_id': repo_id,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source,
+    }
+
+    return commit
+
+
 
 
 
