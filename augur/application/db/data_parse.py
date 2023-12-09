@@ -772,6 +772,35 @@ def extract_needed_pr_commit_data(commit, repo_id, pull_request_id, tool_source,
     return commit
 
 
+def extract_needed_mr_file_data(gitlab_file_data, repo_id, pull_request_id, tool_source, tool_version, data_source):
+
+    files = []
+
+    changes = gitlab_file_data["changes"]
+    for file_changes in changes:
+        try:
+            deletes = int(file_changes['diff'].split('@@')[1].strip().split(' ')[0].split(',')[1])
+            adds = int(file_changes['diff'].split('@@')[1].strip().split(' ')[1].split(',')[1])
+        except:
+            deletes = 0
+            adds = 0
+
+        file_dict = {
+            'pull_request_id': pull_request_id,
+            'repo_id': repo_id,
+            'pr_file_additions': adds,
+            'pr_file_deletions': deletes,
+            'pr_file_path': file_changes['old_path'],
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source,
+        }
+
+        files.append(file_dict)
+
+    return files
+
+
 
 
 
