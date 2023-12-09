@@ -691,3 +691,47 @@ def extract_needed_issue_data_from_gitlab_issue(issue: dict, repo_id: int, tool_
     
 
 
+def extract_gitlab_mr_event_data(event: dict, pr_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
+
+    mr_event = {
+        'pull_request_id': pr_id,
+        'cntrb_id': None,
+        'action': event['action_name'],
+        'action_commit_hash': None,
+        'created_at': event['created_at'],
+        'issue_event_src_id': event['target_id'],
+        'repo_id': repo_id,
+        'platform_id': platform_id,
+        'node_id': None,
+        'node_url': None,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source
+    }
+
+    return mr_event
+
+def extract_gitlab_issue_event_data(event: dict, issue_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
+
+    issue_event = {
+        "issue_event_src_id": event['target_id'],
+        "issue_id": issue_id,
+        "node_id": None,
+        "node_url": None,
+        "cntrb_id": None,
+        "created_at": event['created_at'],
+        "action": event["action_name"],
+        "action_commit_hash": None,
+        "platform_id": platform_id,
+        "repo_id" : repo_id,
+        "tool_source": tool_source,
+        "tool_version": tool_version,
+        "data_source": data_source
+    }
+
+    return issue_event
+
+
+
+
+
