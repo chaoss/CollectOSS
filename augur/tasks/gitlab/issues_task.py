@@ -144,8 +144,8 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
 
     # inserting issue assignees
     # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
-    issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    augur_db.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
+    # issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
+    # augur_db.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
 
     return issue_ids
 

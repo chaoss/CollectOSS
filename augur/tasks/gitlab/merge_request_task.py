@@ -116,8 +116,8 @@ def process_merge_requests(data, task_name, repo_id, logger, augur_db):
     logger.info(f"{task_name}: Inserting other pr data of lengths: Labels: {len(mr_label_dicts)} - Assignees: {len(mr_assignee_dicts)}")
 
     # TODO: Setup unique key on asignees with a value of ('cntrb_id', 'pull_request_id') and add 'cntrb_id' to assingee data
-    mr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    augur_db.insert_data(mr_assignee_dicts, PullRequestAssignee, mr_assignee_natural_keys)
+    # mr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
+    # augur_db.insert_data(mr_assignee_dicts, PullRequestAssignee, mr_assignee_natural_keys)
 
     pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
     pr_label_string_fields = ["pr_src_description"]
