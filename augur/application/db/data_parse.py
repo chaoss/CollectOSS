@@ -840,8 +840,32 @@ def extract_needed_mr_metadata(mr_dict, repo_id, pull_request_id, tool_source, t
     return all_meta
 
 
+def extract_needed_gitlab_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    message_ref_dict = {
+        'issue_id': issue_id,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source,
+        'issue_msg_ref_src_comment_id': int(message['id']),
+        'issue_msg_ref_src_node_id': None,
+        'repo_id': repo_id
+    }
+
+    return message_ref_dict
 
 
+def extract_needed_gitlab_message_data(comment: dict, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str):
 
+    comment_dict = {
+        "pltfrm_id": platform_id,
+        "msg_text": comment['body'],
+        "msg_timestamp": comment['created_at'],
+        "cntrb_id": None,
+        "platform_msg_id": int(comment['id']),
+        "tool_source": tool_source,
+        "tool_version": tool_version,
+        "data_source": data_source
+    }
 
-
+    return comment_dict
