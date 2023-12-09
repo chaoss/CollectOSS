@@ -106,13 +106,13 @@ def primary_repo_collect_phase_gitlab(repo_git):
                                                                 #collect_merge_request_reviewers.s(repo_git),
                                                                 collect_merge_request_metadata.s(repo_git),
                                                                 collect_merge_request_commits.s(repo_git),
-                                                                collect_merge_request_files.s(repo_git),
+                                                                #collect_merge_request_files.s(repo_git),
                                                                 collect_gitlab_merge_request_events.si(repo_git),
                                                                 )),
          chain(collect_gitlab_issues.si(repo_git), group(
                                                         #collect_gitlab_issue_comments.s(repo_git),
                                                         collect_gitlab_issue_events.si(repo_git),
-                                                        # )),
+                                                         )),
     )
 
     return jobs

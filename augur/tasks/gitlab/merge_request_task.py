@@ -314,7 +314,7 @@ def collect_merge_request_commits(mr_ids, repo_git) -> int:
 
     owner, repo = get_owner_repo(repo_git)
 
-    logger = logging.getLogger(collect_merge_request_comments.__name__) 
+    logger = logging.getLogger(collect_merge_request_commits.__name__) 
     with GitlabTaskManifest(logger) as manifest:
 
         augur_db = manifest.augur_db
@@ -366,7 +366,7 @@ def collect_merge_request_files(mr_ids, repo_git) -> int:
 
     owner, repo = get_owner_repo(repo_git)
 
-    logger = logging.getLogger(collect_merge_request_comments.__name__) 
+    logger = logging.getLogger(collect_merge_request_files.__name__) 
     with GitlabTaskManifest(logger) as manifest:
 
         augur_db = manifest.augur_db
