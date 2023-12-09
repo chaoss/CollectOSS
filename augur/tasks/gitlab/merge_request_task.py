@@ -416,9 +416,6 @@ def retrieve_merge_request_data(ids, url, name, owner, repo, key_auth, logger, r
 
     api_handler = GitlabApiHandler(key_auth, logger)
     for id in ids:
-
-        if len(all_data) > 10:
-            return all_data
         
         print(f"Collecting {owner}/{repo} gitlab merge request {name} for merge request {index} of {mr_count}")
         formatted_url = url.format(id=id)

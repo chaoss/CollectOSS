@@ -186,9 +186,6 @@ def retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git):
 
     for id in issue_ids:
 
-        if len(all_comments) > 10:
-            return all_comments
-
         print(f"Collecting {owner}/{repo} gitlab issue comments for issue {index} of {issue_count}")
 
         url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/issues/{id}/notes"
