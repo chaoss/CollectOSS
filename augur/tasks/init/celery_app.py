@@ -51,7 +51,8 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.traffic.tasks']
 
 gitlab_tasks = ['augur.tasks.gitlab.merge_request_task',
-                'augur.tasks.gitlab.issues_task']
+                'augur.tasks.gitlab.issues_task',
+                'augur.tasks.gitlab.events_task']
 
 git_tasks = ['augur.tasks.git.facade_tasks',
             'augur.tasks.git.dependency_tasks.tasks',

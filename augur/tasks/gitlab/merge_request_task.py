@@ -145,14 +145,6 @@ def collect_merge_request_comments(mr_ids, repo_git) -> int:
 
 
 
-@celery.task(base=AugurCoreRepoCollectionTask)
-def collect_merge_request_events(repo_git) -> int:
-
-    owner, repo = get_owner_repo(repo_git)
-
-    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/events?target_type=merge_request"
-    #print("Collect merge request events")
-    # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
