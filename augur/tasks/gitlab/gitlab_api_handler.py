@@ -16,7 +16,7 @@ class GitlabApiResult(Enum):
     SUCCESS = 0
     TIMEOUT = 1
     NO_MORE_ATTEMPTS = 2
-    REPO_NOT_FOUND = 3
+    NOT_FOUND = 3
     SECONDARY_RATE_LIMIT = 4
     RATE_LIMIT_EXCEEDED = 5
     ABUSE_MECHANISM_TRIGGERED = 6
@@ -118,7 +118,6 @@ class GitlabApiHandler():
         """
         
         url = self._set_paginaton_query_params(url)
-        print(f"Iter pages url: {url}")
         
         # retrieves the data for the given url
         data_list, response, result = self.retrieve_data(url)
@@ -130,7 +129,6 @@ class GitlabApiHandler():
 
         # this retrieves the page for the given url
         page_number = get_url_page_number(url)
-        print(f"iter pages first page number: {page_number}")
 
         # yields the first page of data and its page number
         yield data_list, page_number
@@ -139,7 +137,6 @@ class GitlabApiHandler():
 
             # gets the next page from the last responses header
             next_page = response.links['next']['url']
-            print(f"next page url: {next_page}")
 
             # Here we don't need to pass in params with the page, or the default params because the url from the headers already has those values
             data_list, response, result = self.retrieve_data(next_page)
@@ -149,8 +146,6 @@ class GitlabApiHandler():
                 return
 
             page_number = get_url_page_number(next_page)
-
-            print(f"iter pages page number: {page_number}")
 
             # if either the data or response is None then yield None and return
             if data_list is None or response is None:
@@ -203,9 +198,13 @@ class GitlabApiHandler():
                 time.sleep(key_reset_time)
                 continue
 
+            if response.status_code == 404:
+                self.logger.info(f"ERROR: 404 not found for {url}")
+                return [], response, GitlabApiResult.NOT_FOUND
+
             if response.status_code == 204:
                 return [], response, GitlabApiResult.SUCCESS
-            
+                
             if response.status_code >= 200 and response.status_code <=299:
 
                 page_data = parse_json_response(self.logger, response)

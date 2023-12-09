@@ -134,7 +134,7 @@ def collect_merge_request_comments(mr_ids, repo_git) -> int:
     with GitlabTaskManifest(logger) as manifest:
 
         url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/notes".format(owner=owner, repo=repo, id="{id}")
-        comments = retrieve_merge_request_data(mr_ids, url, "comments", owner, repo, manifest.key_auth, logger)
+        comments = retrieve_merge_request_data(mr_ids, url, "comments", owner, repo, manifest.key_auth, logger, response_type="list")
 
         if comments:
             logger.info(f"Length of merge request comments: {len(comments)}")
@@ -158,114 +158,111 @@ def collect_merge_request_events(repo_git) -> int:
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_metadata(mr_ids, repo_git) -> int:
 
-    pass
+    owner, repo = get_owner_repo(repo_git)
 
-    # TODO: Figure out how to handle new response it gitlab paginator
-    # owner, repo = get_owner_repo(repo_git)
+    logger = logging.getLogger(collect_merge_request_metadata.__name__) 
+    with GitlabTaskManifest(logger) as manifest:
 
-    # logger = logging.getLogger(collect_merge_request_metadata.__name__) 
-    # with GitlabTaskManifest(logger) as manifest:
+        url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}".format(owner=owner, repo=repo, id="{id}")
+        metadata_list = retrieve_merge_request_data(mr_ids, url, "metadata", owner, repo, manifest.key_auth, logger, response_type="dict")
 
-    #     url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}".format(owner=owner, repo=repo, id="{id}")
-    #     metadata = retrieve_merge_request_data(mr_ids, url, "metadata", owner, repo, manifest.key_auth, logger)
-
-    #     if metadata:
-    #         logger.info(f"Length of merge request metadata: {len(metadata)}")
-    #         logger.info(f"Mr metadata: {metadata[0]}")
-    #         #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
-    #     else:
-    #         logger.info(f"{owner}/{repo} has no gitlab merge request metadata")
+        if metadata_list:
+            logger.info(f"Length of merge request metadata: {len(metadata_list)}")
+            logger.info(f"Mr metadata: {metadata_list[0]}")
+            #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+        else:
+            logger.info(f"{owner}/{repo} has no gitlab merge request metadata")
     
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
 
-    pass
+    owner, repo = get_owner_repo(repo_git)
 
-    # TODO: Figure out how to handle new response it gitlab paginator
-    # owner, repo = get_owner_repo(repo_git)
+    logger = logging.getLogger(collect_merge_request_reviewers.__name__) 
+    with GitlabTaskManifest(logger) as manifest:
 
-    # logger = logging.getLogger(collect_merge_request_reviewers.__name__) 
-    # with GitlabTaskManifest(logger) as manifest:
+        url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/approvals".format(owner=owner, repo=repo, id="{id}")
+        reviewers = retrieve_merge_request_data(mr_ids, url, "reviewers", owner, repo, manifest.key_auth, logger, response_type="dict")
 
-    #     url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/approvals".format(owner=owner, repo=repo, id="{id}")
-    #     reviewers = retrieve_merge_request_data(mr_ids, url, "reviewers", owner, repo, manifest.key_auth, logger)
-
-    #     if reviewers:
-    #         logger.info(f"Length of merge request reviewers: {len(reviewers)}")
-    #         logger.info(f"Mr reviewer: {reviewers[0]}")
-    #         #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
-    #     else:
-    #         logger.info(f"{owner}/{repo} has no gitlab merge request reviewers")
+        if reviewers:
+            logger.info(f"Length of merge request reviewers: {len(reviewers)}")
+            logger.info(f"Mr reviewer: {reviewers[0]}")
+            #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+        else:
+            logger.info(f"{owner}/{repo} has no gitlab merge request reviewers")
     
-    #print("Collect merge request reviewers")
-    # print(f"Repo git: {repo_git}. Len ids: {mr_ids}")
-
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_commits(mr_ids, repo_git) -> int:
 
-    pass
+    owner, repo = get_owner_repo(repo_git)
 
-    # TODO: Figure out how to handle new response it gitlab paginator
-    # owner, repo = get_owner_repo(repo_git)
+    logger = logging.getLogger(collect_merge_request_comments.__name__) 
+    with GitlabTaskManifest(logger) as manifest:
 
-    # logger = logging.getLogger(collect_merge_request_comments.__name__) 
-    # with GitlabTaskManifest(logger) as manifest:
+        url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/commits".format(owner=owner, repo=repo, id="{id}")
+        commits = retrieve_merge_request_data(mr_ids, url, "commits", owner, repo, manifest.key_auth, logger, response_type="list")
 
-    #     url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/commits".format(owner=owner, repo=repo, id="{id}")
-    #     commits = retrieve_merge_request_data(mr_ids, url, "commits", owner, repo, manifest.key_auth, logger)
-
-    #     if commits:
-    #         logger.info(f"Length of merge request commits: {len(commits)}")
-    #         logger.info(f"Mr commit: {commits[0]}")
-    #         #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
-    #     else:
-    #         logger.info(f"{owner}/{repo} has no gitlab merge request commits")
+        if commits:
+            logger.info(f"Length of merge request commits: {len(commits)}")
+            logger.info(f"Mr commit: {commits[0]}")
+            #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+        else:
+            logger.info(f"{owner}/{repo} has no gitlab merge request commits")
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_files(mr_ids, repo_git) -> int:
 
-    pass
+    owner, repo = get_owner_repo(repo_git)
 
-    # TODO: Figure out how to handle new response it gitlab paginator
-    # owner, repo = get_owner_repo(repo_git)
+    logger = logging.getLogger(collect_merge_request_comments.__name__) 
+    with GitlabTaskManifest(logger) as manifest:
 
-    # logger = logging.getLogger(collect_merge_request_comments.__name__) 
-    # with GitlabTaskManifest(logger) as manifest:
+        url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/changes".format(owner=owner, repo=repo, id="{id}")
+        files = retrieve_merge_request_data(mr_ids, url, "files", owner, repo, manifest.key_auth, logger, response_type="dict")
 
-    #     url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/changes".format(owner=owner, repo=repo, id="{id}")
-    #     files = retrieve_merge_request_data(mr_ids, url, "files", owner, repo, manifest.key_auth, logger)
-
-    #     if files:
-    #         logger.info(f"Length of merge request files: {len(files)}")
-    #         logger.info(f"Mr comment: {files[0]}")
-    #         #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
-    #     else:
-    #         logger.info(f"{owner}/{repo} has no gitlab merge request files")
+        if files:
+            logger.info(f"Length of merge request files: {len(files)}")
+            logger.info(f"Mr file: {files[0]}")
+            #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+        else:
+            logger.info(f"{owner}/{repo} has no gitlab merge request files")
     
 
-def retrieve_merge_request_data(ids, url, name, owner, repo, key_auth, logger):
+def retrieve_merge_request_data(ids, url, name, owner, repo, key_auth, logger, response_type):
 
     all_data = []
     issue_count = len(ids)
     index = 1
 
-    data = GitlabApiHandler(key_auth, logger)
+    api_handler = GitlabApiHandler(key_auth, logger)
     for id in ids:
 
-        if len(all_data) > 40:
+        if len(all_data) > 10:
             return all_data
-
+        
         print(f"Collecting {owner}/{repo} gitlab merge request {name} for merge request {index} of {issue_count}")
-        for page_data, _ in data.iter_pages(url):
+        formatted_url = url.format(id=id)
 
-            if page_data is None or len(page_data) == 0:
-                break
+        if response_type == "dict":
+            page_data, _, _ = api_handler.retrieve_data(formatted_url)
+            if page_data:
+                all_data.append(page_data)
 
-            all_data += page_data
+        elif response_type == "list":
+
+            for page_data, _ in api_handler.iter_pages(formatted_url):
+
+                if page_data is None or len(page_data) == 0:
+                    break
+
+                all_data += page_data
+
+        else:
+            raise Exception(f"Unexpected reponse type: {response_type}")
         
         index += 1
 
