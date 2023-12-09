@@ -4,7 +4,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
-from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data
+from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_pr_reviewer_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
 from augur.application.db.models import PullRequest, PullRequestAssignee, PullRequestLabel, Repo
 
@@ -180,11 +180,30 @@ def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
 
         if reviewers:
             logger.info(f"Length of merge request reviewers: {len(reviewers)}")
-            logger.info(f"Mr reviewer: {reviewers[0]}")
             #issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request reviewers")
-    
+
+def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
+
+    tool_source = "Mr Reviewr Task"
+    tool_version = "2.0"
+    data_source = "Gitlab API"
+
+    # create mapping from mr number to pull request id of current mrs
+    mr_number_to_id_map = {}
+    mrs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    for mr in mrs:
+        mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
+
+    for id, values in data.items():
+
+        pull_request_id = mr_number_to_id_map[id]
+
+        reviewers = extract_needed_pr_reviewer_data(values, pull_request_id, repo_id, tool_source, tool_version, data_source)
+
+        for review in reviewers:
+            print(review["pull_request_id"])
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_commits(mr_ids, repo_git) -> int:
@@ -226,7 +245,7 @@ def collect_merge_request_files(mr_ids, repo_git) -> int:
 
 def retrieve_merge_request_data(ids, url, name, owner, repo, key_auth, logger, response_type):
 
-    all_data = []
+    all_data = {}
     issue_count = len(ids)
     index = 1
 
@@ -242,7 +261,7 @@ def retrieve_merge_request_data(ids, url, name, owner, repo, key_auth, logger, r
         if response_type == "dict":
             page_data, _, _ = api_handler.retrieve_data(formatted_url)
             if page_data:
-                all_data.append(page_data)
+                all_data[id] = page_data
 
         elif response_type == "list":
 
@@ -251,8 +270,10 @@ def retrieve_merge_request_data(ids, url, name, owner, repo, key_auth, logger, r
                 if page_data is None or len(page_data) == 0:
                     break
 
-                all_data += page_data
-
+                if id in all_data:
+                    all_data[id].extend(page_data)
+                else:
+                    all_data[id] = page_data
         else:
             raise Exception(f"Unexpected reponse type: {response_type}")
         

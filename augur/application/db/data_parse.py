@@ -732,6 +732,29 @@ def extract_gitlab_issue_event_data(event: dict, issue_id: int, platform_id: int
     return issue_event
 
 
+# retrieve only the needed data for pr reviewers from the api response
+def extract_needed_pr_reviewer_data(reviewers: List[dict], pull_request_id, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    if len(reviewers) == 0:
+        return []
+
+    reviewer_dicts = []
+    for reviewer in reviewers:
+
+        reviewer_dict = {
+            'pull_request_id': pull_request_id,
+            'cntrb_id': None,
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source
+        }
+
+        reviewer_dicts.append(reviewer_dict)
+
+    return reviewer_dicts
+
+
+
 
 
 
