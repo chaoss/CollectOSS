@@ -37,6 +37,34 @@ def extract_needed_pr_label_data(labels: List[dict], repo_id: int, tool_source: 
 
     return label_dicts
 
+
+def extract_needed_mr_label_data(labels: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    if len(labels) == 0:
+        return []
+
+    label_dicts = []
+    for label in labels:
+
+        label_dict = {
+            'pr_src_id': label['id'],
+            'pr_src_node_id': None,
+            'pr_src_url': None,
+            'pr_src_description': label['name'],
+            'pr_src_color': label['color'],
+            # TODO: Populate this by making an api call for each label
+            'pr_src_default_bool': None,
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source,
+            'repo_id': repo_id
+        }
+
+        label_dicts.append(label_dict)
+
+    return label_dicts
+
+
 # retrieve only the needed data for pr assignees from the api response
 def extract_needed_pr_assignee_data(assignees: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
 
@@ -48,7 +76,6 @@ def extract_needed_pr_assignee_data(assignees: List[dict], repo_id: int, tool_so
     for assignee in assignees:
 
         assignee_dict = {
-            # store the pr_url data on in the pr assignee data for now so we can relate it back to a pr later
             'contrib_id': assignee["cntrb_id"],
             'pr_assignee_src_id': int(assignee['id']),
             'tool_source': tool_source,
@@ -60,6 +87,30 @@ def extract_needed_pr_assignee_data(assignees: List[dict], repo_id: int, tool_so
         assignee_dicts.append(assignee_dict)
  
     return assignee_dicts
+
+def extract_needed_merge_request_assignee_data(assignees: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    if len(assignees) == 0:
+        return []
+
+    assignee_dicts = []
+    for assignee in assignees:
+
+        assignee_dict = {
+                'contrib_id': None,
+                'repo_id': repo_id,
+                # TODO: Temporarily setting this to id which the id of the contributor, unitl we can get the contrib_id set and create a unique on the contrib_id and the pull_request_id
+                'pr_assignee_src_id': assignee["id"],
+                'tool_source': tool_source,
+                'tool_version': tool_version,
+                'data_source': data_source
+            }
+
+        assignee_dicts.append(assignee_dict)
+ 
+    return assignee_dicts
+
+
 
 # retrieve only the needed data for pr reviewers from the api response
 def extract_needed_pr_reviewer_data(reviewers: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
@@ -247,6 +298,28 @@ def extract_needed_issue_assignee_data(assignees: List[dict], repo_id: int, tool
 
     return assignee_dicts
 
+def extract_needed_gitlab_issue_assignee_data(assignees: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    if len(assignees) == 0:
+        return []
+
+    assignee_dicts = []
+    for assignee in assignees:
+
+        assignee_dict = {
+            "cntrb_id": None,
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source,
+            "issue_assignee_src_id": assignee['id'],
+            "issue_assignee_src_node": None,
+            "repo_id": repo_id
+        }
+
+        assignee_dicts.append(assignee_dict)
+
+    return assignee_dicts
+
 
 
 # retrieve only the needed data for pr labels from the api response
@@ -271,6 +344,31 @@ def extract_needed_issue_label_data(labels: List[dict], repo_id: int, tool_sourc
         }
 
         # label_obj = PullRequestLabels(**label_dict)
+
+        label_dicts.append(label_dict)
+
+    return label_dicts
+
+
+def extract_needed_gitlab_issue_label_data(labels: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    if len(labels) == 0:
+        return []
+
+    label_dicts = []
+    for label in labels:
+
+        label_dict = {
+            "label_text": label["name"],
+            "label_description": label.get("description", None),
+            "label_color": label['color'],
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source,
+            "label_src_id": label['id'],
+            "label_src_node_id": None, 
+            "repo_id": repo_id
+        }
 
         label_dicts.append(label_dict)
 
@@ -591,3 +689,199 @@ def extract_needed_issue_data_from_gitlab_issue(issue: dict, repo_id: int, tool_
 
     return issue_dict
     
+
+
+def extract_gitlab_mr_event_data(event: dict, pr_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
+
+    mr_event = {
+        'pull_request_id': pr_id,
+        'cntrb_id': None,
+        'action': event['action_name'],
+        'action_commit_hash': None,
+        'created_at': event['created_at'],
+        'issue_event_src_id': event['target_id'],
+        'repo_id': repo_id,
+        'platform_id': platform_id,
+        'node_id': None,
+        'node_url': None,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source
+    }
+
+    return mr_event
+
+def extract_gitlab_issue_event_data(event: dict, issue_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
+
+    issue_event = {
+        "issue_event_src_id": event['target_id'],
+        "issue_id": issue_id,
+        "node_id": None,
+        "node_url": None,
+        "cntrb_id": None,
+        "created_at": event['created_at'],
+        "action": event["action_name"],
+        "action_commit_hash": None,
+        "platform_id": platform_id,
+        "repo_id" : repo_id,
+        "tool_source": tool_source,
+        "tool_version": tool_version,
+        "data_source": data_source
+    }
+
+    return issue_event
+
+
+# retrieve only the needed data for pr reviewers from the api response
+def extract_needed_pr_reviewer_data(data: List[dict], pull_request_id, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    if len(data) == 0:
+        return []
+    
+    reviewer_dicts = []
+    for x in data:
+
+        for reviewer in x["suggested_approvers"]:
+
+            reviewer_dict = {
+                'pull_request_id': pull_request_id,
+                'cntrb_id': None,
+                'tool_source': tool_source,
+                'tool_version': tool_version,
+                'data_source': data_source
+            }
+
+            reviewer_dicts.append(reviewer_dict)
+
+    return reviewer_dicts
+
+
+def extract_needed_mr_commit_data(commit, repo_id, pull_request_id, tool_source, tool_version, data_source):
+
+    commit = {
+        'pull_request_id': pull_request_id,
+        'pr_cmt_sha': commit['id'],
+        'pr_cmt_node_id': None,
+        'pr_cmt_message': commit['message'],
+        'repo_id': repo_id,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source,
+    }
+
+    return commit
+
+
+def extract_needed_mr_file_data(gitlab_file_data, repo_id, pull_request_id, tool_source, tool_version, data_source):
+
+    files = []
+
+    changes = gitlab_file_data["changes"]
+    for file_changes in changes:
+        try:
+            deletes = int(file_changes['diff'].split('@@')[1].strip().split(' ')[0].split(',')[1])
+            adds = int(file_changes['diff'].split('@@')[1].strip().split(' ')[1].split(',')[1])
+        except:
+            deletes = 0
+            adds = 0
+
+        file_dict = {
+            'pull_request_id': pull_request_id,
+            'repo_id': repo_id,
+            'pr_file_additions': adds,
+            'pr_file_deletions': deletes,
+            'pr_file_path': file_changes['old_path'],
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source,
+        }
+
+        files.append(file_dict)
+
+    return files
+
+
+def extract_needed_mr_metadata(mr_dict, repo_id, pull_request_id, tool_source, tool_version, data_source):
+
+    head = {'sha': mr_dict['diff_refs']['head_sha'],
+            'ref': mr_dict['target_branch'],
+            'label': str(mr_dict['target_project_id']) + ':' + mr_dict['target_branch'],
+            'author': mr_dict['author']['username'],
+            'repo': str(mr_dict['target_project_id'])
+            }
+
+    base = {'sha': mr_dict['diff_refs']['base_sha'],
+            'ref': mr_dict['source_branch'],
+            'label': str(mr_dict['source_project_id']) + ':' + mr_dict['source_branch'],
+            'author': mr_dict['author']['username'],
+            'repo': str(mr_dict['source_project_id'])
+            }
+
+    pr_meta_dict = {
+        'head': head,
+        'base': base
+    }
+    all_meta = []
+    for pr_side, pr_meta_data in pr_meta_dict.items():
+        pr_meta = {
+            'pull_request_id': pull_request_id,
+            'repo_id': repo_id,
+            'pr_head_or_base': pr_side,
+            'pr_src_meta_label': pr_meta_data['label'],
+            'pr_src_meta_ref': pr_meta_data['ref'],
+            'pr_sha': pr_meta_data['sha'],
+            'cntrb_id': None,
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source
+        }
+        all_meta.append(pr_meta)
+
+    return all_meta
+
+
+def extract_needed_gitlab_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    message_ref_dict = {
+        'issue_id': issue_id,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source,
+        'issue_msg_ref_src_comment_id': int(message['id']),
+        'issue_msg_ref_src_node_id': None,
+        'repo_id': repo_id
+    }
+
+    return message_ref_dict
+
+
+def extract_needed_gitlab_message_data(comment: dict, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str):
+
+    comment_dict = {
+        "pltfrm_id": platform_id,
+        "msg_text": comment['body'],
+        "msg_timestamp": comment['created_at'],
+        "cntrb_id": None,
+        "platform_msg_id": int(comment['id']),
+        "tool_source": tool_source,
+        "tool_version": tool_version,
+        "data_source": data_source
+    }
+
+    return comment_dict
+
+# retrieve only the needed data for pr labels from the api response
+def extract_needed_gitlab_mr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+
+    pr_msg_ref = {
+        'pull_request_id': pull_request_id,
+        'pr_message_ref_src_comment_id': comment['id'],
+        'repo_id': repo_id,
+        'pr_message_ref_src_node_id': None,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source
+    }
+                
+    return pr_msg_ref 
+
