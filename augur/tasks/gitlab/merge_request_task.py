@@ -4,7 +4,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
-from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_pr_reviewer_data, extract_needed_mr_commit_data, extract_needed_mr_file_data, extract_needed_mr_metadata, extract_needed_gitlab_mr_message_ref_data, extract_needed_gitlab_message_data
+from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_mr_reviewer_data, extract_needed_mr_commit_data, extract_needed_mr_file_data, extract_needed_mr_metadata, extract_needed_gitlab_mr_message_ref_data, extract_needed_gitlab_message_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
 from augur.application.db.models import PullRequest, PullRequestAssignee, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestCommit, PullRequestFile, PullRequestMessageRef, Repo, Message
 from augur.application.db.util import execute_session_query
@@ -299,7 +299,7 @@ def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
 
         pull_request_id = mr_number_to_id_map[id]
 
-        reviewers = extract_needed_pr_reviewer_data(values, pull_request_id, repo_id, tool_source, tool_version, data_source)
+        reviewers = extract_needed_mr_reviewer_data(values, pull_request_id, repo_id, tool_source, tool_version, data_source)
 
         all_reviewers += reviewers
 
