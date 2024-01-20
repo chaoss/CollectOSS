@@ -84,7 +84,8 @@ def insert_release(augur_db, logger, repo_id, owner, release, tag_only = False):
     release_inf = get_release_inf(repo_id, release, tag_only)
 
     #Do an upsert
-    augur_db.insert_data(release_inf,Release,['release_id'])
+    string_fields = ["release_name", "release_description", "release_author", "release_tag_name"]
+    augur_db.insert_data(release_inf,Release,['release_id'], string_fields=string_fields)
 
     logger.info(f"Inserted info for {owner}/{repo_id}/{release['name']}\n")
 
