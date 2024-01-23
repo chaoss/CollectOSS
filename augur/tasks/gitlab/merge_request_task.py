@@ -346,17 +346,16 @@ def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
 
         if reviewers:
             logger.info(f"Length of merge request reviewers: {len(reviewers)}")
-            process_mr_reviewers(reviewers, f"{owner}/{repo}: Mr reviewer task", repo_id, logger, augur_db)
+            process_mr_reviewers(reviewers, repo_id, logger, augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request reviewers")
 
-def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
+def process_mr_reviewers(data, repo_id, logger, augur_db):
     """
     Retrieve only the needed data for mr reviewer data from the api response
 
     Arguments:
         data: List of dictionaries of mr reviewer data
-        task_name: name of the task as well as the repo being processed
         repo_id: augur id of the repo
         logger: logging object
         augur_db: sqlalchemy db object 
