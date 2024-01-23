@@ -346,11 +346,11 @@ def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
 
         if reviewers:
             logger.info(f"Length of merge request reviewers: {len(reviewers)}")
-            process_mr_reviewers(reviewers, repo_id, logger, augur_db)
+            process_mr_reviewers(reviewers, f"{owner}/{repo}: Mr reviewer task", repo_id, logger, augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request reviewers")
 
-def process_mr_reviewers(data, repo_id, logger, augur_db):
+def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
     """
     Retrieve only the needed data for mr reviewer data from the api response
 
@@ -364,6 +364,8 @@ def process_mr_reviewers(data, repo_id, logger, augur_db):
     tool_source = "Mr Reviewr Task"
     tool_version = "2.0"
     data_source = "Gitlab API"
+
+    logger.info(f"Running {task_name}...")
 
     # create mapping from mr number to pull request id of current mrs
     mr_number_to_id_map = {}
