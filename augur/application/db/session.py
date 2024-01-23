@@ -194,7 +194,7 @@ class DatabaseSession(Session):
 
                 except Exception as e:
                     #self.logger.info(e)
-                    if(len(data) == 1):
+                    if len(data) == 1:
                         raise e
                    
                     time.sleep(3)
