@@ -1,3 +1,6 @@
+"""
+Defines utility functions used by the augur api views
+"""
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from flask import render_template, flash, url_for, Flask

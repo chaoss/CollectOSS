@@ -1,3 +1,6 @@
+"""
+Defines the api routes for the augur views
+"""
 import logging
 import math
 from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash

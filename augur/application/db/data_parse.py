@@ -926,7 +926,7 @@ def extract_needed_mr_reviewer_data(data: List[dict], pull_request_id, tool_sour
 
     
     Returns:
-        List of extracted relevent data from needed mr reviwer data
+        List of extracted relevant data from needed mr reviwer data
     """
 
     if len(data) == 0:
@@ -1080,7 +1080,7 @@ def extract_needed_mr_metadata(mr_dict, repo_id, pull_request_id, tool_source, t
 def extract_needed_gitlab_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
     """
     Extract the message id for a given message on an issue from an api response
-    and connect it to the relevent repo id.
+    and connect it to the relevant repo id.
 
     Arguments:
         message: message data dict
@@ -1111,7 +1111,7 @@ def extract_needed_gitlab_issue_message_ref_data(message: dict, issue_id: int, r
 def extract_needed_gitlab_message_data(comment: dict, platform_id: int, tool_source: str, tool_version: str, data_source: str):
     """
     Extract specific metadata for a comment from an api response
-    and connect it to the relevent platform id.
+    and connect it to the relevant platform id.
 
     Arguments:
         comment: comment data dict
