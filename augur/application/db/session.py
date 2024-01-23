@@ -196,13 +196,13 @@ class DatabaseSession(Session):
                     #self.logger.info(e)
                     if(len(data) == 1):
                         raise e
-                    else:
-                        time.sleep(3)
-                        first_half = data[:len(data)//2]
-                        second_half = data[len(data)//2:]
+                   
+                    time.sleep(3)
+                    first_half = data[:len(data)//2]
+                    second_half = data[len(data)//2:]
 
-                        self.insert_data(first_half, table,natural_keys, return_columns, string_fields, on_conflict_update)
-                        self.insert_data(second_half,table, natural_keys, return_columns, string_fields, on_conflict_update)
+                    self.insert_data(first_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
+                    self.insert_data(second_half,table, natural_keys, return_columns, string_fields, on_conflict_update)
 
             else:
                 self.logger.error("Unable to insert data in 10 attempts")
@@ -232,18 +232,15 @@ class DatabaseSession(Session):
                 raise e
 
             except Exception as e:
-                if(len(data) == 1):
+                if len(data) == 1:
                     raise e
-                else:
-                    time.sp
-                    first_half = data[:len(data)//2]
-                    second_half = data[len(data)//2:]
+                
+                time.sleep(3)
+                first_half = data[:len(data)//2]
+                second_half = data[len(data)//2:]
 
-                    self.insert_data(first_half, natural_keys, return_columns, string_fields, on_conflict_update)
-                    self.insert_data(second_half, natural_keys, return_columns, string_fields, on_conflict_update)
-
-                    self.insert_data(first_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
-                    self.insert_data(second_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
+                self.insert_data(first_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
+                self.insert_data(second_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
 
         else:
             self.logger.error("Unable to insert and return data in 10 attempts")
