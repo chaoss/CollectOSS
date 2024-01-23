@@ -184,7 +184,7 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
             }
 
             message_dicts.append(
-                extract_needed_gitlab_message_data(message, platform_id, repo_id, tool_source, tool_version, data_source)
+                extract_needed_gitlab_message_data(message, platform_id, tool_source, tool_version, data_source)
             )
 
 
@@ -299,7 +299,7 @@ def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
 
         pull_request_id = mr_number_to_id_map[id]
 
-        reviewers = extract_needed_mr_reviewer_data(values, pull_request_id, repo_id, tool_source, tool_version, data_source)
+        reviewers = extract_needed_mr_reviewer_data(values, pull_request_id, tool_source, tool_version, data_source)
 
         all_reviewers += reviewers
 

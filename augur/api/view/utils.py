@@ -1,6 +1,7 @@
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from flask import render_template, flash, url_for, Flask
+from .init import init_logging
 from .init import *
 from ..server import app, db_session
 from augur.application.config import AugurConfig
