@@ -1,14 +1,26 @@
+"""
+Defines a GitLab-specific session and manifest object for use in GitLab tasks
+"""
 from logging import Logger
 
 from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 from augur.application.db.session import DatabaseSession
 
 class GitlabTaskManifest:
+    """
+    Manifest object that represents the state and common elements of
+    the specified task. GitLab version for the GitLab tasks.
+
+    Attributes:
+        augur_db: sqlalchemy db object
+        key_auth: GitLab specific key auth retrieval collection
+        logger: logging object
+        platform_id: GitLab specific platform id (github is 1)
+    """
 
     def __init__(self, logger):
 
         from augur.tasks.init.celery_app import engine
-        from augur.application.db.session import DatabaseSession
 
         self.augur_db = DatabaseSession(logger, engine)
         self.key_auth = GitlabRandomKeyAuth(self.augur_db.session, logger)

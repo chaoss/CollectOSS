@@ -1,3 +1,6 @@
+"""
+Defines the set of tasks used to retrieve GitLab issue data.
+"""
 import logging
 import traceback
 
@@ -14,7 +17,12 @@ platform_id = 2
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_gitlab_issues(repo_git : str) -> int:
+    """
+    Retrieve and parse gitlab issues for the desired repo
 
+    Arguments:
+        repo_git: the repo url string
+    """
 
     logger = logging.getLogger(collect_gitlab_issues.__name__) 
     with GitlabTaskManifest(logger) as manifest:
@@ -45,6 +53,14 @@ def collect_gitlab_issues(repo_git : str) -> int:
 
 
 def retrieve_all_gitlab_issue_data(repo_git, logger, key_auth) -> None:
+    """
+    Retrieve only the needed data for issues from the api response
+
+    Arguments:
+        repo_git: url of the relevant repo
+        logger: loggin object
+        key_auth: key auth cache and rotator object 
+    """
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -73,7 +89,17 @@ def retrieve_all_gitlab_issue_data(repo_git, logger, key_auth) -> None:
     return all_data
     
 def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
-    
+    """
+    Retrieve only the needed data for issues from the api response
+
+    Arguments:
+        issues: List of dictionaries of issue data
+        task_name: name of the task as well as the repo being processed
+        repo_id: augur id of the repo
+        logger: logging object
+        augur_db: sqlalchemy db object 
+    """
+
     # get repo_id or have it passed
     tool_source = "Gitlab Issue Task"
     tool_version = "2.0"
@@ -153,6 +179,13 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_gitlab_issue_comments(issue_ids, repo_git) -> int:
+    """
+    Retrieve and parse gitlab events for the desired repo
+
+    Arguments:
+        issue_ids: Set of issue ids to collect coments for
+        repo_git: repo url
+    """
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -175,6 +208,15 @@ def collect_gitlab_issue_comments(issue_ids, repo_git) -> int:
            
 
 def retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git):
+    """
+    Retrieve only the needed data for issue comments
+
+    Arguments:
+        key_auth: key auth cache and rotator object
+        logger: loggin object
+        issue_ids: ids of issues to find comements for
+        repo_git: repo url
+    """
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -186,7 +228,7 @@ def retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git):
 
     for id in issue_ids:
 
-        print(f"Collecting {owner}/{repo} gitlab issue comments for issue {index} of {issue_count}")
+        logger.info(f"Collecting {owner}/{repo} gitlab issue comments for issue {index} of {issue_count}")
 
         url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/issues/{id}/notes"
         
@@ -206,6 +248,16 @@ def retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git):
 
 
 def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
+    """
+    Retrieve only the needed data for issue messages from the api response
+
+    Arguments:
+        data: List of dictionaries of issue event data
+        task_name: name of the task as well as the repo being processed
+        repo_id: augur id of the repo
+        logger: logging object
+        augur_db: sqlalchemy db object 
+    """
 
     tool_source = "Gitlab issue comments"
     tool_version = "2.0"

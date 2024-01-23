@@ -1,4 +1,7 @@
-
+"""
+Defines a GitlabApiHandler class to paginate and handle interaction with GitLab's
+api through automatic use of relevant key auth and pagination tools. 
+"""
 import httpx
 import time
 import logging
@@ -61,7 +64,7 @@ class GitlabApiHandler():
             issue_len = len(issues)
         """
 
-        num_pages = self.get_num_pages()
+        num_pages = self.get_num_pages(url)
 
         self.logger.info(f"Num pages: {num_pages}")
 
@@ -255,6 +258,16 @@ class GitlabApiHandler():
         return num_pages
 
     def hit_api(self, url, timeout, method):
+        """Attempt to retrieve data at given url.
+
+        Args:
+            url: The url to retrieve the data from
+            timeout: time to wait until timeout
+            method: GET, POST, etc. 
+
+        Returns
+            The response object from hitting the url and the data on the page
+        """
 
         return hit_api(self.key_manager, url, self.logger, timeout, method=method) 
 
