@@ -41,9 +41,9 @@ logo:
 def logo(brand=None):
     if brand is None:
         return redirect(url_for('static', filename='img/augur_logo.png'))
-    elif "augur" in brand:
+    if "augur" in brand:
         return logo(None)
-    elif "chaoss" in brand:
+    if "chaoss" in brand:
         return redirect(url_for('static', filename='img/Chaoss_Logo_white.png'))
     return ""
 
