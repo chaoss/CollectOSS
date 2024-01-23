@@ -17,8 +17,8 @@ exec(open("metadata.py").read())
 
 # Make sure pip and wheel are up to date
 
-python3 -m ensurepip --default-pip
-python3 -m pip install --upgrade pip setuptools wheel
+exec(python3 -m ensurepip --default-pip)
+exec(python3 -m pip install --upgrade pip setuptools wheel)
 
 setup(
     name=__slug__,
