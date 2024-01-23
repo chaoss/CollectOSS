@@ -6,6 +6,7 @@ Install augur package with pip.
 """
 from setuptools import setup, find_packages
 from os import path
+import wheel
 
 here = path.abspath(path.dirname(__file__))
 
@@ -14,11 +15,6 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 exec(open("metadata.py").read())
-
-RUN pip install -U \
-    pip \
-    setuptools \
-    wheel
 
 setup(
     name=__slug__,
