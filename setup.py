@@ -6,7 +6,6 @@ Install augur package with pip.
 """
 from setuptools import setup, find_packages
 from os import path
-import wheel
 
 here = path.abspath(path.dirname(__file__))
 
