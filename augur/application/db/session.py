@@ -197,6 +197,7 @@ class DatabaseSession(Session):
                     if(len(data) == 1):
                         raise e
                     else:
+                        time.sleep(5)
                         first_half = data[:len(data)//2]
                         second_half = data[len(data)//2:]
 
@@ -234,6 +235,7 @@ class DatabaseSession(Session):
                 if(len(data) == 1):
                     raise e
                 else:
+                    time.sp
                     first_half = data[:len(data)//2]
                     second_half = data[len(data)//2:]
 
