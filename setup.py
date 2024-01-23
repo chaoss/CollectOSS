@@ -15,6 +15,11 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 exec(open("metadata.py").read())
 
+# Make sure pip and wheel are up to date
+
+python3 -m ensurepip --default-pip
+python3 -m pip install --upgrade pip setuptools wheel
+
 setup(
     name=__slug__,
     version=__version__,
