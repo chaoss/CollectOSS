@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-FROM python:3.8.11-slim-buster
+FROM python:3.10-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
 LABEL version="0.62.0"
