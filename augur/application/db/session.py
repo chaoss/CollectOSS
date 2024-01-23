@@ -240,6 +240,9 @@ class DatabaseSession(Session):
                     self.insert_data(first_half, natural_keys, return_columns, string_fields, on_conflict_update)
                     self.insert_data(second_half, natural_keys, return_columns, string_fields, on_conflict_update)
 
+                    self.insert_data(first_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
+                    self.insert_data(second_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
+
         else:
             self.logger.error("Unable to insert and return data in 10 attempts")
             return None
