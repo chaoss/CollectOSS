@@ -13,7 +13,8 @@ RUN set -x \
         bash \
         curl \
         gcc \
-        python3-pip \
+        python3.10-distutils \
+        python3.10 -m pip _rest_of_the_pip \
         wget \
         postgresql-client \
     && rm -rf /var/lib/apt/lists/*
@@ -29,7 +30,7 @@ COPY ./setup.py .
 COPY ./scripts/ scripts/
 
 #COPY ./docker/backend/docker.config.json .
-RUN python3 -m venv /opt/venv
+RUN python310 -m venv /opt/venv
 
 RUN set -x \
     && /opt/venv/bin/pip install .
