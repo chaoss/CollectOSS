@@ -13,6 +13,9 @@ RUN set -x \
         bash \
         curl \
         gcc \
+        musl-dev \
+        linux-headers 
+        python3-dev \
         python3-distutils \
         wget \
         postgresql-client \
