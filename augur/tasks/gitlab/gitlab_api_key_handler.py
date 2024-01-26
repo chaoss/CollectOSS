@@ -1,3 +1,8 @@
+"""
+Defines the handler logic needed to effectively fetch GitLab auth keys
+from either the redis cache or the database. Follows the same patterns as
+the github api key handler.
+"""
 import httpx
 import time
 import random
@@ -11,7 +16,7 @@ from sqlalchemy import func
 
 
 class NoValidKeysError(Exception):
-    pass
+    """Defines an exception that is thrown when no gitlab keys are valid"""
 
 
 class GitlabApiKeyHandler():
@@ -102,7 +107,9 @@ class GitlabApiKeyHandler():
             try:
                 keys = self.get_api_keys_from_database()
                 break
-            except:
+            except Exception as e:
+                self.logger.error(f"Ran into issue when fetching key from database:\n {e}\n")
+                self.logger.error("Sleeping for 5 seconds...")
                 time.sleep(5)
                 attempts += 1
 
@@ -135,7 +142,7 @@ class GitlabApiKeyHandler():
 
 
         # shuffling the keys so not all processes get the same keys in the same order
-        valid_now = valid_keys
+        #valid_now = valid_keys
         #try: 
             #self.logger.info(f'valid keys before shuffle: {valid_keys}')
             #valid_keys = random.sample(valid_keys, len(valid_keys))

@@ -72,7 +72,7 @@ setup(
         "slack==0.0.2", # 0.0.2
         "boto3==1.17.57", # 1.24.56
         "toml", # 0.10.2
-        "mistune==0.8.4", # 2.0.4
+        "mistune", # 2.0.4
         "pyYaml", # 6.0
         "redis==4.3.3", # 4.3.4
         "XlsxWriter==1.3.7", # 3.0.3
@@ -94,11 +94,11 @@ setup(
             "pytest==6.2.5", # 7.1.2
             "toml >= 0.10.2", # 0.10.2
             "ipdb==0.13.9", # 0.13.9
-            "sphinx==4.2.0", # 5.1.1
-            "sphinx_rtd_theme==1.0.0", # 1.0.0
-            "sphinxcontrib-openapi==0.7.0", # 0.7.0
+            "sphinx==7.2.6", #4.2.0", # 5.1.1
+            "sphinx_rtd_theme==2.0.0", # 1.0.0
+            "sphinxcontrib-openapi==0.8.3", # 0.7.0
             "sphinxcontrib-redoc==1.6.0", # 1.6.0
-            "docutils==0.17.1" # 0.19
+            "docutils==0.20.1" # 0.19
         ]
     },
     entry_points={

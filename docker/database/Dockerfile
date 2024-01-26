@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-FROM postgres:12
+FROM postgres:14
 
 LABEL maintainer="outdoors@acm.org"
 LABEL version="0.62.0"

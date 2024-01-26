@@ -1,4 +1,8 @@
+"""
+Defines the api routes for the augur views
+"""
 import logging
+import math
 from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash
 from sqlalchemy.orm.exc import NoResultFound
 from .utils import *
@@ -37,9 +41,9 @@ logo:
 def logo(brand=None):
     if brand is None:
         return redirect(url_for('static', filename='img/augur_logo.png'))
-    elif "augur" in brand:
+    if "augur" in brand:
         return logo(None)
-    elif "chaoss" in brand:
+    if "chaoss" in brand:
         return redirect(url_for('static', filename='img/Chaoss_Logo_white.png'))
     return ""
 
