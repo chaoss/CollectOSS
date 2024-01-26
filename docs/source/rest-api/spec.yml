@@ -113,19 +113,19 @@ paths:
                   description: 'Repository description. Example: null'
                   type: string
                 commits_all_time:
-                  description: 'How many commits have been made to this respository. Example: 24'
+                  description: 'How many commits have been made to this repository? Example: 24'
                   type: integer
                 issues_all_time:
-                  description: 'How many issues have been raised on this respository. Example: 1'
+                  description: 'How many issues have been raised on this repository? Example: 1'
                   type: integer
                 pull_requests_all_time:
-                  description: 'How many pull requests have been made to this reqpository. Example: 7'
+                  description: 'How many pull requests have been made to this repository? Example: 7'
                   type: integer
                 repo_id:
                   description: 'Repository ID, should match provided URL parameter. Example: 25551'
                   type: integer
                 repo_name:
-                  description: 'Name of the provided rpository. Example: 3scale-operator-metadata'
+                  description: 'Name of the provided repository. Example: 3scale-operator-metadata'
                   type: string
                 rg_name:
                   description: 'Name of the repository group containing this repo. Example: 3scale'
