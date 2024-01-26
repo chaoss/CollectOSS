@@ -32,6 +32,15 @@ COPY ./scripts/ scripts/
 RUN python3 -m venv /opt/venv
 
 RUN set -x \
+    && /opt/venv/bin/pip install --upgrade pip 
+
+RUN set -x \
+    && /opt/venv/bin/pip install wheel
+    
+RUN set -x \
+    && /opt/venv/bin/pip install .
+    
+RUN set -x \
     && /opt/venv/bin/pip install --upgrade pip \
     && /opt/venv/bin/pip install wheel \
     && /opt/venv/bin/pip install .
