@@ -14,7 +14,6 @@ RUN set -x \
         curl \
         gcc \
         python3-distutils \
-        python3 -m pip _rest_of_the_pip \
         wget \
         postgresql-client \
     && rm -rf /var/lib/apt/lists/*
