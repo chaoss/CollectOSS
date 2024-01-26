@@ -59,15 +59,35 @@ def refresh_materialized_views():
                 COMMIT; 
     """)
 
+    mv9_refresh = s.sql.text("""    
 
+                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_user_repos with data;
+                COMMIT; 
+    """)
 
-    try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv1_refresh)
-    except Exception as e: 
-        logger.info(f"error is {e}")
-        pass 
+    mv10_refresh = s.sql.text("""    
 
+                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_pr_response_times with data;
+                COMMIT; 
+    """)
+
+    mv11_refresh = s.sql.text("""    
+
+                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_pr_assignments with data;
+                COMMIT; 
+    """)
+
+    mv12_refresh = s.sql.text("""    
+
+                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_issue_assignments with data;
+                COMMIT; 
+    """)
+
+    mv13_refresh = s.sql.text("""    
+
+                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_pr_response with data;
+                COMMIT; 
+    """)
 
     try: 
         with DatabaseSession(logger, engine) as session:
@@ -125,7 +145,40 @@ def refresh_materialized_views():
         logger.info(f"error is {e}")
         pass 
 
+    try: 
+        with DatabaseSession(logger, engine) as session:
+            session.execute_sql(mv9_refresh)
+    except Exception as e: 
+        logger.info(f"error is {e}")
+        pass 
 
+    try: 
+        with DatabaseSession(logger, engine) as session:
+            session.execute_sql(mv10_refresh)
+    except Exception as e: 
+        logger.info(f"error is {e}")
+        pass 
+
+    try: 
+        with DatabaseSession(logger, engine) as session:
+            session.execute_sql(mv11_refresh)
+    except Exception as e: 
+        logger.info(f"error is {e}")
+        pass 
+
+    try: 
+        with DatabaseSession(logger, engine) as session:
+            session.execute_sql(mv12_refresh)
+    except Exception as e: 
+        logger.info(f"error is {e}")
+        pass 
+
+    try: 
+        with DatabaseSession(logger, engine) as session:
+            session.execute_sql(mv13_refresh)
+    except Exception as e: 
+        logger.info(f"error is {e}")
+        pass 
 
 
 
