@@ -29,7 +29,7 @@ COPY ./setup.py .
 COPY ./scripts/ scripts/
 
 #COPY ./docker/backend/docker.config.json .
-RUN python310 -m venv /opt/venv
+RUN python31 -m venv /opt/venv
 
 RUN set -x \
     && /opt/venv/bin/pip install .
