@@ -14,7 +14,7 @@ RUN set -x \
         curl \
         gcc \
         musl-dev \
-        linux-headers 
+        linux-headers \
         python3-dev \
         python3-distutils \
         wget \
