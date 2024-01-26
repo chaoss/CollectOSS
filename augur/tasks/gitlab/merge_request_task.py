@@ -361,7 +361,7 @@ def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
         augur_db: sqlalchemy db object 
     """
 
-    tool_source = "Mr Reviewr Task"
+    tool_source = "Mr Reviewer Task"
     tool_version = "2.0"
     data_source = "Gitlab API"
 
