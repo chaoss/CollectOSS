@@ -313,7 +313,7 @@ def add_query_params(url: str, additional_params: dict) -> str:
 
     Args:
         url: the url that is being modified
-        additional_params: key value pairs specififying the paramaters to be added
+        additional_params: key value pairs specifying the parameters to be added
 
     Returns:
         The url with the key value pairs in additional_params added as query params
