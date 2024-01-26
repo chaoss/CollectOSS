@@ -286,7 +286,7 @@ class GitlabApiHandler():
 
 ################################################################################
 
-# Url Helper Method to remove query paramaters from the url
+# Url Helper Method to remove query parameters from the url
 def clean_url(url: str, keys: List[str]) -> str:
     """Remove query params from url.
 
