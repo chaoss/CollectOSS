@@ -352,10 +352,10 @@ def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
 
 def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
     """
-    Retrieve only the needed data for mr reviewer data from the api response
+    Retrieve only the needed data for mr Reviewer data from the api response
 
     Arguments:
-        data: List of dictionaries of mr reviewer data
+        data: List of dictionaries of mr Reviewer data
         repo_id: augur id of the repo
         logger: logging object
         augur_db: sqlalchemy db object 
@@ -553,7 +553,7 @@ def retrieve_merge_request_data(ids, url, name, owner, repo, key_auth, logger, r
                 else:
                     all_data[id] = page_data
         else:
-            raise Exception(f"Unexpected reponse type: {response_type}")
+            raise Exception(f"Unexpected response type: {response_type}")
         
         index += 1
 
