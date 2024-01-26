@@ -1088,6 +1088,7 @@ class Repo(Base):
         Args:
             url: repo url
             repo_group_id: group to assign repo to
+            repo_type: github or gitlab
 
         Note:
             If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
