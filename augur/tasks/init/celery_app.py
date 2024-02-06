@@ -129,14 +129,6 @@ class AugurMlRepoCollectionTask(AugurCoreRepoCollectionTask):
         repo_git = args[0]
         self.augur_handle_task_failure(exc,task_id,repo_git, "ml_task_failure", collection_hook='ml')
 
-#Create task subclasses that set their status to standby instead of error so that they can be retried.
-class AugurCoreRepoCollectionStandbyTask(AugurCoreRepoCollectionTask):
-    def on_failure(self,exc,task_id,args,kwargs,einfo):
-        repo_git = args[0]
-        self.augur_handle_task_failure(exc, task_id, 
-            repo_git, "core_task_failure",after_fail=CollectionState.STANDBY.value)
-        
-#TODO: Make certain tasks such as detect_github_repo_move able to softly fail and be retried later.
 
 #task_cls='augur.tasks.init.celery_app:AugurCoreRepoCollectionTask'
 celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)
