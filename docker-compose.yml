@@ -8,8 +8,11 @@ services:
       - "POSTGRES_DB=augur"
       - "POSTGRES_USER=${AUGUR_DB_USER:-augur}"
       - "POSTGRES_PASSWORD=${AUGUR_DB_PASSWORD:-augur}"
+      - "PGDATA=/var/lib/postgresql/data/pgdata"
     ports:
       - "127.0.0.1:${AUGUR_DB_PORT:-5432}:5432"
+    volumes:
+      - augurpostgres:/var/lib/postgresql/data
 
   redis:
     image: "redis:alpine"
@@ -43,6 +46,8 @@ services:
   
 volumes:
   facade:
+    driver: local
+  augurpostgres:
     driver: local
 
 

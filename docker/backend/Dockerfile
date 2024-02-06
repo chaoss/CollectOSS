@@ -13,7 +13,7 @@ RUN set -x \
         bash \
         curl \
         gcc \
-        python3-pip \
+        python3-dev \
         wget \
         postgresql-client \
     && rm -rf /var/lib/apt/lists/*
