@@ -35,6 +35,7 @@ class CollectionState(Enum):
     INITIALIZING = "Initializing"
     UPDATE = "Update"
     FAILED_CLONE = "Failed Clone"
+    STANDBY = "Standby"
 
 def get_list_of_all_users(session):
     #Get a list of all users.
