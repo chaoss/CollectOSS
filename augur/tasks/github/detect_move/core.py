@@ -12,16 +12,16 @@ from augur.application.db.util import execute_session_query
 
 
 def update_repo_with_dict(repo,new_dict,logger,db):
-"""
-    Update a repository record in the database using a dictionary tagged with
-    the appropriate table fields
+    """
+        Update a repository record in the database using a dictionary tagged with
+        the appropriate table fields
 
-    Args:
-        repo: orm repo object to update
-        new_dict: dict of new values to add to the repo record
-        logger: logging object
-        db: db object
-"""
+        Args:
+            repo: orm repo object to update
+            new_dict: dict of new values to add to the repo record
+            logger: logging object
+            db: db object
+    """
     
     to_insert = repo.__dict__
     del to_insert['_sa_instance_state']
