@@ -30,6 +30,7 @@ def downgrade():
 def mview_keys_26(upgrade=True):
 
    if upgrade:
+      conn = op.get_bind() 
       conn.execute(text("""
       drop materialized view if exists augur_data.explorer_pr_assignments; 
       drop materialized view if exists augur_data.explorer_user_repos; 
