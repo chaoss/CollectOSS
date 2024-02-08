@@ -11,10 +11,19 @@ from augur.application.db.util import execute_session_query
 
 
 
-def update_repo_with_dict(current_dict,new_dict,logger,db):
+def update_repo_with_dict(repo,new_dict,logger,db):
+"""
+    Update a repository record in the database using a dictionary tagged with
+    the appropriate table fields
+
+    Args:
+        repo: orm repo object to update
+        new_dict: dict of new values to add to the repo record
+        logger: logging object
+        db: db object
+"""
     
-    
-    to_insert = current_dict
+    to_insert = repo.__dict__
     del to_insert['_sa_instance_state']
     to_insert.update(new_dict)
 
@@ -63,7 +72,7 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
         'data_collection_date': datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
         }
 
-        update_repo_with_dict(current_repo_dict, repo_update_dict, logger, augur_db)
+        update_repo_with_dict(repo, repo_update_dict, logger, augur_db)
 
         raise Exception(f"ERROR: Repo not found at requested host {repo.repo_git}")
     elif attempts >= 10:
@@ -93,7 +102,7 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
         'description': f"(Originally hosted at {url}) {old_description}"
     }
 
-    update_repo_with_dict(current_repo_dict, repo_update_dict, logger,augur_db)
+    update_repo_with_dict(repo, repo_update_dict, logger,augur_db)
 
     statusQuery = augur_db.session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
 
