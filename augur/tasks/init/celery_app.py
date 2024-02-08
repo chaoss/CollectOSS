@@ -20,16 +20,7 @@ from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
 from augur.application.db.models import CollectionStatus, Repo
-
-class CollectionState(Enum):
-    SUCCESS = "Success"
-    PENDING = "Pending"
-    ERROR = "Error"
-    COLLECTING = "Collecting"
-    INITIALIZING = "Initializing"
-    UPDATE = "Update"
-    FAILED_CLONE = "Failed Clone"
-
+from augur.tasks.util.collection_state import CollectionState
 
 logger = logging.getLogger(__name__)
 
@@ -210,7 +201,7 @@ def setup_periodic_tasks(sender, **kwargs):
     """
     from celery.schedules import crontab
     from augur.tasks.start_tasks import augur_collection_monitor, augur_collection_update_weights
-    from augur.tasks.start_tasks import non_repo_domain_tasks
+    from augur.tasks.start_tasks import non_repo_domain_tasks, retry_404_repos
     from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
     from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
@@ -234,6 +225,9 @@ def setup_periodic_tasks(sender, **kwargs):
 
         logger.info(f"Scheduling update of collection weights on midnight each day")
         sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
+
+        logger.info(f"Setting 404 repos to be marked for retry on midnight each day")
+        sender.add_periodic_task(crontab(hour=0, minute=0),retry_404_repos.s())
 
         logger.info(f"Scheduling contributor breadth every 30 days")
         thirty_days_in_seconds = 30*24*60*60

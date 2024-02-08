@@ -36,6 +36,7 @@ from logging import Logger
 from enum import Enum
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.models import CollectionStatus, Repo
+from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 
@@ -327,6 +328,22 @@ def augur_collection_update_weights():
             session.execute(update_query)
             session.commit()
             #git_update_commit_count_weight(repo_git)
+
+@celery.task
+def retry_404_repos():
+    from augur.tasks.init.celery_app import engine
+    logger = logging.getLogger(create_collection_status_records.__name__)
+
+    with DatabaseSession(logger,engine) as session:
+        query = s.sql.text(f"""UPDATE repo SET secondary_staus = {CollectionState.STANDBY.value}"""
+        f""" WHERE secondary_status = '{CollectionState.PENDING.value}' ;"""
+        f"""UPDATE repo SET core_status = {CollectionState.STANDBY.value}"""
+        f""" WHERE core_status = '{CollectionState.PENDING.value}' ;"""
+        )
+
+        session.execute_sql(query)
+
+
 
 #Retry this task for every issue so that repos that were added manually get the chance to be added to the collection_status table.
 @celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)

@@ -6,14 +6,9 @@ from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.util import parse_json_response
 import logging
 from datetime import datetime
-from enum import Enum
+from augur.tasks.utl.collection_state import CollectionState
 from augur.application.db.util import execute_session_query
 
-class CollectionState(Enum):
-    SUCCESS = "Success"
-    PENDING = "Pending"
-    ERROR = "Error"
-    COLLECTING = "Collecting"
 
 
 def update_repo_with_dict(current_dict,new_dict,logger,db):
@@ -114,6 +109,6 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
 
     augur_db.session.commit()
 
-    raise Exception("ERROR: Repo has moved! Marked repo as pending and stopped collection")
+    raise Exception("ERROR: Repo has moved! Marked repo as standby and stopped collection")
 
     

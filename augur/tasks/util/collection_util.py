@@ -24,18 +24,8 @@ from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.application.db.session import DatabaseSession
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
+from augur.tasks.util.collection_state import CollectionState
 
-
-# class syntax
-class CollectionState(Enum):
-    SUCCESS = "Success"
-    PENDING = "Pending"
-    ERROR = "Error"
-    COLLECTING = "Collecting"
-    INITIALIZING = "Initializing"
-    UPDATE = "Update"
-    FAILED_CLONE = "Failed Clone"
-    STANDBY = "Standby"
 
 def get_list_of_all_users(session):
     #Get a list of all users.
