@@ -10,3 +10,4 @@ class CollectionState(Enum):
     UPDATE = "Update"
     FAILED_CLONE = "Failed Clone"
     STANDBY = "Standby"
+    IGNORE = "Ignore"

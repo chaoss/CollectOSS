@@ -330,15 +330,15 @@ def augur_collection_update_weights():
             #git_update_commit_count_weight(repo_git)
 
 @celery.task
-def retry_404_repos():
+def retry_errored_repos():
     from augur.tasks.init.celery_app import engine
     logger = logging.getLogger(create_collection_status_records.__name__)
 
     with DatabaseSession(logger,engine) as session:
-        query = s.sql.text(f"""UPDATE repo SET secondary_staus = {CollectionState.STANDBY.value}"""
-        f""" WHERE secondary_status = '{CollectionState.PENDING.value}' ;"""
-        f"""UPDATE repo SET core_status = {CollectionState.STANDBY.value}"""
-        f""" WHERE core_status = '{CollectionState.PENDING.value}' ;"""
+        query = s.sql.text(f"""UPDATE repo SET secondary_staus = {CollectionState.PENDING.value}"""
+        f""" WHERE secondary_status = '{CollectionState.ERROR.value}' ;"""
+        f"""UPDATE repo SET core_status = {CollectionState.PENDING.value}"""
+        f""" WHERE core_status = '{CollectionState.ERROR.value}' ;"""
         )
 
         session.execute_sql(query)

@@ -49,7 +49,6 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
 
     owner, name = get_owner_repo(repo.repo_git)
     url = f"https://api.github.com/repos/{owner}/{name}"
-    current_repo_dict = repo.__dict__
 
     attempts = 0
     while attempts < 10:
@@ -108,16 +107,16 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
 
     collectionRecord = execute_session_query(statusQuery,'one')
     if collection_hook == 'core':
-        collectionRecord.core_status = CollectionState.STANDBY.value
+        collectionRecord.core_status = CollectionState.IGNORE.value
         collectionRecord.core_task_id = None
         collectionRecord.core_data_last_collected = datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
     elif collection_hook == 'secondary':
-        collectionRecord.secondary_status = CollectionState.STANDBY.value
+        collectionRecord.secondary_status = CollectionState.IGNORE.value
         collectionRecord.secondary_task_id = None
         collectionRecord.secondary_data_last_collected = datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
 
     augur_db.session.commit()
 
-    raise Exception("ERROR: Repo has moved! Marked repo as standby and stopped collection")
+    raise Exception("ERROR: Repo has moved! Marked repo as IGNORE and stopped collection!")
 
     
