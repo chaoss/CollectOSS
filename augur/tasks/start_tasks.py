@@ -33,7 +33,6 @@ from augur.tasks.db.refresh_materialized_views import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from logging import Logger
-from enum import Enum
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.models import CollectionStatus, Repo
 from augur.tasks.util.collection_state import CollectionState
@@ -357,6 +356,13 @@ def retry_errored_repos():
 #Retry this task for every issue so that repos that were added manually get the chance to be added to the collection_status table.
 @celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
 def create_collection_status_records():
+    """
+    Automatic task that runs and checks for repos that haven't been given a collection_status
+    record corresponding to the state of their collection at the monent. 
+
+    A special celery task that automatically retries itself and has no max retries.
+    """
+
     from augur.tasks.init.celery_app import engine
     logger = logging.getLogger(create_collection_status_records.__name__)
 
