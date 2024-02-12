@@ -29,11 +29,11 @@ setup(
         'psycopg2-binary==2.9.3',
         #'sklearn==0.0.0',
         'scikit-learn==1.1.3',
-        'numpy==1.22.0',
+        'numpy==1.26.0',
         'nltk==3.6.6',
         'seaborn==0.11.1',
         'pandas==1.5.3',
-        'matplotlib==3.5.1'
+        'matplotlib>=3.5.1'
     ],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

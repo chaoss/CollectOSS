@@ -37,8 +37,63 @@ def extract_needed_pr_label_data(labels: List[dict], repo_id: int, tool_source: 
 
     return label_dicts
 
-# retrieve only the needed data for pr assignees from the api response
+
+def extract_needed_mr_label_data(labels: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+    """
+    Retrieve only the needed data for mr label data from the api response
+
+    Arguments:
+        labels: List of dictionaries of label data
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        List of parsed label dicts
+    """
+
+    if len(labels) == 0:
+        return []
+
+    label_dicts = []
+    for label in labels:
+
+        label_dict = {
+            'pr_src_id': label['id'],
+            'pr_src_node_id': None,
+            'pr_src_url': None,
+            'pr_src_description': label['name'],
+            'pr_src_color': label['color'],
+            # TODO: Populate this by making an api call for each label
+            'pr_src_default_bool': None,
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source,
+            'repo_id': repo_id
+        }
+
+        label_dicts.append(label_dict)
+
+    return label_dicts
+
+
 def extract_needed_pr_assignee_data(assignees: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+    """
+    Retrieve only the needed data for pr assignees from the api response
+
+    Arguments:
+        assignees: List of dictionaries of asignee data
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        List of parsed asignee dicts
+    """
 
     if len(assignees) == 0:
         return []
@@ -48,7 +103,6 @@ def extract_needed_pr_assignee_data(assignees: List[dict], repo_id: int, tool_so
     for assignee in assignees:
 
         assignee_dict = {
-            # store the pr_url data on in the pr assignee data for now so we can relate it back to a pr later
             'contrib_id': assignee["cntrb_id"],
             'pr_assignee_src_id': int(assignee['id']),
             'tool_source': tool_source,
@@ -61,8 +115,59 @@ def extract_needed_pr_assignee_data(assignees: List[dict], repo_id: int, tool_so
  
     return assignee_dicts
 
-# retrieve only the needed data for pr reviewers from the api response
+def extract_needed_merge_request_assignee_data(assignees: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+    """
+    Retrieve only the needed data for merge request assignees from the api response
+
+    Arguments:
+        assignees: List of dictionaries of asignee data
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        List of parsed asignee dicts
+    """
+
+    if len(assignees) == 0:
+        return []
+
+    assignee_dicts = []
+    for assignee in assignees:
+
+        assignee_dict = {
+                'contrib_id': None,
+                'repo_id': repo_id,
+                # TODO: Temporarily setting this to id which the id of the contributor, unitl we can get the contrib_id set and create a unique on the contrib_id and the pull_request_id
+                'pr_assignee_src_id': assignee["id"],
+                'tool_source': tool_source,
+                'tool_version': tool_version,
+                'data_source': data_source
+            }
+
+        assignee_dicts.append(assignee_dict)
+ 
+    return assignee_dicts
+
+
+
 def extract_needed_pr_reviewer_data(reviewers: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+    """
+    Retrieve only the needed data for pr reviewers from the api response
+
+    Arguments:
+        reviewers: List of dictionaries of reviewer data
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        List of parsed reviewer dicts
+    """
 
     if len(reviewers) == 0:
         return []
@@ -247,6 +352,42 @@ def extract_needed_issue_assignee_data(assignees: List[dict], repo_id: int, tool
 
     return assignee_dicts
 
+def extract_needed_gitlab_issue_assignee_data(assignees: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+    """
+    Retrieve only the needed data for gitlab issue assignees from the api response
+
+    Arguments:
+        assignees: List of dictionaries of gitlab assignee data
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        List of parsed assignee dicts
+    """
+
+    if len(assignees) == 0:
+        return []
+
+    assignee_dicts = []
+    for assignee in assignees:
+
+        assignee_dict = {
+            "cntrb_id": None,
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source,
+            "issue_assignee_src_id": assignee['id'],
+            "issue_assignee_src_node": None,
+            "repo_id": repo_id
+        }
+
+        assignee_dicts.append(assignee_dict)
+
+    return assignee_dicts
+
 
 
 # retrieve only the needed data for pr labels from the api response
@@ -277,9 +418,62 @@ def extract_needed_issue_label_data(labels: List[dict], repo_id: int, tool_sourc
     return label_dicts
 
 
+def extract_needed_gitlab_issue_label_data(labels: List[dict], repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+    """
+    Retrieve only the needed data for gitlab issue labels from the api response
 
-# retrieve only the needed data for pr labels from the api response
+    Arguments:
+        labels: List of dictionaries of gitlab issue label data
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        List of parsed label dicts
+    """
+
+    if len(labels) == 0:
+        return []
+
+    label_dicts = []
+    for label in labels:
+
+        label_dict = {
+            "label_text": label["name"],
+            "label_description": label.get("description", None),
+            "label_color": label['color'],
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source,
+            "label_src_id": label['id'],
+            "label_src_node_id": None, 
+            "repo_id": repo_id
+        }
+
+        label_dicts.append(label_dict)
+
+    return label_dicts
+
+
+
 def extract_needed_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+    """
+    Retrieve only the needed data for pr labels from the api response
+
+    Arguments:
+        message: Message data dict
+        issue_id: id of the issue
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        Dict of message ref data.
+    """
 
     message_ref_dict = {
         'issue_id': issue_id,
@@ -311,9 +505,21 @@ def extract_needed_pr_message_ref_data(comment: dict, pull_request_id: int, repo
      
 
 def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
-    
+    """
+    Retrieve only the needed data for the pr api response
 
-    pr_dict = {
+    Arguments:
+        pr: PR data dict
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+
+    
+    Returns:
+        Parsed pr dict
+    """
+
+    pr = {
         'repo_id': repo_id,
         'pr_url': pr['url'],
         # 1-22-2022 inconsistent casting; sometimes int, sometimes float in bulk_insert
@@ -367,9 +573,23 @@ def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
         'data_source': 'GitHub API'
     }
 
-    return pr_dict
+    return pr
 
 def extract_needed_issue_data(issue: dict, repo_id: int, tool_source: str, tool_version: str, data_source: str):
+    """
+    Retrieve only the needed data for the issue api response
+
+    Arguments:
+        issue: Issue data dict
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: platform source
+
+    
+    Returns:
+        Parsed issue dict
+    """
 
     dict_data = {
         'cntrb_id': None, # this the contributor who closed the issue
@@ -513,8 +733,438 @@ def extract_needed_pr_review_data(review, pull_request_id, repo_id, platform_id,
 
     return review_row
 
+def extract_needed_pr_data_from_gitlab_merge_request(pr, repo_id, tool_source, tool_version):
+    """
+    Retrieve only the needed data for the pr gitlab api response
 
+    Arguments:
+        pr: PR data dict
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+
+    
+    Returns:
+        Parsed pr dict
+    """
+
+    pr_dict = {
+        'repo_id': repo_id,
+        'pr_url': pr['web_url'],
+        'pr_src_id': pr['id'],
+        'pr_src_node_id': None,
+        'pr_html_url': pr['web_url'],
+        'pr_diff_url': None,
+        'pr_patch_url': None,
+        'pr_issue_url': None,
+        'pr_augur_issue_id': None,
+        'pr_src_number': pr['iid'],
+        'pr_src_state': pr['state'],
+        'pr_src_locked': pr['discussion_locked'],
+        'pr_src_title': pr['title'],
+        # TODO: Add contributor logic for gitlab
+        'pr_augur_contributor_id': None,
+        'pr_body': pr['description'],
+        'pr_created_at': pr['created_at'],
+        'pr_updated_at': pr['updated_at'],
+        'pr_closed_at': pr['closed_at'],
+        'pr_merged_at': pr['merged_at'],
+        'pr_merge_commit_sha': pr['merge_commit_sha'],
+        'pr_teams': None,
+        'pr_milestone': pr['milestone'].get('title') if pr['milestone'] else None,
+        'pr_commits_url': None,
+        'pr_review_comments_url': None,
+        'pr_review_comment_url': None,
+        'pr_comments_url': None,
+        'pr_statuses_url': None,
+        'pr_meta_head_id': None,
+        'pr_meta_base_id': None,
+        'pr_src_issue_url': None,
+        'pr_src_comments_url': None,  
+        'pr_src_review_comments_url': None,  
+        'pr_src_commits_url': None, 
+        'pr_src_statuses_url': None,
+        'pr_src_author_association': None,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': 'Gitlab API'
+    }
+
+    return pr_dict
+
+
+def extract_needed_issue_data_from_gitlab_issue(issue: dict, repo_id: int, tool_source: str, tool_version: str, data_source: str):
+    """
+    Retrieve only the needed data for the issue gitlab api response
+
+    Arguments:
+        issue: Issue data dict
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: platform source
+
+    
+    Returns:
+        Parsed issue dict
+    """
+
+    issue_dict = {
+            "repo_id": repo_id,
+            "reporter_id": None,
+            "pull_request": None,
+            "pull_request_id": None,
+            "created_at": issue['created_at'],
+            "issue_title": issue['title'],
+            "issue_body": issue['description'] if 'description' in issue else None,
+            "comment_count": issue['user_notes_count'],
+            "updated_at": issue['updated_at'],
+            "closed_at": issue['closed_at'],
+            "repository_url": issue['_links']['project'],
+            "issue_url": issue['_links']['self'],
+            "labels_url": None,
+            "comments_url": issue['_links']['notes'],
+            "events_url": None,
+            "html_url": issue['_links']['self'],
+            "issue_state": issue['state'],
+            "issue_node_id": None,
+            "gh_issue_id": issue['id'],
+            "gh_issue_number": issue['iid'],
+            "gh_user_id": issue['author']['id'],
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source
+    }
+
+    return issue_dict
+    
+
+
+def extract_gitlab_mr_event_data(event: dict, pr_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
+    """
+    Retrieve only the needed data for the mr event gitlab api response
+
+    Arguments:
+        event: Event data dict
+        pr_id: id of the pr
+        platform_id: id of the platform
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: platform source
+
+    
+    Returns:
+        Parsed event dict
+    """
+
+    mr_event = {
+        'pull_request_id': pr_id,
+        'cntrb_id': None,
+        'action': event['action_name'],
+        'action_commit_hash': None,
+        'created_at': event['created_at'],
+        'issue_event_src_id': event['target_id'],
+        'repo_id': repo_id,
+        'platform_id': platform_id,
+        'node_id': None,
+        'node_url': None,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source
+    }
+
+    return mr_event
+
+def extract_gitlab_issue_event_data(event: dict, issue_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
+    """
+    Retrieve only the needed data for the issue event gitlab api response
+
+    Arguments:
+        event: Event data dict
+        issue_id: id of the issue
+        platform_id: id of the platform
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: platform source
+
+    
+    Returns:
+        Parsed event dict
+    """
+
+    issue_event = {
+        "issue_event_src_id": event['target_id'],
+        "issue_id": issue_id,
+        "node_id": None,
+        "node_url": None,
+        "cntrb_id": None,
+        "created_at": event['created_at'],
+        "action": event["action_name"],
+        "action_commit_hash": None,
+        "platform_id": platform_id,
+        "repo_id" : repo_id,
+        "tool_source": tool_source,
+        "tool_version": tool_version,
+        "data_source": data_source
+    }
+
+    return issue_event
+
+
+def extract_needed_mr_reviewer_data(data: List[dict], pull_request_id, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+    """
+    Retrieve only the needed data for pr reviewers from the api response
+
+    Arguments:
+        data: List of dictionaries that contain mr reviewer data to parse
+        pull_request_id: id of the PR
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        List of extracted relevant data from needed mr reviwer data
+    """
+
+    if len(data) == 0:
+        return []
+    
+    reviewer_dicts = []
+    for x in data:
+
+        for _ in x["suggested_approvers"]:
+
+            reviewer_dict = {
+                'pull_request_id': pull_request_id,
+                'cntrb_id': None,
+                'tool_source': tool_source,
+                'tool_version': tool_version,
+                'data_source': data_source
+            }
+
+            reviewer_dicts.append(reviewer_dict)
+
+    return reviewer_dicts
+
+
+def extract_needed_mr_commit_data(commit, repo_id, pull_request_id, tool_source, tool_version, data_source):
+    """
+    Retrieve only the needed data for mr commit data from the api response
+
+    Arguments:
+        commit: commit data dictionary
+        repo_id: augur id of the repository
+        pull_request_id: id of the PR
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        Dictionary of the extracted commit data
+    """
+
+    commit = {
+        'pull_request_id': pull_request_id,
+        'pr_cmt_sha': commit['id'],
+        'pr_cmt_node_id': None,
+        'pr_cmt_message': commit['message'],
+        'repo_id': repo_id,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source,
+    }
+
+    return commit
+
+
+def extract_needed_mr_file_data(gitlab_file_data, repo_id, pull_request_id, tool_source, tool_version, data_source):
+    """
+    Retrieve only the needed data for mr file data from the api response
+
+    Arguments:
+        gitlab_file_data: file data dictionary
+        repo_id: augur id of the repository
+        pull_request_id: id of the PR
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        List of dicts of parsed gitlab file changes
+    """
+    files = []
+
+    changes = gitlab_file_data["changes"]
+    for file_changes in changes:
+        try:
+            deletes = int(file_changes['diff'].split('@@')[1].strip().split(' ')[0].split(',')[1])
+            adds = int(file_changes['diff'].split('@@')[1].strip().split(' ')[1].split(',')[1])
+        except Exception:
+            deletes = 0
+            adds = 0
+
+        file_dict = {
+            'pull_request_id': pull_request_id,
+            'repo_id': repo_id,
+            'pr_file_additions': adds,
+            'pr_file_deletions': deletes,
+            'pr_file_path': file_changes['old_path'],
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source,
+        }
+
+        files.append(file_dict)
+
+    return files
+
+
+def extract_needed_mr_metadata(mr_dict, repo_id, pull_request_id, tool_source, tool_version, data_source):
+    """
+    Retrieve only the needed data for mr metadata from the api response
+
+    Arguments:
+        mr_dict: mr data dictionary
+        repo_id: augur id of the repository
+        pull_request_id: id of the PR
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        List of dicts of parsed mr metadata
+    """
+    head = {'sha': mr_dict['diff_refs']['head_sha'],
+            'ref': mr_dict['target_branch'],
+            'label': str(mr_dict['target_project_id']) + ':' + mr_dict['target_branch'],
+            'author': mr_dict['author']['username'],
+            'repo': str(mr_dict['target_project_id'])
+            }
+
+    base = {'sha': mr_dict['diff_refs']['base_sha'],
+            'ref': mr_dict['source_branch'],
+            'label': str(mr_dict['source_project_id']) + ':' + mr_dict['source_branch'],
+            'author': mr_dict['author']['username'],
+            'repo': str(mr_dict['source_project_id'])
+            }
+
+    pr_meta_dict = {
+        'head': head,
+        'base': base
+    }
+    all_meta = []
+    for pr_side, pr_meta_data in pr_meta_dict.items():
+        pr_meta = {
+            'pull_request_id': pull_request_id,
+            'repo_id': repo_id,
+            'pr_head_or_base': pr_side,
+            'pr_src_meta_label': pr_meta_data['label'],
+            'pr_src_meta_ref': pr_meta_data['ref'],
+            'pr_sha': pr_meta_data['sha'],
+            'cntrb_id': None,
+            'tool_source': tool_source,
+            'tool_version': tool_version,
+            'data_source': data_source
+        }
+        all_meta.append(pr_meta)
+
+    return all_meta
+
+
+def extract_needed_gitlab_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+    """
+    Extract the message id for a given message on an issue from an api response
+    and connect it to the relevant repo id.
+
+    Arguments:
+        message: message data dict
+        issue_id: id of the issue
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        Dict containing the message ref id as well as the repo id.
+    """
+
+    message_ref_dict = {
+        'issue_id': issue_id,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source,
+        'issue_msg_ref_src_comment_id': int(message['id']),
+        'issue_msg_ref_src_node_id': None,
+        'repo_id': repo_id
+    }
+
+    return message_ref_dict
+
+
+def extract_needed_gitlab_message_data(comment: dict, platform_id: int, tool_source: str, tool_version: str, data_source: str):
+    """
+    Extract specific metadata for a comment from an api response
+    and connect it to the relevant platform id.
+
+    Arguments:
+        comment: comment data dict
+        platform_id: augur id of the relevant platform
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        Dict containing parsed comment text and metadata
+    """
+
+    comment_dict = {
+        "pltfrm_id": platform_id,
+        "msg_text": comment['body'],
+        "msg_timestamp": comment['created_at'],
+        "cntrb_id": None,
+        "platform_msg_id": int(comment['id']),
+        "tool_source": tool_source,
+        "tool_version": tool_version,
+        "data_source": data_source
+    }
+
+    return comment_dict
+
+def extract_needed_gitlab_mr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+    """
+    Retrieve only the needed data for pr labels from the api response
+
+    Arguments:
+        comment: comment data dict
+        pull_request_id: id of the PR
+        repo_id: augur id of the repository
+        platform_id: augur id of the relevant platform
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
+    
+    Returns:
+        Dict containing the comment, pr and repo id of the parsed comment data.
+    """
+
+    pr_msg_ref = {
+        'pull_request_id': pull_request_id,
+        'pr_message_ref_src_comment_id': comment['id'],
+        'repo_id': repo_id,
+        'pr_message_ref_src_node_id': None,
+        'tool_source': tool_source,
+        'tool_version': tool_version,
+        'data_source': data_source
+    }
                 
-
-
+    return pr_msg_ref 
 

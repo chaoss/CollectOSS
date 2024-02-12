@@ -1,3 +1,8 @@
+"""
+Defines the handler logic needed to effectively fetch GitLab auth keys
+from either the redis cache or the database. Follows the same patterns as
+the github api key handler.
+"""
 import httpx
 import time
 import random
@@ -11,16 +16,16 @@ from sqlalchemy import func
 
 
 class NoValidKeysError(Exception):
-    pass
+    """Defines an exception that is thrown when no gitlab keys are valid"""
 
 
-class GithubApiKeyHandler():
-    """Handles Github API key retrieval from the database and redis
+class GitlabApiKeyHandler():
+    """Handles Gitlab API key retrieval from the database and redis
 
     Attributes:
         session (DatabaseSession): Database connection
         logger (logging.Logger): Handles all logs
-        oauth_redis_key (str): The key where the github api keys are cached in redis
+        oauth_redis_key (str): The key where the gitlab api keys are cached in redis
         redis_key_list (RedisList): Acts like a python list, and interacts directly with the redis cache
         config_key (str): The api key that is stored in the users config table
         key: (List[str]): List of keys retrieve from database or cache
@@ -32,7 +37,7 @@ class GithubApiKeyHandler():
         self.logger = session.logger
         self.config = AugurConfig(self.logger, session)
 
-        self.oauth_redis_key = "github_oauth_keys_list"
+        self.oauth_redis_key = "gitlab_oauth_keys_list"
 
         self.redis_key_list = RedisList(self.oauth_redis_key)
 
@@ -40,28 +45,27 @@ class GithubApiKeyHandler():
 
         self.keys = self.get_api_keys()
 
-        self.logger.info(f"Retrieved {len(self.keys)} github api keys for use")
+        self.logger.info(f"Retrieved {len(self.keys)} gitlab api keys for use")
 
     def get_random_key(self):
         """Retrieves a random key from the list of keys
 
         Returns:
-            A random github api key
+            A random gitlab api key
         """
 
         return random.choice(self.keys)
 
     def get_config_key(self) -> str:
-        """Retrieves the users github api key from their config table
+        """Retrieves the users gitlab api key from their config table
 
         Returns:
             Github API key from config table
         """
-
-        return self.config.get_value("Keys", "github_api_key")
+        return self.config.get_value("Keys", "gitlab_api_key")
 
     def get_api_keys_from_database(self) -> List[str]:
-        """Retieves all github api keys from database
+        """Retieves all gitlab api keys from database
 
         Note:
             It retrieves all the keys from the database except the one defined in the users config
@@ -74,7 +78,7 @@ class GithubApiKeyHandler():
         select = WorkerOauth.access_token
         # randomizing the order at db time
         #select.order_by(func.random())
-        where = [WorkerOauth.access_token != self.config_key, WorkerOauth.platform == 'github']
+        where = [WorkerOauth.access_token != self.config_key, WorkerOauth.platform == 'gitlab']
 
         return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).order_by(func.random()).all()]
         #return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).all()]
@@ -103,7 +107,9 @@ class GithubApiKeyHandler():
             try:
                 keys = self.get_api_keys_from_database()
                 break
-            except:
+            except Exception as e:
+                self.logger.error(f"Ran into issue when fetching key from database:\n {e}\n")
+                self.logger.error("Sleeping for 5 seconds...")
                 time.sleep(5)
                 attempts += 1
 
@@ -132,11 +138,11 @@ class GithubApiKeyHandler():
         self.redis_key_list.extend(valid_keys)
 
         if not valid_keys:
-            raise NoValidKeysError("No valid github api keys found in the config or worker oauth table")
+            raise NoValidKeysError("No valid gitlab api keys found in the config or worker oauth table")
 
 
         # shuffling the keys so not all processes get the same keys in the same order
-        valid_now = valid_keys
+        #valid_now = valid_keys
         #try: 
             #self.logger.info(f'valid keys before shuffle: {valid_keys}')
             #valid_keys = random.sample(valid_keys, len(valid_keys))
@@ -149,27 +155,22 @@ class GithubApiKeyHandler():
         return valid_keys
 
     def is_bad_api_key(self, client: httpx.Client, oauth_key: str) -> bool:
-        """Determines if a Github API is bad
+        """Determines if a Gitlab API key is bad
 
         Args:
             client: makes the http requests
-            oauth_key: github api key that is being tested
+            oauth_key: gitlab api key that is being tested
 
         Returns:
             True if key is bad. False if the key is good
         """
 
-        # this endpoint allows us to check the rate limit, but it does not use one of our 5000 requests
-        url = "https://api.github.com/rate_limit"
+        url = "https://gitlab.com/api/v4/user"
 
-        headers = {'Authorization': f'token {oauth_key}'}
+        headers = {'Authorization': f'Bearer {oauth_key}'}
 
-        data = client.request(method="GET", url=url, headers=headers, timeout=180).json()
-
-        try:
-            if data["message"] == "Bad credentials":
-                return True
-        except KeyError:
-            pass
-
+        response = client.request(method="GET", url=url, headers=headers, timeout=180)
+        if response.status_code == 401:
+            return True
+        
         return False

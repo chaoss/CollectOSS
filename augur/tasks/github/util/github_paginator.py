@@ -154,6 +154,8 @@ class GithubApiResult(Enum):
     SECONDARY_RATE_LIMIT = 4
     RATE_LIMIT_EXCEEDED = 5
     ABUSE_MECHANISM_TRIGGERED = 6
+    # TODO: Add bad credentials detection that removes key 
+    # from redis if bad credentials are detected
     BAD_CREDENTIALS = 7
     HTML = 8
     EMPTY_STRING = 9

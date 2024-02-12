@@ -227,7 +227,7 @@ def add_user_repo():
     repo = request.args.get("repo_url")
     group_name = request.args.get("group_name")
 
-    result = current_user.add_repo(group_name, repo)
+    result = current_user.add_github_repo(group_name, repo)
 
     return jsonify(result[1])
 
@@ -260,7 +260,7 @@ def add_user_org():
     org = request.args.get("org_url")
     group_name = request.args.get("group_name")
 
-    result = current_user.add_org(group_name, org)
+    result = current_user.add_github_org(group_name, org)
 
     return jsonify(result[1])
 
