@@ -33,9 +33,9 @@ from augur.tasks.db.refresh_materialized_views import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from logging import Logger
-from enum import Enum
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.models import CollectionStatus, Repo
+from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 
@@ -328,9 +328,41 @@ def augur_collection_update_weights():
             session.commit()
             #git_update_commit_count_weight(repo_git)
 
+@celery.task
+def retry_errored_repos():
+    """
+        Periodic task to reset repositories that have errored and try again.
+    """
+    from augur.tasks.init.celery_app import engine
+    logger = logging.getLogger(create_collection_status_records.__name__)
+
+    #TODO: Isaac needs to normalize the status's to be abstract in the 
+    #collection_status table once augur dev is less unstable.
+    with DatabaseSession(logger,engine) as session:
+        query = s.sql.text(f"""UPDATE repo SET secondary_staus = {CollectionState.PENDING.value}"""
+        f""" WHERE secondary_status = '{CollectionState.ERROR.value}' ;"""
+        f"""UPDATE repo SET core_status = {CollectionState.PENDING.value}"""
+        f""" WHERE core_status = '{CollectionState.ERROR.value}' ;"""
+        f"""UPDATE repo SET facade_status = {CollectionState.PENDING.value}"""
+        f""" WHERE facade_status = '{CollectionState.ERROR.value}' ;"""
+        f"""UPDATE repo SET ml_status = {CollectionState.PENDING.value}"""
+        f""" WHERE ml_status = '{CollectionState.ERROR.value}' ;"""
+        )
+
+        session.execute_sql(query)
+
+
+
 #Retry this task for every issue so that repos that were added manually get the chance to be added to the collection_status table.
 @celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
 def create_collection_status_records():
+    """
+    Automatic task that runs and checks for repos that haven't been given a collection_status
+    record corresponding to the state of their collection at the monent. 
+
+    A special celery task that automatically retries itself and has no max retries.
+    """
+
     from augur.tasks.init.celery_app import engine
     logger = logging.getLogger(create_collection_status_records.__name__)
 
