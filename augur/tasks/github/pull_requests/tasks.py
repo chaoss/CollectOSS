@@ -74,9 +74,18 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth) -> None:
 
     return all_data
 
-    
-def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
 
+def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
+    """
+    Parse and insert all retrieved PR data.
+
+    Arguments:
+        pull_requests: List of paginated pr endpoint data
+        task_name: Name of the calling task and the repo
+        repo_id: augur id of the repository
+        logger: logging object
+        augur_db: sqlalchemy db object
+    """
     tool_source = "Pr Task"
     tool_version = "2.0"
     data_source = "Github API"

@@ -91,9 +91,12 @@ def start(disable_collection, development, port):
             logger.info("Deleting old task schedule")
             os.remove("celerybeat-schedule.db")
 
-    celery_beat_process = None
-    celery_command = "celery -A augur.tasks.init.celery_app.celery_app beat -l debug"
-    celery_beat_process = subprocess.Popen(celery_command.split(" "))    
+    with DatabaseSession(logger) as db_session:
+        config = AugurConfig(logger, db_session)
+        log_level = config.get_value("Logging", "log_level")
+        celery_beat_process = None
+        celery_command = f"celery -A augur.tasks.init.celery_app.celery_app beat -l {log_level.lower()}"
+        celery_beat_process = subprocess.Popen(celery_command.split(" "))    
 
     if not disable_collection:
 

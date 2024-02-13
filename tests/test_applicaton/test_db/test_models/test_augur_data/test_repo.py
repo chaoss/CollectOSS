@@ -77,20 +77,20 @@ def test_insert_repo(test_db_engine):
 
         with DatabaseSession(logger, test_db_engine) as session:
             
-            assert Repo.insert(session, data["repo_urls"][0], data["rg_id"], data["tool_source"]) is not None
-            assert Repo.insert(session, data["repo_urls"][1], data["rg_id"], data["tool_source"]) is not None
+            assert Repo.insert_github_repo(session, data["repo_urls"][0], data["rg_id"], data["tool_source"], None) is not None
+            assert Repo.insert_github_repo(session, data["repo_urls"][1], data["rg_id"], data["tool_source"], None) is not None
 
             # invalid rg_id
-            assert Repo.insert(session, data["repo_urls"][0], 12, data["tool_source"]) is None
+            assert Repo.insert_github_repo(session, data["repo_urls"][0], 12, data["tool_source"], None) is None
 
             # invalid type for repo url
-            assert Repo.insert(session, 1, data["rg_id"], data["tool_source"]) is None
+            assert Repo.insert_github_repo(session, 1, data["rg_id"], data["tool_source"], None) is None
 
             # invalid type for rg_id
-            assert Repo.insert(session, data["repo_urls"][1], "1", data["tool_source"]) is None
+            assert Repo.insert_github_repo(session, data["repo_urls"][1], "1", data["tool_source"], None) is None
 
             # invalid type for tool_source
-            assert Repo.insert(session, data["repo_urls"][1], data["rg_id"], 52) is None
+            assert Repo.insert_github_repo(session, data["repo_urls"][1], data["rg_id"], 52, None) is None
 
         with test_db_engine.connect() as connection:
 

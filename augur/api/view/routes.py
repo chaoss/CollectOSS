@@ -1,4 +1,8 @@
+"""
+Defines the api routes for the augur views
+"""
 import logging
+import math
 from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash
 from sqlalchemy.orm.exc import NoResultFound
 from .utils import *
@@ -37,9 +41,9 @@ logo:
 def logo(brand=None):
     if brand is None:
         return redirect(url_for('static', filename='img/augur_logo.png'))
-    elif "augur" in brand:
+    if "augur" in brand:
         return logo(None)
-    elif "chaoss" in brand:
+    if "chaoss" in brand:
         return redirect(url_for('static', filename='img/Chaoss_Logo_white.png'))
     return ""
 
@@ -74,17 +78,15 @@ def repo_table_view():
     pagination_offset = config.get_value("frontend", "pagination_offset")
     
     if current_user.is_authenticated:
-        data = load_repos_test(user = current_user, search = query, page = page, sort = sorting, direction = direction, source = "user")
-        page_count = load_repos_test(user = current_user, search = query, count = True, source = "user")
-        # data = current_user.get_repos(page = page, sort = sorting, direction = direction, search=query)[0]
-        # page_count = (current_user.get_repo_count(search = query)[0] or 0) // pagination_offset
+        data = current_user.get_repos(page = page, sort = sorting, direction = direction, search=query)[0]
+        repos_count = (current_user.get_repo_count(search = query)[0] or 0)
     else:
-        data = load_repos_test(search = query, page = page, sort = sorting, direction = direction)
-        page_count = load_repos_test(search = query, count = True)
-        # data = get_all_repos(page = page, sort = sorting, direction = direction, search=query)[0]
-        # page_count = (get_all_repos_count(search = query)[0] or 0) // pagination_offset
+        data = get_all_repos(page = page, sort = sorting, direction = direction, search=query)[0]
+        repos_count = (get_all_repos_count(search = query)[0] or 0)
+
+    page_count = math.ceil(repos_count / pagination_offset) - 1
     
-    if not data.count():
+    if not data:
         data = None
 
 

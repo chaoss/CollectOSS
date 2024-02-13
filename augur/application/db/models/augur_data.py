@@ -564,6 +564,8 @@ class RepoGroup(Base):
     data_source = Column(String)
     data_collection_date = Column(TIMESTAMP(precision=0))
 
+    repo = relationship("Repo", back_populates="repo_group")
+
     @staticmethod
     def is_valid_repo_group_id(session, repo_group_id: int) -> bool:
         """Deterime is repo_group_id exists.
@@ -866,8 +868,8 @@ class Repo(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    repo_group = relationship("RepoGroup")
-    user_repo = relationship("UserRepo")
+    repo_group = relationship("RepoGroup", back_populates="repo")
+    user_repo = relationship("UserRepo", back_populates="repo")
     collection_status = relationship("CollectionStatus", back_populates="repo")
     issues = relationship("Issue", back_populates="repo")
     prs = relationship("PullRequest", back_populates="repo")
@@ -927,6 +929,44 @@ class Repo(Base):
                 return False, {"status": f"Github Error: {data['message']}"}
 
             return True, {"status": "Valid repo", "repo_type": data["owner"]["type"]}
+        
+    @staticmethod
+    def is_valid_gitlab_repo(gl_session, url: str) -> bool:
+        """Determine whether a GitLab repo URL is valid.
+
+        Args:
+            gl_session: GitLab session object with API key
+            url: Repository URL
+
+        Returns:
+            True if repo URL is valid, False otherwise
+        """
+        from augur.tasks.github.util.github_paginator import hit_api
+
+        REPO_ENDPOINT = "https://gitlab.com/api/v4/projects/{}/"
+
+        owner, repo = Repo.parse_gitlab_repo_url(url)
+        if not owner or not repo:
+            return False, {"status": "Invalid repo URL"}
+
+        # Encode namespace and project name for the API request
+        project_identifier = f"{owner}%2F{repo}"
+        url = REPO_ENDPOINT.format(project_identifier)
+
+        attempts = 0
+        while attempts < 10:
+            response = hit_api(gl_session.oauths, url, logger)
+
+            if response.status_code == 404:
+                return False, {"status": "Invalid repo"}
+
+            if response.status_code == 200:
+                return True, {"status": "Valid repo"}
+
+            attempts += 1
+
+        return False, {"status": "Failed to validate repo after multiple attempts"}
+
 
     @staticmethod
     def parse_github_repo_url(url: str) -> tuple:
@@ -940,6 +980,29 @@ class Repo(Base):
         """
         
         result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
+
+        if not result:
+            return None, None
+
+        capturing_groups = result.groups()
+
+        owner = capturing_groups[0]
+        repo = capturing_groups[1]
+
+        return owner, repo
+    
+    @staticmethod
+    def parse_gitlab_repo_url(url: str) -> tuple:
+        """ Gets the owner and repo from a gitlab url.
+
+        Args:
+            url: Gitlab url
+
+        Returns:
+            Tuple of owner and repo. Or a tuple of None and None if the url is invalid.
+        """
+        
+        result = re.search(r"https?:\/\/gitlab\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
 
         if not result:
             return None, None
@@ -972,12 +1035,60 @@ class Repo(Base):
         return result.groups()[0]
 
     @staticmethod
-    def insert(session, url: str, repo_group_id: int, tool_source, repo_type):
+    def insert_gitlab_repo(session, url: str, repo_group_id: int, tool_source):
         """Add a repo to the repo table.
 
         Args:
             url: repo url
             repo_group_id: group to assign repo to
+
+        Note:
+            If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
+        """
+
+        if not isinstance(url, str) or not isinstance(repo_group_id, int) or not isinstance(tool_source, str):
+            return None
+
+        if not RepoGroup.is_valid_repo_group_id(session, repo_group_id):
+            return None
+        
+        if url.endswith("/"):
+            url = url[:-1]
+        
+        url = url.lower()
+        
+        owner, repo = Repo.parse_gitlab_repo_url(url)
+        if not owner or not repo:
+            return None
+
+        repo_data = {
+            "repo_group_id": repo_group_id,
+            "repo_git": url,
+            "repo_path": f"gitlab.com/{owner}/",
+            "repo_name": repo,
+            "repo_type": None,
+            "tool_source": tool_source,
+            "tool_version": "1.0",
+            "data_source": "Git"
+        }
+
+        repo_unique = ["repo_git"]
+        return_columns = ["repo_id"]
+        result = session.insert_data(repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
+
+        if not result:
+            return None
+
+        return result[0]["repo_id"]
+
+    @staticmethod
+    def insert_github_repo(session, url: str, repo_group_id: int, tool_source, repo_type):
+        """Add a repo to the repo table.
+
+        Args:
+            url: repo url
+            repo_group_id: group to assign repo to
+            repo_type: github or gitlab
 
         Note:
             If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
@@ -1207,10 +1318,6 @@ class Commit(Base):
         "Contributor",
         primaryjoin="Commit.cmt_author_platform_username == Contributor.cntrb_login",
         back_populates="commits"
-    )
-    contributor1 = relationship(
-        "Contributor",
-        primaryjoin="Commit.cmt_author_platform_username == Contributor.cntrb_login",
     )
     repo = relationship("Repo", back_populates="commits")
     message_ref = relationship("CommitCommentRef", back_populates="cmt")
