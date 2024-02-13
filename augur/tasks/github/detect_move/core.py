@@ -110,6 +110,11 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
         collectionRecord.facade_task_id = None
         collectionRecord.facade_data_last_collected = datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
 
+        collectionRecord.ml_status = CollectionState.IGNORE.value
+        collectionRecord.ml_task_id = None
+        collectionRecord.ml_data_last_collected = datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
         augur_db.session.commit()
         raise Exception("ERROR: Repo has moved! Resetting Collection!")
 
