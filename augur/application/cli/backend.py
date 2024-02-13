@@ -18,7 +18,7 @@ import traceback
 from urllib.parse import urlparse
 from datetime import datetime
 
-from augur.tasks.start_tasks import augur_collection_monitor, CollectionState, create_collection_status_records
+from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.tasks.init.redis_connection import redis_connection 

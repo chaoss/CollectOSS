@@ -79,7 +79,7 @@ setup(
         "celery==5.2.7", # 5.2.7
         "httpx==0.23.0", # 0.23.0
         "eventlet==0.33.3", 
-        "flower==1.2.0",
+        "flower==2.0.1",
         "tornado==6.3.3", # added because it sometimes errors when tornado is not 6.1 even though nothing we install depends on it
         "pylint==2.15.5",
         "dnspython==2.2.1",
