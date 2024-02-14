@@ -31,7 +31,8 @@ from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analy
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor, get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count, facade_bulk_insert_commits
 
 from augur.tasks.github.facade_github.tasks import *
-from augur.tasks.util.collection_util import CollectionState, get_collection_status_repo_git_from_filter
+from augur.tasks.util.collection_state import CollectionState
+from augur.tasks.util.collection_util import get_collection_status_repo_git_from_filter
 from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneError, git_repo_initialize
 
 
