@@ -96,6 +96,7 @@ Contributors
 - `Dawn Foster <https://github.com/geekygirldawn/>`_
 - `Ivana Atanasova <https://github.com/ivanayov/>`_
 - `Georg J.P. Link <https://github.com/GeorgLink/>`_
+- `Gary P White <https://github.com/garypwhite/>`_
 
 GSoC 2022 participants
 -----------------------
