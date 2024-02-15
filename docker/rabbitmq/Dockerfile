@@ -3,7 +3,7 @@ FROM rabbitmq:3.12-management-alpine
 LABEL maintainer="574/augur@simplelogin.com"
 LABEL version="0.62.0"
 
-COPY --chown=rabbitmq:rabbitmq augur.conf /etc/rabbitmq/conf.d/
+COPY --chown=rabbitmq:rabbitmq ./docker/rabbitmq/augur.conf /etc/rabbitmq/conf.d/
 
 RUN chmod 777 /etc/rabbitmq/conf.d/augur.conf
 
