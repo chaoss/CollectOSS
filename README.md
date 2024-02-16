@@ -1,4 +1,4 @@
-# Augur NEW Release v0.62.0
+# Augur NEW Release v0.62.2
 
 CHECK out Augur's Public Instance at https://ai.chaoss.io 
 
@@ -9,7 +9,7 @@ CHECK out Augur's Public Instance at https://ai.chaoss.io
 ## NEW RELEASE ALERT!
 ### [If you want to jump right in, updated docker build/compose and bare metal installation instructions are available here](docs/new-install.md)
 
-Augur is now releasing a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.62.0
+Augur is now releasing a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.62.2
 - The `main` branch is a stable version of our new architecture, which features:
   - Dramatic improvement in the speed of large scale data collection (100,000+ repos). All data is obtained for 100k+ repos within 2 weeks.
   - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard
