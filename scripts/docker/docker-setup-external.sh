@@ -38,6 +38,9 @@ then
   echo "AUGUR_DB_HOST=$dbHostname" >> docker_env.txt
   echo "AUGUR_DB_HOST=$dbHostname" >> .env
   echo "AUGUR_DB_PORT=$dbPort" >> docker_env.txt
+  echo "AUGUR_RABBITMQ_USERNAME=augur" >> .env
+  echo "AUGUR_RABBITMQ_PASSWORD=password123" >> .env
+
 
   read -p "Plase input database name: " dbName
   #Pretty sure these stay constant among augur databases

@@ -20,6 +20,9 @@ echo "AUGUR_DB_NAME=augur" >> docker_env.txt
 echo "AUGUR_DB_PORT=5434" >> docker_env.txt
 echo "AUGUR_DB_USER=augur" >> docker_env.txt
 echo "AUGUR_DB_PASSWORD=augur" >> docker_env.txt
+echo "AUGUR_RABBITMQ_USERNAME=augur" >> .env
+echo "AUGUR_RABBITMQ_PASSWORD=password123" >> .env
+
 
 #This checks the .env file's environment variables NOT docker_env.txt.
 #AUGUR_DB_TYPE is set by the parent script in the .env file.
