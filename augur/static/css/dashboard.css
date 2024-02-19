@@ -26,12 +26,30 @@ body {
 }
 
 .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
-    background-color: var(--color-accent);
+    background-color: var(--color-accent)
 }
 
 .dashboard-sidebar {
-    width: 280px;
     background-color: var(--color-bg-light) !important;
+    color: var(--color-fg) !important;
+    max-height: 100vh;
+}
+
+.nav-link {
+    color: var(--color-fg);
+}
+
+.nav-pills li:has(a:not(.active)) :hover {
+    color: var(--color-notice);
+}
+
+.nav-pills li {
+    width: 100%;
+}
+
+.nav-pills li a {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
 }
 
 .dashboard-form-control {
