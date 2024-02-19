@@ -46,21 +46,21 @@ fi
 
 
 echo "Tearing down old docker stack..."
-docker-compose -f docker-compose.yml -f database-compose.yml down --remove-orphans
+docker compose -f docker-compose.yml -f database-compose.yml down --remove-orphans
 
 #Run docker stack in background to catch up to later
 echo "Starting set up of docker stack..."
-nohup docker-compose -f docker-compose.yml -f database-compose.yml up --no-recreate &>/tmp/dockerComposeLog & 
+nohup docker compose -f docker-compose.yml -f database-compose.yml up --no-recreate &>/tmp/dockerComposeLog & 
 PIDOS=$!
 
 #While the containers are up show a watch monitor that shows container status and live feed from logs
 printf "\nNow showing active docker containers:\n"
-watch -n1 --color 'docker-compose -f docker-compose.yml -f database-compose.yml ps && echo && tail -n 30 /tmp/dockerComposeLog && echo "Ctrl+C to Exit"'
+watch -n1 --color 'docker compose -f docker-compose.yml -f database-compose.yml ps && echo && tail -n 30 /tmp/dockerComposeLog && echo "Ctrl+C to Exit"'
 printf "\n"
 
 #Stop the process and clean up dead containers on SIGINT.
 kill -15 $PIDOS
 #Cleaning up dead containers
 echo "Cleaning up dead containers... "
-docker-compose -f docker-compose.yml -f database-compose.yml down --remove-orphans
+docker compose -f docker-compose.yml -f database-compose.yml down --remove-orphans
 bash scripts/docker/cleanup.sh
