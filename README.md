@@ -1,4 +1,4 @@
-# Augur NEW Release v0.62.2
+# Augur NEW Release v0.62.4
 
 Augur is primarily a data engineering tool that makes it possible for data scientists to gather open source software community data. Less data carpentry for everyone else! 
 The primary way of looking at Augur data is through [8Knot](https://github.com/oss-aspen/8knot) ... A public instance of 8Knot is available at https://metrix.chaoss.io ... That is tied to a public instance of Augur at https://ai.chaoss.io 
@@ -10,7 +10,7 @@ The primary way of looking at Augur data is through [8Knot](https://github.com/o
 ## NEW RELEASE ALERT!
 ### [If you want to jump right in, updated docker build/compose and bare metal installation instructions are available here](docs/new-install.md)
 
-Augur is now releasing a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.62.2
+Augur is now releasing a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.62.4
 - The `main` branch is a stable version of our new architecture, which features:
   - Dramatic improvement in the speed of large scale data collection (100,000+ repos). All data is obtained for 100k+ repos within 2 weeks.
   - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard
