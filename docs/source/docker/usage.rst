@@ -35,10 +35,10 @@ By default, the only logs shown by the container are the logs of Augur's main da
 .. code-block:: bash
 
     # to quickly view the most recent logs
-    $ docker-compose logs
+    $ docker compose logs
 
     # to watch the logs in real-time (like tail -f)
-    $ docker-compose logs -f
+    $ docker compose logs -f
 
 
 As for worker logs. They are currently a work in progress to be made easier to view. Shortly, they will automatically populate on the host machine and it will not be necessary to step inside the container.

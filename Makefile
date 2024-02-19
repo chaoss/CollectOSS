@@ -139,14 +139,14 @@ docs-view: docs
 
 
 compose-run:
-	@ docker-compose -f docker-compose.yml up --build
+	@ docker compose -f docker-compose.yml up --build
 
 compose-run-database:
 	@ echo "**************************************************************************"
 	@ echo "Make sure there are no database credentials in docker_env.txt!"
 	@ echo "**************************************************************************"
 	@ echo
-	@ docker-compose -f docker-compose.yml -f database-compose.yml up --build
+	@ docker compose -f docker-compose.yml -f database-compose.yml up --build
 
 docker-build: docker-build-backend docker-build-frontend docker-build-database docker-build-rabbitmq
 

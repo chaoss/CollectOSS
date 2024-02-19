@@ -59,14 +59,14 @@ then
   fi
   echo "AUGUR_DB_PASSWORD=$dbPassword" >> docker_env.txt
 else
-  #docker_env.txt should always be present in a docker-compose build otherwise it can cause issues for the database.
+  #docker_env.txt should always be present in a docker compose build otherwise it can cause issues for the database.
   if [[ ! -f "docker_env.txt" ]]
   then
     echo "docker_env.txt not found. Please add environment variables in this file or restart the script and choose to prompt db credentials."
     exit 1
   fi
 
-  #Copy host name to docker-compose env file.
+  #Copy host name to docker compose env file.
   cat docker_env.txt | grep AUGUR_DB_HOST >> .env
 fi
 
@@ -122,21 +122,21 @@ else
 fi
 
 echo "Tearing down old docker stack..."
-docker-compose -f docker-compose.yml down --remove-orphans
+docker compose -f docker-compose.yml down --remove-orphans
 
 #Run docker stack in background to catch up to later
 echo "Starting set up of docker stack..."
-nohup docker-compose -f docker-compose.yml up --no-recreate &>/tmp/dockerComposeLog & 
+nohup docker compose -f docker-compose.yml up --no-recreate &>/tmp/dockerComposeLog & 
 PIDOS=$!
 
 #While the containers are up show a watch monitor that shows container status and live feed from logs
 printf "\nNow showing active docker containers:\n"
-watch -n1 --color 'docker-compose ps && echo && tail -n 30 /tmp/dockerComposeLog && echo "Ctrl+C to Exit"'
+watch -n1 --color 'docker compose ps && echo && tail -n 30 /tmp/dockerComposeLog && echo "Ctrl+C to Exit"'
 printf "\n"
 
 #Stop the process and clean up dead containers on SIGINT.
 kill -15 $PIDOS
 #Cleaning up dead containers
 echo "Cleaning up dead containers... "
-docker-compose -f docker-compose.yml down --remove-orphans
+docker compose -f docker-compose.yml down --remove-orphans
 bash scripts/docker/cleanup.sh
