@@ -1,6 +1,7 @@
 # Augur NEW Release v0.62.2
 
-CHECK out Augur's Public Instance at https://ai.chaoss.io 
+Augur is primarily a data engineering tool that makes it possible for data scientists to gather open source software community data. Less data carpentry for everyone else! 
+The primary way of looking at Augur data is through [8Knot](https://github.com/oss-aspen/8knot) ... A public instance of 8Knot is available at https://metrix.chaoss.io ... That is tied to a public instance of Augur at https://ai.chaoss.io 
 
 [![first-timers-only](https://img.shields.io/badge/first--timers--only-friendly-blue.svg?style=flat-square)](https://www.firsttimersonly.com/) We follow the [First Timers Only](https://www.firsttimersonly.com/) philosophy of tagging issues for first timers only, and walking one newcomer through the resolution process weekly. [You can find these issues tagged with "first timers only" on our issues list.](https://github.com/chaoss/augur/labels/first-timers-only).
 
