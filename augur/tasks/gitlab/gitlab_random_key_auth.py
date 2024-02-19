@@ -6,8 +6,8 @@ from augur.application.db.session import DatabaseSession
 
 
 class GitlabRandomKeyAuth(RandomKeyAuth):
-    """Defines a github specific RandomKeyAuth class so 
-    github collections can have a class randomly selects an api key for each request    
+    """Defines a gitlab specific RandomKeyAuth class so 
+    gitlab collections can have a class randomly selects an api key for each request    
     """
 
     def __init__(self, session: DatabaseSession, logger):

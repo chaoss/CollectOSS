@@ -187,7 +187,8 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
     message_string_fields = ["msg_text"]
     message_return_data = augur_db.insert_data(message_dicts, Message, message_natural_keys, 
                                                 return_columns=message_return_columns, string_fields=message_string_fields)
-    
+    if message_return_data is None:
+        return
 
     pr_message_ref_dicts = []
     issue_message_ref_dicts = []

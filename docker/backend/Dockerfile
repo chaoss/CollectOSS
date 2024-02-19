@@ -1,8 +1,8 @@
 #SPDX-License-Identifier: MIT
-FROM python:3.8.11-slim-buster
+FROM python:3.10-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.53.1"
+LABEL version="0.62.0"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -13,7 +13,9 @@ RUN set -x \
         bash \
         curl \
         gcc \
-        python3-pip \
+        musl-dev \
+        python3-dev \
+        python3-distutils \
         wget \
         postgresql-client \
     && rm -rf /var/lib/apt/lists/*
@@ -32,6 +34,17 @@ COPY ./scripts/ scripts/
 RUN python3 -m venv /opt/venv
 
 RUN set -x \
+    && /opt/venv/bin/pip install --upgrade pip 
+
+RUN set -x \
+    && /opt/venv/bin/pip install wheel
+    
+RUN set -x \
+    && /opt/venv/bin/pip install .
+    
+RUN set -x \
+    && /opt/venv/bin/pip install --upgrade pip \
+    && /opt/venv/bin/pip install wheel \
     && /opt/venv/bin/pip install .
 
 RUN ./scripts/docker/install-workers-deps.sh

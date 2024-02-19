@@ -13,6 +13,12 @@ platform_id = 2
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_gitlab_merge_requests(repo_git: str) -> int:
+    """
+    Retrieve and parse gitlab MRs for the desired repo
+
+    Arguments:
+        repo_git: the repo url string
+    """
 
 
     logger = logging.getLogger(collect_gitlab_merge_requests.__name__)
@@ -37,6 +43,14 @@ def collect_gitlab_merge_requests(repo_git: str) -> int:
 
 
 def retrieve_all_mr_data(repo_git: str, logger, key_auth) -> None:
+    """
+    Retrieve only the needed data for MRs from the api response
+
+    Arguments:
+        repo_git: url of the relevant repo
+        logger: loggin object
+        key_auth: key auth cache and rotator object 
+    """
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -66,6 +80,19 @@ def retrieve_all_mr_data(repo_git: str, logger, key_auth) -> None:
 
 
 def process_merge_requests(data, task_name, repo_id, logger, augur_db):
+    """
+    Retrieve only the needed data for mr label data from the api response
+
+    Arguments:
+        data: collection of mr data
+        task_name: name of the task as well as the repo being processed
+        repo_id: augur id of the repo
+        logger: logging object
+        augur_db: sqlalchemy db object 
+    
+    Returns:
+        List of parsed MR ids.
+    """
 
     tool_source = "Mr Task"
     tool_version = "2.0"
@@ -129,6 +156,13 @@ def process_merge_requests(data, task_name, repo_id, logger, augur_db):
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_comments(mr_ids, repo_git) -> int:
+    """
+    Retrieve and parse gitlab events for the desired repo
+
+    Arguments:
+        mr_ids: ids of MRs to paginate comments for
+        repo_git: the repo url string
+    """
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -152,6 +186,16 @@ def collect_merge_request_comments(mr_ids, repo_git) -> int:
 
 
 def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
+    """
+    Retrieve only the needed data for mr label data from the api response
+
+    Arguments:
+        data: List of dictionaries of mr message data
+        task_name: name of the task as well as the repo being processed
+        repo_id: augur id of the repo
+        logger: logging object
+        augur_db: sqlalchemy db object 
+    """
 
     tool_source = "Gitlab mr comments"
     tool_version = "2.0"
@@ -184,7 +228,7 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
             }
 
             message_dicts.append(
-                extract_needed_gitlab_message_data(message, platform_id, repo_id, tool_source, tool_version, data_source)
+                extract_needed_gitlab_message_data(message, platform_id, tool_source, tool_version, data_source)
             )
 
 
@@ -214,6 +258,13 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_metadata(mr_ids, repo_git) -> int:
+    """
+    Retrieve and parse gitlab events for the desired repo
+
+    Arguments:
+        mr_ids: list of mr ids to find metadata for
+        repo_git: the repo url string
+    """
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -236,6 +287,16 @@ def collect_merge_request_metadata(mr_ids, repo_git) -> int:
             logger.info(f"{owner}/{repo} has no gitlab merge request metadata")
 
 def process_mr_metadata(data, task_name, repo_id, logger, augur_db):
+    """
+    Retrieve only the needed data for mr label data from the api response
+
+    Arguments:
+        data: List of dictionaries of mr metadata
+        task_name: name of the task as well as the repo being processed
+        repo_id: augur id of the repo
+        logger: logging object
+        augur_db: sqlalchemy db object 
+    """
 
     tool_source = "Mr Metadata Task"
     tool_version = "2.0"
@@ -261,6 +322,13 @@ def process_mr_metadata(data, task_name, repo_id, logger, augur_db):
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
+    """
+    Retrieve and parse mr reviewers for the desired repo
+
+    Arguments:
+        mr_ids: mrs to search for reviewers for
+        repo_git: the repo url string
+    """
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -283,10 +351,21 @@ def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
             logger.info(f"{owner}/{repo} has no gitlab merge request reviewers")
 
 def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
+    """
+    Retrieve only the needed data for mr Reviewer data from the api response
 
-    tool_source = "Mr Reviewr Task"
+    Arguments:
+        data: List of dictionaries of mr Reviewer data
+        repo_id: augur id of the repo
+        logger: logging object
+        augur_db: sqlalchemy db object 
+    """
+
+    tool_source = "Mr Reviewer Task"
     tool_version = "2.0"
     data_source = "Gitlab API"
+
+    logger.info(f"Running {task_name}...")
 
     # create mapping from mr number to pull request id of current mrs
     mr_number_to_id_map = {}
@@ -299,7 +378,7 @@ def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
 
         pull_request_id = mr_number_to_id_map[id]
 
-        reviewers = extract_needed_mr_reviewer_data(values, pull_request_id, repo_id, tool_source, tool_version, data_source)
+        reviewers = extract_needed_mr_reviewer_data(values, pull_request_id, tool_source, tool_version, data_source)
 
         all_reviewers += reviewers
 
@@ -311,6 +390,13 @@ def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_commits(mr_ids, repo_git) -> int:
+    """
+    Retrieve and parse mr commits for the desired repo
+
+    Arguments:
+        mr_ids: ids of mrs to get commits for
+        repo_git: the repo url string
+    """
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -334,6 +420,16 @@ def collect_merge_request_commits(mr_ids, repo_git) -> int:
 
 
 def process_mr_commits(data, task_name, repo_id, logger, augur_db):
+    """
+    Retrieve only the needed data for mr commits from the api response
+
+    Arguments:
+        data: List of dictionaries of mr commit data
+        task_name: name of the task as well as the repo being processed
+        repo_id: augur id of the repo
+        logger: logging object
+        augur_db: sqlalchemy db object 
+    """
 
     tool_source = "Mr Commit Task"
     tool_version = "2.0"
@@ -363,6 +459,13 @@ def process_mr_commits(data, task_name, repo_id, logger, augur_db):
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_merge_request_files(mr_ids, repo_git) -> int:
+    """
+    Retrieve and parse gitlab events for the desired repo
+
+    Arguments:
+        mr_ids: the ids of mrs to get files for.
+        repo_git: the repo url string
+    """
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -409,6 +512,19 @@ def process_mr_files(data, task_name, repo_id, logger, augur_db):
     
 
 def retrieve_merge_request_data(ids, url, name, owner, repo, key_auth, logger, response_type):
+    """
+    Retrieve specific mr data from the GitLab api.  
+
+    Arguments:
+        ids: mr ids to paginate info for
+        url: endpoint to paginate or hit
+        name: name of data to collect
+        owner: owner of the repo
+        repo: repo name
+        key_auth: key auth cache and rotator object
+        logger: loggin object
+        response_type: type of data to get from the api 
+    """
 
     all_data = {}
     mr_count = len(ids)
@@ -437,7 +553,7 @@ def retrieve_merge_request_data(ids, url, name, owner, repo, key_auth, logger, r
                 else:
                     all_data[id] = page_data
         else:
-            raise Exception(f"Unexpected reponse type: {response_type}")
+            raise Exception(f"Unexpected response type: {response_type}")
         
         index += 1
 

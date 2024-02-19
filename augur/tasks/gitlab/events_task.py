@@ -1,3 +1,6 @@
+"""
+Module to define the task methods to collect gitlab event data for augur
+"""
 import logging
 
 from augur.tasks.init.celery_app import celery_app as celery
@@ -13,6 +16,12 @@ platform_id = 2
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_gitlab_issue_events(repo_git) -> int:
+    """
+    Retrieve and parse gitlab events for the desired repo
+
+    Arguments:
+        repo_git: the repo url string
+    """
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -36,6 +45,13 @@ def collect_gitlab_issue_events(repo_git) -> int:
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_gitlab_merge_request_events(repo_git) -> int:
+    """
+    Retrieve and parse gitlab mrs for the desired repo
+
+    Arguments:
+        repo_git: the repo url string
+    """
+
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -57,13 +73,22 @@ def collect_gitlab_merge_request_events(repo_git) -> int:
             logger.info(f"{owner}/{repo} has no gitlab merge request events")
 
 
-def retrieve_all_gitlab_event_data(type, repo_git, logger, key_auth) -> None:
+def retrieve_all_gitlab_event_data(gtype, repo_git, logger, key_auth) -> None:
+    """
+    Retrieve only the needed data for mr label data from the api response
+
+    Arguments:
+        gtype: type of event data
+        repo_git: url of the relevant repo
+        logger: loggin object
+        key_auth: key auth cache and rotator object 
+    """
 
     owner, repo = get_owner_repo(repo_git)
 
     logger.info(f"Collecting gitlab issue events for {owner}/{repo}")
 
-    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/events?target_type={type}"
+    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/events?target_type={gtype}"
     events = GitlabApiHandler(key_auth, logger)
 
     all_data = []
@@ -75,18 +100,28 @@ def retrieve_all_gitlab_event_data(type, repo_git, logger, key_auth) -> None:
 
         if len(page_data) == 0:
             logger.debug(
-                f"{owner}/{repo}: Gitlab {type} Events Page {page} contains no data...returning")
-            logger.info(f"{owner}/{repo}: {type} Events Page {page} of {num_pages}")
+                f"{owner}/{repo}: Gitlab {gtype} Events Page {page} contains no data...returning")
+            logger.info(f"{owner}/{repo}: {gtype} Events Page {page} of {num_pages}")
             return all_data
 
-        logger.info(f"{owner}/{repo}: Gitlab {type} Events Page {page} of {num_pages}")
+        logger.info(f"{owner}/{repo}: Gitlab {gtype} Events Page {page} of {num_pages}")
 
         all_data += page_data
 
     return all_data
 
 def process_issue_events(events, task_name, repo_id, logger, augur_db):
-    
+    """
+    Retrieve only the needed data for mr label data from the api response
+
+    Arguments:
+        events: List of dictionaries of issue event data
+        task_name: name of the task as well as the repo being processed
+        repo_id: augur id of the repo
+        logger: logging object
+        augur_db: sqlalchemy db object 
+    """
+
     tool_source = "Gitlab issue events task"
     tool_version = "2.0"
     data_source = "Gitlab API"
@@ -122,7 +157,21 @@ def process_issue_events(events, task_name, repo_id, logger, augur_db):
 
 
 def process_mr_events(events, task_name, repo_id, logger, augur_db):
+    """
+    Retrieve only the needed data for mr events from the api response
+
+    Arguments:
+        labels: List of dictionaries of label data
+        repo_id: augur id of the repository
+        tool_source: The part of augur that processed the data
+        tool_version: The version of the augur task that processed the data
+        data_source: The source of the data 
+
     
+    Returns:
+        List of parsed label dicts
+    """
+
     tool_source = "Gitlab mr events task"
     tool_version = "2.0"
     data_source = "Gitlab API"
