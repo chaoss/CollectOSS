@@ -180,9 +180,8 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
                         issue_label_natural_keys, string_fields=issue_label_string_fields)
 
     # inserting issue assignees
-    # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
-    # issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    # augur_db.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
+    issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
+    augur_db.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
 
     return issue_ids
 
@@ -194,11 +193,11 @@ def process_issue_contributors(issue, tool_source, tool_version, data_source):
     issue["cntrb_id"] = issue_cntrb["cntrb_id"]
     contributors.append(issue_cntrb)
 
-    # for assignee in issue["assignees"]:
+    for assignee in issue["assignees"]:
 
-    #     issue_assignee_cntrb = extract_needed_contributor_data(assignee, tool_source, tool_version, data_source)
-    #     assignee["cntrb_id"] = issue_assignee_cntrb["cntrb_id"]
-    #     contributors.append(issue_assignee_cntrb)
+        issue_assignee_cntrb = extract_needed_gitlab_contributor_data(assignee, tool_source, tool_version, data_source)
+        assignee["cntrb_id"] = issue_assignee_cntrb["cntrb_id"]
+        contributors.append(issue_assignee_cntrb)
 
     return issue, contributors
 

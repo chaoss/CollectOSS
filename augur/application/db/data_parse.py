@@ -375,7 +375,7 @@ def extract_needed_gitlab_issue_assignee_data(assignees: List[dict], repo_id: in
     for assignee in assignees:
 
         assignee_dict = {
-            "cntrb_id": None,
+            "cntrb_id": assignee["cntrb_id"],
             "tool_source": tool_source,
             "tool_version": tool_version,
             "data_source": data_source,
