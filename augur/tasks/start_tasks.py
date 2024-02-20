@@ -339,7 +339,7 @@ def retry_errored_repos():
     #TODO: Isaac needs to normalize the status's to be abstract in the 
     #collection_status table once augur dev is less unstable.
     with DatabaseSession(logger,engine) as session:
-        query = s.sql.text(f"""UPDATE repo SET secondary_staus = {CollectionState.PENDING.value}"""
+        query = s.sql.text(f"""UPDATE repo SET secondary_status = {CollectionState.PENDING.value}"""
         f""" WHERE secondary_status = '{CollectionState.ERROR.value}' ;"""
         f"""UPDATE repo SET core_status = {CollectionState.PENDING.value}"""
         f""" WHERE core_status = '{CollectionState.ERROR.value}' ;"""

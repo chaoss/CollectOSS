@@ -53,7 +53,7 @@ def pull_request_data_collection(repo_id, start_date, end_date):
                     ( EXTRACT ( EPOCH FROM last_response_time ) - EXTRACT ( EPOCH FROM pull_requests.pr_created_at ) ) / 86400 AS days_to_last_response, 
                     first_response_time,
                     last_response_time,
-                    average_time_between_responses,
+                    EXTRACT ( EPOCH FROM average_time_between_responses),
                     assigned_count,
                     review_requested_count,
                     labeled_count,
@@ -62,15 +62,15 @@ def pull_request_data_collection(repo_id, start_date, end_date):
                     referenced_count,
                     closed_count,
                     head_ref_force_pushed_count,
-                    merged_count,
+                    merged_count::INT,
                     milestoned_count,
                     unlabeled_count,
                     head_ref_deleted_count,
                     comment_count,
-                    lines_added, 
-                    lines_removed,
+                    COALESCE(lines_added, 0), 
+                    COALESCE(lines_removed, 0),
                     commit_count, 
-                    file_count
+                    COALESCE(file_count, 0)
                 FROM
                     repo,
                     repo_groups,
@@ -87,46 +87,47 @@ def pull_request_data_collection(repo_id, start_date, end_date):
                         count(*) FILTER (WHERE action = 'head_ref_force_pushed') AS head_ref_force_pushed_count,
                         count(*) FILTER (WHERE action = 'head_ref_deleted') AS head_ref_deleted_count,
                         count(*) FILTER (WHERE action = 'milestoned') AS milestoned_count,
-                        count(*) FILTER (WHERE action = 'merged') AS merged_count,
-                        MIN(message.msg_timestamp) AS first_response_time,
-                        COUNT(DISTINCT message.msg_timestamp) AS comment_count,
-                        MAX(message.msg_timestamp) AS last_response_time,
-                        (MAX(message.msg_timestamp) - MIN(message.msg_timestamp)) / COUNT(DISTINCT message.msg_timestamp) AS average_time_between_responses
-                        FROM pull_request_events, pull_requests, repo, pull_request_message_ref, message
-                        WHERE repo.repo_id = {repo_id}
-                        AND repo.repo_id = pull_requests.repo_id
-                        AND pull_requests.pull_request_id = pull_request_events.pull_request_id
-                        AND pull_requests.pull_request_id = pull_request_message_ref.pull_request_id
-                        AND pull_request_message_ref.msg_id = message.msg_id
+                        COALESCE(count(*) FILTER (WHERE action = 'merged'), 0) AS merged_count,
+                        COALESCE(MIN(message.msg_timestamp), pull_requests.pr_merged_at, pull_requests.pr_closed_at) AS first_response_time,
+                        COALESCE(COUNT(DISTINCT message.msg_timestamp), 0) AS comment_count,
+                        COALESCE(MAX(message.msg_timestamp), pull_requests.pr_closed_at) AS last_response_time,
+                        COALESCE((MAX(message.msg_timestamp) - MIN(message.msg_timestamp)) / COUNT(DISTINCT message.msg_timestamp), pull_requests.pr_created_at - pull_requests.pr_closed_at) AS average_time_between_responses
+                        FROM  pull_requests 
+												LEFT OUTER JOIN pull_request_events on pull_requests.pull_request_id = pull_request_events.pull_request_id 
+												JOIN repo on repo.repo_id = pull_requests.repo_id 
+												LEFT OUTER JOIN pull_request_message_ref on pull_requests.pull_request_id = pull_request_message_ref.pull_request_id
+												LEFT OUTER JOIN message on pull_request_message_ref.msg_id = message.msg_id
+                        WHERE repo.repo_id = 1
                         GROUP BY pull_requests.pull_request_id
                     ) response_times
                     ON pull_requests.pull_request_id = response_times.pull_request_id
-                    LEFT OUTER JOIN (
-                        SELECT pull_request_commits.pull_request_id, count(DISTINCT pr_cmt_sha) AS commit_count                                FROM pull_request_commits, pull_requests, pull_request_meta
+                    LEFT JOIN (
+                        SELECT pull_request_commits.pull_request_id, count(DISTINCT pr_cmt_sha) AS commit_count                                
+												FROM pull_request_commits, pull_requests, pull_request_meta
                         WHERE pull_requests.pull_request_id = pull_request_commits.pull_request_id
                         AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
-                        AND pull_requests.repo_id = {repo_id}
+                        AND pull_requests.repo_id = 1
                         AND pr_cmt_sha <> pull_requests.pr_merge_commit_sha
                         AND pr_cmt_sha <> pull_request_meta.pr_sha
                         GROUP BY pull_request_commits.pull_request_id
                     ) all_commit_counts
                     ON pull_requests.pull_request_id = all_commit_counts.pull_request_id
-                    LEFT OUTER JOIN (
+                    LEFT JOIN (
                         SELECT MAX(pr_repo_meta_id), pull_request_meta.pull_request_id, pr_head_or_base, pr_src_meta_label
                         FROM pull_requests, pull_request_meta
                         WHERE pull_requests.pull_request_id = pull_request_meta.pull_request_id
-                        AND pull_requests.repo_id = {repo_id}
+                        AND pull_requests.repo_id = 1
                         AND pr_head_or_base = 'base'
                         GROUP BY pull_request_meta.pull_request_id, pr_head_or_base, pr_src_meta_label
                     ) base_labels
                     ON base_labels.pull_request_id = all_commit_counts.pull_request_id
-                    LEFT OUTER JOIN (
+                    LEFT JOIN (
                         SELECT sum(cmt_added) AS lines_added, sum(cmt_removed) AS lines_removed, pull_request_commits.pull_request_id, count(DISTINCT cmt_filename) AS file_count
                         FROM pull_request_commits, commits, pull_requests, pull_request_meta
                         WHERE cmt_commit_hash = pr_cmt_sha
                         AND pull_requests.pull_request_id = pull_request_commits.pull_request_id
                         AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
-                        AND pull_requests.repo_id = {repo_id}
+                        AND pull_requests.repo_id = 1
                         AND commits.repo_id = pull_requests.repo_id
                         AND commits.cmt_commit_hash <> pull_requests.pr_merge_commit_sha
                         AND commits.cmt_commit_hash <> pull_request_meta.pr_sha
@@ -136,7 +137,7 @@ def pull_request_data_collection(repo_id, start_date, end_date):
                 WHERE 
                     repo.repo_group_id = repo_groups.repo_group_id 
                     AND repo.repo_id = pull_requests.repo_id 
-                    AND repo.repo_id = {repo_id} 
+                    AND repo.repo_id = 1 
                 ORDER BY
                     merged_count DESC
                     """)

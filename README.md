@@ -1,6 +1,7 @@
-# Augur NEW Release v0.62.0
+# Augur NEW Release v0.62.4
 
-CHECK out Augur's Public Instance at https://ai.chaoss.io 
+Augur is primarily a data engineering tool that makes it possible for data scientists to gather open source software community data. Less data carpentry for everyone else! 
+The primary way of looking at Augur data is through [8Knot](https://github.com/oss-aspen/8knot) ... A public instance of 8Knot is available at https://metrix.chaoss.io ... That is tied to a public instance of Augur at https://ai.chaoss.io 
 
 [![first-timers-only](https://img.shields.io/badge/first--timers--only-friendly-blue.svg?style=flat-square)](https://www.firsttimersonly.com/) We follow the [First Timers Only](https://www.firsttimersonly.com/) philosophy of tagging issues for first timers only, and walking one newcomer through the resolution process weekly. [You can find these issues tagged with "first timers only" on our issues list.](https://github.com/chaoss/augur/labels/first-timers-only).
 
@@ -9,7 +10,7 @@ CHECK out Augur's Public Instance at https://ai.chaoss.io
 ## NEW RELEASE ALERT!
 ### [If you want to jump right in, updated docker build/compose and bare metal installation instructions are available here](docs/new-install.md)
 
-Augur is now releasing a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.62.0
+Augur is now releasing a dramatically improved new version to the main branch. It is also available here: https://github.com/chaoss/augur/releases/tag/v0.62.4
 - The `main` branch is a stable version of our new architecture, which features:
   - Dramatic improvement in the speed of large scale data collection (100,000+ repos). All data is obtained for 100k+ repos within 2 weeks.
   - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard
@@ -96,6 +97,7 @@ Contributors
 - `Dawn Foster <https://github.com/geekygirldawn/>`_
 - `Ivana Atanasova <https://github.com/ivanayov/>`_
 - `Georg J.P. Link <https://github.com/GeorgLink/>`_
+- `Gary P White <https://github.com/garypwhite/>`_
 
 GSoC 2022 participants
 -----------------------
