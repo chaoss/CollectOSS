@@ -10,8 +10,9 @@ from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
 from augur.application.db.data_parse import extract_needed_issue_data_from_gitlab_issue, extract_needed_gitlab_issue_label_data, extract_needed_gitlab_issue_assignee_data, extract_needed_gitlab_issue_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
-from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Repo
+from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Repo, Contributor
 from augur.application.db.util import execute_session_query
+from augur.tasks.util.worker_util import remove_duplicate_dicts
 
 platform_id = 2
 
@@ -135,6 +136,13 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
     if len(issue_dicts) == 0:
         print("No gitlab issues found while processing")  
         return
+    
+    # remove duplicate contributors before inserting
+    contributors = remove_duplicate_dicts(contributors)
+
+    # insert contributors from these issues
+    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
            
     logger.info(f"{task_name}: Inserting {len(issue_dicts)} gitlab issues")
     issue_natural_keys = ["repo_id", "gh_issue_id"]
