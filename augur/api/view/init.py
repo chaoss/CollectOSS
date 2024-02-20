@@ -1,12 +1,9 @@
 from pathlib import Path
-from .server import Environment
 from augur.application.logs import AugurLogger
 import logging, secrets, yaml
 
-env = Environment()
-
 # load configuration files and initialize globals
-configFile = Path(env.setdefault("CONFIG_LOCATION", "config.yml"))
+configFile = Path("config.yml")
 
 report_requests = {}
 settings = {}

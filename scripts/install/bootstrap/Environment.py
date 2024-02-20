@@ -49,4 +49,4 @@ class Environment:
         return str(os.environ)
 
     def __iter__(self):
-        return (item for item in os.environ.items)
+        return (item for item in os.environ.items())
