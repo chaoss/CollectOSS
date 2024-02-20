@@ -67,10 +67,10 @@ def pull_request_data_collection(repo_id, start_date, end_date):
                     unlabeled_count,
                     head_ref_deleted_count,
                     comment_count,
-                    COALESCE(lines_added, 0), 
-                    COALESCE(lines_removed, 0),
+                    COALESCE(lines_added, 0) as lines_added, 
+                    COALESCE(lines_removed, 0) as lines_removed,
                     commit_count, 
-                    COALESCE(file_count, 0)
+                    COALESCE(file_count, 0) as file_count
                 FROM
                     repo,
                     repo_groups,
