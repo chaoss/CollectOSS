@@ -117,7 +117,7 @@ def start_celery_collection_processes(vmem_cap_ratio):
     max_process_estimate = available_memory_in_megabytes // 500
     sleep_time = 0
 
-    #Get a subset of the maximum procesess available using a ratio, not exceeding a maximum value
+    #Get a subset of the maximum processes available using a ratio, not exceeding a maximum value
     def determine_worker_processes(ratio,maximum):
         return max(min(round(max_process_estimate * ratio),maximum),1)
 
