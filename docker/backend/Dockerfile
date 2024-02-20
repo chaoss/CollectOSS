@@ -2,7 +2,7 @@
 FROM python:3.10-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.62.4"
+LABEL version="0.62.5"
 
 ENV DEBIAN_FRONTEND=noninteractive
 

@@ -1,7 +1,7 @@
 FROM rabbitmq:3.12-management-alpine
 
 LABEL maintainer="574/augur@simplelogin.com"
-LABEL version="0.62.4"
+LABEL version="0.62.5"
 
 COPY --chown=rabbitmq:rabbitmq ./docker/rabbitmq/augur.conf /etc/rabbitmq/conf.d/
 
