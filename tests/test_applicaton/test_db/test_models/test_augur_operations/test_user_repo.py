@@ -124,7 +124,7 @@ def test_add_frontend_repos_with_invalid_repo(test_db_engine):
 
         with GithubTaskSession(logger, test_db_engine) as session:
 
-            result = UserRepo.add(session, url, data["user_id"], data["user_group_name"])
+            result = UserRepo.add_github_repo(session, url, data["user_id"], data["user_group_name"])
 
             assert result[1]["status"] == "Invalid repo"
 
@@ -163,11 +163,11 @@ def test_add_frontend_repos_with_duplicates(test_db_engine):
 
         with GithubTaskSession(logger, test_db_engine) as session:
 
-            result = UserRepo.add(session, url, data["user_id"], data["user_group_name"])
-            result2 = UserRepo.add(session, url, data["user_id"], data["user_group_name"])
+            result = UserRepo.add_github_repo(session, url, data["user_id"], data["user_group_name"])
+            result2 = UserRepo.add_github_repo(session, url, data["user_id"], data["user_group_name"])
 
             # add repo with invalid group name
-            result3 = UserRepo.add(session, url, data["user_id"], "Invalid group name")
+            result3 = UserRepo.add_github_repo(session, url, data["user_id"], "Invalid group name")
 
             assert result[1]["status"] == "Repo Added"
             assert result2[1]["status"] == "Repo Added"
@@ -263,11 +263,11 @@ def test_add_frontend_org_with_invalid_org(test_db_engine):
         with GithubTaskSession(logger, test_db_engine) as session:
 
             url = f"https://github.com/{data['org_name']}/"
-            result = UserRepo.add_org_repos(session, url, data["user_id"], data["user_group_name"])
+            result = UserRepo.add_github_org_repos(session, url, data["user_id"], data["user_group_name"])
             assert result[1]["status"] == "Invalid owner url"
 
             # test with invalid group name
-            result = UserRepo.add_org_repos(session, url, data["user_id"], "Invalid group name")
+            result = UserRepo.add_github_org_repos(session, url, data["user_id"], "Invalid group name")
             assert result[1]["status"] == "Invalid group name"
 
         with test_db_engine.connect() as connection:
@@ -305,7 +305,7 @@ def test_add_frontend_org_with_valid_org(test_db_engine):
         with GithubTaskSession(logger, test_db_engine) as session:
 
             url = "https://github.com/{}/".format(data["org_name"])
-            result = UserRepo.add_org_repos(session, url, data["user_id"], data["user_group_name"])
+            result = UserRepo.add_github_org_repos(session, url, data["user_id"], data["user_group_name"])
             assert result[1]["status"] == "Org repos added"
 
         with test_db_engine.connect() as connection:

@@ -24,15 +24,18 @@ from augur.tasks.github.pull_requests.files_model.tasks import process_pull_requ
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
 from augur.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
 from augur.tasks.github.traffic.tasks import collect_github_repo_clones_data
+from augur.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests, collect_merge_request_comments, collect_merge_request_metadata, collect_merge_request_reviewers, collect_merge_request_commits, collect_merge_request_files
+from augur.tasks.gitlab.issues_task import collect_gitlab_issues, collect_gitlab_issue_comments
+from augur.tasks.gitlab.events_task import collect_gitlab_issue_events, collect_gitlab_merge_request_events
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.db.refresh_materialized_views import *
 # from augur.tasks.data_analysis import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from logging import Logger
-from enum import Enum
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.models import CollectionStatus, Repo
+from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 
@@ -93,6 +96,27 @@ def primary_repo_collect_phase(repo_git):
 
     return repo_task_group
 
+def primary_repo_collect_phase_gitlab(repo_git):
+
+    logger = logging.getLogger(primary_repo_collect_phase_gitlab.__name__)
+
+    jobs = group(
+        chain(collect_gitlab_merge_requests.si(repo_git), group(
+                                                                #collect_merge_request_comments.s(repo_git), 
+                                                                #collect_merge_request_reviewers.s(repo_git),
+                                                                collect_merge_request_metadata.s(repo_git),
+                                                                collect_merge_request_commits.s(repo_git),
+                                                                collect_merge_request_files.s(repo_git),
+                                                                collect_gitlab_merge_request_events.si(repo_git),
+                                                                )),
+         chain(collect_gitlab_issues.si(repo_git), group(
+                                                        #collect_gitlab_issue_comments.s(repo_git),
+                                                        collect_gitlab_issue_events.si(repo_git),
+                                                         )),
+    )
+
+    return jobs
+
 
 #This phase creates the message for secondary collection tasks.
 #These are less important and have their own worker.
@@ -102,8 +126,8 @@ def secondary_repo_collect_phase(repo_git):
     repo_task_group = group(
         process_pull_request_files.si(repo_git),
         process_pull_request_commits.si(repo_git),
-        process_ossf_dependency_metrics.si(repo_git),
-        chain(collect_pull_request_reviews.si(repo_git), collect_pull_request_review_comments.si(repo_git))
+        chain(collect_pull_request_reviews.si(repo_git), collect_pull_request_review_comments.si(repo_git)),
+        process_ossf_dependency_metrics.si(repo_git)
     )
 
     return repo_task_group
@@ -143,65 +167,53 @@ def non_repo_domain_tasks():
     tasks.apply_async()
 
 
-
-    """
-        The below functions define augur's collection hooks.
-        Each collection hook schedules tasks for a number of repos
-    """
-def start_primary_collection(session,max_repo, days_until_collect_again = 1):
-
-    #Get list of enabled phases 
-    enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
-
-    #Primary collection hook.
+def build_primary_repo_collect_request(session,enabled_phase_names, days_until_collect_again = 1):
+    #Add all required tasks to a list and pass it to the CollectionRequest
     primary_enabled_phases = []
+    primary_gitlab_enabled_phases = []
 
     #Primary jobs
     if prelim_phase.__name__ in enabled_phase_names:
         primary_enabled_phases.append(prelim_phase)
-    
-    
+
     primary_enabled_phases.append(primary_repo_collect_phase)
+    primary_gitlab_enabled_phases.append(primary_repo_collect_phase_gitlab)
 
     #task success is scheduled no matter what the config says.
     def core_task_success_util_gen(repo_git):
         return core_task_success_util.si(repo_git)
-    
+
     primary_enabled_phases.append(core_task_success_util_gen)
+    primary_gitlab_enabled_phases.append(core_task_success_util_gen)
 
-    start_repos_by_user(session, max_repo, primary_enabled_phases)
+    primary_request = CollectionRequest("core",primary_enabled_phases,max_repo=40, days_until_collect_again=7, gitlab_phases=primary_gitlab_enabled_phases)
+    primary_request.get_valid_repos(session)
+    return primary_request
 
-def start_secondary_collection(session,max_repo, days_until_collect_again = 1):
-
-    #Get list of enabled phases 
-    enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
-
+def build_secondary_repo_collect_request(session,enabled_phase_names, days_until_collect_again = 1):
     #Deal with secondary collection
     secondary_enabled_phases = []
 
     if prelim_phase.__name__ in enabled_phase_names:
         secondary_enabled_phases.append(prelim_phase_secondary)
 
-    
+
     secondary_enabled_phases.append(secondary_repo_collect_phase)
 
     def secondary_task_success_util_gen(repo_git):
         return secondary_task_success_util.si(repo_git)
 
     secondary_enabled_phases.append(secondary_task_success_util_gen)
+    request = CollectionRequest("secondary",secondary_enabled_phases,max_repo=10, days_until_collect_again=10)
 
-    conds = f"augur_operations.collection_status.core_status = '{str(CollectionState.SUCCESS.value)}'"#[CollectionStatus.core_status == str(CollectionState.SUCCESS.value)]
-    start_repos_by_user(
-        session, max_repo,
-        secondary_enabled_phases,hook="secondary",
-        additional_conditions=conds
-    )
+    request.get_valid_repos(session)
+    return request
 
-def start_facade_collection(session,max_repo,days_until_collect_again = 1):
 
-    #Deal with secondary collection
+def build_facade_repo_collect_request(session,enabled_phase_names, days_until_collect_again = 1):
+    #Deal with facade collection
     facade_enabled_phases = []
-    
+
     facade_enabled_phases.append(facade_phase)
 
     def facade_task_success_util_gen(repo_git):
@@ -214,22 +226,12 @@ def start_facade_collection(session,max_repo,days_until_collect_again = 1):
 
     facade_enabled_phases.append(facade_task_update_weight_util_gen)
 
-    #cutoff_date = datetime.datetime.now() - datetime.timedelta(days=days)
-    #not_pending = CollectionStatus.facade_status != str(CollectionState.PENDING.value)
-    #not_failed_clone = CollectionStatus.facade_status != str(CollectionState.FAILED_CLONE.value)
-    #not_initializing = CollectionStatus.facade_status != str(CollectionState.INITIALIZING.value)
+    request = CollectionRequest("facade",facade_enabled_phases,max_repo=30, days_until_collect_again=7)
 
-    conds = f"augur_operations.collection_status.facade_status != '{str(CollectionState.PENDING.value)}' "#[not_pending,not_failed_clone,not_initializing]
-    conds += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.FAILED_CLONE.value)}' "
-    conds += f"AND augur_operations.collection_status.facade_status != '{str(CollectionState.INITIALIZING.value)}'"
+    request.get_valid_repos(session)
+    return request
 
-    start_repos_by_user(
-        session, max_repo,
-        facade_enabled_phases,hook="facade",
-        new_status=CollectionState.UPDATE.value,additional_conditions=conds
-    )
-
-def start_ml_collection(session,max_repo, days_until_collect_again=7):
+def build_ml_repo_collect_request(session,enabled_phase_names, days_until_collect_again = 1):
     ml_enabled_phases = []
 
     ml_enabled_phases.append(machine_learning_phase)
@@ -239,13 +241,9 @@ def start_ml_collection(session,max_repo, days_until_collect_again=7):
 
     ml_enabled_phases.append(ml_task_success_util_gen)
 
-    conds = f"augur_operations.collection_status.secondary_status = '{str(CollectionState.SUCCESS.value)}'"
-
-    start_repos_by_user(
-        session,max_repo,
-        ml_enabled_phases,hook="ml",additional_conditions=conds
-    )
-
+    request = CollectionRequest("ml",ml_enabled_phases,max_repo=5, days_until_collect_again=10)
+    request.get_valid_repos(session)
+    return request
 
 @celery.task
 def augur_collection_monitor():     
@@ -260,17 +258,27 @@ def augur_collection_monitor():
         #Get list of enabled phases 
         enabled_phase_names = get_enabled_phase_names_from_config(session.logger, session)
 
+        enabled_collection_hooks = []
+
         if primary_repo_collect_phase.__name__ in enabled_phase_names:
-            start_primary_collection(session, max_repo=40)
+            enabled_collection_hooks.append(build_primary_repo_collect_request(session,enabled_phase_names))
         
         if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-            start_secondary_collection(session, max_repo=10)
+            enabled_collection_hooks.append(build_secondary_repo_collect_request(session,enabled_phase_names))
+            #start_secondary_collection(session, max_repo=10)
 
         if facade_phase.__name__ in enabled_phase_names:
-            start_facade_collection(session, max_repo=30)
+            #start_facade_collection(session, max_repo=30)
+            enabled_collection_hooks.append(build_facade_repo_collect_request(session,enabled_phase_names))
         
         if machine_learning_phase.__name__ in enabled_phase_names:
-            start_ml_collection(session,max_repo=5)
+            enabled_collection_hooks.append(build_ml_repo_collect_request(session,enabled_phase_names))
+            #start_ml_collection(session,max_repo=5)
+        
+        logger.info(f"Starting collection phases: {[h.name for h in enabled_collection_hooks]}")
+        main_routine = AugurTaskRoutine(session,enabled_collection_hooks)
+
+        main_routine.start_data_collection()
 
 # have a pipe of 180
 
@@ -320,9 +328,41 @@ def augur_collection_update_weights():
             session.commit()
             #git_update_commit_count_weight(repo_git)
 
+@celery.task
+def retry_errored_repos():
+    """
+        Periodic task to reset repositories that have errored and try again.
+    """
+    from augur.tasks.init.celery_app import engine
+    logger = logging.getLogger(create_collection_status_records.__name__)
+
+    #TODO: Isaac needs to normalize the status's to be abstract in the 
+    #collection_status table once augur dev is less unstable.
+    with DatabaseSession(logger,engine) as session:
+        query = s.sql.text(f"""UPDATE repo SET secondary_status = {CollectionState.PENDING.value}"""
+        f""" WHERE secondary_status = '{CollectionState.ERROR.value}' ;"""
+        f"""UPDATE repo SET core_status = {CollectionState.PENDING.value}"""
+        f""" WHERE core_status = '{CollectionState.ERROR.value}' ;"""
+        f"""UPDATE repo SET facade_status = {CollectionState.PENDING.value}"""
+        f""" WHERE facade_status = '{CollectionState.ERROR.value}' ;"""
+        f"""UPDATE repo SET ml_status = {CollectionState.PENDING.value}"""
+        f""" WHERE ml_status = '{CollectionState.ERROR.value}' ;"""
+        )
+
+        session.execute_sql(query)
+
+
+
 #Retry this task for every issue so that repos that were added manually get the chance to be added to the collection_status table.
 @celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
 def create_collection_status_records():
+    """
+    Automatic task that runs and checks for repos that haven't been given a collection_status
+    record corresponding to the state of their collection at the monent. 
+
+    A special celery task that automatically retries itself and has no max retries.
+    """
+
     from augur.tasks.init.celery_app import engine
     logger = logging.getLogger(create_collection_status_records.__name__)
 

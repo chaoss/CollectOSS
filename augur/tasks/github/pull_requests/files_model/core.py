@@ -20,8 +20,8 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth):
     pr_numbers = []
     #pd.read_sql(pr_number_sql, self.db, params={})
 
-    result = augur_db.execute_sql(pr_number_sql).fetchall()
-    pr_numbers = [dict(zip(row.keys(), row)) for row in result]
+    result = augur_db.execute_sql(pr_number_sql)#.fetchall()
+    pr_numbers = [dict(row) for row in result.mappings()]
 
     query = augur_db.session.query(Repo).filter(Repo.repo_id == repo_id)
     repo = execute_session_query(query, 'one')

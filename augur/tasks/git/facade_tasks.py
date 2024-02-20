@@ -23,15 +23,16 @@ from celery.signals import after_setup_logger
 from datetime import timedelta
 import sqlalchemy as s
 
-from sqlalchemy import or_, and_, update
+from sqlalchemy import or_, and_, update, insert
 
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import update_repo_log, trim_commits, store_working_author, trim_author
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor, get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor, get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count, facade_bulk_insert_commits
 
 from augur.tasks.github.facade_github.tasks import *
-from augur.tasks.util.collection_util import CollectionState, get_collection_status_repo_git_from_filter
+from augur.tasks.util.collection_state import CollectionState
+from augur.tasks.util.collection_util import get_collection_status_repo_git_from_filter
 from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneError, git_repo_initialize
 
 
@@ -46,6 +47,7 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 
 from augur.tasks.git.dependency_tasks.tasks import process_dependency_metrics
 from augur.tasks.git.dependency_libyear_tasks.tasks import process_libyear_dependency_metrics
+from augur.tasks.git.scc_value_tasks.tasks import process_scc_value_metrics
 
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
 from augur.tasks.github.util.gh_graphql_entities import PullRequest
@@ -124,16 +126,9 @@ def trim_commits_facade_task(repo_git):
 
         # If there's a commit still there, the previous run was interrupted and
         # the commit data may be incomplete. It should be trimmed, just in case.
-        for commit in working_commits:
-            trim_commit(session, repo_id,commit['working_commit'])
-
-            # Remove the working commit.
-            remove_commit = s.sql.text("""DELETE FROM working_commits
-                WHERE repos_id = :repo_id AND 
-                working_commit = :commit""").bindparams(repo_id=repo_id,commit=commit['working_commit'])
-            session.execute_sql(remove_commit)
-            session.log_activity('Debug',f"Removed working commit: {commit['working_commit']}")
-
+        commits_to_trim = [commit['working_commit'] for commit in working_commits]
+        
+        trim_commits(session,repo_id,commits_to_trim)
         # Start the main analysis
 
         update_analysis_log(repo_id,'Collecting data')
@@ -193,8 +188,8 @@ def trim_commits_post_analysis_facade_task(repo_git):
 
 
 
-        for commit in trimmed_commits:
-            trim_commit(session,repo_id,commit)
+        #for commit in trimmed_commits:
+        trim_commits(session,repo_id,trimmed_commits)
         
 
         update_analysis_log(repo_id,'Commit trimming complete')
@@ -255,20 +250,20 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
         missing_commits = parent_commits - existing_commits
 
         session.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
-        
-        queue = []
-        if len(missing_commits) > 0:
-            #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
 
-            #encode the repo_id with the commit.
-            commits = list(missing_commits)
-            #Get all missing commits into one large list to split into task pools
-            queue.extend(commits)
-        else:
+        
+        if not len(missing_commits):
+            #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
             return
+        
+        queue = list(missing_commits)
 
         logger.info(f"Got to analysis!")
-        
+        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
+        repo_loc = (f"{absoulte_path}/.git")
+
+        pendingCommitRecordsToInsert = []
+
         for count, commitTuple in enumerate(queue):
             quarterQueue = int(len(queue) / 4)
 
@@ -281,13 +276,27 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
 
 
             #logger.info(f"Got to analysis!")
-            absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-            repo_loc = (f"{absoulte_path}/.git")
+            commitRecords = analyze_commit(session, repo_id, repo_loc, commitTuple)
+            #logger.debug(commitRecord)
+            if len(commitRecords):
+                pendingCommitRecordsToInsert.extend(commitRecords)
+                if len(pendingCommitRecordsToInsert) >= 1000:
+                    facade_bulk_insert_commits(session,pendingCommitRecordsToInsert)
+                    pendingCommitRecordsToInsert = []
+
+        
+        facade_bulk_insert_commits(session,pendingCommitRecordsToInsert)
+
         
 
-            analyze_commit(session, repo_id, repo_loc, commitTuple)
 
-        logger.info("Analysis complete")
+        # Remove the working commit.
+        remove_commit = s.sql.text("""DELETE FROM working_commits 
+        	WHERE repos_id = :repo_id AND working_commit IN :hashes
+        	""").bindparams(repo_id=repo_id,hashes=tuple(queue))
+        session.execute_sql(remove_commit)  
+    
+    logger.info("Analysis complete")
     return
 
 @celery.task
@@ -389,7 +398,7 @@ def clone_repos():
 #    with FacadeSession(logger) as session:
 #        check_for_repo_updates(session, repo_git)
 
-@celery.task
+@celery.task(base=AugurFacadeRepoCollectionTask)
 def git_update_commit_count_weight(repo_git):
 
     from augur.tasks.init.celery_app import engine
@@ -402,7 +411,7 @@ def git_update_commit_count_weight(repo_git):
         update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
 
 
-@celery.task
+@celery.task(base=AugurFacadeRepoCollectionTask)
 def git_repo_updates_facade_task(repo_git):
 
     logger = logging.getLogger(git_repo_updates_facade_task.__name__)
@@ -526,7 +535,8 @@ def facade_phase(repo_git):
             group(
                 chain(*facade_core_collection),
                 process_dependency_metrics.si(repo_git),
-                process_libyear_dependency_metrics.si(repo_git)
+                process_libyear_dependency_metrics.si(repo_git),
+                process_scc_value_metrics.si(repo_git)
             )
         )
 

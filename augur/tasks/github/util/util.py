@@ -54,10 +54,21 @@ def parse_json_response(logger: logging.Logger, response: httpx.Response) -> dic
     try:
         return response.json()
     except json.decoder.JSONDecodeError as e:
-        logger.warning(f"invalid return from GitHub. Response was: {response.text}. Exception: {e}")
+        logger.warning(f"invalid return. Response was: {response.text}. Exception: {e}")
         return json.loads(json.dumps(response.text))
 
 def get_repo_weight_by_issue(logger,repo_git):
+    """
+    Retrieve the sum of the number of issues and prs in a repository from a graphql query.
+
+    Arguments:
+        logger: logger object
+        repo_git: repository url
+    
+    Returns:
+        Sum of issues and prs for that repo
+    """
+
     from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
 
     owner,name = get_owner_repo(repo_git)

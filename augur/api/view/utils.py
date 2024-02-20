@@ -1,10 +1,24 @@
+"""
+Defines utility functions used by the augur api views
+"""
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from flask import render_template, flash, url_for, Flask
+from .init import init_logging
 from .init import *
 from ..server import app, db_session
 from augur.application.config import AugurConfig
-import urllib.request, urllib.error, json, os, math, yaml, urllib3, time, logging, re
+import urllib.request, urllib.error, json, os, math, yaml, urllib3, time, logging, re, math
+
+from augur.application.db.session import DatabaseSession
+from augur.application.db.engine import DatabaseEngine
+from augur.application.db.models import User, Repo, RepoGroup, UserGroup, UserRepo
+from sqlalchemy import Column, Table, Integer, MetaData, or_
+from sqlalchemy.sql.operators import ilike_op, distinct_op
+from sqlalchemy.sql.functions import coalesce
+from augur.application.db.models.base import Base
+
+from sqlalchemy.orm import Query
 
 init_logging()
 
@@ -65,6 +79,8 @@ def getSetting(key, section = "View"):
         return config.get_value(section, key)
 
 loadSettings()
+
+#version_check(settings)
 
 """ ----------------------------------------------------------------
 """
@@ -298,3 +314,6 @@ def render_message(messageTitle, messageBody = None, title = None, redirect = No
 def render_module(module, **args):
     args.setdefault("body", module)
     return render_template('index.j2', **args)
+
+""" ----------------------------------------------------------------
+"""

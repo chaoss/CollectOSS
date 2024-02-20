@@ -1,8 +1,5 @@
-Augur Setup
------------
-
-Ubuntu 22.x
-===========
+Ubuntu 22.x Setup
+=================
 
 We default to this version of Ubuntu for the moment because Augur does
 not yet support python3.10, which is the default version of python3.x
@@ -47,7 +44,7 @@ Executable
    sudo snap install go --classic && #required: Go Needs to be version 1.19.x or higher. Snap is the package manager that gets you to the right version. Classic enables it to actually be installed at the correct version.
    sudo apt install nginx && # required for hosting
    sudo add-apt-repository ppa:mozillateam/firefox-next &&
-   sudo apt install firefox=111.0~b8+build1-0ubuntu0.22.04.1 &&
+   sudo apt install firefox=121.0~b7+build1-0ubuntu0.22.04.1 &&
    sudo apt install firefox-geckodriver
 
    # You will almost certainly need to reboot after this. 
@@ -100,9 +97,9 @@ Then, from within the resulting postgresql shell:
    CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
    GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
 
-**If you're using PostgreSQL 15 or later**, default database permissions will
-prevent Augur's installer from configuring the database. Add one last line
-after the above to fix this:
+**If you’re using PostgreSQL 15 or later**, default database permissions
+will prevent Augur’s installer from configuring the database. Add one
+last line after the above to fix this:
 
 .. code:: sql
 
@@ -114,14 +111,15 @@ After that, return to your user by exiting ``psql``
 
    postgres=# \quit
 
-Here we want to start an SSL connection to the ``augur`` database on port 5432:
+Here we want to start an SSL connection to the ``augur`` database on
+port 5432:
 
 .. code:: shell
 
    psql -h localhost -U postgres -p 5432
 
-Now type ``exit`` to log off the postgres user, and ``exit`` a SECOND time to
-log off the root user.
+Now type ``exit`` to log off the postgres user, and ``exit`` a SECOND
+time to log off the root user.
 
 .. code:: shell
 
@@ -136,7 +134,7 @@ instance. You can accomplish this by running the below commands:
 
 .. code:: shell
 
-   sudo rabbitmq-plugins enable rabbitmq_management
+   sudo rabbitmq-plugins enable rabbitmq_management &&
    sudo rabbitmqctl add_user augur password123 &&
    sudo rabbitmqctl add_vhost augur_vhost &&
    sudo rabbitmqctl set_user_tags augur augurTag administrator &&
@@ -151,7 +149,7 @@ instance. You can accomplish this by running the below commands:
 NOTE: it is important to have a static hostname when using rabbitmq as
 it uses hostname to communicate with nodes.
 
-RabbitMQ's server can then be started from systemd:
+RabbitMQ’s server can then be started from systemd:
 
 .. code:: shell
 
@@ -209,7 +207,7 @@ Proxying Augur through Nginx
 Assumes nginx is installed.
 
 Then you create a file for the server you want Augur to run under in the
-location of your ``sites-enabled`` directory for nginx (In this example,
+location of your ``sites-enabled`` directory for nginx. In this example,
 Augur is running on port 5038: (the long timeouts on the settings page
 is for when a user adds a large number of repos or orgs in a single
 session to prevent timeouts from nginx)
@@ -247,10 +245,10 @@ Install Certbot:
 
 ::
 
-   sudo apt update
-   sudo apt upgrade
-   sudo apt install certbot
-   apt-get install python3-certbot-nginx
+   sudo apt update &&
+   sudo apt upgrade &&
+   sudo apt install certbot &&
+   sudo apt-get install python3-certbot-nginx
 
 Generate a certificate for the specific domain for which you have a file
 already in the sites-enabled directory for nginx (located at
@@ -320,17 +318,17 @@ Activate your Python Virtual Environment
 From the root of the Augur Directory, type ``make install``. You will be
 prompted to provide:
 
-- "User" is the PSQL database user, which is ``augur`` if you followed
-  instructions exactly
-- "Password" is the above user's password
-- "Host" is the domain used with nginx, e.g. ``ai.chaoss.io``
-- "Port" is 5432 unless you reconfigured something
-- "Database" is the name of the Augur database, which is ``augur`` if you
-  followed instructions exactly
-- The GitHub token created earlier
-- Then the username associated with it
-- Then the same for GitLab
-- and finally a directory to clone repositories to
+-  “User” is the PSQL database user, which is ``augur`` if you followed
+   instructions exactly
+-  “Password” is the above user’s password
+-  “Host” is the domain used with nginx, e.g. ``ai.chaoss.io``
+-  “Port” is 5432 unless you reconfigured something
+-  “Database” is the name of the Augur database, which is ``augur`` if
+   you followed instructions exactly
+-  The GitHub token created earlier
+-  Then the username associated with it
+-  Then the same for GitLab
+-  and finally a directory to clone repositories to
 
 Post Installation of Augur
 --------------------------
@@ -412,8 +410,8 @@ Specifically, you may find this error in your augur logs:
 
 ::
 
-   hugeadm --thp-never` &&
-   echo never > /sys/kernel/mm/transparent_hugepage/enabled
+   sudo hugeadm --thp-never &&
+   sudo echo never > /sys/kernel/mm/transparent_hugepage/enabled
 
 .. code:: shell
 
@@ -468,11 +466,11 @@ NOTE: You can use any open port on your server, and access the dashboard
 in a browser with http://servername-or-ip:8400 in the example above
 (assuming you have access to that port, and its open on your network.)
 
-If you're using a virtual machine within Windows and you get an error about
-missing AVX instructions, you should kill Hyper-V. Even if it doesn't *appear*
-to be active, it might still be affecting your VM. Follow
-`these instructions <https://stackoverflow.com/a/68214280>`_ to disable
-Hyper-V, and afterward AVX should pass to the VM.
+If you’re using a virtual machine within Windows and you get an error
+about missing AVX instructions, you should kill Hyper-V. Even if it
+doesn’t *appear* to be active, it might still be affecting your VM.
+Follow `these instructions <https://stackoverflow.com/a/68214280>`__ to
+disable Hyper-V, and afterward AVX should pass to the VM.
 
 Starting your Augur Instance
 ----------------------------
@@ -505,7 +503,7 @@ killing.
 Docker
 ~~~~~~
 
-1. Make sure docker, and docker-compose are both installed
+1. Make sure docker, and docker compose are both installed
 2. Modify the ``environment.txt`` file in the root of the repository to
    include your GitHub and GitLab API keys.
 3. If you are already running postgresql on your server you have two
@@ -517,7 +515,7 @@ Docker
       values for your local, non-docker-container database.
 
 4. ``sudo docker build -t augur-new -f docker/backend/Dockerfile .``
-5. ``sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up``
+5. ``sudo docker compose --env-file ./environment.txt --file docker-compose.yml up``
    to run the database in a Docker Container or
-   ``sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up``
+   ``sudo docker compose --env-file ./environment.txt --file docker-compose.yml up``
    to connect to an already running database.

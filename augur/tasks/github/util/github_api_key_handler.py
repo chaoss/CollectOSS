@@ -7,6 +7,7 @@ from typing import Optional, List
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
+from sqlalchemy import func 
 
 
 class NoValidKeysError(Exception):
@@ -31,7 +32,7 @@ class GithubApiKeyHandler():
         self.logger = session.logger
         self.config = AugurConfig(self.logger, session)
 
-        self.oauth_redis_key = "oauth_keys_list"
+        self.oauth_redis_key = "github_oauth_keys_list"
 
         self.redis_key_list = RedisList(self.oauth_redis_key)
 
@@ -39,7 +40,7 @@ class GithubApiKeyHandler():
 
         self.keys = self.get_api_keys()
 
-        # self.logger.debug(f"Retrieved {len(self.keys)} github api keys for use")
+        self.logger.info(f"Retrieved {len(self.keys)} github api keys for use")
 
     def get_random_key(self):
         """Retrieves a random key from the list of keys
@@ -71,9 +72,12 @@ class GithubApiKeyHandler():
         from augur.application.db.models import WorkerOauth
 
         select = WorkerOauth.access_token
+        # randomizing the order at db time
+        #select.order_by(func.random())
         where = [WorkerOauth.access_token != self.config_key, WorkerOauth.platform == 'github']
 
-        return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).all()]
+        return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).order_by(func.random()).all()]
+        #return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).all()]
 
 
     def get_api_keys(self) -> List[str]:
@@ -129,6 +133,18 @@ class GithubApiKeyHandler():
 
         if not valid_keys:
             raise NoValidKeysError("No valid github api keys found in the config or worker oauth table")
+
+
+        # shuffling the keys so not all processes get the same keys in the same order
+        valid_now = valid_keys
+        #try: 
+            #self.logger.info(f'valid keys before shuffle: {valid_keys}')
+            #valid_keys = random.sample(valid_keys, len(valid_keys))
+            #self.logger.info(f'valid keys AFTER shuffle: {valid_keys}')
+        #except Exception as e: 
+         #   self.logger.debug(f'{e}')
+         #   valid_keys = valid_now
+         #   pass 
 
         return valid_keys
 

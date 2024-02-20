@@ -26,16 +26,40 @@ def contributor_breadth_model() -> None:
     tool_version = '0.0.1'
     data_source = 'GitHub API'
 
-
+    # This version of the query pulls contributors who have not had any data collected yet
+    # To the top of the list
     cntrb_login_query = s.sql.text("""
-        SELECT DISTINCT gh_login, cntrb_id 
-        FROM augur_data.contributors 
-        WHERE gh_login IS NOT NULL
+            SELECT DISTINCT
+                gh_login,
+                cntrb_id 
+            FROM
+                (
+                SELECT DISTINCT
+                    gh_login,
+                    cntrb_id,
+                    data_collection_date 
+                FROM
+                    (
+                    SELECT DISTINCT
+                        contributors.gh_login,
+                        contributors.cntrb_id,
+                        contributor_repo.data_collection_date :: DATE 
+                    FROM
+                        contributor_repo
+                        RIGHT OUTER JOIN contributors ON contributors.cntrb_id = contributor_repo.cntrb_id 
+                        AND contributors.gh_login IS NOT NULL 
+                    ORDER BY
+                        contributor_repo.data_collection_date :: DATE NULLS FIRST 
+                    ) A 
+                ORDER BY
+                data_collection_date DESC NULLS FIRST 
+                ) b
     """)
 
-    result = engine.execute(cntrb_login_query)
+    with engine.connect() as connection:
+        result = connection.execute(cntrb_login_query)
 
-    current_cntrb_logins = [dict(row) for row in result]
+    current_cntrb_logins = [dict(row) for row in result.mappings()]
 
 
     cntrb_newest_events_query = s.sql.text("""
@@ -45,8 +69,10 @@ def contributor_breadth_model() -> None:
         GROUP BY c.gh_login;
     """)
 
-    cntrb_newest_events_list = engine.execute(cntrb_newest_events_query)
-    cntrb_newest_events_list = [dict(row) for row in cntrb_newest_events_list]
+    with engine.connect() as connection:
+        cntrb_newest_events_list = connection.execute(cntrb_newest_events_query)
+    
+    cntrb_newest_events_list = [dict(row) for row in cntrb_newest_events_list.mappings()]
 
     cntrb_newest_events_map = {}
     for cntrb_event in cntrb_newest_events_list:

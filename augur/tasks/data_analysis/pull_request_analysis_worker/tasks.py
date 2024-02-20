@@ -74,8 +74,8 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
         and pull_requests.repo_id = :repo_id 
         and pr_src_state like 'open' 
     """)
-
-    df_pr = pd.read_sql_query(pr_SQL, engine, params={'begin_date': begin_date, 'repo_id': repo_id})
+    with engine.connect() as conn:
+        df_pr = pd.read_sql_query(pr_SQL, conn, params={'begin_date': begin_date, 'repo_id': repo_id})
 
     logger.info(f'PR Dataframe dim: {df_pr.shape}\n')
 
@@ -106,15 +106,16 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
             select message.msg_id, msg_timestamp, msg_text, message.cntrb_id from augur_data.message
             left outer join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
             left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id where issue_message_ref.repo_id = :repo_id""")
-
-    df_message = pd.read_sql_query(messages_SQL, engine, params={'repo_id': repo_id})
+    with engine.connect() as conn:
+        df_message = pd.read_sql_query(messages_SQL, conn, params={'repo_id': repo_id})
 
     logger.info(f'Mapping messages to PR, find comment & participants counts')
 
     # Map PR to its corresponding messages
     
     pr_ref_sql = s.sql.text("select * from augur_data.pull_request_message_ref")
-    df_pr_ref = pd.read_sql_query(pr_ref_sql, engine)
+    with engine.connect() as conn:
+        df_pr_ref = pd.read_sql_query(pr_ref_sql, conn)
     df_merge = pd.merge(df_pr, df_pr_ref, on='pull_request_id', how='left')
     df_merge = pd.merge(df_merge, df_message, on='msg_id', how='left')
     df_merge = df_merge.dropna(subset=['msg_id'], axis=0)
@@ -167,7 +168,9 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
             SELECT repo_id, pull_requests_merged, pull_request_count,watchers_count, last_updated FROM 
             augur_data.repo_info where repo_id = :repo_id
             """)
-    df_repo = pd.read_sql_query(repo_sql, engine, params={'repo_id': repo_id})
+    
+    with engine.connect() as conn:
+        df_repo = pd.read_sql_query(repo_sql, conn, params={'repo_id': repo_id})
 
     df_repo = df_repo.loc[df_repo.groupby('repo_id').last_updated.idxmax(), :]
     df_repo = df_repo.drop(['last_updated'], axis=1)

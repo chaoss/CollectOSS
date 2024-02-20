@@ -24,7 +24,6 @@ missingModules=""
 #Check everything that needs to be in the $PATH is in there.
 #Bash doesn't let this work if this is in an if statement for some reason it has to be chained
 type -P "docker" &>/dev/null && echo "docker found..." || missingModules="${missingModules} docker"
-type -P "docker-compose" &>/dev/null && echo "docker-compose found..." || missingModules="${missingModules} docker-compose"
 type -P "ifconfig" &>/dev/null && echo "ifconfig found..." || missingModules="${missingModules} ifconfig (part of net-tools)"
 type -P "psql" &>/dev/null && echo "psql found..." || missingModules="${missingModules} psql"
 type -P "watch" &>/dev/null && echo "watch found..." || missingModules="${missingModules} watch"

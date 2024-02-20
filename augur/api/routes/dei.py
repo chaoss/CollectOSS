@@ -17,7 +17,7 @@ from augur.application.db.models import User, ClientApplication, CollectionStatu
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 
-from augur.tasks.util.collection_util import start_block_of_repos, get_enabled_phase_names_from_config, core_task_success_util
+from augur.tasks.util.collection_util import CollectionRequest,AugurTaskRoutine, get_enabled_phase_names_from_config, core_task_success_util
 from augur.tasks.start_tasks import prelim_phase, primary_repo_collect_phase
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.init.redis_connection import redis_connection as redis
@@ -52,7 +52,7 @@ def dei_track_repo(application: ClientApplication):
         return jsonify({"status": "Repo already exists"})
     
     frontend_repo_group: RepoGroup = session.query(RepoGroup).filter(RepoGroup.rg_name == FRONTEND_REPO_GROUP_NAME).first()
-    repo_id = Repo.insert(session, repo_url, frontend_repo_group.repo_group_id, "API.DEI", repo_type="")
+    repo_id = Repo.insert_github_repo(session, repo_url, frontend_repo_group.repo_group_id, "API.DEI", repo_type="")
     if not repo_id:
         return jsonify({"status": "Error adding repo"})
     
@@ -96,7 +96,13 @@ def dei_track_repo(application: ClientApplication):
 
     record = BadgingDEI(**record)
     session.add(record)
-    start_block_of_repos(logger, session, [repo_url], primary_enabled_phases, "new")
+    
+    deiHook = CollectionRequest("core",primary_enabled_phases)
+    deiHook.repo_list = [repo_url]
+
+    singleRoutine = AugurTaskRoutine(session,[deiHook])
+    singleRoutine.start_data_collection()
+    #start_block_of_repos(logger, session, [repo_url], primary_enabled_phases, "new")
 
     session.close()
 

@@ -259,8 +259,15 @@ class Contributor(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
+    issues_opened = relationship("Issue", primaryjoin="Issue.reporter_id == Contributor.cntrb_id", back_populates="reporter")
+    pull_requests = relationship("PullRequest", back_populates="cntrb")
+    pull_request_reviews = relationship("PullRequestReview", back_populates="cntrb")
+    commits = relationship("Commit", primaryjoin="Commit.cmt_author_platform_username == Contributor.cntrb_login", back_populates="contributor")
+    alias = relationship("ContributorsAlias", back_populates="cntrb")
+
     @classmethod
     def from_github(cls, contributor, tool_source, tool_version, data_source):
+        from augur.tasks.util.AugurUUID import GithubUUID
 
         cntrb_id = GithubUUID()   
         cntrb_id["user"] = contributor["id"]
@@ -557,6 +564,8 @@ class RepoGroup(Base):
     data_source = Column(String)
     data_collection_date = Column(TIMESTAMP(precision=0))
 
+    repo = relationship("Repo", back_populates="repo_group")
+
     @staticmethod
     def is_valid_repo_group_id(session, repo_group_id: int) -> bool:
         """Deterime is repo_group_id exists.
@@ -794,7 +803,7 @@ class ContributorsAlias(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    cntrb = relationship("Contributor")
+    cntrb = relationship("Contributor", back_populates="alias")
 
 
 class Repo(Base):
@@ -859,9 +868,14 @@ class Repo(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    repo_group = relationship("RepoGroup")
-    user_repo = relationship("UserRepo")
+    repo_group = relationship("RepoGroup", back_populates="repo")
+    user_repo = relationship("UserRepo", back_populates="repo")
     collection_status = relationship("CollectionStatus", back_populates="repo")
+    issues = relationship("Issue", back_populates="repo")
+    prs = relationship("PullRequest", back_populates="repo")
+    messages = relationship("Message", back_populates="repo")
+    commits = relationship("Commit", back_populates="repo")
+    releases = relationship("Release", back_populates="repo")
 
     @staticmethod
     def get_by_id(session, repo_id):
@@ -915,6 +929,44 @@ class Repo(Base):
                 return False, {"status": f"Github Error: {data['message']}"}
 
             return True, {"status": "Valid repo", "repo_type": data["owner"]["type"]}
+        
+    @staticmethod
+    def is_valid_gitlab_repo(gl_session, url: str) -> bool:
+        """Determine whether a GitLab repo URL is valid.
+
+        Args:
+            gl_session: GitLab session object with API key
+            url: Repository URL
+
+        Returns:
+            True if repo URL is valid, False otherwise
+        """
+        from augur.tasks.github.util.github_paginator import hit_api
+
+        REPO_ENDPOINT = "https://gitlab.com/api/v4/projects/{}/"
+
+        owner, repo = Repo.parse_gitlab_repo_url(url)
+        if not owner or not repo:
+            return False, {"status": "Invalid repo URL"}
+
+        # Encode namespace and project name for the API request
+        project_identifier = f"{owner}%2F{repo}"
+        url = REPO_ENDPOINT.format(project_identifier)
+
+        attempts = 0
+        while attempts < 10:
+            response = hit_api(gl_session.oauths, url, logger)
+
+            if response.status_code == 404:
+                return False, {"status": "Invalid repo"}
+
+            if response.status_code == 200:
+                return True, {"status": "Valid repo"}
+
+            attempts += 1
+
+        return False, {"status": "Failed to validate repo after multiple attempts"}
+
 
     @staticmethod
     def parse_github_repo_url(url: str) -> tuple:
@@ -928,6 +980,29 @@ class Repo(Base):
         """
         
         result = re.search(r"https?:\/\/github\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
+
+        if not result:
+            return None, None
+
+        capturing_groups = result.groups()
+
+        owner = capturing_groups[0]
+        repo = capturing_groups[1]
+
+        return owner, repo
+    
+    @staticmethod
+    def parse_gitlab_repo_url(url: str) -> tuple:
+        """ Gets the owner and repo from a gitlab url.
+
+        Args:
+            url: Gitlab url
+
+        Returns:
+            Tuple of owner and repo. Or a tuple of None and None if the url is invalid.
+        """
+        
+        result = re.search(r"https?:\/\/gitlab\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
 
         if not result:
             return None, None
@@ -960,12 +1035,60 @@ class Repo(Base):
         return result.groups()[0]
 
     @staticmethod
-    def insert(session, url: str, repo_group_id: int, tool_source, repo_type):
+    def insert_gitlab_repo(session, url: str, repo_group_id: int, tool_source):
         """Add a repo to the repo table.
 
         Args:
             url: repo url
             repo_group_id: group to assign repo to
+
+        Note:
+            If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
+        """
+
+        if not isinstance(url, str) or not isinstance(repo_group_id, int) or not isinstance(tool_source, str):
+            return None
+
+        if not RepoGroup.is_valid_repo_group_id(session, repo_group_id):
+            return None
+        
+        if url.endswith("/"):
+            url = url[:-1]
+        
+        url = url.lower()
+        
+        owner, repo = Repo.parse_gitlab_repo_url(url)
+        if not owner or not repo:
+            return None
+
+        repo_data = {
+            "repo_group_id": repo_group_id,
+            "repo_git": url,
+            "repo_path": f"gitlab.com/{owner}/",
+            "repo_name": repo,
+            "repo_type": None,
+            "tool_source": tool_source,
+            "tool_version": "1.0",
+            "data_source": "Git"
+        }
+
+        repo_unique = ["repo_git"]
+        return_columns = ["repo_id"]
+        result = session.insert_data(repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
+
+        if not result:
+            return None
+
+        return result[0]["repo_id"]
+
+    @staticmethod
+    def insert_github_repo(session, url: str, repo_group_id: int, tool_source, repo_type):
+        """Add a repo to the repo table.
+
+        Args:
+            url: repo url
+            repo_group_id: group to assign repo to
+            repo_type: github or gitlab
 
         Note:
             If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
@@ -1194,12 +1317,10 @@ class Commit(Base):
     contributor = relationship(
         "Contributor",
         primaryjoin="Commit.cmt_author_platform_username == Contributor.cntrb_login",
+        back_populates="commits"
     )
-    contributor1 = relationship(
-        "Contributor",
-        primaryjoin="Commit.cmt_author_platform_username == Contributor.cntrb_login",
-    )
-    repo = relationship("Repo")
+    repo = relationship("Repo", back_populates="commits")
+    message_ref = relationship("CommitCommentRef", back_populates="cmt")
 
 
 class Issue(Base):
@@ -1259,12 +1380,14 @@ class Issue(Base):
     )
 
     cntrb = relationship(
-        "Contributor", primaryjoin="Issue.cntrb_id == Contributor.cntrb_id"
-    )
-    repo = relationship("Repo")
+        "Contributor", primaryjoin="Issue.cntrb_id == Contributor.cntrb_id")
+    repo = relationship("Repo", back_populates="issues")
     reporter = relationship(
-        "Contributor", primaryjoin="Issue.reporter_id == Contributor.cntrb_id"
+        "Contributor", primaryjoin="Issue.reporter_id == Contributor.cntrb_id", back_populates="issues_opened"
     )
+    message_refs = relationship("IssueMessageRef", back_populates="issue")
+    assignees = relationship("IssueAssignee", back_populates="issue")
+    labels = relationship("IssueLabel", back_populates="issue")
 
     # @classmethod
     # def from_github(cls):
@@ -1408,8 +1531,11 @@ class Message(Base):
 
     cntrb = relationship("Contributor")
     pltfrm = relationship("Platform")
-    repo = relationship("Repo")
+    repo = relationship("Repo", back_populates="messages")
     rgls = relationship("RepoGroupsListServe")
+    pr_message_ref = relationship("PullRequestMessageRef", back_populates="message")
+    issue_message_ref = relationship("IssueMessageRef", back_populates="message")
+    commit_message_ref = relationship("CommitCommentRef", back_populates="msg")
 
     # @classmethod
     # def from_github(cls):
@@ -1582,8 +1708,13 @@ class PullRequest(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    pr_augur_contributor = relationship("Contributor")
-    repo = relationship("Repo")
+    cntrb = relationship("Contributor", back_populates="pull_requests")
+    repo = relationship("Repo", back_populates="prs")
+    message_refs = relationship("PullRequestMessageRef", back_populates="pr")
+    reviews = relationship("PullRequestReview", back_populates="pr")
+    labels = relationship("PullRequestLabel", back_populates="pull_request")
+    assignees = relationship("PullRequestAssignee", back_populates="pull_request")
+    files = relationship("PullRequestFile", back_populates="")
 
     @classmethod
     def from_github(cls, pr, repo_id, tool_source, tool_version):
@@ -1661,7 +1792,7 @@ class Release(Base):
         TIMESTAMP(precision=6), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    repo = relationship("Repo")
+    repo = relationship("Repo", back_populates="releases")
 
 
 class RepoBadging(Base):
@@ -2136,7 +2267,7 @@ class CommitCommentRef(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    cmt = relationship("Commit")
+    cmt = relationship("Commit", back_populates="message_ref")
     msg = relationship("Message")
 
 
@@ -2236,7 +2367,7 @@ class IssueAssignee(Base):
     )
 
     cntrb = relationship("Contributor")
-    issue = relationship("Issue")
+    issue = relationship("Issue", back_populates="assignees")
     repo = relationship("Repo")
 
     @classmethod
@@ -2379,7 +2510,7 @@ class IssueLabel(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    issue = relationship("Issue")
+    issue = relationship("Issue", back_populates="labels")
     repo = relationship("Repo")
 
     @classmethod
@@ -2456,8 +2587,8 @@ class IssueMessageRef(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    issue = relationship("Issue")
-    msg = relationship("Message")
+    issue = relationship("Issue", back_populates="message_refs")
+    message = relationship("Message", back_populates="issue_message_ref")
     repo = relationship("Repo")
 
 
@@ -2683,7 +2814,7 @@ class PullRequestAssignee(Base):
     )
 
     contrib = relationship("Contributor")
-    pull_request = relationship("PullRequest")
+    pull_request = relationship("PullRequest", back_populates="assignees")
     repo = relationship("Repo")
 
     @classmethod
@@ -2896,7 +3027,7 @@ class PullRequestFile(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    pull_request = relationship("PullRequest")
+    pull_request = relationship("PullRequest", back_populates="files")
     repo = relationship("Repo")
 
     # @classmethod
@@ -2945,7 +3076,7 @@ class PullRequestLabel(Base):
     )
     
 
-    pull_request = relationship("PullRequest")
+    pull_request = relationship("PullRequest", back_populates="labels")
     repo = relationship("Repo")
 
     @classmethod
@@ -3013,8 +3144,8 @@ class PullRequestMessageRef(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    msg = relationship("Message")
-    pull_request = relationship("PullRequest")
+    message = relationship("Message", back_populates="pr_message_ref")
+    pr = relationship("PullRequest", back_populates="message_refs")
     repo = relationship("Repo")
 
 
@@ -3209,9 +3340,9 @@ class PullRequestReview(Base):
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
 
-    cntrb = relationship("Contributor")
+    cntrb = relationship("Contributor", back_populates="pull_request_reviews")
     platform = relationship("Platform")
-    pull_request = relationship("PullRequest")
+    pr = relationship("PullRequest", back_populates="reviews")
     repo = relationship("Repo")
 
     # @classmethod

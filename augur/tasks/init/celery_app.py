@@ -20,16 +20,7 @@ from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
 from augur.application.db.models import CollectionStatus, Repo
-
-class CollectionState(Enum):
-    SUCCESS = "Success"
-    PENDING = "Pending"
-    ERROR = "Error"
-    COLLECTING = "Collecting"
-    INITIALIZING = "Initializing"
-    UPDATE = "Update"
-    FAILED_CLONE = "Failed Clone"
-
+from augur.tasks.util.collection_state import CollectionState
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +41,14 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.pull_requests.commits_model.tasks',
                 'augur.tasks.github.traffic.tasks']
 
+gitlab_tasks = ['augur.tasks.gitlab.merge_request_task',
+                'augur.tasks.gitlab.issues_task',
+                'augur.tasks.gitlab.events_task']
+
 git_tasks = ['augur.tasks.git.facade_tasks',
             'augur.tasks.git.dependency_tasks.tasks',
-            'augur.tasks.git.dependency_libyear_tasks.tasks']
+            'augur.tasks.git.dependency_libyear_tasks.tasks',
+            'augur.tasks.git.scc_value_tasks.tasks']
 
 data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
                        'augur.tasks.data_analysis.clustering_worker.tasks',
@@ -65,7 +61,7 @@ materialized_view_tasks = ['augur.tasks.db.refresh_materialized_views']
 
 frontend_tasks = ['augur.tasks.frontend']
 
-tasks = start_tasks + github_tasks + git_tasks + materialized_view_tasks + frontend_tasks
+tasks = start_tasks + github_tasks + gitlab_tasks + git_tasks + materialized_view_tasks + frontend_tasks
 
 if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
     tasks += data_analysis_tasks
@@ -80,7 +76,7 @@ BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 #Classes for tasks that take a repo_git as an argument.
 class AugurCoreRepoCollectionTask(celery.Task):
 
-    def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core'):
+    def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core',after_fail=CollectionState.ERROR.value):
         from augur.tasks.init.celery_app import engine
 
         logger = AugurLogger(logger_name).get_logger()
@@ -99,7 +95,7 @@ class AugurCoreRepoCollectionTask(celery.Task):
             prevStatus = getattr(repoStatus, f"{collection_hook}_status")
 
             if prevStatus == CollectionState.COLLECTING.value or prevStatus == CollectionState.INITIALIZING.value:
-                setattr(repoStatus, f"{collection_hook}_status", CollectionState.ERROR.value)
+                setattr(repoStatus, f"{collection_hook}_status", after_fail)
                 setattr(repoStatus, f"{collection_hook}_task_id", None)
                 session.commit()
 
@@ -124,6 +120,7 @@ class AugurMlRepoCollectionTask(AugurCoreRepoCollectionTask):
         repo_git = args[0]
         self.augur_handle_task_failure(exc,task_id,repo_git, "ml_task_failure", collection_hook='ml')
 
+
 #task_cls='augur.tasks.init.celery_app:AugurCoreRepoCollectionTask'
 celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)
 
@@ -139,6 +136,7 @@ celery_app.conf.task_routes = {
     'augur.tasks.github.pull_requests.tasks.collect_pull_request_review_comments': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.process_ossf_dependency_metrics': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.process_dependency_metrics': {'queue': 'facade'},
+    'augur.tasks.git.scc_value_tasks.tasks.process_scc_value_metrics' : {'queue': 'facade'},
     'augur.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'},
     'augur.tasks.frontend.*': {'queue': 'frontend'},
     'augur.tasks.data_analysis.contributor_breadth_worker.*': {'queue': 'secondary'},
@@ -203,7 +201,7 @@ def setup_periodic_tasks(sender, **kwargs):
     """
     from celery.schedules import crontab
     from augur.tasks.start_tasks import augur_collection_monitor, augur_collection_update_weights
-    from augur.tasks.start_tasks import non_repo_domain_tasks
+    from augur.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos
     from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
     from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
@@ -227,6 +225,9 @@ def setup_periodic_tasks(sender, **kwargs):
 
         logger.info(f"Scheduling update of collection weights on midnight each day")
         sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
+
+        logger.info(f"Setting 404 repos to be marked for retry on midnight each day")
+        sender.add_periodic_task(crontab(hour=0, minute=0),retry_errored_repos.s())
 
         logger.info(f"Scheduling contributor breadth every 30 days")
         thirty_days_in_seconds = 30*24*60*60

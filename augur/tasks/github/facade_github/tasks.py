@@ -3,6 +3,7 @@ import logging
 
 
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api, retrieve_dict_from_endpoint
 from augur.tasks.github.util.github_task_session import GithubTaskSession, GithubTaskManifest
 from augur.tasks.github.util.util import get_owner_repo
@@ -198,7 +199,7 @@ def link_commits_to_contributor(session,contributorQueue):
 
 
 # Update the contributors table from the data facade has gathered.
-@celery.task
+@celery.task(base=AugurFacadeRepoCollectionTask)
 def insert_facade_contributors(repo_id):
 
     from augur.tasks.init.celery_app import engine
@@ -251,8 +252,8 @@ def insert_facade_contributors(repo_id):
         """).bindparams(repo_id=repo_id)
 
         #Execute statement with session.
-        result = manifest.augur_db.execute_sql(new_contrib_sql).fetchall()
-        new_contribs = [dict(zip(row.keys(), row)) for row in result]
+        result = manifest.augur_db.execute_sql(new_contrib_sql)
+        new_contribs = [dict(row) for row in result.mappings()]
 
         #print(new_contribs)
 
@@ -302,8 +303,8 @@ def insert_facade_contributors(repo_id):
         #existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
         #                                    'repo_id': repo_id}).to_json(orient="records"))
 
-        result = session.execute_sql(resolve_email_to_cntrb_id_sql).fetchall()
-        existing_cntrb_emails = [dict(zip(row.keys(), row)) for row in result]
+        result = session.execute_sql(resolve_email_to_cntrb_id_sql)
+        existing_cntrb_emails = [dict(row) for row in result.mappings()]
 
         print(existing_cntrb_emails)
         link_commits_to_contributor(session,list(existing_cntrb_emails))

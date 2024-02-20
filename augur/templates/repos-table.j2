@@ -86,6 +86,10 @@
 </nav>
 {% elif query_key %}
 <h1>Your search did not match any repositories</h1>
+{% elif pages %}
+<h1>Pagination Error</h1>
+<p>Something went wrong displaying the requested section of results.</p>
+<P>Please go back and try again.</P>
 {% elif current_user.is_authenticated %}
 <h1>No Repos Tracked</h1>
 <p>Add repos to your personal tracker in your <a href="{{ url_for('user_settings') }}">profile page</a></p>

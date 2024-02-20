@@ -5,6 +5,7 @@ import re
 
 from sqlalchemy.exc import IntegrityError
 
+from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
@@ -29,16 +30,29 @@ def collect_issues(repo_git : str) -> int:
 
         augur_db = manifest.augur_db
 
+        logger.info(f'this is the manifest.key_auth value: {str(manifest.key_auth)}')
+
         try:
         
             query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
             repo_obj = execute_session_query(query, 'one')
             repo_id = repo_obj.repo_id
 
+            #try this
+            # the_key = manifest.key_auth
+            # try: 
+            #     randomon = GithubApiKeyHandler(augur_db.session)
+            #     the_key = randomon.get_random_key()
+            #     logger.info(f'The Random Key {the_key}')
+            # except Exception as e: 
+            #     logger.info(f'error: {e}')
+            #     the_key = manifest.key_auth
+            #     pass 
+
             owner, repo = get_owner_repo(repo_git)
         
             issue_data = retrieve_all_issue_data(repo_git, logger, manifest.key_auth)
-
+            #issue_data = retrieve_all_issue_data(repo_git, logger, the_key)
 
             if issue_data:
                 total_issues = len(issue_data)
@@ -181,7 +195,7 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
         issue_assignee_dicts += add_key_value_pair_to_dicts(other_issue_data["assignees"], "issue_id", issue_id)
 
 
-    logger.info(f"{task_name}: Inserting other issue data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
+    logger.info(f"{task_name}: Inserting other github issue data of lengths: Labels: {len(issue_label_dicts)} - Assignees: {len(issue_assignee_dicts)}")
 
     # inserting issue labels
     # we are using label_src_id and issue_id to determine if the label is already in the database.
@@ -207,7 +221,7 @@ def process_issue_contributors(issue, tool_source, tool_version, data_source):
 
     for assignee in issue["assignees"]:
 
-        issue_assignee_cntrb = extract_needed_contributor_data(issue["user"], tool_source, tool_version, data_source)
+        issue_assignee_cntrb = extract_needed_contributor_data(assignee, tool_source, tool_version, data_source)
         assignee["cntrb_id"] = issue_assignee_cntrb["cntrb_id"]
         contributors.append(issue_assignee_cntrb)
 

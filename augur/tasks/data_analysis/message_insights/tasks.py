@@ -59,7 +59,8 @@ def message_insight_model(repo_git: str,logger,engine, session) -> None:
     repo_exists_SQL = s.sql.text("""
         SELECT exists (SELECT 1 FROM augur_data.message_analysis_summary WHERE repo_id = :repo_id LIMIT 1)""")
 
-    df_rep = pd.read_sql_query(repo_exists_SQL, engine, params={'repo_id': repo_id})
+    with engine.connect() as conn:
+        df_rep = pd.read_sql_query(repo_exists_SQL, conn, params={'repo_id': repo_id})
     #full_train = not(df_rep['exists'].iloc[0])
     logger.info(f'Full Train: {full_train}')
 
@@ -84,7 +85,8 @@ def message_insight_model(repo_git: str,logger,engine, session) -> None:
             where message.repo_id = :repo_id
             """)
 
-        df_past = pd.read_sql_query(past_SQL, engine, params={'repo_id': repo_id})
+        with engine.connect() as conn:
+            df_past = pd.read_sql_query(past_SQL, conn, params={'repo_id': repo_id})
 
         df_past['msg_timestamp'] = pd.to_datetime(df_past['msg_timestamp'])
         df_past = df_past.sort_values(by='msg_timestamp')
@@ -124,7 +126,8 @@ def message_insight_model(repo_git: str,logger,engine, session) -> None:
             left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
             where message.repo_id = :repo_id""")
 
-    df_message = pd.read_sql_query(join_SQL, engine, params={'repo_id': repo_id, 'begin_date': begin_date})
+    with engine.connect() as conn:
+        df_message = pd.read_sql_query(join_SQL, conn, params={'repo_id': repo_id, 'begin_date': begin_date})
 
     logger.info(f'Messages dataframe dim: {df_message.shape}')
     logger.info(f'Value 1: {df_message.shape[0]}')
@@ -159,7 +162,8 @@ def message_insight_model(repo_git: str,logger,engine, session) -> None:
             left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
             where issue_message_ref.repo_id = :repo_id""")
 
-            df_past = pd.read_sql_query(merge_SQL, engine, params={'repo_id': repo_id})
+            with engine.connect() as conn:
+                df_past = pd.read_sql_query(merge_SQL, conn, params={'repo_id': repo_id})
             df_past = df_past.loc[df_past['novelty_flag'] == 0]
             rec_errors = df_past['reconstruction_error'].tolist()
             threshold = threshold_otsu(np.array(rec_errors))
@@ -345,7 +349,8 @@ def message_insight_model(repo_git: str,logger,engine, session) -> None:
                                  FROM message_analysis_summary 
                                  WHERE repo_id=:repo_id""")
 
-        df_past = pd.read_sql_query(message_analysis_query, engine, params={'repo_id': repo_id})
+        with engine.connect() as conn:
+            df_past = pd.read_sql_query(message_analysis_query, conn, params={'repo_id': repo_id})
 
         # df_past = get_table_values(cols=['period', 'positive_ratio', 'negative_ratio', 'novel_count'],
         #                                 tables=['message_analysis_summary'],
@@ -414,12 +419,13 @@ def send_insight(repo_id, insights, logger, engine):
             WHERE repo_id = {}
         """.format(repo_id))
 
-        repo = pd.read_sql(repoSQL, engine, params={}).iloc[0]
+        with engine.connect() as conn:
+            repo = pd.read_sql(repoSQL, conn, params={}).iloc[0]
 
         to_send = {
             'message_insight': True,
             'repo_git': repo['repo_git'],
-            'insight_begin_date': begin_date.strftime("%Y-%m-%d %H:%M:%S"),
+            'insight_begin_date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             # date from when insights are calculated
             'sentiment': insights[0],  # sentiment insight dict
             'novelty': insights[1],  # novelty insight dict
@@ -449,13 +455,14 @@ def get_max_id(table, column, logger, engine, default=25150):
         SELECT max({0}.{1}) AS {1}
         FROM {0}
     """.format(table, column))
-    rs = pd.read_sql(max_id_sql, engine, params={})
+
+    with engine.connect() as conn:
+        rs = pd.read_sql(max_id_sql, conn, params={})
     if rs.iloc[0][column] is not None:
         max_id = int(rs.iloc[0][column]) + 1
         logger.info("Found max id for {} column in the {} table: {}\n".format(column, table, max_id))
     else:
         max_id = default
-        logger.warning("Could not find max id for {} column in the {} table... " +
-            "using default set to: {}\n".format(column, table, max_id))
+        logger.warning(f"Could not find max id for {column} column in the {table} table... using default set to: {max_id}\n")
 
     return max_id
