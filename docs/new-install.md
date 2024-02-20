@@ -374,3 +374,5 @@ You can stop augur with `augur backend stop`, followed by `augur backend kill`. 
 4. `sudo docker build -t augur-new -f docker/backend/Dockerfile .`
 5. `sudo docker compose --env-file ./environment.txt --file docker-compose.yml up` to run the database in a Docker Container or 
    `sudo docker compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. 
+
+_Note: `AUGUR\_DB` and `RABBIT\_*` variables are optional when using the default docker-comopse.yml. `docker-compose-externalDB` does require `AUGUR\_DB` set to a postgresql installation._
