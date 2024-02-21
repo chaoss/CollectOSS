@@ -256,7 +256,7 @@ def retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git):
 
         url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/issues/{id}/notes"
         
-        for page_data, page in comments.iter_pages(url):
+        for page_data, _ in comments.iter_pages(url):
 
             if page_data is None or len(page_data) == 0:
                 break
@@ -294,6 +294,7 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
         issue_number_to_id_map[issue.gh_issue_number] = issue.issue_id
 
     message_dicts = []
+    contributors = []
     message_ref_mapping_data = {}
     for id, messages in data.items():
 
@@ -307,6 +308,11 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
 
         for message in messages:
 
+            message, contributor = process_gitlab_comment_contributors(message, tool_source, tool_version, data_source)
+
+            if contributor:
+                contributors.append(contributor)
+
             issue_message_ref_data = extract_needed_gitlab_issue_message_ref_data(message, issue_id, repo_id, tool_source, tool_version, data_source)
 
             message_ref_mapping_data[message["id"]] = {
@@ -317,6 +323,10 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
                 extract_needed_gitlab_message_data(message, platform_id, tool_source, tool_version, data_source)
             )
 
+    contributors = remove_duplicate_dicts(contributors)
+
+    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
 
     logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
     message_natural_keys = ["platform_msg_id"]
@@ -340,3 +350,14 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
     logger.info(f"{task_name}: Inserting {len(issue_message_ref_dicts)} gitlab issue messages ref rows")
     issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
     augur_db.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
+
+
+def process_gitlab_comment_contributors(message, tool_source, tool_version, data_source):
+
+    contributor = extract_needed_gitlab_contributor_data(message["author"], tool_source, tool_version, data_source)
+    if contributor:
+        message["cntrb_id"] = contributor["cntrb_id"]
+    else:
+        message["cntrb_id"] = None
+
+    return message, contributor

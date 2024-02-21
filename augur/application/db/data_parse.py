@@ -1174,7 +1174,7 @@ def extract_needed_gitlab_message_data(comment: dict, platform_id: int, tool_sou
         "pltfrm_id": platform_id,
         "msg_text": comment['body'],
         "msg_timestamp": comment['created_at'],
-        "cntrb_id": None,
+        "cntrb_id": comment["cntrb_id"],
         "platform_msg_id": int(comment['id']),
         "tool_source": tool_source,
         "tool_version": tool_version,
