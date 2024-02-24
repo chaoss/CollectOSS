@@ -202,7 +202,8 @@ def link_commits_to_contributor(session,contributorQueue):
 @celery.task(base=AugurFacadeRepoCollectionTask)
 def insert_facade_contributors(repo_id):
 
-    from augur.tasks.init.celery_app import engine
+    from augur.application.db import get_engine
+    engine = get_engine()
 
     logger = logging.getLogger(insert_facade_contributors.__name__)
 

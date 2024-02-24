@@ -81,7 +81,9 @@ def get_repo_weight_by_issue(logger,repo_git):
 
 #Get the weight for each repo for the core collection hook
 def get_repo_weight_core(logger,repo_git):
-    from augur.tasks.init.celery_app import engine
+    
+    from augur.application.db import get_engine
+    engine = get_engine()
 
     with DatabaseSession(logger,engine) as session:
         repo = Repo.get_by_repo_git(session, repo_git)

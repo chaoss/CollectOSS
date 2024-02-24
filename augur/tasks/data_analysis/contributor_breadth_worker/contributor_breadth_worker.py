@@ -18,7 +18,8 @@ from augur.application.db.models import ContributorRepo
 @celery.task
 def contributor_breadth_model() -> None:
 
-    from augur.tasks.init.celery_app import engine
+    from augur.application.db import get_engine
+    engine = get_engine()
 
     logger = logging.getLogger(contributor_breadth_model.__name__)
 

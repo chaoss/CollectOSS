@@ -12,7 +12,8 @@ def machine_learning_phase(repo_git):
     from augur.tasks.data_analysis.message_insights.tasks import message_insight_task
     from augur.tasks.data_analysis.pull_request_analysis_worker.tasks import pull_request_analysis_task
 
-    from augur.tasks.init.celery_app import engine
+    from augur.application.db import get_engine
+    engine = get_engine()
 
     logger = logging.getLogger(machine_learning_phase.__name__)
 

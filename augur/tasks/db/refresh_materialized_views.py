@@ -14,7 +14,8 @@ def refresh_materialized_views():
 
     #self.logger = AugurLogger("data_collection_jobs").get_logger()
 
-    from augur.tasks.init.celery_app import engine
+    from augur.application.db import get_engine
+    engine = get_engine()
 
     logger = logging.getLogger(refresh_materialized_views.__name__)
     #self.logger = logging.getLogger(refresh_materialized_views.__name__)

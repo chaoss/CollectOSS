@@ -108,7 +108,8 @@ def retrieve_dict_data(url: str, key_auth, logger):
 @celery.task(base=AugurCoreRepoCollectionTask)
 def grab_comitters(repo_git,platform="github"):
 
-    from augur.tasks.init.celery_app import engine
+    from augur.application.db import get_engine
+    engine = get_engine()
 
     logger = logging.getLogger(grab_comitters.__name__)
     with DatabaseSession(logger,engine) as session:

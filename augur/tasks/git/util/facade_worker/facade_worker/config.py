@@ -112,7 +112,8 @@ class FacadeSession(GithubTaskSession):
     """
     def __init__(self,logger: Logger):
 
-        from augur.tasks.init.celery_app import engine
+        from augur.application.db import get_engine
+        engine = get_engine()
         #self.cfg = FacadeConfig(logger)
         self.repos_processed = 0
         super().__init__(logger=logger, engine=engine)

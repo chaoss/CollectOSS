@@ -26,7 +26,8 @@ ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.d
 def pull_request_analysis_task(repo_git):
 
     logger = logging.getLogger(pull_request_analysis_task.__name__)
-    from augur.tasks.init.celery_app import engine
+    from augur.application.db import get_engine
+    engine = get_engine()
 
     with DatabaseSession(logger, engine) as session:
         pull_request_analysis_model(repo_git, logger, engine)

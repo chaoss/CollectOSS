@@ -77,7 +77,9 @@ BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 class AugurCoreRepoCollectionTask(celery.Task):
 
     def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core',after_fail=CollectionState.ERROR.value):
-        from augur.tasks.init.celery_app import engine
+            
+        from augur.application.db import get_engine
+        engine = get_engine()
 
         logger = AugurLogger(logger_name).get_logger()
 
@@ -245,23 +247,29 @@ def setup_loggers(*args,**kwargs):
     TaskLogConfig(split_tasks_into_groups(augur_tasks))
 
 
-engine = None
+#engine = None
 @worker_process_init.connect
 def init_worker(**kwargs):
 
-    global engine
+    pass
 
-    from augur.application.db.engine import DatabaseEngine
-    from sqlalchemy.pool import NullPool, StaticPool
+    # global engine
 
-    engine = DatabaseEngine(poolclass=StaticPool).engine
+    # from augur.application.db.engine import DatabaseEngine
+    # from sqlalchemy.pool import NullPool, StaticPool
+
+    # engine = DatabaseEngine(poolclass=StaticPool).engine
 
 
 @worker_process_shutdown.connect
 def shutdown_worker(**kwargs):
-    global engine
-    if engine:
-        logger.info('Closing database connectionn for worker')
-        engine.dispose()
+
+    from augur.application.db import dispose_database_engine
+    dispose_database_engine()
+
+    # global engine
+    # if engine:
+    #     logger.info('Closing database connectionn for worker')
+    #     engine.dispose()
 
 

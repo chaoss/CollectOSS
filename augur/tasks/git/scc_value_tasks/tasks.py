@@ -12,7 +12,8 @@ from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_
 @celery.task(base=AugurFacadeRepoCollectionTask)
 def process_scc_value_metrics(repo_git):
 
-    from augur.tasks.init.celery_app import engine
+    from augur.application.db import get_engine
+    engine = get_engine()
 
     logger = logging.getLogger(process_scc_value_metrics.__name__)
 
