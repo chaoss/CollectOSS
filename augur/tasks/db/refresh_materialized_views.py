@@ -6,6 +6,7 @@ from celery import group, chain, chord, signature
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
+from augur.application.db import get_engine
 from augur.application.logs import AugurLogger
 
 
@@ -14,7 +15,6 @@ def refresh_materialized_views():
 
     #self.logger = AugurLogger("data_collection_jobs").get_logger()
 
-    from augur.application.db import get_engine
     engine = get_engine()
 
     logger = logging.getLogger(refresh_materialized_views.__name__)

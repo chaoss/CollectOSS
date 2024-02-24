@@ -39,6 +39,7 @@ from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneE
 from augur.tasks.util.worker_util import create_grouped_task_load
 
 from augur.tasks.init.celery_app import celery_app as celery
+from augur.application.db import get_engine
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 
 
@@ -391,7 +392,6 @@ def clone_repos():
 #@celery.task
 #def check_for_repo_updates_facade_task(repo_git):
 #
-#    from augur.application.db import get_engine
 #    engine = get_engine()
 #
 #    logger = logging.getLogger(check_for_repo_updates_facade_task.__name__)
@@ -402,7 +402,6 @@ def clone_repos():
 @celery.task(base=AugurFacadeRepoCollectionTask)
 def git_update_commit_count_weight(repo_git):
 
-    from augur.application.db import get_engine
     engine = get_engine()
     logger = logging.getLogger(git_update_commit_count_weight.__name__)
     

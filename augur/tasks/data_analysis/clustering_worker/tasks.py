@@ -21,6 +21,7 @@ from collections import Counter
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
+from augur.application.db import get_engine
 from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, RepoClusterMessage, RepoTopic, TopicWord
 from augur.application.db.util import execute_session_query
@@ -35,7 +36,6 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 def clustering_task(repo_git):
 
     logger = logging.getLogger(clustering_model.__name__)
-    from augur.application.db import get_engine
     engine = get_engine()
 
     with DatabaseSession(logger, engine) as session:

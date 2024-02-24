@@ -1,4 +1,5 @@
 from augur.application.db.session import DatabaseSession
+from augur.application.db import get_engine
 from augur.application.db.models import Repo 
 from augur.application.db.util import execute_session_query
 from celery import group, chain, chord, signature
@@ -12,7 +13,6 @@ def machine_learning_phase(repo_git):
     from augur.tasks.data_analysis.message_insights.tasks import message_insight_task
     from augur.tasks.data_analysis.pull_request_analysis_worker.tasks import pull_request_analysis_task
 
-    from augur.application.db import get_engine
     engine = get_engine()
 
     logger = logging.getLogger(machine_learning_phase.__name__)

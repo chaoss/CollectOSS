@@ -32,6 +32,7 @@ from augur.tasks.db.refresh_materialized_views import *
 # from augur.tasks.data_analysis import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
+from augur.application.db import get_engine
 from logging import Logger
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.models import CollectionStatus, Repo
@@ -140,11 +141,7 @@ def secondary_repo_collect_phase(repo_git):
 @celery.task
 def non_repo_domain_tasks():
 
-    from augur.application.db import get_engine
     engine = get_engine()
-
-    
-
 
     logger = logging.getLogger(non_repo_domain_tasks.__name__)
 
@@ -252,7 +249,6 @@ def build_ml_repo_collect_request(session,enabled_phase_names, days_until_collec
 @celery.task
 def augur_collection_monitor():     
 
-    from augur.application.db import get_engine
     engine = get_engine()
 
     logger = logging.getLogger(augur_collection_monitor.__name__)
@@ -291,7 +287,6 @@ def augur_collection_monitor():
 @celery.task
 def augur_collection_update_weights():
 
-    from augur.application.db import get_engine
     engine = get_engine()
 
     logger = logging.getLogger(augur_collection_update_weights.__name__)
@@ -339,7 +334,6 @@ def retry_errored_repos():
     """
         Periodic task to reset repositories that have errored and try again.
     """
-    from augur.application.db import get_engine
     engine = get_engine()
     logger = logging.getLogger(create_collection_status_records.__name__)
 
@@ -370,7 +364,6 @@ def create_collection_status_records():
     A special celery task that automatically retries itself and has no max retries.
     """
 
-    from augur.application.db import get_engine
     engine = get_engine()
     logger = logging.getLogger(create_collection_status_records.__name__)
 

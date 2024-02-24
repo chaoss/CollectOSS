@@ -9,7 +9,7 @@ def get_engine():
     if engine is None:
         url = get_database_string()
         engine = create_database_engine(url=url, poolclass=StaticPool)  
-        
+    
     return engine
 
 

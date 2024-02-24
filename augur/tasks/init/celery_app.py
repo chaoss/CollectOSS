@@ -16,6 +16,7 @@ from sqlalchemy import create_engine, event, or_, and_
 from augur.application.logs import TaskLogConfig, AugurLogger
 from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import DatabaseEngine
+from augur.application.db import get_engine
 from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
@@ -78,7 +79,6 @@ class AugurCoreRepoCollectionTask(celery.Task):
 
     def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core',after_fail=CollectionState.ERROR.value):
             
-        from augur.application.db import get_engine
         engine = get_engine()
 
         logger = AugurLogger(logger_name).get_logger()
