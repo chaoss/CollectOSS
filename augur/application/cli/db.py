@@ -1,9 +1,7 @@
 # SPDX-License-Identifier: MIT
-from os import environ, chmod, path
-import os
+from os import environ, chmod, path, getenv, stat
 import logging
 from sys import exit
-import stat
 from subprocess import call
 import random
 import string
@@ -12,7 +10,6 @@ import click
 import sqlalchemy as s
 import pandas as pd
 import json
-import sqlalchemy as s
 import re
 
 from augur.application.cli import test_connection, test_db_connection 
@@ -277,7 +274,7 @@ def get_api_key():
     short_help="Check the ~/.pgpass file for Augur's database credentials",
 )
 def check_pgpass():
-    augur_db_env_var = os.getenv("AUGUR_DB")
+    augur_db_env_var = getenv("AUGUR_DB")
     if augur_db_env_var:
 
         # gets the user, passowrd, host, port, and database_name out of environment variable
@@ -379,7 +376,7 @@ def run_psql_command_in_database(target_type, target):
         logger.error("Invalid target type. Exiting...")
         exit(1)
 
-    augur_db_environment_var = os.getenv("AUGUR_DB")
+    augur_db_environment_var = getenv("AUGUR_DB")
 
     # db_json_file_location = os.getcwd() + "/db.config.json"
     # db_json_exists = os.path.exists(db_json_file_location)
@@ -425,7 +422,7 @@ def check_pgpass_credentials(config):
         open(pgpass_file_path, "w+")
         chmod(pgpass_file_path, stat.S_IWRITE | stat.S_IREAD)
 
-    pgpass_file_mask = oct(os.stat(pgpass_file_path).st_mode & 0o777)
+    pgpass_file_mask = oct(stat(pgpass_file_path).st_mode & 0o777)
 
     if pgpass_file_mask != "0o600":
         print("Updating ~/.pgpass file permissions.")
