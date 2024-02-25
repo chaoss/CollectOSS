@@ -1,6 +1,5 @@
 #SPDX-License-Identifier: MIT
-import logging, json
-import pandas as pd
+import logging
 import sqlalchemy as s
 from datetime import datetime
 

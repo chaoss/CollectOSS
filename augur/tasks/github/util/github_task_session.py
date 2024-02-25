@@ -8,8 +8,6 @@ class GithubTaskManifest:
 
     def __init__(self, logger):
 
-        from augur.application.db.session import DatabaseSession
-
         engine = get_engine()
 
         self.augur_db = DatabaseSession(logger, engine)

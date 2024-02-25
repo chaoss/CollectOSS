@@ -6,7 +6,7 @@ import httpx
 import time
 import logging
 
-from typing import List, Optional, Union, Generator, Tuple
+from typing import List, Optional, Generator, Tuple
 from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
 from enum import Enum
 

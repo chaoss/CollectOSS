@@ -1,13 +1,10 @@
 from __future__ import annotations
 import logging
 import sqlalchemy as s
-from celery import signature
-from celery import group, chain, chord, signature
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db import get_engine
-from augur.application.logs import AugurLogger
 
 
 @celery.task

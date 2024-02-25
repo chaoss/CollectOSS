@@ -25,17 +25,7 @@
 # and checks for any parents of HEAD that aren't already accounted for in the
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
-import sys
-import platform
-import imp
-import time
-import datetime
-import html.parser
 import subprocess
-import os
-import getopt
-import xlsxwriter
-import configparser
 import sqlalchemy as s
 from augur.application.db.util import execute_session_query
 from .utilitymethods import get_absolute_repo_path
@@ -60,7 +50,7 @@ def git_repo_cleanup(session,repo_git):
 
 		# Remove the files on disk
 
-		absolute_path = get_absolute_repo_path(session.repo_base_directory, row.repo_id, row.repo_path,repo.repo_name)
+		absolute_path = get_absolute_repo_path(session.repo_base_directory, row.repo_id, row.repo_path,row.repo_name)
 
 		cmd = ("rm -rf %s"
 			% (absolute_path))

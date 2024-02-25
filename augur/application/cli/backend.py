@@ -10,28 +10,21 @@ import click
 import logging
 import psutil
 import signal
-import sys
 from redis.exceptions import ConnectionError as RedisConnectionError
-from celery import chain, signature, group
 import uuid
 import traceback
 from urllib.parse import urlparse
-from datetime import datetime
 
-from augur import instance_id
-from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.tasks.init.redis_connection import redis_connection 
-from augur.application.db.models import Repo, CollectionStatus, UserRepo
+from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
-from augur.application.db.util import execute_session_query
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.cli import test_connection, test_db_connection 
 import sqlalchemy as s
-from sqlalchemy import or_, and_
 
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()

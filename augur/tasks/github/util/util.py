@@ -1,6 +1,5 @@
 """Utility functions that are useful for several Github tasks"""
 from typing import Any, List, Tuple
-from httpx import Response
 import logging
 import json
 import httpx

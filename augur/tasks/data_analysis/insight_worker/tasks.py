@@ -1,11 +1,7 @@
 # SPDX-License-Identifier: MIT
-from multiprocessing import Process, Queue
-from urllib.parse import urlparse
 import requests
 import pandas as pd
 import sqlalchemy as s
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy import MetaData, and_
 import logging, json
 import numpy as np
 import scipy.stats

@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: MIT
-from os import walk, chdir, environ, chmod, path
+from os import environ, chmod, path
 import os
 import logging
 from sys import exit
 import stat
-from collections import OrderedDict
 from subprocess import call
 import random
 import string
@@ -12,7 +11,6 @@ import csv
 import click
 import sqlalchemy as s
 import pandas as pd
-import requests
 import json
 import sqlalchemy as s
 import re
@@ -20,7 +18,6 @@ import re
 from augur.application.cli import test_connection, test_db_connection 
 
 from augur.application.db.session import DatabaseSession
-from augur.application.logs import AugurLogger
 from augur.application.db.engine import DatabaseEngine
 from sqlalchemy import update
 from datetime import datetime

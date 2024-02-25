@@ -23,7 +23,6 @@
 # places to be modified when creating a derivative script are marked with #-->
 
 import sys
-import MySQLdb
 import imp
 import time
 import datetime

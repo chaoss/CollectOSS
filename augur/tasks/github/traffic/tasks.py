@@ -1,4 +1,3 @@
-import time
 import logging
 
 from augur.tasks.init.celery_app import celery_app as celery

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, session, request, jsonify
+from flask import render_template, redirect, url_for, session, request, jsonify
 from flask_login import LoginManager
 from io import StringIO
 from .utils import *

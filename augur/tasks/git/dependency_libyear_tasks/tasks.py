@@ -1,5 +1,4 @@
 import logging
-import traceback
 from augur.application.db.session import DatabaseSession
 from augur.application.db import get_engine
 from augur.tasks.git.dependency_libyear_tasks.core import *

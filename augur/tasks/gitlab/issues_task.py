@@ -10,7 +10,7 @@ from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
 from augur.application.db.data_parse import extract_needed_issue_data_from_gitlab_issue, extract_needed_gitlab_issue_label_data, extract_needed_gitlab_issue_assignee_data, extract_needed_gitlab_issue_message_ref_data, extract_needed_gitlab_message_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
-from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Repo
+from augur.application.db.models import Issue, IssueLabel, IssueMessageRef, Message, Repo
 from augur.application.db.util import execute_session_query
 
 platform_id = 2

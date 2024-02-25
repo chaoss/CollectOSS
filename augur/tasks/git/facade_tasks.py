@@ -1,60 +1,38 @@
 #SPDX-License-Identifier: MIT
 
-import sys
-import time
-import traceback
 import logging
-import platform
-import imp
-import time
-import datetime
-import html.parser
-import subprocess
-import os
-import getopt
-import xlsxwriter
-import configparser
-import multiprocessing
-import numpy as np
-from celery import group, chain, chord, signature
-from celery.utils.log import get_task_logger
-from celery.result import allow_join_result
-from celery.signals import after_setup_logger
-from datetime import timedelta
+from celery import group, chain
 import sqlalchemy as s
 
-from sqlalchemy import or_, and_, update, insert
 
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import update_repo_log, trim_commits, store_working_author, trim_author
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor, get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count, facade_bulk_insert_commits
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count, facade_bulk_insert_commits
+from augur.tasks.git.util.facade_worker.facade_worker.rebuildcache import fill_empty_affiliations, invalidate_caches, nuke_affiliations, rebuild_unknown_affiliation_and_web_caches
+from augur.tasks.git.util.facade_worker.facade_worker.postanalysiscleanup import git_repo_cleanup
+
 
 from augur.tasks.github.facade_github.tasks import *
 from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import get_collection_status_repo_git_from_filter
-from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneError, git_repo_initialize
+from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneError, git_repo_initialize, git_repo_updates
 
 
-from augur.tasks.util.worker_util import create_grouped_task_load
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db import get_engine
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 
 
-from augur.tasks.util.AugurUUID import GithubUUID, UnresolvableUUID
-from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo, CollectionStatus
+from augur.application.db.models import Repo, CollectionStatus
 
 from augur.tasks.git.dependency_tasks.tasks import process_dependency_metrics
 from augur.tasks.git.dependency_libyear_tasks.tasks import process_libyear_dependency_metrics
 from augur.tasks.git.scc_value_tasks.tasks import process_scc_value_metrics
 
-from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
-from augur.tasks.github.util.gh_graphql_entities import PullRequest
 from augur.tasks.github.util.github_task_session import *
 
-from augur.application.logs import TaskLogConfig
 
 #define an error callback for chains in facade collection so facade doesn't make the program crash
 #if it does.
