@@ -201,9 +201,8 @@ def process_mr_events(events, task_name, repo_id, logger, augur_db):
                                     tool_source, tool_version, data_source)
         )
 
-    # TODO: Add unique key for this
     logger.info(f"{task_name}: Inserting {len(mr_event_dicts)} gitlab mr events")
-    mr_event_natural_keys = ["pull_request_id", "issue_event_src_id"]
+    mr_event_natural_keys = ["platform_id", "node_id"]
     augur_db.insert_data(mr_event_dicts, PullRequestEvent, mr_event_natural_keys)
 
 

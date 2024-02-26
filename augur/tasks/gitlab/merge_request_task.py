@@ -312,8 +312,10 @@ def process_mr_metadata(data, task_name, repo_id, logger, augur_db):
     for id, metadata in data.items():
 
         pull_request_id = mr_number_to_id_map[id]
-
-        all_metadata.extend(extract_needed_mr_metadata(metadata, repo_id, pull_request_id, tool_source, tool_version, data_source))
+        
+        #ignore blank metadata
+        if metadata:
+            all_metadata.extend(extract_needed_mr_metadata(metadata, repo_id, pull_request_id, tool_source, tool_version, data_source))
 
     logger.info(f"{task_name}: Inserting {len(all_metadata)} merge request metadata")
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
