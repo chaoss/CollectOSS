@@ -66,7 +66,6 @@ def add_repos(filename):
                 
                 print(
                     f"Inserting repo with Git URL `{repo_data['url']}` into repo group {repo_data['repo_group_id']}")
-                controller.add_cli_repo(repo_data)
 
 
 
