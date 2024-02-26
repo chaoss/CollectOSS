@@ -8,6 +8,7 @@ import re
 import json
 
 from augur.application.db.engine import DatabaseEngine
+from augur.application.db import get_engine, dispose_database_engine
 from sqlalchemy.exc import OperationalError 
 
 
@@ -71,6 +72,22 @@ def test_db_connection(function_db_connection):
             sys.exit()
         
     return update_wrapper(new_func, function_db_connection)
+
+
+class DatabaseContext(object):
+    def __init__(self):
+        self.engine = None
+
+def with_database(f):
+    @click.pass_context
+    def new_func(ctx, *args, **kwargs):
+        ctx.obj.engine = get_engine()
+        try:
+            return ctx.invoke(f, *args, **kwargs)
+        finally:
+            dispose_database_engine()
+    return new_func
+
 
 # def pass_application(f):
 #     @click.pass_context
