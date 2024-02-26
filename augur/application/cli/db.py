@@ -120,9 +120,10 @@ def add_repo_groups(filename):
                 if int(row[0]) not in repo_group_IDs:
                     repo_group_IDs.append(int(row[0]))
                     connection.execute(
-                        insert_repo_group_sql,
-                        repo_group_id=int(row[0]),
-                        repo_group_name=row[1],
+                        insert_repo_group_sql.bindparams(
+                            repo_group_id=int(row[0]),
+                            repo_group_name=row[1],
+                        )
                     )
                 else:
                     logger.info(
