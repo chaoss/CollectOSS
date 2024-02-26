@@ -368,11 +368,28 @@ def init_database(
         f"GRANT ALL PRIVILEGES ON DATABASE {target_db_name} TO {target_user};",
     )
 
+@cli.command("reset-repo-age")
+@test_connection
+@test_db_connection
+@with_database
+@click.pass_context
+def reset_repo_age(ctx):
+
+    with DatabaseSession(logger, engine=ctx.obj.engine) as session:
+        update_query = (
+            update(Repo)
+            .values(repo_added=datetime.now())
+        )
+
+        session.execute(update_query)
+        session.commit()
+
 @cli.command("test-connection")
 @test_connection
 @test_db_connection
 def test_db_connection():
-    pass
+    print("Successful db connection")
+
 
 # TODO: Fix this function
 def run_psql_command_in_database(target_type, target):
@@ -457,18 +474,3 @@ def check_pgpass_credentials(config):
         else:
             print("Credentials found in $HOME/.pgpass")
 
-
-#NOTE: For some reason when I try to add function decorators to this function 
-#click thinks it's an argument and tries to parse it but it errors since a function 
-#isn't an iterable. 
-@cli.command("reset-repo-age")
-def reset_repo_age():
-
-    with DatabaseSession(logger) as session:
-        update_query = (
-            update(Repo)
-            .values(repo_added=datetime.now())
-        )
-
-        session.execute(update_query)
-        session.commit()
