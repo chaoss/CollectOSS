@@ -101,14 +101,14 @@ def primary_repo_collect_phase_gitlab(repo_git):
     logger = logging.getLogger(primary_repo_collect_phase_gitlab.__name__)
 
     jobs = group(
-        # chain(collect_gitlab_merge_requests.si(repo_git), group(
-        #                                                         #collect_merge_request_comments.s(repo_git), 
-        #                                                         #collect_merge_request_reviewers.s(repo_git),
-        #                                                         collect_merge_request_metadata.s(repo_git),
-        #                                                         collect_merge_request_commits.s(repo_git),
-        #                                                         collect_merge_request_files.s(repo_git),
-        #                                                         collect_gitlab_merge_request_events.si(repo_git),
-        #                                                         )),
+         chain(collect_gitlab_merge_requests.si(repo_git), group(
+                                                                 #collect_merge_request_comments.s(repo_git), 
+                                                                 #collect_merge_request_reviewers.s(repo_git),
+                                                                collect_merge_request_metadata.s(repo_git),
+                                                                collect_merge_request_commits.s(repo_git),
+                                                                collect_merge_request_files.s(repo_git),
+                                                                collect_gitlab_merge_request_events.si(repo_git),
+                                                                )),
          chain(collect_gitlab_issues.si(repo_git), group(
                                                         #collect_gitlab_issue_comments.s(repo_git),
                                                         collect_gitlab_issue_events.si(repo_git),
