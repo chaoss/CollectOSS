@@ -157,7 +157,7 @@ killing.
 Docker
 ~~~~~~
 
-1. Make sure docker, and docker-compose are both installed
+1. Make sure docker, and docker compose are both installed
 2. Modify the ``environment.txt`` file in the root of the repository to
    include your GitHub and GitLab API keys.
 3. If you are already running postgresql on your server you have two
@@ -169,9 +169,9 @@ Docker
       values for your local, non-docker-container database.
 
 4. ``sudo docker build -t augur-new -f docker/backend/Dockerfile .``
-5. ``sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up``
+5. ``sudo docker compose --env-file ./environment.txt --file docker-compose.yml up``
    to run the database in a Docker Container or
-   ``sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up``
+   ``sudo docker compose --env-file ./environment.txt --file docker-compose.yml up``
    to connect to an already running database.
 
 

@@ -101,9 +101,9 @@ def primary_repo_collect_phase_gitlab(repo_git):
     logger = logging.getLogger(primary_repo_collect_phase_gitlab.__name__)
 
     jobs = group(
-        chain(collect_gitlab_merge_requests.si(repo_git), group(
-                                                                #collect_merge_request_comments.s(repo_git), 
-                                                                #collect_merge_request_reviewers.s(repo_git),
+         chain(collect_gitlab_merge_requests.si(repo_git), group(
+                                                                 #collect_merge_request_comments.s(repo_git), 
+                                                                 #collect_merge_request_reviewers.s(repo_git),
                                                                 collect_merge_request_metadata.s(repo_git),
                                                                 collect_merge_request_commits.s(repo_git),
                                                                 collect_merge_request_files.s(repo_git),
@@ -339,13 +339,13 @@ def retry_errored_repos():
     #TODO: Isaac needs to normalize the status's to be abstract in the 
     #collection_status table once augur dev is less unstable.
     with DatabaseSession(logger,engine) as session:
-        query = s.sql.text(f"""UPDATE repo SET secondary_staus = {CollectionState.PENDING.value}"""
+        query = s.sql.text(f"""UPDATE collection_status SET secondary_status = {CollectionState.PENDING.value}"""
         f""" WHERE secondary_status = '{CollectionState.ERROR.value}' ;"""
-        f"""UPDATE repo SET core_status = {CollectionState.PENDING.value}"""
+        f"""UPDATE collection_status SET core_status = {CollectionState.PENDING.value}"""
         f""" WHERE core_status = '{CollectionState.ERROR.value}' ;"""
-        f"""UPDATE repo SET facade_status = {CollectionState.PENDING.value}"""
+        f"""UPDATE collection_status SET facade_status = {CollectionState.PENDING.value}"""
         f""" WHERE facade_status = '{CollectionState.ERROR.value}' ;"""
-        f"""UPDATE repo SET ml_status = {CollectionState.PENDING.value}"""
+        f"""UPDATE collection_status SET ml_status = {CollectionState.PENDING.value}"""
         f""" WHERE ml_status = '{CollectionState.ERROR.value}' ;"""
         )
 
