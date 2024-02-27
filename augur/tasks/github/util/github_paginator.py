@@ -4,8 +4,6 @@ import collections
 import httpx
 import time
 import json
-import asyncio
-import datetime
 import logging
 
 
@@ -587,6 +585,7 @@ def retrieve_dict_from_endpoint(logger, key_auth, url, timeout_wait=10) -> Tuple
         page_data = parse_json_response(logger, response)
 
         if isinstance(page_data, str):
+            # TODO: Define process_str_response as outside the class and fix this reference
             str_processing_result: Union[str, List[dict]] = process_str_response(logger,page_data)
 
             if isinstance(str_processing_result, dict):

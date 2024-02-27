@@ -6,7 +6,7 @@ from augur.api.routes import AUGUR_API_VERSION
 
 import logging
 import secrets
-from flask import request, jsonify, session
+from flask import request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash
 from sqlalchemy.orm import sessionmaker

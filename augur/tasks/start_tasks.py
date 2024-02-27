@@ -1,17 +1,9 @@
 from __future__ import annotations
-from typing import List
-import time
 import logging
 import os
-from enum import Enum
-import math
-import numpy as np
-import datetime
-import random
 #from celery.result import AsyncResult
-from celery import signature
-from celery import group, chain, chord, signature
-from sqlalchemy import or_, and_,tuple_, update
+from celery import group, chain
+from sqlalchemy import and_,update
 
 
 from augur.tasks.github import *
@@ -24,16 +16,15 @@ from augur.tasks.github.pull_requests.files_model.tasks import process_pull_requ
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
 from augur.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
 from augur.tasks.github.traffic.tasks import collect_github_repo_clones_data
-from augur.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests, collect_merge_request_comments, collect_merge_request_metadata, collect_merge_request_reviewers, collect_merge_request_commits, collect_merge_request_files
-from augur.tasks.gitlab.issues_task import collect_gitlab_issues, collect_gitlab_issue_comments
+from augur.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests, collect_merge_request_metadata, collect_merge_request_commits, collect_merge_request_files
+from augur.tasks.gitlab.issues_task import collect_gitlab_issues
 from augur.tasks.gitlab.events_task import collect_gitlab_issue_events, collect_gitlab_merge_request_events
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.db.refresh_materialized_views import *
 # from augur.tasks.data_analysis import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
-from logging import Logger
-from augur.tasks.util.redis_list import RedisList
+from augur.application.db import get_engine
 from augur.application.db.models import CollectionStatus, Repo
 from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
@@ -140,7 +131,7 @@ def secondary_repo_collect_phase(repo_git):
 @celery.task
 def non_repo_domain_tasks():
 
-    from augur.tasks.init.celery_app import engine
+    engine = get_engine()
 
     logger = logging.getLogger(non_repo_domain_tasks.__name__)
 
@@ -248,7 +239,7 @@ def build_ml_repo_collect_request(session,enabled_phase_names, days_until_collec
 @celery.task
 def augur_collection_monitor():     
 
-    from augur.tasks.init.celery_app import engine
+    engine = get_engine()
 
     logger = logging.getLogger(augur_collection_monitor.__name__)
 
@@ -286,7 +277,7 @@ def augur_collection_monitor():
 @celery.task
 def augur_collection_update_weights():
 
-    from augur.tasks.init.celery_app import engine
+    engine = get_engine()
 
     logger = logging.getLogger(augur_collection_update_weights.__name__)
 
@@ -333,7 +324,7 @@ def retry_errored_repos():
     """
         Periodic task to reset repositories that have errored and try again.
     """
-    from augur.tasks.init.celery_app import engine
+    engine = get_engine()
     logger = logging.getLogger(create_collection_status_records.__name__)
 
     #TODO: Isaac needs to normalize the status's to be abstract in the 
@@ -363,7 +354,7 @@ def create_collection_status_records():
     A special celery task that automatically retries itself and has no max retries.
     """
 
-    from augur.tasks.init.celery_app import engine
+    engine = get_engine()
     logger = logging.getLogger(create_collection_status_records.__name__)
 
     with DatabaseSession(logger,engine) as session:

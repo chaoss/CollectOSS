@@ -3,14 +3,12 @@ Defines the api routes for the augur views
 """
 import logging
 import math
-from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash
-from sqlalchemy.orm.exc import NoResultFound
+from flask import render_template, request, redirect, url_for, session, flash
 from .utils import *
 from flask_login import login_user, logout_user, current_user, login_required
 
 from augur.application.db.models import User, Repo, ClientApplication
 from .server import LoginException
-from augur.tasks.init.redis_connection import redis_connection as redis
 from augur.application.util import *
 from augur.application.config import AugurConfig
 from ..server import app, db_session

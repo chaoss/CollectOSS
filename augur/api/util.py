@@ -4,9 +4,6 @@ Provides shared functions that do not fit in a class of their own
 """
 import os
 import re
-import inspect
-import types
-import sys
 import beaker
 
 from flask import request, jsonify
@@ -16,7 +13,7 @@ from functools import wraps
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from augur.application.config import get_development_flag
-from augur.application.db.models import User, UserRepo, UserGroup, UserSessionToken, ClientApplication, RefreshToken
+from augur.application.db.models import ClientApplication
 
 Session = sessionmaker(bind=engine)
 development = get_development_flag()

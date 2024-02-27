@@ -4,15 +4,13 @@
 import glob
 import sys
 import inspect
-import types
 import json
 import os
 import base64
-import logging
 import importlib
 import graphene
 
-from typing import Optional, List, Any, Tuple
+from typing import List, Any
 
 from pathlib import Path
 
@@ -21,7 +19,6 @@ from flask_cors import CORS
 import pandas as pd
 from beaker.util import parse_cache_config_options
 from beaker.cache import CacheManager, Cache
-from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 from flask_graphql import GraphQLView
 from graphene_sqlalchemy import SQLAlchemyObjectType

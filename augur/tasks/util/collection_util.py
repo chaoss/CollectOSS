@@ -1,28 +1,19 @@
 from __future__ import annotations
-from typing import List
-import time
 import logging
 import random
-import os
-from enum import Enum
-import math
-import numpy as np
 import datetime
 #from celery.result import AsyncResult
-from celery import signature
-from celery import group, chain, chord, signature
+from celery import chain
 import sqlalchemy as s
-from sqlalchemy import or_, and_, update
+from sqlalchemy import or_, update
 from augur.application.logs import AugurLogger
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
 from augur.application.config import AugurConfig
-from augur.tasks.github.util.util import get_owner_repo, get_repo_weight_core, get_repo_weight_by_issue
-from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
-from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.tasks.github.util.util import get_repo_weight_core, get_repo_weight_by_issue
 from augur.application.db.session import DatabaseSession
+from augur.application.db import get_engine
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 from augur.tasks.util.collection_state import CollectionState
 
@@ -227,7 +218,7 @@ def split_list_into_chunks(given_list, num_chunks):
 @celery.task
 def task_failed_util(request,exc,traceback):
 
-    from augur.tasks.init.celery_app import engine
+    engine = get_engine()
 
     logger = logging.getLogger(task_failed_util.__name__)
 
@@ -283,7 +274,8 @@ def task_failed_util(request,exc,traceback):
 #This task updates the core and secondary weight with the issues and prs already passed in
 @celery.task
 def issue_pr_task_update_weight_util(issue_and_pr_nums,repo_git=None,session=None):
-    from augur.tasks.init.celery_app import engine
+
+    engine = get_engine()
     logger = logging.getLogger(issue_pr_task_update_weight_util.__name__)
 
     if repo_git is None:
@@ -299,7 +291,7 @@ def issue_pr_task_update_weight_util(issue_and_pr_nums,repo_git=None,session=Non
 @celery.task
 def core_task_success_util(repo_git):
 
-    from augur.tasks.init.celery_app import engine
+    engine = get_engine()
 
     logger = logging.getLogger(core_task_success_util.__name__)
 
@@ -366,7 +358,7 @@ def update_issue_pr_weights(logger,session,repo_git,raw_sum):
 @celery.task
 def secondary_task_success_util(repo_git):
 
-    from augur.tasks.init.celery_app import engine
+    engine = get_engine()
 
     logger = logging.getLogger(secondary_task_success_util.__name__)
 
@@ -395,7 +387,8 @@ def secondary_task_success_util(repo_git):
 
 #Get the weight for each repo for the secondary collection hook.
 def get_repo_weight_secondary(logger,repo_git):
-    from augur.tasks.init.celery_app import engine
+
+    engine = get_engine()
 
     with DatabaseSession(logger,engine) as session:
         repo = Repo.get_by_repo_git(session, repo_git)
@@ -418,7 +411,7 @@ def get_repo_weight_secondary(logger,repo_git):
 @celery.task
 def facade_task_success_util(repo_git):
 
-    from augur.tasks.init.celery_app import engine
+    engine = get_engine()
 
     logger = logging.getLogger(facade_task_success_util.__name__)
 
@@ -440,7 +433,8 @@ def facade_task_success_util(repo_git):
 
 @celery.task
 def ml_task_success_util(repo_git):
-    from augur.tasks.init.celery_app import engine
+
+    engine = get_engine()
 
     logger = logging.getLogger(facade_task_success_util.__name__)
 
@@ -465,7 +459,7 @@ def ml_task_success_util(repo_git):
 @celery.task
 def facade_clone_success_util(repo_git):
 
-    from augur.tasks.init.celery_app import engine
+    engine = get_engine()
 
     logger = logging.getLogger(facade_clone_success_util.__name__)
 

@@ -1,14 +1,11 @@
-import re
 import logging
 
-import sqlalchemy as s
-import pandas as pd
 import base64
 
-from typing import List, Any, Dict
+from typing import Any, Dict
 
 from augur.application.db.engine import DatabaseEngine
-from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User, CollectionStatus
+from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User
 from augur.application.db.models.augur_operations import retrieve_owner_repos
 from augur.application.db.util import execute_session_query
 

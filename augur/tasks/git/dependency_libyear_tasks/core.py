@@ -1,15 +1,7 @@
 from datetime import datetime
-import logging
-import requests
-import re
-import os, subprocess
-import traceback
-import sqlalchemy as s
 from augur.application.db.models import *
-from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.util import execute_session_query
-from urllib.parse import quote
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.util import get_deps_libyear_data
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 
