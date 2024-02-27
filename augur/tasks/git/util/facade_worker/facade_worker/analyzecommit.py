@@ -25,20 +25,9 @@
 # and checks for any parents of HEAD that aren't already accounted for in the
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
-import sys
-import platform
-import imp
-import time
-import datetime
-import html.parser
 import subprocess
 import os
-import getopt
-import xlsxwriter
-import configparser
-import traceback 
 import sqlalchemy as s
-from sqlalchemy.exc import IntegrityError, DataError
 
 def analyze_commit(session, repo_id, repo_loc, commit):
 

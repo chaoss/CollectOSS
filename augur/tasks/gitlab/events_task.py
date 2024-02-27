@@ -8,7 +8,7 @@ from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
 from augur.application.db.data_parse import extract_gitlab_mr_event_data, extract_gitlab_issue_event_data
-from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
+from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import Repo, Issue, IssueEvent, PullRequest, PullRequestEvent
 from augur.application.db.util import execute_session_query
 

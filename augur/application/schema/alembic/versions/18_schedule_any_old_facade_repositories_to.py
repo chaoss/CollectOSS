@@ -6,8 +6,6 @@ Create Date: 2023-05-02 17:35:18.891913
 
 """
 from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import text
 import pathlib
 import shutil

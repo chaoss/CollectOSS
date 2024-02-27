@@ -24,17 +24,8 @@
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
 import sys
-import platform
-import imp
 import time
-import datetime
-import html.parser
-import subprocess
 import os
-import getopt
-import xlsxwriter
-import configparser
-import psycopg2
 import json
 import logging
 import random
@@ -44,7 +35,6 @@ from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 
 from augur.tasks.github.util.github_task_session import *
-from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from logging import Logger
 
@@ -112,7 +102,8 @@ class FacadeSession(GithubTaskSession):
     """
     def __init__(self,logger: Logger):
 
-        from augur.tasks.init.celery_app import engine
+        from augur.application.db import get_engine
+        engine = get_engine()
         #self.cfg = FacadeConfig(logger)
         self.repos_processed = 0
         super().__init__(logger=logger, engine=engine)

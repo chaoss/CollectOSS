@@ -1,6 +1,7 @@
 import logging
 import traceback
 from augur.application.db.session import DatabaseSession
+from augur.application.db import get_engine
 from augur.tasks.git.dependency_tasks.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask, AugurCoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
@@ -13,7 +14,7 @@ from augur.application.config import AugurConfig
 def process_dependency_metrics(repo_git):
     #raise NotImplementedError
 
-    from augur.tasks.init.celery_app import engine
+    engine = get_engine()
 
     logger = logging.getLogger(process_dependency_metrics.__name__)
 
@@ -35,7 +36,8 @@ def process_dependency_metrics(repo_git):
 
 @celery.task(base=AugurSecondaryRepoCollectionTask)
 def process_ossf_dependency_metrics(repo_git):
-    from augur.tasks.init.celery_app import engine
+
+    engine = get_engine()
     
     logger = logging.getLogger(process_ossf_dependency_metrics.__name__)
 

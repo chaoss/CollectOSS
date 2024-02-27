@@ -2,7 +2,7 @@ import httpx
 import time
 import random
 
-from typing import Optional, List
+from typing import List
 
 from augur.tasks.util.redis_list import RedisList
 from augur.application.db.session import DatabaseSession

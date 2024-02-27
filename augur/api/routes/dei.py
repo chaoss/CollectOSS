@@ -2,25 +2,20 @@
 Creates routes for DEI badging functionality
 """
 
-import logging, subprocess, inspect
+import logging, subprocess
 
-from flask import request, Response, jsonify, render_template, send_file
+from flask import request, jsonify, render_template, send_file
 from pathlib import Path
 
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.exc import NoResultFound
 
 from augur.api.util import api_key_required, ssl_required
-from augur.util.repo_load_controller import RepoLoadController
 
-from augur.application.db.models import User, ClientApplication, CollectionStatus, Repo, RepoGroup, BadgingDEI
+from augur.application.db.models import ClientApplication, CollectionStatus, Repo, RepoGroup, BadgingDEI
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
 
 from augur.tasks.util.collection_util import CollectionRequest,AugurTaskRoutine, get_enabled_phase_names_from_config, core_task_success_util
 from augur.tasks.start_tasks import prelim_phase, primary_repo_collect_phase
-from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.tasks.init.redis_connection import redis_connection as redis
 from augur.tasks.github.util.util import get_repo_weight_by_issue
 
 from ..server import app, engine

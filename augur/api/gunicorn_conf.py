@@ -1,10 +1,8 @@
 # from augur import ROOT_AUGUR_DIRECTORY
 import multiprocessing
 import logging
-import os
 from pathlib import Path
 from glob import glob
-import shutil
 
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig

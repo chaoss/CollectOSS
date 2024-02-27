@@ -7,9 +7,7 @@ import click
 import json
 import logging
 
-from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
-from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.cli import test_connection, test_db_connection 
 from augur.util.inspect_without_import import get_phase_names_without_import

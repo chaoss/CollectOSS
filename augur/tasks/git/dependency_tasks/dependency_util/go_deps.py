@@ -1,4 +1,4 @@
-import sys, re
+import re
 from pathlib import Path
 
 def get_files(path):

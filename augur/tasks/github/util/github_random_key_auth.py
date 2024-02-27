@@ -3,7 +3,6 @@
 from augur.tasks.util.random_key_auth import RandomKeyAuth
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.application.db.session import DatabaseSession
-import random 
 
 
 class GithubRandomKeyAuth(RandomKeyAuth):

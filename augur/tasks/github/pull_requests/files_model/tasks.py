@@ -1,6 +1,4 @@
 import logging
-import traceback
-from augur.application.db.session import DatabaseSession
 from augur.tasks.github.pull_requests.files_model.core import *
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.init.celery_app import celery_app as celery
