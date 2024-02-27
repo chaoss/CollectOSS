@@ -74,7 +74,7 @@ def test_db_connection(function_db_connection):
     return update_wrapper(new_func, function_db_connection)
 
 
-class DatabaseContext(object):
+class DatabaseContext():
     def __init__(self):
         self.engine = None
 
