@@ -12,7 +12,7 @@
 #refactoring checker
 #enable=R
 
-disable=E0611,E1101,W1203,R0801,W0614,W0611,C0411,C0103,C0301,C0303,C0304,C0305,W0311,E0401
+disable=E0611,E1101,W1203,R0801,W0614,W0611,C0411,C0103,C0301,C0303,C0304,C0305,W0311,E0401,C0116
 
 
 # Analyse import fallback blocks. This can be used to support both Python 2 and
