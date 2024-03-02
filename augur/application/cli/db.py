@@ -12,7 +12,7 @@ import pandas as pd
 import json
 import re
 
-from augur.application.cli import test_connection, test_db_connection 
+from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 
 from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import DatabaseEngine
@@ -23,15 +23,18 @@ from augur.application.db.models import Repo
 logger = logging.getLogger(__name__)
 
 @click.group("db", short_help="Database utilities")
-def cli():
-    pass
+@click.pass_context 
+def cli(ctx):
+    ctx.obj = DatabaseContext()
 
 
 @cli.command("add-repos")
 @click.argument("filename", type=click.Path(exists=True))
 @test_connection
 @test_db_connection
-def add_repos(filename):
+@with_database
+@click.pass_context
+def add_repos(ctx, filename):
     """Add repositories to Augur's database. 
 
     The .csv file format should be repo_url,group_id
@@ -42,7 +45,7 @@ def add_repos(filename):
     from augur.tasks.github.util.github_task_session import GithubTaskSession
     from augur.util.repo_load_controller import RepoLoadController
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine=ctx.obj.engine) as session:
 
         controller = RepoLoadController(session)
 
@@ -67,12 +70,14 @@ def add_repos(filename):
 @cli.command("get-repo-groups")
 @test_connection
 @test_db_connection
-def get_repo_groups():
+@with_database
+@click.pass_context
+def get_repo_groups(ctx):
     """
     List all repo groups and their associated IDs
     """
 
-    with DatabaseEngine() as engine, engine.connect() as connection:
+    with ctx.obj.engine.connect() as connection:
         df = pd.read_sql(
             s.sql.text(
                 "SELECT repo_group_id, rg_name, rg_description FROM augur_data.repo_groups"
@@ -80,20 +85,21 @@ def get_repo_groups():
             connection,
         )
     print(df)
-    engine.dispose()
 
     return df
 
 
 @cli.command("add-repo-groups")
+@click.argument("filename", type=click.Path(exists=True))
 @test_connection
 @test_db_connection
-@click.argument("filename", type=click.Path(exists=True))
-def add_repo_groups(filename):
+@with_database
+@click.pass_context
+def add_repo_groups(ctx, filename):
     """
     Create new repo groups in Augur's database
     """
-    with DatabaseEngine() as engine, engine.begin() as connection:
+    with ctx.obj.engine.begin() as connection:
 
         df = pd.read_sql(
             s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"),
@@ -130,21 +136,20 @@ def add_repo_groups(filename):
                         f"Repo group with ID {row[1]} for repo group {row[1]} already exists, skipping..."
                     )
 
-    engine.dispose()
-
-
 @cli.command("add-github-org")
 @click.argument("organization_name")
 @test_connection
 @test_db_connection
-def add_github_org(organization_name):
+@with_database
+@click.pass_context
+def add_github_org(ctx, organization_name):
     """
     Create new repo groups in Augur's database
     """
     from augur.tasks.github.util.github_task_session import GithubTaskSession
     from augur.util.repo_load_controller import RepoLoadController
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession(logger, engine=ctx.obj.engine) as session:
 
         controller = RepoLoadController(session)
 
@@ -229,7 +234,9 @@ def generate_api_key(ctx):
 @click.argument("api_key")
 @test_connection
 @test_db_connection
-def update_api_key(api_key):
+@with_database
+@click.pass_context
+def update_api_key(ctx, api_key):
     """
     Update the API key in the database to the given key
     """
@@ -243,18 +250,17 @@ def update_api_key(api_key):
     """
     )
 
-    with DatabaseEngine() as engine, engine.begin() as connection:
+    with ctx.obj.engine.begin() as connection:
 
         connection.execute(update_api_key_sql, api_key=api_key)
         logger.info(f"Updated Augur API key to: {api_key}")
 
-    engine.dispose()
-
-
 @cli.command("get-api-key")
 @test_connection
 @test_db_connection
-def get_api_key():
+@with_database
+@click.pass_context
+def get_api_key(ctx):
     get_api_key_sql = s.sql.text(
         """
         SELECT value FROM augur_operations.augur_settings WHERE setting='augur_api_key';
@@ -262,12 +268,10 @@ def get_api_key():
     )
 
     try:
-        with DatabaseEngine() as engine, engine.connect() as connection:
+        with ctx.obj.engine.connect() as connection:
             print(connection.execute(get_api_key_sql).fetchone()[0])
     except TypeError:
         print("No Augur API key found.")
-
-    engine.dispose()
 
 
 @cli.command(
@@ -365,11 +369,28 @@ def init_database(
         f"GRANT ALL PRIVILEGES ON DATABASE {target_db_name} TO {target_user};",
     )
 
+@cli.command("reset-repo-age")
+@test_connection
+@test_db_connection
+@with_database
+@click.pass_context
+def reset_repo_age(ctx):
+
+    with DatabaseSession(logger, engine=ctx.obj.engine) as session:
+        update_query = (
+            update(Repo)
+            .values(repo_added=datetime.now())
+        )
+
+        session.execute(update_query)
+        session.commit()
+
 @cli.command("test-connection")
 @test_connection
 @test_db_connection
 def test_db_connection():
-    pass
+    print("Successful db connection")
+
 
 # TODO: Fix this function
 def run_psql_command_in_database(target_type, target):
@@ -454,18 +475,3 @@ def check_pgpass_credentials(config):
         else:
             print("Credentials found in $HOME/.pgpass")
 
-
-#NOTE: For some reason when I try to add function decorators to this function 
-#click thinks it's an argument and tries to parse it but it errors since a function 
-#isn't an iterable. 
-@cli.command("reset-repo-age")
-def reset_repo_age():
-
-    with DatabaseSession(logger) as session:
-        update_query = (
-            update(Repo)
-            .values(repo_added=datetime.now())
-        )
-
-        session.execute(update_query)
-        session.commit()
