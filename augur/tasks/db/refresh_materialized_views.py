@@ -4,15 +4,13 @@ import sqlalchemy as s
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
-from augur.application.db import get_engine
 
-
-@celery.task
-def refresh_materialized_views():
+@celery.task(bind=True)
+def refresh_materialized_views(self):
 
     #self.logger = AugurLogger("data_collection_jobs").get_logger()
 
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(refresh_materialized_views.__name__)
     #self.logger = logging.getLogger(refresh_materialized_views.__name__)

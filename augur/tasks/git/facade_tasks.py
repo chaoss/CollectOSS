@@ -21,7 +21,6 @@ from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneE
 
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db import get_engine
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 
 
@@ -367,22 +366,23 @@ def clone_repos():
 
 
 
-#@celery.task
-#def check_for_repo_updates_facade_task(repo_git):
+#@celery.task(bind=True)
+#def check_for_repo_updates_facade_task(self, repo_git):
 #
-#    engine = get_engine()
+#    engine = self.app.engine
 #
 #    logger = logging.getLogger(check_for_repo_updates_facade_task.__name__)
 #
 #    with FacadeSession(logger) as session:
 #        check_for_repo_updates(session, repo_git)
 
-@celery.task(base=AugurFacadeRepoCollectionTask)
-def git_update_commit_count_weight(repo_git):
+@celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
+def git_update_commit_count_weight(self, repo_git):
 
-    engine = get_engine()
+    engine = self.app.engine
     logger = logging.getLogger(git_update_commit_count_weight.__name__)
     
+    # Change facade session to take in engine
     with FacadeSession(logger) as session:
         commit_count = get_repo_commit_count(session, repo_git)
         facade_weight = get_facade_weight_with_commit_count(session, repo_git, commit_count)

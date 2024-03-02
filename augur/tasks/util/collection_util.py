@@ -215,10 +215,10 @@ def split_list_into_chunks(given_list, num_chunks):
     return [given_list[i:i + n] for i in range(0, len(given_list),n)]
 
 
-@celery.task
-def task_failed_util(request,exc,traceback):
+@celery.task(bind=True)
+def task_failed_util(self, request,exc,traceback):
 
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(task_failed_util.__name__)
 
@@ -272,10 +272,10 @@ def task_failed_util(request,exc,traceback):
 
 
 #This task updates the core and secondary weight with the issues and prs already passed in
-@celery.task
-def issue_pr_task_update_weight_util(issue_and_pr_nums,repo_git=None,session=None):
+@celery.task(bind=True)
+def issue_pr_task_update_weight_util(self, issue_and_pr_nums,repo_git=None,session=None):
 
-    engine = get_engine()
+    engine = self.app.engine
     logger = logging.getLogger(issue_pr_task_update_weight_util.__name__)
 
     if repo_git is None:
@@ -288,10 +288,10 @@ def issue_pr_task_update_weight_util(issue_and_pr_nums,repo_git=None,session=Non
             update_issue_pr_weights(logger,session,repo_git,sum(issue_and_pr_nums))
 
 
-@celery.task
-def core_task_success_util(repo_git):
+@celery.task(bind=True)
+def core_task_success_util(self, repo_git):
 
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(core_task_success_util.__name__)
 
@@ -355,10 +355,10 @@ def update_issue_pr_weights(logger,session,repo_git,raw_sum):
 
 
 
-@celery.task
-def secondary_task_success_util(repo_git):
+@celery.task(bind=True)
+def secondary_task_success_util(self, repo_git):
 
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(secondary_task_success_util.__name__)
 
@@ -408,10 +408,10 @@ def get_repo_weight_secondary(logger,repo_git):
         return get_repo_weight_by_issue(logger, repo_git, days)
 
 
-@celery.task
-def facade_task_success_util(repo_git):
+@celery.task(bind=True)
+def facade_task_success_util(self, repo_git):
 
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(facade_task_success_util.__name__)
 
@@ -431,10 +431,10 @@ def facade_task_success_util(repo_git):
 
         session.commit()
 
-@celery.task
-def ml_task_success_util(repo_git):
+@celery.task(bind=True)
+def ml_task_success_util(self, repo_git):
 
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(facade_task_success_util.__name__)
 
@@ -456,10 +456,10 @@ def ml_task_success_util(repo_git):
 
 
 
-@celery.task
-def facade_clone_success_util(repo_git):
+@celery.task(bind=True)
+def facade_clone_success_util(self, repo_git):
 
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(facade_clone_success_util.__name__)
 

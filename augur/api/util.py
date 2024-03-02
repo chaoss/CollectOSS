@@ -8,7 +8,7 @@ import beaker
 
 from flask import request, jsonify
 
-from augur.application.db import get_engine, get_session
+from augur.application.db import get_session
 from functools import wraps
 from sqlalchemy.orm.exc import NoResultFound
 from augur.application.config import get_development_flag

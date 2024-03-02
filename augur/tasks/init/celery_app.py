@@ -76,6 +76,7 @@ class AugurCoreRepoCollectionTask(celery.Task):
 
     def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core',after_fail=CollectionState.ERROR.value):
             
+        # Note: I think self.app.engine would work but leaving it to try later
         engine = get_engine()
 
         logger = AugurLogger(logger_name).get_logger()
@@ -248,7 +249,7 @@ def setup_loggers(*args,**kwargs):
 @worker_process_init.connect
 def init_worker(**kwargs):
 
-    pass
+    celery_app.engine = get_engine()
 
     # global engine
 

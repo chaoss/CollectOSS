@@ -193,11 +193,10 @@ def link_commits_to_contributor(session,contributorQueue):
 
 
 # Update the contributors table from the data facade has gathered.
-@celery.task(base=AugurFacadeRepoCollectionTask)
-def insert_facade_contributors(repo_id):
+@celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
+def insert_facade_contributors(self, repo_id):
 
-    from augur.application.db import get_engine
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(insert_facade_contributors.__name__)
 
