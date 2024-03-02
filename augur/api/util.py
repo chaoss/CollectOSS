@@ -8,14 +8,14 @@ import beaker
 
 from flask import request, jsonify
 
-from .server import engine
+from augur.application.db import get_engine
 from functools import wraps
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from augur.application.config import get_development_flag
 from augur.application.db.models import ClientApplication
 
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(bind=get_engine())
 development = get_development_flag()
 
 __ROOT = os.path.abspath(os.path.dirname(__file__))

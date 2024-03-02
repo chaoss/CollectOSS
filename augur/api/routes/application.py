@@ -9,12 +9,13 @@ from sqlalchemy.orm import sessionmaker
 from augur.api.util import api_key_required, ssl_required
 
 from augur.application.db.models import User, ClientApplication
+from augur.application.db import get_engine
 from augur.application.config import get_development_flag
-from ..server import app, engine
+from ..server import app
 
 logger = logging.getLogger(__name__)
 development = get_development_flag()
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(bind=get_engine())
 
 from augur.api.routes import AUGUR_API_VERSION
 

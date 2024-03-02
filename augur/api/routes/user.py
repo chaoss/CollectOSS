@@ -7,20 +7,21 @@ from augur.api.routes import AUGUR_API_VERSION
 import logging
 import secrets
 from flask import request, jsonify
-from flask_login import login_user, logout_user, current_user, login_required
+from flask_login import login_user, logout_user, current_user, login_required, current_app
 from werkzeug.security import check_password_hash
 from sqlalchemy.orm import sessionmaker
 from augur.application.db.session import DatabaseSession
+from augur.application.db import get_engine
 from augur.api.util import api_key_required
 from augur.api.util import ssl_required
 
 from augur.application.db.models import User, UserSessionToken, RefreshToken
 from augur.tasks.init.redis_connection import redis_connection as redis
-from ..server import app, engine
+from ..server import app
 
 logger = logging.getLogger(__name__)
 current_user: User = current_user
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(bind=get_engine())
 
 @app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
 @ssl_required
@@ -88,7 +89,7 @@ def generate_session(application):
     if not username:
         return jsonify({"status": "Invalid authorization code"})
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine=current_app.engine) as session:
 
         user = User.get_user(session, username)
         if not user:
@@ -123,7 +124,7 @@ def refresh_session(application):
     if request.args.get("grant_type") != "refresh_token":
         return jsonify({"status": "Invalid grant type"})
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine=current_app.engine) as session:
 
         refresh_token = session.query(RefreshToken).filter(RefreshToken.id == refresh_token_str).first()
         if not refresh_token:
