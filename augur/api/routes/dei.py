@@ -7,13 +7,10 @@ import logging, subprocess
 from flask import request, jsonify, render_template, send_file, current_app
 from pathlib import Path
 
-from sqlalchemy.orm import sessionmaker
-
 from augur.api.util import api_key_required, ssl_required
 
 from augur.application.db.models import ClientApplication, CollectionStatus, Repo, RepoGroup, BadgingDEI
 from augur.application.db.session import DatabaseSession
-from augur.application.db import get_engine
 
 from augur.tasks.util.collection_util import CollectionRequest,AugurTaskRoutine, get_enabled_phase_names_from_config, core_task_success_util
 from augur.tasks.start_tasks import prelim_phase, primary_repo_collect_phase
@@ -22,7 +19,6 @@ from augur.tasks.github.util.util import get_repo_weight_by_issue
 from ..server import app
 
 logger = logging.getLogger(__name__)
-Session = sessionmaker(bind=get_engine(), autocommit=True)
 
 from augur.api.routes import AUGUR_API_VERSION
 from augur.application.db.models.augur_operations import FRONTEND_REPO_GROUP_NAME

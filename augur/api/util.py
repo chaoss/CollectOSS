@@ -8,14 +8,12 @@ import beaker
 
 from flask import request, jsonify
 
-from augur.application.db import get_engine
+from augur.application.db import get_engine, get_session
 from functools import wraps
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from augur.application.config import get_development_flag
 from augur.application.db.models import ClientApplication
 
-Session = sessionmaker(bind=get_engine())
 development = get_development_flag()
 
 __ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -130,13 +128,13 @@ def api_key_required(fun):
 
         # If valid:
         if client_token:
-            session = Session()
-            try:
-                kwargs["application"] = session.query(ClientApplication).filter(ClientApplication.api_key == client_token).one()
-            except NoResultFound as e:
-                return {"status": "Unauthorized client"}
+            with get_session() as session:
+                try:
+                    kwargs["application"] = session.query(ClientApplication).filter(ClientApplication.api_key == client_token).one()
+                except NoResultFound as e:
+                    return {"status": "Unauthorized client"}
 
-            return fun(*args, **kwargs)
+                return fun(*args, **kwargs)
         
         return {"status": "Unauthorized client"}
     

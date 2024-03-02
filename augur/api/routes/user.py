@@ -7,11 +7,10 @@ from augur.api.routes import AUGUR_API_VERSION
 import logging
 import secrets
 from flask import request, jsonify
-from flask_login import login_user, logout_user, current_user, login_required, current_app
+from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash
 from sqlalchemy.orm import sessionmaker
-from augur.application.db.session import DatabaseSession
-from augur.application.db import get_engine
+from augur.application.db import get_engine, get_session
 from augur.api.util import api_key_required
 from augur.api.util import ssl_required
 
@@ -32,9 +31,8 @@ def validate_user():
         # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
         return jsonify({"status": "Missing argument"}), 400
 
-    session = Session()
-    user = session.query(User).filter(User.login_name == username).first()
-    session.close()
+    with get_session() as session:
+        user = session.query(User).filter(User.login_name == username).first()
 
     if user is None:
         return jsonify({"status": "Invalid username"})
@@ -89,7 +87,7 @@ def generate_session(application):
     if not username:
         return jsonify({"status": "Invalid authorization code"})
 
-    with DatabaseSession(logger, engine=current_app.engine) as session:
+    with get_session() as session:
 
         user = User.get_user(session, username)
         if not user:
@@ -124,7 +122,7 @@ def refresh_session(application):
     if request.args.get("grant_type") != "refresh_token":
         return jsonify({"status": "Invalid grant type"})
 
-    with DatabaseSession(logger, engine=current_app.engine) as session:
+    with get_session() as session:
 
         refresh_token = session.query(RefreshToken).filter(RefreshToken.id == refresh_token_str).first()
         if not refresh_token:

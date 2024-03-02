@@ -58,6 +58,7 @@ def internal_server_error(error):
 def unauthorized():
     if AUGUR_API_VERSION in str(request.path):
         token_str = get_bearer_token()
+        print(token_str)
         token = db_session.query(UserSessionToken).filter(UserSessionToken.token == token_str).first()
         if not token:
             return jsonify({"status": "Session expired"})

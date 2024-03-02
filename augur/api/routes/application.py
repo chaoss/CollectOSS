@@ -5,17 +5,15 @@ Creates routes for user functionality
 
 import logging
 from flask import request, jsonify
-from sqlalchemy.orm import sessionmaker
 from augur.api.util import api_key_required, ssl_required
 
 from augur.application.db.models import User, ClientApplication
-from augur.application.db import get_engine
+from augur.application.db import get_session
 from augur.application.config import get_development_flag
 from ..server import app
 
 logger = logging.getLogger(__name__)
 development = get_development_flag()
-Session = sessionmaker(bind=get_engine())
 
 from augur.api.routes import AUGUR_API_VERSION
 
