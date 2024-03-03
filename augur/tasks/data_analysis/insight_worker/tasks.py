@@ -1,11 +1,7 @@
 # SPDX-License-Identifier: MIT
-from multiprocessing import Process, Queue
-from urllib.parse import urlparse
 import requests
 import pandas as pd
 import sqlalchemy as s
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy import MetaData, and_
 import logging, json
 import numpy as np
 import scipy.stats
@@ -27,7 +23,8 @@ warnings.filterwarnings('ignore')
 def insight_task(repo_git):
 
     logger = logging.getLogger(insight_task.__name__)
-    from augur.tasks.init.celery_app import engine
+    from augur.application.db import get_engine
+    engine = get_engine()
 
     with DatabaseSession(logger, engine) as session:
         insight_model(repo_git, logger, engine, session)

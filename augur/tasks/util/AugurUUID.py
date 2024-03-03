@@ -129,6 +129,19 @@ class GithubUUID(AugurUUID):
     def __init__(self):
         super().__init__(platform = 1)
 
+class GitlabUUID(AugurUUID):
+    struct = {
+        "platform": {"start": 0, "size": 1},
+        "user": {"start": 1, "size": 4},
+        "repo": {"start": 5, "size": 3},
+        "issue": {"start": 8, "size": 4},
+        "event": {"start": 12, "size": 4},
+        "metadata": {"start": 12, "size": 4}
+    }
+
+    def __init__(self):
+        super().__init__(platform = 2)
+
 class UnresolvableUUID(GithubUUID):
     def __init__(self):
         super(GithubUUID, self).__init__(platform = 0)

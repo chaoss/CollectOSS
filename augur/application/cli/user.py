@@ -12,7 +12,7 @@ from augur.application.db.models import User
 from augur.application.db.engine import DatabaseEngine
 from sqlalchemy.orm import sessionmaker
 
-
+# TODO: Update these commands to use cli DatabaseContext so this engine is cleaned up
 engine = DatabaseEngine().engine
 Session = sessionmaker(bind=engine)
 

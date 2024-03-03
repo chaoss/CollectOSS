@@ -2,14 +2,10 @@
 import os
 import json
 import sys
-import logging
-import inspect
 import re
 import subprocess
 
 from sqlalchemy import create_engine, event
-from sqlalchemy.engine.base import Engine
-from sqlalchemy.pool import NullPool
 from augur.application.db.util import catch_operational_error
 
 

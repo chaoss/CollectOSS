@@ -3,9 +3,7 @@
 Creates routes for config functionality
 """
 import logging
-import requests
-import os
-from flask import request, jsonify, Response
+from flask import request, jsonify
 import sqlalchemy as s
 
 # Disable the requirement for SSL by setting env["AUGUR_DEV"] = True

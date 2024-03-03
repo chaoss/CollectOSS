@@ -1,13 +1,10 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
 
 from alembic import context
 from augur.application.db.models.base import Base
-from augur.application.db.engine import DatabaseEngine, get_database_string
+from augur.application.db.engine import get_database_string
 from sqlalchemy import create_engine, event
-from sqlalchemy.pool import NullPool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
