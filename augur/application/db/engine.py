@@ -6,10 +6,11 @@ import re
 import subprocess
 
 from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
 from augur.application.db.util import catch_operational_error
 
 
-def parse_database_string(db_string) -> str:
+def parse_database_string(db_string: str) -> str:
     """Parse database string into the following components:
         username, password, host, port, database 
     """
@@ -87,7 +88,7 @@ def get_database_string() -> str:
 
     return db_conn_string
 
-def create_database_engine(url, **kwargs):  
+def create_database_engine(url: str, **kwargs) -> Engine:  
     """Create sqlalchemy database engine 
 
     Note:
