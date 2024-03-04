@@ -186,20 +186,21 @@ def repo_reset(ctx):
     """
     Refresh repo collection to force data collection
     """
-    augur_app.database.execute(s.sql.text("""
-        UPDATE augur_operations.collection_status 
-        SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
+    with ctx.obj.engine.connect() as connection:
+        connection.execute(s.sql.text("""
+            UPDATE augur_operations.collection_status 
+            SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
 
-        UPDATE augur_operations.collection_status 
-        SET secondary_status='Pending',secondary_task_id = NULL, secondary_data_last_collected = NULL;
+            UPDATE augur_operations.collection_status 
+            SET secondary_status='Pending',secondary_task_id = NULL, secondary_data_last_collected = NULL;
 
-        UPDATE augur_operations.collection_status 
-        SET facade_status='Pending', facade_task_id=NULL, facade_data_last_collected = NULL;
+            UPDATE augur_operations.collection_status 
+            SET facade_status='Pending', facade_task_id=NULL, facade_data_last_collected = NULL;
 
-        TRUNCATE augur_data.commits CASCADE;
-        """))
+            TRUNCATE augur_data.commits CASCADE;
+            """))
 
-    logger.info("Repos successfully reset")
+        logger.info("Repos successfully reset")
 
 @cli.command('processes')
 def processes():

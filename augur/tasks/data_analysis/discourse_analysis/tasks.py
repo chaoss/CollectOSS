@@ -38,8 +38,7 @@ def discourse_analysis_task(self, repo_git):
     logger = logging.getLogger(discourse_analysis_task.__name__)
     engine = self.app.engine
 
-    with DatabaseSession(logger, engine) as session:
-        discourse_analysis_model(repo_git, logger, engine)
+    discourse_analysis_model(repo_git, logger, engine)
 
 
 def discourse_analysis_model(repo_git: str,logger,engine) -> None:
