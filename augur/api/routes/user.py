@@ -9,8 +9,9 @@ import secrets
 from flask import request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash
-from sqlalchemy.orm import sessionmaker
-from augur.application.db import get_engine, get_session
+from sqlalchemy.orm import object_session
+
+from augur.application.db import get_session
 from augur.api.util import api_key_required
 from augur.api.util import ssl_required
 
@@ -20,7 +21,6 @@ from ..server import app
 
 logger = logging.getLogger(__name__)
 current_user: User = current_user
-Session = sessionmaker(bind=get_engine())
 
 @app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
 @ssl_required
@@ -189,21 +189,20 @@ def update_user():
     new_login_name = request.args.get("new_username")
     new_password = request.args.get("new_password")
 
-    if email is not None:
-        existing_user = session.query(User).filter(User.email == email).one()
-        if existing_user is not None:
-            session = Session()
-            return jsonify({"status": "Already an account with this email"})
+    session = object_session(current_user)
 
+    if email is not None:
+        existing_user = session.query(User).filter(User.email == email).one_or_none()
+        if existing_user is not None:
+            return jsonify({"status": "Already an account with this email"})
+        
         current_user.email = email
         session.commit()
-        session = Session()
         return jsonify({"status": "Email Updated"})
 
     if new_password is not None:
         current_user.login_hashword = User.compute_hashsed_password(new_password)
         session.commit()
-        session = Session()
         return jsonify({"status": "Password Updated"})
 
     if new_login_name is not None:
@@ -213,7 +212,6 @@ def update_user():
 
         current_user.login_name = new_login_name
         session.commit()
-        session = Session()
         return jsonify({"status": "Username Updated"})
 
     return jsonify({"status": "Missing argument"}), 400

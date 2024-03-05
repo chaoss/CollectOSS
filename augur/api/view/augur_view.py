@@ -83,7 +83,6 @@ def load_user(user_id):
         repos = group.repos
     for token in tokens:
         application = token.application
-    db_session.expunge(user)
 
 
     # The flask_login library sets a unique session["_id"]

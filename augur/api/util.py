@@ -14,6 +14,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from augur.application.config import get_development_flag
 from augur.application.db.models import ClientApplication
 
+development = get_development_flag()
 
 __ROOT = os.path.abspath(os.path.dirname(__file__))
 def get_data_path(path):
