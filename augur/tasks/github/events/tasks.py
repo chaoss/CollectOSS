@@ -214,22 +214,22 @@ def update_issue_closed_cntrbs_from_events(engine, repo_id):
 
     update_data = []
     for row in result:
-        if row[1]:
-            update_data.append(
-                {
-                'issue_id': row[0], 
-                'cntrb_id': row[1], 
-                'repo_id': repo_id
-                }
-            )
+        update_data.append(
+            {
+            'issue_id': row[0], 
+            'cntrb_id': row[1], 
+            'repo_id': repo_id
+            }
+        )
 
-    with engine.connect() as connection:
-        update_stmt = s.text("""
-            UPDATE issues
-            SET cntrb_id = :cntrb_id
-            WHERE issue_id = :issue_id
-            AND repo_id = :repo_id
-        """)
-        connection.execute(update_stmt, update_data)
+    if update_data:
+        with engine.connect() as connection:
+            update_stmt = s.text("""
+                UPDATE issues
+                SET cntrb_id = :cntrb_id
+                WHERE issue_id = :issue_id
+                AND repo_id = :repo_id
+            """)
+            connection.execute(update_stmt, update_data)
 
 
