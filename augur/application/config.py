@@ -140,7 +140,11 @@ def convert_type_of_value(config_dict, logger=None):
 
 class AugurConfig():
 
-    def __init__(self, logger, session):
+    from augur.application.db.session import DatabaseSession
+
+    session: DatabaseSession
+
+    def __init__(self, logger, session: DatabaseSession):
 
         self.session = session
         self.logger = logger

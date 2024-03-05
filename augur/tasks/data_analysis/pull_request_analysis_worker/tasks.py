@@ -10,7 +10,6 @@ from augur.tasks.data_analysis.message_insights.message_sentiment import get_sen
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
-from augur.application.db import get_engine
 from augur.application.config import AugurConfig
 from augur.application.db.models import Repo, PullRequestAnalysis
 from augur.application.db.util import execute_session_query
@@ -23,15 +22,13 @@ from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
-@celery.task(base=AugurMlRepoCollectionTask)
-def pull_request_analysis_task(repo_git):
+@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+def pull_request_analysis_task(self, repo_git):
 
     logger = logging.getLogger(pull_request_analysis_task.__name__)
-    engine = get_engine()
+    engine = self.app.engine
 
-    with DatabaseSession(logger, engine) as session:
-        pull_request_analysis_model(repo_git, logger, engine)
-
+    pull_request_analysis_model(repo_git, logger, engine)
 
 
 def pull_request_analysis_model(repo_git: str,logger,engine) -> None:

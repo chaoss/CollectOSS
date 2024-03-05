@@ -21,10 +21,8 @@ from augur.tasks.gitlab.issues_task import collect_gitlab_issues
 from augur.tasks.gitlab.events_task import collect_gitlab_issue_events, collect_gitlab_merge_request_events
 from augur.tasks.git.facade_tasks import *
 from augur.tasks.db.refresh_materialized_views import *
-# from augur.tasks.data_analysis import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
-from augur.application.db import get_engine
 from augur.application.db.models import CollectionStatus, Repo
 from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
@@ -128,10 +126,10 @@ def secondary_repo_collect_phase(repo_git):
 
 #This is a periodic task that runs less often to handle less important collection tasks such as 
 #refreshing the materialized views.
-@celery.task
-def non_repo_domain_tasks():
+@celery.task(bind=True)
+def non_repo_domain_tasks(self):
 
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(non_repo_domain_tasks.__name__)
 
@@ -236,10 +234,10 @@ def build_ml_repo_collect_request(session,enabled_phase_names, days_until_collec
     request.get_valid_repos(session)
     return request
 
-@celery.task
-def augur_collection_monitor():     
+@celery.task(bind=True)
+def augur_collection_monitor(self):     
 
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(augur_collection_monitor.__name__)
 
@@ -274,10 +272,10 @@ def augur_collection_monitor():
 # have a pipe of 180
 
 
-@celery.task
-def augur_collection_update_weights():
+@celery.task(bind=True)
+def augur_collection_update_weights(self):
 
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(augur_collection_update_weights.__name__)
 
@@ -319,24 +317,24 @@ def augur_collection_update_weights():
             session.commit()
             #git_update_commit_count_weight(repo_git)
 
-@celery.task
-def retry_errored_repos():
+@celery.task(bind=True)
+def retry_errored_repos(self):
     """
         Periodic task to reset repositories that have errored and try again.
     """
-    engine = get_engine()
+    engine = self.app.engine
     logger = logging.getLogger(create_collection_status_records.__name__)
 
     #TODO: Isaac needs to normalize the status's to be abstract in the 
     #collection_status table once augur dev is less unstable.
     with DatabaseSession(logger,engine) as session:
-        query = s.sql.text(f"""UPDATE collection_status SET secondary_status = {CollectionState.PENDING.value}"""
+        query = s.sql.text(f"""UPDATE collection_status SET secondary_status = '{CollectionState.PENDING.value}'"""
         f""" WHERE secondary_status = '{CollectionState.ERROR.value}' ;"""
-        f"""UPDATE collection_status SET core_status = {CollectionState.PENDING.value}"""
+        f"""UPDATE collection_status SET core_status = '{CollectionState.PENDING.value}'"""
         f""" WHERE core_status = '{CollectionState.ERROR.value}' ;"""
-        f"""UPDATE collection_status SET facade_status = {CollectionState.PENDING.value}"""
+        f"""UPDATE collection_status SET facade_status = '{CollectionState.PENDING.value}'"""
         f""" WHERE facade_status = '{CollectionState.ERROR.value}' ;"""
-        f"""UPDATE collection_status SET ml_status = {CollectionState.PENDING.value}"""
+        f"""UPDATE collection_status SET ml_status = '{CollectionState.PENDING.value}'"""
         f""" WHERE ml_status = '{CollectionState.ERROR.value}' ;"""
         )
 
@@ -345,8 +343,8 @@ def retry_errored_repos():
 
 
 #Retry this task for every issue so that repos that were added manually get the chance to be added to the collection_status table.
-@celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
-def create_collection_status_records():
+@celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None, bind=True)
+def create_collection_status_records(self):
     """
     Automatic task that runs and checks for repos that haven't been given a collection_status
     record corresponding to the state of their collection at the monent. 
@@ -354,7 +352,7 @@ def create_collection_status_records():
     A special celery task that automatically retries itself and has no max retries.
     """
 
-    engine = get_engine()
+    engine = self.app.engine
     logger = logging.getLogger(create_collection_status_records.__name__)
 
     with DatabaseSession(logger,engine) as session:

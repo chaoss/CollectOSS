@@ -15,7 +15,7 @@ import traceback
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
-from augur.application.cli import test_connection, test_db_connection 
+from augur.application.cli import test_connection, test_db_connection, with_database
 from augur.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
@@ -29,7 +29,9 @@ def cli():
 @click.option('--port')
 @test_connection
 @test_db_connection
-def start(development, port):
+@with_database
+@click.pass_context
+def start(ctx, development, port):
     """Start Augur's backend server."""
 
     try:
@@ -51,7 +53,7 @@ def start(development, port):
     except FileNotFoundError:
         logger.error("\n\nPlease run augur commands in the root directory\n\n")
 
-    with DatabaseSession(logger) as db_session:
+    with DatabaseSession(logger, ctx.obj.engine) as db_session:
         config = AugurConfig(logger, db_session)
         host = config.get_value("Server", "host")
 
@@ -81,21 +83,25 @@ def start(development, port):
             frontend_worker_process.terminate()
 
 @cli.command('stop')
-def stop():
+@with_database
+@click.pass_context
+def stop(ctx):
     """
     Sends SIGTERM to all Augur api processes
     """
     logger = logging.getLogger("augur.cli")
 
-    augur_stop(signal.SIGTERM, logger)
+    augur_stop(signal.SIGTERM, logger, ctx.obj.engine)
 
 @cli.command('kill')
-def kill():
+@with_database
+@click.pass_context
+def kill(ctx):
     """
     Sends SIGKILL to all Augur api processes
     """
     logger = logging.getLogger("augur.cli")
-    augur_stop(signal.SIGKILL, logger)
+    augur_stop(signal.SIGKILL, logger, ctx.obj.engine)
 
 @cli.command('processes')
 def processes():
@@ -105,7 +111,7 @@ def processes():
     for process in augur_processes:
         logger.info(f"Found process {process.pid}")
 
-def augur_stop(signal, logger):
+def augur_stop(signal, logger, engine):
     """
     Stops augur with the given signal, 
     and cleans up the api
@@ -115,14 +121,14 @@ def augur_stop(signal, logger):
  
     _broadcast_signal_to_processes(augur_processes, logger=logger, broadcast_signal=signal)
 
-    cleanup_after_api_halt(logger)
+    cleanup_after_api_halt(logger, engine)
 
 
-def cleanup_after_api_halt(logger):
+def cleanup_after_api_halt(logger, engine):
     
     connection_string = ""
     queues = ['frontend','celery']
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
         config = AugurConfig(logger, session)
         connection_string = config.get_section("RabbitMQ")['connection_string']
 

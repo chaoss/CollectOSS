@@ -9,7 +9,6 @@ from collections import Counter
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
-from augur.application.db import get_engine
 from augur.application.db.models import Repo, DiscourseInsight
 from augur.application.db.util import execute_session_query
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
@@ -33,14 +32,13 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 DISCOURSE_ANALYSIS_DIR = f"{ROOT_AUGUR_DIRECTORY}/tasks/data_analysis/discourse_analysis/"
 
-@celery.task(base=AugurMlRepoCollectionTask)
-def discourse_analysis_task(repo_git):
+@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+def discourse_analysis_task(self, repo_git):
 
     logger = logging.getLogger(discourse_analysis_task.__name__)
-    engine = get_engine()
+    engine = self.app.engine
 
-    with DatabaseSession(logger, engine) as session:
-        discourse_analysis_model(repo_git, logger, engine)
+    discourse_analysis_model(repo_git, logger, engine)
 
 
 def discourse_analysis_model(repo_git: str,logger,engine) -> None:

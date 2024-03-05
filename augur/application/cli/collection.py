@@ -22,7 +22,7 @@ from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
-from augur.application.cli import test_connection, test_db_connection 
+from augur.application.cli import test_connection, test_db_connection, with_database
 from augur.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
@@ -35,7 +35,9 @@ def cli():
 @click.option("--development", is_flag=True, default=False, help="Enable development mode, implies --disable-collection")
 @test_connection
 @test_db_connection
-def start(development):
+@with_database
+@click.pass_context
+def start(ctx, development):
     """Start Augur's backend server."""
 
     try:
@@ -52,7 +54,7 @@ def start(development):
         os.environ["AUGUR_DEV"] = "1"
         logger.info("Starting in development mode")
 
-    with DatabaseSession(logger) as db_session:
+    with DatabaseSession(logger, ctx.obj.engine) as db_session:
         config = AugurConfig(logger, db_session)
         
         worker_vmem_cap = config.get_value("Celery", 'worker_process_vmem_cap')
@@ -63,7 +65,7 @@ def start(development):
             logger.info("Deleting old task schedule")
             os.remove("celerybeat-schedule.db")
 
-    with DatabaseSession(logger) as db_session:
+    with DatabaseSession(logger, ctx.obj.engine) as db_session:
         config = AugurConfig(logger, db_session)
         log_level = config.get_value("Logging", "log_level")
         celery_beat_process = None
@@ -71,7 +73,7 @@ def start(development):
         celery_beat_process = subprocess.Popen(celery_command.split(" "))    
 
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, ctx.obj.engine) as session:
 
         clean_collection_status(session)
         assign_orphan_repos_to_default_user(session)
@@ -155,43 +157,50 @@ def start_celery_collection_processes(vmem_cap_ratio):
 
 
 @cli.command('stop')
-def stop():
+@with_database
+@click.pass_context
+def stop(ctx):
     """
     Sends SIGTERM to all Augur server & worker processes
     """
     logger = logging.getLogger("augur.cli")
 
-    augur_stop(signal.SIGTERM, logger)
+    augur_stop(signal.SIGTERM, logger, ctx.obj.engine)
 
 @cli.command('kill')
-def kill():
+@with_database
+@click.pass_context
+def kill(ctx):
     """
     Sends SIGKILL to all Augur server & worker processes
     """
     logger = logging.getLogger("augur.cli")
-    augur_stop(signal.SIGKILL, logger)
+    augur_stop(signal.SIGKILL, logger, ctx.obj.engine)
 
 @cli.command('repo-reset')
 @test_connection
 @test_db_connection
-def repo_reset(augur_app):
+@with_database
+@click.pass_context
+def repo_reset(ctx):
     """
     Refresh repo collection to force data collection
     """
-    augur_app.database.execute(s.sql.text("""
-        UPDATE augur_operations.collection_status 
-        SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
+    with ctx.obj.engine.connect() as connection:
+        connection.execute(s.sql.text("""
+            UPDATE augur_operations.collection_status 
+            SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
 
-        UPDATE augur_operations.collection_status 
-        SET secondary_status='Pending',secondary_task_id = NULL, secondary_data_last_collected = NULL;
+            UPDATE augur_operations.collection_status 
+            SET secondary_status='Pending',secondary_task_id = NULL, secondary_data_last_collected = NULL;
 
-        UPDATE augur_operations.collection_status 
-        SET facade_status='Pending', facade_task_id=NULL, facade_data_last_collected = NULL;
+            UPDATE augur_operations.collection_status 
+            SET facade_status='Pending', facade_task_id=NULL, facade_data_last_collected = NULL;
 
-        TRUNCATE augur_data.commits CASCADE;
-        """))
+            TRUNCATE augur_data.commits CASCADE;
+            """))
 
-    logger.info("Repos successfully reset")
+        logger.info("Repos successfully reset")
 
 @cli.command('processes')
 def processes():
@@ -232,7 +241,7 @@ def is_collection_process(process):
     return False
 
 
-def augur_stop(signal, logger):
+def augur_stop(signal, logger, engine):
     """
     Stops augur with the given signal, 
     and cleans up collection if it was running
@@ -242,13 +251,13 @@ def augur_stop(signal, logger):
 
     _broadcast_signal_to_processes(augur_collection_processes, logger=logger, broadcast_signal=signal)
 
-    cleanup_after_collection_halt(logger)
+    cleanup_after_collection_halt(logger, engine)
 
-def cleanup_after_collection_halt(logger):
+def cleanup_after_collection_halt(logger, engine):
     
     queues = ['celery', 'core', 'secondary','scheduling','facade']
     connection_string = ""
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine) as session:
         config = AugurConfig(logger, session)
         connection_string = config.get_section("RabbitMQ")['connection_string']
 

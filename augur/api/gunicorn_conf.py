@@ -6,9 +6,10 @@ from glob import glob
 
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
+from augur.application.db import get_engine, dispose_database_engine
 
 logger = logging.getLogger(__name__)
-with DatabaseSession(logger) as session:
+with DatabaseSession(logger, engine=get_engine()) as session:
 
     augur_config = AugurConfig(logger, session)
     
@@ -43,3 +44,9 @@ with DatabaseSession(logger) as session:
         workers = int(augur_config.get_value('Server', 'workers'))
         bind = '%s:%s' % (augur_config.get_value("Server", "host"), augur_config.get_value("Server", "port"))
         timeout = int(augur_config.get_value('Server', 'timeout'))
+
+
+def worker_exit(server, worker):
+    print("Stopping gunicorn worker process")
+    dispose_database_engine()
+

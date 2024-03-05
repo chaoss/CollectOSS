@@ -27,7 +27,8 @@ from graphene_sqlalchemy import SQLAlchemyObjectType
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
-from augur.application.db.engine import get_database_string, create_database_engine
+from augur.application.db import get_engine
+# from augur.application.db.engine import get_database_string, create_database_engine
 from metadata import __version__ as augur_code_version
 from augur.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
 
@@ -325,8 +326,7 @@ def get_server_cache(config, cache_manager) -> Cache:
 
 
 logger = AugurLogger("server").get_logger()
-url = get_database_string()
-engine = create_database_engine(url, poolclass=StaticPool)
+engine = get_engine()
 db_session = DatabaseSession(logger, engine)
 augur_config = AugurConfig(logger, db_session)
 
@@ -669,7 +669,7 @@ logger.debug("Created Flask app")
 # so when we pass the flask app to the routes files we 
 # know can access the api version via the app variable
 app.augur_api_version = AUGUR_API_VERSION
-
+app.engine = engine
 
 CORS(app)
 app.url_map.strict_slashes = False

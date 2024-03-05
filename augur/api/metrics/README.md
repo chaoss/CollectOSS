@@ -14,7 +14,6 @@ import datetime
 import sqlalchemy as s
 import pandas as pd
 from augur.api.util import register_metric
-from augur.application.db.engine import engine
 ```
 3. Defining the function
     1. Add the decorator @register_metric to the function

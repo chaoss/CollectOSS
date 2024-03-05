@@ -4,10 +4,8 @@ Creates routes for DEI badging functionality
 
 import logging, subprocess
 
-from flask import request, jsonify, render_template, send_file
+from flask import request, jsonify, render_template, send_file, current_app
 from pathlib import Path
-
-from sqlalchemy.orm import sessionmaker
 
 from augur.api.util import api_key_required, ssl_required
 
@@ -18,10 +16,9 @@ from augur.tasks.util.collection_util import CollectionRequest,AugurTaskRoutine,
 from augur.tasks.start_tasks import prelim_phase, primary_repo_collect_phase
 from augur.tasks.github.util.util import get_repo_weight_by_issue
 
-from ..server import app, engine
+from ..server import app
 
 logger = logging.getLogger(__name__)
-Session = sessionmaker(bind=engine, autocommit=True)
 
 from augur.api.routes import AUGUR_API_VERSION
 from augur.application.db.models.augur_operations import FRONTEND_REPO_GROUP_NAME
@@ -39,7 +36,7 @@ def dei_track_repo(application: ClientApplication):
     
     repo_url = repo_url.lower()
     
-    session = DatabaseSession(logger)
+    session = DatabaseSession(logger, engine=current_app.engine)
     session.autocommit = True
     repo: Repo = session.query(Repo).filter(Repo.repo_git==repo_url).first()
     if repo:
@@ -112,7 +109,7 @@ def dei_report(application: ClientApplication):
     if not dei_id:
         return jsonify({"status": "Missing argument"}), 400
     
-    session = DatabaseSession(logger)
+    session = DatabaseSession(logger, engine=current_app.engine)
 
     project: BadgingDEI = session.query(BadgingDEI).filter(BadgingDEI.badging_id==dei_id).first()
 

@@ -2,7 +2,6 @@ import time
 import logging
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db import get_engine
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
@@ -104,10 +103,10 @@ def retrieve_dict_data(url: str, key_auth, logger):
     return None
 
 
-@celery.task(base=AugurCoreRepoCollectionTask)
-def grab_comitters(repo_git,platform="github"):
+@celery.task(base=AugurCoreRepoCollectionTask, bind=True)
+def grab_comitters(self, repo_git,platform="github"):
 
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(grab_comitters.__name__)
     with DatabaseSession(logger,engine) as session:

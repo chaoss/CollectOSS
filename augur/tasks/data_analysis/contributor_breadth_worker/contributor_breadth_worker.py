@@ -14,11 +14,10 @@ from augur.application.db.models import ContributorRepo
 ### Logic: For each unique platform contributor, gather non duplicate events, using the GitHub "id"
 ### for the event API (GitLab coming!)
 
-@celery.task
-def contributor_breadth_model() -> None:
+@celery.task(bind=True)
+def contributor_breadth_model(self) -> None:
 
-    from augur.application.db import get_engine
-    engine = get_engine()
+    engine = self.app.engine
 
     logger = logging.getLogger(contributor_breadth_model.__name__)
 

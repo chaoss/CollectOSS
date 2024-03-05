@@ -1,11 +1,11 @@
 #SPDX-License-Identifier: MIT
 from augur.api.routes import AUGUR_API_VERSION
-from ..server import app, engine
+from ..server import app
 import base64
 import sqlalchemy as s
 import pandas as pd
 import json
-from flask import Response
+from flask import Response, current_app
 
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
@@ -21,7 +21,7 @@ def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
         ORDER BY rg_name
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(repoGroupsSQL,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -58,7 +58,7 @@ def get_all_repos():
         order by repo_name
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(get_all_repos_sql,  conn)
     results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
 
@@ -101,7 +101,7 @@ def get_repos_in_repo_group(repo_group_id):
         ORDER BY repo.repo_git
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(repos_in_repo_groups_SQL, conn, params={'repo_group_id': repo_group_id})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -137,7 +137,7 @@ def get_repo_by_id(repo_id: int) -> Response:
             repo.repo_id = :id
     """)
 
-    results = pd.read_sql(repo_by_id_SQL, engine, params={"id": repo_id})
+    results = pd.read_sql(repo_by_id_SQL, current_app.engine, params={"id": repo_id})
     results["url"] = results["url"].apply(lambda datum: datum.split("//")[1])  # cut "https://" off the URL
     results["base64_url"] = [base64.b64encode(results.at[i, "url"].encode()) for i in results.index]
     data = results.to_json(orient="records", date_format="iso", date_unit="ms")
@@ -161,7 +161,7 @@ def get_repo_by_git_name(owner, repo):
         GROUP BY repo_id, rg_name
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(get_repo_by_git_name_sql, conn, params={'owner': '%{}%'.format(owner), 'repo': repo,})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -179,7 +179,7 @@ def get_repo_by_name(rg_name, repo_name):
         AND LOWER(repo_name) = LOWER(:repo_name)
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(get_repo_by_name_sql, conn, params={'rg_name': rg_name, 'repo_name': repo_name})
     results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
@@ -195,7 +195,7 @@ def get_group_by_name(rg_name):
         WHERE lower(rg_name) = lower(:rg_name)
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(groupSQL, conn, params={'rg_name': rg_name})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -210,7 +210,7 @@ def get_repos_for_dosocs():
         WHERE a.setting='repo_directory'
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(get_repos_for_dosocs_SQL,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -240,7 +240,7 @@ def get_issues(repo_group_id, repo_id=None):
             ORDER by OPEN_DAY DESC
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(get_issues_sql, conn, params={'repo_group_id': repo_group_id})
     else:
         get_issues_sql = s.sql.text("""
@@ -262,7 +262,7 @@ def get_issues(repo_group_id, repo_id=None):
             ORDER by OPEN_DAY DESC
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(get_issues_sql, conn, params={'repo_id': repo_id})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -272,7 +272,7 @@ def get_issues(repo_group_id, repo_id=None):
 @app.route('/{}/api-port'.format(AUGUR_API_VERSION))
 def api_port():
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine=current_app.engine) as session:
 
         response = {'port': AugurConfig(logger, session).get_value('Server', 'port')}
         return Response(response=json.dumps(response),

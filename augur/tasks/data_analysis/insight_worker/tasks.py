@@ -19,12 +19,11 @@ from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 warnings.filterwarnings('ignore')
 
 
-@celery.task(base=AugurMlRepoCollectionTask)
-def insight_task(repo_git):
+@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+def insight_task(self, repo_git):
 
     logger = logging.getLogger(insight_task.__name__)
-    from augur.application.db import get_engine
-    engine = get_engine()
+    engine = self.app.engine
 
     with DatabaseSession(logger, engine) as session:
         insight_model(repo_git, logger, engine, session)

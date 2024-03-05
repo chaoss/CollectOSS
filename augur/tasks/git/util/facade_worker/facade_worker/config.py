@@ -284,7 +284,7 @@ class FacadeConfig:
 
         #worker_options = read_config("Workers", "facade_worker", None, None)
 
-        with DatabaseSession(logger) as session:
+        with DatabaseSession(logger, engine) as session:
             config = AugurConfig(logger, session)
             worker_options = config.get_section("Facade")
 

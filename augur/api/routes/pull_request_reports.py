@@ -6,7 +6,7 @@ import warnings
 import datetime
 import json
 # from scipy import stats
-from flask import request, send_file, Response
+from flask import request, send_file, Response, current_app
 import math
 
 from bokeh.palettes import Colorblind, mpl, Category20
@@ -24,7 +24,7 @@ from bokeh.transform import dodge, factor_cmap, transform
 warnings.filterwarnings('ignore')
 
 from augur.api.routes import AUGUR_API_VERSION
-from ..server import app, engine
+from ..server import app
 
 def pull_request_data_collection(repo_id, start_date, end_date):
 
@@ -142,7 +142,7 @@ def pull_request_data_collection(repo_id, start_date, end_date):
                     merged_count DESC
                     """)
     
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         pr_all = pd.read_sql(pr_query,  conn)
 
     pr_all[['assigned_count',

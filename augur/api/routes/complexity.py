@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-from flask import Response
+from flask import Response, current_app
 import sqlalchemy as s
 import pandas as pd
 from augur.api.util import metric_metadata
@@ -7,7 +7,7 @@ import os
 import requests
 
 from augur.api.routes import AUGUR_API_VERSION
-from ..server import app, engine
+from ..server import app
 
 
 @app.route('/{}/complexity/project_languages'.format(AUGUR_API_VERSION), methods=["GET"])
@@ -48,7 +48,7 @@ def get_project_languages():
             ORDER BY e.repo_id
     """)
 
-    with engine.connect() as conn:         
+    with current_app.engine.connect() as conn:         
         results = pd.read_sql(project_languages_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -87,7 +87,7 @@ def get_project_files():
             ORDER BY e.repo_id
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(project_files_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -129,7 +129,7 @@ def get_project_lines():
             ORDER BY e.repo_id   
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(project_lines_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -171,7 +171,7 @@ def get_project_comment_lines():
             ORDER BY e.repo_id
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(comment_lines_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -213,7 +213,7 @@ def get_project_blank_lines():
             ORDER BY e.repo_id
         """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(blank_lines_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -256,7 +256,7 @@ def get_project_file_complexity():
             ORDER BY e.repo_id
         """)
     
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(project_file_complexity_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,

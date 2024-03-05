@@ -15,7 +15,6 @@ import re
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 
 from augur.application.db.session import DatabaseSession
-from augur.application.db.engine import DatabaseEngine
 from sqlalchemy import update
 from datetime import datetime
 from augur.application.db.models import Repo
@@ -156,7 +155,7 @@ def add_github_org(ctx, organization_name):
         controller.add_cli_org(organization_name)
 
 # get_db_version is a helper function to print_db_version and upgrade_db_version
-def get_db_version():
+def get_db_version(engine):
 
     db_version_sql = s.sql.text(
         """
@@ -164,7 +163,7 @@ def get_db_version():
         """
     )
 
-    with DatabaseEngine() as engine, engine.connect() as connection:
+    with engine.connect() as connection:
 
         result = int(connection.execute(db_version_sql).fetchone()[2])
 
