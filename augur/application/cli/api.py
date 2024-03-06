@@ -14,9 +14,9 @@ import traceback
 
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
 from augur.application.cli import test_connection, test_db_connection, with_database
 from augur.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
+from augur.application.db.lib import get_value
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
 
@@ -53,12 +53,10 @@ def start(ctx, development, port):
     except FileNotFoundError:
         logger.error("\n\nPlease run augur commands in the root directory\n\n")
 
-    with DatabaseSession(logger, ctx.obj.engine) as db_session:
-        config = AugurConfig(logger, db_session)
-        host = config.get_value("Server", "host")
+    host = get_value("Server", "host")
 
-        if not port:
-            port = config.get_value("Server", "port")
+    if not port:
+        port = get_value("Server", "port")
         
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file gunicorn.log"
     server = subprocess.Popen(gunicorn_command.split(" "))
@@ -126,11 +124,8 @@ def augur_stop(signal, logger, engine):
 
 def cleanup_after_api_halt(logger, engine):
     
-    connection_string = ""
     queues = ['frontend','celery']
-    with DatabaseSession(logger, engine) as session:
-        config = AugurConfig(logger, session)
-        connection_string = config.get_section("RabbitMQ")['connection_string']
+    connection_string = get_value("RabbitMQ", "connection_string")
 
     clear_rabbitmq_messages(connection_string, queues, logger)
     clear_redis_caches(logger)

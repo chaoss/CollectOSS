@@ -22,7 +22,7 @@ from augur.tasks.init.redis_connection import redis_connection
 from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.db.lib import get_value, get_section
+from augur.application.db.lib import get_value
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 import sqlalchemy as s
 
@@ -236,7 +236,7 @@ def augur_stop(signal, logger, engine):
 def cleanup_after_collection_halt(logger, engine):
     clear_redis_caches()
 
-    connection_string = get_section("RabbitMQ")['connection_string']
+    connection_string = get_value("RabbitMQ", "connection_string")
 
     with DatabaseSession(logger, engine=engine) as session:
 
