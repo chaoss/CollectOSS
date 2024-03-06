@@ -69,7 +69,7 @@ def generate_scorecard(session,repo_id,path):
     path_to_scorecard = os.environ['HOME'] + '/scorecard'
 
     #setting the environmental variable which is required by scorecard
-    key_handler = GithubApiKeyHandler(session)       
+    key_handler = GithubApiKeyHandler(session, session.logger)       
     os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
     
     required_output = parse_json_from_subprocess_call(session.logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
