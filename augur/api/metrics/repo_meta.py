@@ -202,6 +202,26 @@ def sbom_download(repo_group_id, repo_id=None):
     #return [json.dumps(license_information)]
 
 @register_metric()
+def nadia_project_labeling_badge(repo_group_id, repo_id=None):
+    """Returns the project type of the desired repo according to 
+    Microsoft's implementation of 'Road's and Bridges' style
+    project catagorization
+
+    :param repo_group_id: The repository's repo_group_id
+    :param repo_id: The repository's repo_id
+
+    :return: JSON object with project label and url to badge
+    """
+
+    if not repo_id:
+        return {}
+
+    get_unique_contributor_ids_sql = s.sql.text("""
+        SELECT COUNT(*)
+        FROM augur_data.contributor_repo
+        WHERE repo_git in (SELECT repo_git FROM augur_data.repo WHERE repo_id = :repo_id)""")
+
+@register_metric()
 def cii_best_practices_badge(repo_group_id, repo_id=None):
     """Returns the CII best practices badge level
 
