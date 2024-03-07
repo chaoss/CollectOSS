@@ -1,7 +1,7 @@
 #SPDX-License-Identifier: MIT
-from flask import Response, current_app
-import sqlalchemy as s
+from flask import Response, current_app, request
 import pandas as pd
+import sqlalchemy as s
 from augur.api.util import metric_metadata
 import os
 import requests
@@ -12,6 +12,8 @@ from ..server import app
 
 @app.route('/{}/complexity/project_languages'.format(AUGUR_API_VERSION), methods=["GET"])
 def get_project_languages():
+
+    repo_id = request.args.get('repo_id')
     project_languages_sql = s.sql.text("""
         SELECT
                 e.repo_id,
