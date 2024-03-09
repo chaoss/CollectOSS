@@ -97,7 +97,7 @@ def start(ctx, development):
             logger.info("Shutting down celery beat process")
             celery_beat_process.terminate()
         try:
-            cleanup_after_collection_halt(logger)
+            cleanup_after_collection_halt(logger, ctx.obj.engine)
         except RedisConnectionError:
             pass
 
@@ -254,7 +254,7 @@ def cleanup_after_collection_halt(logger, engine):
 
     connection_string = get_value("RabbitMQ", "connection_string")
 
-    with DatabaseSession(logger, ) as session:
+    with DatabaseSession(logger, engine) as session:
         clean_collection_status(session)
 
     clear_rabbitmq_messages(connection_string, queues, logger)
