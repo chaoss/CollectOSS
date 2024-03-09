@@ -138,9 +138,8 @@ def extract_needed_merge_request_assignee_data(assignees: List[dict], repo_id: i
     for assignee in assignees:
 
         assignee_dict = {
-                'contrib_id': None,
+                'contrib_id': assignee["cntrb_id"],
                 'repo_id': repo_id,
-                # TODO: Temporarily setting this to id which the id of the contributor, unitl we can get the contrib_id set and create a unique on the contrib_id and the pull_request_id
                 'pr_assignee_src_id': assignee["id"],
                 'tool_source': tool_source,
                 'tool_version': tool_version,
@@ -807,8 +806,7 @@ def extract_needed_pr_data_from_gitlab_merge_request(pr, repo_id, tool_source, t
         'pr_src_state': pr['state'],
         'pr_src_locked': pr['discussion_locked'],
         'pr_src_title': pr['title'],
-        # TODO: Add contributor logic for gitlab
-        'pr_augur_contributor_id': None,
+        'pr_augur_contributor_id': pr["cntrb_id"],
         'pr_body': pr['description'],
         'pr_created_at': pr['created_at'],
         'pr_updated_at': pr['updated_at'],

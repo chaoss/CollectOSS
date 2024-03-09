@@ -308,7 +308,7 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
 
         for message in messages:
 
-            message, contributor = process_gitlab_comment_contributors(message, tool_source, tool_version, data_source)
+            message, contributor = process_gitlab_issue_comment_contributors(message, tool_source, tool_version, data_source)
 
             if contributor:
                 contributors.append(contributor)
@@ -352,7 +352,7 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
     augur_db.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
 
 
-def process_gitlab_comment_contributors(message, tool_source, tool_version, data_source):
+def process_gitlab_issue_comment_contributors(message, tool_source, tool_version, data_source):
 
     contributor = extract_needed_gitlab_contributor_data(message["author"], tool_source, tool_version, data_source)
     if contributor:
