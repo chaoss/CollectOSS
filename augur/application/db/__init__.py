@@ -42,9 +42,9 @@ def get_session():
 def temporary_database_engine():
 
     url = get_database_string()
-    engine = create_database_engine(url=url, poolclass=StaticPool)  
+    temporary_database_engine = create_database_engine(url=url, poolclass=StaticPool)  
 
     try:
-        yield engine
+        yield temporary_database_engine
     finally:
-        engine.dispose()
+        temporary_database_engine.dispose()
