@@ -37,3 +37,14 @@ def get_session():
         yield session
     finally:
         session.close()
+
+@contextmanager
+def temporary_database_engine():
+
+    url = get_database_string()
+    engine = create_database_engine(url=url, poolclass=StaticPool)  
+
+    try:
+        yield engine
+    finally:
+        engine.dispose()
