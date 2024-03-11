@@ -1,0 +1,7 @@
+{
+	"user":"augur", 
+	"password":"mcguire18", 
+	"host":"data.chaoss.io", 
+	"port":"5432", 
+	"database_name":"sean"
+}
