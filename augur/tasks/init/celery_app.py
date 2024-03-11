@@ -205,8 +205,10 @@ def setup_periodic_tasks(sender, **kwargs):
     from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
     from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
-    
-    with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
+    from augur.application.db import temporary_database_engine
+
+    # Need to engine to be temporary so that there isn't an engine defined when the parent is forked to create worker processes
+    with temporary_database_engine() as engine, DatabaseSession(logger, engine) as session:
 
         config = AugurConfig(logger, session)
 
@@ -232,7 +234,6 @@ def setup_periodic_tasks(sender, **kwargs):
         logger.info(f"Scheduling contributor breadth every 30 days")
         thirty_days_in_seconds = 30*24*60*60
         sender.add_periodic_task(thirty_days_in_seconds, contributor_breadth_model.s())
-
 
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):

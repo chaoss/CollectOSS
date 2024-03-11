@@ -10,7 +10,7 @@ from augur.application.logs import AugurLogger
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
-from augur.application.config import AugurConfig
+from augur.application.db.lib import get_section
 from augur.tasks.github.util.util import get_repo_weight_core, get_repo_weight_by_issue
 from augur.application.db.session import DatabaseSession
 from augur.application.db import get_engine
@@ -186,10 +186,9 @@ class CollectionRequest:
             limit -= len(collection_list)
 
 
-def get_enabled_phase_names_from_config(logger, session):
+def get_enabled_phase_names_from_config():
 
-    config = AugurConfig(logger, session)
-    phase_options = config.get_section("Task_Routine")
+    phase_options = get_section("Task_Routine")
 
     #Get list of enabled phases 
     enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]

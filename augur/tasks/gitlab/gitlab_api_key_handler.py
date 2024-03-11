@@ -8,10 +8,10 @@ import time
 import random
 
 from typing import List
+from sqlalchemy.orm import Session
 
 from augur.tasks.util.redis_list import RedisList
-from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.db.lib import get_value
 from sqlalchemy import func 
 
 
@@ -31,11 +31,10 @@ class GitlabApiKeyHandler():
         key: (List[str]): List of keys retrieve from database or cache
     """
 
-    def __init__(self, session: DatabaseSession):
+    def __init__(self, session: Session, logger):
 
         self.session = session
-        self.logger = session.logger
-        self.config = AugurConfig(self.logger, session)
+        self.logger = logger
 
         self.oauth_redis_key = "gitlab_oauth_keys_list"
 
@@ -62,7 +61,7 @@ class GitlabApiKeyHandler():
         Returns:
             Github API key from config table
         """
-        return self.config.get_value("Keys", "gitlab_api_key")
+        return get_value("Keys", "gitlab_api_key")
 
     def get_api_keys_from_database(self) -> List[str]:
         """Retieves all gitlab api keys from database

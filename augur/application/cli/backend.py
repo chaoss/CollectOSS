@@ -22,7 +22,7 @@ from augur.tasks.init.redis_connection import redis_connection
 from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
+from augur.application.db.lib import get_value
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 import sqlalchemy as s
 
@@ -65,14 +65,12 @@ def start(ctx, disable_collection, development, port):
     except FileNotFoundError:
         logger.error("\n\nPlease run augur commands in the root directory\n\n")
 
-    with DatabaseSession(logger, engine=ctx.obj.engine) as db_session:
-        config = AugurConfig(logger, db_session)
-        host = config.get_value("Server", "host")
+    host = get_value("Server", "host")
 
-        if not port:
-            port = config.get_value("Server", "port")
-        
-        worker_vmem_cap = config.get_value("Celery", 'worker_process_vmem_cap')
+    if not port:
+        port = get_value("Server", "port")
+    
+    worker_vmem_cap = get_value("Celery", 'worker_process_vmem_cap')
 
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file gunicorn.log"
     server = subprocess.Popen(gunicorn_command.split(" "))
@@ -87,12 +85,10 @@ def start(ctx, disable_collection, development, port):
             logger.info("Deleting old task schedule")
             os.remove("celerybeat-schedule.db")
 
-    with DatabaseSession(logger, engine=ctx.obj.engine) as db_session:
-        config = AugurConfig(logger, db_session)
-        log_level = config.get_value("Logging", "log_level")
-        celery_beat_process = None
-        celery_command = f"celery -A augur.tasks.init.celery_app.celery_app beat -l {log_level.lower()}"
-        celery_beat_process = subprocess.Popen(celery_command.split(" "))    
+    log_level = get_value("Logging", "log_level")
+    celery_beat_process = None
+    celery_command = f"celery -A augur.tasks.init.celery_app.celery_app beat -l {log_level.lower()}"
+    celery_beat_process = subprocess.Popen(celery_command.split(" "))    
 
     if not disable_collection:
 
@@ -239,10 +235,10 @@ def augur_stop(signal, logger, engine):
 
 def cleanup_after_collection_halt(logger, engine):
     clear_redis_caches()
-    connection_string = ""
+
+    connection_string = get_value("RabbitMQ", "connection_string")
+
     with DatabaseSession(logger, engine=engine) as session:
-        config = AugurConfig(logger, session)
-        connection_string = config.get_section("RabbitMQ")['connection_string']
 
         clean_collection_status(session)
 
