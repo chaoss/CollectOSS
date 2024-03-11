@@ -16,7 +16,6 @@ down_revision = '26'
 branch_labels = None
 depends_on = None
 
-
 def upgrade():
 
     mview_keys_27()
