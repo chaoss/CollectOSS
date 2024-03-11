@@ -250,11 +250,11 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
 
     contributors = remove_duplicate_dicts(contributors)
 
-    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    logger.info(f"{task_name}: Inserting {len(contributors)} mr message contributors")
     augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
 
-    logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
-    message_natural_keys = ["platform_msg_id"]
+    logger.info(f"{task_name}: Inserting {len(message_dicts)} mr messages")
+    message_natural_keys = ["platform_msg_id", "pltfrm_id"]
     message_return_columns = ["msg_id", "platform_msg_id"]
     message_string_fields = ["msg_text"]
     message_return_data = augur_db.insert_data(message_dicts, Message, message_natural_keys, 
