@@ -328,7 +328,7 @@ logger = AugurLogger("server").get_logger()
 url = get_database_string()
 engine = create_database_engine(url, poolclass=StaticPool)
 db_session = DatabaseSession(logger, engine)
-augur_config = AugurConfig(logger, test_db_session)
+augur_config = AugurConfig(logger, db_session)
 
 
 def get_connection(table, cursor_field_name, connection_class, after, limit, extra_condition=False):
