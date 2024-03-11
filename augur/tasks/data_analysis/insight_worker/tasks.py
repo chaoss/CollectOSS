@@ -11,7 +11,7 @@ import warnings
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.db.lib import get_value
 from augur.application.db.models import Repo, ChaossMetricStatus, RepoInsight, RepoInsightsRecord
 from augur.application.db.util import execute_session_query
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
@@ -40,17 +40,15 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
     metrics = {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
                 "reviews": "pull_requests", "contributors-new": "new_contributors"}
 
-    config = AugurConfig(logger, session)
-
     query = session.query(Repo).filter(Repo.repo_git == repo_git)
     repo_id = execute_session_query(query, 'one').repo_id
 
-    anomaly_days = config.get_value('Insight_Task', 'anomaly_days')
-    training_days = config.get_value('Insight_Task', 'training_days')
-    contamination = config.get_value('Insight_Task', 'contamination')
-    confidence = config.get_value('Insight_Task', 'confidence_interval') / 100
-    api_host = config.get_value('Server', 'host')
-    api_port = config.get_value('Server', 'port')
+    anomaly_days = get_value('Insight_Task', 'anomaly_days')
+    training_days = get_value('Insight_Task', 'training_days')
+    contamination = get_value('Insight_Task', 'contamination')
+    confidence = get_value('Insight_Task', 'confidence_interval') / 100
+    api_host = get_value('Server', 'host')
+    api_port = get_value('Server', 'port')
 
     logger.info("Discovering insights for repo {}\n".format(repo_git))
 
