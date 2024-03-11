@@ -6,17 +6,13 @@ from concurrent.futures import ThreadPoolExecutor
 from flask import render_template, flash, url_for
 from .init import init_logging
 from .init import *
-from ..server import db_session
-from augur.application.config import AugurConfig
+from augur.application.db.lib import get_value
 import urllib.error, math, yaml, urllib3, time, math
-
 
 
 init_logging()
 
 from .init import logger
-
-config = AugurConfig(logger, db_session)
 
 """ ----------------------------------------------------------------
 loadSettings:
@@ -68,7 +64,7 @@ def getSetting(key, section = "View"):
             return "http://127.0.0.1:5000/api/unstable"
         return settings[key]
     else:
-        return config.get_value(section, key)
+        return get_value(section, key)
 
 loadSettings()
 

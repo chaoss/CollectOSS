@@ -1,8 +1,9 @@
 """Defines the GitlabRandomKeyAuth class"""
 
+from sqlalchemy.orm import Session
+
 from augur.tasks.util.random_key_auth import RandomKeyAuth
 from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
-from augur.application.db.session import DatabaseSession
 
 
 class GitlabRandomKeyAuth(RandomKeyAuth):
@@ -10,12 +11,12 @@ class GitlabRandomKeyAuth(RandomKeyAuth):
     gitlab collections can have a class randomly selects an api key for each request    
     """
 
-    def __init__(self, session: DatabaseSession, logger):
+    def __init__(self, session: Session, logger):
         """Creates a GitlabRandomKeyAuth object and initializes the RandomKeyAuth parent class"""
 
     
         # gets the gitlab api keys from the database via the GitlabApiKeyHandler
-        gitlab_api_keys = GitlabApiKeyHandler(session).keys
+        gitlab_api_keys = GitlabApiKeyHandler(session, logger).keys
 
         if not gitlab_api_keys:
             print("Failed to find github api keys. This is usually because your key has expired")
