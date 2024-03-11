@@ -43,12 +43,7 @@ def mview_keys_26(upgrade=True):
 
         CREATE INDEX "pr_id_pr_reviews" ON "augur_data"."pull_request_reviews" USING btree (
         "pull_request_id" "pg_catalog"."int8_ops" ASC NULLS LAST
-        );
-
-        ALTER TABLE "augur_data"."commits" DROP CONSTRAINT if EXISTS "cmt_ght_author_cntrb_id_fk";
-
-        ALTER TABLE "augur_data"."commits" ADD CONSTRAINT "cmt_ght_author_cntrb_id_fk" 
-        FOREIGN KEY ("cmt_ght_author_id") REFERENCES "augur_data"."contributors" ("cntrb_id") ON DELETE NO ACTION ON UPDATE NO ACTION;"""))
+        );"""))
 
       conn.execute(text("""
       create materialized view augur_data.explorer_pr_assignments as 
