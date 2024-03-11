@@ -28,8 +28,10 @@ from augur.application.logs import AugurLogger
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string, create_database_engine
-from metadata import __version__ as augur_code_version
 from augur.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
+
+from metadata import __version__ as augur_code_version
+
 
 
 # from augur.api.routes import AUGUR_API_VERSION
