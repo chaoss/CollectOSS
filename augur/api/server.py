@@ -25,12 +25,13 @@ from graphene_sqlalchemy import SQLAlchemyObjectType
 
 
 from augur.application.logs import AugurLogger
-from augur.application.db.lib import get_value
 from augur.application.db.session import DatabaseSession
-from augur.application.db import get_engine
+from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string, create_database_engine
-from metadata import __version__ as augur_code_version
 from augur.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
+
+from metadata import __version__ as augur_code_version
+
 
 
 # from augur.api.routes import AUGUR_API_VERSION
@@ -318,7 +319,7 @@ def get_server_cache(cache_manager) -> Cache:
         server cache
     """
 
-    expire = int(get_value('Server', 'cache_expire'))
+    expire = int(augur_config.get_value('Server', 'cache_expire'))
     server_cache = cache_manager.get_cache('server', expire=expire)
     server_cache.clear()
 
@@ -329,6 +330,7 @@ logger = AugurLogger("server").get_logger()
 url = get_database_string()
 engine = create_database_engine(url, poolclass=StaticPool)
 db_session = DatabaseSession(logger, engine)
+augur_config = AugurConfig(logger, db_session)
 
 
 def get_connection(table, cursor_field_name, connection_class, after, limit, extra_condition=False):
