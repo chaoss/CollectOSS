@@ -217,9 +217,17 @@ def nadia_project_labeling_badge(repo_group_id, repo_id=None):
         return {}
 
     get_unique_contributor_ids_sql = s.sql.text("""
-        SELECT COUNT(*)
-        FROM augur_data.contributor_repo
-        WHERE repo_git in (SELECT repo_git FROM augur_data.repo WHERE repo_id = :repo_id)""")
+        SELECT repo_id, COUNT(*) AS repo_contributor_count FROM
+        (
+        SELECT cntrb_id, repo_id, COUNT(*) FROM explorer_contributor_actions GROUP BY cntrb_id, repo_id
+        ) a GROUP BY repo_id
+        WHERE repo_id = :repo_id_param
+        ORDER BY repo_id; 
+    """).bindparams(repo_id_param=repo_id)
+
+    with current_app.engine.connect() as conn:
+        raw_df = pd.read_sql(get_unique_contributor_ids_sql, conn)
+        unique_contribs = raw_df.at[0,1]
 
 @register_metric()
 def cii_best_practices_badge(repo_group_id, repo_id=None):
