@@ -201,6 +201,44 @@ def sbom_download(repo_group_id, repo_id=None):
         return pd.read_sql(dosocs_SQL, conn, params=params)
     #return [json.dumps(license_information)]
 
+
+def calculate_nadia_project_category(unique_contributor_count,stargazers_count):
+    """
+    Calculates the correct nadia eghbal project label based on Microsoft's cutoff
+    values for the taxonomy. 
+
+    A Club is a project with a lot of dev activity but not a lot of users
+
+    A Federation is a project that has a lot of contributors and users
+
+    A Stadium is a project with a lot of users but not a lot of devs
+
+    A toy is a project with not a lot of devs or users
+
+    ContribMid is a misc category.
+
+    :param unique_contributor_count: The count of contributors the repo has
+    :param stargazers_count: The count of stargazers the repo has
+    :return: String containing the project category
+    """
+    
+    ratio_stargazers_to_contribs = stargazers_count / unique_contributor_count
+
+    if unique_contributor_count > 75 and ratio_stargazers_to_contribs < 2:
+        return "club"
+    elif unique_contributor_count > 75 and ratio_stargazers_to_contribs > 2 and stargazers_count > 1000:
+        return "federation"
+    elif unique_contributor_count < 6 and stargazers_count > 100:
+        return "stadium"
+    elif unique_contributor_count < 6 and stargazers_count < 100:
+        return "toy"
+    
+    #"ContribMid" is the label for repos that don't make sense in the other
+    #categories. Contribs > 6 and < 75
+    return "contribMid"
+
+
+
 @register_metric()
 def nadia_project_labeling_badge(repo_group_id, repo_id=None):
     """Returns the project type of the desired repo according to 
@@ -227,7 +265,30 @@ def nadia_project_labeling_badge(repo_group_id, repo_id=None):
 
     with current_app.engine.connect() as conn:
         raw_df = pd.read_sql(get_unique_contributor_ids_sql, conn)
-        unique_contribs = raw_df.at[0,1]
+        unique_contribs = int(raw_df.at[0,1])
+    
+    stars_count_SQL = s.sql.text("""
+            SELECT repo_name, stars_count AS stars
+            FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+            WHERE repo_info.repo_id = :repo_id_param
+            ORDER BY repo_info.data_collection_date DESC
+            LIMIT 1
+    """).bindparams(repo_id_param=repo_id)
+
+    with current_app.engine.connect() as conn:
+        raw_df = pd.read_sql(stars_count_SQL, conn)
+        stargazers_count = int(raw_df.at[0,'stars'])
+        repo_name = str(raw_df.at[0,'repo_name'])
+    
+    category = calculate_nadia_project_category(unique_contribs, stargazers_count)
+
+    result = {
+        "repo_name" : repo_name,
+        "nadia_badge_level": category
+    }
+
+    return pd.DataFrame(result, index=[0])
+
 
 @register_metric()
 def cii_best_practices_badge(repo_group_id, repo_id=None):
