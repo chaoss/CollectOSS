@@ -258,14 +258,22 @@ def nadia_project_labeling_badge(repo_group_id, repo_id=None):
         SELECT repo_id, COUNT(*) AS repo_contributor_count FROM
         (
         SELECT cntrb_id, repo_id, COUNT(*) FROM explorer_contributor_actions GROUP BY cntrb_id, repo_id
-        ) a GROUP BY repo_id
-        WHERE repo_id = :repo_id_param
-        ORDER BY repo_id; 
+        ) a
+        WHERE repo_id= :repo_id_param
+        GROUP BY repo_id
+        ORDER BY repo_id;
     """).bindparams(repo_id_param=repo_id)
 
     with current_app.engine.connect() as conn:
         raw_df = pd.read_sql(get_unique_contributor_ids_sql, conn)
-        unique_contribs = int(raw_df.at[0,1])
+        #print(raw_df)
+        try:
+            unique_contribs = int(raw_df.at[0,'repo_contributor_count'])
+        except KeyError:
+            result = {
+                "nadia_badge_level": "unknown"
+            }
+            return pd.DataFrame(result, index=[0])
     
     stars_count_SQL = s.sql.text("""
             SELECT repo_name, stars_count AS stars

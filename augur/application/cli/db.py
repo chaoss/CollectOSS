@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: MIT
+import os
 from os import environ, chmod, path, getenv, stat
 import logging
 from sys import exit
@@ -11,6 +12,7 @@ import sqlalchemy as s
 import pandas as pd
 import json
 import re
+import stat
 
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 
@@ -443,7 +445,7 @@ def check_pgpass_credentials(config):
         open(pgpass_file_path, "w+")
         chmod(pgpass_file_path, stat.S_IWRITE | stat.S_IREAD)
 
-    pgpass_file_mask = oct(stat(pgpass_file_path).st_mode & 0o777)
+    pgpass_file_mask = oct(os.stat(pgpass_file_path).st_mode & 0o777)
 
     if pgpass_file_mask != "0o600":
         print("Updating ~/.pgpass file permissions.")
