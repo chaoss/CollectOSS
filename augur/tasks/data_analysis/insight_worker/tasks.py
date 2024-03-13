@@ -108,7 +108,9 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
                 repo_id = :repo_id
                 AND ri_date < :min_date
     """)
-    result = engine.execute(delete_record_SQL, repo_id=repo_id, min_date=min_date)
+
+    with engine.connect() as conn:
+        result = conn.execute(delete_record_SQL, repo_id=repo_id, min_date=min_date)
 
     logger.info("Deleting out of date data points ...\n")
     delete_points_SQL = s.sql.text("""
@@ -129,7 +131,7 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
             AND repo_insights.ri_field = to_delete.ri_field
     """)
 
-    with engine.connect as conn:
+    with engine.connect() as conn:
         result = conn.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
 
     # get table values to check for dupes later on
@@ -254,7 +256,7 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
                         repo_insight_record_obj.ri_id))
 
                 # Send insight to Jonah for slack bot
-                send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean), logger,engine)
+                send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean), logger,engine, anomaly_days, send_insights)
 
                 insight_count += 1
             else:
@@ -516,7 +518,7 @@ def confidence_interval_insights(logger, engine):
             else:
                 logger.info("Key: {} has empty raw_values, should not have key here".format(key))
 
-def send_insight(insight, units_from_mean, logger, engine):
+def send_insight(insight, units_from_mean, logger, engine, anomaly_days, send_insights):
     try:
         repoSQL = s.sql.text("""
             SELECT repo_git, rg_name 
