@@ -1,5 +1,5 @@
 import sqlalchemy as s
-from sqlalchemy import or_, and_, update
+from sqlalchemy import and_, update
 import json
 from typing import List, Any, Optional
 import os
@@ -140,7 +140,11 @@ def convert_type_of_value(config_dict, logger=None):
 
 class AugurConfig():
 
-    def __init__(self, logger, session):
+    from augur.application.db.session import DatabaseSession
+
+    session: DatabaseSession
+
+    def __init__(self, logger, session: DatabaseSession):
 
         self.session = session
         self.logger = logger

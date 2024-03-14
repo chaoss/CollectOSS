@@ -6,9 +6,9 @@ Metrics that provide data about commits & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.api.util import register_metric
+from flask import current_app
 
-from ..server import engine
+from augur.api.util import register_metric
 
 @register_metric()
 def committers(repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):
@@ -90,7 +90,7 @@ def committers(repo_group_id, repo_id=None, begin_date=None, end_date=None, peri
             """
         )
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(committersSQL, conn, params={'repo_id': repo_id, 
             'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date, 'period':period})
 
@@ -168,7 +168,7 @@ def annual_commit_count_ranked_by_new_repo_in_repo_group(repo_group_id, repo_id=
             ORDER BY YEAR ASC
         """.format(table, period))
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(cdRgNewrepRankedCommitsSQL, conn, params={'repo_id': repo_id, 
             'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date})
     return results
@@ -267,7 +267,7 @@ def annual_commit_count_ranked_by_repo_in_repo_group(repo_group_id, repo_id=None
                 LIMIT 10
             """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(cdRgTpRankedCommitsSQL, conn, params={ "repo_group_id": repo_group_id,
         "repo_id": repo_id})
     return results
@@ -299,7 +299,7 @@ def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
                 ORDER BY patches DESC) a
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(total_commits_SQL, conn,
                                 params={'year': year, 'repo_group_id': repo_group_id})
     else:
@@ -312,7 +312,7 @@ def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
                 ORDER BY patches DESC) a
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(total_commits_SQL, conn,
                                 params={'year': year, 'repo_id': repo_id})
 
@@ -339,7 +339,7 @@ def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
             ORDER BY commits DESC
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(committers_SQL, conn,
                                 params={'year': year, 'repo_group_id': repo_group_id})
     else:
@@ -359,7 +359,7 @@ def top_committers(repo_group_id, repo_id=None, year=None, threshold=0.8):
             ORDER BY commits DESC
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(committers_SQL, conn,
                                 params={'year': year, 'repo_id': repo_id})
 

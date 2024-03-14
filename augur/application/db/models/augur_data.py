@@ -24,12 +24,10 @@ from sqlalchemy.sql import text
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 import logging
 import re
-from typing import List, Any, Dict
 import json
 
 
 from augur.application.db.models.base import Base
-from augur.application import requires_db_session
 from augur.application.db.util import execute_session_query
 DEFAULT_REPO_GROUP_ID = 1
 

@@ -5,7 +5,6 @@ import string
 import unicodedata
 
 import nltk
-import pandas as pd
 from bs4 import BeautifulSoup
 from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import word_tokenize

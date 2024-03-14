@@ -1,20 +1,14 @@
-import time
 import logging
 
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
-from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api, retrieve_dict_from_endpoint
-from augur.tasks.github.util.github_task_session import GithubTaskSession, GithubTaskManifest
-from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
+from augur.tasks.github.util.github_paginator import retrieve_dict_from_endpoint
+from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.application.db.models import Contributor
 from augur.tasks.github.facade_github.core import *
-from augur.tasks.util.worker_util import create_grouped_task_load
-from celery.result import allow_join_result
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
-from sqlalchemy.orm.exc import NoResultFound
 
 
 def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id):
@@ -199,10 +193,10 @@ def link_commits_to_contributor(session,contributorQueue):
 
 
 # Update the contributors table from the data facade has gathered.
-@celery.task(base=AugurFacadeRepoCollectionTask)
-def insert_facade_contributors(repo_id):
+@celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
+def insert_facade_contributors(self, repo_id):
 
-    from augur.tasks.init.celery_app import engine
+    engine = self.app.engine
 
     logger = logging.getLogger(insert_facade_contributors.__name__)
 

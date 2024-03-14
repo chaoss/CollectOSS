@@ -8,10 +8,11 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
-from augur.application.db.data_parse import extract_needed_issue_data_from_gitlab_issue, extract_needed_gitlab_issue_label_data, extract_needed_gitlab_issue_assignee_data, extract_needed_gitlab_issue_message_ref_data, extract_needed_gitlab_message_data
+from augur.application.db.data_parse import extract_needed_issue_data_from_gitlab_issue, extract_needed_gitlab_issue_label_data, extract_needed_gitlab_issue_assignee_data, extract_needed_gitlab_issue_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
-from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Repo
+from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Repo, Contributor
 from augur.application.db.util import execute_session_query
+from augur.tasks.util.worker_util import remove_duplicate_dicts
 
 platform_id = 2
 
@@ -49,8 +50,6 @@ def collect_gitlab_issues(repo_git : str) -> int:
         except Exception as e:
             logger.error(f"Could not collect gitlab issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
             return -1
-
-
 
 def retrieve_all_gitlab_issue_data(repo_git, logger, key_auth) -> None:
     """
@@ -108,9 +107,14 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
     issue_dicts = []
     issue_ids = []
     issue_mapping_data = {}
+    contributors = []
     for issue in issues:
 
         issue_ids.append(issue["iid"])
+
+        issue, contributor_data = process_issue_contributors(issue, tool_source, tool_version, data_source)
+
+        contributors += contributor_data
 
         issue_dicts.append(
             extract_needed_issue_data_from_gitlab_issue(issue, repo_id, tool_source, tool_version, data_source)
@@ -132,6 +136,13 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
     if len(issue_dicts) == 0:
         print("No gitlab issues found while processing")  
         return
+    
+    # remove duplicate contributors before inserting
+    contributors = remove_duplicate_dicts(contributors)
+
+    # insert contributors from these issues
+    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
            
     logger.info(f"{task_name}: Inserting {len(issue_dicts)} gitlab issues")
     issue_natural_keys = ["repo_id", "gh_issue_id"]
@@ -169,13 +180,26 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
                         issue_label_natural_keys, string_fields=issue_label_string_fields)
 
     # inserting issue assignees
-    # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
-    # issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    # augur_db.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
+    issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
+    augur_db.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
 
     return issue_ids
 
+def process_issue_contributors(issue, tool_source, tool_version, data_source):
 
+    contributors = []
+
+    issue_cntrb = extract_needed_gitlab_contributor_data(issue["author"], tool_source, tool_version, data_source)
+    issue["cntrb_id"] = issue_cntrb["cntrb_id"]
+    contributors.append(issue_cntrb)
+
+    for assignee in issue["assignees"]:
+
+        issue_assignee_cntrb = extract_needed_gitlab_contributor_data(assignee, tool_source, tool_version, data_source)
+        assignee["cntrb_id"] = issue_assignee_cntrb["cntrb_id"]
+        contributors.append(issue_assignee_cntrb)
+
+    return issue, contributors
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_gitlab_issue_comments(issue_ids, repo_git) -> int:
@@ -232,7 +256,7 @@ def retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git):
 
         url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/issues/{id}/notes"
         
-        for page_data, page in comments.iter_pages(url):
+        for page_data, _ in comments.iter_pages(url):
 
             if page_data is None or len(page_data) == 0:
                 break
@@ -270,6 +294,7 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
         issue_number_to_id_map[issue.gh_issue_number] = issue.issue_id
 
     message_dicts = []
+    contributors = []
     message_ref_mapping_data = {}
     for id, messages in data.items():
 
@@ -283,6 +308,11 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
 
         for message in messages:
 
+            message, contributor = process_gitlab_comment_contributors(message, tool_source, tool_version, data_source)
+
+            if contributor:
+                contributors.append(contributor)
+
             issue_message_ref_data = extract_needed_gitlab_issue_message_ref_data(message, issue_id, repo_id, tool_source, tool_version, data_source)
 
             message_ref_mapping_data[message["id"]] = {
@@ -293,6 +323,10 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
                 extract_needed_gitlab_message_data(message, platform_id, tool_source, tool_version, data_source)
             )
 
+    contributors = remove_duplicate_dicts(contributors)
+
+    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
 
     logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
     message_natural_keys = ["platform_msg_id"]
@@ -318,3 +352,12 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
     augur_db.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
 
 
+def process_gitlab_comment_contributors(message, tool_source, tool_version, data_source):
+
+    contributor = extract_needed_gitlab_contributor_data(message["author"], tool_source, tool_version, data_source)
+    if contributor:
+        message["cntrb_id"] = contributor["cntrb_id"]
+    else:
+        message["cntrb_id"] = None
+
+    return message, contributor

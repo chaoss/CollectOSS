@@ -8,7 +8,7 @@ from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
 from augur.application.db.data_parse import extract_gitlab_mr_event_data, extract_gitlab_issue_event_data
-from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
+from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import Repo, Issue, IssueEvent, PullRequest, PullRequestEvent
 from augur.application.db.util import execute_session_query
 
@@ -201,9 +201,8 @@ def process_mr_events(events, task_name, repo_id, logger, augur_db):
                                     tool_source, tool_version, data_source)
         )
 
-    # TODO: Add unique key for this
     logger.info(f"{task_name}: Inserting {len(mr_event_dicts)} gitlab mr events")
-    mr_event_natural_keys = ["pull_request_id", "issue_event_src_id"]
+    mr_event_natural_keys = ["platform_id", "node_id"]
     augur_db.insert_data(mr_event_dicts, PullRequestEvent, mr_event_natural_keys)
 
 

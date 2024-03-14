@@ -1,7 +1,7 @@
 from pathlib import Path
 from .server import Environment
 from augur.application.logs import AugurLogger
-import logging, secrets, yaml
+import secrets, yaml
 
 env = Environment()
 

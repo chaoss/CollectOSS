@@ -1,4 +1,3 @@
-from distutils import version
 import requests
 import dateutil.parser
 # from packaging import version

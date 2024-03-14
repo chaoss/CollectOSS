@@ -6,21 +6,21 @@ from augur.api.routes import AUGUR_API_VERSION
 
 import logging
 import secrets
-from flask import request, jsonify, session
+from flask import request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash
-from sqlalchemy.orm import sessionmaker
-from augur.application.db.session import DatabaseSession
+from sqlalchemy.orm import object_session
+
+from augur.application.db import get_session
 from augur.api.util import api_key_required
 from augur.api.util import ssl_required
 
 from augur.application.db.models import User, UserSessionToken, RefreshToken
 from augur.tasks.init.redis_connection import redis_connection as redis
-from ..server import app, engine
+from ..server import app
 
 logger = logging.getLogger(__name__)
 current_user: User = current_user
-Session = sessionmaker(bind=engine)
 
 @app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
 @ssl_required
@@ -31,9 +31,8 @@ def validate_user():
         # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
         return jsonify({"status": "Missing argument"}), 400
 
-    session = Session()
-    user = session.query(User).filter(User.login_name == username).first()
-    session.close()
+    with get_session() as session:
+        user = session.query(User).filter(User.login_name == username).first()
 
     if user is None:
         return jsonify({"status": "Invalid username"})
@@ -88,7 +87,7 @@ def generate_session(application):
     if not username:
         return jsonify({"status": "Invalid authorization code"})
 
-    with DatabaseSession(logger) as session:
+    with get_session() as session:
 
         user = User.get_user(session, username)
         if not user:
@@ -123,7 +122,7 @@ def refresh_session(application):
     if request.args.get("grant_type") != "refresh_token":
         return jsonify({"status": "Invalid grant type"})
 
-    with DatabaseSession(logger) as session:
+    with get_session() as session:
 
         refresh_token = session.query(RefreshToken).filter(RefreshToken.id == refresh_token_str).first()
         if not refresh_token:
@@ -190,21 +189,20 @@ def update_user():
     new_login_name = request.args.get("new_username")
     new_password = request.args.get("new_password")
 
-    if email is not None:
-        existing_user = session.query(User).filter(User.email == email).one()
-        if existing_user is not None:
-            session = Session()
-            return jsonify({"status": "Already an account with this email"})
+    session = object_session(current_user)
 
+    if email is not None:
+        existing_user = session.query(User).filter(User.email == email).one_or_none()
+        if existing_user is not None:
+            return jsonify({"status": "Already an account with this email"})
+        
         current_user.email = email
         session.commit()
-        session = Session()
         return jsonify({"status": "Email Updated"})
 
     if new_password is not None:
         current_user.login_hashword = User.compute_hashsed_password(new_password)
         session.commit()
-        session = Session()
         return jsonify({"status": "Password Updated"})
 
     if new_login_name is not None:
@@ -214,7 +212,6 @@ def update_user():
 
         current_user.login_name = new_login_name
         session.commit()
-        session = Session()
         return jsonify({"status": "Username Updated"})
 
     return jsonify({"status": "Missing argument"}), 400

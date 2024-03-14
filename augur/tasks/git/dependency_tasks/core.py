@@ -1,16 +1,7 @@
 from datetime import datetime
-import logging
-import requests
-import json
 import os
-import subprocess
-import re
-import traceback
 from augur.application.db.models import *
-from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
-from augur.application.db.util import execute_session_query
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
 from augur.tasks.util.worker_util import parse_json_from_subprocess_call
 
@@ -78,7 +69,7 @@ def generate_scorecard(session,repo_id,path):
     path_to_scorecard = os.environ['HOME'] + '/scorecard'
 
     #setting the environmental variable which is required by scorecard
-    key_handler = GithubApiKeyHandler(session)       
+    key_handler = GithubApiKeyHandler(session, session.logger)       
     os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
     
     required_output = parse_json_from_subprocess_call(session.logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
