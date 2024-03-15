@@ -110,7 +110,7 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
     """)
 
     with engine.connect() as conn:
-        result = conn.execute(delete_record_SQL, repo_id=repo_id, min_date=min_date)
+        result = conn.execute(delete_record_SQL, parameters=dict(repo_id=repo_id, min_date=min_date))
 
     logger.info("Deleting out of date data points ...\n")
     delete_points_SQL = s.sql.text("""
@@ -132,7 +132,7 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
     """)
 
     with engine.connect() as conn:
-        result = conn.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
+        result = conn.execute(delete_points_SQL, parameters=dict(repo_id=repo_id, min_date=min_date))
 
     # get table values to check for dupes later on
 
