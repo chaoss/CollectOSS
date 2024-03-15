@@ -1474,7 +1474,7 @@ class LstmAnomalyResult(Base):
 class Message(Base):
     __tablename__ = "message"
     __table_args__ = (
-        UniqueConstraint("platform_msg_id", name="message-insert-unique"),
+        UniqueConstraint("platform_msg_id", "pltfrm_id", name="message-insert-unique"),
         Index("msg-cntrb-id-idx", "cntrb_id"),
         Index("platformgrouper", "msg_id", "pltfrm_id"),
         Index("messagegrouper", "msg_id", "rgls_id", unique=True),
