@@ -279,7 +279,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
 
 
         logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
-        message_natural_keys = ["platform_msg_id"]
+        message_natural_keys = ["platform_msg_id", "pltfrm_id"]
         message_return_columns = ["msg_id", "platform_msg_id"]
         message_return_data = augur_db.insert_data(pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
         if message_return_data is None:
