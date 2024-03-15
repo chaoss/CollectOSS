@@ -6,7 +6,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask, AugurSecondaryRepoCollectionTask
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
-from augur.application.config import AugurConfig
+from augur.application.db.lib import get_value
 
 
 @celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
@@ -23,10 +23,8 @@ def process_dependency_metrics(self, repo_git):
         
 
         repo = execute_session_query(query,'one')
-
-        config = AugurConfig(session.logger, session)
     
-        absolute_repo_path = get_absolute_repo_path(config.get_section("Facade")['repo_directory'],repo.repo_id,repo.repo_path,repo.repo_name)
+        absolute_repo_path = get_absolute_repo_path(get_value("Facade", "repo_directory"),repo.repo_id,repo.repo_path,repo.repo_name)
 
         session.logger.debug(f"This is the deps model repo: {repo_git}.")
 

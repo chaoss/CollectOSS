@@ -7,6 +7,8 @@ import os
 import click
 import importlib
 import traceback
+
+from pathlib import Path
 # import augur.application
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='AUGUR')
@@ -24,11 +26,16 @@ class AugurMultiCommand(click.MultiCommand):
         return rv
 
     def get_command(self, ctx, name):
-        try:
-            module = importlib.import_module('.' + name, 'augur.application.cli')
-            return module.cli
-        except ModuleNotFoundError as e:
-            pass
+        cmdfile = "augur/application/cli" / Path(name + ".py")
+
+        # Check that the command exists before importing
+        if not cmdfile.is_file():
+
+            return
+
+        # Prefer to raise exception instead of silcencing it
+        module = importlib.import_module('.' + name, 'augur.application.cli')
+        return module.cli
 
 @click.command(cls=AugurMultiCommand, context_settings=CONTEXT_SETTINGS)
 @click.pass_context

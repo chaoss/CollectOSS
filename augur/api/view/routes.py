@@ -10,7 +10,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from augur.application.db.models import User, Repo, ClientApplication
 from .server import LoginException
 from augur.application.util import *
-from augur.application.config import AugurConfig
+from augur.application.db.lib import get_value
 from ..server import app, db_session
 
 logger = logging.getLogger(__name__)
@@ -71,9 +71,7 @@ def repo_table_view():
     
     direction = "DESC" if rev else "ASC"
 
-    config = AugurConfig(logger, db_session)
-
-    pagination_offset = config.get_value("frontend", "pagination_offset")
+    pagination_offset = get_value("frontend", "pagination_offset")
     
     if current_user.is_authenticated:
         data = current_user.get_repos(page = page, sort = sorting, direction = direction, search=query)[0]
@@ -241,9 +239,7 @@ table:
 def user_groups_view():
     params = {}
 
-    config = AugurConfig(logger, db_session)
-
-    pagination_offset = config.get_value("frontend", "pagination_offset")
+    pagination_offset = get_value("frontend", "pagination_offset")
 
     params = {}
     
@@ -317,9 +313,7 @@ def user_group_view(group = None):
             rev = True
             params["direction"] = "DESC"
 
-    config = AugurConfig(logger, db_session)
-
-    pagination_offset = config.get_value("frontend", "pagination_offset")
+    pagination_offset = get_value("frontend", "pagination_offset")
 
     data = current_user.get_group_repos(group, **params)[0]
     page_count = current_user.get_group_repo_count(group, search = query)[0] or 0

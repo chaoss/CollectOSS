@@ -25,12 +25,13 @@ from graphene_sqlalchemy import SQLAlchemyObjectType
 
 
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
-from augur.application.db import get_engine
-# from augur.application.db.engine import get_database_string, create_database_engine
-from metadata import __version__ as augur_code_version
+from augur.application.config import AugurConfig
+from augur.application.db.engine import get_database_string, create_database_engine
 from augur.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
+
+from metadata import __version__ as augur_code_version
+
 
 
 # from augur.api.routes import AUGUR_API_VERSION
@@ -311,14 +312,14 @@ def create_cache_manager() -> CacheManager:
 
     return cache
 
-def get_server_cache(config, cache_manager) -> Cache:
+def get_server_cache(cache_manager) -> Cache:
     """Create the server cache, set expiration, and clear
     
     Returns:
         server cache
     """
 
-    expire = int(config.get_value('Server', 'cache_expire'))
+    expire = int(augur_config.get_value('Server', 'cache_expire'))
     server_cache = cache_manager.get_cache('server', expire=expire)
     server_cache.clear()
 
@@ -326,7 +327,8 @@ def get_server_cache(config, cache_manager) -> Cache:
 
 
 logger = AugurLogger("server").get_logger()
-engine = get_engine()
+url = get_database_string()
+engine = create_database_engine(url, poolclass=StaticPool)
 db_session = DatabaseSession(logger, engine)
 augur_config = AugurConfig(logger, db_session)
 
@@ -730,7 +732,7 @@ from .view.routes import *
 from .view.api import *
 
 cache_manager = create_cache_manager()
-server_cache = get_server_cache(augur_config, cache_manager)
+server_cache = get_server_cache(cache_manager)
 
 
 
