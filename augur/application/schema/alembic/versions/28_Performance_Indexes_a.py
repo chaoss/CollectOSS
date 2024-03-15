@@ -1,7 +1,7 @@
 """ Updating materialized views and associated indices
 
-Revision ID: 27
-Revises: 26
+Revision ID: 28
+Revises: 27
 Create Date: 2023-08-23 18:17:22.651191
 
 """
@@ -11,16 +11,16 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
-revision = '27'
-down_revision = '26'
+revision = '28'
+down_revision = '27'
 branch_labels = None
 depends_on = None
 
 def upgrade():
 
-    mview_keys_27()
+    mview_keys_28()
 
-def mview_keys_27(upgrade=True):
+def mview_keys_28(upgrade=True):
 
    if upgrade:
       conn = op.get_bind() 
