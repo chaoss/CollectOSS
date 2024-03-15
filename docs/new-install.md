@@ -375,7 +375,7 @@ You can stop augur with `augur backend stop`, followed by `augur backend kill`. 
    - Change to variables in `environment.txt` to include the correct values for your local, non-docker-container database.
 4. `sudo docker build -t augur-new -f docker/backend/Dockerfile .` OSX: 
 5. `sudo docker compose --env-file ./environment.txt --file docker-compose.yml up` to run the database in a Docker Container or 
-   `sudo docker compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. *Note*: Enviornment file would be modified to point to an already running database. 
+   `sudo docker compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. *Note*: Environment file would be modified to point to an already running database. 
 
 
 #### Possible Apple Silicon Prerequisites: 
