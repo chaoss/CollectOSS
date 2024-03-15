@@ -367,7 +367,12 @@ def get_login_with_supplemental_data(logger,db,auth, commit_data):
         return None
 
     # Grab first result and make sure it has the highest match score
-    match = login_json['items'][0]
+    try:
+        match = login_json['items'][0]
+    except IndexError as e:
+        logger.error(f"Ran into error {e} when parsing users with search url: {url}\n return dict: {login_json}")
+        return None
+
     for item in login_json['items']:
         if item['score'] > match['score']:
             match = item
