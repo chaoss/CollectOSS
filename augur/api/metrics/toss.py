@@ -28,7 +28,7 @@ def toss_pull_request_acceptance_rate(repo_id, begin_date=None, end_date=None, g
             (
             SELECT COUNT
                 ( pull_request_events.pull_request_id ) AS num_approved,
-                repo_id
+                pull_requests.repo_id
             FROM
                 pull_requests
                 JOIN pull_request_events ON pull_request_events.pull_request_id = pull_requests.pull_request_id
@@ -39,12 +39,12 @@ def toss_pull_request_acceptance_rate(repo_id, begin_date=None, end_date=None, g
                 AND pull_request_events.created_at BETWEEN :begin_date
                 AND :end_date
             GROUP BY
-                repo_id
+                pull_requests.repo_id
             ) merged
             JOIN (
             SELECT COUNT
                 ( pull_request_events.pull_request_id ) AS num_opened,
-                repo_id
+                pull_requests.repo_id
             FROM
                 pull_requests
                 JOIN pull_request_events ON pull_request_events.pull_request_id = pull_requests.pull_request_id
@@ -54,7 +54,7 @@ def toss_pull_request_acceptance_rate(repo_id, begin_date=None, end_date=None, g
                 AND pull_request_events.created_at BETWEEN :begin_date
                 AND :end_date
             GROUP BY
-            repo_id
+            pull_requests.repo_id
             ) opened ON merged.repo_id = opened.repo_id
     """)
     

@@ -285,6 +285,10 @@ def nadia_project_labeling_badge(repo_group_id, repo_id=None):
 
     with current_app.engine.connect() as conn:
         raw_df = pd.read_sql(stars_count_SQL, conn)
+
+        if raw_df.empty:
+            return {"status": "Not enough data"}
+
         stargazers_count = int(raw_df.at[0,'stars'])
         repo_name = str(raw_df.at[0,'repo_name'])
     
