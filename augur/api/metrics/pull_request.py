@@ -30,7 +30,7 @@ def pull_requests_new(repo_group_id, repo_id=None, period='day', begin_date=None
     if repo_id:
         new_pull_requests_query = s.sql.text("""
             SELECT DATE_TRUNC(:period, pr_created_at) AS created_date,
-                   COUNT(pr_id) AS new_pull_requests
+                   COUNT(*) AS new_pull_requests
             FROM pull_requests
             WHERE repo_id = :repo_id
             AND pr_created_at BETWEEN :begin_date AND :end_date
@@ -607,6 +607,11 @@ def pull_request_average_time_to_close(repo_group_id, repo_id=None, group_by='mo
             pr_all = pd.read_sql(pr_all_SQL, conn,
                 params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                         'begin_date': begin_date, 'end_date': end_date})
+    
+
+    if pr_all.empty:
+        return []
+
     if not repo_id:
         pr_avg_time_to_close = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_{}_to_close'.format(time_unit)]]
     else:
@@ -720,6 +725,10 @@ def pull_request_merged_status_counts(repo_group_id, repo_id=None, begin_date='1
             pr_all = pd.read_sql(pr_all_SQL, conn,
                 params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                         'begin_date': begin_date, 'end_date': end_date})
+    
+    if pr_all.empty:
+        return []
+    
     if not repo_id:
         pr_avg_time_between_responses = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_{}_between_responses'.format(time_unit)]]
     else:
@@ -831,6 +840,10 @@ def pull_request_average_commit_counts(repo_group_id, repo_id=None, group_by='mo
             pr_all = pd.read_sql(pr_all_SQL, conn,
                 params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                         'begin_date': begin_date, 'end_date': end_date})
+
+    if pr_all.empty:
+        return []    
+        
     if not repo_id:
         pr_avg_commit_counts = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_commits_per_pull_request']]
     else:        
@@ -997,6 +1010,10 @@ def pull_request_average_event_counts(repo_group_id, repo_id=None, group_by='mon
     for name in count_names.copy(): 
         average_count_names.append('average_' + name)
 
+
+    if pr_all.empty:
+        return []
+
     if not repo_id:
         pr_avg_event_counts = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + average_count_names]
     else:
@@ -1115,6 +1132,9 @@ def pull_request_average_time_to_responses_and_close(repo_group_id, repo_id=None
         pr_all = pd.read_sql(pr_all_SQL, conn,
             params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                     'begin_date': begin_date, 'end_date': end_date})
+
+    if pr_all.empty:
+        return []
 
     if not repo_id:
          avg_pr_time_to_responses_and_close  = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_{}_to_first_response'.format(time_unit), 'average_{}_to_last_response'.format(time_unit), 'average_{}_to_close'.format(time_unit)]]
