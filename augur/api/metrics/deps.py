@@ -48,7 +48,7 @@ def deps(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=No
             """)
 
         with current_app.engine.connect() as conn:
-            results = pd.read_sql(depsSQL, conn)    	
+            results = pd.read_sql(depsSQL, conn, params={'repo_id': repo_id})    	
 
     else:
 
@@ -73,7 +73,7 @@ def deps(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=No
             """)
 
         with current_app.engine.connect() as conn:
-            results = pd.read_sql(depsSQL, conn)
+            results = pd.read_sql(depsSQL, conn, params={'repo_group_id': repo_group_id})
     return results
 
 

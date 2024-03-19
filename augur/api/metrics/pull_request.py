@@ -3,13 +3,12 @@
 Metrics that provide data about pull requests & their associated activity
 """
 
-import datetime
+from datetime import datetime
 import sqlalchemy as s
 import pandas as pd
 from flask import current_app
 
 from augur.api.util import register_metric
-
 
 @register_metric()
 def pull_requests_new(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -31,14 +30,15 @@ def pull_requests_new(repo_group_id, repo_id=None, period='day', begin_date=None
     if repo_id:
         new_pull_requests_query = s.sql.text("""
             SELECT DATE_TRUNC(:period, pr_created_at) AS created_date,
-                   COUNT(pr_id) AS new_pull_requests
+                   COUNT(*) AS new_pull_requests
             FROM pull_requests
             WHERE repo_id = :repo_id
             AND pr_created_at BETWEEN :begin_date AND :end_date
             GROUP BY created_date
         """)
 
-        results = pd.read_sql(new_pull_requests_query, current_app.engine, params={'repo_id': repo_id, 'period': period,
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(new_pull_requests_query, conn, params={'repo_id': repo_id, 'period': period,
                                                                        'begin_date': begin_date,
                                                                        'end_date': end_date})
     else:
@@ -51,8 +51,9 @@ def pull_requests_new(repo_group_id, repo_id=None, period='day', begin_date=None
             GROUP BY created_date
         """)
 
-        results = pd.read_sql(new_pull_requests_query, current_app.engine,
-                              params={'repo_group_id': repo_group_id, 'period': period,
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(new_pull_requests_query, conn,
+                                params={'repo_group_id': repo_group_id, 'period': period,
                                       'begin_date': begin_date,
                                       'end_date': end_date})
 
@@ -73,7 +74,7 @@ def pull_requests_merge_contributor_new(repo_group_id, repo_id=None, period='day
     if not begin_date:
         begin_date = '1970-1-1 00:00:01'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        end_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     if repo_id:
         commitNewContributor = s.sql.text("""
@@ -129,7 +130,7 @@ def pull_requests_closed_no_merge(repo_group_id, repo_id=None, period='day', beg
     if not begin_date:
         begin_date = '1970-1-1 00:00:01'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        end_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     if repo_id:
         closedNoMerge = s.sql.text("""
@@ -181,7 +182,7 @@ def reviews(repo_group_id, repo_id=None, period='day', begin_date=None, end_date
     if not begin_date:
         begin_date = '1970-1-1'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        end_date = datetime.now().strftime('%Y-%m-%d')
 
     if not repo_id:
         reviews_SQL = s.sql.text("""
@@ -242,7 +243,7 @@ def reviews_accepted(repo_group_id, repo_id=None, period='day', begin_date=None,
     if not begin_date:
         begin_date = '1970-1-1'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        end_date = datetime.now().strftime('%Y-%m-%d')
 
     if not repo_id:
         reviews_accepted_SQL = s.sql.text("""
@@ -303,7 +304,7 @@ def reviews_declined(repo_group_id, repo_id=None, period='day', begin_date=None,
     if not begin_date:
         begin_date = '1970-1-1'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        end_date = datetime.now().strftime('%Y-%m-%d')
 
     if not repo_id:
         reviews_declined_SQL = s.sql.text("""
@@ -363,7 +364,7 @@ def review_duration(repo_group_id, repo_id=None, begin_date=None, end_date=None)
     if not begin_date:
         begin_date = '1970-1-1'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        end_date = datetime.now().strftime('%Y-%m-%d')
 
     if not repo_id:
         review_duration_SQL = s.sql.text("""
@@ -428,7 +429,7 @@ def pull_request_acceptance_rate(repo_group_id, repo_id=None, begin_date=None, e
     if not begin_date:
         begin_date = '1970-1-1 00:00:01'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        end_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     if not repo_id:
         prAccRateSQL = s.sql.text("""
@@ -517,7 +518,7 @@ def pull_request_average_time_to_close(repo_group_id, repo_id=None, group_by='mo
     if not begin_date:
         begin_date = '1970-1-1'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        end_date = datetime.now().strftime('%Y-%m-%d')
 
 
     unit_options = ['year', 'month', 'week', 'day']
@@ -606,6 +607,11 @@ def pull_request_average_time_to_close(repo_group_id, repo_id=None, group_by='mo
             pr_all = pd.read_sql(pr_all_SQL, conn,
                 params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                         'begin_date': begin_date, 'end_date': end_date})
+    
+
+    if pr_all.empty:
+        return []
+
     if not repo_id:
         pr_avg_time_to_close = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_{}_to_close'.format(time_unit)]]
     else:
@@ -633,7 +639,7 @@ def pull_request_merged_status_counts(repo_group_id, repo_id=None, begin_date='1
     if not begin_date:
         begin_date = '1970-1-1'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        end_date = datetime.now().strftime('%Y-%m-%d')
 
 
     unit_options = ['year', 'month', 'week', 'day']
@@ -719,6 +725,10 @@ def pull_request_merged_status_counts(repo_group_id, repo_id=None, begin_date='1
             pr_all = pd.read_sql(pr_all_SQL, conn,
                 params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                         'begin_date': begin_date, 'end_date': end_date})
+    
+    if pr_all.empty:
+        return []
+    
     if not repo_id:
         pr_avg_time_between_responses = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_{}_between_responses'.format(time_unit)]]
     else:
@@ -741,7 +751,7 @@ def pull_request_average_commit_counts(repo_group_id, repo_id=None, group_by='mo
     if not begin_date:
         begin_date = '1970-1-1'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        end_date = datetime.now().strftime('%Y-%m-%d')
 
 
     unit_options = ['year', 'month', 'week', 'day']
@@ -830,6 +840,10 @@ def pull_request_average_commit_counts(repo_group_id, repo_id=None, group_by='mo
             pr_all = pd.read_sql(pr_all_SQL, conn,
                 params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                         'begin_date': begin_date, 'end_date': end_date})
+
+    if pr_all.empty:
+        return []    
+        
     if not repo_id:
         pr_avg_commit_counts = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_commits_per_pull_request']]
     else:        
@@ -852,7 +866,7 @@ def pull_request_average_event_counts(repo_group_id, repo_id=None, group_by='mon
     if not begin_date:
         begin_date = '1970-1-1'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        end_date = datetime.now().strftime('%Y-%m-%d')
 
 
     unit_options = ['year', 'month', 'week', 'day']
@@ -996,6 +1010,10 @@ def pull_request_average_event_counts(repo_group_id, repo_id=None, group_by='mon
     for name in count_names.copy(): 
         average_count_names.append('average_' + name)
 
+
+    if pr_all.empty:
+        return []
+
     if not repo_id:
         pr_avg_event_counts = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + average_count_names]
     else:
@@ -1019,7 +1037,7 @@ def pull_request_average_time_to_responses_and_close(repo_group_id, repo_id=None
     if not begin_date:
         begin_date = '1970-1-1'
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        end_date = datetime.now().strftime('%Y-%m-%d')
 
 
     unit_options = ['year', 'month', 'week', 'day']
@@ -1115,6 +1133,9 @@ def pull_request_average_time_to_responses_and_close(repo_group_id, repo_id=None
             params={'repo_id': repo_id, 'repo_group_id':repo_group_id,
                     'begin_date': begin_date, 'end_date': end_date})
 
+    if pr_all.empty:
+        return []
+
     if not repo_id:
          avg_pr_time_to_responses_and_close  = pr_all.groupby(['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys).mean().reset_index()[['merged_status', 'repo_id', 'repo_name', 'repo_group_id', 'repo_group_name'] + time_group_bys + ['average_{}_to_first_response'.format(time_unit), 'average_{}_to_last_response'.format(time_unit), 'average_{}_to_close'.format(time_unit)]]
     else:
@@ -1135,7 +1156,7 @@ def pull_request_merged_status_counts(repo_group_id, repo_id=None, begin_date='1
     """
 
     if not end_date:
-        end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        end_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     unit_options = ['year', 'month', 'week', 'day']
     time_group_bys = []
