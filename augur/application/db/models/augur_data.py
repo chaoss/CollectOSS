@@ -24,12 +24,10 @@ from sqlalchemy.sql import text
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 import logging
 import re
-from typing import List, Any, Dict
 import json
 
 
 from augur.application.db.models.base import Base
-from augur.application import requires_db_session
 from augur.application.db.util import execute_session_query
 DEFAULT_REPO_GROUP_ID = 1
 
@@ -1476,7 +1474,7 @@ class LstmAnomalyResult(Base):
 class Message(Base):
     __tablename__ = "message"
     __table_args__ = (
-        UniqueConstraint("platform_msg_id", name="message-insert-unique"),
+        UniqueConstraint("platform_msg_id", "pltfrm_id", name="message-insert-unique"),
         Index("msg-cntrb-id-idx", "cntrb_id"),
         Index("platformgrouper", "msg_id", "pltfrm_id"),
         Index("messagegrouper", "msg_id", "rgls_id", unique=True),

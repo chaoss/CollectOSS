@@ -1,7 +1,6 @@
 import http.server
 import socketserver
 import logging
-import cgi
 import json
 from pathlib import Path
 import re

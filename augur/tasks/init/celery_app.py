@@ -1,25 +1,23 @@
 """Defines the Celery app."""
-from celery.signals import worker_process_init, worker_process_shutdown, eventlet_pool_started, eventlet_pool_preshutdown, eventlet_pool_postshutdown
+from celery.signals import worker_process_init, worker_process_shutdown
 import logging
 from typing import List, Dict
 import os
 import datetime
-from enum import Enum
 import traceback
 import celery
 from celery import Celery
 from celery import current_app 
 from celery.signals import after_setup_logger
-from sqlalchemy import create_engine, event, or_, and_
 
 
 from augur.application.logs import TaskLogConfig, AugurLogger
 from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import DatabaseEngine
+from augur.application.db import get_engine
 from augur.application.config import AugurConfig
-from augur.application.db.engine import get_database_string
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
-from augur.application.db.models import CollectionStatus, Repo
+from augur.application.db.models import Repo
 from augur.tasks.util.collection_state import CollectionState
 
 logger = logging.getLogger(__name__)
@@ -77,7 +75,9 @@ BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 class AugurCoreRepoCollectionTask(celery.Task):
 
     def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core',after_fail=CollectionState.ERROR.value):
-        from augur.tasks.init.celery_app import engine
+            
+        # Note: I think self.app.engine would work but leaving it to try later
+        engine = get_engine()
 
         logger = AugurLogger(logger_name).get_logger()
 
@@ -205,8 +205,10 @@ def setup_periodic_tasks(sender, **kwargs):
     from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
     from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
-    
-    with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
+    from augur.application.db import temporary_database_engine
+
+    # Need to engine to be temporary so that there isn't an engine defined when the parent is forked to create worker processes
+    with temporary_database_engine() as engine, DatabaseSession(logger, engine) as session:
 
         config = AugurConfig(logger, session)
 
@@ -233,7 +235,6 @@ def setup_periodic_tasks(sender, **kwargs):
         thirty_days_in_seconds = 30*24*60*60
         sender.add_periodic_task(thirty_days_in_seconds, contributor_breadth_model.s())
 
-
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
     """Override Celery loggers with our own."""
@@ -245,23 +246,29 @@ def setup_loggers(*args,**kwargs):
     TaskLogConfig(split_tasks_into_groups(augur_tasks))
 
 
-engine = None
+#engine = None
 @worker_process_init.connect
 def init_worker(**kwargs):
 
-    global engine
+    celery_app.engine = get_engine()
 
-    from augur.application.db.engine import DatabaseEngine
-    from sqlalchemy.pool import NullPool, StaticPool
+    # global engine
 
-    engine = DatabaseEngine(poolclass=StaticPool).engine
+    # from augur.application.db.engine import DatabaseEngine
+    # from sqlalchemy.pool import NullPool, StaticPool
+
+    # engine = DatabaseEngine(poolclass=StaticPool).engine
 
 
 @worker_process_shutdown.connect
 def shutdown_worker(**kwargs):
-    global engine
-    if engine:
-        logger.info('Closing database connectionn for worker')
-        engine.dispose()
+
+    from augur.application.db import dispose_database_engine
+    dispose_database_engine()
+
+    # global engine
+    # if engine:
+    #     logger.info('Closing database connectionn for worker')
+    #     engine.dispose()
 
 

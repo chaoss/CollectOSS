@@ -4,10 +4,11 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
-from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_mr_reviewer_data, extract_needed_mr_commit_data, extract_needed_mr_file_data, extract_needed_mr_metadata, extract_needed_gitlab_mr_message_ref_data, extract_needed_gitlab_message_data
+from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_mr_reviewer_data, extract_needed_mr_commit_data, extract_needed_mr_file_data, extract_needed_mr_metadata, extract_needed_gitlab_mr_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
-from augur.application.db.models import PullRequest, PullRequestAssignee, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestCommit, PullRequestFile, PullRequestMessageRef, Repo, Message
+from augur.application.db.models import PullRequest, PullRequestLabel, PullRequestMeta, PullRequestCommit, PullRequestFile, PullRequestMessageRef, Repo, Message, Contributor
 from augur.application.db.util import execute_session_query
+from augur.tasks.util.worker_util import remove_duplicate_dicts
 
 platform_id = 2
 
@@ -99,11 +100,16 @@ def process_merge_requests(data, task_name, repo_id, logger, augur_db):
     data_source = "Gitlab API"
 
     merge_requests = []
+    contributors = []
     mr_ids = []
     mr_mapping_data = {}
     for mr in data:
 
         mr_ids.append(mr["iid"])
+
+        mr, contributor_data = process_mr_contributors(mr, tool_source, tool_version, data_source)
+
+        contributors += contributor_data
 
         merge_requests.append(extract_needed_pr_data_from_gitlab_merge_request(mr, repo_id, tool_source, tool_version))
 
@@ -116,6 +122,11 @@ def process_merge_requests(data, task_name, repo_id, logger, augur_db):
                                             "assignees": assignees,
                                             "labels": labels
                                             }          
+
+    contributors = remove_duplicate_dicts(contributors)
+
+    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
 
     logger.info(f"{task_name}: Inserting mrs of length: {len(merge_requests)}")
     pr_natural_keys = ["repo_id", "pr_src_id"]
@@ -142,9 +153,8 @@ def process_merge_requests(data, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting other pr data of lengths: Labels: {len(mr_label_dicts)} - Assignees: {len(mr_assignee_dicts)}")
 
-    # TODO: Setup unique key on asignees with a value of ('cntrb_id', 'pull_request_id') and add 'cntrb_id' to assingee data
-    # mr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    # augur_db.insert_data(mr_assignee_dicts, PullRequestAssignee, mr_assignee_natural_keys)
+    mr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
+    augur_db.insert_data(mr_assignee_dicts, PullRequestAssignee, mr_assignee_natural_keys)
 
     pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
     pr_label_string_fields = ["pr_src_description"]
@@ -208,6 +218,7 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
         mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
 
     message_dicts = []
+    contributors = []
     message_ref_mapping_data = {}
     for id, messages in data.items():
 
@@ -221,6 +232,11 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
 
         for message in messages:
 
+            message, contributor = process_gitlab_mr_comment_contributors(message, tool_source, tool_version, data_source)
+
+            if contributor:
+                contributors.append(contributor)
+
             mr_message_ref_data = extract_needed_gitlab_mr_message_ref_data(message, pull_request_id, repo_id, tool_source, tool_version, data_source)
 
             message_ref_mapping_data[message["id"]] = {
@@ -231,9 +247,13 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
                 extract_needed_gitlab_message_data(message, platform_id, tool_source, tool_version, data_source)
             )
 
+    contributors = remove_duplicate_dicts(contributors)
 
-    logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
-    message_natural_keys = ["platform_msg_id"]
+    logger.info(f"{task_name}: Inserting {len(contributors)} mr message contributors")
+    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+
+    logger.info(f"{task_name}: Inserting {len(message_dicts)} mr messages")
+    message_natural_keys = ["platform_msg_id", "pltfrm_id"]
     message_return_columns = ["msg_id", "platform_msg_id"]
     message_string_fields = ["msg_text"]
     message_return_data = augur_db.insert_data(message_dicts, Message, message_natural_keys, 
@@ -312,8 +332,10 @@ def process_mr_metadata(data, task_name, repo_id, logger, augur_db):
     for id, metadata in data.items():
 
         pull_request_id = mr_number_to_id_map[id]
-
-        all_metadata.extend(extract_needed_mr_metadata(metadata, repo_id, pull_request_id, tool_source, tool_version, data_source))
+        
+        #ignore blank metadata
+        if metadata:
+            all_metadata.extend(extract_needed_mr_metadata(metadata, repo_id, pull_request_id, tool_source, tool_version, data_source))
 
     logger.info(f"{task_name}: Inserting {len(all_metadata)} merge request metadata")
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
@@ -558,3 +580,30 @@ def retrieve_merge_request_data(ids, url, name, owner, repo, key_auth, logger, r
         index += 1
 
     return all_data
+
+
+def process_mr_contributors(mr, tool_source, tool_version, data_source):
+
+    contributors = []
+
+    issue_cntrb = extract_needed_gitlab_contributor_data(mr["author"], tool_source, tool_version, data_source)
+    mr["cntrb_id"] = issue_cntrb["cntrb_id"]
+    contributors.append(issue_cntrb)
+
+    for assignee in mr["assignees"]:
+
+        issue_assignee_cntrb = extract_needed_gitlab_contributor_data(assignee, tool_source, tool_version, data_source)
+        assignee["cntrb_id"] = issue_assignee_cntrb["cntrb_id"]
+        contributors.append(issue_assignee_cntrb)
+
+    return mr, contributors
+
+def process_gitlab_mr_comment_contributors(message, tool_source, tool_version, data_source):
+
+    contributor = extract_needed_gitlab_contributor_data(message["author"], tool_source, tool_version, data_source)
+    if contributor:
+        message["cntrb_id"] = contributor["cntrb_id"]
+    else:
+        message["cntrb_id"] = None
+
+    return message, contributor

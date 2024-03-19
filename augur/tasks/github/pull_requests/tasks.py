@@ -1,17 +1,14 @@
-import time
 import logging
-import traceback
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
+from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
-from augur.application.db.session import DatabaseSession
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
-from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, PullRequestMessageRef, Contributor, Repo
+from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor, Repo
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
 
@@ -282,7 +279,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
 
 
         logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
-        message_natural_keys = ["platform_msg_id"]
+        message_natural_keys = ["platform_msg_id", "pltfrm_id"]
         message_return_columns = ["msg_id", "platform_msg_id"]
         message_return_data = augur_db.insert_data(pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
         if message_return_data is None:

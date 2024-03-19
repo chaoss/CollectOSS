@@ -1,14 +1,11 @@
-import re
 import logging
 
-import sqlalchemy as s
-import pandas as pd
 import base64
 
-from typing import List, Any, Dict
+from typing import Any, Dict
 
 from augur.application.db.engine import DatabaseEngine
-from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User, CollectionStatus
+from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User
 from augur.application.db.models.augur_operations import retrieve_owner_repos
 from augur.application.db.util import execute_session_query
 
@@ -54,15 +51,24 @@ class RepoLoadController:
 
         # if it is from not from an org list then we need to check its validity, and get the repo type
         if not from_org_list:
-            result = Repo.is_valid_github_repo(self.session, url)
+            if "gitlab" in url:
+                result = Repo.is_valid_gitlab_repo(self.session, url)
+            else:
+                result = Repo.is_valid_github_repo(self.session, url)
             if not result[0]:
                 return False, {"status": result[1]["status"], "repo_url": url}
             
-            repo_type = result[1]["repo_type"]
+            try:
+                repo_type = result[1]["repo_type"]
+            except KeyError:
+                print("Skipping repo type...")
 
 
         # if the repo doesn't exist it adds it
-        repo_id = Repo.insert_github_repo(self.session, url, repo_group_id, "CLI", repo_type)
+        if "gitlab" in url:
+            repo_id = Repo.insert_gitlab_repo(self.session, url, repo_group_id, "CLI")
+        else:
+            repo_id = Repo.insert_github_repo(self.session, url, repo_group_id, "CLI", repo_type)
 
         if not repo_id:
             logger.warning(f"Invalid repo group id specified for {url}, skipping.")

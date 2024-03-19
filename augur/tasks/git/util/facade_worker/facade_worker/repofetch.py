@@ -25,20 +25,12 @@
 # and checks for any parents of HEAD that aren't already accounted for in the
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
-import sys
-import platform
-import imp
-import time
-import datetime
 import html.parser
 import subprocess
 import os
-import getopt
-import xlsxwriter
-import configparser
 import pathlib
 import sqlalchemy as s
-from .utilitymethods import update_repo_log, trim_commits, store_working_author, trim_author, get_absolute_repo_path
+from .utilitymethods import update_repo_log, get_absolute_repo_path
 from augur.application.db.models.augur_data import *
 from augur.application.db.models.augur_operations import CollectionStatus
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list

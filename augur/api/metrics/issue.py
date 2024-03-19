@@ -6,9 +6,10 @@ Metrics that provides data about issues & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
+from flask import current_app
+
 from augur.api.util import register_metric
 
-from ..server import engine
 
 @register_metric()
 def issues_first_time_opened(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -51,7 +52,7 @@ def issues_first_time_opened(repo_group_id, repo_id=None, period='day', begin_da
             ORDER BY issue_date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issueNewContributor, conn, params={'repo_id': repo_id, 'period': period,
                                                                         'begin_date': begin_date, 'end_date': end_date})
     else:
@@ -78,7 +79,7 @@ def issues_first_time_opened(repo_group_id, repo_id=None, period='day', begin_da
             GROUP BY repo.repo_id, issue_date
             ORDER BY issue_date
         """)
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issueNewContributor, conn,
                                 params={'repo_group_id': repo_group_id, 'period': period,
                                         'begin_date': begin_date, 'end_date': end_date})
@@ -122,7 +123,7 @@ def issues_first_time_closed(repo_group_id, repo_id=None, period='day', begin_da
                 ) AS iss_close
             GROUP BY issue_date, repo_name
         """)
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issuesClosedSQL, conn, params={'repo_id': repo_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
     else:
@@ -146,7 +147,7 @@ def issues_first_time_closed(repo_group_id, repo_id=None, period='day', begin_da
             GROUP BY repo_id, repo_name,issue_date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issuesClosedSQL, conn, params={'repo_group_id': repo_group_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
 
@@ -185,7 +186,7 @@ def issues_new(repo_group_id, repo_id=None, period='day', begin_date=None, end_d
             ORDER BY issues.repo_id, date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issues_new_SQL, conn, params={'repo_group_id': repo_group_id, 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
 
@@ -205,7 +206,7 @@ def issues_new(repo_group_id, repo_id=None, period='day', begin_date=None, end_d
             ORDER BY date;
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issues_new_SQL, conn, params={'repo_id': repo_id, 'period': period,
                                                                 'begin_date': begin_date, 'end_date': end_date})
         return results
@@ -243,7 +244,7 @@ def issues_active(repo_group_id, repo_id=None, period='day', begin_date=None, en
             ORDER BY issues.repo_id, date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issues_active_SQL, conn, params={'repo_group_id': repo_group_id, 'period':period,
                                                                     'begin_date': begin_date, 'end_date':end_date})
                                                                 
@@ -263,7 +264,7 @@ def issues_active(repo_group_id, repo_id=None, period='day', begin_date=None, en
             ORDER BY date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issues_active_SQL, conn, params={'repo_id': repo_id, 'period':period,
                                                 'begin_date': begin_date, 'end_date':end_date})
     return results
@@ -300,7 +301,7 @@ def issues_closed(repo_group_id, repo_id=None, period='day', begin_date=None, en
             ORDER BY issues.repo_id, date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issues_closed_SQL, conn, params={'repo_group_id': repo_group_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
 
@@ -319,7 +320,7 @@ def issues_closed(repo_group_id, repo_id=None, period='day', begin_date=None, en
             ORDER BY date;
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issues_closed_SQL, conn, params={'repo_id': repo_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
 
@@ -359,7 +360,7 @@ def issue_duration(repo_group_id, repo_id=None, begin_date=None, end_date=None):
             ORDER BY repo_id, issue_id
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issue_duration_SQL, conn, params={'repo_group_id': repo_group_id,
                                                                     'begin_date': begin_date,
                                                                     'end_date': end_date})
@@ -384,7 +385,7 @@ def issue_duration(repo_group_id, repo_id=None, begin_date=None, end_date=None):
             ORDER BY issue_id;
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issue_duration_SQL, conn, params={'repo_id': repo_id,
                                                                     'begin_date': begin_date,
                                                                     'end_date': end_date})
@@ -431,7 +432,7 @@ def issue_participants(repo_group_id, repo_id=None, begin_date=None, end_date=No
             ORDER BY issues.repo_id, issues.created_at
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             result = pd.read_sql(issue_participants_SQL, conn, params={'repo_group_id': repo_group_id,
                                                                         'begin_date': begin_date,
                                                                         'end_date': end_date})
@@ -460,7 +461,7 @@ def issue_participants(repo_group_id, repo_id=None, begin_date=None, end_date=No
             ORDER BY issues.created_at
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             result = pd.read_sql(issue_participants_SQL, conn, params={'repo_id': repo_id,
                                                                         'begin_date': begin_date,
                                                                         'end_date': end_date})
@@ -485,7 +486,7 @@ def issue_backlog(repo_group_id, repo_id=None):
             ORDER BY issues.repo_id
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             result = pd.read_sql(issue_backlog_SQL, conn, params={'repo_group_id': repo_group_id})
         return result
 
@@ -499,7 +500,7 @@ def issue_backlog(repo_group_id, repo_id=None):
             GROUP BY repo_name
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             result = pd.read_sql(issue_backlog_SQL, conn, params={'repo_id': repo_id})
         return result
 
@@ -528,7 +529,7 @@ def issue_throughput(repo_group_id, repo_id=None):
             AND table1.repo_id = repo.repo_id
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issue_throughput_SQL, conn, params={'repo_group_id': repo_group_id})
         return results
 
@@ -545,7 +546,7 @@ def issue_throughput(repo_group_id, repo_id=None):
             WHERE table1.repo_id = repo.repo_id
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             result = pd.read_sql(issue_throughput_SQL, conn, params={'repo_id': repo_id})
         return result
 
@@ -595,7 +596,7 @@ def issues_open_age(repo_group_id, repo_id=None, period='day', begin_date=None, 
             ORDER BY open_date DESC
         """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(openAgeSQL, conn,
                                 params={'repo_id': repo_id, 'repo_group_id': repo_group_id,
                                 'period': period, 'begin_date':begin_date, 'end_date':end_date})
@@ -656,7 +657,7 @@ def issues_closed_resolution_duration(repo_group_id, repo_id=None, period='day',
             ORDER BY gh_issue_number
         """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(issueSQL, conn,
                                 params={'repo_id': repo_id,
                                 'repo_group_id': repo_group_id,
@@ -690,7 +691,7 @@ def average_issue_resolution_time(repo_group_id, repo_id=None):
         """)
 
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(avg_issue_resolution_SQL, conn,
                                 params={'repo_group_id': repo_group_id})
         return results
@@ -707,7 +708,7 @@ def average_issue_resolution_time(repo_group_id, repo_id=None):
             GROUP BY repo.repo_name
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(avg_issue_resolution_SQL, conn,
                                 params={'repo_id': repo_id})
         return results
@@ -782,7 +783,7 @@ def issues_maintainer_response_duration(repo_group_id, repo_id=None, begin_date=
             group by repo_id, repo_name
         """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(issuesSQL, conn, params={'repo_id': repo_id, 'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date})
 
     return results
@@ -806,7 +807,7 @@ def open_issues_count(repo_group_id, repo_id=None):
             GROUP BY date, repo_groups.rg_name
             ORDER BY date
         """)
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(openIssueCountSQL, conn, params={'repo_group_id': repo_group_id})
         return results
     else:
@@ -821,7 +822,7 @@ def open_issues_count(repo_group_id, repo_id=None):
             GROUP BY date, repo.repo_id
             ORDER BY date
         """)
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(openIssueCountSQL, conn, params={'repo_id': repo_id})
         return results
 
@@ -845,7 +846,7 @@ def closed_issues_count(repo_group_id, repo_id=None):
             GROUP BY date, repo_groups.rg_name
             ORDER BY date
         """)
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(closedIssueCountSQL, conn, params={'repo_group_id': repo_group_id})
         return results
     else:
@@ -860,7 +861,7 @@ def closed_issues_count(repo_group_id, repo_id=None):
             GROUP BY date, repo.repo_id
             ORDER BY date
         """)
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(closedIssueCountSQL, conn, params={'repo_id': repo_id})
         return results
 
@@ -923,7 +924,7 @@ def issue_comments_mean(repo_group_id, repo_id=None, group_by='week'):
         else:
             raise ValueError("Incorrect value for 'group_by'")
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issue_comments_mean_std_SQL, conn,
                                 params={'repo_group_id': repo_group_id})
         return results
@@ -977,7 +978,7 @@ def issue_comments_mean(repo_group_id, repo_id=None, group_by='week'):
         else:
             raise ValueError("Incorrect value for 'group_by'")
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issue_comments_mean_std_SQL, conn,
                                 params={'repo_id': repo_id})
         return results
@@ -1010,7 +1011,7 @@ def issue_comments_mean_std(repo_group_id, repo_id=None, group_by='week'):
         """)
 
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issue_comments_mean_std_SQL, conn,
                                 params={'repo_group_id': repo_group_id,
                                         'group_by': group_by})
@@ -1039,7 +1040,7 @@ def issue_comments_mean_std(repo_group_id, repo_id=None, group_by='week'):
             ORDER BY date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(issue_comments_mean_std_SQL, conn,
                                 params={'repo_id': repo_id, 'group_by': group_by})
         return results
@@ -1091,7 +1092,7 @@ def abandoned_issues(repo_group_id, repo_id=None, period='day', begin_date=None,
             '''
         )
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(abandonedSQL, conn, params={'repo_id': repo_id, 'repo_group_id': repo_group_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
     return results

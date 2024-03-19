@@ -4711,7 +4711,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4772,7 +4772,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4833,7 +4833,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4887,7 +4887,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4948,7 +4948,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4988,7 +4988,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -5028,7 +5028,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -5068,7 +5068,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -5108,7 +5108,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -5148,7 +5148,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -5195,7 +5195,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -5235,7 +5235,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -5275,6 +5275,14 @@ paths:
     get:
       description: 'Returns project line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of lines in the project repository.'
       operationId: Total Lines (repo)
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Repository Id
       responses:
         '200':
           description: OK
@@ -5331,6 +5339,14 @@ paths:
     get:
       description: 'Returns project blank line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of blank lines in the project repository.'
       operationId: Total Blank Lines (repo)
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Repository Id
       responses:
         '200':
           description: OK
@@ -5359,6 +5375,14 @@ paths:
     get:
       description: 'Returns project comment line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of comment lines in the project repository.'
       operationId: Total Comment Lines (repo)
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Repository Id
       responses:
         '200':
           description: OK

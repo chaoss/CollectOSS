@@ -4,15 +4,13 @@
 import glob
 import sys
 import inspect
-import types
 import json
 import os
 import base64
-import logging
 import importlib
 import graphene
 
-from typing import Optional, List, Any, Tuple
+from typing import List, Any
 
 from pathlib import Path
 
@@ -21,18 +19,19 @@ from flask_cors import CORS
 import pandas as pd
 from beaker.util import parse_cache_config_options
 from beaker.cache import CacheManager, Cache
-from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 from flask_graphql import GraphQLView
 from graphene_sqlalchemy import SQLAlchemyObjectType
 
 
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string, create_database_engine
-from metadata import __version__ as augur_code_version
 from augur.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
+
+from metadata import __version__ as augur_code_version
+
 
 
 # from augur.api.routes import AUGUR_API_VERSION
@@ -313,14 +312,14 @@ def create_cache_manager() -> CacheManager:
 
     return cache
 
-def get_server_cache(config, cache_manager) -> Cache:
+def get_server_cache(cache_manager) -> Cache:
     """Create the server cache, set expiration, and clear
     
     Returns:
         server cache
     """
 
-    expire = int(config.get_value('Server', 'cache_expire'))
+    expire = int(augur_config.get_value('Server', 'cache_expire'))
     server_cache = cache_manager.get_cache('server', expire=expire)
     server_cache.clear()
 
@@ -672,7 +671,7 @@ logger.debug("Created Flask app")
 # so when we pass the flask app to the routes files we 
 # know can access the api version via the app variable
 app.augur_api_version = AUGUR_API_VERSION
-
+app.engine = engine
 
 CORS(app)
 app.url_map.strict_slashes = False
@@ -733,7 +732,7 @@ from .view.routes import *
 from .view.api import *
 
 cache_manager = create_cache_manager()
-server_cache = get_server_cache(augur_config, cache_manager)
+server_cache = get_server_cache(cache_manager)
 
 
 

@@ -13,7 +13,7 @@ from augur.tasks.data_analysis.message_insights.message_sentiment import get_sen
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.db.lib import get_value
 from augur.application.db.models import Repo, MessageAnalysis, MessageAnalysisSummary
 from augur.application.db.util import execute_session_query
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
@@ -22,11 +22,11 @@ from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
-@celery.task(base=AugurMlRepoCollectionTask)
-def message_insight_task(repo_git):
+@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+def message_insight_task(self, repo_git):
 
     logger = logging.getLogger(message_insight_task.__name__)
-    from augur.tasks.init.celery_app import engine
+    engine = self.app.engine
 
     with DatabaseSession(logger, engine) as session:
         message_insight_model(repo_git, logger, engine, session)
@@ -45,13 +45,11 @@ def message_insight_model(repo_git: str,logger,engine, session) -> None:
     now = datetime.datetime.utcnow()
     run_id = int(now.timestamp())+5
 
-    config = AugurConfig(logger, session)
-
     query = session.query(Repo).filter(Repo.repo_git == repo_git)
     repo_id = execute_session_query(query, 'one').repo_id
 
-    models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", config.get_value("Message_Insights", 'models_dir'))
-    insight_days = config.get_value("Message_Insights", 'insight_days')
+    models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", get_value("Message_Insights", 'models_dir'))
+    insight_days = get_value("Message_Insights", 'insight_days')
 
     # Any initial database instructions, like finding the last tuple inserted or generate the next ID value
 

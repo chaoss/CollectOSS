@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, session, request, jsonify
+from flask import render_template, redirect, url_for, session, request, jsonify
 from flask_login import LoginManager
 from io import StringIO
 from .utils import *
@@ -83,7 +83,6 @@ def load_user(user_id):
         repos = group.repos
     for token in tokens:
         application = token.application
-    db_session.expunge(user)
 
 
     # The flask_login library sets a unique session["_id"]

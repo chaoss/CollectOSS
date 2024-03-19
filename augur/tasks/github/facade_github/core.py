@@ -1,14 +1,9 @@
 from augur.tasks.github.facade_github.contributor_interfaceable.contributor_interface import * 
 from augur.tasks.github.util.util import get_owner_repo
-from numpy.lib.utils import source
 from augur.tasks.github.util.github_task_session import *
 from augur.tasks.github.util.github_paginator import *
 from augur.application.db.models import *
-import sqlalchemy as s
-import time
-import math
-import traceback
-from augur.tasks.util.AugurUUID import AugurUUID, GithubUUID, UnresolvableUUID
+from augur.tasks.util.AugurUUID import GithubUUID
 
 
 

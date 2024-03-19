@@ -1,6 +1,5 @@
 #SPDX-License-Identifier: MIT
-import logging, json
-import pandas as pd
+import logging
 import sqlalchemy as s
 from datetime import datetime
 
@@ -15,10 +14,10 @@ from augur.application.db.models import ContributorRepo
 ### Logic: For each unique platform contributor, gather non duplicate events, using the GitHub "id"
 ### for the event API (GitLab coming!)
 
-@celery.task
-def contributor_breadth_model() -> None:
+@celery.task(bind=True)
+def contributor_breadth_model(self) -> None:
 
-    from augur.tasks.init.celery_app import engine
+    engine = self.app.engine
 
     logger = logging.getLogger(contributor_breadth_model.__name__)
 

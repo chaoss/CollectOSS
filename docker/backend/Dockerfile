@@ -1,8 +1,8 @@
 #SPDX-License-Identifier: MIT
-FROM python:3.10-slim-bullseye
+FROM python:3.10-bookworm
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.62.6"
+LABEL version="0.63.0"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -13,6 +13,8 @@ RUN set -x \
         bash \
         curl \
         gcc \
+        software-properties-common \
+        postgresql-contrib \
         musl-dev \
         python3-dev \
         python3-distutils \

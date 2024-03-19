@@ -2,31 +2,23 @@
 Creates routes for DEI badging functionality
 """
 
-import logging, subprocess, inspect
+import logging, subprocess
 
-from flask import request, Response, jsonify, render_template, send_file
+from flask import request, jsonify, render_template, send_file, current_app
 from pathlib import Path
 
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.exc import NoResultFound
-
 from augur.api.util import api_key_required, ssl_required
-from augur.util.repo_load_controller import RepoLoadController
 
-from augur.application.db.models import User, ClientApplication, CollectionStatus, Repo, RepoGroup, BadgingDEI
+from augur.application.db.models import ClientApplication, CollectionStatus, Repo, RepoGroup, BadgingDEI
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
 
 from augur.tasks.util.collection_util import CollectionRequest,AugurTaskRoutine, get_enabled_phase_names_from_config, core_task_success_util
 from augur.tasks.start_tasks import prelim_phase, primary_repo_collect_phase
-from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.tasks.init.redis_connection import redis_connection as redis
 from augur.tasks.github.util.util import get_repo_weight_by_issue
 
-from ..server import app, engine
+from ..server import app
 
 logger = logging.getLogger(__name__)
-Session = sessionmaker(bind=engine, autocommit=True)
 
 from augur.api.routes import AUGUR_API_VERSION
 from augur.application.db.models.augur_operations import FRONTEND_REPO_GROUP_NAME
@@ -44,7 +36,7 @@ def dei_track_repo(application: ClientApplication):
     
     repo_url = repo_url.lower()
     
-    session = DatabaseSession(logger)
+    session = DatabaseSession(logger, engine=current_app.engine)
     session.autocommit = True
     repo: Repo = session.query(Repo).filter(Repo.repo_git==repo_url).first()
     if repo:
@@ -77,7 +69,7 @@ def dei_track_repo(application: ClientApplication):
         "repo_id": repo_id
     }
 
-    enabled_phase_names = get_enabled_phase_names_from_config(logger, session)
+    enabled_phase_names = get_enabled_phase_names_from_config()
 
     #Primary collection hook.
     primary_enabled_phases = []
@@ -117,7 +109,7 @@ def dei_report(application: ClientApplication):
     if not dei_id:
         return jsonify({"status": "Missing argument"}), 400
     
-    session = DatabaseSession(logger)
+    session = DatabaseSession(logger, engine=current_app.engine)
 
     project: BadgingDEI = session.query(BadgingDEI).filter(BadgingDEI.badging_id==dei_id).first()
 

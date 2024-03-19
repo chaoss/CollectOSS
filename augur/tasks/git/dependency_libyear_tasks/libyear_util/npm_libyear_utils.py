@@ -1,4 +1,3 @@
-import os, re
 import requests
 
 def get_NPM_data(package):

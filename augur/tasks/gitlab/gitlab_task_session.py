@@ -5,6 +5,7 @@ from logging import Logger
 
 from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 from augur.application.db.session import DatabaseSession
+from augur.application.db import get_engine
 
 class GitlabTaskManifest:
     """
@@ -20,7 +21,7 @@ class GitlabTaskManifest:
 
     def __init__(self, logger):
 
-        from augur.tasks.init.celery_app import engine
+        engine = get_engine()
 
         self.augur_db = DatabaseSession(logger, engine)
         self.key_auth = GitlabRandomKeyAuth(self.augur_db.session, logger)

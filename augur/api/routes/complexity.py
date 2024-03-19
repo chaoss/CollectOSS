@@ -1,17 +1,19 @@
 #SPDX-License-Identifier: MIT
-from flask import Response
-import sqlalchemy as s
+from flask import Response, current_app, request
 import pandas as pd
+import sqlalchemy as s
 from augur.api.util import metric_metadata
 import os
 import requests
 
 from augur.api.routes import AUGUR_API_VERSION
-from ..server import app, engine
+from ..server import app
 
 
 @app.route('/{}/complexity/project_languages'.format(AUGUR_API_VERSION), methods=["GET"])
 def get_project_languages():
+
+    repo_id = request.args.get('repo_id')
     project_languages_sql = s.sql.text("""
         SELECT
                 e.repo_id,
@@ -48,7 +50,7 @@ def get_project_languages():
             ORDER BY e.repo_id
     """)
 
-    with engine.connect() as conn:         
+    with current_app.engine.connect() as conn:         
         results = pd.read_sql(project_languages_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -87,7 +89,7 @@ def get_project_files():
             ORDER BY e.repo_id
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(project_files_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -96,8 +98,10 @@ def get_project_files():
 
 @app.route('/{}/complexity/project_lines'.format(AUGUR_API_VERSION), methods=["GET"])
 def get_project_lines():
+    
+    repo_id = request.args.get('repo_id')
     project_lines_sql = s.sql.text("""
-        SELECT
+           SELECT
                 e.repo_id,
                 augur_data.repo.repo_git,
                 augur_data.repo.repo_name,
@@ -125,11 +129,11 @@ def get_project_lines():
                             augur_data.repo_labor.repo_id = recent.repo_id
                             AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
                 GROUP BY d.repo_id) e
-            WHERE augur_data.repo.repo_id = e.repo_id
+            WHERE augur_data.repo.repo_id = e.repo_id and augur_data.repo.repo_id = :repo_id_param
             ORDER BY e.repo_id   
-    """)
+    """).bindparams(repo_id_param=repo_id)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(project_lines_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -138,6 +142,8 @@ def get_project_lines():
 
 @app.route('/{}/complexity/project_comment_lines'.format(AUGUR_API_VERSION), methods=["GET"])
 def get_project_comment_lines():
+
+    repo_id = request.args.get('repo_id')
     comment_lines_sql = s.sql.text("""
         SELECT
                 e.repo_id,
@@ -167,11 +173,12 @@ def get_project_comment_lines():
                             augur_data.repo_labor.repo_id = recent.repo_id
                             AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
                 GROUP BY d.repo_id) e
-            WHERE augur_data.repo.repo_id = e.repo_id
+            WHERE augur_data.repo.repo_id = e.repo_id 
+            AND e.repo_id = :repo_id_param
             ORDER BY e.repo_id
-    """)
+    """).bindparams(repo_id_param=repo_id)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(comment_lines_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -180,40 +187,43 @@ def get_project_comment_lines():
 
 @app.route('/{}/complexity/project_blank_lines'.format(AUGUR_API_VERSION), methods=["GET"])
 def get_project_blank_lines():
+
+    repo_id = request.args.get('repo_id')
     blank_lines_sql = s.sql.text("""
-        SELECT
+            SELECT
                 e.repo_id,
                 augur_data.repo.repo_git,
                 augur_data.repo.repo_name,
                 e.blank_lines,
                 e.avg_blank_lines
-            FROM
-                augur_data.repo,
-            (SELECT 
-                    d.repo_id,
-                    SUM(d.blank_lines) AS blank_lines,
-                    AVG(d.blank_lines)::int AS avg_blank_lines
-                FROM
-                    (SELECT
-                            augur_data.repo_labor.repo_id,
-                            augur_data.repo_labor.blank_lines
-                        FROM
-                                augur_data.repo_labor,
-                                ( SELECT 
-                                        augur_data.repo_labor.repo_id,
-                                        MAX ( data_collection_date ) AS last_collected
-                                    FROM 
-                                        augur_data.repo_labor
-                                    GROUP BY augur_data.repo_labor.repo_id) recent 
-                            WHERE
-                                augur_data.repo_labor.repo_id = recent.repo_id
-                                AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
-                    GROUP BY d.repo_id) e
-            WHERE augur_data.repo.repo_id = e.repo_id
-            ORDER BY e.repo_id
-        """)
+                    FROM
+                            augur_data.repo,
+                    (SELECT 
+                                    d.repo_id,
+                                    SUM(d.blank_lines) AS blank_lines,
+                                    AVG(d.blank_lines)::int AS avg_blank_lines
+                            FROM
+                                    (SELECT
+                                                    augur_data.repo_labor.repo_id,
+                                                    augur_data.repo_labor.blank_lines
+                                            FROM
+                                                            augur_data.repo_labor,
+                                                            ( SELECT 
+                                                                            augur_data.repo_labor.repo_id,
+                                                                            MAX ( data_collection_date ) AS last_collected
+                                                                    FROM 
+                                                                            augur_data.repo_labor
+                                                                    GROUP BY augur_data.repo_labor.repo_id) recent 
+                                                    WHERE
+                                                            augur_data.repo_labor.repo_id = recent.repo_id
+                                                            AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
+                                    GROUP BY d.repo_id) e
+                    WHERE augur_data.repo.repo_id = e.repo_id
+                    AND e.repo_id = :repo_id_param
+                    ORDER BY e.repo_id
+        """).bindparams(repo_id_param=repo_id)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(blank_lines_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -256,7 +266,7 @@ def get_project_file_complexity():
             ORDER BY e.repo_id
         """)
     
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(project_file_complexity_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
