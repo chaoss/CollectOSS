@@ -35,7 +35,7 @@ from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.db.lib import get_section
 from logging import Logger
 
 logger = logging.getLogger(__name__)
@@ -104,12 +104,10 @@ class FacadeSession(DatabaseSession):
 
         from augur.application.db import get_engine
         engine = get_engine()
-        #self.cfg = FacadeConfig(logger)
         self.repos_processed = 0
         super().__init__(logger=logger, engine=engine)
-        # Figure out what we need to do
         
-        worker_options = AugurConfig(logger, self).get_section("Facade")
+        worker_options = get_section("Facade")
 
         self.limited_run = worker_options["limited_run"]
         self.delete_marked_repos = worker_options["delete_marked_repos"]
