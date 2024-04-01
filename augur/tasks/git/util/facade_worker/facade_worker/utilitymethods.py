@@ -33,6 +33,7 @@ from sqlalchemy.exc import DataError
 from augur.application.db.models import *
 from .config import FacadeSession as FacadeSession
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
+from augur.application.db.lib import execute_sql
 #from augur.tasks.git.util.facade_worker.facade
 
 def update_repo_log(session, repos_id,status):
@@ -61,14 +62,14 @@ def trim_commits(session, repo_id,commits):
 			AND cmt_commit_hash IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
 	
 	
-		session.execute_sql(remove_commit)
+		execute_sql(remove_commit)
 	
 		# Remove the working commit.
 		remove_commit = s.sql.text("""DELETE FROM working_commits
 		    WHERE repos_id = :repo_id AND 
 		    working_commit IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
 		
-		session.execute_sql(remove_commit)
+		execute_sql(remove_commit)
 
 	for commit in commits:
 		session.log_activity('Debug',f"Trimmed commit: {commit}")

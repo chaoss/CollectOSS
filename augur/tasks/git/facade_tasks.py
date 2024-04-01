@@ -4,6 +4,7 @@ import logging
 from celery import group, chain
 import sqlalchemy as s
 
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text
 
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
@@ -85,7 +86,7 @@ def trim_commits_facade_task(repo_git):
                 VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
 
             try:
-                session.execute_sql(log_message)
+                execute_sql(log_message)
             except:
                 pass
 
@@ -98,7 +99,7 @@ def trim_commits_facade_task(repo_git):
             """).bindparams(repo_id=repo_id)
 
         try:
-            working_commits = session.fetchall_data_from_sql_text(get_status)
+            working_commits = fetchall_data_from_sql_text(get_status)
         except:
             working_commits = []
 
