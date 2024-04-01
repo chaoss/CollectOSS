@@ -655,7 +655,7 @@ def get_valid_repos_for_users(session,limit,users,allow_old_repos = False,hook="
     valid_repos = session.execute_sql(repo_query).fetchall()
     valid_repo_git_list = [repo[1] for repo in valid_repos]
 
-    session.logger.info(f"valid repo git list: {tuple(valid_repo_git_list)}")
+    session.logger.info(f"valid {hook} repo git list: {tuple(valid_repo_git_list)}")
     
     #start repos for new primary collection hook
     #collection_size = start_block_of_repos(

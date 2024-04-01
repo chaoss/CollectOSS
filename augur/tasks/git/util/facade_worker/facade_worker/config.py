@@ -34,7 +34,7 @@ import sqlalchemy as s
 from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 
-from augur.tasks.github.util.github_task_session import *
+from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from logging import Logger
 
@@ -77,7 +77,7 @@ def get_database_args_from_env():
     #print(credentials)
     return credentials
 
-class FacadeSession(GithubTaskSession):
+class FacadeSession(DatabaseSession):
     """ORM session used in facade tasks.
 
         This class adds the various attributes needed for legacy facade as well as a modified version of the legacy FacadeConfig class.
