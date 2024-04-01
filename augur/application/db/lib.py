@@ -2,7 +2,7 @@ import sqlalchemy as s
 import logging
 from typing import List, Any, Optional
 from augur.application.db.models import Config 
-from augur.application.db import get_session
+from augur.application.db import get_session, get_engine
 from augur.application.db.util import execute_session_query
 
 logger = logging.getLogger("db_lib")
@@ -95,3 +95,23 @@ def get_value(section_name: str, setting_name: str) -> Optional[Any]:
         setting_dict = convert_type_of_value(setting_dict, logger)
 
         return setting_dict["value"]
+    
+    
+def execute_sql(sql_text):
+
+    engine = get_engine()
+
+    with engine.begin() as connection:
+
+        return_data = connection.execute(sql_text)  
+
+    return return_data
+
+def fetchall_data_from_sql_text(sql_text):
+
+    engine = get_engine()
+
+    with engine.begin() as connection:
+
+        result = connection.execute(sql_text)
+    return [dict(row) for row in result.mappings()]

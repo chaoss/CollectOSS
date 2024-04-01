@@ -29,6 +29,8 @@ import subprocess
 import os
 import sqlalchemy as s
 
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text
+
 def analyze_commit(session, repo_id, repo_loc, commit):
 
 # This function analyzes a given commit, counting the additions, removals, and
@@ -84,7 +86,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 			WHERE alias_email=:alias_email 
 			AND cntrb_active = 1""").bindparams(alias_email=email)
 
-		canonical = session.fetchall_data_from_sql_text(fetch_canonical)#list(cursor_people_local)
+		canonical = fetchall_data_from_sql_text(fetch_canonical)#list(cursor_people_local)
 
 		if canonical:
 			for email in canonical:
@@ -173,7 +175,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 
 	#cursor_local.execute(store_working_commit, (repo_id,commit))
 	#db_local.commit()
-	session.execute_sql(store_working_commit)
+	execute_sql(store_working_commit)
 
 	#session.log_activity('Debug',f"Stored working commit and analyzing : {commit}")
 
