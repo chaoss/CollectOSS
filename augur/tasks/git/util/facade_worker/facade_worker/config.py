@@ -78,7 +78,7 @@ def get_database_args_from_env():
     #print(credentials)
     return credentials
 
-class FacadeSession():
+class FacadeHelper():
     """ORM session used in facade tasks.
 
         This class adds the various attributes needed for legacy facade as well as a modified version of the legacy FacadeConfig class.

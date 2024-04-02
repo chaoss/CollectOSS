@@ -33,13 +33,13 @@ from .utilitymethods import get_absolute_repo_path
 from augur.application.db.models import *
 
 #Will delete repos passed and cleanup associated commit data.
-def git_repo_cleanup(facade_session, session,repo_git):
+def git_repo_cleanup(facade_helper, session,repo_git):
 
 # Clean up any git repos that are pending deletion
 
-	facade_session.update_status('Purging deleted repos')
+	facade_helper.update_status('Purging deleted repos')
 	#logger.info("Processing deletions")
-	facade_session.log_activity('Info','Processing deletions')
+	facade_helper.log_activity('Info','Processing deletions')
 
 
 	query = session.query(Repo).filter(
@@ -51,7 +51,7 @@ def git_repo_cleanup(facade_session, session,repo_git):
 
 		# Remove the files on disk
 
-		absolute_path = get_absolute_repo_path(facade_session.repo_base_directory, row.repo_id, row.repo_path,row.repo_name)
+		absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, row.repo_id, row.repo_path,row.repo_name)
 
 		cmd = ("rm -rf %s"
 			% (absolute_path))
@@ -103,7 +103,7 @@ def git_repo_cleanup(facade_session, session,repo_git):
 
 		#log_activity('Verbose','Deleted repo %s' % row[0])
 		#logger.debug(f"Deleted repo {row.repo_id}")
-		facade_session.log_activity('Verbose',f"Deleted repo {row.repo_id}")
+		facade_helper.log_activity('Verbose',f"Deleted repo {row.repo_id}")
 		cleanup = '%s/%s%s' % (row.repo_group_id,row.repo_path,row.repo_name)
 
 		# Remove any working commits
@@ -127,14 +127,14 @@ def git_repo_cleanup(facade_session, session,repo_git):
 		while (cleanup.find('/',0) > 0):
 			cleanup = cleanup[:cleanup.rfind('/',0)]
 
-			cmd = "rmdir %s%s" % (facade_session.repo_base_directory,cleanup)
+			cmd = "rmdir %s%s" % (facade_helper.repo_base_directory,cleanup)
 			subprocess.Popen([cmd],shell=True).wait()
 			#log_activity('Verbose','Attempted %s' % cmd)
 			#logger.debug(f"Attempted {cmd}")
-			facade_session.log_activity('Verbose',f"Attempted {cmd}")
+			facade_helper.log_activity('Verbose',f"Attempted {cmd}")
 
 		#update_repo_log(row[0],'Deleted')
-		facade_session.update_repo_log(row.repo_id,'Deleted')
+		facade_helper.update_repo_log(row.repo_id,'Deleted')
 
 	# Clean up deleted projects
 
@@ -181,4 +181,4 @@ def git_repo_cleanup(facade_session, session,repo_git):
 		execute_sql(remove_project)
 
 	
-	facade_session.log_activity('Info', 'Processing deletions (complete)')
+	facade_helper.log_activity('Info', 'Processing deletions (complete)')

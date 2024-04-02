@@ -33,7 +33,7 @@ from .utilitymethods import store_working_author, trim_author
 # else:
 #   import MySQLdb
 
-def nuke_affiliations(facade_session):
+def nuke_affiliations(facade_helper):
 
 # Delete all stored affiliations in the database. Normally when you
 # add/remove/change affiliation data via the web UI, any potentially affected
@@ -43,16 +43,16 @@ def nuke_affiliations(facade_session):
 # this is the scorched earth way: remove them all to force a total rebuild.
 # Brutal but effective.
 
-    facade_session.log_activity('Info','Nuking affiliations')
+    facade_helper.log_activity('Info','Nuking affiliations')
 
     nuke = s.sql.text("""UPDATE commits SET cmt_author_affiliation = NULL,
             cmt_committer_affiliation = NULL""")
 
     execute_sql(nuke)
 
-    facade_session.log_activity('Info','Nuking affiliations (complete)')
+    facade_helper.log_activity('Info','Nuking affiliations (complete)')
 
-def fill_empty_affiliations(facade_session):
+def fill_empty_affiliations(facade_helper):
 
      
 
@@ -86,7 +86,7 @@ def fill_empty_affiliations(facade_session):
 
             # It's not a properly formatted email, leave it NULL and log it.
 
-            facade_session.log_activity('Info',f"Unmatchable email: {email}")
+            facade_helper.log_activity('Info',f"Unmatchable email: {email}")
 
             return
 
@@ -131,7 +131,7 @@ def fill_empty_affiliations(facade_session):
 
         if matches:
 
-            facade_session.log_activity('Debug',f"Found domain match for {email}")
+            facade_helper.log_activity('Debug',f"Found domain match for {email}")
 
             for match in matches:
                 update = s.sql.text(("UPDATE commits "
@@ -141,14 +141,14 @@ def fill_empty_affiliations(facade_session):
                     f"AND cmt_{attribution}_date::date >= \'{match['ca_start_date']}\'::date")
                     ).bindparams(affiliation=match['ca_affiliation'],email=email)
 
-                facade_session.log_activity('Info', f"attr: {attribution} \nmatch:{match}\nsql: {update}")
+                facade_helper.log_activity('Info', f"attr: {attribution} \nmatch:{match}\nsql: {update}")
 
                 try: 
                     execute_sql(update)
                 except Exception as e: 
-                    facade_session.log_activity('Info', f"Error encountered: {e}")
-                    facade_session.log_activity('Info', f"Affiliation insertion failed for {email} ")
-                    facade_session.log_activity('Info', f"Offending query: {update} ")
+                    facade_helper.log_activity('Info', f"Error encountered: {e}")
+                    facade_helper.log_activity('Info', f"Affiliation insertion failed for {email} ")
+                    facade_helper.log_activity('Info', f"Offending query: {update} ")
 
     def discover_alias(email):
 
@@ -169,8 +169,8 @@ def fill_empty_affiliations(facade_session):
 
 ### The real function starts here ###
 
-    facade_session.update_status('Filling empty affiliations')
-    facade_session.log_activity('Info','Filling empty affiliations')
+    facade_helper.update_status('Filling empty affiliations')
+    facade_helper.log_activity('Info','Filling empty affiliations')
 
     # Process any changes to the affiliations or aliases, and set any existing
     # entries in commits to NULL so they are filled properly.
@@ -183,7 +183,7 @@ def fill_empty_affiliations(facade_session):
     print(affiliations_fetched)
     # Now find the last time we worked on affiliations, to figure out what's new
 
-    affiliations_processed = facade_session.get_setting('affiliations_processed')
+    affiliations_processed = facade_helper.get_setting('affiliations_processed')
 
     get_changed_affiliations = s.sql.text("""SELECT ca_domain FROM contributor_affiliations""")# WHERE "
         #"ca_last_used >= timestamptz  %s")
@@ -196,7 +196,7 @@ def fill_empty_affiliations(facade_session):
 
     for changed_affiliation in changed_affiliations:
 
-        facade_session.log_activity('Debug',f"Resetting affiliation for {changed_affiliation['ca_domain']}")
+        facade_helper.log_activity('Debug',f"Resetting affiliation for {changed_affiliation['ca_domain']}")
 
         set_author_to_null = s.sql.text("""UPDATE commits SET cmt_author_affiliation = NULL
             WHERE cmt_author_email LIKE CONCAT('%%',:affiliation)""").bindparams(affiliation=changed_affiliation['ca_domain'])
@@ -225,7 +225,7 @@ def fill_empty_affiliations(facade_session):
 
     # Now find the last time we worked on aliases, to figure out what's new
 
-    aliases_processed = facade_session.get_setting('aliases_processed')
+    aliases_processed = facade_helper.get_setting('aliases_processed')
 
     get_changed_aliases = s.sql.text("""SELECT alias_email FROM contributors_aliases WHERE
         cntrb_last_modified >= :aliases""").bindparams(aliases=aliases_processed)
@@ -236,31 +236,31 @@ def fill_empty_affiliations(facade_session):
 
     for changed_alias in changed_aliases:
 
-        facade_session.log_activity('Debug',f"Resetting affiliation for {changed_alias['alias_email']}")
+        facade_helper.log_activity('Debug',f"Resetting affiliation for {changed_alias['alias_email']}")
 
         set_author_to_null = s.sql.text("""UPDATE commits SET cmt_author_affiliation = NULL
             WHERE cmt_author_raw_email LIKE CONCAT('%%',:alias)""").bindparams(alias=changed_alias['alias_email'])
 
-        facade_session.insert_or_update_data(set_author_to_null)
+        facade_helper.insert_or_update_data(set_author_to_null)
 
         set_committer_to_null = s.sql.text("""UPDATE commits SET cmt_committer_affiliation = NULL 
             WHERE cmt_committer_raw_email LIKE CONCAT('%%',:alias_email)""").bindparams(alias_email=changed_alias['alias_email'])
 
-        facade_session.insert_or_update_data(set_committer_to_null)
+        facade_helper.insert_or_update_data(set_committer_to_null)
 
         reset_author = s.sql.text("""UPDATE commits
             SET cmt_author_email = :author_email 
             WHERE cmt_author_raw_email = :raw_author_email
             """).bindparams(author_email=discover_alias(changed_alias['alias_email']),raw_author_email=changed_alias['alias_email'])
 
-        facade_session.insert_or_update_data(reset_author)
+        facade_helper.insert_or_update_data(reset_author)
 
         reset_committer = s.sql.text("""UPDATE commits
             SET cmt_committer_email = :author_email 
             WHERE cmt_committer_raw_email = :raw_author_email
             """).bindparams(author_email=discover_alias(changed_alias['alias_email']), raw_author_email=changed_alias['alias_email'])
 
-        facade_session.insert_or_update_data(reset_committer)
+        facade_helper.insert_or_update_data(reset_committer)
         
     # Update the last fetched date, so we know where to start next time.
 
@@ -271,11 +271,11 @@ def fill_empty_affiliations(facade_session):
 
     # Now rebuild the affiliation data
 
-    working_author = facade_session.get_setting('working_author')
+    working_author = facade_helper.get_setting('working_author')
 
     if working_author != 'done':
-        facade_session.log_activity('Error',f"Trimming author data in affiliations: {working_author}")
-        trim_author(facade_session, working_author)
+        facade_helper.log_activity('Error',f"Trimming author data in affiliations: {working_author}")
+        trim_author(facade_helper, working_author)
 
     # Figure out which projects have NULL affiliations so they can be recached
 
@@ -307,17 +307,17 @@ def fill_empty_affiliations(facade_session):
 
     null_authors = fetchall_data_from_sql_text(find_null_authors)
 
-    facade_session.log_activity('Debug',f"Found {len(null_authors)} authors with NULL affiliation")
+    facade_helper.log_activity('Debug',f"Found {len(null_authors)} authors with NULL affiliation")
 
     for null_author in null_authors:
 
         email = null_author['email']
 
-        store_working_author(facade_session, email)
+        store_working_author(facade_helper, email)
 
         discover_null_affiliations('author',email)
 
-    store_working_author(facade_session, 'done')
+    store_working_author(facade_helper, 'done')
 
     # Find any committers with NULL affiliations and fill them
 
@@ -329,13 +329,13 @@ def fill_empty_affiliations(facade_session):
 
     null_committers = fetchall_data_from_sql_text(find_null_committers)
 
-    facade_session.log_activity('Debug',f"Found {len(null_committers)} committers with NULL affiliation")
+    facade_helper.log_activity('Debug',f"Found {len(null_committers)} committers with NULL affiliation")
 
     for null_committer in null_committers:
 
         email = null_committer['email']
 
-        store_working_author(facade_session, email)
+        store_working_author(facade_helper, email)
 
         discover_null_affiliations('committer',email)
 
@@ -354,34 +354,34 @@ def fill_empty_affiliations(facade_session):
     execute_sql(fill_unknown_committer)
     
 
-    store_working_author(facade_session, 'done')
+    store_working_author(facade_helper, 'done')
 
-    facade_session.log_activity('Info','Filling empty affiliations (complete)')
+    facade_helper.log_activity('Info','Filling empty affiliations (complete)')
 
-def invalidate_caches(facade_session):
+def invalidate_caches(facade_helper):
 
 # Invalidate all caches
 
-    facade_session.update_status('Invalidating caches')
-    facade_session.log_activity('Info','Invalidating caches')
+    facade_helper.update_status('Invalidating caches')
+    facade_helper.log_activity('Info','Invalidating caches')
 
     invalidate_cache = s.sql.text("""UPDATE repo_groups SET rg_recache = 1""")
     execute_sql(invalidate_cache)
 
-    facade_session.log_activity('Info','Invalidating caches (complete)')
+    facade_helper.log_activity('Info','Invalidating caches (complete)')
 
-def rebuild_unknown_affiliation_and_web_caches(facade_session):
+def rebuild_unknown_affiliation_and_web_caches(facade_helper):
 
 # When there's a lot of analysis data, calculating display data on the fly gets
 # pretty expensive. Instead, we crunch the data based upon the user's preferred
 # statistics (author or committer) and store them. We also store all records
 # with an (Unknown) affiliation for display to the user.
 
-    facade_session.update_status('Caching data for display')
-    facade_session.log_activity('Info','Caching unknown affiliations and web data for display')
+    facade_helper.update_status('Caching data for display')
+    facade_helper.log_activity('Info','Caching unknown affiliations and web data for display')
 
-    report_date = facade_session.get_setting('report_date')
-    report_attribution = facade_session.get_setting('report_attribution')
+    report_date = facade_helper.get_setting('report_date')
+    report_attribution = facade_helper.get_setting('report_attribution')
 
     # Clear stale caches
 
@@ -492,7 +492,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_session):
     #   "p.rg_recache=TRUE")
     execute_sql(clear_unknown_cache)
 
-    facade_session.log_activity('Verbose','Caching unknown authors and committers')
+    facade_helper.log_activity('Verbose','Caching unknown authors and committers')
 
     # Cache the unknown authors
 
@@ -512,7 +512,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_session):
         AND p.rg_recache = 1 
         GROUP BY r.repo_group_id,a.cmt_author_email, info.a, info.b, info.c
 
-        """).bindparams(tool_source=facade_session.tool_source,tool_version=facade_session.tool_version,data_source=facade_session.data_source)
+        """).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
     execute_sql(unknown_authors)
 
@@ -532,13 +532,13 @@ def rebuild_unknown_affiliation_and_web_caches(facade_session):
         WHERE a.cmt_committer_affiliation = '(Unknown)' 
         AND p.rg_recache = 1 
         GROUP BY r.repo_group_id,a.cmt_committer_email, info.a, info.b, info.c 
-        """).bindparams(tool_source=facade_session.tool_source,tool_version=facade_session.tool_version,data_source=facade_session.data_source)
+        """).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
     execute_sql(unknown_committers)
 
     # Start caching by project
 
-    facade_session.log_activity('Verbose','Caching projects')
+    facade_helper.log_activity('Verbose','Caching projects')
 
     cache_projects_by_week = s.sql.text((
         "INSERT INTO dm_repo_group_weekly (repo_group_id, email, affiliation, week, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
@@ -572,7 +572,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_session):
         "affiliation, "
         f"a.cmt_{report_attribution}_email, "
         "r.repo_group_id, info.a, info.b, info.c")
-        ).bindparams(tool_source=facade_session.tool_source,tool_version=facade_session.tool_version,data_source=facade_session.data_source)
+        ).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
     execute_sql(cache_projects_by_week)
 
@@ -608,7 +608,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_session):
         "affiliation, "
         f"a.cmt_{report_attribution}_email,"
         "r.repo_group_id, info.a, info.b, info.c"
-        )).bindparams(tool_source=facade_session.tool_source,tool_version=facade_session.tool_version,data_source=facade_session.data_source)
+        )).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
     execute_sql(cache_projects_by_month)
 
@@ -645,7 +645,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_session):
 
         
         
-        )).bindparams(tool_source=facade_session.tool_source,tool_version=facade_session.tool_version,data_source=facade_session.data_source)
+        )).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
      
      
@@ -653,7 +653,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_session):
     execute_sql(cache_projects_by_year)
     # Start caching by repo
 
-    facade_session.log_activity('Verbose','Caching repos')
+    facade_helper.log_activity('Verbose','Caching repos')
 
     cache_repos_by_week = s.sql.text(
         (
@@ -688,7 +688,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_session):
         "affiliation, "
         f"a.cmt_{report_attribution}_email,"
         "a.repo_id, info.a, info.b, info.c"
-        )).bindparams(tool_source=facade_session.tool_source,tool_version=facade_session.tool_version,data_source=facade_session.data_source)
+        )).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
     execute_sql(cache_repos_by_week)
 
@@ -724,7 +724,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_session):
         "affiliation, "
         f"a.cmt_{report_attribution}_email,"
         "a.repo_id, info.a, info.b, info.c"
-        )).bindparams(tool_source=facade_session.tool_source,tool_version=facade_session.tool_version,data_source=facade_session.data_source)
+        )).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
     execute_sql(cache_repos_by_month)
 
@@ -758,7 +758,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_session):
         "affiliation, "
         f"a.cmt_{report_attribution}_email,"
         "a.repo_id, info.a, info.b, info.c"
-        )).bindparams(tool_source=facade_session.tool_source,tool_version=facade_session.tool_version,data_source=facade_session.data_source)
+        )).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
     execute_sql(cache_repos_by_year)
 
@@ -767,5 +767,5 @@ def rebuild_unknown_affiliation_and_web_caches(facade_session):
     reset_recache = s.sql.text("UPDATE repo_groups SET rg_recache = 0")
     execute_sql(reset_recache)
 
-    facade_session.log_activity('Info','Caching unknown affiliations and web data for display (complete)')
+    facade_helper.log_activity('Info','Caching unknown affiliations and web data for display (complete)')
 
