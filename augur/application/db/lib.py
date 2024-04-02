@@ -1,7 +1,7 @@
 import sqlalchemy as s
 import logging
 from typing import List, Any, Optional
-from augur.application.db.models import Config 
+from augur.application.db.models import Config, Repo
 from augur.application.db import get_session, get_engine
 from augur.application.db.util import execute_session_query
 
@@ -115,3 +115,21 @@ def fetchall_data_from_sql_text(sql_text):
 
         result = connection.execute(sql_text)
     return [dict(row) for row in result.mappings()]
+
+def get_repo_by_repo_git(repo_git: str):
+
+    with get_session() as session:
+
+        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+        repo = execute_session_query(query, 'one')
+
+        return repo
+    
+def get_repo_by_repo_id(repo_id):
+
+    with get_session() as session:
+
+        query = session.query(Repo).filter(Repo.repo_id == repo_id)
+        repo = execute_session_query(query, 'one')
+
+        return repo

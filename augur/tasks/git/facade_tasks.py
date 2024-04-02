@@ -4,7 +4,7 @@ import logging
 from celery import group, chain
 import sqlalchemy as s
 
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, get_session
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, get_session, get_repo_by_repo_git, get_repo_by_repo_id
 
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
@@ -73,9 +73,8 @@ def trim_commits_facade_task(repo_git):
 
     facade_helper = FacadeHelper(logger)
 
-    with get_session() as session:
+    repo = get_repo_by_repo_git(repo_git)
 
-        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
     repo_id = repo.repo_id
 
     def update_analysis_log(repos_id,status):
@@ -120,9 +119,7 @@ def trim_commits_post_analysis_facade_task(repo_git):
     
     facade_helper = FacadeHelper(logger)
 
-    with get_session() as session:
-        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
-
+    repo = repo = get_repo_by_repo_git(repo_git)
     repo_id = repo.repo_id
 
     start_date = facade_helper.get_setting('start_date')
@@ -138,9 +135,7 @@ def trim_commits_post_analysis_facade_task(repo_git):
     
     logger.info(f"Generating sequence for repo {repo_id}")
 
-    with get_session() as session:
-        query = session.query(Repo).filter(Repo.repo_id == repo_id)
-        repo = execute_session_query(query, 'one')
+    repo = get_repo_by_repo_git(repo_git)
 
     #Get the huge list of commits to process.
     absoulte_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
@@ -166,7 +161,7 @@ def trim_commits_post_analysis_facade_task(repo_git):
 
     update_analysis_log(repo_id,'Beginning to trim commits')
 
-    session.log_activity('Debug',f"Commits to be trimmed from repo {repo_id}: {len(trimmed_commits)}")
+    facade_helper.log_activity('Debug',f"Commits to be trimmed from repo {repo_id}: {len(trimmed_commits)}")
 
     #for commit in trimmed_commits:
     trim_commits(facade_helper,repo_id,trimmed_commits)
@@ -206,45 +201,44 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
     facade_helper = FacadeHelper(logger)
 
+    repo = get_repo_by_repo_git(repo_git)
+    repo_id = repo.repo_id
+
+    start_date = facade_helper.get_setting('start_date')
+
+    logger.info(f"Generating sequence for repo {repo_id}")
+    
+    repo = get_repo_by_repo_id(repo_id)
+
+    #Get the huge list of commits to process.
+    absoulte_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
+    repo_loc = (f"{absoulte_path}/.git")
+    # Grab the parents of HEAD
+
+    parent_commits = get_parent_commits_set(repo_loc, start_date)
+
+    # Grab the existing commits from the database
+    existing_commits = get_existing_commits_set(repo_id)
+
+    # Find missing commits and add them
+    missing_commits = parent_commits - existing_commits
+
+    facade_helper.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
+
+    
+    if not len(missing_commits) or repo_id is None:
+        #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
+        return
+    
+    queue = list(missing_commits)
+
+    logger.info(f"Got to analysis!")
+    absoulte_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
+    repo_loc = (f"{absoulte_path}/.git")
+
+    pendingCommitRecordsToInsert = []
+
     with get_session() as session:
-        
-        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
-        repo_id = repo.repo_id
-
-        start_date = facade_helper.get_setting('start_date')
-
-        logger.info(f"Generating sequence for repo {repo_id}")
-        
-        query = session.query(Repo).filter(Repo.repo_id == repo_id)
-        repo = execute_session_query(query, 'one')
-
-        #Get the huge list of commits to process.
-        absoulte_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
-        repo_loc = (f"{absoulte_path}/.git")
-        # Grab the parents of HEAD
-
-        parent_commits = get_parent_commits_set(repo_loc, start_date)
-
-        # Grab the existing commits from the database
-        existing_commits = get_existing_commits_set(repo_id)
-
-        # Find missing commits and add them
-        missing_commits = parent_commits - existing_commits
-
-        facade_helper.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
-
-        
-        if not len(missing_commits) or repo_id is None:
-            #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
-            return
-        
-        queue = list(missing_commits)
-
-        logger.info(f"Got to analysis!")
-        absoulte_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-        repo_loc = (f"{absoulte_path}/.git")
-
-        pendingCommitRecordsToInsert = []
 
         for count, commitTuple in enumerate(queue):
             quarterQueue = int(len(queue) / 4)
@@ -255,7 +249,6 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
             #Log progress when another quarter of the queue has been processed
             if (count + 1) % quarterQueue == 0:
                 logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
-
 
             #logger.info(f"Got to analysis!")
             commitRecords = analyze_commit(logger, repo_id, repo_loc, commitTuple)
@@ -269,14 +262,14 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
         
         facade_bulk_insert_commits(logger, session,pendingCommitRecordsToInsert)
 
-        # Remove the working commit.
-        remove_commit = s.sql.text("""DELETE FROM working_commits 
-            WHERE repos_id = :repo_id AND working_commit IN :hashes
-            """).bindparams(repo_id=repo_id,hashes=tuple(queue))
-        execute_sql(remove_commit)  
+    # Remove the working commit.
+    remove_commit = s.sql.text("""DELETE FROM working_commits 
+        WHERE repos_id = :repo_id AND working_commit IN :hashes
+        """).bindparams(repo_id=repo_id,hashes=tuple(queue))
+    execute_sql(remove_commit)  
 
-        logger.info("Analysis complete")
-        return
+    logger.info("Analysis complete")
+    return
 
 @celery.task
 def nuke_affiliations_facade_task():
@@ -335,7 +328,7 @@ def clone_repos():
         repo_git_identifiers = get_collection_status_repo_git_from_filter(session, is_pending, 999999)
         for repo_git in repo_git_identifiers:
             # set repo to intializing
-            repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+            repo = get_repo_by_repo_git(repo_git)
             repoStatus = repo.collection_status[0]
             setattr(repoStatus,"facade_status", CollectionState.INITIALIZING.value)
             session.commit()
