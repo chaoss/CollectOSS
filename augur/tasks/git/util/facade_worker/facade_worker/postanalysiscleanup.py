@@ -37,7 +37,7 @@ def git_repo_cleanup(session,repo_git):
 # Clean up any git repos that are pending deletion
 
 	session.update_status('Purging deleted repos')
-	#session.logger.info("Processing deletions")
+	#logger.info("Processing deletions")
 	session.log_activity('Info','Processing deletions')
 
 
@@ -101,7 +101,7 @@ def git_repo_cleanup(session,repo_git):
 		session.execute_sql(query)
 
 		#log_activity('Verbose','Deleted repo %s' % row[0])
-		#session.logger.debug(f"Deleted repo {row.repo_id}")
+		#logger.debug(f"Deleted repo {row.repo_id}")
 		session.log_activity('Verbose',f"Deleted repo {row.repo_id}")
 		cleanup = '%s/%s%s' % (row.repo_group_id,row.repo_path,row.repo_name)
 
@@ -129,7 +129,7 @@ def git_repo_cleanup(session,repo_git):
 			cmd = "rmdir %s%s" % (session.repo_base_directory,cleanup)
 			subprocess.Popen([cmd],shell=True).wait()
 			#log_activity('Verbose','Attempted %s' % cmd)
-			#session.logger.debug(f"Attempted {cmd}")
+			#logger.debug(f"Attempted {cmd}")
 			session.log_activity('Verbose',f"Attempted {cmd}")
 
 		#update_repo_log(row[0],'Deleted')

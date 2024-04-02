@@ -3,22 +3,22 @@ import os
 from augur.application.db.models import *
 from augur.tasks.util.worker_util import parse_json_from_subprocess_call
 
-def value_model(session,repo_git,repo_id, path):
+def value_model(logger, session,repo_git,repo_id, path):
     """Runs scc on repo and stores data in database
         :param repo_id: Repository ID
         :param path: absolute file path of the Repostiory
     """
 
-    session.logger.info('Generating value data for repo')
-    session.logger.info(f"Repo ID: {repo_id}, Path: {path}")
-    session.logger.info('Running scc...')
+    logger.info('Generating value data for repo')
+    logger.info(f"Repo ID: {repo_id}, Path: {path}")
+    logger.info('Running scc...')
 
     path_to_scc = os.environ['HOME'] + '/scc'
 
-    required_output = parse_json_from_subprocess_call(session.logger,['./scc', '-f','json','--by-file', path], cwd=path_to_scc)
+    required_output = parse_json_from_subprocess_call(logger,['./scc', '-f','json','--by-file', path], cwd=path_to_scc)
     
-    session.logger.info('adding scc data to database... ')
-    session.logger.debug(f"output: {required_output}")
+    logger.info('adding scc data to database... ')
+    logger.debug(f"output: {required_output}")
 
     to_insert = []
     for record in required_output:
@@ -44,4 +44,4 @@ def value_model(session,repo_git,repo_id, path):
     
     session.insert_data(to_insert, RepoLabor, ["repo_id", "rl_analysis_date", "file_path", "file_name" ])
 
-    session.logger.info(f"Done generating scc data for repo {repo_id} from path {path}")
+    logger.info(f"Done generating scc data for repo {repo_id} from path {path}")

@@ -26,9 +26,9 @@ def process_dependency_metrics(self, repo_git):
     
         absolute_repo_path = get_absolute_repo_path(get_value("Facade", "repo_directory"),repo.repo_id,repo.repo_path,repo.repo_name)
 
-        session.logger.debug(f"This is the deps model repo: {repo_git}.")
+        logger.debug(f"This is the deps model repo: {repo_git}.")
 
-        generate_deps_data(session,repo.repo_id,absolute_repo_path)
+        generate_deps_data(logger, session,repo.repo_id,absolute_repo_path)
 
 
 @celery.task(base=AugurSecondaryRepoCollectionTask, bind=True)
@@ -44,4 +44,4 @@ def process_ossf_dependency_metrics(self, repo_git):
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         
         repo = execute_session_query(query,'one')
-        generate_scorecard(session, repo.repo_id, repo_git)
+        generate_scorecard(logger, session, repo.repo_id, repo_git)

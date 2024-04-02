@@ -5,10 +5,10 @@ from augur.application.db.util import execute_session_query
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.util import get_deps_libyear_data
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 
-def deps_libyear_model( session, repo_id,repo_git,repo_group_id):
+def deps_libyear_model(logger, session, repo_id,repo_git,repo_group_id):
         """ Data collection and storage method
         """
-        session.logger.info(f"This is the libyear deps model repo: {repo_git}")
+        logger.info(f"This is the libyear deps model repo: {repo_git}")
 
         #result = re.search(r"https:\/\/(github\.com\/[A-Za-z0-9 \- _]+\/)([A-Za-z0-9 \- _ .]+)$", repo_git).groups()
 
@@ -21,23 +21,23 @@ def deps_libyear_model( session, repo_id,repo_git,repo_group_id):
         absolute_repo_path = get_absolute_repo_path(get_value("Facade", "repo_directory"),repo_id,result.repo_path,result.repo_name)
         #config.get_section("Facade")['repo_directory'] + relative_repo_path#self.config['repo_directory'] + relative_repo_path
 
-        generate_deps_libyear_data(session,repo_id, absolute_repo_path)
+        generate_deps_libyear_data(logger, session,repo_id, absolute_repo_path)
 
 
-def generate_deps_libyear_data(session, repo_id, path):
+def generate_deps_libyear_data(logger, session, repo_id, path):
         """Scans for package files and calculates libyear
         :param session: Task manifest and database session. 
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
         date_scanned = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-        session.logger.info('Searching for deps in repo')
-        session.logger.info(f'Repo ID: {repo_id}, Path: {path}')
+        logger.info('Searching for deps in repo')
+        logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
-        deps = get_deps_libyear_data(path,session.logger)
+        deps = get_deps_libyear_data(path,logger)
 
         if not deps:
-            session.logger.info(f"No deps found for repo {repo_id} on path {path}")
+            logger.info(f"No deps found for repo {repo_id} on path {path}")
             return
 
         to_insert = []

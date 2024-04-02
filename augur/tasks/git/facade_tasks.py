@@ -134,7 +134,7 @@ def trim_commits_post_analysis_facade_task(repo_git):
             
             session.execute_sql(log_message)
         
-        session.logger.info(f"Generating sequence for repo {repo_id}")
+        logger.info(f"Generating sequence for repo {repo_id}")
 
         query = session.query(Repo).filter(Repo.repo_id == repo_id)
         repo = execute_session_query(query, 'one')
@@ -210,7 +210,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
 
         start_date = session.get_setting('start_date')
 
-        session.logger.info(f"Generating sequence for repo {repo_id}")
+        logger.info(f"Generating sequence for repo {repo_id}")
         
         query = session.query(Repo).filter(Repo.repo_id == repo_id)
         repo = execute_session_query(query, 'one')
@@ -255,16 +255,16 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
 
 
             #logger.info(f"Got to analysis!")
-            commitRecords = analyze_commit(session, repo_id, repo_loc, commitTuple)
+            commitRecords = analyze_commit(logger, repo_id, repo_loc, commitTuple)
             #logger.debug(commitRecord)
             if len(commitRecords):
                 pendingCommitRecordsToInsert.extend(commitRecords)
                 if len(pendingCommitRecordsToInsert) >= 1000:
-                    facade_bulk_insert_commits(session,pendingCommitRecordsToInsert)
+                    facade_bulk_insert_commits(logger, session,pendingCommitRecordsToInsert)
                     pendingCommitRecordsToInsert = []
 
         
-        facade_bulk_insert_commits(session,pendingCommitRecordsToInsert)
+        facade_bulk_insert_commits(logger, session,pendingCommitRecordsToInsert)
 
         
 
@@ -343,7 +343,7 @@ def clone_repos():
                 session.commit()
 
                 # get the commit count
-                commit_count = get_repo_commit_count(session, repo_git)
+                commit_count = get_repo_commit_count(logger, session, repo_git)
                 facade_weight = get_facade_weight_with_commit_count(session, repo_git, commit_count)
 
                 update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
@@ -385,7 +385,7 @@ def git_update_commit_count_weight(self, repo_git):
     
     # Change facade session to take in engine
     with FacadeSession(logger) as session:
-        commit_count = get_repo_commit_count(session, repo_git)
+        commit_count = get_repo_commit_count(logger, session, repo_git)
         facade_weight = get_facade_weight_with_commit_count(session, repo_git, commit_count)
 
         update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
@@ -452,7 +452,7 @@ def generate_contributor_sequence(logger,repo_git, session):
     WHERE repo_git=:value""").bindparams(value=repo_git)
 
     repo = session.execute_sql(query).fetchone()
-    session.logger.info(f"repo: {repo}")
+    logger.info(f"repo: {repo}")
     repo_id = repo[0]
     #pdb.set_trace()
     #breakpoint()
@@ -557,7 +557,7 @@ def generate_non_repo_domain_facade_tasks(logger):
             # from queries and materialized views in the current version of Augur.
             # This method is also a major performance bottleneck with little value.
 
-        #session.logger.info(session.cfg)
+        #logger.info(session.cfg)
         if not limited_run or (limited_run and fix_affiliations):
             #facade_sequence.append(fill_empty_affiliations_facade_task.si().on_error(facade_error_handler.s()))#fill_empty_affiliations(session)
             logger.info("Fill empty affiliations is deprecated.")

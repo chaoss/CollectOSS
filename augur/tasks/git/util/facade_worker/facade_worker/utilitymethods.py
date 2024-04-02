@@ -149,15 +149,15 @@ def count_branches(git_dir):
     branches_dir = os.path.join(git_dir, 'refs', 'heads')
     return sum(1 for _ in os.scandir(branches_dir))
 
-def get_repo_commit_count(session, repo_git):
+def get_repo_commit_count(logger, session, repo_git):
     
 	repo = Repo.get_by_repo_git(session, repo_git)
 
 	absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
 	repo_loc = (f"{absolute_path}/.git")
 
-	session.logger.debug(f"loc: {repo_loc}")
-	session.logger.debug(f"path: {repo.repo_path}")
+	logger.debug(f"loc: {repo_loc}")
+	logger.debug(f"path: {repo.repo_path}")
 
 	# Check if the .git directory exists
 	if not os.path.exists(repo_loc):
@@ -192,7 +192,7 @@ def get_facade_weight_with_commit_count(session, repo_git, commit_count):
 
 def get_repo_weight_by_commit(logger,repo_git):
 	with FacadeSession(logger) as session:
-		return get_repo_commit_count(session, repo_git) - get_facade_weight_time_factor(session, repo_git)
+		return get_repo_commit_count(logger, session, repo_git) - get_facade_weight_time_factor(session, repo_git)
 	
 
 def update_facade_scheduling_fields(session, repo_git, weight, commit_count):
@@ -207,7 +207,7 @@ def update_facade_scheduling_fields(session, repo_git, weight, commit_count):
 	session.execute(update_query)
 	session.commit()
 
-def facade_bulk_insert_commits(session,records):
+def facade_bulk_insert_commits(logger, session,records):
 
 	try:
 		session.execute(
@@ -218,14 +218,14 @@ def facade_bulk_insert_commits(session,records):
 	except Exception as e:
 		
 		if len(records) > 1:
-			session.logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
+			logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
 
 			#split list into halves and retry insert until we isolate offending record
 			firsthalfRecords = records[:len(records)//2]
 			secondhalfRecords = records[len(records)//2:]
 
-			facade_bulk_insert_commits(session,firsthalfRecords)
-			facade_bulk_insert_commits(session,secondhalfRecords)
+			facade_bulk_insert_commits(logger, session,firsthalfRecords)
+			facade_bulk_insert_commits(logger, session,secondhalfRecords)
 		elif len(records) == 1 and isinstance(e,DataError) and "time zone displacement" in f"{e}":
 			commit_record = records[0]
 			#replace incomprehensible dates with epoch.

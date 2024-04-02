@@ -19,4 +19,4 @@ def process_libyear_dependency_metrics(self, repo_git):
         
 
         repo = execute_session_query(query,'one')
-        deps_libyear_model(session, repo.repo_id,repo_git,repo.repo_group_id)
+        deps_libyear_model(logger, session, repo.repo_id,repo_git,repo.repo_group_id)

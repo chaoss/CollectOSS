@@ -5,19 +5,19 @@ from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
 from augur.tasks.util.worker_util import parse_json_from_subprocess_call
 
-def generate_deps_data(session, repo_id, path):
+def generate_deps_data(logger, session, repo_id, path):
         """Run dependency logic on repo and stores data in database
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
         
         scan_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-        session.logger.info('Searching for deps in repo')
-        session.logger.info(f'Repo ID: {repo_id}, Path: {path}, Scan date: {scan_date}')
+        logger.info('Searching for deps in repo')
+        logger.info(f'Repo ID: {repo_id}, Path: {path}, Scan date: {scan_date}')
 
         
 
-        deps = dep_calc.get_deps(path,session.logger)
+        deps = dep_calc.get_deps(path,logger)
         
         to_insert = []
         for dep in deps:
@@ -36,26 +36,26 @@ def generate_deps_data(session, repo_id, path):
             
         session.insert_data(to_insert,RepoDependency,["repo_id","dep_name","data_collection_date"])
         
-        session.logger.info(f"Inserted {len(deps)} dependencies for repo {repo_id}")
+        logger.info(f"Inserted {len(deps)} dependencies for repo {repo_id}")
 
 """
 def deps_model(session, repo_id,repo_git,repo_path,repo_name):
     # Data collection and storage method
 
-    session.logger.info(f"This is the deps model repo: {repo_git}.")
+    logger.info(f"This is the deps model repo: {repo_git}.")
 
     
 
     generate_deps_data(session,repo_id, absolute_repo_path)
 """
 
-def generate_scorecard(session,repo_id,path):
+def generate_scorecard(logger, session,repo_id,path):
     """Runs scorecard on repo and stores data in database
         :param repo_id: Repository ID
         :param path: URL path of the Repostiory
     """
-    session.logger.info('Generating scorecard data for repo')
-    session.logger.info(f"Repo ID: {repo_id}, Path: {path}")
+    logger.info('Generating scorecard data for repo')
+    logger.info(f"Repo ID: {repo_id}, Path: {path}")
 
     # we convert relative path in the format required by scorecard like github.com/chaoss/augur
     # raw_path,_ = path.split('-')
@@ -69,16 +69,16 @@ def generate_scorecard(session,repo_id,path):
     path_to_scorecard = os.environ['HOME'] + '/scorecard'
 
     #setting the environmental variable which is required by scorecard
-    key_handler = GithubApiKeyHandler(session, session.logger)       
+    key_handler = GithubApiKeyHandler(session, logger)       
     os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
     
-    required_output = parse_json_from_subprocess_call(session.logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
+    required_output = parse_json_from_subprocess_call(logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
     
-    session.logger.info('adding to database...')
-    session.logger.debug(f"output: {required_output}")
+    logger.info('adding to database...')
+    logger.debug(f"output: {required_output}")
 
     if not required_output['checks']:
-        session.logger.info('No scorecard checks found!')
+        logger.info('No scorecard checks found!')
         return
     
     #Store the overall score first
@@ -112,6 +112,6 @@ def generate_scorecard(session,repo_id,path):
     
     session.insert_data(to_insert, RepoDepsScorecard, ["repo_id","name"])
     
-    session.logger.info(f"Done generating scorecard for repo {repo_id} from path {path}")
+    logger.info(f"Done generating scorecard for repo {repo_id} from path {path}")
 
 
