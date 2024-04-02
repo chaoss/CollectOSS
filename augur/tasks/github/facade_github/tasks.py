@@ -261,48 +261,48 @@ def insert_facade_contributors(self, repo_id):
         manifest.logger.debug("DEBUG: Got through the new_contribs")
     
 
-    with FacadeSession(logger) as session:
-        # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
-        # i.e., if a contributor already exists, we use it!
-        resolve_email_to_cntrb_id_sql = s.sql.text("""
-            SELECT DISTINCT
-                cntrb_id,
-                contributors.cntrb_login AS login,
-                contributors.cntrb_canonical AS email,
-                commits.cmt_author_raw_email
-            FROM
-                contributors,
-                commits
-            WHERE
-                contributors.cntrb_canonical = commits.cmt_author_raw_email
-                AND commits.repo_id = :repo_id
-            UNION
-            SELECT DISTINCT
-                contributors_aliases.cntrb_id,
-                                contributors.cntrb_login as login, 
-                contributors_aliases.alias_email AS email,
-                commits.cmt_author_raw_email
-            FROM
-                                contributors,
-                contributors_aliases,
-                commits
-            WHERE
-                contributors_aliases.alias_email = commits.cmt_author_raw_email
-                                AND contributors.cntrb_id = contributors_aliases.cntrb_id
-                AND commits.repo_id = :repo_id
-        """).bindparams(repo_id=repo_id)
+    session = FacadeSession(logger)
+    # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
+    # i.e., if a contributor already exists, we use it!
+    resolve_email_to_cntrb_id_sql = s.sql.text("""
+        SELECT DISTINCT
+            cntrb_id,
+            contributors.cntrb_login AS login,
+            contributors.cntrb_canonical AS email,
+            commits.cmt_author_raw_email
+        FROM
+            contributors,
+            commits
+        WHERE
+            contributors.cntrb_canonical = commits.cmt_author_raw_email
+            AND commits.repo_id = :repo_id
+        UNION
+        SELECT DISTINCT
+            contributors_aliases.cntrb_id,
+                            contributors.cntrb_login as login, 
+            contributors_aliases.alias_email AS email,
+            commits.cmt_author_raw_email
+        FROM
+                            contributors,
+            contributors_aliases,
+            commits
+        WHERE
+            contributors_aliases.alias_email = commits.cmt_author_raw_email
+                            AND contributors.cntrb_id = contributors_aliases.cntrb_id
+            AND commits.repo_id = :repo_id
+    """).bindparams(repo_id=repo_id)
 
-        #self.logger.info("DEBUG: got passed the sql statement declaration")
-        # Get a list of dicts that contain the emails and cntrb_id's of commits that appear in the contributor's table.
-        #existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
-        #                                    'repo_id': repo_id}).to_json(orient="records"))
+    #self.logger.info("DEBUG: got passed the sql statement declaration")
+    # Get a list of dicts that contain the emails and cntrb_id's of commits that appear in the contributor's table.
+    #existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
+    #                                    'repo_id': repo_id}).to_json(orient="records"))
 
-        result = session.execute_sql(resolve_email_to_cntrb_id_sql)
-        existing_cntrb_emails = [dict(row) for row in result.mappings()]
+    result = session.execute_sql(resolve_email_to_cntrb_id_sql)
+    existing_cntrb_emails = [dict(row) for row in result.mappings()]
 
-        print(existing_cntrb_emails)
-        link_commits_to_contributor(session,list(existing_cntrb_emails))
+    print(existing_cntrb_emails)
+    link_commits_to_contributor(session,list(existing_cntrb_emails))
 
-        session.logger.info("Done with inserting and updating facade contributors")
+    logger.info("Done with inserting and updating facade contributors")
     return
 

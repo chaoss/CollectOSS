@@ -35,6 +35,7 @@ from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 
 from augur.application.db.session import DatabaseSession
+from augur.application.db.lib import execute_sql
 from augur.application.db.lib import get_section
 from logging import Logger
 
@@ -77,7 +78,7 @@ def get_database_args_from_env():
     #print(credentials)
     return credentials
 
-class FacadeSession(DatabaseSession):
+class FacadeSession():
     """ORM session used in facade tasks.
 
         This class adds the various attributes needed for legacy facade as well as a modified version of the legacy FacadeConfig class.
@@ -105,7 +106,9 @@ class FacadeSession(DatabaseSession):
         from augur.application.db import get_engine
         engine = get_engine()
         self.repos_processed = 0
-        super().__init__(logger=logger, engine=engine)
+        # super().__init__(logger=logger, engine=engine)
+
+        self.logger = logger
         
         worker_options = get_section("Facade")
 
@@ -148,7 +151,7 @@ class FacadeSession(DatabaseSession):
         query = s.sql.text("""SELECT value FROM settings WHERE setting=:settingParam ORDER BY
             last_modified DESC LIMIT 1""").bindparams(settingParam=setting)
         
-        result = self.execute_sql(query).fetchone()
+        result = execute_sql(query).fetchone()
         print(result)
         return result[0]
         
@@ -157,7 +160,7 @@ class FacadeSession(DatabaseSession):
         query = s.sql.text("""UPDATE settings SET value=:statusParam WHERE setting='utility_status'
             """).bindparams(statusParam=status)
         
-        self.execute_sql(query)
+        execute_sql(query)
 
     def log_activity(self, level, status):
         # Log an activity based upon urgency and user's preference.  If the log level is
@@ -174,7 +177,7 @@ class FacadeSession(DatabaseSession):
             """).bindparams(levelParam=level,statusParam=status)
 
         try:
-            self.execute_sql(query)
+            execute_sql(query)
         except Exception as e:
             self.logger.error(f"Error encountered: {e}")
             raise e
@@ -185,7 +188,7 @@ class FacadeSession(DatabaseSession):
             VALUES (:repo_id,:repo_status)""").bindparams(repo_id=repos_id,repo_status=status)
         
         try:
-            self.execute_sql(log_message)
+            execute_sql(log_message)
         except:
             pass
     def insert_or_update_data(self, query, **bind_args)-> None:
@@ -204,9 +207,9 @@ class FacadeSession(DatabaseSession):
             try:
                 if bind_args:
                     #self.cfg.cursor.execute(query, params)
-                    self.execute_sql(query.bindparams(**bind_args))
+                    execute_sql(query.bindparams(**bind_args))
                 else:
-                    self.execute_sql(query)
+                    execute_sql(query)
                 break
             except OperationalError as e:
                 # print(str(e).split("Process")[1].split(";")[0])

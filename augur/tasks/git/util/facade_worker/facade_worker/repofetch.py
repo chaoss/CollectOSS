@@ -34,19 +34,20 @@ from .utilitymethods import update_repo_log, get_absolute_repo_path
 from augur.application.db.models.augur_data import *
 from augur.application.db.models.augur_operations import CollectionStatus
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list
+from augur.application.db.lib import execute_sql
 
 class GitCloneError(Exception):
     pass
 
-def git_repo_initialize(session, repo_git):
+def git_repo_initialize(facade_session, session, repo_git):
 
     # Select any new git repos so we can set up their locations and git clone
 
-    session.update_status('Fetching non-cloned repos')
-    session.log_activity('Info', 'Fetching non-cloned repos')
+    facade_session.update_status('Fetching non-cloned repos')
+    facade_session.log_activity('Info', 'Fetching non-cloned repos')
 
     # Get data as a list of dicts
-    # new_repos = session.fetchall_data_from_sql_text(query)#list(cfg.cursor)
+    # new_repos = fetchall_data_from_sql_text(query)#list(cfg.cursor)
     row = Repo.get_by_repo_git(session, repo_git)
 
     if row:
@@ -54,7 +55,7 @@ def git_repo_initialize(session, repo_git):
         session.log_activity(
             'Info', f"Fetching repo with repo id: {row.repo_id}")
 
-        update_repo_log(session, row.repo_id, 'Cloning')
+        update_repo_log(logger, facade_session, row.repo_id, 'Cloning')
 
         git = html.unescape(row.repo_git)
 
@@ -62,28 +63,28 @@ def git_repo_initialize(session, repo_git):
         if git.find('://', 0) > 0:
             platform_org_git_url_section = git[git.find(
                 '://', 0)+3:][:git[git.find('://', 0)+3:].rfind('/', 0)+1]
-            session.log_activity(
+            facade_session.log_activity(
                 'Info', f"Repo Relative Path from facade05, from for row in new_repos, line 79: {platform_org_git_url_section}")
-            session.log_activity('Info', f"The git path used : {git}")
+            facade_session.log_activity('Info', f"The git path used : {git}")
 
         else:
             platform_org_git_url_section = git[:git.rfind('/', 0)+1]
-            session.log_activity(
+            facade_session.log_activity(
                 'Info', f"Repo Relative Path from facade05, line 80, reset at 86: {platform_org_git_url_section}")
 
         # Get the name of repo
         repo_name = git[git.rfind('/', 0)+1:]
         if repo_name.endswith('.git'):
             repo_name = repo_name[:repo_name.find('.git', 0)]
-            session.log_activity(
+            facade_session.log_activity(
                 'Info', f"Repo Name from facade05, line 93: {repo_name}")
         
         path_identifier = f"{platform_org_git_url_section}{repo_name}".replace('/','-')
 
         # Get the full path to the directory where we'll clone the repo
         repo_path = (
-            f"{session.repo_base_directory}{row.repo_id}-{path_identifier}")
-        session.log_activity(
+            f"{facade_session.repo_base_directory}{row.repo_id}-{path_identifier}")
+        facade_session.log_activity(
             'Info', f"Repo Path from facade05, line 86: {repo_path}")
 
         
@@ -91,21 +92,21 @@ def git_repo_initialize(session, repo_git):
         # query = s.sql.text("""SELECT NULL FROM repo WHERE CONCAT(repo_group_id,'/',repo_path,repo_name) = :repo_group_id
         #    """).bindparams(repo_group_id=f"{row.repo_group_id}/{platform_org_git_url_section}{repo_name}")
         #
-        # result = session.fetchall_data_from_sql_text(query)
+        # result = fetchall_data_from_sql_text(query)
 
         query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
             repo_name=:nameParam WHERE repo_id=:idParam
             """).bindparams(pathParam=path_identifier, nameParam=repo_name, idParam=row.repo_id)
 
-        session.execute_sql(query)
+        execute_sql(query)
         # Check if there will be a storage path collision
         # If there is a collision, throw an error so that it updates the existing repo instead of trying
         # to reclone.
         if os.path.isdir(repo_path):  # len(result):
 
-            session.log_activity(
+            facade_session.log_activity(
                 'Verbose', f"Identical repo detected, storing {git} in {repo_name}")
-            session.logger.warning(
+            logger.warning(
                 f"Identical repo found in facade directory! Repo git: {git}")
             statusQuery = session.query(CollectionStatus).filter(
                 CollectionStatus.repo_id == row.repo_id)
@@ -119,7 +120,7 @@ def git_repo_initialize(session, repo_git):
             repo_name=:nameParam WHERE repo_id=:idParam
             """).bindparams(pathParam=path_identifier, nameParam=repo_name, idParam=row.repo_id)
 
-            session.execute_sql(query)
+            execute_sql(query)
             return
 
         # Create the prerequisite directories
@@ -128,21 +129,21 @@ def git_repo_initialize(session, repo_git):
         except Exception as e:
             print("COULD NOT CREATE REPO DIRECTORY")
 
-            update_repo_log(session, row.repo_id, 'Failed (mkdir)')
+            update_repo_log(logger, facade_session, row.repo_id, 'Failed (mkdir)')
             session.update_status(f"Failed (mkdir {repo_path})")
             session.log_activity(
                 'Error', f"Could not create repo directory: {repo_path}")
 
             raise e
 
-        update_repo_log(session, row.repo_id, 'New (cloning)')
+        update_repo_log(logger, facade_session, row.repo_id, 'New (cloning)')
 
         #Make sure newly cloned repo path is recorded in repo table
         query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
             repo_name=:nameParam WHERE repo_id=:idParam
             """).bindparams(pathParam=path_identifier, nameParam=repo_name, idParam=row.repo_id)
 
-        session.execute_sql(query)
+        execute_sql(query)
 
         session.log_activity('Verbose', f"Cloning: {git}")
 
@@ -153,12 +154,12 @@ def git_repo_initialize(session, repo_git):
             # If cloning succeeded, repo is ready for analysis
             # Mark the entire project for an update, so that under normal
             # circumstances caches are rebuilt only once per waiting period.
-            update_repo_log(session, row.repo_id, 'Up-to-date')
+            update_repo_log(logger, facade_session, row.repo_id, 'Up-to-date')
             session.log_activity('Info', f"Cloned {git}")
 
         else:
             # If cloning failed, log it and set the status back to new
-            update_repo_log(session, row.repo_id, f"Failed ({return_code})")
+            update_repo_log(logger, facade_session, row.repo_id, f"Failed ({return_code})")
 
             session.log_activity('Error', f"Could not clone {git}")
 
@@ -185,8 +186,8 @@ def check_for_repo_updates(session, repo_git):
         AND repo_status != 'Analyze' AND repo_status != 'Empty'
         AND repo_git = :value""").bindparams(value=repo_git)
 
-    # repos = session.fetchall_data_from_sql_text(get_initialized_repos)#list(cfg.cursor)
-    repo = session.execute_sql(get_initialized_repos).fetchone()
+    # repos = fetchall_data_from_sql_text(get_initialized_repos)#list(cfg.cursor)
+    repo = execute_sql(get_initialized_repos).fetchone()
 
     if repo:
 
@@ -196,7 +197,7 @@ def check_for_repo_updates(session, repo_git):
             repos_id=:repo_id AND status='Up-to-date' AND
             date >= CURRENT_TIMESTAMP(6) - INTERVAL :update_freq HOUR """).bindparams(repo_id=repo['repo_id'], update_freq=update_frequency[0])
 
-        result = session.fetchall_data_from_sql_text(get_last_update)
+        result = fetchall_data_from_sql_text(get_last_update)
         # If the repo has not been updated within the waiting period, mark it.
         # Also mark any other repos in the project, so we only recache the
         # project once per waiting period.
@@ -213,7 +214,7 @@ def check_for_repo_updates(session, repo_git):
             #     "SET status='Update' WHERE "
             #     "r.id=%s and r.status != 'Empty'")
 
-            session.execute_sql(mark_repo)
+            execute_sql(mark_repo)
 
     # Mark the entire project for an update, so that under normal
     # circumstances caches are rebuilt only once per waiting period.
@@ -250,7 +251,7 @@ def force_repo_updates(session, repo_git):
     get_repo_ids = s.sql.text("""UPDATE repo SET repo_status='Update' WHERE repo_status
         NOT LIKE 'New%' AND repo_status!='Delete' AND repo_status !='Empty'
         AND repo_git=:value""").bindparams(value=repo_git)
-    session.execute_sql(get_repo_ids)
+    execute_sql(get_repo_ids)
 
     session.log_activity('Info', 'Forcing repos to update (complete)')
 
@@ -268,17 +269,17 @@ def force_repo_analysis(session, repo_git):
         NOT LIKE 'New%' AND repo_status!='Delete' AND repo_status != 'Empty'
         AND repo_git=:repo_git_ident""").bindparams(repo_git_ident=repo_git)
 
-    session.execute_sql(set_to_analyze)
+    execute_sql(set_to_analyze)
 
     session.log_activity('Info', 'Forcing repos to be analyzed (complete)')
 
 
-def git_repo_updates(session, repo_git):
+def git_repo_updates(facade_session, session, repo_git):
 
     # Update existing repos
 
-    session.update_status('Updating repos')
-    session.log_activity('Info', 'Updating existing repos')
+    facade_session.update_status('Updating repos')
+    facade_session.log_activity('Info', 'Updating existing repos')
 
     # query = s.sql.text("""SELECT repo_id,repo_group_id,repo_git,repo_name,repo_path FROM repo WHERE
     #    repo_status='Update'""")
@@ -287,7 +288,7 @@ def git_repo_updates(session, repo_git):
     result = execute_session_query(query, 'all')
 
     try:
-        # session.fetchall_data_from_sql_text(query)#list(cfg.cursor)
+        # fetchall_data_from_sql_text(query)#list(cfg.cursor)
         row = convert_orm_list_to_dict_list(result)[0]
     except IndexError:
         raise Exception(
@@ -297,9 +298,9 @@ def git_repo_updates(session, repo_git):
         raise Exception(
             f"The repo path or repo name is NULL for repo_id: {row['repo_id']}")
 
-    session.log_activity(
+    facade_session.log_activity(
         'Verbose', f"Attempting to update {row['repo_git']}")  # ['git'])
-    update_repo_log(session, row['repo_id'], 'Updating')  # ['id'],'Updating')
+    update_repo_log(logger, facade_session, row['repo_id'], 'Updating')  # ['id'],'Updating')
 
     attempt = 0
 
@@ -310,7 +311,7 @@ def git_repo_updates(session, repo_git):
     # default_branch = ''
 
     absolute_path = get_absolute_repo_path(
-        session.repo_base_directory, row["repo_id"], row['repo_path'],row['repo_name'])
+        facade_session.repo_base_directory, row["repo_id"], row['repo_path'],row['repo_name'])
 
     while attempt < 2:
 
@@ -321,7 +322,7 @@ def git_repo_updates(session, repo_git):
             return_code_remote = subprocess.Popen(
                 [firstpull], shell=True).wait()
 
-            session.log_activity('Verbose', 'Got to here. 1.')
+            facade_session.log_activity('Verbose', 'Got to here. 1.')
 
             if return_code_remote == 0:
 
@@ -343,26 +344,26 @@ def git_repo_updates(session, repo_git):
 
                 remotedefault = remotedefault.decode()
 
-                session.log_activity(
+                facade_session.log_activity(
                     'Verbose', f'remote default getting checked out is: {remotedefault}.')
 
                 getremotedefault = (
                     f"git -C {absolute_path} checkout {remotedefault}")
 
-                session.log_activity(
+                facade_session.log_activity(
                     'Verbose', f"get remote default command is: \n \n {getremotedefault} \n \n ")
 
                 return_code_remote_default_again = subprocess.Popen(
                     [getremotedefault], shell=True).wait()
 
                 if return_code_remote_default_again == 0:
-                    session.log_activity('Verbose', "local checkout worked.")
+                    facade_session.log_activity('Verbose', "local checkout worked.")
                     cmd = (f"git -C {absolute_path} pull")
 
                     return_code = subprocess.Popen([cmd], shell=True).wait()
 
         except Exception as e:
-            session.log_activity(
+            facade_session.log_activity(
                 'Verbose', f'Error code on branch change is {e}.')
             pass
 
@@ -378,7 +379,7 @@ def git_repo_updates(session, repo_git):
             break
 
         elif attempt == 0:
-            session.log_activity(
+            facade_session.log_activity(
                 'Verbose', f"git pull failed, attempting reset and clean for {row['repo_git']}")
 
 #                remotedefault = 'main'
@@ -412,7 +413,7 @@ def git_repo_updates(session, repo_git):
                 return_message_getremotedefault = subprocess.Popen(
                     [getremotedefault], stdout=subprocess.PIPE, shell=True).communicate()[0]
 
-                session.log_activity(
+                facade_session.log_activity(
                     'Verbose', f'get remote default result: {return_message_getremotedefault}')
 
                 getcurrentbranch = (f"git -C {absolute_path} branch")
@@ -425,7 +426,7 @@ def git_repo_updates(session, repo_git):
 
                 localdefault = localdefault.decode()
 
-                session.log_activity(
+                facade_session.log_activity(
                     'Verbose', f'remote default is: {remotedefault}, and localdefault is {localdefault}.')
 
                 cmd_checkout_default = (
@@ -448,7 +449,7 @@ def git_repo_updates(session, repo_git):
 
             except Exception as e:
 
-                session.log_activity('Verbose', f'Second pass failed: {e}.')
+                facade_session.log_activity('Verbose', f'Second pass failed: {e}.')
                 pass
 
         cmdpull2 = (f"git -C {absolute_path} pull")
@@ -462,12 +463,12 @@ def git_repo_updates(session, repo_git):
 
     if return_code == 0:
 
-        update_repo_log(session, row['repo_id'], 'Up-to-date')
-        session.log_activity('Verbose', f"Updated {row['repo_git']}")
+        update_repo_log(logger, facade_session, row['repo_id'], 'Up-to-date')
+        facade_session.log_activity('Verbose', f"Updated {row['repo_git']}")
 
     else:
 
-        update_repo_log(session, row['repo_id'], f"Failed ({return_code})")
-        session.log_activity('Error', f"Could not update {row['repo_git']}")
+        update_repo_log(logger, facade_session, row['repo_id'], f"Failed ({return_code})")
+        facade_session.log_activity('Error', f"Could not update {row['repo_git']}")
 
-    session.log_activity('Info', 'Updating existing repos (complete)')
+    facade_session.log_activity('Info', 'Updating existing repos (complete)')
