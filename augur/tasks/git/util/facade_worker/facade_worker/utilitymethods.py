@@ -33,7 +33,7 @@ from sqlalchemy.exc import DataError
 from augur.application.db.models import *
 from .config import FacadeHelper as FacadeHelper
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_working_commits_by_repo_id_and_hashes, remove_commits_by_repo_id_and_hashes
 #from augur.tasks.git.util.facade_worker.facade
 
 def update_repo_log(logger, facade_helper, repos_id,status):
@@ -57,19 +57,10 @@ def trim_commits(facade_helper, repo_id,commits):
 	# Quickly remove a given commit
 
 	if len(commits):
-		remove_commit = s.sql.text("""DELETE FROM commits
-			WHERE repo_id=:repo_id
-			AND cmt_commit_hash IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
-	
-	
-		execute_sql(remove_commit)
+		remove_commits_by_repo_id_and_hashes(repo_id, commits)
 	
 		# Remove the working commit.
-		remove_commit = s.sql.text("""DELETE FROM working_commits
-		    WHERE repos_id = :repo_id AND 
-		    working_commit IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
-		
-		execute_sql(remove_commit)
+		remove_working_commits_by_repo_id_and_hashes(repo_id, commits)
 
 	for commit in commits:
 		facade_helper.log_activity('Debug',f"Trimmed commit: {commit}")

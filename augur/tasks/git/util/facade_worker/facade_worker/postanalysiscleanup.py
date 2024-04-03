@@ -28,7 +28,7 @@
 import subprocess
 import sqlalchemy as s
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_commits_by_repo_id, remove_working_commits_by_repo_id
 from .utilitymethods import get_absolute_repo_path
 from augur.application.db.models import *
 
@@ -41,7 +41,7 @@ def git_repo_cleanup(facade_helper, session,repo_git):
 	#logger.info("Processing deletions")
 	facade_helper.log_activity('Info','Processing deletions')
 
-
+	# TODO: We can convert this to use get_repo_by_repo_git. We just need to know how to handle the NoResultFoundException
 	query = session.query(Repo).filter(
 		Repo.repo_git == repo_git)#s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Delete'""")
 
@@ -59,10 +59,7 @@ def git_repo_cleanup(facade_helper, session,repo_git):
 		return_code = subprocess.Popen([cmd],shell=True).wait()
 
 		# Remove the analysis data
-
-		remove_commits = s.sql.text("""DELETE FROM commits WHERE repo_id=:repo_id
-			""").bindparams(repo_id=row.repo_id)
-		execute_sql(remove_commits) 
+		remove_commits_by_repo_id(row.repo_id)
 
 		optimize_table = s.sql.text("""OPTIMIZE TABLE commits""")
 		execute_sql(optimize_table)
@@ -107,10 +104,7 @@ def git_repo_cleanup(facade_helper, session,repo_git):
 		cleanup = '%s/%s%s' % (row.repo_group_id,row.repo_path,row.repo_name)
 
 		# Remove any working commits
-
-		remove_working_commits = s.sql.text("""DELETE FROM working_commits WHERE repos_id=:repo_id
-			""").bindparams(repo_id=row.repo_id)
-		execute_sql(remove_working_commits)
+		remove_working_commits_by_repo_id(row.repo_id)
 
 		# Remove the repo from the logs
 

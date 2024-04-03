@@ -4,7 +4,7 @@ import logging
 from celery import group, chain
 import sqlalchemy as s
 
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, get_session, get_repo_by_repo_git, get_repo_by_repo_id
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id
 
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
@@ -94,13 +94,7 @@ def trim_commits_facade_task(repo_git):
         update_analysis_log(repo_id,"Beginning analysis.")
         # First we check to see if the previous analysis didn't complete
 
-        get_status = s.sql.text("""SELECT working_commit FROM working_commits WHERE repos_id=:repo_id
-            """).bindparams(repo_id=repo_id)
-
-        try:
-            working_commits = fetchall_data_from_sql_text(get_status)
-        except:
-            working_commits = []
+        working_commits = get_working_commits_by_repo_id(repo_id)
 
         # If there's a commit still there, the previous run was interrupted and
         # the commit data may be incomplete. It should be trimmed, just in case.
@@ -263,10 +257,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
         facade_bulk_insert_commits(logger, session,pendingCommitRecordsToInsert)
 
     # Remove the working commit.
-    remove_commit = s.sql.text("""DELETE FROM working_commits 
-        WHERE repos_id = :repo_id AND working_commit IN :hashes
-        """).bindparams(repo_id=repo_id,hashes=tuple(queue))
-    execute_sql(remove_commit)  
+    remove_working_commits_by_repo_id_and_hashes(repo_id, queue)
 
     logger.info("Analysis complete")
     return
