@@ -1,11 +1,12 @@
 from datetime import datetime
 import os
 from augur.application.db.models import *
+from augur.application.db.lib import bulk_insert_dicts
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
 from augur.tasks.util.worker_util import parse_json_from_subprocess_call
 
-def generate_deps_data(logger, session, repo_id, path):
+def generate_deps_data(logger, repo_id, path):
         """Run dependency logic on repo and stores data in database
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
@@ -14,9 +15,7 @@ def generate_deps_data(logger, session, repo_id, path):
         scan_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         logger.info('Searching for deps in repo')
         logger.info(f'Repo ID: {repo_id}, Path: {path}, Scan date: {scan_date}')
-
         
-
         deps = dep_calc.get_deps(path,logger)
         
         to_insert = []
@@ -33,8 +32,8 @@ def generate_deps_data(logger, session, repo_id, path):
             }
 
             to_insert.append(repo_deps)
-            
-        session.insert_data(to_insert,RepoDependency,["repo_id","dep_name","data_collection_date"])
+        
+        bulk_insert_dicts(to_insert,RepoDependency,["repo_id","dep_name","data_collection_date"])
         
         logger.info(f"Inserted {len(deps)} dependencies for repo {repo_id}")
 
@@ -110,7 +109,7 @@ def generate_scorecard(logger, session,repo_id,path):
         }
         to_insert.append(repo_deps_scorecard)
     
-    session.insert_data(to_insert, RepoDepsScorecard, ["repo_id","name"])
+    bulk_insert_dicts(to_insert, RepoDepsScorecard, ["repo_id","name"])
     
     logger.info(f"Done generating scorecard for repo {repo_id} from path {path}")
 

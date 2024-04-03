@@ -1,5 +1,5 @@
 import logging
-from augur.application.db.session import DatabaseSession
+from augur.application.db.lib import get_session
 from augur.tasks.git.scc_value_tasks.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
@@ -15,7 +15,7 @@ def process_scc_value_metrics(self, repo_git):
 
     logger = logging.getLogger(process_scc_value_metrics.__name__)
 
-    with DatabaseSession(logger,engine) as session:
+    with get_session() as session:
         logger.info(f"repo_git: {repo_git}")
 
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
@@ -23,4 +23,4 @@ def process_scc_value_metrics(self, repo_git):
 
         absolute_repo_path = get_absolute_repo_path(get_value("Facade", "repo_directory"),repo.repo_id,repo.repo_path,repo.repo_name)
 
-        value_model(logger, session,repo_git,repo.repo_id, absolute_repo_path)
+        value_model(logger,repo_git,repo.repo_id, absolute_repo_path)

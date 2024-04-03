@@ -88,16 +88,12 @@ def trim_author(facade_helper, email):
 		SET cmt_author_affiliation = NULL 
 		WHERE cmt_author_email = :email
 		""").bindparams(email=email)
-
-	 
-	 
 	execute_sql(trim)
 
 	trim = s.sql.text("""UPDATE commits
 		SET cmt_committer_affiliation = NULL
 		WHERE cmt_committer_email = :email
 		""").bindparams(email=email)
-
 	execute_sql(trim)
 
 	store_working_author(facade_helper, 'done')

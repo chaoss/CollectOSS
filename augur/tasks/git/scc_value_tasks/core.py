@@ -1,9 +1,10 @@
 from datetime import datetime
 import os
 from augur.application.db.models import *
+from augur.application.db.lib import bulk_insert_dicts
 from augur.tasks.util.worker_util import parse_json_from_subprocess_call
 
-def value_model(logger, session,repo_git,repo_id, path):
+def value_model(logger,repo_git,repo_id, path):
     """Runs scc on repo and stores data in database
         :param repo_id: Repository ID
         :param path: absolute file path of the Repostiory
@@ -42,6 +43,6 @@ def value_model(logger, session,repo_git,repo_id, path):
 
             to_insert.append(repo_labor)
     
-    session.insert_data(to_insert, RepoLabor, ["repo_id", "rl_analysis_date", "file_path", "file_name" ])
+    bulk_insert_dicts(to_insert, RepoLabor, ["repo_id", "rl_analysis_date", "file_path", "file_name" ])
 
     logger.info(f"Done generating scc data for repo {repo_id} from path {path}")

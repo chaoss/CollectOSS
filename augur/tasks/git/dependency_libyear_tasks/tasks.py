@@ -1,5 +1,5 @@
 import logging
-from augur.application.db.session import DatabaseSession
+from augur.application.db.lib import get_session
 from augur.tasks.git.dependency_libyear_tasks.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
@@ -13,10 +13,10 @@ def process_libyear_dependency_metrics(self, repo_git):
 
     logger = logging.getLogger(process_libyear_dependency_metrics.__name__)
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
+
         logger.info(f"repo_git: {repo_git}")
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         
-
         repo = execute_session_query(query,'one')
         deps_libyear_model(logger, session, repo.repo_id,repo_git,repo.repo_group_id)
