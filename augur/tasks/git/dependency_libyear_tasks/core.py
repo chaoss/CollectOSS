@@ -68,4 +68,4 @@ def generate_deps_libyear_data(logger, repo_id, path):
             #session.execute_sql(insert_statement)
             to_insert.append(repo_deps)
 
-        bulk_insert_dicts(to_insert, RepoDepsLibyear, ["repo_id","name","data_collection_date"])
+        bulk_insert_dicts(logger, to_insert, RepoDepsLibyear, ["repo_id","name","data_collection_date"])

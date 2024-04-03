@@ -223,7 +223,7 @@ def facade_bulk_insert_commits(logger, records):
                 raise e
             
 
-def bulk_insert_dicts(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
+def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
 
     if isinstance(data, list) is False:
         
@@ -233,7 +233,7 @@ def bulk_insert_dicts(self, data: Union[List[dict], dict], table, natural_keys: 
             data = [data]
         
         else:
-            self.logger.info("Data must be a list or a dict")
+            logger.info("Data must be a list or a dict")
             return None
 
     if len(data) == 0:
@@ -241,7 +241,7 @@ def bulk_insert_dicts(self, data: Union[List[dict], dict], table, natural_keys: 
         return None
 
     if isinstance(data[0], dict) is False: 
-        self.logger.info("Must be list of dicts")
+        logger.info("Must be list of dicts")
         return None
 
     # remove any duplicate data 
@@ -293,6 +293,7 @@ def bulk_insert_dicts(self, data: Union[List[dict], dict], table, natural_keys: 
     sleep_time_list = list(range(1,11))
     deadlock_detected = False
 
+    engine = get_engine()
 
     # if there is no data to return then it executes the insert then returns nothing
     if not return_columns:
@@ -301,7 +302,7 @@ def bulk_insert_dicts(self, data: Union[List[dict], dict], table, natural_keys: 
             try:
                 #begin keyword is needed for sqlalchemy 2.x
                 #this is because autocommit support was removed in 2.0
-                with self.engine.begin() as connection:
+                with engine.begin() as connection:
                     connection.execute(stmnt)
                     break
             except OperationalError as e:
@@ -309,7 +310,7 @@ def bulk_insert_dicts(self, data: Union[List[dict], dict], table, natural_keys: 
                 if isinstance(e.orig, DeadlockDetected):
                     deadlock_detected = True
                     sleep_time = random.choice(sleep_time_list)
-                    self.logger.debug(f"Deadlock detected on {table.__table__} table...trying again in {round(sleep_time)} seconds: transaction size: {len(data)}")
+                    logger.debug(f"Deadlock detected on {table.__table__} table...trying again in {round(sleep_time)} seconds: transaction size: {len(data)}")
                     time.sleep(sleep_time)
 
                     attempts += 1
@@ -326,15 +327,15 @@ def bulk_insert_dicts(self, data: Union[List[dict], dict], table, natural_keys: 
                 first_half = data[:len(data)//2]
                 second_half = data[len(data)//2:]
 
-                self.insert_data(first_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
-                self.insert_data(second_half,table, natural_keys, return_columns, string_fields, on_conflict_update)
+                bulk_insert_dicts(logger, first_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
+                bulk_insert_dicts(logger, second_half,table, natural_keys, return_columns, string_fields, on_conflict_update)
 
         else:
-            self.logger.error("Unable to insert data in 10 attempts")
+            logger.error("Unable to insert data in 10 attempts")
             return None
 
         if deadlock_detected is True:
-            self.logger.error("Made it through even though Deadlock was detected")
+            logger.error("Made it through even though Deadlock was detected")
                 
         return "success"
     
@@ -342,13 +343,13 @@ def bulk_insert_dicts(self, data: Union[List[dict], dict], table, natural_keys: 
     # othewise it gets the requested return columns and returns them as a list of dicts
     while attempts < 10:
         try:
-            with self.engine.begin() as connection:
+            with engine.begin() as connection:
                 return_data_tuples = connection.execute(stmnt)
                 break
         except OperationalError as e:
             if isinstance(e.orig, DeadlockDetected):
                 sleep_time = random.choice(sleep_time_list)
-                self.logger.debug(f"Deadlock detected on {table.__table__} table...trying again in {round(sleep_time)} seconds: transaction size: {len(data)}")
+                logger.debug(f"Deadlock detected on {table.__table__} table...trying again in {round(sleep_time)} seconds: transaction size: {len(data)}")
                 time.sleep(sleep_time)
 
                 attempts += 1
@@ -364,15 +365,15 @@ def bulk_insert_dicts(self, data: Union[List[dict], dict], table, natural_keys: 
             first_half = data[:len(data)//2]
             second_half = data[len(data)//2:]
 
-            self.insert_data(first_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
-            self.insert_data(second_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
+            bulk_insert_dicts(logger, first_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
+            bulk_insert_dicts(logger, second_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
 
     else:
-        self.logger.error("Unable to insert and return data in 10 attempts")
+        logger.error("Unable to insert and return data in 10 attempts")
         return None
 
     if deadlock_detected is True:
-        self.logger.error("Made it through even though Deadlock was detected")
+        logger.error("Made it through even though Deadlock was detected")
 
     return_data = [dict(row) for row in return_data_tuples.mappings()]
     
@@ -393,9 +394,11 @@ def bulk_insert_dicts(self, data: Union[List[dict], dict], table, natural_keys: 
 
             conditions.append(column.in_(tuple(column_values)))
 
-        result = (
-            self.query(table).filter(*conditions).all()
-        )
+        with get_session() as session:
+
+            result = (
+                session.query(table).filter(*conditions).all()
+            )
 
         for row in result:
 

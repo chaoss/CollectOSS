@@ -7,6 +7,7 @@ from augur.tasks.github.util.github_paginator import retrieve_dict_from_endpoint
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.application.db.models import Contributor
 from augur.tasks.github.facade_github.core import *
+from augur.application.db.lib import execute_sql
 from augur.application.db.util import execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 
@@ -169,11 +170,11 @@ def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id)
     return
 
 
-def link_commits_to_contributor(session,contributorQueue):
+def link_commits_to_contributor(logger, facade_helper, contributorQueue):
 
     # # iterate through all the commits with emails that appear in contributors and give them the relevant cntrb_id.
     for cntrb in contributorQueue:
-        session.logger.debug(
+        logger.debug(
             f"These are the emails and cntrb_id's  returned: {cntrb}")
 
         query = s.sql.text("""
@@ -186,7 +187,7 @@ def link_commits_to_contributor(session,contributorQueue):
         """).bindparams(cntrb_id=cntrb["cntrb_id"],cntrb_email=cntrb["email"])
 
         #engine.execute(query, **data)
-        session.insert_or_update_data(query)          
+        facade_helper.insert_or_update_data(query)          
         
     
     return
@@ -261,7 +262,7 @@ def insert_facade_contributors(self, repo_id):
         manifest.logger.debug("DEBUG: Got through the new_contribs")
     
 
-    session = FacadeSession(logger)
+    facade_helper = FacadeHelper(logger)
     # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
     # i.e., if a contributor already exists, we use it!
     resolve_email_to_cntrb_id_sql = s.sql.text("""
@@ -297,11 +298,11 @@ def insert_facade_contributors(self, repo_id):
     #existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
     #                                    'repo_id': repo_id}).to_json(orient="records"))
 
-    result = session.execute_sql(resolve_email_to_cntrb_id_sql)
+    result = execute_sql(resolve_email_to_cntrb_id_sql)
     existing_cntrb_emails = [dict(row) for row in result.mappings()]
 
     print(existing_cntrb_emails)
-    link_commits_to_contributor(session,list(existing_cntrb_emails))
+    link_commits_to_contributor(logger, facade_helper,list(existing_cntrb_emails))
 
     logger.info("Done with inserting and updating facade contributors")
     return

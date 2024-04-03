@@ -33,7 +33,7 @@ def generate_deps_data(logger, repo_id, path):
 
             to_insert.append(repo_deps)
         
-        bulk_insert_dicts(to_insert,RepoDependency,["repo_id","dep_name","data_collection_date"])
+        bulk_insert_dicts(logger, to_insert,RepoDependency,["repo_id","dep_name","data_collection_date"])
         
         logger.info(f"Inserted {len(deps)} dependencies for repo {repo_id}")
 
@@ -109,7 +109,7 @@ def generate_scorecard(logger, session,repo_id,path):
         }
         to_insert.append(repo_deps_scorecard)
     
-    bulk_insert_dicts(to_insert, RepoDepsScorecard, ["repo_id","name"])
+    bulk_insert_dicts(logger, to_insert, RepoDepsScorecard, ["repo_id","name"])
     
     logger.info(f"Done generating scorecard for repo {repo_id} from path {path}")
 

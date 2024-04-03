@@ -43,6 +43,6 @@ def value_model(logger,repo_git,repo_id, path):
 
             to_insert.append(repo_labor)
     
-    bulk_insert_dicts(to_insert, RepoLabor, ["repo_id", "rl_analysis_date", "file_path", "file_name" ])
+    bulk_insert_dicts(logger, to_insert, RepoLabor, ["repo_id", "rl_analysis_date", "file_path", "file_name" ])
 
     logger.info(f"Done generating scc data for repo {repo_id} from path {path}")
