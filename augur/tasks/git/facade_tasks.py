@@ -411,19 +411,16 @@ def generate_analysis_sequence(logger,repo_git, facade_helper):
     commit being analyzed at the time) we can recover.
     """
 
-    
-    
     analysis_sequence = []
 
-    repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
-    WHERE repo_git=:value""").bindparams(value=repo_git)
-    repos = fetchall_data_from_sql_text(repo_list)
+    #repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_git=:value""").bindparams(value=repo_git)
+    #repos = fetchall_data_from_sql_text(repo_list)
 
     start_date = facade_helper.get_setting('start_date')
 
-    repo_ids = [repo['repo_id'] for repo in repos]
+    #repo_ids = [repo['repo_id'] for repo in repos]
 
-    repo_id = repo_ids.pop(0)
+    #repo_id = repo_ids.pop(0)
 
     analysis_sequence.append(facade_analysis_init_facade_task.si(repo_git))
 
@@ -448,12 +445,9 @@ def generate_contributor_sequence(logger,repo_git, session):
     repo_id = None
         
     #contributor_sequence.append(facade_start_contrib_analysis_task.si())
-    query = s.sql.text("""SELECT repo_id FROM repo
-    WHERE repo_git=:value""").bindparams(value=repo_git)
+    repo = get_repo_by_repo_git(repo_git)
+    repo_id = repo.repo_id
 
-    repo = execute_sql(query).fetchone()
-    logger.info(f"repo: {repo}")
-    repo_id = repo[0]
     #pdb.set_trace()
     #breakpoint()
     #for repo in all_repos:
@@ -471,15 +465,14 @@ def facade_phase(repo_git):
     logger.info("Generating facade sequence")
     facade_helper = FacadeHelper(logger)
     #Get the repo_id
-    repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
-    WHERE repo_git=:value""").bindparams(value=repo_git)
-    repos = fetchall_data_from_sql_text(repo_list)
+    #repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_git=:value""").bindparams(value=repo_git)
+    #repos = fetchall_data_from_sql_text(repo_list)
 
     start_date = facade_helper.get_setting('start_date')
 
-    repo_ids = [repo['repo_id'] for repo in repos]
+    #repo_ids = [repo['repo_id'] for repo in repos]
 
-    repo_id = repo_ids.pop(0)
+    #repo_id = repo_ids.pop(0)
 
     #Get the collectionStatus
     #query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id)
