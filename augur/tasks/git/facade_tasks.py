@@ -4,12 +4,12 @@ import logging
 from celery import group, chain
 import sqlalchemy as s
 
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id, facade_bulk_insert_commits
 
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count, facade_bulk_insert_commits
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
 from augur.tasks.git.util.facade_worker.facade_worker.rebuildcache import fill_empty_affiliations, invalidate_caches, nuke_affiliations, rebuild_unknown_affiliation_and_web_caches
 from augur.tasks.git.util.facade_worker.facade_worker.postanalysiscleanup import git_repo_cleanup
 
@@ -232,29 +232,26 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
 
     pendingCommitRecordsToInsert = []
 
-    with get_session() as session:
+    for count, commitTuple in enumerate(queue):
+        quarterQueue = int(len(queue) / 4)
 
-        for count, commitTuple in enumerate(queue):
-            quarterQueue = int(len(queue) / 4)
+        if quarterQueue == 0:
+            quarterQueue = 1 # prevent division by zero with integer math
 
-            if quarterQueue == 0:
-                quarterQueue = 1 # prevent division by zero with integer math
+        #Log progress when another quarter of the queue has been processed
+        if (count + 1) % quarterQueue == 0:
+            logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
 
-            #Log progress when another quarter of the queue has been processed
-            if (count + 1) % quarterQueue == 0:
-                logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
-
-            #logger.info(f"Got to analysis!")
-            commitRecords = analyze_commit(logger, repo_id, repo_loc, commitTuple)
-            #logger.debug(commitRecord)
-            if len(commitRecords):
-                pendingCommitRecordsToInsert.extend(commitRecords)
-                if len(pendingCommitRecordsToInsert) >= 1000:
-                    facade_bulk_insert_commits(logger, session,pendingCommitRecordsToInsert)
-                    pendingCommitRecordsToInsert = []
-
-        
-        facade_bulk_insert_commits(logger, session,pendingCommitRecordsToInsert)
+        #logger.info(f"Got to analysis!")
+        commitRecords = analyze_commit(logger, repo_id, repo_loc, commitTuple)
+        #logger.debug(commitRecord)
+        if len(commitRecords):
+            pendingCommitRecordsToInsert.extend(commitRecords)
+            if len(pendingCommitRecordsToInsert) >= 1000:
+                facade_bulk_insert_commits(logger,pendingCommitRecordsToInsert)
+                pendingCommitRecordsToInsert = []
+    
+    facade_bulk_insert_commits(logger,pendingCommitRecordsToInsert)
 
     # Remove the working commit.
     remove_working_commits_by_repo_id_and_hashes(repo_id, queue)

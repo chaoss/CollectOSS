@@ -29,7 +29,6 @@ import subprocess
 from subprocess import check_output
 import os
 import sqlalchemy as s
-from sqlalchemy.exc import DataError
 from augur.application.db.models import *
 from .config import FacadeHelper as FacadeHelper
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
@@ -198,42 +197,5 @@ def update_facade_scheduling_fields(session, repo_git, weight, commit_count):
 	session.execute(update_query)
 	session.commit()
 
-def facade_bulk_insert_commits(logger, session,records):
 
-	try:
-		session.execute(
-				s.insert(Commit),
-				records,
-			)
-		session.commit()
-	except Exception as e:
-		
-		if len(records) > 1:
-			logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
-
-			#split list into halves and retry insert until we isolate offending record
-			firsthalfRecords = records[:len(records)//2]
-			secondhalfRecords = records[len(records)//2:]
-
-			facade_bulk_insert_commits(logger, session,firsthalfRecords)
-			facade_bulk_insert_commits(logger, session,secondhalfRecords)
-		elif len(records) == 1 and isinstance(e,DataError) and "time zone displacement" in f"{e}":
-			commit_record = records[0]
-			#replace incomprehensible dates with epoch.
-			#2021-10-11 11:57:46 -0500
-			placeholder_date = "1970-01-01 00:00:15 -0500"
-
-			#Check for improper utc timezone offset
-			#UTC timezone offset should be betwen -14:00 and +14:00
-
-			commit_record['author_timestamp'] = placeholder_date
-			commit_record['committer_timestamp'] = placeholder_date
-
-			session.execute(
-				s.insert(Commit),
-				[commit_record],
-			)
-			session.commit()
-		else:
-			raise e
 
