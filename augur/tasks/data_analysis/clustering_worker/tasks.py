@@ -20,8 +20,7 @@ from textblob import TextBlob
 from collections import Counter
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.session import DatabaseSession
-from augur.application.db.lib import get_value
+from augur.application.db.lib import get_value, get_session
 from augur.application.db.models import Repo, RepoClusterMessage, RepoTopic, TopicWord
 from augur.application.db.util import execute_session_query
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
@@ -37,7 +36,7 @@ def clustering_task(self, repo_git):
     logger = logging.getLogger(clustering_model.__name__)
     engine = self.app.engine
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
         clustering_model(repo_git, logger, engine, session)
 
 def clustering_model(repo_git: str,logger,engine, session) -> None:

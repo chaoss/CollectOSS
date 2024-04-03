@@ -8,7 +8,7 @@ import os
 from collections import Counter
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.session import DatabaseSession
+from augur.application.db.lib import get_session
 from augur.application.db.models import Repo, DiscourseInsight
 from augur.application.db.util import execute_session_query
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
@@ -47,7 +47,7 @@ def discourse_analysis_model(repo_git: str,logger,engine) -> None:
     tool_version = '0.1.0'
     data_source = 'Analysis of Issue/PR Messages'
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id
@@ -96,7 +96,7 @@ def discourse_analysis_model(repo_git: str,logger,engine) -> None:
     logger.debug(f"y_pred_git_flat len: {len(y_pred_git_flat)}")
     msg_df_cur_repo['discourse_act'] = y_pred_git_flat
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
         for index, row in msg_df_cur_repo.iterrows():
             record = {
                 'msg_id': row['msg_id'],

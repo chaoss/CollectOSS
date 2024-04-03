@@ -9,8 +9,7 @@ import sqlalchemy as s
 from augur.tasks.data_analysis.message_insights.message_sentiment import get_senti_score
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.session import DatabaseSession
-from augur.application.db.lib import get_value
+from augur.application.db.lib import get_value, get_session
 from augur.application.db.models import Repo, PullRequestAnalysis
 from augur.application.db.util import execute_session_query
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
@@ -40,7 +39,7 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
 
     insight_days = 200
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         query = session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id
@@ -211,7 +210,7 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
     logger.info('Begin PR_analysis data insertion...')
     logger.info(f'{df.shape[0]} data records to be inserted')
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
         for row in df.itertuples(index=False):
             try:
                 msg = {

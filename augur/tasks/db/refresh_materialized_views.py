@@ -3,7 +3,7 @@ import logging
 import sqlalchemy as s
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.session import DatabaseSession
+from augur.application.db.lib import execute_sql
 
 @celery.task(bind=True)
 def refresh_materialized_views(self):
@@ -86,92 +86,79 @@ def refresh_materialized_views(self):
     """)
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv1_refresh)
+        execute_sql(mv1_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv2_refresh)
+        execute_sql(mv2_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv3_refresh)
+        execute_sql(mv3_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv4_refresh)
+        execute_sql(mv4_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv5_refresh)
+        execute_sql(mv5_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv6_refresh)
+        execute_sql(mv6_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv7_refresh)
+        execute_sql(mv7_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv8_refresh)
+        execute_sql(mv8_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv9_refresh)
+        execute_sql(mv9_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv10_refresh)
+        execute_sql(mv10_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv11_refresh)
+        execute_sql(mv11_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv12_refresh)
+        execute_sql(mv12_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
 
     try: 
-        with DatabaseSession(logger, engine) as session:
-            session.execute_sql(mv13_refresh)
+        execute_sql(mv13_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
