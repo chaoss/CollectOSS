@@ -1,16 +1,27 @@
 from datetime import datetime
 import os
 from augur.application.db.models import *
-from augur.application.db.lib import bulk_insert_dicts
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value, get_session
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
 from augur.tasks.util.worker_util import parse_json_from_subprocess_call
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 
-def generate_deps_data(logger, repo_id, path):
+
+def generate_deps_data(logger, repo_git):
         """Run dependency logic on repo and stores data in database
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
+
+        logger.info(f"repo_git: {repo_git}")
+        
+        repo = get_repo_by_repo_git(repo_git)
+        repo_id = repo.repo_id
+    
+        path = get_absolute_repo_path(get_value("Facade", "repo_directory"),repo.repo_id,repo.repo_path,repo.repo_name)
+
+        logger.debug(f"This is the deps model repo: {repo_git}.")
         
         scan_date = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         logger.info('Searching for deps in repo')
@@ -48,28 +59,32 @@ def deps_model(session, repo_id,repo_git,repo_path,repo_name):
     generate_deps_data(session,repo_id, absolute_repo_path)
 """
 
-def generate_scorecard(logger, session,repo_id,path):
+def generate_scorecard(logger, repo_git):
     """Runs scorecard on repo and stores data in database
         :param repo_id: Repository ID
-        :param path: URL path of the Repostiory
-    """
-    logger.info('Generating scorecard data for repo')
-    logger.info(f"Repo ID: {repo_id}, Path: {path}")
+        :param repo_git: URL path of the Repostiory
+    """    
+    repo = get_repo_by_repo_git(repo_git)
+    repo_id = repo.repo_id
 
+    logger.info('Generating scorecard data for repo')
     # we convert relative path in the format required by scorecard like github.com/chaoss/augur
     # raw_path,_ = path.split('-')
     # scorecard_repo_path = raw_path[2:]
-    path = path[8:]
+    path = repo_git[8:]
     if path[-4:] == '.git':
         path = path.replace(".git", "")
-    command = '--repo='+ path
+    command = '--repo=' + path
     
     #this is path where our scorecard project is located
     path_to_scorecard = os.environ['HOME'] + '/scorecard'
 
     #setting the environmental variable which is required by scorecard
-    key_handler = GithubApiKeyHandler(session, logger)       
-    os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
+
+    with get_session() as session:
+
+        key_handler = GithubApiKeyHandler(session, logger)       
+        os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
     
     required_output = parse_json_from_subprocess_call(logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
     
