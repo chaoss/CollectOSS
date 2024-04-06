@@ -1,11 +1,10 @@
 from datetime import datetime
 from augur.application.db.models import *
-from augur.application.db.lib import get_value, bulk_insert_dicts
-from augur.application.db.util import execute_session_query
+from augur.application.db.lib import get_value, bulk_insert_dicts, get_repo_by_repo_git
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.util import get_deps_libyear_data
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 
-def deps_libyear_model(logger, session, repo_id,repo_git,repo_group_id):
+def deps_libyear_model(logger,repo_git):
         """ Data collection and storage method
         """
         logger.info(f"This is the libyear deps model repo: {repo_git}")
@@ -13,15 +12,13 @@ def deps_libyear_model(logger, session, repo_id,repo_git,repo_group_id):
         #result = re.search(r"https:\/\/(github\.com\/[A-Za-z0-9 \- _]+\/)([A-Za-z0-9 \- _ .]+)$", repo_git).groups()
 
         #relative_repo_path = f"{repo_group_id}/{result[0]}{result[1]}"
-        query = session.query(Repo).filter(
-            Repo.repo_git == repo_git)
+
+        repo = get_repo_by_repo_git(repo_git)
         
-        result = execute_session_query(query, 'one')
-        
-        absolute_repo_path = get_absolute_repo_path(get_value("Facade", "repo_directory"),repo_id,result.repo_path,result.repo_name)
+        absolute_repo_path = get_absolute_repo_path(get_value("Facade", "repo_directory"),repo.repo_id,repo.repo_path,repo.repo_name)
         #config.get_section("Facade")['repo_directory'] + relative_repo_path#self.config['repo_directory'] + relative_repo_path
 
-        generate_deps_libyear_data(logger, repo_id, absolute_repo_path)
+        generate_deps_libyear_data(logger, repo.repo_id, absolute_repo_path)
 
 
 def generate_deps_libyear_data(logger, repo_id, path):
