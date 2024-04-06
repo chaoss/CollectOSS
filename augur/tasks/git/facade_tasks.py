@@ -292,7 +292,7 @@ def clone_repos():
         repo_git_identifiers = get_collection_status_repo_git_from_filter(session, is_pending, 999999)
         for repo_git in repo_git_identifiers:
             # set repo to intializing
-            repo = get_repo_by_repo_git(repo_git)
+            repo = Repo.get_by_repo_git(session)
             repoStatus = repo.collection_status[0]
             setattr(repoStatus,"facade_status", CollectionState.INITIALIZING.value)
             session.commit()

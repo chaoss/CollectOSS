@@ -8,7 +8,7 @@ import os
 from collections import Counter
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.lib import get_session
+from augur.application.db.lib import get_session, get_repo_by_repo_git
 from augur.application.db.models import Repo, DiscourseInsight
 from augur.application.db.util import execute_session_query
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
@@ -47,10 +47,7 @@ def discourse_analysis_model(repo_git: str,logger,engine) -> None:
     tool_version = '0.1.0'
     data_source = 'Analysis of Issue/PR Messages'
 
-    with get_session() as session:
-
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_id = execute_session_query(query, 'one').repo_id
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
 
     get_messages_for_repo_sql = s.sql.text("""
                 (SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, i.issue_id thread_id,m.msg_text,i.issue_title thread_title,m.msg_id

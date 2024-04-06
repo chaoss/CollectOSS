@@ -9,9 +9,8 @@ import sqlalchemy as s
 from augur.tasks.data_analysis.message_insights.message_sentiment import get_senti_score
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.lib import get_value, get_session
-from augur.application.db.models import Repo, PullRequestAnalysis
-from augur.application.db.util import execute_session_query
+from augur.application.db.lib import get_value, get_session, get_repo_by_repo_git
+from augur.application.db.models import PullRequestAnalysis
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 
 
@@ -39,14 +38,11 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
 
     insight_days = 200
 
-    with get_session() as session:
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_id = execute_session_query(query, 'one').repo_id
+    senti_models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", get_value("Message_Insights", 'models_dir'))
 
-        senti_models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", get_value("Message_Insights", 'models_dir'))
-
-        logger.info(f'Sentiment model dir located - {senti_models_dir}')
+    logger.info(f'Sentiment model dir located - {senti_models_dir}')
 
     # Any initial database instructions, like finding the last tuple inserted or generate the next ID value
 
