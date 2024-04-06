@@ -32,7 +32,7 @@ import sqlalchemy as s
 from augur.application.db.models import *
 from .config import FacadeHelper as FacadeHelper
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_working_commits_by_repo_id_and_hashes, remove_commits_by_repo_id_and_hashes
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_working_commits_by_repo_id_and_hashes, remove_commits_by_repo_id_and_hashes, get_repo_by_repo_git, get_session
 #from augur.tasks.git.util.facade_worker.facade
 
 def update_repo_log(logger, facade_helper, repos_id,status):
@@ -135,10 +135,10 @@ def count_branches(git_dir):
     branches_dir = os.path.join(git_dir, 'refs', 'heads')
     return sum(1 for _ in os.scandir(branches_dir))
 
-def get_repo_commit_count(logger, facade_helper, session, repo_git):
-    
-	repo = Repo.get_by_repo_git(session, repo_git)
+def get_repo_commit_count(logger, facade_helper, repo_git):
 
+	repo = get_repo_by_repo_git(repo_git)
+    
 	absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
 	repo_loc = (f"{absolute_path}/.git")
 
@@ -158,8 +158,9 @@ def get_repo_commit_count(logger, facade_helper, session, repo_git):
 
 	return commit_count
 
-def get_facade_weight_time_factor(session,repo_git):
-	repo = Repo.get_by_repo_git(session, repo_git)
+def get_facade_weight_time_factor(repo_git):
+
+	repo = get_repo_by_repo_git(repo_git)
 	
 	try:
 		status = repo.collection_status[0]
@@ -172,26 +173,29 @@ def get_facade_weight_time_factor(session,repo_git):
 
 	return  time_factor
 
-def get_facade_weight_with_commit_count(session, repo_git, commit_count):
-	return commit_count - get_facade_weight_time_factor(session, repo_git)
+def get_facade_weight_with_commit_count(repo_git, commit_count):
+	return commit_count - get_facade_weight_time_factor(repo_git)
 
 
-def get_repo_weight_by_commit(logger, session, repo_git):
+def get_repo_weight_by_commit(logger, repo_git):
 	facade_helper = FacadeHelper(logger)
-	return get_repo_commit_count(logger, facade_helper, session, repo_git) - get_facade_weight_time_factor(session, repo_git)
+	return get_repo_commit_count(logger, facade_helper, repo_git) - get_facade_weight_time_factor(repo_git)
 	
 
 def update_facade_scheduling_fields(session, repo_git, weight, commit_count):
-	repo = Repo.get_by_repo_git(session, repo_git)
 
-	update_query = (
-		s.update(CollectionStatus)
-		.where(CollectionStatus.repo_id == repo.repo_id)
-		.values(facade_weight=weight,commit_sum=commit_count)
-	)
+	repo = get_repo_by_repo_git(repo_git)
 
-	session.execute(update_query)
-	session.commit()
+	with get_session() as session:
+
+		update_query = (
+			s.update(CollectionStatus)
+			.where(CollectionStatus.repo_id == repo.repo_id)
+			.values(facade_weight=weight,commit_sum=commit_count)
+		)
+
+		session.execute(update_query)
+		session.commit()
 
 
 

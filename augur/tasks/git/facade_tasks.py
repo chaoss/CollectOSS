@@ -77,34 +77,21 @@ def trim_commits_facade_task(repo_git):
 
     repo_id = repo.repo_id
 
-    def update_analysis_log(repos_id,status):
+    facade_helper.inc_repos_processed()
+    facade_helper.update_analysis_log(repo_id,"Beginning analysis.")
+    # First we check to see if the previous analysis didn't complete
 
-    # Log a repo's analysis status
+    working_commits = get_working_commits_by_repo_id(repo_id)
 
-        log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
-            VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
+    # If there's a commit still there, the previous run was interrupted and
+    # the commit data may be incomplete. It should be trimmed, just in case.
+    commits_to_trim = [commit['working_commit'] for commit in working_commits]
+    
+    trim_commits(facade_helper,repo_id,commits_to_trim)
+    # Start the main analysis
 
-        try:
-            execute_sql(log_message)
-        except:
-            pass
-
-
-        facade_helper.inc_repos_processed()
-        update_analysis_log(repo_id,"Beginning analysis.")
-        # First we check to see if the previous analysis didn't complete
-
-        working_commits = get_working_commits_by_repo_id(repo_id)
-
-        # If there's a commit still there, the previous run was interrupted and
-        # the commit data may be incomplete. It should be trimmed, just in case.
-        commits_to_trim = [commit['working_commit'] for commit in working_commits]
-        
-        trim_commits(facade_helper,repo_id,commits_to_trim)
-        # Start the main analysis
-
-        update_analysis_log(repo_id,'Collecting data')
-        logger.info(f"Got past repo {repo_id}")
+    facade_helper.update_analysis_log(repo_id,'Collecting data')
+    logger.info(f"Got past repo {repo_id}")
 
 @celery.task(base=AugurFacadeRepoCollectionTask)
 def trim_commits_post_analysis_facade_task(repo_git):
@@ -117,15 +104,6 @@ def trim_commits_post_analysis_facade_task(repo_git):
     repo_id = repo.repo_id
 
     start_date = facade_helper.get_setting('start_date')
-    def update_analysis_log(repos_id,status):
-
-        # Log a repo's analysis status
-
-        log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
-            VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
-
-        
-        execute_sql(log_message)
     
     logger.info(f"Generating sequence for repo {repo_id}")
 
@@ -151,19 +129,18 @@ def trim_commits_post_analysis_facade_task(repo_git):
 
     trimmed_commits = existing_commits - parent_commits
 
-    update_analysis_log(repo_id,'Data collection complete')
+    facade_helper.update_analysis_log(repo_id,'Data collection complete')
 
-    update_analysis_log(repo_id,'Beginning to trim commits')
+    facade_helper.update_analysis_log(repo_id,'Beginning to trim commits')
 
     facade_helper.log_activity('Debug',f"Commits to be trimmed from repo {repo_id}: {len(trimmed_commits)}")
 
     #for commit in trimmed_commits:
     trim_commits(facade_helper,repo_id,trimmed_commits)
     
+    facade_helper.update_analysis_log(repo_id,'Commit trimming complete')
 
-    update_analysis_log(repo_id,'Commit trimming complete')
-
-    update_analysis_log(repo_id,'Complete')
+    facade_helper.update_analysis_log(repo_id,'Complete')
     
 
 
@@ -297,8 +274,7 @@ def git_repo_cleanup_facade_task(repo_git):
     logger = logging.getLogger(git_repo_cleanup_facade_task.__name__)
 
     facade_helper = FacadeHelper(logger)
-    with get_session() as session:
-        git_repo_cleanup(facade_helper, session, repo_git)
+    git_repo_cleanup(facade_helper, repo_git)
 
 # retry this task indefinitely every 5 minutes if it errors. Since the only way it gets scheduled is by itself, so if it stops running no more clones will happen till the instance is restarted
 @celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
@@ -327,10 +303,10 @@ def clone_repos():
                 session.commit()
 
                 # get the commit count
-                commit_count = get_repo_commit_count(logger, facade_helper, session, repo_git)
-                facade_weight = get_facade_weight_with_commit_count(session, repo_git, commit_count)
+                commit_count = get_repo_commit_count(logger, facade_helper, repo_git)
+                facade_weight = get_facade_weight_with_commit_count(repo_git, commit_count)
 
-                update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
+                update_facade_scheduling_fields(repo_git, facade_weight, commit_count)
 
                 # set repo to update
                 setattr(repoStatus,"facade_status", CollectionState.UPDATE.value)
@@ -368,12 +344,10 @@ def git_update_commit_count_weight(self, repo_git):
     # Change facade session to take in engine
     facade_helper = FacadeHelper(logger)
 
-    with get_session() as session:
-
-        commit_count = get_repo_commit_count(logger, facade_helper, session, repo_git)
-        facade_weight = get_facade_weight_with_commit_count(session, repo_git, commit_count)
-
-        update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
+    commit_count = get_repo_commit_count(logger, facade_helper, repo_git)
+    facade_weight = get_facade_weight_with_commit_count(repo_git, commit_count)
+    
+    update_facade_scheduling_fields(repo_git, facade_weight, commit_count)
 
 
 @celery.task(base=AugurFacadeRepoCollectionTask)
@@ -383,9 +357,7 @@ def git_repo_updates_facade_task(repo_git):
 
     facade_helper = FacadeHelper(logger)
 
-    with get_session() as session:
-
-        git_repo_updates(facade_helper, session, repo_git)
+    git_repo_updates(facade_helper, repo_git)
 
 
 def generate_analysis_sequence(logger,repo_git, facade_helper):

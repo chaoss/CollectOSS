@@ -28,7 +28,7 @@
 import subprocess
 import sqlalchemy as s
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_commits_by_repo_id, remove_working_commits_by_repo_id
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_commits_by_repo_id, remove_working_commits_by_repo_id, get_session
 from .utilitymethods import get_absolute_repo_path
 from augur.application.db.models import *
 
@@ -42,10 +42,12 @@ def git_repo_cleanup(facade_helper, session,repo_git):
 	facade_helper.log_activity('Info','Processing deletions')
 
 	# TODO: We can convert this to use get_repo_by_repo_git. We just need to know how to handle the NoResultFoundException
-	query = session.query(Repo).filter(
-		Repo.repo_git == repo_git)#s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Delete'""")
+	with get_session() as session:
 
-	delete_repos = execute_session_query(query,'all')#fetchall_data_from_sql_text(query)
+		query = session.query(Repo).filter(
+			Repo.repo_git == repo_git)#s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_status='Delete'""")
+
+		delete_repos = execute_session_query(query,'all')#fetchall_data_from_sql_text(query)
 
 	for row in delete_repos:
 

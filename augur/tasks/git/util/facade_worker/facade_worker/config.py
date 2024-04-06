@@ -191,6 +191,16 @@ class FacadeHelper():
             execute_sql(log_message)
         except:
             pass
+
+    def update_analysis_log(self, repos_id,status):
+
+        # Log a repo's analysis status
+
+        log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
+            VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
+
+        execute_sql(log_message)
+
     def insert_or_update_data(self, query, **bind_args)-> None:
         """Provide deadlock detection for postgres updates, inserts, and deletions for facade.
 

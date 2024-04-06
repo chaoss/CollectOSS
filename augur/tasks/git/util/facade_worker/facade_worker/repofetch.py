@@ -275,7 +275,7 @@ def force_repo_analysis(session, repo_git):
     session.log_activity('Info', 'Forcing repos to be analyzed (complete)')
 
 
-def git_repo_updates(facade_helper, session, repo_git):
+def git_repo_updates(facade_helper, repo_git):
 
     # Update existing repos
 
