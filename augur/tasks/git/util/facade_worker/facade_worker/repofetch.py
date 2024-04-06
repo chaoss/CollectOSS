@@ -31,10 +31,11 @@ import os
 import pathlib
 import sqlalchemy as s
 from .utilitymethods import update_repo_log, get_absolute_repo_path
+from sqlalchemy.orm.exc import NoResultFound
 from augur.application.db.models.augur_data import *
 from augur.application.db.models.augur_operations import CollectionStatus
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list
-from augur.application.db.lib import execute_sql
+from augur.application.db.lib import execute_sql, get_repo_by_repo_git
 
 class GitCloneError(Exception):
     pass
@@ -283,24 +284,21 @@ def git_repo_updates(facade_helper, session, repo_git):
 
     # query = s.sql.text("""SELECT repo_id,repo_group_id,repo_git,repo_name,repo_path FROM repo WHERE
     #    repo_status='Update'""")
-    query = session.query(Repo).filter(
-        Repo.repo_git == repo_git)
-    result = execute_session_query(query, 'all')
 
     try:
-        # fetchall_data_from_sql_text(query)#list(cfg.cursor)
-        row = convert_orm_list_to_dict_list(result)[0]
-    except IndexError:
+        repo = get_repo_by_repo_git(repo_git)
+    except NoResultFound:
         raise Exception(
             f"Repo git: {repo_git} does not exist or the status is not 'Update'")
 
-    if row["repo_path"] is None or row["repo_name"] is None:
+
+    if repo.repo_path is None or repo.repo_name is None:
         raise Exception(
-            f"The repo path or repo name is NULL for repo_id: {row['repo_id']}")
+            f"The repo path or repo name is NULL for repo_id: {repo.repo_id}")
 
     facade_helper.log_activity(
-        'Verbose', f"Attempting to update {row['repo_git']}")  # ['git'])
-    update_repo_log(logger, facade_helper, row['repo_id'], 'Updating')  # ['id'],'Updating')
+        'Verbose', f"Attempting to update {repo.repo_git}")  # ['git'])
+    update_repo_log(logger, facade_helper, repo.repo_id, 'Updating')  # ['id'],'Updating')
 
     attempt = 0
 
@@ -311,7 +309,7 @@ def git_repo_updates(facade_helper, session, repo_git):
     # default_branch = ''
 
     absolute_path = get_absolute_repo_path(
-        facade_helper.repo_base_directory, row["repo_id"], row['repo_path'],row['repo_name'])
+        facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
 
     while attempt < 2:
 
@@ -380,7 +378,7 @@ def git_repo_updates(facade_helper, session, repo_git):
 
         elif attempt == 0:
             facade_helper.log_activity(
-                'Verbose', f"git pull failed, attempting reset and clean for {row['repo_git']}")
+                'Verbose', f"git pull failed, attempting reset and clean for {repo.repo_git}")
 
 #                remotedefault = 'main'
 
@@ -463,12 +461,12 @@ def git_repo_updates(facade_helper, session, repo_git):
 
     if return_code == 0:
 
-        update_repo_log(logger, facade_helper, row['repo_id'], 'Up-to-date')
-        facade_helper.log_activity('Verbose', f"Updated {row['repo_git']}")
+        update_repo_log(logger, facade_helper, repo.repo_id, 'Up-to-date')
+        facade_helper.log_activity('Verbose', f"Updated {repo.repo_git}")
 
     else:
 
-        update_repo_log(logger, facade_helper, row['repo_id'], f"Failed ({return_code})")
-        facade_helper.log_activity('Error', f"Could not update {row['repo_git']}")
+        update_repo_log(logger, facade_helper, repo.repo_id, f"Failed ({return_code})")
+        facade_helper.log_activity('Error', f"Could not update {repo.repo_git}")
 
     facade_helper.log_activity('Info', 'Updating existing repos (complete)')
