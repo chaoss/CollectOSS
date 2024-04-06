@@ -1,14 +1,20 @@
 from datetime import datetime
 import os
 from augur.application.db.models import *
-from augur.application.db.lib import bulk_insert_dicts
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value
 from augur.tasks.util.worker_util import parse_json_from_subprocess_call
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 
-def value_model(logger,repo_git,repo_id, path):
+def value_model(logger,repo_git):
     """Runs scc on repo and stores data in database
         :param repo_id: Repository ID
-        :param path: absolute file path of the Repostiory
     """
+    logger.info(f"repo_git: {repo_git}")
+
+    repo = get_repo_by_repo_git(repo_git)
+    repo_id = repo.repo_id
+
+    path = get_absolute_repo_path(get_value("Facade", "repo_directory"),repo_id,repo.repo_path,repo.repo_name)
 
     logger.info('Generating value data for repo')
     logger.info(f"Repo ID: {repo_id}, Path: {path}")

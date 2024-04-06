@@ -1,12 +1,8 @@
 import logging
 import traceback
-from augur.application.db.lib import get_session
 from augur.tasks.git.dependency_tasks.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask, AugurSecondaryRepoCollectionTask
-from augur.application.db.util import execute_session_query
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
-from augur.application.db.lib import get_value
 
 
 @celery.task(base=AugurFacadeRepoCollectionTask)
