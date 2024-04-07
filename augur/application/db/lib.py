@@ -2,13 +2,14 @@ import time
 import random
 import logging
 import sqlalchemy as s
+from sqlalchemy import func 
 from sqlalchemy.exc import DataError
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
 
-from augur.application.db.models import Config, Repo, Commit
+from augur.application.db.models import Config, Repo, Commit, WorkerOauth
 from augur.application.db import get_session, get_engine
 from augur.application.db.util import execute_session_query
 from augur.application.db.session import remove_duplicates_by_uniques, remove_null_characters_from_list_of_dicts
@@ -179,6 +180,14 @@ def get_working_commits_by_repo_id(repo_id):
         working_commits = []
 
     return working_commits
+
+def get_worker_oauth_keys(platform: str):
+
+    with get_session() as session:
+
+        results = session.query(WorkerOauth).filter(WorkerOauth.platform == platform).order_by(func.random()).all()
+
+        return [row.access_token for row in results]
 
 
 def facade_bulk_insert_commits(logger, records):
