@@ -267,15 +267,6 @@ def rebuild_unknown_affiliation_and_web_caches_facade_task():
     facade_helper = FacadeHelper(logger)
     rebuild_unknown_affiliation_and_web_caches(facade_helper)
 
-
-@celery.task
-def git_repo_cleanup_facade_task(repo_git):
-
-    logger = logging.getLogger(git_repo_cleanup_facade_task.__name__)
-
-    facade_helper = FacadeHelper(logger)
-    git_repo_cleanup(facade_helper, repo_git)
-
 # retry this task indefinitely every 5 minutes if it errors. Since the only way it gets scheduled is by itself, so if it stops running no more clones will happen till the instance is restarted
 @celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
 def clone_repos():
