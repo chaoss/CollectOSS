@@ -24,7 +24,7 @@ class GitlabTaskManifest:
         engine = get_engine()
 
         self.augur_db = DatabaseSession(logger, engine)
-        self.key_auth = GitlabRandomKeyAuth(self.augur_db.session, logger)
+        self.key_auth = GitlabRandomKeyAuth(logger)
         self.logger = logger
         self.platform_id = 2
 
@@ -51,6 +51,6 @@ class GitlabTaskSession(DatabaseSession):
 
         super().__init__(logger, engine=engine)
 
-        self.oauths = GitlabRandomKeyAuth(self, logger)
+        self.oauths = GitlabRandomKeyAuth(logger)
         self.platform_id = 2
         
