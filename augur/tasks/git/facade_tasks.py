@@ -11,7 +11,6 @@ from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_
 from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
 from augur.tasks.git.util.facade_worker.facade_worker.rebuildcache import fill_empty_affiliations, invalidate_caches, nuke_affiliations, rebuild_unknown_affiliation_and_web_caches
-from augur.tasks.git.util.facade_worker.facade_worker.postanalysiscleanup import git_repo_cleanup
 
 
 from augur.tasks.github.facade_github.tasks import *
@@ -283,7 +282,7 @@ def clone_repos():
         repo_git_identifiers = get_collection_status_repo_git_from_filter(session, is_pending, 999999)
         for repo_git in repo_git_identifiers:
             # set repo to intializing
-            repo = Repo.get_by_repo_git(session)
+            repo = Repo.get_by_repo_git(session, repo_git)
             repoStatus = repo.collection_status[0]
             setattr(repoStatus,"facade_status", CollectionState.INITIALIZING.value)
             session.commit()

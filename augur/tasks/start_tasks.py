@@ -301,7 +301,7 @@ def augur_collection_update_weights(self):
             repo = Repo.get_by_id(session, status.repo_id)
 
             commit_count = status.commit_sum
-            date_factor = get_facade_weight_time_factor(session, repo.repo_git)
+            date_factor = get_facade_weight_time_factor(repo.repo_git)
             weight = commit_count - date_factor
 
             update_query = (

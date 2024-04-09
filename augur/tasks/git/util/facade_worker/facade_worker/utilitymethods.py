@@ -33,6 +33,7 @@ from augur.application.db.models import *
 from .config import FacadeHelper as FacadeHelper
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_working_commits_by_repo_id_and_hashes, remove_commits_by_repo_id_and_hashes, get_repo_by_repo_git, get_session
+from augur.application.db.util import execute_session_query
 #from augur.tasks.git.util.facade_worker.facade
 
 def update_repo_log(logger, facade_helper, repos_id,status):
@@ -160,18 +161,21 @@ def get_repo_commit_count(logger, facade_helper, repo_git):
 
 def get_facade_weight_time_factor(repo_git):
 
-	repo = get_repo_by_repo_git(repo_git)
-	
-	try:
-		status = repo.collection_status[0]
-		time_factor = calculate_date_weight_from_timestamps(repo.repo_added, status.facade_data_last_collected)
-	except IndexError:
-		time_factor = calculate_date_weight_from_timestamps(repo.repo_added, None)
-	
-	#Adjust for commits.
-	time_factor *= 1.2
+	with get_session() as session:
 
-	return  time_factor
+		query = session.query(Repo).filter(Repo.repo_git == repo_git)
+		repo = execute_session_query(query, 'one')
+
+		try:
+			status = repo.collection_status[0]
+			time_factor = calculate_date_weight_from_timestamps(repo.repo_added, status.facade_data_last_collected)
+		except IndexError:
+			time_factor = calculate_date_weight_from_timestamps(repo.repo_added, None)
+		
+		#Adjust for commits.
+		time_factor *= 1.2
+
+		return  time_factor
 
 def get_facade_weight_with_commit_count(repo_git, commit_count):
 	return commit_count - get_facade_weight_time_factor(repo_git)
@@ -182,7 +186,7 @@ def get_repo_weight_by_commit(logger, repo_git):
 	return get_repo_commit_count(logger, facade_helper, repo_git) - get_facade_weight_time_factor(repo_git)
 	
 
-def update_facade_scheduling_fields(session, repo_git, weight, commit_count):
+def update_facade_scheduling_fields(repo_git, weight, commit_count):
 
 	repo = get_repo_by_repo_git(repo_git)
 

@@ -53,7 +53,7 @@ def git_repo_initialize(facade_helper, session, repo_git):
 
     if row:
 
-        session.log_activity(
+        facade_helper.log_activity(
             'Info', f"Fetching repo with repo id: {row.repo_id}")
 
         update_repo_log(logger, facade_helper, row.repo_id, 'Cloning')
@@ -131,8 +131,8 @@ def git_repo_initialize(facade_helper, session, repo_git):
             print("COULD NOT CREATE REPO DIRECTORY")
 
             update_repo_log(logger, facade_helper, row.repo_id, 'Failed (mkdir)')
-            session.update_status(f"Failed (mkdir {repo_path})")
-            session.log_activity(
+            facade_helper.update_status(f"Failed (mkdir {repo_path})")
+            facade_helper.log_activity(
                 'Error', f"Could not create repo directory: {repo_path}")
 
             raise e
@@ -146,7 +146,7 @@ def git_repo_initialize(facade_helper, session, repo_git):
 
         execute_sql(query)
 
-        session.log_activity('Verbose', f"Cloning: {git}")
+        facade_helper.log_activity('Verbose', f"Cloning: {git}")
 
         cmd = f"git -C {repo_path} clone '{git}' {repo_name}"
         return_code = subprocess.Popen([cmd], shell=True).wait()
@@ -156,17 +156,17 @@ def git_repo_initialize(facade_helper, session, repo_git):
             # Mark the entire project for an update, so that under normal
             # circumstances caches are rebuilt only once per waiting period.
             update_repo_log(logger, facade_helper, row.repo_id, 'Up-to-date')
-            session.log_activity('Info', f"Cloned {git}")
+            facade_helper.log_activity('Info', f"Cloned {git}")
 
         else:
             # If cloning failed, log it and set the status back to new
             update_repo_log(logger, facade_helper, row.repo_id, f"Failed ({return_code})")
 
-            session.log_activity('Error', f"Could not clone {git}")
+            facade_helper.log_activity('Error', f"Could not clone {git}")
 
             raise GitCloneError(f"Could not clone {git}")
 
-    session.log_activity('Info', f"Fetching new repos (complete)")
+    facade_helper.log_activity('Info', f"Fetching new repos (complete)")
 
 
 # Deprecated functionality. No longer used
