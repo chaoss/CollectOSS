@@ -326,13 +326,22 @@ def retry_errored_repos(self):
     #collection_status table once augur dev is less unstable.
     with DatabaseSession(logger,engine) as session:
         query = s.sql.text(f"""UPDATE collection_status SET secondary_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE secondary_status = '{CollectionState.ERROR.value}' ;"""
+        f""" WHERE secondary_status = '{CollectionState.ERROR.value}' and secondary_data_last_collected is NULL;"""
         f"""UPDATE collection_status SET core_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE core_status = '{CollectionState.ERROR.value}' ;"""
+        f""" WHERE core_status = '{CollectionState.ERROR.value}' and core_data_last_collected is NULL;"""
         f"""UPDATE collection_status SET facade_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE facade_status = '{CollectionState.ERROR.value}' ;"""
+        f""" WHERE facade_status = '{CollectionState.ERROR.value}' and facade_data_last_collected is NULL;"""
         f"""UPDATE collection_status SET ml_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE ml_status = '{CollectionState.ERROR.value}' ;"""
+        f""" WHERE ml_status = '{CollectionState.ERROR.value}' and ml_data_last_collected is NULL;"""
+        
+        f"""UPDATE collection_status SET secondary_status = '{CollectionState.SUCCESS.value}'"""
+        f""" WHERE secondary_status = '{CollectionState.ERROR.value}' and secondary_data_last_collected is not NULL;"""
+        f"""UPDATE collection_status SET core_status = '{CollectionState.SUCCESS.value}'"""
+        f""" WHERE core_status = '{CollectionState.ERROR.value}' and core_data_last_collected is not NULL;;"""
+        f"""UPDATE collection_status SET facade_status = '{CollectionState.SUCCESS.value}'"""
+        f""" WHERE facade_status = '{CollectionState.ERROR.value}' and facade_data_last_collected is not NULL;;"""
+        f"""UPDATE collection_status SET ml_status = '{CollectionState.SUCCESS.value}'"""
+        f""" WHERE ml_status = '{CollectionState.ERROR.value}' and ml_data_last_collected is not NULL;;"""
         )
 
         session.execute_sql(query)
