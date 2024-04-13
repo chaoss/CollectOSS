@@ -6,25 +6,25 @@ from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.models import RepoClone, Repo
-from augur.application.db.util import execute_session_query
+from augur.application.db.models import RepoClone
+from augur.application.db.lib import get_repo_by_repo_git
+
+
 
 @celery.task
 def collect_github_repo_clones_data(repo_git: str) -> None:
     
     logger = logging.getLogger(collect_github_repo_clones_data.__name__)
+    
+    repo_obj = get_repo_by_repo_git(repo_git)
+    repo_id = repo_obj.repo_id
 
-    # using GithubTaskSession to get our repo_obj for which we will store data of clones
+    owner, repo = get_owner_repo(repo_git)
+
+    logger.info(f"Collecting Github repository clone data for {owner}/{repo}")
+
     with GithubTaskManifest(logger) as manifest:
 
-        query = manifest.augur_db.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
-
-        owner, repo = get_owner_repo(repo_git)
-
-        logger.info(f"Collecting Github repository clone data for {owner}/{repo}")
-    
         clones_data = retrieve_all_clones_data(repo_git, logger, manifest.key_auth)
 
         if clones_data:

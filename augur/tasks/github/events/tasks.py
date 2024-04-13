@@ -9,8 +9,8 @@ from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.models import PullRequest, PullRequestEvent, Issue, IssueEvent, Contributor, Repo
-from augur.application.db.util import execute_session_query
+from augur.application.db.models import PullRequest, PullRequestEvent, Issue, IssueEvent, Contributor
+from augur.application.db.lib import get_repo_by_repo_git
 
 platform_id = 1
 
@@ -19,32 +19,26 @@ def collect_events(repo_git: str):
 
     logger = logging.getLogger(collect_events.__name__)
     
-    with GithubTaskManifest(logger) as manifest:
+    try:
+        
+        repo_obj = get_repo_by_repo_git(repo_git)
+        repo_id = repo_obj.repo_id
 
-        augur_db = manifest.augur_db
+        owner, repo = get_owner_repo(repo_git)
 
-        try:
-            
-            query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-            repo_obj = execute_session_query(query, 'one')
-            repo_id = repo_obj.repo_id
+        logger.info(f"Collecting Github events for {owner}/{repo}")
 
-            owner, repo = get_owner_repo(repo_git)
-
-            logger.info(f"Collecting Github events for {owner}/{repo}")
-
-            url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
+        with GithubTaskManifest(logger) as manifest:
 
             event_data = retrieve_all_event_data(repo_git, logger, manifest.key_auth)
 
             if event_data:
-            
                 process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger, manifest.augur_db)
-
             else:
                 logger.info(f"{owner}/{repo} has no events")
-        except Exception as e:
-            logger.error(f"Could not collect events for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+
+    except Exception as e:
+        logger.error(f"Could not collect events for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
 def retrieve_all_event_data(repo_git: str, logger, key_auth):

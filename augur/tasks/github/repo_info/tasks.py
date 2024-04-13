@@ -4,7 +4,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.repo_info.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
-from augur.application.db.util import execute_session_query
+from augur.application.db.lib import get_repo_by_repo_git
 
 
 #Task to get regular misc github info
@@ -13,12 +13,11 @@ def collect_repo_info(repo_git: str):
 
     logger = logging.getLogger(collect_repo_info.__name__)
 
+    repo = get_repo_by_repo_git(repo_git)
+
     with GithubTaskManifest(logger) as manifest:
-        augur_db = manifest.augur_db
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo = execute_session_query(query, 'one')
-        
-        repo_info_model(augur_db, manifest.key_auth, repo, logger)
+
+        repo_info_model(manifest.augur_db, manifest.key_auth, repo, logger)
 
 
 #Task to get CII api data for linux badge info using github data.
@@ -27,9 +26,8 @@ def collect_linux_badge_info(repo_git: str):
 
     logger = logging.getLogger(collect_linux_badge_info.__name__)
 
+    repo = get_repo_by_repo_git(repo_git)
+
     with GithubTaskManifest(logger) as manifest:
-        augur_db = manifest.augur_db
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo = execute_session_query(query, 'one')
 
         badges_model(logger, repo_git, repo.repo_id, augur_db)
