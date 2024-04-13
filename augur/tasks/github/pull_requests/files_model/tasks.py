@@ -15,4 +15,4 @@ def process_pull_request_files(repo_git: str) -> None:
 
     with GithubTaskManifest(logger) as manifest:
 
-        pull_request_files_model(repo, logger, manifest.augur_db, manifest.key_auth)
+        pull_request_files_model(repo, logger, manifest.key_auth)

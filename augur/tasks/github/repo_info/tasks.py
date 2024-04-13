@@ -17,7 +17,7 @@ def collect_repo_info(repo_git: str):
 
     with GithubTaskManifest(logger) as manifest:
 
-        repo_info_model(manifest.augur_db, manifest.key_auth, repo, logger)
+        repo_info_model(manifest.key_auth, repo, logger)
 
 
 #Task to get CII api data for linux badge info using github data.
@@ -30,4 +30,4 @@ def collect_linux_badge_info(repo_git: str):
 
     with GithubTaskManifest(logger) as manifest:
 
-        badges_model(logger, repo_git, repo.repo_id, augur_db)
+        badges_model(logger, repo_git, repo.repo_id, manifest.augur_db)

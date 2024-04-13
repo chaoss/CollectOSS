@@ -8,8 +8,8 @@ from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
-from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor, Repo
-from augur.application.db.lib import get_repo_by_repo_git
+from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
 
@@ -30,7 +30,7 @@ def collect_pull_requests(repo_git: str) -> int:
         pr_data = retrieve_all_pr_data(repo_git, logger, manifest.key_auth)
 
         if pr_data:
-            process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger, manifest.augur_db)
+            process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger)
 
             return len(pr_data)
         else:
@@ -70,7 +70,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth) -> None:
     return all_data
 
 
-def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
+def process_pull_requests(pull_requests, task_name, repo_id, logger):
     """
     Parse and insert all retrieved PR data.
 
@@ -92,7 +92,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
 
     # insert contributors from these prs
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
 
 
     # insert the prs into the pull_requests table. 
@@ -102,7 +102,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
     pr_natural_keys = ["repo_id", "pr_src_id"]
     pr_return_columns = ["pull_request_id", "pr_url"]
     pr_string_fields = ["pr_src_title", "pr_body"]
-    pr_return_data = augur_db.insert_data(pr_dicts, PullRequest, pr_natural_keys, 
+    pr_return_data = bulk_insert_dicts(pr_dicts, PullRequest, pr_natural_keys, 
                             return_columns=pr_return_columns, string_fields=pr_string_fields)
 
     if pr_return_data is None:
@@ -141,24 +141,24 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
     pr_label_string_fields = ["pr_src_description"]
-    augur_db.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys, string_fields=pr_label_string_fields)
+    bulk_insert_dicts(pr_label_dicts, PullRequestLabel, pr_label_natural_keys, string_fields=pr_label_string_fields)
 
     # inserting pr assignees
     # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
     pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    augur_db.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
+    bulk_insert_dicts(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
 
 
     # inserting pr requested reviewers
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
-    augur_db.insert_data(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
+    bulk_insert_dicts(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
     
     # inserting pr metadata
     # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
     pr_metadata_string_fields = ["pr_src_meta_label"]
-    augur_db.insert_data(pr_metadata_dicts, PullRequestMeta,
+    bulk_insert_dicts(pr_metadata_dicts, PullRequestMeta,
                         pr_metadata_natural_keys, string_fields=pr_metadata_string_fields)
 
 
@@ -208,10 +208,8 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
 
     # define GithubTaskSession to handle insertions, and store oauth keys
     with GithubTaskManifest(logger) as manifest:
-
-        augur_db = manifest.augur_db
-
-        query = augur_db.session.query(PullRequestReview).filter(PullRequestReview.repo_id == repo_id)
+ 
+        query = manifest.augur_db.session.query(PullRequestReview).filter(PullRequestReview.repo_id == repo_id)
         pr_reviews = execute_session_query(query, 'all')
 
         # maps the github pr_review id to the auto incrementing pk that augur stores as pr_review id
@@ -250,7 +248,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
                 contributors.append(contributor)
 
         logger.info(f"{owner}/{repo} Pr review messages: Inserting {len(contributors)} contributors")
-        augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+        bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
 
 
         pr_review_comment_dicts = []
@@ -277,7 +275,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
         logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
         message_natural_keys = ["platform_msg_id", "pltfrm_id"]
         message_return_columns = ["msg_id", "platform_msg_id"]
-        message_return_data = augur_db.insert_data(pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
+        message_return_data = bulk_insert_dicts(pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
         if message_return_data is None:
             return
 
@@ -307,7 +305,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
 
         logger.info(f"Inserting {len(pr_review_message_ref_insert_data)} pr review refs")
         pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
-        augur_db.insert_data(pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
+        bulk_insert_dicts(pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
 
 
 
@@ -326,10 +324,8 @@ def collect_pull_request_reviews(repo_git: str) -> None:
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
     with GithubTaskManifest(logger) as manifest:
-
-        augur_db = manifest.augur_db
-
-        query = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
+        
+        query = manifest.augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
         prs = execute_session_query(query, 'all')
 
         pr_count = len(prs)
@@ -373,7 +369,7 @@ def collect_pull_request_reviews(repo_git: str) -> None:
                     contributors.append(contributor)
 
         logger.info(f"{owner}/{repo} Pr reviews: Inserting {len(contributors)} contributors")
-        augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+        bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
 
 
         pr_reviews = []
@@ -387,7 +383,7 @@ def collect_pull_request_reviews(repo_git: str) -> None:
 
         logger.info(f"{owner}/{repo}: Inserting pr reviews of length: {len(pr_reviews)}")
         pr_review_natural_keys = ["pr_review_src_id",]
-        augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys)
+        bulk_insert_dicts(pr_reviews, PullRequestReview, pr_review_natural_keys)
 
 
 

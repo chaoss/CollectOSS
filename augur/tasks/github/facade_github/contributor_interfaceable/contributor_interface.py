@@ -391,22 +391,3 @@ def get_login_with_commit_hash(logger,db,auth, commit_data, repo_id):
         match = None
 
     return match
-
-
-
-def create_endpoint_from_repo_id(logger,db, repo_id):
-    
-    """
-        SELECT repo_git from repo
-        WHERE repo_id = :repo_id_bind
-    """
-    #ORM syntax of above statement
-    result = get_repo_by_repo_id(repo_id)
-
-    url = result.repo_git
-    logger.info(f"Url: {url}")
-
-    return url
-
-
-

@@ -2,8 +2,9 @@ import sqlalchemy as s
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
+from augur.application.db.lib import bulk_insert_dicts, execute_sql
 
-def pull_request_files_model(repo,logger, augur_db, key_auth):
+def pull_request_files_model(repo,logger, key_auth):
     
     # query existing PRs and the respective url we will append the commits url to
     pr_number_sql = s.sql.text("""
@@ -14,7 +15,7 @@ def pull_request_files_model(repo,logger, augur_db, key_auth):
     pr_numbers = []
     #pd.read_sql(pr_number_sql, self.db, params={})
 
-    result = augur_db.execute_sql(pr_number_sql)#.fetchall()
+    result = execute_sql(pr_number_sql)#.fetchall()
     pr_numbers = [dict(row) for row in result.mappings()]
 
     owner, name = get_owner_repo(repo.repo_git)
@@ -74,4 +75,4 @@ def pull_request_files_model(repo,logger, augur_db, key_auth):
     if len(pr_file_rows) > 0:
         #Execute a bulk upsert with sqlalchemy 
         pr_file_natural_keys = ["pull_request_id", "repo_id", "pr_file_path"]
-        augur_db.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)
+        bulk_insert_dicts(pr_file_rows, PullRequestFile, pr_file_natural_keys)

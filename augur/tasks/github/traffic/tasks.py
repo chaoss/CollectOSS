@@ -7,7 +7,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import RepoClone
-from augur.application.db.lib import get_repo_by_repo_git
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
 
 
 
@@ -28,7 +28,7 @@ def collect_github_repo_clones_data(repo_git: str) -> None:
         clones_data = retrieve_all_clones_data(repo_git, logger, manifest.key_auth)
 
         if clones_data:
-            process_clones_data(clones_data, f"{owner}/{repo}: Traffic task", repo_id, manifest.augur_db)
+            process_clones_data(clones_data, f"{owner}/{repo}: Traffic task", repo_id)
         else:
             logger.info(f"{owner}/{repo} has no clones")
 
@@ -58,7 +58,7 @@ def retrieve_all_clones_data(repo_git: str, logger, key_auth):
     return all_data
 
 
-def process_clones_data(clones_data, task_name, repo_id, logger, augur_db) -> None:
+def process_clones_data(clones_data, task_name, repo_id, logger) -> None:
     clone_history_data = clones_data[0]['clones']
 
     clone_history_data_dicts = extract_needed_clone_history_data(clone_history_data, repo_id)
@@ -66,4 +66,4 @@ def process_clones_data(clones_data, task_name, repo_id, logger, augur_db) -> No
     clone_history_data = remove_duplicate_dicts(clone_history_data_dicts, 'clone_data_timestamp')
     logger.info(f"{task_name}: Inserting {len(clone_history_data_dicts)} clone history records")
     
-    augur_db.insert_data(clone_history_data_dicts, RepoClone, ['repo_id'])
+    bulk_insert_dicts(clone_history_data_dicts, RepoClone, ['repo_id'])

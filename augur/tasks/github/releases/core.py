@@ -4,6 +4,7 @@ from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.gh_graphql_entities import request_graphql_dict
 from augur.application.db.util import execute_session_query
+from augur.application.db.lib import bulk_insert_dicts
 
 
 def get_release_inf(repo_id, release, tag_only):
@@ -77,7 +78,7 @@ def insert_release(augur_db, logger, repo_id, owner, release, tag_only = False):
 
     #Do an upsert
     string_fields = ["release_name", "release_description", "release_author", "release_tag_name"]
-    augur_db.insert_data(release_inf,Release,['release_id'], string_fields=string_fields)
+    bulk_insert_dicts(release_inf,Release,['release_id'], string_fields=string_fields)
 
     logger.info(f"Inserted info for {owner}/{repo_id}/{release['name']}\n")
 
