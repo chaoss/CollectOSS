@@ -26,7 +26,7 @@ def update_repo_with_dict(repo,new_dict,logger):
     del to_insert['_sa_instance_state']
     to_insert.update(new_dict)
 
-    result = bulk_insert_dicts(to_insert, Repo, ['repo_id'])
+    result = bulk_insert_dicts(logger, to_insert, Repo, ['repo_id'])
 
     url = to_insert['repo_git']
     logger.info(f"Updated repo for {url}\n")

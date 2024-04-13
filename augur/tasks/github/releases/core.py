@@ -78,7 +78,7 @@ def insert_release(augur_db, logger, repo_id, owner, release, tag_only = False):
 
     #Do an upsert
     string_fields = ["release_name", "release_description", "release_author", "release_tag_name"]
-    bulk_insert_dicts(release_inf,Release,['release_id'], string_fields=string_fields)
+    bulk_insert_dicts(logger, release_inf,Release,['release_id'], string_fields=string_fields)
 
     logger.info(f"Inserted info for {owner}/{repo_id}/{release['name']}\n")
 

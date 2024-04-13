@@ -113,12 +113,9 @@ def grab_comitters(self, repo_git,platform="github"):
 
     logger = logging.getLogger(grab_comitters.__name__)
 
-    repo = get_repo_by_repo_git(repo_git)
-    repo_id = repo.repo_id
-
     try:
         key_auth = GithubRandomKeyAuth(logger)
-        grab_committer_list(logger, key_auth, repo_id,platform)
+        grab_committer_list(logger, key_auth, repo_git, platform)
     except Exception as e:
         logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 

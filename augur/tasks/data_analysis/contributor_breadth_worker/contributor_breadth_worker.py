@@ -117,7 +117,7 @@ def contributor_breadth_model(self) -> None:
 
         logger.info(f"Inserting {len(events)} events")
         natural_keys = ["event_id", "tool_version"]
-        bulk_insert_dicts(events, ContributorRepo, natural_keys)  
+        bulk_insert_dicts(logger, events, ContributorRepo, natural_keys)  
 
 
 def process_contributor_events(cntrb, cntrb_events, logger, tool_source, tool_version, data_source):

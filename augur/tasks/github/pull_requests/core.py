@@ -144,7 +144,7 @@ def insert_pr_contributors(contributors: List[dict], logger, task_name: str) -> 
 
     # insert contributors from these prs
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
 
 
 def insert_prs(pr_dicts: List[dict], logger, task_name: str) -> Optional[List[dict]]:
@@ -163,7 +163,7 @@ def insert_prs(pr_dicts: List[dict], logger, task_name: str) -> Optional[List[di
     logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
     pr_natural_keys = ["pr_url"]
     pr_return_columns = ["pull_request_id", "pr_url"]
-    pr_return_data = bulk_insert_dicts(pr_dicts, PullRequest, pr_natural_keys, return_columns=pr_return_columns)
+    pr_return_data = bulk_insert_dicts(logger, pr_dicts, PullRequest, pr_natural_keys, return_columns=pr_return_columns)
 
     return pr_return_data
 
@@ -239,7 +239,7 @@ def insert_pr_assignees(assignees: List[dict], logger: logging.Logger) -> None:
     """
     # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
     pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    bulk_insert_dicts(assignees, PullRequestAssignee, pr_assignee_natural_keys)
+    bulk_insert_dicts(logger, assignees, PullRequestAssignee, pr_assignee_natural_keys)
 
 
 def insert_pr_reviewers(reviewers: List[dict], logger: logging.Logger) -> None:
@@ -270,7 +270,7 @@ def insert_pr_metadata(metadata: List[dict], logger: logging.Logger) -> None:
     # inserting pr metadata
     # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
-    bulk_insert_dicts(metadata, PullRequestMeta, pr_metadata_natural_keys)
+    bulk_insert_dicts(logger, metadata, PullRequestMeta, pr_metadata_natural_keys)
 
 
 

@@ -154,7 +154,7 @@ def process_events(events, task_name, repo_id, logger, augur_db):
     # remove contributors that were found in the data more than once
     contributors = remove_duplicate_dicts(contributors)
 
-    bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
 
     issue_events_len = len(issue_event_dicts)
     pr_events_len = len(pr_event_dicts)
@@ -168,10 +168,10 @@ def process_events(events, task_name, repo_id, logger, augur_db):
 
     # TODO: Could replace this with "id" but it isn't stored on the table for some reason
     pr_event_natural_keys = ["node_id"]
-    bulk_insert_dicts(pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
+    bulk_insert_dicts(logger, pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
 
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
-    bulk_insert_dicts(issue_event_dicts, IssueEvent, issue_event_natural_keys)
+    bulk_insert_dicts(logger, issue_event_dicts, IssueEvent, issue_event_natural_keys)
 
     update_issue_closed_cntrbs_from_events(augur_db.engine, repo_id)
 

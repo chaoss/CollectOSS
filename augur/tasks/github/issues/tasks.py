@@ -137,7 +137,7 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
 
     # insert contributors from these issues
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
                         
 
     # insert the issues into the issues table. 
@@ -148,7 +148,7 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
     issue_return_columns = ["issue_url", "issue_id"]
     issue_string_columns = ["issue_title", "issue_body"]
     try:
-        issue_return_data = bulk_insert_dicts(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
+        issue_return_data = bulk_insert_dicts(logger, issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
     except IntegrityError as e:
         logger.error(f"Ran into integrity error:{e} \n Offending data: \n{issue_dicts}")
 
@@ -181,13 +181,13 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
     # we are using label_src_id and issue_id to determine if the label is already in the database.
     issue_label_natural_keys = ['label_src_id', 'issue_id']
     issue_label_string_fields = ["label_text", "label_description"]
-    bulk_insert_dicts(issue_label_dicts, IssueLabel,
+    bulk_insert_dicts(logger, issue_label_dicts, IssueLabel,
                         issue_label_natural_keys, string_fields=issue_label_string_fields)
 
     # inserting issue assignees
     # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
     issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    bulk_insert_dicts(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
+    bulk_insert_dicts(logger, issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
 
 
 
