@@ -13,7 +13,8 @@ from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_d
 from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Repo, Contributor
 from augur.application.db.util import execute_session_query
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.lib import bulk_insert_dicts
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git
+from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 
 platform_id = 2
 
@@ -27,28 +28,24 @@ def collect_gitlab_issues(repo_git : str) -> int:
     """
 
     logger = logging.getLogger(collect_gitlab_issues.__name__) 
-    with GitlabTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-        try:
-        
-            query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-            repo_obj = execute_session_query(query, 'one')
-            repo_id = repo_obj.repo_id
+    key_auth = GitlabRandomKeyAuth(logger)
 
-            owner, repo = get_owner_repo(repo_git)
-        
-            issue_data = retrieve_all_gitlab_issue_data(repo_git, logger, manifest.key_auth)
+    try:
+        owner, repo = get_owner_repo(repo_git)
+    
+        issue_data = retrieve_all_gitlab_issue_data(repo_git, logger, key_auth)
 
-            if issue_data:
-                issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger)
+        if issue_data:
+            issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger)
 
-                return issue_ids
-            else:
-                logger.info(f"{owner}/{repo} has no issues")
-                return []
-        except Exception as e:
+            return issue_ids
+        else:
+            logger.info(f"{owner}/{repo} has no issues")
+            return []
+    except Exception as e:
             logger.error(f"Could not collect gitlab issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
             return -1
 
@@ -215,19 +212,16 @@ def collect_gitlab_issue_comments(issue_ids, repo_git) -> int:
     owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_gitlab_issues.__name__) 
+
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
     with GitlabTaskManifest(logger) as manifest:
-
-        augur_db = manifest.augur_db
-
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
 
         comments = retrieve_all_gitlab_issue_comments(manifest.key_auth, logger, issue_ids, repo_git)
 
         if comments:
             logger.info(f"Length of comments: {len(comments)}")
-            process_gitlab_issue_messages(comments, f"{owner}/{repo}: Gitlab issue messages task", repo_id, logger, augur_db)
+            process_gitlab_issue_messages(comments, f"{owner}/{repo}: Gitlab issue messages task", repo_id, logger, manifest.augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab issue comments")
            

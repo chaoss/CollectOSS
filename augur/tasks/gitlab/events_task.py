@@ -11,7 +11,7 @@ from augur.application.db.data_parse import extract_gitlab_mr_event_data, extrac
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import Repo, Issue, IssueEvent, PullRequest, PullRequestEvent
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import bulk_insert_dicts
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git
 
 platform_id = 2
 
@@ -27,19 +27,16 @@ def collect_gitlab_issue_events(repo_git) -> int:
     owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_gitlab_issue_events.__name__) 
+
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
     with GitlabTaskManifest(logger) as manifest:
-
-        augur_db = manifest.augur_db
-
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
 
         events = retrieve_all_gitlab_event_data("issue", repo_git, logger, manifest.key_auth)
 
         if events:
             logger.info(f"Length of gitlab issue events: {len(events)}")
-            process_issue_events(events, f"{owner}/{repo}: Gitlab Issue Events task", repo_id, logger, augur_db)
+            process_issue_events(events, f"{owner}/{repo}: Gitlab Issue Events task", repo_id, logger, manifest.augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab issue events")
 
@@ -57,19 +54,16 @@ def collect_gitlab_merge_request_events(repo_git) -> int:
     owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_gitlab_issue_events.__name__) 
+
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
     with GitlabTaskManifest(logger) as manifest:
-
-        augur_db = manifest.augur_db
-
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
 
         events = retrieve_all_gitlab_event_data("merge_request", repo_git, logger, manifest.key_auth)
 
         if events:
             logger.info(f"Length of gitlab merge request events: {len(events)}")
-            process_mr_events(events, f"{owner}/{repo}: Gitlab MR Events task", repo_id, logger, augur_db)
+            process_mr_events(events, f"{owner}/{repo}: Gitlab MR Events task", repo_id, logger, manifest.augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request events")
 

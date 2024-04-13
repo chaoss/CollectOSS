@@ -9,7 +9,7 @@ from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_d
 from augur.application.db.models import PullRequest, PullRequestLabel, PullRequestMeta, PullRequestCommit, PullRequestFile, PullRequestMessageRef, Repo, Message, Contributor, PullRequestAssignee
 from augur.application.db.util import execute_session_query
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.lib import bulk_insert_dicts
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git
 
 platform_id = 2
 
@@ -25,18 +25,16 @@ def collect_gitlab_merge_requests(repo_git: str) -> int:
 
     logger = logging.getLogger(collect_gitlab_merge_requests.__name__)
 
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
+    owner, repo = get_owner_repo(repo_git)
+
     with GitlabTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
-
-        repo_id = augur_db.session.query(Repo).filter(
-        Repo.repo_git == repo_git).one().repo_id
-
-        owner, repo = get_owner_repo(repo_git)
         mr_data = retrieve_all_mr_data(repo_git, logger, manifest.key_auth)
 
         if mr_data:
-            mr_ids = process_merge_requests(mr_data, f"{owner}/{repo}: Mr task", repo_id, logger, augur_db)
+            mr_ids = process_merge_requests(mr_data, f"{owner}/{repo}: Mr task", repo_id, logger, manifest.augur_db)
 
             return mr_ids
         else:
@@ -178,20 +176,17 @@ def collect_merge_request_comments(mr_ids, repo_git) -> int:
     owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_merge_request_comments.__name__) 
+
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
     with GitlabTaskManifest(logger) as manifest:
-
-        augur_db = manifest.augur_db
-
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
 
         url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/notes".format(owner=owner, repo=repo, id="{id}")
         comments = retrieve_merge_request_data(mr_ids, url, "comments", owner, repo, manifest.key_auth, logger, response_type="list")
 
         if comments:
             logger.info(f"Length of merge request comments: {len(comments)}")
-            process_gitlab_mr_messages(comments, f"{owner}/{repo}: Gitlab mr messages task", repo_id, logger, augur_db)
+            process_gitlab_mr_messages(comments, f"{owner}/{repo}: Gitlab mr messages task", repo_id, logger, manifest.augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request comments")
 
@@ -290,20 +285,17 @@ def collect_merge_request_metadata(mr_ids, repo_git) -> int:
     owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_merge_request_metadata.__name__) 
+
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
     with GitlabTaskManifest(logger) as manifest:
-
-        augur_db = manifest.augur_db
-
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
 
         url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}".format(owner=owner, repo=repo, id="{id}")
         metadata_list = retrieve_merge_request_data(mr_ids, url, "metadata", owner, repo, manifest.key_auth, logger, response_type="dict")
 
         if metadata_list:
             logger.info(f"Length of merge request metadata: {len(metadata_list)}")
-            process_mr_metadata(metadata_list, f"{owner}/{repo}: Mr metadata task", repo_id, logger, augur_db)
+            process_mr_metadata(metadata_list, f"{owner}/{repo}: Mr metadata task", repo_id, logger, manifest.augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request metadata")
 
@@ -356,20 +348,17 @@ def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
     owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_merge_request_reviewers.__name__) 
+
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
     with GitlabTaskManifest(logger) as manifest:
-
-        augur_db = manifest.augur_db
-
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
 
         url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/approvals".format(owner=owner, repo=repo, id="{id}")
         reviewers = retrieve_merge_request_data(mr_ids, url, "reviewers", owner, repo, manifest.key_auth, logger, response_type="dict")
 
         if reviewers:
             logger.info(f"Length of merge request reviewers: {len(reviewers)}")
-            process_mr_reviewers(reviewers, f"{owner}/{repo}: Mr reviewer task", repo_id, logger, augur_db)
+            process_mr_reviewers(reviewers, f"{owner}/{repo}: Mr reviewer task", repo_id, logger,  manifest.augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request reviewers")
 
@@ -424,20 +413,17 @@ def collect_merge_request_commits(mr_ids, repo_git) -> int:
     owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_merge_request_commits.__name__) 
+
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
     with GitlabTaskManifest(logger) as manifest:
-
-        augur_db = manifest.augur_db
-
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
 
         url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/commits".format(owner=owner, repo=repo, id="{id}")
         commits = retrieve_merge_request_data(mr_ids, url, "commits", owner, repo, manifest.key_auth, logger, response_type="list")
 
         if commits:
             logger.info(f"Length of merge request commits: {len(commits)}")
-            process_mr_commits(commits, f"{owner}/{repo}: Mr commit task", repo_id, logger, augur_db)
+            process_mr_commits(commits, f"{owner}/{repo}: Mr commit task", repo_id, logger, manifest.augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request commits")
 
@@ -490,23 +476,20 @@ def collect_merge_request_files(mr_ids, repo_git) -> int:
         repo_git: the repo url string
     """
 
+    logger = logging.getLogger(collect_merge_request_files.__name__) 
+
     owner, repo = get_owner_repo(repo_git)
 
-    logger = logging.getLogger(collect_merge_request_files.__name__) 
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
     with GitlabTaskManifest(logger) as manifest:
-
-        augur_db = manifest.augur_db
-
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
 
         url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/changes".format(owner=owner, repo=repo, id="{id}")
         files = retrieve_merge_request_data(mr_ids, url, "files", owner, repo, manifest.key_auth, logger, response_type="dict")
 
         if files:
             logger.info(f"Length of merge request files: {len(files)}")
-            process_mr_files(files, f"{owner}/{repo}: Mr files task", repo_id, logger, augur_db)
+            process_mr_files(files, f"{owner}/{repo}: Mr files task", repo_id, logger, manifest.augur_db)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request files")
 
