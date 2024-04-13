@@ -125,13 +125,13 @@ def process_merge_requests(data, task_name, repo_id, logger, augur_db):
     contributors = remove_duplicate_dicts(contributors)
 
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
 
     logger.info(f"{task_name}: Inserting mrs of length: {len(merge_requests)}")
     pr_natural_keys = ["repo_id", "pr_src_id"]
     pr_string_fields = ["pr_src_title", "pr_body"]
     pr_return_columns = ["pull_request_id", "pr_src_id"]
-    pr_return_data = bulk_insert_dicts(merge_requests, PullRequest, pr_natural_keys, return_columns=pr_return_columns, string_fields=pr_string_fields)
+    pr_return_data = bulk_insert_dicts(logger, merge_requests, PullRequest, pr_natural_keys, return_columns=pr_return_columns, string_fields=pr_string_fields)
 
 
     mr_assignee_dicts = []
@@ -153,11 +153,11 @@ def process_merge_requests(data, task_name, repo_id, logger, augur_db):
     logger.info(f"{task_name}: Inserting other pr data of lengths: Labels: {len(mr_label_dicts)} - Assignees: {len(mr_assignee_dicts)}")
 
     mr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    bulk_insert_dicts(mr_assignee_dicts, PullRequestAssignee, mr_assignee_natural_keys)
+    bulk_insert_dicts(logger, mr_assignee_dicts, PullRequestAssignee, mr_assignee_natural_keys)
 
     pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
     pr_label_string_fields = ["pr_src_description"]
-    bulk_insert_dicts(mr_label_dicts, PullRequestLabel, pr_label_natural_keys, string_fields=pr_label_string_fields)
+    bulk_insert_dicts(logger, mr_label_dicts, PullRequestLabel, pr_label_natural_keys, string_fields=pr_label_string_fields)
 
     return mr_ids
 
@@ -246,13 +246,13 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
     contributors = remove_duplicate_dicts(contributors)
 
     logger.info(f"{task_name}: Inserting {len(contributors)} mr message contributors")
-    bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
 
     logger.info(f"{task_name}: Inserting {len(message_dicts)} mr messages")
     message_natural_keys = ["platform_msg_id", "pltfrm_id"]
     message_return_columns = ["msg_id", "platform_msg_id"]
     message_string_fields = ["msg_text"]
-    message_return_data = bulk_insert_dicts(message_dicts, Message, message_natural_keys, 
+    message_return_data = bulk_insert_dicts(logger, message_dicts, Message, message_natural_keys, 
                                                 return_columns=message_return_columns, string_fields=message_string_fields)
     
     mr_message_ref_dicts = []
@@ -269,7 +269,7 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(mr_message_ref_dicts)} mr messages ref rows")
     mr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
-    bulk_insert_dicts(mr_message_ref_dicts, PullRequestMessageRef, mr_message_ref_natural_keys)
+    bulk_insert_dicts(logger, mr_message_ref_dicts, PullRequestMessageRef, mr_message_ref_natural_keys)
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
@@ -332,7 +332,7 @@ def process_mr_metadata(data, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(all_metadata)} merge request metadata")
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
-    bulk_insert_dicts(all_metadata, PullRequestMeta, pr_metadata_natural_keys)
+    bulk_insert_dicts(logger, all_metadata, PullRequestMeta, pr_metadata_natural_keys)
     
 
 @celery.task(base=AugurCoreRepoCollectionTask)
@@ -462,7 +462,7 @@ def process_mr_commits(data, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(all_commits)} merge request commits")
     pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
-    bulk_insert_dicts(all_commits,PullRequestCommit,pr_commits_natural_keys)
+    bulk_insert_dicts(logger, all_commits,PullRequestCommit,pr_commits_natural_keys)
             
 
 
@@ -514,7 +514,7 @@ def process_mr_files(data, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(all_files)} merge request files")
     pr_file_natural_keys = ["pull_request_id", "repo_id", "pr_file_path"]
-    bulk_insert_dicts(all_files, PullRequestFile, pr_file_natural_keys)
+    bulk_insert_dicts(logger, all_files, PullRequestFile, pr_file_natural_keys)
     
 
 def retrieve_merge_request_data(ids, url, name, owner, repo, key_auth, logger, response_type):

@@ -52,7 +52,7 @@ def pull_request_commits_model(repo,logger, key_auth):
     if len(all_data) > 0:
         logger.info(f"{task_name}: Inserting {len(all_data)} rows")
         pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
-        bulk_insert_dicts(all_data,PullRequestCommit,pr_commits_natural_keys)
+        bulk_insert_dicts(logger, all_data,PullRequestCommit,pr_commits_natural_keys)
             
 
 

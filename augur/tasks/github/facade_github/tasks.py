@@ -131,7 +131,7 @@ def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id)
         #Executes an upsert with sqlalchemy 
         cntrb_natural_keys = ['cntrb_id']
         
-        bulk_insert_dicts(cntrb,Contributor,cntrb_natural_keys)
+        bulk_insert_dicts(logger, cntrb,Contributor,cntrb_natural_keys)
 
         try:
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey

@@ -29,6 +29,8 @@ import json
 
 from augur.application.db.models.base import Base
 from augur.application.db.util import execute_session_query
+from augur.application.db.lib import bulk_insert_dicts
+
 DEFAULT_REPO_GROUP_ID = 1
 
 metadata = Base.metadata
@@ -1072,7 +1074,7 @@ class Repo(Base):
 
         repo_unique = ["repo_git"]
         return_columns = ["repo_id"]
-        result = session.insert_data(repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
+        result = bulk_insert_dicts(logger, repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
 
         if not result:
             return None
@@ -1120,7 +1122,7 @@ class Repo(Base):
 
         repo_unique = ["repo_git"]
         return_columns = ["repo_id"]
-        result = session.insert_data(repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
+        result = bulk_insert_dicts(logger, repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
 
         if not result:
             return None

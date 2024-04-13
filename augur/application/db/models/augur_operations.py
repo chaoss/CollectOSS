@@ -13,6 +13,7 @@ import traceback
 
 from augur.application.db.models import Repo, RepoGroup
 from augur.application.db.session import DatabaseSession
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_id
 from augur.application.db.models.base import Base
 
 FRONTEND_REPO_GROUP_NAME = "Frontend Repos"
@@ -673,7 +674,7 @@ class UserGroup(Base):
             return False, {"status": "Group already exists"}
 
         try:
-            result = session.insert_data(user_group_data, UserGroup, ["name", "user_id"], return_columns=["group_id"])
+            result = bulk_insert_dicts(logger, user_group_data, UserGroup, ["name", "user_id"], return_columns=["group_id"])
         except IntegrityError:
             return False, {"status": "Error: User id does not exist"}
 
@@ -756,7 +757,7 @@ class UserRepo(Base):
     group = relationship("UserGroup", back_populates="repos")
 
     @staticmethod
-    def insert(session, repo_id: int, group_id:int = 1) -> bool:
+    def insert(repo_id: int, group_id:int = 1) -> bool:
         """Add a repo to a user in the user_repos table.
 
         Args:
@@ -777,7 +778,7 @@ class UserRepo(Base):
         return_columns = ["group_id", "repo_id"]
 
         try:
-            data = session.insert_data(repo_user_group_data, UserRepo, repo_user_group_unique, return_columns)
+            data = bulk_insert_dicts(logger, repo_user_group_data, UserRepo, repo_user_group_unique, return_columns)
         except IntegrityError:
             return False
 
@@ -832,7 +833,7 @@ class UserRepo(Base):
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
-        result = UserRepo.insert(session, repo_id, group_id)
+        result = UserRepo.insert(repo_id, group_id)
         if not result:
             return False, {"status": "repo_user insertion failed", "repo_url": url}
 
@@ -897,7 +898,7 @@ class UserRepo(Base):
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
-        result = UserRepo.insert(session, repo_id, group_id)
+        result = UserRepo.insert(repo_id, group_id)
         if not result:
             return False, {"status": "repo_user insertion failed", "repo_url": url}
 
@@ -1224,11 +1225,11 @@ class CollectionStatus(Base):
     repo = relationship("Repo", back_populates="collection_status")
 
     @staticmethod
-    def insert(session, logger, repo_id):
+    def insert(logger, repo_id):
         from augur.tasks.github.util.util import get_repo_weight_by_issue
         from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
-        repo = Repo.get_by_id(session, repo_id)
+        repo = get_repo_by_repo_id(repo_id)
         repo_git = repo.repo_git
 
         collection_status_unique = ["repo_id"]
@@ -1265,7 +1266,7 @@ class CollectionStatus(Base):
         }
      
 
-        result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)
+        result = bulk_insert_dicts(logger, record, CollectionStatus, collection_status_unique, on_conflict_update=False)
 
         logger.info(f"Trying to insert repo \n issue and pr sum: {record['issue_pr_sum']}")
 

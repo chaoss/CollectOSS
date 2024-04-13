@@ -191,7 +191,7 @@ def insert_alias(logger,db, contributor, email):
 
     # Insert new alias
     
-    bulk_insert_dicts(alias, ContributorsAlias, ['alias_email'])
+    bulk_insert_dicts(logger, alias, ContributorsAlias, ['alias_email'])
     
 
     return
@@ -328,7 +328,7 @@ def get_login_with_supplemental_data(logger, auth, commit_data):
         try:
             
             unresolved_natural_keys = ['email']
-            bulk_insert_dicts(unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
+            bulk_insert_dicts(logger, unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
         except Exception as e:
             logger.error(
                 f"Could not create new unresolved email {unresolved['email']}. Error: {e}")

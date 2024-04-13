@@ -119,7 +119,7 @@ def query_github_contributors(logger, key_auth, github_url):
             cntrb_natural_keys = ['cntrb_id']
             #insert cntrb to table.
             #session.logger.info(f"Contributor:  {cntrb}  \n")
-            bulk_insert_dicts(cntrb,Contributor,cntrb_natural_keys)
+            bulk_insert_dicts(logger, cntrb,Contributor,cntrb_natural_keys)
             
         except Exception as e:
             logger.error("Caught exception: {}".format(e))

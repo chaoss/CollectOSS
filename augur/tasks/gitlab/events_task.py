@@ -148,7 +148,7 @@ def process_issue_events(events, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(issue_event_dicts)} gitlab issue events")
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
-    bulk_insert_dicts(issue_event_dicts, IssueEvent, issue_event_natural_keys)
+    bulk_insert_dicts(logger, issue_event_dicts, IssueEvent, issue_event_natural_keys)
 
 
 def process_mr_events(events, task_name, repo_id, logger, augur_db):
@@ -198,6 +198,6 @@ def process_mr_events(events, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(mr_event_dicts)} gitlab mr events")
     mr_event_natural_keys = ["platform_id", "node_id"]
-    bulk_insert_dicts(mr_event_dicts, PullRequestEvent, mr_event_natural_keys)
+    bulk_insert_dicts(logger, mr_event_dicts, PullRequestEvent, mr_event_natural_keys)
 
 

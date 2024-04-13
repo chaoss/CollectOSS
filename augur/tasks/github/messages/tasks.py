@@ -170,13 +170,13 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
     contributors = remove_duplicate_dicts(contributors)
 
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
 
     logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
     message_natural_keys = ["platform_msg_id", "pltfrm_id"]
     message_return_columns = ["msg_id", "platform_msg_id"]
     message_string_fields = ["msg_text"]
-    message_return_data = bulk_insert_dicts(message_dicts, Message, message_natural_keys, 
+    message_return_data = bulk_insert_dicts(logger, message_dicts, Message, message_natural_keys, 
                                                 return_columns=message_return_columns, string_fields=message_string_fields)
     if message_return_data is None:
         return
@@ -199,11 +199,11 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(pr_message_ref_dicts)} pr messages ref rows")
     pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
-    bulk_insert_dicts(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
+    bulk_insert_dicts(logger, pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
 
     logger.info(f"{task_name}: Inserting {len(issue_message_ref_dicts)} issue messages ref rows")
     issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
-    bulk_insert_dicts(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
+    bulk_insert_dicts(logger, issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
 
     logger.info(f"{task_name}: Inserted {len(message_dicts)} messages. {len(issue_message_ref_dicts)} from issues and {len(pr_message_ref_dicts)} from prs")
 

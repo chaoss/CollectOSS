@@ -66,4 +66,4 @@ def process_clones_data(clones_data, task_name, repo_id, logger) -> None:
     clone_history_data = remove_duplicate_dicts(clone_history_data_dicts, 'clone_data_timestamp')
     logger.info(f"{task_name}: Inserting {len(clone_history_data_dicts)} clone history records")
     
-    bulk_insert_dicts(clone_history_data_dicts, RepoClone, ['repo_id'])
+    bulk_insert_dicts(logger, clone_history_data_dicts, RepoClone, ['repo_id'])

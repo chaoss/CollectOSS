@@ -75,4 +75,4 @@ def pull_request_files_model(repo,logger, key_auth):
     if len(pr_file_rows) > 0:
         #Execute a bulk upsert with sqlalchemy 
         pr_file_natural_keys = ["pull_request_id", "repo_id", "pr_file_path"]
-        bulk_insert_dicts(pr_file_rows, PullRequestFile, pr_file_natural_keys)
+        bulk_insert_dicts(logger, pr_file_rows, PullRequestFile, pr_file_natural_keys)
