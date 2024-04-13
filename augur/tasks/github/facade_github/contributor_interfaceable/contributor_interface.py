@@ -8,6 +8,7 @@ from augur.tasks.github.util.github_paginator import hit_api, process_dict_respo
 import traceback
 from augur.tasks.github.util.github_paginator import GithubApiResult
 from augur.application.db.util import execute_session_query
+from augur.application.db.lib import get_repo_by_repo_id
 
 ##TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
 
@@ -113,9 +114,7 @@ def create_endpoint_from_commit_sha(logger,db,commit_sha, repo_id):
 
 
     #stmnt = s.select(Repo.repo_path, Repo.repo_name).where(Repo.repo_id == repo_id)
-
-    query = db.query(Repo).filter_by(repo_id=repo_id)
-    result = execute_session_query(query, 'one')
+    result = get_repo_by_repo_id(repo_id)
 
     if result.repo_path is None or result.repo_name is None:
         raise KeyError
@@ -402,8 +401,7 @@ def create_endpoint_from_repo_id(logger,db, repo_id):
         WHERE repo_id = :repo_id_bind
     """
     #ORM syntax of above statement
-    query = db.session.query(Repo).filter_by(repo_id=repo_id)
-    result = execute_session_query(query, 'one')
+    result = get_repo_by_repo_id(repo_id)
 
     url = result.repo_git
     logger.info(f"Url: {url}")

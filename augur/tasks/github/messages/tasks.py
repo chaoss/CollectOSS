@@ -9,32 +9,27 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import PullRequest, Message, Issue, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
-
+from augur.application.db.lib import get_repo_by_repo_git
 
 
 platform_id = 1
-
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_github_messages(repo_git: str) -> None:
 
     logger = logging.getLogger(collect_github_messages.__name__)
 
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
+    owner, repo = get_owner_repo(repo_git)
+
     with GithubTaskManifest(logger) as manifest:
-
-        augur_db = manifest.augur_db
             
-        repo_id = augur_db.session.query(Repo).filter(
-            Repo.repo_git == repo_git).one().repo_id
-
-        owner, repo = get_owner_repo(repo_git)
         task_name = f"{owner}/{repo}: Message Task"
         message_data = retrieve_all_pr_and_issue_messages(repo_git, logger, manifest.key_auth, task_name)
         
         if message_data:
-        
-            process_messages(message_data, task_name, repo_id, logger, augur_db)
-
+            process_messages(message_data, task_name, repo_id, logger, manifest.augur_db)
         else:
             logger.info(f"{owner}/{repo} has no messages")
 

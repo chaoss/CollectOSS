@@ -5,18 +5,17 @@ from augur.tasks.github.releases.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.util import execute_session_query
+from augur.application.db.lib import get_repo_by_repo_git
+
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_releases(repo_git):
 
     logger = logging.getLogger(collect_releases.__name__)
+
+    repo_obj = get_repo_by_repo_git(repo_git)
+    repo_id = repo_obj.repo_id
+
     with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
-
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
-
-
-        releases_model(augur_db, manifest.key_auth, logger, repo_git, repo_id)
+        releases_model(manifest.augur_db, manifest.key_auth, logger, repo_git, repo_id)

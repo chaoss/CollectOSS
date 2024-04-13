@@ -9,30 +9,28 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor, Repo
+from augur.application.db.lib import get_repo_by_repo_git
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
 
 
 platform_id = 1
 
-
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_pull_requests(repo_git: str) -> int:
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
+    owner, repo = get_owner_repo(repo_git)
+
     with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
-
-        repo_id = augur_db.session.query(Repo).filter(
-        Repo.repo_git == repo_git).one().repo_id
-
-        owner, repo = get_owner_repo(repo_git)
         pr_data = retrieve_all_pr_data(repo_git, logger, manifest.key_auth)
 
         if pr_data:
-            process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+            process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger, manifest.augur_db)
 
             return len(pr_data)
         else:
@@ -206,14 +204,12 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
     logger = logging.getLogger(collect_pull_request_review_comments.__name__)
     logger.info(f"Collecting pull request review comments for {owner}/{repo}")
 
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
     # define GithubTaskSession to handle insertions, and store oauth keys
     with GithubTaskManifest(logger) as manifest:
 
         augur_db = manifest.augur_db
-
-        # get repo_id
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_id = execute_session_query(query, 'one').repo_id
 
         query = augur_db.session.query(PullRequestReview).filter(PullRequestReview.repo_id == repo_id)
         pr_reviews = execute_session_query(query, 'all')
@@ -327,12 +323,11 @@ def collect_pull_request_reviews(repo_git: str) -> None:
     tool_source = "pull_request_reviews"
     data_source = "Github API"
 
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
     with GithubTaskManifest(logger) as manifest:
 
         augur_db = manifest.augur_db
-
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_id = execute_session_query(query, 'one').repo_id
 
         query = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
         prs = execute_session_query(query, 'all')

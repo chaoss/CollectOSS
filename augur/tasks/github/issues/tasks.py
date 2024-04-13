@@ -13,46 +13,30 @@ from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import Issue, IssueLabel, IssueAssignee, Contributor, Repo
 from augur.application.config import get_development_flag
-from augur.application.db.util import execute_session_query
+from augur.application.db.lib import get_repo_by_repo_git
+
 
 development = get_development_flag()
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_issues(repo_git : str) -> int:
 
-
     logger = logging.getLogger(collect_issues.__name__) 
-    with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
+
+    owner, repo = get_owner_repo(repo_git)
+
+    with GithubTaskManifest(logger) as manifest:
 
         logger.info(f'this is the manifest.key_auth value: {str(manifest.key_auth)}')
 
-        try:
-        
-            query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-            repo_obj = execute_session_query(query, 'one')
-            repo_id = repo_obj.repo_id
-
-            #try this
-            # the_key = manifest.key_auth
-            # try: 
-            #     randomon = GithubApiKeyHandler(augur_db.session)
-            #     the_key = randomon.get_random_key()
-            #     logger.info(f'The Random Key {the_key}')
-            # except Exception as e: 
-            #     logger.info(f'error: {e}')
-            #     the_key = manifest.key_auth
-            #     pass 
-
-            owner, repo = get_owner_repo(repo_git)
-        
+        try:    
             issue_data = retrieve_all_issue_data(repo_git, logger, manifest.key_auth)
-            #issue_data = retrieve_all_issue_data(repo_git, logger, the_key)
 
             if issue_data:
                 total_issues = len(issue_data)
-                process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger, augur_db)
+                process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger, manifest.augur_db)
 
                 return total_issues
             else:

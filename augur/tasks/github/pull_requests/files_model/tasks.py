@@ -3,16 +3,16 @@ from augur.tasks.github.pull_requests.files_model.core import *
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurSecondaryRepoCollectionTask
-from augur.application.db.util import execute_session_query
+from augur.application.db.lib import get_repo_by_repo_git
+
 
 @celery.task(base=AugurSecondaryRepoCollectionTask)
 def process_pull_request_files(repo_git: str) -> None:
 
     logger = logging.getLogger(process_pull_request_files.__name__)
 
-    with GithubTaskManifest(logger) as manifest:
-        augur_db = manifest.augur_db
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo = execute_session_query(query, 'one')
+    repo = get_repo_by_repo_git(repo_git)
 
-        pull_request_files_model(repo.repo_id, logger, augur_db, manifest.key_auth)
+    with GithubTaskManifest(logger) as manifest:
+
+        pull_request_files_model(repo, logger, manifest.augur_db, manifest.key_auth)
