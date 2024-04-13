@@ -74,7 +74,7 @@ class RepoLoadController:
             logger.warning(f"Invalid repo group id specified for {url}, skipping.")
             return False, {"status": f"Invalid repo group id specified for {url}, skipping."}
 
-        UserRepo.insert(repo_id)
+        UserRepo.insert(self.session, repo_id)
 
         #collection_status records are now only added during collection -IM 5/1/23
         #CollectionStatus.insert(self.session, repo_id)

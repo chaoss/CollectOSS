@@ -317,7 +317,7 @@ def assign_orphan_repos_to_default_user(session):
     repos = session.execute_sql(query).fetchall()
 
     for repo in repos:
-        UserRepo.insert(repo[0],1)
+        UserRepo.insert(session, repo[0],1)
 
 
 @cli.command('export-env')

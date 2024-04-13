@@ -23,7 +23,7 @@ def add_existing_repo_to_group(session, user_id, group_name, repo_id):
     if group_id is None:
         return False
     
-    result = UserRepo.insert(repo_id, group_id)
+    result = UserRepo.insert(session, repo_id, group_id)
     if not result:
         return False
     
@@ -38,7 +38,7 @@ def add_existing_org_to_group(session, user_id, group_name, rg_id):
     repos = session.query(Repo).filter(Repo.repo_group_id == rg_id).all()
     logger.info("Length of repos in org: " + str(len(repos)))
     for repo in repos:
-        result = UserRepo.insert(repo.repo_id, group_id)
+        result = UserRepo.insert(session, repo.repo_id, group_id)
         if not result:
             logger.info("Failed to add repo to group")
     
