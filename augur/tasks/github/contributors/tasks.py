@@ -116,7 +116,7 @@ def grab_comitters(self, repo_git,platform="github"):
 
     try:
         with GithubTaskManifest(logger) as manifest:
-            grab_committer_list(manifest, repo_id,platform)
+            grab_committer_list(logger, manifest.key_auth, repo_id,platform)
     except Exception as e:
         logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
