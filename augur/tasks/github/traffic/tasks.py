@@ -8,7 +8,7 @@ from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import RepoClone
 from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
-
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
 @celery.task
@@ -23,14 +23,14 @@ def collect_github_repo_clones_data(repo_git: str) -> None:
 
     logger.info(f"Collecting Github repository clone data for {owner}/{repo}")
 
-    with GithubTaskManifest(logger) as manifest:
+    key_auth = GithubRandomKeyAuth(logger)
 
-        clones_data = retrieve_all_clones_data(repo_git, logger, manifest.key_auth)
+    clones_data = retrieve_all_clones_data(repo_git, logger, key_auth)
 
-        if clones_data:
-            process_clones_data(clones_data, f"{owner}/{repo}: Traffic task", repo_id)
-        else:
-            logger.info(f"{owner}/{repo} has no clones")
+    if clones_data:
+        process_clones_data(clones_data, f"{owner}/{repo}: Traffic task", repo_id)
+    else:
+        logger.info(f"{owner}/{repo} has no clones")
 
 def retrieve_all_clones_data(repo_git: str, logger, key_auth):
     owner, repo = get_owner_repo(repo_git)

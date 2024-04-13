@@ -12,6 +12,7 @@ from augur.application.db.models import PullRequest, Message, PullRequestReview,
 from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
 platform_id = 1
@@ -25,17 +26,17 @@ def collect_pull_requests(repo_git: str) -> int:
 
     owner, repo = get_owner_repo(repo_git)
 
-    with GithubTaskManifest(logger) as manifest:
+    key_auth = GithubRandomKeyAuth(logger)
 
-        pr_data = retrieve_all_pr_data(repo_git, logger, manifest.key_auth)
+    pr_data = retrieve_all_pr_data(repo_git, logger, key_auth)
 
-        if pr_data:
-            process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger)
+    if pr_data:
+        process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger)
 
-            return len(pr_data)
-        else:
-            logger.info(f"{owner}/{repo} has no pull requests")
-            return 0
+        return len(pr_data)
+    else:
+        logger.info(f"{owner}/{repo} has no pull requests")
+        return 0
         
     
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers

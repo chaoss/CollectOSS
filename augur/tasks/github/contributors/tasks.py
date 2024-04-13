@@ -9,6 +9,8 @@ from augur.tasks.github.facade_github.tasks import *
 from augur.application.db.models import Contributor
 from augur.application.db.util import execute_session_query
 from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+
 
 
 @celery.task
@@ -115,8 +117,8 @@ def grab_comitters(self, repo_git,platform="github"):
     repo_id = repo.repo_id
 
     try:
-        with GithubTaskManifest(logger) as manifest:
-            grab_committer_list(logger, manifest.key_auth, repo_id,platform)
+        key_auth = GithubRandomKeyAuth(logger)
+        grab_committer_list(logger, key_auth, repo_id,platform)
     except Exception as e:
         logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 

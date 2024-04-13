@@ -5,6 +5,7 @@ from augur.tasks.github.repo_info.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.lib import get_repo_by_repo_git
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
 #Task to get regular misc github info
@@ -15,9 +16,9 @@ def collect_repo_info(repo_git: str):
 
     repo = get_repo_by_repo_git(repo_git)
 
-    with GithubTaskManifest(logger) as manifest:
+    key_auth = GithubRandomKeyAuth(logger)
 
-        repo_info_model(manifest.key_auth, repo, logger)
+    repo_info_model(key_auth, repo, logger)
 
 
 #Task to get CII api data for linux badge info using github data.

@@ -8,7 +8,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import Issue, IssueLabel, IssueAssignee, Contributor
@@ -27,24 +27,24 @@ def collect_issues(repo_git : str) -> int:
 
     owner, repo = get_owner_repo(repo_git)
 
-    with GithubTaskManifest(logger) as manifest:
+    key_auth = GithubRandomKeyAuth(logger)
 
-        logger.info(f'this is the manifest.key_auth value: {str(manifest.key_auth)}')
+    logger.info(f'this is the manifest.key_auth value: {str(key_auth)}')
 
-        try:    
-            issue_data = retrieve_all_issue_data(repo_git, logger, manifest.key_auth)
+    try:    
+        issue_data = retrieve_all_issue_data(repo_git, logger, key_auth)
 
-            if issue_data:
-                total_issues = len(issue_data)
-                process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger)
+        if issue_data:
+            total_issues = len(issue_data)
+            process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger)
 
-                return total_issues
-            else:
-                logger.info(f"{owner}/{repo} has no issues")
-                return 0
-        except Exception as e:
-            logger.error(f"Could not collect issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
-            return -1
+            return total_issues
+        else:
+            logger.info(f"{owner}/{repo} has no issues")
+            return 0
+    except Exception as e:
+        logger.error(f"Could not collect issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        return -1
 
 
 

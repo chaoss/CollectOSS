@@ -12,7 +12,6 @@ class GithubTaskManifest:
 
         self.augur_db = DatabaseSession(logger, engine)
         self.key_auth = GithubRandomKeyAuth(logger)
-        self.logger = logger
         self.platform_id = 1
 
     def __enter__(self):
