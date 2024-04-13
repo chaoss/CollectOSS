@@ -14,11 +14,12 @@ from augur.application.db.lib import get_section
 from augur.tasks.github.util.util import get_repo_weight_core, get_repo_weight_by_issue
 from augur.application.db.session import DatabaseSession
 from augur.application.db import get_engine
+from augur.application.db.lib import execute_sql
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 from augur.tasks.util.collection_state import CollectionState
 
 
-def get_list_of_all_users(session):
+def get_list_of_all_users():
     #Get a list of all users.
     query = s.sql.text("""
         SELECT  
@@ -26,7 +27,7 @@ def get_list_of_all_users(session):
         FROM augur_operations.users
     """)
 
-    users = session.execute_sql(query).fetchall()
+    users = execute_sql(query).fetchall()
     return users
 
 
@@ -133,7 +134,7 @@ class CollectionRequest:
         return len(session.query(CollectionStatus).filter(getattr(CollectionStatus,f"{self.name}_status" ) == CollectionState.COLLECTING.value).all())
 
     #Get repo urls based on passed in info.
-    def get_valid_repos(self,session):
+    def get_valid_repos(self,session, logger):
         #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
         #Get the count of repos that are currently running this collection hook
         #status_column = f"{hook}_status"
@@ -145,16 +146,16 @@ class CollectionRequest:
         limit = self.max_repo-active_repo_count
 
         #Extract the user id from the randomized list and split into four chunks
-        split_user_list = split_random_users_list(session,f"{self.name}_status",self.new_status)
+        split_user_list = split_random_users_list(f"{self.name}_status",self.new_status)
 
-        session.logger.info(f"User_list: {split_user_list}")
+        logger.info(f"User_list: {split_user_list}")
 
         #Iterate through each fourth of the users fetched
         for quarter_list in split_user_list:
             if limit <= 0:
                 return
 
-            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
+            collection_list = get_valid_repos_for_users(logger,limit,tuple(quarter_list),hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
 
             self.repo_list.extend(collection_list)
             #Update limit with amount of repos started
@@ -165,7 +166,7 @@ class CollectionRequest:
             return
 
 
-        user_list = get_list_of_all_users(session)
+        user_list = get_list_of_all_users()
         random.shuffle(user_list)
 
         #Extract the user id from the randomized list and split into four chunks
@@ -180,7 +181,7 @@ class CollectionRequest:
             #only start repos older than the specified amount of days
             #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
             #Order by the relevant weight for the collection hook
-            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),allow_old_repos=True,hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
+            collection_list = get_valid_repos_for_users(logger,limit,tuple(quarter_list),allow_old_repos=True,hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
 
             self.repo_list.extend(collection_list)
             limit -= len(collection_list)
@@ -625,7 +626,7 @@ class AugurTaskRoutine:
 #
 #    return len(repo_git_identifiers)
 
-def get_valid_repos_for_users(session,limit,users,allow_old_repos = False,hook="core",days_to_wait_until_next_collection = 1):
+def get_valid_repos_for_users(logger,limit,users,allow_old_repos = False,hook="core",days_to_wait_until_next_collection = 1):
 
     condition_string = "1"
 
@@ -652,10 +653,10 @@ def get_valid_repos_for_users(session,limit,users,allow_old_repos = False,hook="
     """).bindparams(list_of_user_ids=users,limit_num=limit)
 
     #Get a list of valid repo ids, limit set to 2 times the usual
-    valid_repos = session.execute_sql(repo_query).fetchall()
+    valid_repos = execute_sql(repo_query).fetchall()
     valid_repo_git_list = [repo[1] for repo in valid_repos]
 
-    session.logger.info(f"valid {hook} repo git list: {tuple(valid_repo_git_list)}")
+    logger.info(f"valid {hook} repo git list: {tuple(valid_repo_git_list)}")
     
     #start repos for new primary collection hook
     #collection_size = start_block_of_repos(
@@ -666,7 +667,7 @@ def get_valid_repos_for_users(session,limit,users,allow_old_repos = False,hook="
 
     return valid_repo_git_list
 
-def split_random_users_list(session,status_col, status_new):
+def split_random_users_list(status_col, status_new):
     #Split all users that have new repos into four lists and randomize order
     query = s.sql.text(f"""
         SELECT  
@@ -679,7 +680,7 @@ def split_random_users_list(session,status_col, status_new):
         GROUP BY user_id
     """)
 
-    user_list = session.execute_sql(query).fetchall()
+    user_list = execute_sql(query).fetchall()
     random.shuffle(user_list)
 
     #Extract the user id from the randomized list and split into four chunks

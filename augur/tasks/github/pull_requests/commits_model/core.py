@@ -15,8 +15,7 @@ def pull_request_commits_model(repo,logger, key_auth):
     pr_urls = []
     #pd.read_sql(pr_number_sql, self.db, params={})
 
-    pr_urls = fetchall_data_from_sql_text(pr_url_sql)#session.execute_sql(pr_number_sql).fetchall()
-
+    pr_urls = fetchall_data_from_sql_text(pr_url_sql)
     owner, name = get_owner_repo(repo.repo_git)
 
     task_name = f"{owner}/{name} Pr commits"

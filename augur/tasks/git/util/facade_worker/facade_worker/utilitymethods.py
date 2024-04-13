@@ -46,7 +46,7 @@ def update_repo_log(logger, facade_helper, repos_id,status):
 		log_message = s.sql.text("""INSERT INTO repos_fetch_log (repos_id,status) 
             VALUES (:repo_id,:repo_status)""").bindparams(repo_id=repos_id,repo_status=status)
 
-		#session.insert_data(data,t_repos_fetch_log,['repos_id','status'])
+		#bulk_insert_dicts(data,t_repos_fetch_log,['repos_id','status'])
 		execute_sql(log_message)
 	except Exception as e:
 		logger.error(f"Ran into error in update_repo_log: {e}")

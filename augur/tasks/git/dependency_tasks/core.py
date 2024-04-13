@@ -108,7 +108,7 @@ def generate_scorecard(logger, repo_git):
         'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
     }
     to_insert.append(overall_deps_scorecard)
-   # session.insert_data(overall_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
+   # bulk_insert_dicts(overall_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
 
     #Store misc data from scorecard in json field. 
     for check in required_output['checks']:

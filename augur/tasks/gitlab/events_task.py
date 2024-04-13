@@ -11,6 +11,7 @@ from augur.application.db.data_parse import extract_gitlab_mr_event_data, extrac
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import Repo, Issue, IssueEvent, PullRequest, PullRequestEvent
 from augur.application.db.util import execute_session_query
+from augur.application.db.lib import bulk_insert_dicts
 
 platform_id = 2
 
@@ -153,7 +154,7 @@ def process_issue_events(events, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(issue_event_dicts)} gitlab issue events")
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
-    augur_db.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
+    bulk_insert_dicts(issue_event_dicts, IssueEvent, issue_event_natural_keys)
 
 
 def process_mr_events(events, task_name, repo_id, logger, augur_db):
@@ -203,6 +204,6 @@ def process_mr_events(events, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(mr_event_dicts)} gitlab mr events")
     mr_event_natural_keys = ["platform_id", "node_id"]
-    augur_db.insert_data(mr_event_dicts, PullRequestEvent, mr_event_natural_keys)
+    bulk_insert_dicts(mr_event_dicts, PullRequestEvent, mr_event_natural_keys)
 
 

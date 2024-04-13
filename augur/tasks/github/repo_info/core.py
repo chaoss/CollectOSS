@@ -256,7 +256,7 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
         'data_source': "Github"
     }
 
-    #result = session.insert_data(rep_inf,RepoInfo,['repo_info_id']) #result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
+    #result = bulk_insert_dicts(rep_inf,RepoInfo,['repo_info_id']) #result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
     insert_statement = s.sql.text("""INSERT INTO repo_info (repo_id,last_updated,issues_enabled,
 			open_issues,pull_requests_enabled,wiki_enabled,pages_enabled,fork_count,
 			default_branch,watchers_count,license,stars_count,

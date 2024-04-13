@@ -62,7 +62,6 @@ def generate_deps_libyear_data(logger, repo_id, path):
             #    VALUES (:repo_id, :name,:requirement,:type,:package_manager,:current_verion,:latest_version,:current_release_date,:latest_release_date,:libyear,:tool_source,:tool_version,:data_source, :data_collection_date)
             #""").bindparams(**repo_deps)
 #
-            #session.execute_sql(insert_statement)
             to_insert.append(repo_deps)
 
         bulk_insert_dicts(logger, to_insert, RepoDepsLibyear, ["repo_id","name","data_collection_date"])

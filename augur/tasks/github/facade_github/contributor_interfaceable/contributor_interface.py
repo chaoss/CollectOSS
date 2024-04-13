@@ -8,7 +8,7 @@ from augur.tasks.github.util.github_paginator import hit_api, process_dict_respo
 import traceback
 from augur.tasks.github.util.github_paginator import GithubApiResult
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import get_repo_by_repo_id
+from augur.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts, execute_sql
 
 ##TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
 
@@ -191,7 +191,7 @@ def insert_alias(logger,db, contributor, email):
 
     # Insert new alias
     
-    db.insert_data(alias, ContributorsAlias, ['alias_email'])
+    bulk_insert_dicts(alias, ContributorsAlias, ['alias_email'])
     
 
     return
@@ -199,7 +199,7 @@ def insert_alias(logger,db, contributor, email):
 # Takes the user data from the endpoint as arg
 # Updates the alias table if the login is already in the contributor's table with the new email.
 # Returns whether the login was found in the contributors table
-def resolve_if_login_existing(session, contributor):
+def resolve_if_login_existing(logger, contributor):
     # check if login exists in contributors table
     select_cntrbs_query = s.sql.text("""
         SELECT cntrb_id from contributors
@@ -209,7 +209,7 @@ def resolve_if_login_existing(session, contributor):
     # Bind parameter
     select_cntrbs_query = select_cntrbs_query.bindparams(
         gh_login_value=contributor['cntrb_login'])
-    result = session.execute_sql(select_cntrbs_query)
+    result = execute_sql(select_cntrbs_query)
 
     # if yes
     if len(result.fetchall()) >= 1:
@@ -217,7 +217,7 @@ def resolve_if_login_existing(session, contributor):
         return True
 
     # If not found, return false
-    session.logger.info(
+    logger.info(
         f"Contributor not found in contributors table but can be added. Adding...")
     return False
 """
@@ -310,7 +310,7 @@ def fetch_username_from_email(logger, auth, commit):
 # Method to return the login given commit data using the supplemental data in the commit
 #   -email
 #   -name
-def get_login_with_supplemental_data(logger,db,auth, commit_data):
+def get_login_with_supplemental_data(logger, auth, commit_data):
 
     # Try to get login from all possible emails
     # Is None upon failure.
@@ -328,7 +328,7 @@ def get_login_with_supplemental_data(logger,db,auth, commit_data):
         try:
             
             unresolved_natural_keys = ['email']
-            db.insert_data(unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
+            bulk_insert_dicts(unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
         except Exception as e:
             logger.error(
                 f"Could not create new unresolved email {unresolved['email']}. Error: {e}")

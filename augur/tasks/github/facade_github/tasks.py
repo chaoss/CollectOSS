@@ -63,7 +63,7 @@ def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id)
         if login == None or login == "":
             logger.info("Failed to get login from commit hash")
             # Try to get the login from supplemental data if not found with the commit hash
-            login = get_login_with_supplemental_data(logger, db, auth,contributor)
+            login = get_login_with_supplemental_data(logger, auth,contributor)
     
         if login == None or login == "":
             logger.error("Failed to get login from supplemental data!")
@@ -131,8 +131,7 @@ def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id)
         #Executes an upsert with sqlalchemy 
         cntrb_natural_keys = ['cntrb_id']
         
-        db.insert_data(cntrb,Contributor,cntrb_natural_keys)
-
+        bulk_insert_dicts(cntrb,Contributor,cntrb_natural_keys)
 
         try:
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
@@ -160,7 +159,7 @@ def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id)
         logger.info(f"Updating now resolved email {email}")
 
         try:
-            db.execute_sql(query)
+            execute_sql(query)
         except Exception as e:
             logger.info(
                 f"Deleting now resolved email failed with error: {e}")
@@ -207,7 +206,7 @@ def insert_facade_contributors(self, repo_id):
         # Get all of the commit data's emails and names from the commit table that do not appear
         # in the contributors table or the contributors_aliases table.
 
-        manifest.logger.info(
+        logger.info(
         "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
         new_contrib_sql = s.sql.text("""
                 SELECT DISTINCT
@@ -247,7 +246,7 @@ def insert_facade_contributors(self, repo_id):
         """).bindparams(repo_id=repo_id)
 
         #Execute statement with session.
-        result = manifest.augur_db.execute_sql(new_contrib_sql)
+        result = execute_sql(new_contrib_sql)
         new_contribs = [dict(row) for row in result.mappings()]
 
         #print(new_contribs)
@@ -257,9 +256,9 @@ def insert_facade_contributors(self, repo_id):
 
 
 
-        process_commit_metadata(manifest.logger,manifest.augur_db,manifest.key_auth,list(new_contribs),repo_id,manifest.platform_id)
+        process_commit_metadata(logger,manifest.augur_db,manifest.key_auth,list(new_contribs),repo_id,manifest.platform_id)
 
-        manifest.logger.debug("DEBUG: Got through the new_contribs")
+        logger.debug("DEBUG: Got through the new_contribs")
     
 
     facade_helper = FacadeHelper(logger)

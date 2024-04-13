@@ -8,7 +8,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.facade_github.tasks import *
 from augur.application.db.models import Contributor
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import get_repo_by_repo_git
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
 
 
 @celery.task
@@ -61,7 +61,7 @@ def process_contributors():
             enriched_contributors.append(contributor_dict)
 
         logger.info(f"Enriching {len(enriched_contributors)} contributors")
-        augur_db.insert_data(enriched_contributors, Contributor, ["cntrb_id"])
+        bulk_insert_dicts(enriched_contributors, Contributor, ["cntrb_id"])
 
 
 

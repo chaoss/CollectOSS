@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple, Optional
 
 from augur.application.db.data_parse import *
 from augur.application.db.session import DatabaseSession
+from augur.application.db.lib import bulk_insert_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, Contributor
@@ -129,12 +130,12 @@ def extract_data_from_pr_list(pull_requests: List[dict],
     return pr_dicts, pr_mapping_data, pr_numbers, contributors
 
 
-def insert_pr_contributors(contributors: List[dict], session: DatabaseSession, task_name: str) -> None:
+def insert_pr_contributors(contributors: List[dict], logger, task_name: str) -> None:
     """Insert pr contributors
     
     Args:
         contributors: the contributor data that is being inserted
-        session: database session to insert the data with
+        logger
         task_name: to differiante between log statements since there are multiple tasks of the same type
     """
 
@@ -142,16 +143,16 @@ def insert_pr_contributors(contributors: List[dict], session: DatabaseSession, t
     contributors = remove_duplicate_dicts(contributors)
 
     # insert contributors from these prs
-    session.logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    session.insert_data(contributors, Contributor, ["cntrb_id"])
+    logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
+    bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
 
 
-def insert_prs(pr_dicts: List[dict], session: DatabaseSession, task_name: str) -> Optional[List[dict]]:
+def insert_prs(pr_dicts: List[dict], logger, task_name: str) -> Optional[List[dict]]:
     """Insert pull requests
     
     Args:
         pr_dicts: the pull request data that is being inserted
-        session: database session to insert the data with
+        logger
         task_name: to differiante between log statements since there are multiple tasks of the same type
 
     Returns:
@@ -159,10 +160,10 @@ def insert_prs(pr_dicts: List[dict], session: DatabaseSession, task_name: str) -
             So we can determine what labels, assigness, and other data belong to each pr
     """
 
-    session.logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
+    logger.info(f"{task_name}: Inserting prs of length: {len(pr_dicts)}")
     pr_natural_keys = ["pr_url"]
     pr_return_columns = ["pull_request_id", "pr_url"]
-    pr_return_data = session.insert_data(pr_dicts, PullRequest, pr_natural_keys, return_columns=pr_return_columns)
+    pr_return_data = bulk_insert_dicts(pr_dicts, PullRequest, pr_natural_keys, return_columns=pr_return_columns)
 
     return pr_return_data
 
@@ -211,7 +212,7 @@ def map_other_pr_data_to_pr(
     return pr_label_dicts, pr_assignee_dicts, pr_reviewer_dicts, pr_metadata_dicts 
 
 
-def insert_pr_labels(labels: List[dict], logger: logging.Logger, session) -> None:
+def insert_pr_labels(labels: List[dict], logger: logging.Logger) -> None:
     """Insert pull request labels
 
     Note:
@@ -223,10 +224,10 @@ def insert_pr_labels(labels: List[dict], logger: logging.Logger, session) -> Non
     """
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
-    session.insert_data(labels, PullRequestLabel, pr_label_natural_keys)
+    bulk_insert_dicts(labels, PullRequestLabel, pr_label_natural_keys)
 
 
-def insert_pr_assignees(assignees: List[dict], logger: logging.Logger, session) -> None:
+def insert_pr_assignees(assignees: List[dict], logger: logging.Logger) -> None:
     """Insert pull request assignees
 
     Note:
@@ -238,10 +239,10 @@ def insert_pr_assignees(assignees: List[dict], logger: logging.Logger, session) 
     """
     # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
     pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    session.insert_data(assignees, PullRequestAssignee, pr_assignee_natural_keys)
+    bulk_insert_dicts(assignees, PullRequestAssignee, pr_assignee_natural_keys)
 
 
-def insert_pr_reviewers(reviewers: List[dict], logger: logging.Logger, session) -> None:
+def insert_pr_reviewers(reviewers: List[dict], logger: logging.Logger) -> None:
     """Insert pull request reviewers
 
     Note:
@@ -253,10 +254,10 @@ def insert_pr_reviewers(reviewers: List[dict], logger: logging.Logger, session) 
     """
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
-    session.insert_data(reviewers, PullRequestReviewer, pr_reviewer_natural_keys)
+    bulk_insert_dicts(reviewers, PullRequestReviewer, pr_reviewer_natural_keys)
 
 
-def insert_pr_metadata(metadata: List[dict], logger: logging.Logger, session) -> None:
+def insert_pr_metadata(metadata: List[dict], logger: logging.Logger) -> None:
     """Insert pull request metadata
 
     Note:
@@ -269,7 +270,7 @@ def insert_pr_metadata(metadata: List[dict], logger: logging.Logger, session) ->
     # inserting pr metadata
     # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
-    session.insert_data(metadata, PullRequestMeta, pr_metadata_natural_keys)
+    bulk_insert_dicts(metadata, PullRequestMeta, pr_metadata_natural_keys)
 
 
 

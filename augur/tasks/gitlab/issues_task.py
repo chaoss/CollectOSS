@@ -13,6 +13,7 @@ from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_d
 from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Repo, Contributor
 from augur.application.db.util import execute_session_query
 from augur.tasks.util.worker_util import remove_duplicate_dicts
+from augur.application.db.lib import bulk_insert_dicts
 
 platform_id = 2
 
@@ -41,7 +42,7 @@ def collect_gitlab_issues(repo_git : str) -> int:
             issue_data = retrieve_all_gitlab_issue_data(repo_git, logger, manifest.key_auth)
 
             if issue_data:
-                issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger, augur_db)
+                issue_ids = process_issues(issue_data, f"{owner}/{repo}: Gitlab Issue task", repo_id, logger)
 
                 return issue_ids
             else:
@@ -87,7 +88,7 @@ def retrieve_all_gitlab_issue_data(repo_git, logger, key_auth) -> None:
 
     return all_data
     
-def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
+def process_issues(issues, task_name, repo_id, logger) -> None:
     """
     Retrieve only the needed data for issues from the api response
 
@@ -142,14 +143,14 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
 
     # insert contributors from these issues
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
            
     logger.info(f"{task_name}: Inserting {len(issue_dicts)} gitlab issues")
     issue_natural_keys = ["repo_id", "gh_issue_id"]
     issue_string_columns = ["issue_title", "issue_body"]
     issue_return_columns = ["gh_issue_id", "issue_id"]
 
-    issue_return_data = augur_db.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
+    issue_return_data = bulk_insert_dicts(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
 
     issue_label_dicts = []
     issue_assignee_dicts = []
@@ -176,12 +177,12 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
     # we are using label_src_id and issue_id to determine if the label is already in the database.
     issue_label_natural_keys = ['label_src_id', 'issue_id']
     issue_label_string_fields = ["label_text", "label_description"]
-    augur_db.insert_data(issue_label_dicts, IssueLabel,
+    bulk_insert_dicts(issue_label_dicts, IssueLabel,
                         issue_label_natural_keys, string_fields=issue_label_string_fields)
 
     # inserting issue assignees
     issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    augur_db.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
+    bulk_insert_dicts(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
 
     return issue_ids
 
@@ -326,13 +327,13 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
     contributors = remove_duplicate_dicts(contributors)
 
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
 
     logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
     message_natural_keys = ["platform_msg_id", "pltfrm_id"]
     message_return_columns = ["msg_id", "platform_msg_id"]
     message_string_fields = ["msg_text"]
-    message_return_data = augur_db.insert_data(message_dicts, Message, message_natural_keys, 
+    message_return_data = bulk_insert_dicts(message_dicts, Message, message_natural_keys, 
                                                 return_columns=message_return_columns, string_fields=message_string_fields)
     
     issue_message_ref_dicts = []
@@ -349,7 +350,7 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(issue_message_ref_dicts)} gitlab issue messages ref rows")
     issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
-    augur_db.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
+    bulk_insert_dicts(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
 
 
 def process_gitlab_issue_comment_contributors(message, tool_source, tool_version, data_source):

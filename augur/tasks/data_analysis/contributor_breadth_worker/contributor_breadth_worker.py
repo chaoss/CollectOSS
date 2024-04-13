@@ -7,6 +7,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.application.db.models import ContributorRepo
+from augur.application.db.lib import bulk_insert_dicts
 
 ### This worker scans all the platform users in Augur, and pulls their platform activity 
 ### logs. Those are then used to analyze what repos each is working in (which will include repos not
@@ -117,7 +118,7 @@ def contributor_breadth_model(self) -> None:
 
             logger.info(f"Inserting {len(events)} events")
             natural_keys = ["event_id", "tool_version"]
-            manifest.augur_db.insert_data(events, ContributorRepo, natural_keys)  
+            bulk_insert_dicts(events, ContributorRepo, natural_keys)  
 
 
 def process_contributor_events(cntrb, cntrb_events, logger, tool_source, tool_version, data_source):

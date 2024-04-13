@@ -10,7 +10,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, PullRequestEvent, Issue, IssueEvent, Contributor
-from augur.application.db.lib import get_repo_by_repo_git
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
 
 platform_id = 1
 
@@ -154,7 +154,7 @@ def process_events(events, task_name, repo_id, logger, augur_db):
     # remove contributors that were found in the data more than once
     contributors = remove_duplicate_dicts(contributors)
 
-    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(contributors, Contributor, ["cntrb_id"])
 
     issue_events_len = len(issue_event_dicts)
     pr_events_len = len(pr_event_dicts)
@@ -168,10 +168,10 @@ def process_events(events, task_name, repo_id, logger, augur_db):
 
     # TODO: Could replace this with "id" but it isn't stored on the table for some reason
     pr_event_natural_keys = ["node_id"]
-    augur_db.insert_data(pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
+    bulk_insert_dicts(pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
 
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
-    augur_db.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
+    bulk_insert_dicts(issue_event_dicts, IssueEvent, issue_event_natural_keys)
 
     update_issue_closed_cntrbs_from_events(augur_db.engine, repo_id)
 
