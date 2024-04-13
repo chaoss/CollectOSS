@@ -57,7 +57,7 @@ def query_github_contributors(logger, key_auth, github_url):
 
             
             logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
-            #r = hit_api(session.oauths, cntrb_url, session.logger)
+            #r = hit_api(session.oauths, cntrb_url, logger)
             #contributor = r.json()
 
             contributor, result = retrieve_dict_from_endpoint(logger, key_auth, cntrb_url)

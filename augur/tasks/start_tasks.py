@@ -263,7 +263,7 @@ def augur_collection_monitor(self):
             #start_ml_collection(session,max_repo=5)
         
         logger.info(f"Starting collection phases: {[h.name for h in enabled_collection_hooks]}")
-        main_routine = AugurTaskRoutine(session,enabled_collection_hooks)
+        main_routine = AugurTaskRoutine(logger, session,enabled_collection_hooks)
 
         main_routine.start_data_collection()
 
@@ -369,7 +369,7 @@ def create_collection_status_records(self):
         repo = execute_sql(query).first()
 
         while repo is not None:
-            CollectionStatus.insert(session,repo[0])
+            CollectionStatus.insert(session, logger, repo[0])
             repo = execute_sql(query).first()
     
     #Check for new repos every seven minutes to be out of step with the clone_repos task

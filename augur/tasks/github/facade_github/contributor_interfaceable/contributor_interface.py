@@ -25,8 +25,8 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
 # Returns None on failure.
 # NOTE: This function is being deprecated in favor of retrieve_dict_from_endpoint
-def request_dict_from_endpoint(session, url, timeout_wait=10):
-    #session.logger.info(f"Hitting endpoint: {url}")
+def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
+    #logger.info(f"Hitting endpoint: {url}")
 
     attempts = 0
     response_data = None
@@ -34,9 +34,9 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
 
     while attempts < 10:
         try:
-            response = hit_api(session.oauths, url, session.logger)
+            response = hit_api(session.oauths, url, logger)
         except TimeoutError:
-            session.logger.info(
+            logger.info(
                 f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
             time.sleep(timeout_wait)
             continue
@@ -51,34 +51,34 @@ def request_dict_from_endpoint(session, url, timeout_wait=10):
             response_data = json.loads(json.dumps(response.text))
 
         if type(response_data) == dict:
-            err = process_dict_response(session.logger,response,response_data)
+            err = process_dict_response(logger,response,response_data)
 
             
             #If we get an error message that's not None
             if err and err != GithubApiResult.SUCCESS:
                 attempts += 1
-                session.logger.info(f"err: {err}")
+                logger.info(f"err: {err}")
                 continue
 
-            #session.logger.info(f"Returned dict: {response_data}")
+            #logger.info(f"Returned dict: {response_data}")
             success = True
             break
         elif type(response_data) == list:
-            session.logger.warning("Wrong type returned, trying again...")
-            session.logger.info(f"Returned list: {response_data}")
+            logger.warning("Wrong type returned, trying again...")
+            logger.info(f"Returned list: {response_data}")
         elif type(response_data) == str:
-            session.logger.info(
+            logger.info(
                 f"Warning! page_data was string: {response_data}")
             if "<!DOCTYPE html>" in response_data:
-                session.logger.info("HTML was returned, trying again...\n")
+                logger.info("HTML was returned, trying again...\n")
             elif len(response_data) == 0:
-                session.logger.warning("Empty string, trying again...\n")
+                logger.warning("Empty string, trying again...\n")
             else:
                 try:
                     # Sometimes raw text can be converted to a dict
                     response_data = json.loads(response_data)
 
-                    err = process_dict_response(session.logger,response,response_data)
+                    err = process_dict_response(logger,response,response_data)
 
                     #If we get an error message that's not None
                     if err and err != GithubApiResult.SUCCESS:
@@ -120,7 +120,7 @@ def create_endpoint_from_commit_sha(logger,db,commit_sha, repo_id):
         raise KeyError
 
     # Else put into a more readable local var
-    #session.logger.info(f"Result: {result}")
+    #logger.info(f"Result: {result}")
 
     split_git = result.repo_git.split('/')
     repo_name_and_org = split_git[-2] + "/" + result.repo_name
@@ -174,9 +174,9 @@ def insert_alias(logger,db, contributor, email):
         logger.info(
             f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
 
-    #session.logger.info(f"Creating alias for email: {email}")
+    #logger.info(f"Creating alias for email: {email}")
 
-    #session.logger.info(f"{contributor_table_data} has type {type(contributor_table_data)}")
+    #logger.info(f"{contributor_table_data} has type {type(contributor_table_data)}")
     # Insert a new alias that corresponds to where the contributor was found
     # use the email of the new alias for canonical_email if the api returns NULL
     # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
@@ -275,7 +275,7 @@ def fetch_username_from_email(logger, auth, commit):
     # Default to failed state
     login_json = None
 
-    #session.logger.info(f"Here is the commit: {commit}")
+    #logger.info(f"Here is the commit: {commit}")
 
     # email = commit['email_raw'] if 'email_raw' in commit else commit['email_raw']
 

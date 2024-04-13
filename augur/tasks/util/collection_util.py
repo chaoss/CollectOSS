@@ -536,8 +536,8 @@ class AugurTaskRoutine:
         collection_hook (str): String determining the attributes to update when collection for a repo starts. e.g. core
         session: Database session to use
     """
-    def __init__(self,session,collection_hooks):
-        self.logger = session.logger
+    def __init__(self, logger, session,collection_hooks):
+        self.logger = logger
 
         self.collection_hooks = collection_hooks
         self.session = session
@@ -660,7 +660,7 @@ def get_valid_repos_for_users(logger,limit,users,allow_old_repos = False,hook="c
     
     #start repos for new primary collection hook
     #collection_size = start_block_of_repos(
-    #    session.logger, session,
+    #    logger, session,
     #    valid_repo_git_list,
     #    phases, repos_type=repos_type, hook=hook
     #)
