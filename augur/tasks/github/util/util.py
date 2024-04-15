@@ -4,6 +4,7 @@ import logging
 import json
 import httpx
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.application.db.lib import get_repo_by_repo_git
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
@@ -71,9 +72,10 @@ def get_repo_weight_by_issue(logger,repo_git):
 
     owner,name = get_owner_repo(repo_git)
 
-    with GithubTaskManifest(logger) as manifest:
-        repo_graphql = GitHubRepoGraphql(logger, manifest.key_auth, owner, name)
-        number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
+    key_auth = GithubRandomKeyAuth(logger)
+
+    repo_graphql = GitHubRepoGraphql(logger, key_auth, owner, name)
+    number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
     
     return number_of_issues_and_prs
 
