@@ -4,7 +4,6 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.releases.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
-from augur.application.db.util import execute_session_query
 from augur.application.db.lib import get_repo_by_repo_git
 
 

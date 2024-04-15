@@ -9,7 +9,7 @@ from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
 
-from augur.application.db.models import Config, Repo, Commit, WorkerOauth
+from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest
 from augur.application.db import get_session, get_engine
 from augur.application.db.util import execute_session_query
 from augur.application.db.session import remove_duplicates_by_uniques, remove_null_characters_from_list_of_dicts
@@ -423,3 +423,53 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
 
 
 
+def get_issues_by_repo_id(repo_id):
+
+    with get_session() as session:
+
+        return session.query(Issue).filter(Issue.repo_id == repo_id).all()
+    
+def get_pull_requests_by_repo_id(repo_id):
+
+    with get_session() as session:
+
+        return session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    
+
+def update_issue_closed_cntrbs_by_repo_id(repo_id):
+
+    engine = get_engine()
+
+    get_ranked_issues = s.text(f"""
+        WITH RankedIssues AS (
+            SELECT repo_id, issue_id, cntrb_id, 
+                ROW_NUMBER() OVER(PARTITION BY issue_id ORDER BY created_at DESC) AS rn
+            FROM issue_events 
+            WHERE "action" = 'closed'
+        )
+                                            
+        SELECT issue_id, cntrb_id from RankedIssues where rn=1 and repo_id={repo_id} and cntrb_id is not NULL
+    """)
+
+    with engine.connect() as conn:
+        result = conn.execute(get_ranked_issues).fetchall()
+
+    update_data = []
+    for row in result:
+        update_data.append(
+            {
+            'issue_id': row[0], 
+            'cntrb_id': row[1], 
+            'repo_id': repo_id
+            }
+        )
+
+    if update_data:
+        with engine.connect() as connection:
+            update_stmt = s.text("""
+                UPDATE issues
+                SET cntrb_id = :cntrb_id
+                WHERE issue_id = :issue_id
+                AND repo_id = :repo_id
+            """)
+            connection.execute(update_stmt, update_data)

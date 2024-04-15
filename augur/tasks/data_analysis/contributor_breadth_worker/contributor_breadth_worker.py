@@ -4,7 +4,6 @@ import sqlalchemy as s
 from datetime import datetime
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.application.db.models import ContributorRepo
 from augur.application.db.lib import bulk_insert_dicts

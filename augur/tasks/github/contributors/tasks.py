@@ -4,11 +4,10 @@ import logging
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.github.util.github_paginator import hit_api
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.facade_github.tasks import *
 from augur.application.db.models import Contributor
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
+from augur.application.db.lib import bulk_insert_dicts
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
