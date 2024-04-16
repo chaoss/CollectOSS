@@ -9,7 +9,7 @@ from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
 
-from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview
+from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,    UnresolvedCommitEmail, Contributor
 from augur.application.db import get_session, get_engine
 from augur.application.db.util import execute_session_query
 from augur.application.db.session import remove_duplicates_by_uniques, remove_null_characters_from_list_of_dicts
@@ -441,6 +441,30 @@ def get_pull_request_reviews_by_repo_id(repo_id):
 
         return session.query(PullRequestReview).filter(PullRequestReview.repo_id == repo_id).all()
     
+def get_contributor_aliases_by_email(email):
+
+    with get_session() as session:
+
+        return session.query(ContributorsAlias).filter_by(alias_email=email).all()
+    
+def get_unresolved_commit_emails_by_name(name):
+
+    with get_session() as session:
+
+        return session.query(UnresolvedCommitEmail).filter_by(name=name).all()
+ 
+def get_contributors_by_full_name(full_name):
+
+    with get_session() as session:
+
+        return session.query(Contributor).filter_by(cntrb_full_name=full_name).all()
+    
+def get_contributors_by_github_user_id(id):
+
+    with get_session() as session:
+
+        # Look into this, where it was used was doing .all() but this query should really only return one
+        return session.query(Contributor).filter_by(gh_user_id=id).all()
 
 def update_issue_closed_cntrbs_by_repo_id(repo_id):
 

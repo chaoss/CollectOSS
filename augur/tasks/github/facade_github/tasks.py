@@ -4,15 +4,14 @@ import logging
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 from augur.tasks.github.util.github_paginator import retrieve_dict_from_endpoint
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.application.db.models import Contributor
 from augur.tasks.github.facade_github.core import *
-from augur.application.db.lib import execute_sql
-from augur.application.db.util import execute_session_query
+from augur.application.db.lib import execute_sql, get_contributor_aliases_by_email, get_unresolved_commit_emails_by_name, get_contributors_by_full_name
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 
 
-def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id):
+def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id):
 
     for contributor in contributorQueue:
         # Get the email from the commit data
@@ -23,8 +22,7 @@ def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id)
         # check the email to see if it already exists in contributor_aliases
         
         # Look up email to see if resolved
-        query = db.query(ContributorsAlias).filter_by(alias_email=email)
-        alias_table_data = execute_session_query(query, 'all')
+        alias_table_data = get_contributor_aliases_by_email(email)
         if len(alias_table_data) >= 1:
             # Move on if email resolved
             logger.info(
@@ -35,8 +33,7 @@ def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id)
         #Check the unresolved_commits table to avoid hitting endpoints that we know don't have relevant data needlessly
         
             
-        query = db.query(UnresolvedCommitEmail).filter_by(name=name)
-        unresolved_query_result = execute_session_query(query, 'all')
+        unresolved_query_result = get_unresolved_commit_emails_by_name(name)
 
         if len(unresolved_query_result) >= 1:
 
@@ -47,8 +44,7 @@ def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id)
     
         #Check the contributors table for a login for the given name
 
-        query = db.query(Contributor).filter_by(cntrb_full_name=name)
-        contributors_with_matching_name = execute_session_query(query, 'first')
+        contributors_with_matching_name = get_contributors_by_full_name(name)
 
         if not contributors_with_matching_name:
             logger.debug("Failed local login lookup")
@@ -58,7 +54,7 @@ def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id)
 
         # Try to get the login from the commit sha
         if login == None or login == "":
-            login = get_login_with_commit_hash(logger,db,auth,contributor, repo_id)
+            login = get_login_with_commit_hash(logger, auth, contributor, repo_id)
     
         if login == None or login == "":
             logger.info("Failed to get login from commit hash")
@@ -135,7 +131,7 @@ def process_commit_metadata(logger,db,auth,contributorQueue,repo_id,platform_id)
 
         try:
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
-            insert_alias(logger, db,cntrb, emailFromCommitData)
+            insert_alias(logger, cntrb, emailFromCommitData)
         except LookupError as e:
             logger.info(
                 ''.join(traceback.format_exception(None, e, e.__traceback__)))
@@ -196,71 +192,71 @@ def link_commits_to_contributor(logger, facade_helper, contributorQueue):
 @celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
 def insert_facade_contributors(self, repo_id):
 
+    # Set platform id to 1 since this task is github specific
+    platform_id = 1
+
     engine = self.app.engine
 
     logger = logging.getLogger(insert_facade_contributors.__name__)
 
-    with GithubTaskManifest(logger) as manifest:
-        
+    # Get all of the commit data's emails and names from the commit table that do not appear
+    # in the contributors table or the contributors_aliases table.
 
-        # Get all of the commit data's emails and names from the commit table that do not appear
-        # in the contributors table or the contributors_aliases table.
+    logger.info(
+    "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
+    new_contrib_sql = s.sql.text("""
+            SELECT DISTINCT
+                commits.cmt_author_name AS NAME,
+                commits.cmt_commit_hash AS hash,
+                commits.cmt_author_raw_email AS email_raw,
+                'not_unresolved' as resolution_status
+            FROM
+                commits
+            WHERE
+                commits.repo_id = :repo_id
+                AND (NOT EXISTS ( SELECT contributors.cntrb_canonical FROM contributors WHERE contributors.cntrb_canonical = commits.cmt_author_raw_email )
+                or NOT EXISTS ( SELECT contributors_aliases.alias_email from contributors_aliases where contributors_aliases.alias_email = commits.cmt_author_raw_email)
+                AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name ))
+            GROUP BY
+                commits.cmt_author_name,
+                commits.cmt_commit_hash,
+                commits.cmt_author_raw_email
+            UNION
+            SELECT DISTINCT
+                commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
+                commits.cmt_commit_hash AS hash,
+                commits.cmt_author_raw_email AS email_raw,
+                'unresolved' as resolution_status
+            FROM
+                commits
+            WHERE
+                commits.repo_id = :repo_id
+                AND EXISTS ( SELECT unresolved_commit_emails.email FROM unresolved_commit_emails WHERE unresolved_commit_emails.email = commits.cmt_author_raw_email )
+                AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name )
+            GROUP BY
+                commits.cmt_author_name,
+                commits.cmt_commit_hash,
+                commits.cmt_author_raw_email
+            ORDER BY
+            hash
+    """).bindparams(repo_id=repo_id)
 
-        logger.info(
-        "Beginning process to insert contributors from facade commits for repo w entry info: {}\n".format(repo_id))
-        new_contrib_sql = s.sql.text("""
-                SELECT DISTINCT
-                    commits.cmt_author_name AS NAME,
-                    commits.cmt_commit_hash AS hash,
-                    commits.cmt_author_raw_email AS email_raw,
-                    'not_unresolved' as resolution_status
-                FROM
-                    commits
-                WHERE
-                    commits.repo_id = :repo_id
-                    AND (NOT EXISTS ( SELECT contributors.cntrb_canonical FROM contributors WHERE contributors.cntrb_canonical = commits.cmt_author_raw_email )
-                    or NOT EXISTS ( SELECT contributors_aliases.alias_email from contributors_aliases where contributors_aliases.alias_email = commits.cmt_author_raw_email)
-                    AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name ))
-                GROUP BY
-                    commits.cmt_author_name,
-                    commits.cmt_commit_hash,
-                    commits.cmt_author_raw_email
-                UNION
-                SELECT DISTINCT
-                    commits.cmt_author_name AS NAME,--commits.cmt_id AS id,
-                    commits.cmt_commit_hash AS hash,
-                    commits.cmt_author_raw_email AS email_raw,
-                    'unresolved' as resolution_status
-                FROM
-                    commits
-                WHERE
-                    commits.repo_id = :repo_id
-                    AND EXISTS ( SELECT unresolved_commit_emails.email FROM unresolved_commit_emails WHERE unresolved_commit_emails.email = commits.cmt_author_raw_email )
-                    AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name )
-                GROUP BY
-                    commits.cmt_author_name,
-                    commits.cmt_commit_hash,
-                    commits.cmt_author_raw_email
-                ORDER BY
-                hash
-        """).bindparams(repo_id=repo_id)
+    #Execute statement with session.
+    result = execute_sql(new_contrib_sql)
+    new_contribs = [dict(row) for row in result.mappings()]
 
-        #Execute statement with session.
-        result = execute_sql(new_contrib_sql)
-        new_contribs = [dict(row) for row in result.mappings()]
+    #print(new_contribs)
 
-        #print(new_contribs)
-
-        #json.loads(pd.read_sql(new_contrib_sql, self.db, params={
-        #             'repo_id': repo_id}).to_json(orient="records"))
+    #json.loads(pd.read_sql(new_contrib_sql, self.db, params={
+    #             'repo_id': repo_id}).to_json(orient="records"))
 
 
+    key_auth = GithubRandomKeyAuth(logger)
 
-        process_commit_metadata(logger,manifest.augur_db,manifest.key_auth,list(new_contribs),repo_id,manifest.platform_id)
+    process_commit_metadata(logger, key_auth, list(new_contribs), repo_id, platform_id)
 
-        logger.debug("DEBUG: Got through the new_contribs")
+    logger.debug("DEBUG: Got through the new_contribs")
     
-
     facade_helper = FacadeHelper(logger)
     # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
     # i.e., if a contributor already exists, we use it!

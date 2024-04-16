@@ -5,11 +5,11 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.models import PullRequest, Message, Issue, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
+from augur.application.db.models import Message, PullRequestMessageRef, IssueMessageRef, Contributor
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id
 
 
 platform_id = 1
@@ -23,15 +23,15 @@ def collect_github_messages(repo_git: str) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
-    with GithubTaskManifest(logger) as manifest:
-            
-        task_name = f"{owner}/{repo}: Message Task"
-        message_data = retrieve_all_pr_and_issue_messages(repo_git, logger, manifest.key_auth, task_name)
+    key_auth = GithubRandomKeyAuth(logger)
         
-        if message_data:
-            process_messages(message_data, task_name, repo_id, logger, manifest.augur_db)
-        else:
-            logger.info(f"{owner}/{repo} has no messages")
+    task_name = f"{owner}/{repo}: Message Task"
+    message_data = retrieve_all_pr_and_issue_messages(repo_git, logger, key_auth, task_name)
+    
+    if message_data:
+        process_messages(message_data, task_name, repo_id, logger)
+    else:
+        logger.info(f"{owner}/{repo} has no messages")
 
 
 
@@ -74,7 +74,7 @@ def retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, task_nam
     return all_data
     
 
-def process_messages(messages, task_name, repo_id, logger, augur_db):
+def process_messages(messages, task_name, repo_id, logger):
 
     tool_source = "Pr comment task"
     tool_version = "2.0"
@@ -93,13 +93,13 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
 
     # create mapping from issue url to issue id of current issues
     issue_url_to_id_map = {}
-    issues = augur_db.session.query(Issue).filter(Issue.repo_id == repo_id).all()
+    issues = get_issues_by_repo_id(repo_id)
     for issue in issues:
         issue_url_to_id_map[issue.issue_url] = issue.issue_id
 
     # create mapping from pr url to pr id of current pull requests
     pr_issue_url_to_id_map = {}
-    prs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    prs = get_pull_requests_by_repo_id(repo_id)
     for pr in prs:
         pr_issue_url_to_id_map[pr.pr_issue_url] = pr.pull_request_id
 

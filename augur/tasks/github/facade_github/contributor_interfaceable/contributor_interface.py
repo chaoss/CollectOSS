@@ -7,8 +7,7 @@ from augur.tasks.github.util.github_paginator import hit_api, process_dict_respo
 # Debugger
 import traceback
 from augur.tasks.github.util.github_paginator import GithubApiResult
-from augur.application.db.util import execute_session_query
-from augur.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts, execute_sql
+from augur.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts, execute_sql, get_contributors_by_github_user_id
 
 ##TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
 
@@ -106,7 +105,7 @@ def create_endpoint_from_email(email):
     return url
 
 
-def create_endpoint_from_commit_sha(logger,db,commit_sha, repo_id):
+def create_endpoint_from_commit_sha(logger, commit_sha, repo_id):
     logger.info(
         f"Trying to create endpoint from commit hash: {commit_sha}")
 
@@ -153,14 +152,13 @@ def create_endpoint_from_name(contributor):
 
     return url
 
-def insert_alias(logger,db, contributor, email):
+def insert_alias(logger, contributor, email):
     # Insert cntrb_id and email of the corresponding record into the alias table
     # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
     # Same principle as enrich_cntrb_id method.
 
     
-    query = db.query(Contributor).filter_by(gh_user_id=contributor["gh_user_id"])
-    contributor_table_data = execute_session_query(query, 'all')
+    contributor_table_data = get_contributors_by_github_user_id(contributor["gh_user_id"])
     # self.logger.info(f"Contributor query: {contributor_table_data}")
 
     # Handle potential failures
@@ -371,11 +369,11 @@ def get_login_with_supplemental_data(logger, auth, commit_data):
 
     return match['login']
 
-def get_login_with_commit_hash(logger,db,auth, commit_data, repo_id):
+def get_login_with_commit_hash(logger, auth, commit_data, repo_id):
 
     # Get endpoint for login from hash
     url = create_endpoint_from_commit_sha(
-        logger,db,commit_data['hash'], repo_id)
+        logger, commit_data['hash'], repo_id)
 
     #TODO: here.
     # Send api request
