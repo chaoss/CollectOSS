@@ -9,7 +9,7 @@ from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
 
-from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest
+from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview
 from augur.application.db import get_session, get_engine
 from augur.application.db.util import execute_session_query
 from augur.application.db.session import remove_duplicates_by_uniques, remove_null_characters_from_list_of_dicts
@@ -434,6 +434,12 @@ def get_pull_requests_by_repo_id(repo_id):
     with get_session() as session:
 
         return session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    
+def get_pull_request_reviews_by_repo_id(repo_id):
+
+    with get_session() as session:
+
+        return session.query(PullRequestReview).filter(PullRequestReview.repo_id == repo_id).all()
     
 
 def update_issue_closed_cntrbs_by_repo_id(repo_id):

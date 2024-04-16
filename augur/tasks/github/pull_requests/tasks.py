@@ -9,7 +9,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
@@ -207,106 +207,103 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-    # define GithubTaskSession to handle insertions, and store oauth keys
-    with GithubTaskManifest(logger) as manifest:
- 
-        query = manifest.augur_db.session.query(PullRequestReview).filter(PullRequestReview.repo_id == repo_id)
-        pr_reviews = execute_session_query(query, 'all')
+    pr_reviews = get_pull_request_reviews_by_repo_id(repo_id)
 
-        # maps the github pr_review id to the auto incrementing pk that augur stores as pr_review id
-        pr_review_id_mapping = {}
-        for review in pr_reviews:
-            pr_review_id_mapping[review.pr_review_src_id] = review.pr_review_id
+    # maps the github pr_review id to the auto incrementing pk that augur stores as pr_review id
+    pr_review_id_mapping = {}
+    for review in pr_reviews:
+        pr_review_id_mapping[review.pr_review_src_id] = review.pr_review_id
 
 
-        tool_source = "Pr review comment task"
-        tool_version = "2.0"
-        data_source = "Github API"
+    tool_source = "Pr review comment task"
+    tool_version = "2.0"
+    data_source = "Github API"
 
-        pr_review_messages = GithubPaginator(review_msg_url, manifest.key_auth, logger)
-        num_pages = pr_review_messages.get_num_pages()
+    key_auth = GithubRandomKeyAuth(logger)
+    pr_review_messages = GithubPaginator(review_msg_url, key_auth, logger)
+    num_pages = pr_review_messages.get_num_pages()
 
-        all_raw_pr_review_messages = []
-        for page_data, page in pr_review_messages.iter_pages():
+    all_raw_pr_review_messages = []
+    for page_data, page in pr_review_messages.iter_pages():
 
-            if page_data is None:
-                break
+        if page_data is None:
+            break
 
-            if len(page_data) == 0:
-                logger.debug(f"{owner}/{repo} Pr Review Messages Page {page} contains no data...returning")
-                logger.info(f"{owner}/{repo} Pr Review Messages Page {page} of {num_pages}")
-                break
-
+        if len(page_data) == 0:
+            logger.debug(f"{owner}/{repo} Pr Review Messages Page {page} contains no data...returning")
             logger.info(f"{owner}/{repo} Pr Review Messages Page {page} of {num_pages}")
+            break
 
-            all_raw_pr_review_messages += page_data
+        logger.info(f"{owner}/{repo} Pr Review Messages Page {page} of {num_pages}")
 
-        contributors = []
-        for comment in all_raw_pr_review_messages:
-            
-            _, contributor = process_github_comment_contributors(comment, tool_source, tool_version, data_source)
-            if contributor is not None:
-                contributors.append(contributor)
+        all_raw_pr_review_messages += page_data
 
-        logger.info(f"{owner}/{repo} Pr review messages: Inserting {len(contributors)} contributors")
-        bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
+    contributors = []
+    for comment in all_raw_pr_review_messages:
+        
+        _, contributor = process_github_comment_contributors(comment, tool_source, tool_version, data_source)
+        if contributor is not None:
+            contributors.append(contributor)
 
-
-        pr_review_comment_dicts = []
-        pr_review_msg_mapping_data = {}
-
-        pr_review_comments_len = len(all_raw_pr_review_messages)
-        logger.info(f"{owner}/{repo}: Pr review comments len: {pr_review_comments_len}")
-        for index, comment in enumerate(all_raw_pr_review_messages):
-
-            # pull_request_review_id is required to map it to the correct pr review
-            if not comment["pull_request_review_id"]:
-                continue
-
-            pr_review_comment_dicts.append(
-                                    extract_needed_message_data(comment, platform_id, repo_id, tool_source, tool_version, data_source)
-            )
-
-            # map github message id to the data that maps it to the pr review
-            github_msg_id = comment["id"]
-            pr_review_msg_mapping_data[github_msg_id] = comment
+    logger.info(f"{owner}/{repo} Pr review messages: Inserting {len(contributors)} contributors")
+    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
 
 
+    pr_review_comment_dicts = []
+    pr_review_msg_mapping_data = {}
 
-        logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
-        message_natural_keys = ["platform_msg_id", "pltfrm_id"]
-        message_return_columns = ["msg_id", "platform_msg_id"]
-        message_return_data = bulk_insert_dicts(logger, pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
-        if message_return_data is None:
-            return
+    pr_review_comments_len = len(all_raw_pr_review_messages)
+    logger.info(f"{owner}/{repo}: Pr review comments len: {pr_review_comments_len}")
+    for index, comment in enumerate(all_raw_pr_review_messages):
 
+        # pull_request_review_id is required to map it to the correct pr review
+        if not comment["pull_request_review_id"]:
+            continue
 
-        pr_review_message_ref_insert_data = []
-        for data in message_return_data:
+        pr_review_comment_dicts.append(
+                                extract_needed_message_data(comment, platform_id, repo_id, tool_source, tool_version, data_source)
+        )
 
-            augur_msg_id = data["msg_id"]
-            github_msg_id = data["platform_msg_id"]
-
-            comment = pr_review_msg_mapping_data[github_msg_id]
-            comment["msg_id"] = augur_msg_id
-
-            github_pr_review_id = comment["pull_request_review_id"]
-
-            try:
-                augur_pr_review_id = pr_review_id_mapping[github_pr_review_id]
-            except KeyError:
-                logger.info(f"{owner}/{repo}: Could not find related pr review")
-                logger.info(f"{owner}/{repo}: We were searching for pr review with id: {github_pr_review_id}")
-                logger.info("Skipping")
-                continue
-
-            pr_review_message_ref = extract_pr_review_message_ref_data(comment, augur_pr_review_id, github_pr_review_id, repo_id, tool_version, data_source)
-            pr_review_message_ref_insert_data.append(pr_review_message_ref)
+        # map github message id to the data that maps it to the pr review
+        github_msg_id = comment["id"]
+        pr_review_msg_mapping_data[github_msg_id] = comment
 
 
-        logger.info(f"Inserting {len(pr_review_message_ref_insert_data)} pr review refs")
-        pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
-        bulk_insert_dicts(logger, pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
+
+    logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
+    message_natural_keys = ["platform_msg_id", "pltfrm_id"]
+    message_return_columns = ["msg_id", "platform_msg_id"]
+    message_return_data = bulk_insert_dicts(logger, pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
+    if message_return_data is None:
+        return
+
+
+    pr_review_message_ref_insert_data = []
+    for data in message_return_data:
+
+        augur_msg_id = data["msg_id"]
+        github_msg_id = data["platform_msg_id"]
+
+        comment = pr_review_msg_mapping_data[github_msg_id]
+        comment["msg_id"] = augur_msg_id
+
+        github_pr_review_id = comment["pull_request_review_id"]
+
+        try:
+            augur_pr_review_id = pr_review_id_mapping[github_pr_review_id]
+        except KeyError:
+            logger.info(f"{owner}/{repo}: Could not find related pr review")
+            logger.info(f"{owner}/{repo}: We were searching for pr review with id: {github_pr_review_id}")
+            logger.info("Skipping")
+            continue
+
+        pr_review_message_ref = extract_pr_review_message_ref_data(comment, augur_pr_review_id, github_pr_review_id, repo_id, tool_version, data_source)
+        pr_review_message_ref_insert_data.append(pr_review_message_ref)
+
+
+    logger.info(f"Inserting {len(pr_review_message_ref_insert_data)} pr review refs")
+    pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
+    bulk_insert_dicts(logger, pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
 
 
 
