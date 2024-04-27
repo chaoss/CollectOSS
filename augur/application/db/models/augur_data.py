@@ -878,7 +878,13 @@ class Repo(Base):
     @staticmethod
     def get_by_id(session, repo_id):
 
-        return session.query(Repo).filter(Repo.repo_id == repo_id).first()
+        try:
+            return session.query(Repo).filter(Repo.repo_id == repo_id).first()
+        except Exception as e:
+            session.rollback()
+            raise e
+
+        
 
     @staticmethod
     def get_by_repo_git(session, repo_git):
