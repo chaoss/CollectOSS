@@ -14,7 +14,7 @@ from augur.application.db.lib import get_section
 from augur.tasks.github.util.util import get_repo_weight_core, get_repo_weight_by_issue
 from augur.application.db.session import DatabaseSession
 from augur.application.db import get_engine
-from augur.application.db.lib import execute_sql
+from augur.application.db.lib import execute_sql, get_session, get_active_repo_count, get_repo_by_repo_git
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 from augur.tasks.util.collection_state import CollectionState
 
@@ -130,15 +130,12 @@ class CollectionRequest:
         if name == "facade":
             self.new_status = CollectionState.UPDATE.value
 
-    def get_active_repo_count(self,session):
-        return len(session.query(CollectionStatus).filter(getattr(CollectionStatus,f"{self.name}_status" ) == CollectionState.COLLECTING.value).all())
-
     #Get repo urls based on passed in info.
-    def get_valid_repos(self,session, logger):
+    def get_valid_repos(self, logger):
         #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
         #Get the count of repos that are currently running this collection hook
         #status_column = f"{hook}_status"
-        active_repo_count = self.get_active_repo_count(session)
+        active_repo_count = get_active_repo_count(self.name)
 
         #Will always disallow errored repos and repos that are already collecting
 
@@ -536,21 +533,21 @@ class AugurTaskRoutine:
         collection_hook (str): String determining the attributes to update when collection for a repo starts. e.g. core
         session: Database session to use
     """
-    def __init__(self, logger, session,collection_hooks):
+    def __init__(self, logger,collection_hooks):
         self.logger = logger
 
         self.collection_hooks = collection_hooks
-        self.session = session
 
-    def update_status_and_id(self,repo_git, task_id, name):
-        repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
+    def update_status_and_id(self,repo_git, task_id, name, session):
+        # NOTE: Can't simply replace with lib method because it is doing .collection_status[0] afterwards
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
 
         #Set status in database to collecting
         repoStatus = repo.collection_status[0]
         #
         setattr(repoStatus,f"{name}_task_id",task_id)
         setattr(repoStatus,f"{name}_status", CollectionState.COLLECTING.value)
-        self.session.commit()
+        session.commit()
 
 
     def start_data_collection(self):
@@ -564,8 +561,11 @@ class AugurTaskRoutine:
 
         #Send messages starts each repo and yields its running info
         #to concurrently update the correct field in the database.
-        for repo_git, task_id, hook_name in self.send_messages():
-            self.update_status_and_id(repo_git,task_id,hook_name)
+
+        with get_session() as session:
+
+            for repo_git, task_id, hook_name in self.send_messages():
+                self.update_status_and_id(repo_git,task_id,hook_name, session)
     
     def send_messages(self):
         augur_collection_list = []
@@ -576,7 +576,7 @@ class AugurTaskRoutine:
             
             for repo_git in col_hook.repo_list:
 
-                repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
+                repo = get_repo_by_repo_git(repo_git)
                 if "github" in repo.repo_git:
                     augur_collection_sequence = []
                     for job in col_hook.phases:
