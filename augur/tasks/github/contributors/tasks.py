@@ -8,6 +8,7 @@ from augur.tasks.github.facade_github.tasks import *
 from augur.application.db.models import Contributor
 from augur.application.db.util import execute_session_query
 from augur.application.db.lib import bulk_insert_dicts
+from augur.application.db import get_engine
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
@@ -21,48 +22,48 @@ def process_contributors():
     tool_version = "2.0"
     data_source = "Github API"
 
-    with GithubTaskManifest(logger) as manifest:
+    key_auth = GithubRandomKeyAuth(logger)
 
-        augur_db = manifest.augur_db
+    with DatabaseSession(logger, get_engine()) as session:
 
-        query = augur_db.session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at is None, Contributor.cntrb_last_used is None)
+        query = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at is None, Contributor.cntrb_last_used is None)
         contributors = execute_session_query(query, 'all')
 
-        contributors_len = len(contributors)
+    contributors_len = len(contributors)
 
-        if contributors_len == 0:
-            logger.info("No contributors to enrich...returning...")
-            return
+    if contributors_len == 0:
+        logger.info("No contributors to enrich...returning...")
+        return
 
-        print(f"Length of contributors to enrich: {contributors_len}")
-        enriched_contributors = []
-        for index, contributor in enumerate(contributors):
+    print(f"Length of contributors to enrich: {contributors_len}")
+    enriched_contributors = []
+    for index, contributor in enumerate(contributors):
 
-            logger.info(f"Contributor {index + 1} of {contributors_len}")
+        logger.info(f"Contributor {index + 1} of {contributors_len}")
 
-            contributor_dict = contributor.__dict__
+        contributor_dict = contributor.__dict__
 
-            del contributor_dict["_sa_instance_state"]
+        del contributor_dict["_sa_instance_state"]
 
-            url = f"https://api.github.com/users/{contributor_dict['cntrb_login']}" 
+        url = f"https://api.github.com/users/{contributor_dict['cntrb_login']}" 
 
-            data = retrieve_dict_data(url, manifest.key_auth, logger)
+        data = retrieve_dict_data(url, key_auth, logger)
 
-            if data is None:
-                print(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
-                continue
+        if data is None:
+            print(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
+            continue
 
-            new_contributor_data = {
-                "cntrb_created_at": data["created_at"],
-                "cntrb_last_used": data["updated_at"]
-            }
+        new_contributor_data = {
+            "cntrb_created_at": data["created_at"],
+            "cntrb_last_used": data["updated_at"]
+        }
 
-            contributor_dict.update(new_contributor_data)
+        contributor_dict.update(new_contributor_data)
 
-            enriched_contributors.append(contributor_dict)
+        enriched_contributors.append(contributor_dict)
 
-        logger.info(f"Enriching {len(enriched_contributors)} contributors")
-        bulk_insert_dicts(enriched_contributors, Contributor, ["cntrb_id"])
+    logger.info(f"Enriching {len(enriched_contributors)} contributors")
+    bulk_insert_dicts(enriched_contributors, Contributor, ["cntrb_id"])
 
 
 
