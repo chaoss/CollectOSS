@@ -7,8 +7,7 @@ from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.facade_github.tasks import *
 from augur.application.db.models import Contributor
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import bulk_insert_dicts
-from augur.application.db import get_engine
+from augur.application.db.lib import bulk_insert_dicts, get_session
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
@@ -24,7 +23,7 @@ def process_contributors():
 
     key_auth = GithubRandomKeyAuth(logger)
 
-    with DatabaseSession(logger, get_engine()) as session:
+    with get_session() as session:
 
         query = session.query(Contributor).filter(Contributor.data_source == data_source, Contributor.cntrb_created_at is None, Contributor.cntrb_last_used is None)
         contributors = execute_session_query(query, 'all')

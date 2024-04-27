@@ -8,12 +8,10 @@ from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id
+from augur.application.db.lib import get_session, get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
-from augur.application.db import get_engine
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.application.db.session import DatabaseSession
 
 
 platform_id = 1
@@ -324,7 +322,7 @@ def collect_pull_request_reviews(repo_git: str) -> None:
 
     key_auth = GithubRandomKeyAuth(logger)
 
-    with DatabaseSession(logger, get_engine()) as session:
+    with get_session() as session:
         
         query = session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
         prs = execute_session_query(query, 'all')

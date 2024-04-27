@@ -12,7 +12,6 @@ from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
 from augur.application.db.lib import get_section
 from augur.tasks.github.util.util import get_repo_weight_core, get_repo_weight_by_issue
-from augur.application.db.session import DatabaseSession
 from augur.application.db import get_engine
 from augur.application.db.lib import execute_sql, get_session, get_active_repo_count, get_repo_by_repo_git
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
@@ -222,7 +221,7 @@ def task_failed_util(self, request,exc,traceback):
     # log traceback to error file
     logger.error(f"Task {request.id} raised exception: {exc}\n{traceback}")
     
-    with DatabaseSession(logger,engine) as session:
+    with get_session() as session:
         core_id_match = CollectionStatus.core_task_id == request.id
         secondary_id_match = CollectionStatus.secondary_task_id == request.id
         facade_id_match = CollectionStatus.facade_task_id == request.id
@@ -281,7 +280,7 @@ def issue_pr_task_update_weight_util(self, issue_and_pr_nums,repo_git=None,sessi
     if session is not None:
         update_issue_pr_weights(logger, session, repo_git, sum(issue_and_pr_nums))
     else:
-        with DatabaseSession(logger,engine=engine) as session:
+        with get_session() as session:
             update_issue_pr_weights(logger,session,repo_git,sum(issue_and_pr_nums))
 
 
@@ -294,7 +293,7 @@ def core_task_success_util(self, repo_git):
 
     logger.info(f"Repo '{repo_git}' succeeded through core collection")
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
@@ -361,7 +360,7 @@ def secondary_task_success_util(self, repo_git):
 
     logger.info(f"Repo '{repo_git}' succeeded through secondary collection")
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
@@ -387,7 +386,7 @@ def get_repo_weight_secondary(logger,repo_git):
 
     engine = get_engine()
 
-    with DatabaseSession(logger,engine) as session:
+    with get_session() as session:
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
             raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
@@ -414,7 +413,7 @@ def facade_task_success_util(self, repo_git):
 
     logger.info(f"Repo '{repo_git}' succeeded through facade task collection")
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
@@ -437,7 +436,7 @@ def ml_task_success_util(self, repo_git):
 
     logger.info(f"Repo '{repo_git}' succeeded through machine learning task collection")
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
@@ -462,7 +461,7 @@ def facade_clone_success_util(self, repo_git):
 
     logger.info(f"Repo '{repo_git}' succeeded through facade update/clone")
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:

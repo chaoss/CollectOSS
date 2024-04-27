@@ -3,13 +3,12 @@ import logging
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
-from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
 from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_mr_reviewer_data, extract_needed_mr_commit_data, extract_needed_mr_file_data, extract_needed_mr_metadata, extract_needed_gitlab_mr_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
 from augur.application.db.models import PullRequest, PullRequestLabel, PullRequestMeta, PullRequestCommit, PullRequestFile, PullRequestMessageRef, Repo, Message, Contributor, PullRequestAssignee
-from augur.application.db.util import execute_session_query
+from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session
 
 platform_id = 2
 
@@ -29,17 +28,17 @@ def collect_gitlab_merge_requests(repo_git: str) -> int:
 
     owner, repo = get_owner_repo(repo_git)
 
-    with GitlabTaskManifest(logger) as manifest:
+    key_auth = GitlabRandomKeyAuth(logger)
 
-        mr_data = retrieve_all_mr_data(repo_git, logger, manifest.key_auth)
+    mr_data = retrieve_all_mr_data(repo_git, logger, key_auth)
 
-        if mr_data:
-            mr_ids = process_merge_requests(mr_data, f"{owner}/{repo}: Mr task", repo_id, logger, manifest.augur_db)
+    if mr_data:
+        mr_ids = process_merge_requests(mr_data, f"{owner}/{repo}: Mr task", repo_id, logger)
 
-            return mr_ids
-        else:
-            logger.info(f"{owner}/{repo} has no merge requests")
-            return []
+        return mr_ids
+    else:
+        logger.info(f"{owner}/{repo} has no merge requests")
+        return []
 
 
 def retrieve_all_mr_data(repo_git: str, logger, key_auth) -> None:
@@ -79,7 +78,7 @@ def retrieve_all_mr_data(repo_git: str, logger, key_auth) -> None:
     return all_data
 
 
-def process_merge_requests(data, task_name, repo_id, logger, augur_db):
+def process_merge_requests(data, task_name, repo_id, logger):
     """
     Retrieve only the needed data for mr label data from the api response
 
@@ -88,7 +87,6 @@ def process_merge_requests(data, task_name, repo_id, logger, augur_db):
         task_name: name of the task as well as the repo being processed
         repo_id: augur id of the repo
         logger: logging object
-        augur_db: sqlalchemy db object 
     
     Returns:
         List of parsed MR ids.
@@ -179,19 +177,21 @@ def collect_merge_request_comments(mr_ids, repo_git) -> int:
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-    with GitlabTaskManifest(logger) as manifest:
+    key_auth = GitlabRandomKeyAuth(logger)
 
-        url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/notes".format(owner=owner, repo=repo, id="{id}")
-        comments = retrieve_merge_request_data(mr_ids, url, "comments", owner, repo, manifest.key_auth, logger, response_type="list")
+    url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/notes".format(owner=owner, repo=repo, id="{id}")
+    comments = retrieve_merge_request_data(mr_ids, url, "comments", owner, repo, key_auth, logger, response_type="list")
+
+    with get_session() as session:
 
         if comments:
             logger.info(f"Length of merge request comments: {len(comments)}")
-            process_gitlab_mr_messages(comments, f"{owner}/{repo}: Gitlab mr messages task", repo_id, logger, manifest.augur_db)
+            process_gitlab_mr_messages(comments, f"{owner}/{repo}: Gitlab mr messages task", repo_id, logger, session)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request comments")
 
 
-def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
+def process_gitlab_mr_messages(data, task_name, repo_id, logger, session):
     """
     Retrieve only the needed data for mr label data from the api response
 
@@ -209,7 +209,7 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, augur_db):
 
     # create mapping from mr number to pull request id of current mrs
     mr_number_to_id_map = {}
-    mrs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    mrs = session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
     for mr in mrs:
         mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
 
@@ -288,18 +288,20 @@ def collect_merge_request_metadata(mr_ids, repo_git) -> int:
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-    with GitlabTaskManifest(logger) as manifest:
+    key_auth = GitlabRandomKeyAuth(logger)
 
-        url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}".format(owner=owner, repo=repo, id="{id}")
-        metadata_list = retrieve_merge_request_data(mr_ids, url, "metadata", owner, repo, manifest.key_auth, logger, response_type="dict")
+    url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}".format(owner=owner, repo=repo, id="{id}")
+    metadata_list = retrieve_merge_request_data(mr_ids, url, "metadata", owner, repo, key_auth, logger, response_type="dict")
+
+    with get_session() as session:
 
         if metadata_list:
             logger.info(f"Length of merge request metadata: {len(metadata_list)}")
-            process_mr_metadata(metadata_list, f"{owner}/{repo}: Mr metadata task", repo_id, logger, manifest.augur_db)
+            process_mr_metadata(metadata_list, f"{owner}/{repo}: Mr metadata task", repo_id, logger, session)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request metadata")
 
-def process_mr_metadata(data, task_name, repo_id, logger, augur_db):
+def process_mr_metadata(data, task_name, repo_id, logger, session):
     """
     Retrieve only the needed data for mr label data from the api response
 
@@ -317,7 +319,7 @@ def process_mr_metadata(data, task_name, repo_id, logger, augur_db):
 
     # create mapping from mr number to pull request id of current mrs
     mr_number_to_id_map = {}
-    mrs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    mrs = session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
     for mr in mrs:
         mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
 
@@ -351,18 +353,20 @@ def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-    with GitlabTaskManifest(logger) as manifest:
+    key_auth = GitlabRandomKeyAuth(logger)
 
-        url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/approvals".format(owner=owner, repo=repo, id="{id}")
-        reviewers = retrieve_merge_request_data(mr_ids, url, "reviewers", owner, repo, manifest.key_auth, logger, response_type="dict")
+    url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/approvals".format(owner=owner, repo=repo, id="{id}")
+    reviewers = retrieve_merge_request_data(mr_ids, url, "reviewers", owner, repo, key_auth, logger, response_type="dict")
+
+    with get_session() as session:
 
         if reviewers:
             logger.info(f"Length of merge request reviewers: {len(reviewers)}")
-            process_mr_reviewers(reviewers, f"{owner}/{repo}: Mr reviewer task", repo_id, logger,  manifest.augur_db)
+            process_mr_reviewers(reviewers, f"{owner}/{repo}: Mr reviewer task", repo_id, logger, session)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request reviewers")
 
-def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
+def process_mr_reviewers(data, task_name, repo_id, logger, session):
     """
     Retrieve only the needed data for mr Reviewer data from the api response
 
@@ -381,7 +385,7 @@ def process_mr_reviewers(data, task_name, repo_id, logger, augur_db):
 
     # create mapping from mr number to pull request id of current mrs
     mr_number_to_id_map = {}
-    mrs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    mrs = session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
     for mr in mrs:
         mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
 
@@ -416,19 +420,21 @@ def collect_merge_request_commits(mr_ids, repo_git) -> int:
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-    with GitlabTaskManifest(logger) as manifest:
+    key_auth = GitlabRandomKeyAuth(logger)
 
-        url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/commits".format(owner=owner, repo=repo, id="{id}")
-        commits = retrieve_merge_request_data(mr_ids, url, "commits", owner, repo, manifest.key_auth, logger, response_type="list")
+    url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/commits".format(owner=owner, repo=repo, id="{id}")
+    commits = retrieve_merge_request_data(mr_ids, url, "commits", owner, repo, key_auth, logger, response_type="list")
+
+    with get_session() as session:
 
         if commits:
             logger.info(f"Length of merge request commits: {len(commits)}")
-            process_mr_commits(commits, f"{owner}/{repo}: Mr commit task", repo_id, logger, manifest.augur_db)
+            process_mr_commits(commits, f"{owner}/{repo}: Mr commit task", repo_id, logger, session)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request commits")
 
 
-def process_mr_commits(data, task_name, repo_id, logger, augur_db):
+def process_mr_commits(data, task_name, repo_id, logger, session):
     """
     Retrieve only the needed data for mr commits from the api response
 
@@ -446,7 +452,7 @@ def process_mr_commits(data, task_name, repo_id, logger, augur_db):
 
     # create mapping from mr number to pull request id of current mrs
     mr_number_to_id_map = {}
-    mrs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    mrs = session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
     for mr in mrs:
         mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
 
@@ -482,14 +488,16 @@ def collect_merge_request_files(mr_ids, repo_git) -> int:
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-    with GitlabTaskManifest(logger) as manifest:
+    key_auth = GitlabRandomKeyAuth(logger)
 
-        url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/changes".format(owner=owner, repo=repo, id="{id}")
-        files = retrieve_merge_request_data(mr_ids, url, "files", owner, repo, manifest.key_auth, logger, response_type="dict")
+    url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/changes".format(owner=owner, repo=repo, id="{id}")
+    files = retrieve_merge_request_data(mr_ids, url, "files", owner, repo, key_auth, logger, response_type="dict")
+
+    with get_session() as session:
 
         if files:
             logger.info(f"Length of merge request files: {len(files)}")
-            process_mr_files(files, f"{owner}/{repo}: Mr files task", repo_id, logger, manifest.augur_db)
+            process_mr_files(files, f"{owner}/{repo}: Mr files task", repo_id, logger, session)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request files")
 

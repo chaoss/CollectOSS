@@ -7,13 +7,11 @@ import traceback
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
-from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
 from augur.application.db.data_parse import extract_needed_issue_data_from_gitlab_issue, extract_needed_gitlab_issue_label_data, extract_needed_gitlab_issue_assignee_data, extract_needed_gitlab_issue_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
 from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
-from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Repo, Contributor
-from augur.application.db.util import execute_session_query
+from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Contributor
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session
 from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 
 platform_id = 2
@@ -215,13 +213,15 @@ def collect_gitlab_issue_comments(issue_ids, repo_git) -> int:
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-    with GitlabTaskManifest(logger) as manifest:
+    key_auth = GitlabRandomKeyAuth(logger)
 
-        comments = retrieve_all_gitlab_issue_comments(manifest.key_auth, logger, issue_ids, repo_git)
+    comments = retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git)
+
+    with get_session() as session:
 
         if comments:
             logger.info(f"Length of comments: {len(comments)}")
-            process_gitlab_issue_messages(comments, f"{owner}/{repo}: Gitlab issue messages task", repo_id, logger, manifest.augur_db)
+            process_gitlab_issue_messages(comments, f"{owner}/{repo}: Gitlab issue messages task", repo_id, logger, session)
         else:
             logger.info(f"{owner}/{repo} has no gitlab issue comments")
            
@@ -266,7 +266,7 @@ def retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git):
     return all_comments
 
 
-def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
+def process_gitlab_issue_messages(data, task_name, repo_id, logger, session):
     """
     Retrieve only the needed data for issue messages from the api response
 
@@ -284,7 +284,7 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, augur_db):
 
     # create mapping from mr number to pull request id of current mrs
     issue_number_to_id_map = {}
-    issues = augur_db.session.query(Issue).filter(Issue.repo_id == repo_id).all()
+    issues = session.session.query(Issue).filter(Issue.repo_id == repo_id).all()
     for issue in issues:
         issue_number_to_id_map[issue.gh_issue_number] = issue.issue_id
 

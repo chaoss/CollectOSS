@@ -7,35 +7,6 @@ from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 from augur.application.db.session import DatabaseSession
 from augur.application.db import get_engine
 
-class GitlabTaskManifest:
-    """
-    Manifest object that represents the state and common elements of
-    the specified task. GitLab version for the GitLab tasks.
-
-    Attributes:
-        augur_db: sqlalchemy db object
-        key_auth: GitLab specific key auth retrieval collection
-        logger: logging object
-        platform_id: GitLab specific platform id (github is 1)
-    """
-
-    def __init__(self, logger):
-
-        engine = get_engine()
-
-        self.augur_db = DatabaseSession(logger, engine)
-        self.key_auth = GitlabRandomKeyAuth(logger)
-        self.logger = logger
-        self.platform_id = 2
-
-    def __enter__(self):
-
-        return self
-
-    def __exit__(self, exception_type, exception_value, exception_traceback):
-
-        self.augur_db.close()
-
 class GitlabTaskSession(DatabaseSession):
     """ORM session used in gitlab tasks.
         This class adds the platform_id and the gitlab key authentication class,

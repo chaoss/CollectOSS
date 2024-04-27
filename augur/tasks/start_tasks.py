@@ -27,7 +27,7 @@ from augur.application.db.models import CollectionStatus, Repo
 from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
-from augur.application.db.lib import execute_sql
+from augur.application.db.lib import execute_sql, get_session
 
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
@@ -280,7 +280,7 @@ def augur_collection_update_weights(self):
 
     logger.info("Updating stale collection weights")
 
-    with DatabaseSession(logger,engine) as session:
+    with get_session() as session:
 
         core_weight_update_repos = session.query(CollectionStatus).filter(CollectionStatus.core_weight != None).all()
 
