@@ -5,14 +5,15 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor
 from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
+from augur.application.db import get_engine
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from augur.application.db.session import DatabaseSession
 
 
 platform_id = 1
@@ -321,67 +322,69 @@ def collect_pull_request_reviews(repo_git: str) -> None:
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-    with GithubTaskManifest(logger) as manifest:
+    key_auth = GithubRandomKeyAuth(logger)
+
+    with DatabaseSession(logger, get_engine()) as session:
         
-        query = manifest.augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
+        query = session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
         prs = execute_session_query(query, 'all')
 
-        pr_count = len(prs)
+    pr_count = len(prs)
 
-        all_pr_reviews = {}
-        for index, pr in enumerate(prs):
+    all_pr_reviews = {}
+    for index, pr in enumerate(prs):
 
-            pr_number = pr.pr_src_number
-            pull_request_id = pr.pull_request_id
+        pr_number = pr.pr_src_number
+        pull_request_id = pr.pull_request_id
 
-            logger.info(f"{owner}/{repo} Collecting Pr Reviews for pr {index + 1} of {pr_count}")
+        logger.info(f"{owner}/{repo} Collecting Pr Reviews for pr {index + 1} of {pr_count}")
 
-            pr_review_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
-
-            pr_reviews = []
-            pr_reviews_generator = GithubPaginator(pr_review_url, manifest.key_auth, logger)
-            for page_data, page in pr_reviews_generator.iter_pages():
-
-                if page_data is None:
-                    break
-
-                if len(page_data) == 0:
-                    break
-
-                pr_reviews.extend(page_data)
-            
-            if pr_reviews:
-                all_pr_reviews[pull_request_id] = pr_reviews
-
-        if not list(all_pr_reviews.keys()):
-            logger.info(f"{owner}/{repo} No pr reviews for repo")
-            return
-
-        contributors = []
-        for pull_request_id in all_pr_reviews.keys():
-
-            reviews = all_pr_reviews[pull_request_id]
-            for review in reviews:
-                contributor = process_pull_request_review_contributor(review, tool_source, tool_version, data_source)
-                if contributor:
-                    contributors.append(contributor)
-
-        logger.info(f"{owner}/{repo} Pr reviews: Inserting {len(contributors)} contributors")
-        bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
-
+        pr_review_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
 
         pr_reviews = []
-        for pull_request_id in all_pr_reviews.keys():
+        pr_reviews_generator = GithubPaginator(pr_review_url, key_auth, logger)
+        for page_data, page in pr_reviews_generator.iter_pages():
 
-            reviews = all_pr_reviews[pull_request_id]
-            for review in reviews:
-                
-                if "cntrb_id" in review:
-                    pr_reviews.append(extract_needed_pr_review_data(review, pull_request_id, repo_id, platform_id, tool_source, tool_version))
+            if page_data is None:
+                break
 
-        logger.info(f"{owner}/{repo}: Inserting pr reviews of length: {len(pr_reviews)}")
-        pr_review_natural_keys = ["pr_review_src_id",]
-        bulk_insert_dicts(logger, pr_reviews, PullRequestReview, pr_review_natural_keys)
+            if len(page_data) == 0:
+                break
+
+            pr_reviews.extend(page_data)
+        
+        if pr_reviews:
+            all_pr_reviews[pull_request_id] = pr_reviews
+
+    if not list(all_pr_reviews.keys()):
+        logger.info(f"{owner}/{repo} No pr reviews for repo")
+        return
+
+    contributors = []
+    for pull_request_id in all_pr_reviews.keys():
+
+        reviews = all_pr_reviews[pull_request_id]
+        for review in reviews:
+            contributor = process_pull_request_review_contributor(review, tool_source, tool_version, data_source)
+            if contributor:
+                contributors.append(contributor)
+
+    logger.info(f"{owner}/{repo} Pr reviews: Inserting {len(contributors)} contributors")
+    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
+
+
+    pr_reviews = []
+    for pull_request_id in all_pr_reviews.keys():
+
+        reviews = all_pr_reviews[pull_request_id]
+        for review in reviews:
+            
+            if "cntrb_id" in review:
+                pr_reviews.append(extract_needed_pr_review_data(review, pull_request_id, repo_id, platform_id, tool_source, tool_version))
+
+    logger.info(f"{owner}/{repo}: Inserting pr reviews of length: {len(pr_reviews)}")
+    pr_review_natural_keys = ["pr_review_src_id",]
+    bulk_insert_dicts(logger, pr_reviews, PullRequestReview, pr_review_natural_keys)
 
 
 

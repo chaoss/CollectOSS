@@ -1,10 +1,12 @@
 import logging
 
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.releases.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.lib import get_repo_by_repo_git
+from augur.application.db import get_engine
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from augur.application.db.session import DatabaseSession
 
 
 @celery.task(base=AugurCoreRepoCollectionTask)
@@ -15,6 +17,8 @@ def collect_releases(repo_git):
     repo_obj = get_repo_by_repo_git(repo_git)
     repo_id = repo_obj.repo_id
 
-    with GithubTaskManifest(logger) as manifest:
+    key_auth = GithubRandomKeyAuth(logger)
 
-        releases_model(manifest.augur_db, manifest.key_auth, logger, repo_git, repo_id)
+    with DatabaseSession(logger, get_engine()) as session:
+
+        releases_model(session, key_auth, logger, repo_git, repo_id)
