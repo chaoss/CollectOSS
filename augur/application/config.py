@@ -4,6 +4,7 @@ import json
 from typing import List, Any, Optional
 import os
 from augur.application.db.models import Config 
+from augur.application.db.lib import get_session
 from augur.application.db.util import execute_session_query
 
 def get_development_flag_from_config():
@@ -12,7 +13,7 @@ def get_development_flag_from_config():
     from augur.application.db.session import DatabaseSession
 
     logger = getLogger(__name__)
-    with DatabaseSession(logger) as session:
+    with get_session() as session:
 
         config = AugurConfig(logger, session)
 
@@ -288,6 +289,7 @@ class AugurConfig():
             query = self.session.query(Config).filter(and_(Config.section_name == setting["section_name"],Config.setting_name == setting["setting_name"]) )
 
             if execute_session_query(query, 'first') is None:
+                # TODO: Update to use bulk insert dicts so config doesn't require database session
                 self.session.insert_data(setting,Config, ["section_name", "setting_name"])
             else:
                 #If setting exists. use raw update to not increase autoincrement
