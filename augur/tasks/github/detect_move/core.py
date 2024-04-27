@@ -44,7 +44,7 @@ def extract_owner_and_repo_from_endpoint(key_auth, url, logger):
 
     return splits[0], splits[-1]
 
-def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='core'):
+def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='core'):
 
     owner, name = get_owner_repo(repo.repo_git)
     url = f"https://api.github.com/repos/{owner}/{name}"
@@ -93,7 +93,7 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
 
         update_repo_with_dict(repo, repo_update_dict, logger)
 
-        statusQuery = augur_db.session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
+        statusQuery = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
 
         collectionRecord = execute_session_query(statusQuery,'one')
 
@@ -114,7 +114,7 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
         collectionRecord.ml_data_last_collected = datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
-        augur_db.session.commit()
+        session.commit()
         raise Exception("ERROR: Repo has moved! Resetting Collection!")
 
 

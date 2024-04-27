@@ -200,7 +200,7 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, session):
         task_name: name of the task as well as the repo being processed
         repo_id: augur id of the repo
         logger: logging object
-        augur_db: sqlalchemy db object 
+        session: sqlalchemy db object 
     """
 
     tool_source = "Gitlab mr comments"
@@ -310,7 +310,7 @@ def process_mr_metadata(data, task_name, repo_id, logger, session):
         task_name: name of the task as well as the repo being processed
         repo_id: augur id of the repo
         logger: logging object
-        augur_db: sqlalchemy db object 
+        session: sqlalchemy db object 
     """
 
     tool_source = "Mr Metadata Task"
@@ -374,7 +374,7 @@ def process_mr_reviewers(data, task_name, repo_id, logger, session):
         data: List of dictionaries of mr Reviewer data
         repo_id: augur id of the repo
         logger: logging object
-        augur_db: sqlalchemy db object 
+        session: sqlalchemy db object 
     """
 
     tool_source = "Mr Reviewer Task"
@@ -443,7 +443,7 @@ def process_mr_commits(data, task_name, repo_id, logger, session):
         task_name: name of the task as well as the repo being processed
         repo_id: augur id of the repo
         logger: logging object
-        augur_db: sqlalchemy db object 
+        session: sqlalchemy db object 
     """
 
     tool_source = "Mr Commit Task"
@@ -501,7 +501,7 @@ def collect_merge_request_files(mr_ids, repo_git) -> int:
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request files")
 
-def process_mr_files(data, task_name, repo_id, logger, augur_db):
+def process_mr_files(data, task_name, repo_id, logger, session):
 
     tool_source = "Mr files Task"
     tool_version = "2.0"
@@ -509,7 +509,7 @@ def process_mr_files(data, task_name, repo_id, logger, augur_db):
 
     # create mapping from mr number to pull request id of current mrs
     mr_number_to_id_map = {}
-    mrs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    mrs = session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
     for mr in mrs:
         mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
 

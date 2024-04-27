@@ -117,7 +117,7 @@ def process_issue_events(events, task_name, repo_id, logger, session):
         task_name: name of the task as well as the repo being processed
         repo_id: augur id of the repo
         logger: logging object
-        augur_db: sqlalchemy db object 
+        session: sqlalchemy db object 
     """
 
     tool_source = "Gitlab issue events task"

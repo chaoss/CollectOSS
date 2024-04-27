@@ -92,7 +92,7 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
         task_name: name of the task as well as the repo being processed
         repo_id: augur id of the repo
         logger: logging object
-        augur_db: sqlalchemy db object 
+        session: sqlalchemy db object 
     """
 
     # get repo_id or have it passed
@@ -275,7 +275,7 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, session):
         task_name: name of the task as well as the repo being processed
         repo_id: augur id of the repo
         logger: logging object
-        augur_db: sqlalchemy db object 
+        session: sqlalchemy db object 
     """
 
     tool_source = "Gitlab issue comments"

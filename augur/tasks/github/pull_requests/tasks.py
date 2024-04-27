@@ -79,7 +79,6 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger):
         task_name: Name of the calling task and the repo
         repo_id: augur id of the repository
         logger: logging object
-        augur_db: sqlalchemy db object
     """
     tool_source = "Pr Task"
     tool_version = "2.0"
