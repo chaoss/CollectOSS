@@ -4,7 +4,6 @@ import json
 from typing import List, Any, Optional
 import os
 from augur.application.db.models import Config 
-from augur.application.db.lib import get_session
 from augur.application.db.util import execute_session_query
 
 def get_development_flag_from_config():
@@ -13,7 +12,7 @@ def get_development_flag_from_config():
     from augur.application.db.session import DatabaseSession
 
     logger = getLogger(__name__)
-    with get_session() as session:
+    with DatabaseSession(logger) as session:
 
         config = AugurConfig(logger, session)
 
