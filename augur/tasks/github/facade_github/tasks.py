@@ -190,7 +190,7 @@ def link_commits_to_contributor(logger, facade_helper, contributorQueue):
 
 # Update the contributors table from the data facade has gathered.
 @celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
-def insert_facade_contributors(self, repo_id):
+def insert_facade_contributors(self, repo_git):
 
     # Set platform id to 1 since this task is github specific
     platform_id = 1
@@ -198,6 +198,7 @@ def insert_facade_contributors(self, repo_id):
     engine = self.app.engine
 
     logger = logging.getLogger(insert_facade_contributors.__name__)
+    repo_id = None
 
     # Get all of the commit data's emails and names from the commit table that do not appear
     # in the contributors table or the contributors_aliases table.
