@@ -303,8 +303,7 @@ class GithubPaginator(collections.abc.Sequence):
             return
 
         # yield the first page data
-        for data in data_list:
-            yield data
+        yield from data_list
 
         while 'next' in response.links.keys():
             next_page = response.links['next']['url']
@@ -315,9 +314,8 @@ class GithubPaginator(collections.abc.Sequence):
             if result != GithubApiResult.SUCCESS:
                 self.logger.debug("Failed to retrieve the data even though 10 attempts were given")
                 return
-
-            for data in data_list:
-                yield data
+            
+            yield from data_list
 
     def iter_pages(self) -> Generator[Tuple[Optional[List[dict]], int], None, None]:
         """Provide data from Github API via a generator that yields a page of dicts at a time.
@@ -389,10 +387,10 @@ class GithubPaginator(collections.abc.Sequence):
             if response.status_code == 204:
                 return [], response, GithubApiResult.SUCCESS
             
-            elif response.status_code == 404:
+            if response.status_code == 404:
                 return None, response, GithubApiResult.REPO_NOT_FOUND
             
-            elif response.status_code in [403, 429]:
+            if response.status_code in [403, 429]:
 
                 if "Retry-After" in response.headers:
 
