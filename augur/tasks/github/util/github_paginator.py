@@ -389,6 +389,9 @@ class GithubPaginator(collections.abc.Sequence):
             if response.status_code == 204:
                 return [], response, GithubApiResult.SUCCESS
             
+            elif response.status_code == 404:
+                return None, response, GithubApiResult.REPO_NOT_FOUND
+            
             elif response.status_code in [403, 429]:
 
                 if "Retry-After" in response.headers:
