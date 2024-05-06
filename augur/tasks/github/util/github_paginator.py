@@ -391,7 +391,14 @@ class GithubPaginator(collections.abc.Sequence):
             
             elif response.status_code in [403, 429]:
 
-                if "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) == 0:
+                if "Retry-After" in response.headers:
+
+                    retry_after = int(response.headers["Retry-After"])
+                    self.logger.info(
+                        f'\n\n\n\nSleeping for {retry_after} seconds due to secondary rate limit issue.\n\n\n\n')
+                    time.sleep(retry_after)
+
+                elif "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) == 0:
                     current_epoch = int(time.time())
                     epoch_when_key_resets = int(response.headers["X-RateLimit-Reset"])
                     key_reset_time =  epoch_when_key_resets - current_epoch
@@ -404,18 +411,10 @@ class GithubPaginator(collections.abc.Sequence):
                     time.sleep(key_reset_time)
                     num_attempts = 0
 
-                elif "Retry-After" in response.headers:
-
-                    retry_after = int(response.headers["Retry-After"])
-                    self.logger.info(
-                        f'\n\n\n\nSleeping for {retry_after} seconds due to secondary rate limit issue.\n\n\n\n')
-                    time.sleep(retry_after)
-
                 else:
                     time.sleep(60)
 
                 continue
-
             
             page_data = parse_json_response(self.logger, response)
 
