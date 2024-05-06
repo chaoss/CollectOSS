@@ -426,6 +426,8 @@ class GithubPaginator(collections.abc.Sequence):
             if isinstance(page_data, dict) is True:
                 dict_processing_result = process_dict_response(self.logger, response, page_data)
 
+                self.logger.info(f"Used string interogation of dict to determine result. Response code: {response.status_code}. Processing result: {dict_processing_result}. Response body: {page_data}")
+
                 if dict_processing_result == GithubApiResult.NEW_RESULT:
                     self.logger.info(f"Encountered new dict response from api on url: {url}. Response: {page_data}")
                     return None, None, GithubApiResult.NEW_RESULT
