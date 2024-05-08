@@ -82,8 +82,9 @@ AS SELECT a.id AS cntrb_id,
            FROM augur_data.pull_requests,
             augur_data.pull_request_message_ref,
             augur_data.message
-             LEFT JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id  and pull_request_message_ref.created_at >= now() - interval '13 months'
+             LEFT JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id 
           WHERE pull_request_message_ref.pull_request_id = pull_requests.pull_request_id AND pull_request_message_ref.msg_id = message.msg_id
+           and pull_requests.pr_created_at >= now() - interval '13 months'
         UNION ALL
          SELECT issues.reporter_id AS id,
             message.msg_timestamp AS created_at,
@@ -93,7 +94,7 @@ AS SELECT a.id AS cntrb_id,
            FROM augur_data.issues,
             augur_data.issue_message_ref,
             augur_data.message
-             LEFT JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id  and message.created_at >= now() - interval '13 months'
+             LEFT JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id  and message.msg_timestamp >= now() - interval '13 months'
           WHERE issue_message_ref.msg_id = message.msg_id AND issues.issue_id = issue_message_ref.issue_id AND issues.closed_at <> message.msg_timestamp) a,
     augur_data.repo
   WHERE a.repo_id = repo.repo_id
