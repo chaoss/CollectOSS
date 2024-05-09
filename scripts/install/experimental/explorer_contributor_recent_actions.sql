@@ -97,7 +97,7 @@ AS SELECT a.id AS cntrb_id,
              LEFT JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id  and message.msg_timestamp >= now() - interval '13 months'
           WHERE issue_message_ref.msg_id = message.msg_id AND issues.issue_id = issue_message_ref.issue_id AND issues.closed_at <> message.msg_timestamp) a,
     augur_data.repo
-  WHERE a.repo_id = repo.repo_id
+  WHERE a.repo_id = repo.repo_id and a.created_at >= now() - interval '13 months' 
   ORDER BY a.created_at DESC
 WITH DATA;
 
