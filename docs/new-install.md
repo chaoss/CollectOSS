@@ -18,7 +18,8 @@ Here we ensure your system is up to date, install required python libraries, ins
 ```shell 
 sudo apt update && 
 sudo apt upgrade && 
-sudo apt install software-properties-common && 
+sudo apt install software-properties-common &&
+sudo apt-get install libpq-dev &&
 sudo apt install python3-dev && 
 sudo apt install python3.10-venv &&
 sudo apt install postgresql postgresql-contrib postgresql-client && 
