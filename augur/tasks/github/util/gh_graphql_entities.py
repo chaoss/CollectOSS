@@ -341,7 +341,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
             coreData = self.extract_paginate_result(data)
 
             #Check to make sure we have data
-            if coreData['totalCount']: 
+            if coreData['totalCount'] is not None: 
                 self.logger.info(f"... core data obtained")
             else: 
                 self.logger.info(f"Helen, the ghost in our machine, did not get a numerical result for core data (value): {data} \n Zero value assigned.")
