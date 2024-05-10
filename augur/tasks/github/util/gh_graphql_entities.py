@@ -344,7 +344,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
             if coreData['totalCount']: 
                 self.logger.info(f"... core data obtained")
             else: 
-                self.logginer.info(f"Helen, the ghost in our machine, did not get a numerical result for core data (value): {data} \n Zero value assigned.")
+                self.logger.info(f"Helen, the ghost in our machine, did not get a numerical result for core data (value): {data} \n Zero value assigned.")
                 coreData['totalCount'] = 0
         except KeyError as e:
             self.logger.error("Could not extract paginate result because there was no data returned")
