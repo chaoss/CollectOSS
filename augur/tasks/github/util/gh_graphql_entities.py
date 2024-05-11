@@ -346,8 +346,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
                     self.logger.info("... core data obtained")
                 else:
                     self.logger.info(f"Helen, the ghost in our machine, did not get a numerical result for core data (value): {data} \n Zero value assigned.")
-                    yield None 
-                    return 
+                    coreData['totalCount'] = 0 
             else:
                 self.logger.error("Core data is None, cannot proceed with operations on it, but assigning a value of Zero to ensure continued collection.")
                 yield None 
