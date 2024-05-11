@@ -338,9 +338,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
         #self.logger.info(f"{params}")
         data = self.request_graphql_dict(variables=params)
         try:
-            coreData = self.extract_paginate_result(data)
-
             #Check to make sure we have data
+            coreData = self.extract_paginate_result(data)
             if coreData is not None:
                 if coreData.get('totalCount') is not None: 
                     self.logger.info("... core data obtained")
@@ -351,7 +350,6 @@ class GraphQlPageCollection(collections.abc.Sequence):
                 self.logger.error("Core data is None, cannot proceed with operations on it, but assigning a value of Zero to ensure continued collection.")
                 yield None 
                 return 
-
         except KeyError as e:
             self.logger.error("Could not extract paginate result because there was no data returned")
             self.logger.error(''.join(traceback.format_exception(None, e, e.__traceback__)))
