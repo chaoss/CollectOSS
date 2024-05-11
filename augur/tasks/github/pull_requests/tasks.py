@@ -68,6 +68,15 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth) -> None:
         logger.info(f"{owner}/{repo} Prs Page {page} of {num_pages}")
 
         all_data += page_data
+        
+        if len(all_data) >= 200:
+            with GithubTaskManifest(logger) as manifest:
+                augur_db = manifest.augur_db
+                repo_id = augur_db.session.query(Repo).filter(
+                Repo.repo_git == repo_git).one().repo_id
+                owner, repo = get_owner_repo(repo_git)
+            process_pull_requests(all_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+            all_data.clear()
 
     return all_data
 
