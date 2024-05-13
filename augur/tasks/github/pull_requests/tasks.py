@@ -69,7 +69,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth) -> None:
 
         all_data += page_data
         
-        if len(all_data) >= 200:
+        if len(all_data) >= 2000:
             with GithubTaskManifest(logger) as manifest:
                 augur_db = manifest.augur_db
                 repo_id = augur_db.session.query(Repo).filter(
