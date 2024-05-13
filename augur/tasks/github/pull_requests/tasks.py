@@ -42,10 +42,16 @@ def collect_pull_requests(repo_git: str) -> int:
                 total_count += len(all_data)
                 all_data.clear()
 
+        if len(all_data):
+            process_pull_requests(all_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+            total_count += len(all_data)
+
+        if total_count > 0:
             return total_count
         else:
             logger.info(f"{owner}/{repo} has no pull requests")
             return 0
+        
         
     
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
