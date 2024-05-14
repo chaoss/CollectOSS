@@ -132,58 +132,73 @@ class CollectionRequest:
     def get_active_repo_count(self,session):
         return len(session.query(CollectionStatus).filter(getattr(CollectionStatus,f"{self.name}_status" ) == CollectionState.COLLECTING.value).all())
 
-    #Get repo urls based on passed in info.
+
     def get_valid_repos(self,session):
-        #getattr(CollectionStatus,f"{hook}_status" ) represents the status of the given hook
-        #Get the count of repos that are currently running this collection hook
-        #status_column = f"{hook}_status"
+
         active_repo_count = self.get_active_repo_count(session)
-
-        #Will always disallow errored repos and repos that are already collecting
-
-        #The maximum amount of repos to schedule is affected by the existing repos running tasks
         limit = self.max_repo-active_repo_count
 
-        #Extract the user id from the randomized list and split into four chunks
-        split_user_list = split_random_users_list(session,f"{self.name}_status",self.new_status)
-
-        session.logger.info(f"User_list: {split_user_list}")
-
-        #Iterate through each fourth of the users fetched
-        for quarter_list in split_user_list:
-            if limit <= 0:
-                return
-
-            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
-
-            self.repo_list.extend(collection_list)
-            #Update limit with amount of repos started
-            limit -= len(collection_list)
-
-        #Now start old repos if there is space to do so.
         if limit <= 0:
             return
 
+        collection_list = get_newly_added_repos(session, limit, hook=self.name)
+        self.repo_list.extend(collection_list)
+        limit -= len(collection_list)
 
-        user_list = get_list_of_all_users(session)
-        random.shuffle(user_list)
+        #Now start recollecting other repos if there is space to do so.
+        if limit <= 0:
+            return
 
-        #Extract the user id from the randomized list and split into four chunks
-        split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
+        collection_list = get_repos_for_recollection(session, limit, hook=self.name, days_until_collect_again=self.days_until_collect_again)
 
-        for quarter_list in split_user_list:
+        self.repo_list.extend(collection_list)
+
+
+def get_newly_added_repos(session, limit, hook):
+
+    if hook in ["core", "secondary", "ml"]:
+        condition_string = f"""{hook}_status='{str(CollectionState.PENDING.value)}'"""
         
-            #Break out if limit has been reached
-            if limit <= 0:
-                return
+    elif hook == "facade":
+        condition_string = f"""facade_status='{str(CollectionState.UPDATE.value)}'"""
 
-            #only start repos older than the specified amount of days
-            #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
-            #Order by the relevant weight for the collection hook
-            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),allow_old_repos=True,hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
 
-            self.repo_list.extend(collection_list)
-            limit -= len(collection_list)
+    repo_query = s.sql.text(f"""
+        select repo_git 
+        from augur_operations.collection_status x, augur_data.repo y 
+        where x.repo_id=y.repo_id 
+        and {condition_string}
+        order by repo_added
+        limit :limit_num
+    """).bindparams(limit_num=limit)
+
+    valid_repos = session.execute_sql(repo_query).fetchall()
+    valid_repo_git_list = [repo[0] for repo in valid_repos]
+
+    return valid_repo_git_list
+
+def get_repos_for_recollection(session, limit, hook, days_until_collect_again):
+
+    if hook in ["core", "secondary", "ml"]:
+        condition_string = f"""{hook}_status='{str(CollectionState.SUCCESS.value)}'"""
+        
+    elif hook == "facade":
+        condition_string = f"""facade_status='{str(CollectionState.SUCCESS.value)}'"""
+
+    repo_query = s.sql.text(f"""
+        select repo_git 
+        from augur_operations.collection_status x,  repo y 
+        where x.repo_id = y.repo_id
+        and {condition_string}
+        and {hook}_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
+        order by {hook}_data_last_collected 
+        limit :limit_num
+    """).bindparams(limit_num=limit)
+
+    valid_repos = session.execute_sql(repo_query).fetchall()
+    valid_repo_git_list = [repo[0] for repo in valid_repos]
+
+    return valid_repo_git_list
 
 
 def get_enabled_phase_names_from_config():
@@ -610,80 +625,3 @@ class AugurTaskRoutine:
 
                         #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
                         yield repo_git, task_id, col_hook.name
-
-#def start_block_of_repos(logger,session,repo_git_identifiers,phases,repos_type,hook="core"):
-#
-#    logger.info(f"Starting collection on {len(repo_git_identifiers)} {repos_type} {hook} repos")
-#    if len(repo_git_identifiers) == 0:
-#        return 0
-#    
-#    logger.info(f"Collection starting for {hook}: {tuple(repo_git_identifiers)}")
-#
-#    routine = AugurTaskRoutine(session,repos=repo_git_identifiers,collection_phases=phases,collection_hook=hook)
-#
-#    routine.start_data_collection()
-#
-#    return len(repo_git_identifiers)
-
-def get_valid_repos_for_users(session,limit,users,allow_old_repos = False,hook="core",days_to_wait_until_next_collection = 1):
-
-    condition_string = "1"
-
-    if hook == "core":
-        condition_string = get_required_conditions_for_core_repos(allow_collected_before=allow_old_repos,days_until_collect_again= days_to_wait_until_next_collection)
-    elif hook == "secondary":
-        condition_string = get_required_conditions_for_secondary_repos(allow_collected_before=allow_old_repos,days_until_collect_again = days_to_wait_until_next_collection)
-    elif hook == "facade":
-        condition_string = get_required_conditions_for_facade_repos(allow_collected_before=allow_old_repos,days_until_collect_again = days_to_wait_until_next_collection)
-    elif hook == "ml":
-        condition_string = get_required_conditions_for_ml_repos(allow_collected_before=allow_old_repos,days_until_collect_again = days_to_wait_until_next_collection)
-
-    #Query a set of valid repositories sorted by weight, also making sure that the repos are new
-    #Order by the relevant weight for the collection hook
-    repo_query = s.sql.text(f"""
-        SELECT DISTINCT repo.repo_id, repo.repo_git, collection_status.{hook}_weight
-        FROM augur_operations.user_groups 
-        JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
-        JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
-        JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-        WHERE user_id IN :list_of_user_ids AND {condition_string}
-        ORDER BY augur_operations.collection_status.{hook}_weight
-        LIMIT :limit_num
-    """).bindparams(list_of_user_ids=users,limit_num=limit)
-
-    #Get a list of valid repo ids, limit set to 2 times the usual
-    valid_repos = session.execute_sql(repo_query).fetchall()
-    valid_repo_git_list = [repo[1] for repo in valid_repos]
-
-    session.logger.info(f"valid repo git list: {tuple(valid_repo_git_list)}")
-    
-    #start repos for new primary collection hook
-    #collection_size = start_block_of_repos(
-    #    session.logger, session,
-    #    valid_repo_git_list,
-    #    phases, repos_type=repos_type, hook=hook
-    #)
-
-    return valid_repo_git_list
-
-def split_random_users_list(session,status_col, status_new):
-    #Split all users that have new repos into four lists and randomize order
-    query = s.sql.text(f"""
-        SELECT  
-        user_id
-        FROM augur_operations.user_groups 
-        JOIN augur_operations.user_repos ON augur_operations.user_groups.group_id = augur_operations.user_repos.group_id
-        JOIN augur_data.repo ON augur_operations.user_repos.repo_id = augur_data.repo.repo_id
-        JOIN augur_operations.collection_status ON augur_operations.user_repos.repo_id = augur_operations.collection_status.repo_id
-        WHERE {status_col}='{str(status_new)}'
-        GROUP BY user_id
-    """)
-
-    user_list = session.execute_sql(query).fetchall()
-    random.shuffle(user_list)
-
-    #Extract the user id from the randomized list and split into four chunks
-    split_user_list = split_list_into_chunks([row[0] for row in user_list], 4)
-
-    return split_user_list
-
