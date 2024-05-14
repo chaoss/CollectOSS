@@ -56,7 +56,7 @@ def collect_pull_requests(repo_git: str) -> int:
     
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
-def retrieve_all_pr_data(repo_git: str, logger, key_auth) -> Generator[List[Dict]]:
+def retrieve_all_pr_data(repo_git: str, logger, key_auth): #-> Generator[List[Dict]]:
 
     owner, repo = get_owner_repo(repo_git)
 
