@@ -1237,7 +1237,7 @@ class CollectionStatus(Base):
         from augur.tasks.github.util.util import get_repo_weight_by_issue
         from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
-        repo = Repo.get_by_id(repo_id)
+        repo = Repo.get_by_id(session, repo_id)
         repo_git = repo.repo_git
 
         collection_status_unique = ["repo_id"]
