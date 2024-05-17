@@ -585,7 +585,7 @@ class AugurTaskRoutine:
                     for job in col_hook.phases:
                         #Add the phase to the sequence in order as a celery task.
                         #The preliminary task creates the larger task chain 
-                        augur_collection_sequence.append(job(repo_git))
+                        augur_collection_sequence.append(job(repo_git, full_collection))
 
                     #augur_collection_sequence.append(core_task_success_util.si(repo_git))
                     #Link all phases in a chain and send to celery
@@ -603,7 +603,7 @@ class AugurTaskRoutine:
                         for job in col_hook.gitlab_phases:
                             #Add the phase to the sequence in order as a celery task.
                             #The preliminary task creates the larger task chain 
-                            augur_collection_sequence.append(job(repo_git))
+                            augur_collection_sequence.append(job(repo_git, full_collection))
 
                         #augur_collection_sequence.append(core_task_success_util.si(repo_git))
                         #Link all phases in a chain and send to celery
