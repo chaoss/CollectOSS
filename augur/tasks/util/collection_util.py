@@ -156,12 +156,15 @@ class CollectionRequest:
 
 def get_newly_added_repos(session, limit, hook):
 
+    condition_string = ""
     if hook in ["core", "secondary", "ml"]:
-        condition_string = f"""{hook}_status='{str(CollectionState.PENDING.value)}'"""
+        condition_string += f"""{hook}_status='{str(CollectionState.PENDING.value)}'"""
         
     elif hook == "facade":
-        condition_string = f"""facade_status='{str(CollectionState.UPDATE.value)}'"""
+        condition_string += f"""facade_status='{str(CollectionState.UPDATE.value)}'"""
 
+    if hook == "secondary":
+        condition_string += f""" and core_status='{str(CollectionState.SUCCESS.value)}'"""
 
     repo_query = s.sql.text(f"""
         select repo_git 
