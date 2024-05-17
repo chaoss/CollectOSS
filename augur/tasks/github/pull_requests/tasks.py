@@ -11,6 +11,7 @@ from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor, Repo
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
+from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs
 
 
 platform_id = 1
@@ -317,7 +318,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
 
 
 @celery.task(base=AugurSecondaryRepoCollectionTask)
-def collect_pull_request_reviews(repo_git: str) -> None:
+def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
     logger = logging.getLogger(collect_pull_request_reviews.__name__)
 
@@ -334,8 +335,13 @@ def collect_pull_request_reviews(repo_git: str) -> None:
         query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id
 
-        query = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
-        prs = execute_session_query(query, 'all')
+        if full_collection:
+
+            query = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
+            prs = execute_session_query(query, 'all')
+        else:
+            last_collected = get_secondary_data_last_collected(repo_id).date()
+            prs = get_updated_prs(last_collected)
 
         pr_count = len(prs)
 

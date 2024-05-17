@@ -7,7 +7,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 
 
 @celery.task(base=AugurSecondaryRepoCollectionTask)
-def process_pull_request_commits(repo_git: str) -> None:
+def process_pull_request_commits(repo_git: str, full_collection: bool) -> None:
 
     logger = logging.getLogger(process_pull_request_commits.__name__)
 
@@ -18,4 +18,4 @@ def process_pull_request_commits(repo_git: str) -> None:
         query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo = execute_session_query(query, 'one')
 
-        pull_request_commits_model(repo.repo_id, logger, augur_db, manifest.key_auth)
+        pull_request_commits_model(repo.repo_id, logger, augur_db, manifest.key_auth, full_collection)

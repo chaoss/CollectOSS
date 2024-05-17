@@ -3,20 +3,28 @@ from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.util import execute_session_query
+from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs
 
-def pull_request_files_model(repo_id,logger, augur_db, key_auth):
+
+def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection=False):
     
-    # query existing PRs and the respective url we will append the commits url to
-    pr_number_sql = s.sql.text("""
-        SELECT DISTINCT pr_src_number as pr_src_number, pull_requests.pull_request_id
-        FROM pull_requests--, pull_request_meta
-        WHERE repo_id = :repo_id
-    """).bindparams(repo_id=repo_id)
-    pr_numbers = []
-    #pd.read_sql(pr_number_sql, self.db, params={})
+    if full_collection:
+        # query existing PRs and the respective url we will append the commits url to
+        pr_number_sql = s.sql.text("""
+            SELECT DISTINCT pr_src_number as pr_src_number, pull_requests.pull_request_id
+            FROM pull_requests--, pull_request_meta
+            WHERE repo_id = :repo_id
+        """).bindparams(repo_id=repo_id)
+        pr_numbers = []
+        #pd.read_sql(pr_number_sql, self.db, params={})
 
-    result = augur_db.execute_sql(pr_number_sql)#.fetchall()
-    pr_numbers = [dict(row) for row in result.mappings()]
+        result = augur_db.execute_sql(pr_number_sql)#.fetchall()
+        pr_numbers = [dict(row) for row in result.mappings()]
+
+    else:
+        last_collected = get_secondary_data_last_collected(repo_id).date()
+        prs = get_updated_prs(last_collected)
+        pr_numbers = [pr.pr_src_number for pr in prs]
 
     query = augur_db.session.query(Repo).filter(Repo.repo_id == repo_id)
     repo = execute_session_query(query, 'one')

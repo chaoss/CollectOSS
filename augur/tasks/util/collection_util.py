@@ -154,7 +154,9 @@ class CollectionRequest:
             if limit <= 0:
                 return
 
-            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
+            repo_git_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
+
+            collection_list = [tuple(repo_git, True) for repo_git in repo_git_list]
 
             self.repo_list.extend(collection_list)
             #Update limit with amount of repos started
@@ -180,7 +182,9 @@ class CollectionRequest:
             #only start repos older than the specified amount of days
             #Query a set of valid repositories sorted by weight, also making sure that the repos aren't new or errored
             #Order by the relevant weight for the collection hook
-            collection_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),allow_old_repos=True,hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
+            repo_git_list = get_valid_repos_for_users(session,limit,tuple(quarter_list),allow_old_repos=True,hook=self.name, days_to_wait_until_next_collection=self.days_until_collect_again)
+
+            collection_list = [tuple(repo_git, False) for repo_git in repo_git_list]
 
             self.repo_list.extend(collection_list)
             limit -= len(collection_list)
@@ -572,8 +576,8 @@ class AugurTaskRoutine:
         for col_hook in self.collection_hooks:
 
             self.logger.info(f"Starting collection on {len(col_hook.repo_list)} {col_hook.name} repos")
-            
-            for repo_git in col_hook.repo_list:
+
+            for repo_git, full_collection in col_hook.repo_list:
 
                 repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
                 if "github" in repo.repo_git:
