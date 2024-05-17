@@ -22,7 +22,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
     
     else:
         last_collected = get_secondary_data_last_collected(repo_id).date()
-        prs = get_updated_prs(last_collected)
+        prs = get_updated_prs(repo_id, last_collected)
         pr_urls = [pr.pr_url for pr in prs]
 
     

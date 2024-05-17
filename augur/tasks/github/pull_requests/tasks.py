@@ -341,7 +341,7 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
             prs = execute_session_query(query, 'all')
         else:
             last_collected = get_secondary_data_last_collected(repo_id).date()
-            prs = get_updated_prs(last_collected)
+            prs = get_updated_prs(repo_id, last_collected)
 
         pr_count = len(prs)
 

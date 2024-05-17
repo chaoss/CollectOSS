@@ -23,7 +23,7 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
 
     else:
         last_collected = get_secondary_data_last_collected(repo_id).date()
-        prs = get_updated_prs(last_collected)
+        prs = get_updated_prs(repo_id, last_collected)
         pr_numbers = [pr.pr_src_number for pr in prs]
 
     query = augur_db.session.query(Repo).filter(Repo.repo_id == repo_id)

@@ -105,8 +105,8 @@ def get_secondary_data_last_collected(repo_id):
         except s.orm.exc.NoResultFound:
             return None
         
-def get_updated_prs(since):
+def get_updated_prs(repo_id, since):
     
     with get_session() as session:
-        return session.query(PullRequest).filter(PullRequest.pr_updated_at >= since).order_by(PullRequest.pr_src_number).all()
+        return session.query(PullRequest).filter(PullRequest.repo_id == repo_id, PullRequest.pr_updated_at >= since).order_by(PullRequest.pr_src_number).all()
             
