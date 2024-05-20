@@ -30,9 +30,6 @@ def generate_upgrade_request():
 @app.route(f"/{API_VERSION}/config/get", methods=['GET', 'POST'])
 @ssl_required
 def get_config():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     with DatabaseSession(logger, engine=current_app.engine) as session:
         
         config_dict = SystemConfig(logger, session).config.load_config()
