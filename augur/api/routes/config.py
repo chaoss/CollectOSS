@@ -7,7 +7,6 @@ from flask import request, jsonify, current_app
 import sqlalchemy as s
 
 # Disable the requirement for SSL by setting env["AUGUR_DEV"] = True
-from augur.application.config import get_development_flag
 from augur.api.util import ssl_required
 from augur.application.db.models import Config
 from augur.application.config import AugurConfig
@@ -21,9 +20,6 @@ from augur.api.routes import AUGUR_API_VERSION
 @app.route(f"/{AUGUR_API_VERSION}/config/get", methods=['GET', 'POST'])
 @ssl_required
 def get_config():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     with DatabaseSession(logger, engine=current_app.engine) as session:
         
         config_dict = AugurConfig(logger, session).config.load_config()
