@@ -12,6 +12,7 @@ from collectoss.application.db.models import User, Repo, ClientApplication
 from .server import LoginException
 from collectoss.application.util import *
 from collectoss.application.db.lib import get_value
+from collectoss.application.config import SystemConfig
 from ..server import app, db_session
 
 logger = logging.getLogger(__name__)
