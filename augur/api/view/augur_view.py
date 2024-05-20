@@ -57,6 +57,7 @@ def internal_server_error(error):
         traceback.print_tb(error.__traceback__, file=errout)
         # traceback.print_exception(error, file=errout)
         stacktrace = errout.getvalue()
+        stacktrace += f"\n{type(error).__name__}: {str(error)}"
         errout.close()
     except Exception as e:
         logger.error(e)
