@@ -8,12 +8,11 @@ Add Admin command: augur user add <username> <email> <firstname> <lastname> --ad
 import os
 import click
 import logging
-from werkzeug.security import generate_password_hash
 from augur.application.db.models import User
 from augur.application.db.engine import DatabaseEngine
 from sqlalchemy.orm import sessionmaker
 
-
+# TODO: Update these commands to use cli DatabaseContext so this engine is cleaned up
 engine = DatabaseEngine().engine
 Session = sessionmaker(bind=engine)
 
@@ -48,7 +47,7 @@ def add_user(username, email, firstname, lastname, admin, phone_number, password
 
     user = session.query(User).filter(User.login_name == username).first()
     if not user:
-        password = generate_password_hash(password)
+        password = User.compute_hashsed_password(password)
         new_user = User(login_name=username, login_hashword=password, email=email, text_phone=phone_number, first_name=firstname, last_name=lastname, admin=admin, tool_source="User CLI", tool_version=None, data_source="CLI")
         session.add(new_user)
         session.commit()
@@ -60,3 +59,20 @@ def add_user(username, email, firstname, lastname, admin, phone_number, password
         engine.dispose()
         
         return 0
+
+@cli.command('password_reset', short_help="Reset a user's password")
+@click.argument("username")
+@click.password_option(help="New password")
+def reset_password(username, password):
+    session = Session()
+
+    user = session.query(User).filter(User.login_name == username).first()
+
+    if not user:
+        return click.echo("invalid username")
+    
+    password = User.compute_hashsed_password(password)
+    user.login_hashword = password
+    session.commit()
+
+    return click.echo("Password updated")

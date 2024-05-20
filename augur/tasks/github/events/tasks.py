@@ -1,16 +1,15 @@
-import time
 import logging
 import traceback
+import sqlalchemy as s
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
+from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
-from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
+from augur.application.db.models import PullRequest, PullRequestEvent, Issue, IssueEvent, Contributor, Repo
 from augur.application.db.util import execute_session_query
 
 platform_id = 1
@@ -180,6 +179,7 @@ def process_events(events, task_name, repo_id, logger, augur_db):
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
     augur_db.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
 
+    update_issue_closed_cntrbs_from_events(augur_db.engine, repo_id)
 
 # TODO: Should we skip an event if there is no contributor to resolve it o
 def process_github_event_contributors(logger, event, tool_source, tool_version, data_source):
@@ -194,3 +194,42 @@ def process_github_event_contributors(logger, event, tool_source, tool_version, 
         return event, None
     
     return event, event_cntrb
+
+
+def update_issue_closed_cntrbs_from_events(engine, repo_id):
+
+    get_ranked_issues = s.text(f"""
+        WITH RankedIssues AS (
+            SELECT repo_id, issue_id, cntrb_id, 
+                ROW_NUMBER() OVER(PARTITION BY issue_id ORDER BY created_at DESC) AS rn
+            FROM issue_events 
+            WHERE "action" = 'closed'
+        )
+                                            
+        SELECT issue_id, cntrb_id from RankedIssues where rn=1 and repo_id={repo_id} and cntrb_id is not NULL
+    """)
+
+    with engine.connect() as conn:
+        result = conn.execute(get_ranked_issues).fetchall()
+
+    update_data = []
+    for row in result:
+        update_data.append(
+            {
+            'issue_id': row[0], 
+            'cntrb_id': row[1], 
+            'repo_id': repo_id
+            }
+        )
+
+    if update_data:
+        with engine.connect() as connection:
+            update_stmt = s.text("""
+                UPDATE issues
+                SET cntrb_id = :cntrb_id
+                WHERE issue_id = :issue_id
+                AND repo_id = :repo_id
+            """)
+            connection.execute(update_stmt, update_data)
+
+

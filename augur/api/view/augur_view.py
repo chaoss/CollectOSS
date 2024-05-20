@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, session, request, jsonify
+from flask import render_template, redirect, url_for, session, request, jsonify
 from flask_login import LoginManager, current_user, login_required
 from io import StringIO
 from .utils import *
@@ -31,7 +31,7 @@ def page_not_found(error):
     if AUGUR_API_VERSION in str(request.path):
         return jsonify({"status": "Not Found"}), 404
 
-    return render_template('index.j2', title='404', api_url=getSetting('serving')), 404
+    return render_template('index.j2', title='404'), 404
 
 @app.errorhandler(405)
 def unsupported_method(error):
@@ -102,7 +102,6 @@ def load_user(user_id):
         repos = group.repos
     for token in tokens:
         application = token.application
-    db_session.expunge(user)
 
 
     # The flask_login library sets a unique session["_id"]

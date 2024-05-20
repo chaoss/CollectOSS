@@ -1,18 +1,14 @@
 #SPDX-License-Identifier: MIT
-import logging, os, sys, time, requests, json
-from datetime import datetime
-from multiprocessing import Process, Queue
-import pandas as pd
+import json
 import sqlalchemy as s
-import httpx
-import logging
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.github.util.gh_graphql_entities import hit_api_graphql, request_graphql_dict
+from augur.tasks.github.util.gh_graphql_entities import request_graphql_dict
 from augur.application.db.models import *
 from augur.tasks.github.util.github_task_session import *
-
+from augur.application.db.models.augur_data import RepoBadging
+from urllib.parse import quote
 
 def query_committers_count(key_auth, logger, owner, repo):
 
@@ -149,10 +145,10 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
                 pr_merged: pullRequests(states: MERGED) {
                     totalCount
                 }
-                ref(qualifiedName: "master") {
+                defaultBranchRef {
                     target {
                         ... on Commit {
-                            history(first: 0){
+                            history {
                                 totalCount
                             }
                         }
@@ -247,7 +243,7 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
         'security_audit_file': None,
         'status': None,
         'keywords': None,
-        'commit_count': data['ref']['target']['history']['totalCount'] if data['ref'] else None,
+        'commit_count': data['defaultBranchRef']['target']['history']['totalCount'] if data['defaultBranchRef'] else None,
         'issues_count': data['issue_count']['totalCount'] if data['issue_count'] else None,
         'issues_closed': data['issues_closed']['totalCount'] if data['issues_closed'] else None,
         'pull_request_count': data['pr_count']['totalCount'] if data['pr_count'] else None,
@@ -255,7 +251,7 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
         'pull_requests_closed': data['pr_closed']['totalCount'] if data['pr_closed'] else None,
         'pull_requests_merged': data['pr_merged']['totalCount'] if data['pr_merged'] else None,
         'tool_source': 'Repo_info Model',
-        'tool_version': '0.42',
+        'tool_version': '0.50.0',
         'data_source': "Github"
     }
 
@@ -290,5 +286,37 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
     augur_db.execute_sql(update_repo_data)
 
     logger.info(f"Inserted info for {owner}/{repo}\n")
+
+
+def badges_model(logger,repo_git,repo_id,db):
+    """ Data collection and storage method
+        Query the CII API and store the result in the DB for the badges model
+
+        This is a github task because it only covers github repos, this is not 
+        part of the regular repo info model because it uses a differant api + github.
+    """
+    cii_endpoint = "https://bestpractices.coreinfrastructure.org/projects.json?pq="
+
+    
+    #https://github.com/chaoss/grimoirelab-hatstall
+    logger.info(f"Collecting badge data for {repo_git}")
+    git_url_extension = quote(repo_git[0:-4])
+
+    url = cii_endpoint + git_url_extension
+    logger.debug(f"Hitting CII endpoint: {url}")
+
+    #Hit cii api with no api key.
+    response = hit_api(None, url, logger)
+
+    try:
+        response_data = response.json()
+    except:
+        response_data = json.loads(json.dumps(response.text))
+
+    #Insert any data that was returned
+    if len(response_data) > 0:
+        RepoBadging.insert(db, repo_id, response_data)
+    else:
+        logger.info(f"Could not find CII data for {repo_git}")
 
 

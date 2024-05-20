@@ -3,11 +3,11 @@ basePath: /api/unstable/
 externalDocs:
   description: CHAOSS Metric Definitions
   url: https://chaoss.community/metrics/
-host: augur.chaoss.io
+host: ai.chaoss.io
 info:
   title: Augur REST API
-  version: 0.21.11
-openapi: 3.0.0
+  version: 0.60.0
+openapi: 3.1.0
 paths:
   #utility endpoints
   /repo-groups:
@@ -92,6 +92,49 @@ paths:
                   type: string
                 url:
                   description: 'Example: github.com/apache/incubator-argus.git'
+                  type: string
+            type: array
+      tags:
+      - utility
+  /repos/:id:
+    get:
+      description: Get a downloaded repo by its ID in Augur. The schema block below says it is an array, but it is not.
+      operationId: Get Repo By ID
+      responses:
+        '200':
+          description: OK
+          schema:
+            items:
+              properties:
+                base64_url:
+                  description: 'Base64 encode of the full URL. Example Z2l0aHViLmNvbS8zc2NhbGUvM3NjYWxlLW9wZXJhdG9yLW1ldGFkYXRh'
+                  type: string
+                description:
+                  description: 'Repository description. Example: null'
+                  type: string
+                commits_all_time:
+                  description: 'How many commits have been made to this repository? Example: 24'
+                  type: integer
+                issues_all_time:
+                  description: 'How many issues have been raised on this repository? Example: 1'
+                  type: integer
+                pull_requests_all_time:
+                  description: 'How many pull requests have been made to this repository? Example: 7'
+                  type: integer
+                repo_id:
+                  description: 'Repository ID, should match provided URL parameter. Example: 25551'
+                  type: integer
+                repo_name:
+                  description: 'Name of the provided repository. Example: 3scale-operator-metadata'
+                  type: string
+                rg_name:
+                  description: 'Name of the repository group containing this repo. Example: 3scale'
+                  type: string
+                repo_group_id:
+                  description: 'ID of the repository group containing this repo. Example: 25431'
+                  type: integer
+                url:
+                  description: 'URL of this repository, sans leading protocol. Example: github.com/3scale/3scale-operator-metadata'
                   type: string
             type: array
       tags:
@@ -284,12 +327,12 @@ paths:
       tags:
       - utility
   #risk endpoints
-  /metadata/repo_info: 
-    get: 
-      description: 'Returns the metadata about all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the default branch name, repository license file, forks, stars, watchers, and committers. Also includes metadata about current repository issue and pull request status and counts.' 
+  /metadata/repo_info:
+    get:
+      description: 'Returns the metadata about all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the default branch name, repository license file, forks, stars, watchers, and committers. Also includes metadata about current repository issue and pull request status and counts.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md  
+        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
       operationId: Activity Metadata (Repo)
       responses:
         '200':
@@ -315,45 +358,45 @@ paths:
                 fork_count:
                   description: 'Example: 554'
                   type: integer
-                watchers_count: 
+                watchers_count:
                   description: 'Example: 424'
                   type: integer
-                stars_count: 
+                stars_count:
                   description: 'Example: 443'
                   type: integer
-                commits_count: 
+                commits_count:
                   description: '4434'
-                  type: integer 
-                committers_count: 
+                  type: integer
+                committers_count:
                   description: 'Example: 42'
                   type: integer
-                open_issues: 
+                open_issues:
                   description: 'Example: 7'
-                  type: integer 
-                issues_count: 
+                  type: integer
+                issues_count:
                   description: 'Example: 23332'
                   type: integer
-                issues_closed: 
+                issues_closed:
                   description: 'Example: 23322'
                   type: integer
-                pull_request_count: 
+                pull_request_count:
                   description: 'Example: 19445'
                   type: integer
-                pull_requests_open: 
+                pull_requests_open:
                   description: 'Example: 10'
                   type: integer
-                pull_requests_closed: 
+                pull_requests_closed:
                   description: 'Example: 19435'
                   type: integer
-                pull_requests_merged: 
+                pull_requests_merged:
                   description: 'Example: 17473'
                   type: integer
             type: array
       tags:
       - risk
-  /metadata/contributions_count: 
-    get: 
-      description: 'Returns a list of repositories contributed to by all the contributors in an Augur Instance: INCLUDING all repositories on a platform, *not* merely those repositories in the Augur Instance. Numerical totals represent total CONTRIBUTIONS.' 
+  /metadata/contributions_count:
+    get:
+      description: 'Returns a list of repositories contributed to by all the contributors in an Augur Instance: INCLUDING all repositories on a platform, *not* merely those repositories in the Augur Instance. Numerical totals represent total CONTRIBUTIONS.'
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
@@ -373,9 +416,9 @@ paths:
             type: array
       tags:
       - risk
-  /metadata/contributors_count: 
-    get: 
-      description: 'Returns a list of repositories contributed to by all the contributors in an Augur Instance: INCLUDING all repositories on a platform, *not* merely those repositories in the Augur Instance. Numerical totals represent total CONTRIBUTORS.' 
+  /metadata/contributors_count:
+    get:
+      description: 'Returns a list of repositories contributed to by all the contributors in an Augur Instance: INCLUDING all repositories on a platform, *not* merely those repositories in the Augur Instance. Numerical totals represent total CONTRIBUTORS.'
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
@@ -1678,6 +1721,90 @@ paths:
             type: array
       tags:
       - experimental
+  /repo-groups/:repo_group_id/pull-requests-new:
+   get:
+      description: Returns a time series of the number of new Pull Requests opened during a certain period for a specific repository group.
+      operationId: Pull Requests New (Repo Group)
+      parameters:
+        - name: repo_group_id
+          in: path
+          description: The repository group's id.
+          required: true
+          schema:
+            type: string
+        - name: period
+          in: query
+          description: Sets the periodicity to 'day', 'week', 'month', or 'year'.
+          schema:
+            type: string
+        - name: begin_date
+          in: query
+          description: Specifies the begin date.
+          schema:
+            type: string
+        - name: end_date
+          in: query
+          description: Specifies the end date.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created_date:
+                    type: string
+                    description: Date in the format 'YYYY-MM-DD'.
+                  new_pull_requests:
+                    type: integer
+                    description: The number of new pull requests opened on the date.
+      tags:
+        - experimental
+  /repo-groups/:repo_id/pull-requests-new:
+    get:
+      description: Returns a time series of the number of new Pull Requests opened during a certain period for a specific repository.
+      operationId: Pull Requests New (Repo)
+      parameters:
+        - name: repo_id
+          in: path
+          description: The repository's id.
+          required: true
+          schema:
+            type: string
+        - name: period
+          in: query
+          description: Sets the periodicity to 'day', 'week', 'month', or 'year'.
+          schema:
+            type: string
+        - name: begin_date
+          in: query
+          description: Specifies the begin date.
+          schema:
+            type: string
+        - name: end_date
+          in: query
+          description: Specifies the end date.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created_date:
+                    type: string
+                    description: Date in the format 'YYYY-MM-DD'.
+                  new_pull_requests:
+                    type: integer
+                    description: The number of new pull requests opened on the date.
+      tags:
+        - experimental
   /repo-groups/:repo_group_id/pull-requests-closed-no-merge:
     get:
       description: Timeseries of pull request which were closed but not merged
@@ -4584,7 +4711,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4645,7 +4772,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4706,7 +4833,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4760,7 +4887,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4821,7 +4948,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4861,7 +4988,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4901,7 +5028,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4941,7 +5068,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -4981,7 +5108,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -5021,7 +5148,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -5068,7 +5195,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -5108,7 +5235,7 @@ paths:
           schema:
             type: integer
           type: integer
-          description: Reposity Id
+          description: Repository Id
         - in: query
           name: start_date
           required: false
@@ -5144,10 +5271,18 @@ paths:
             type: object
       tags:
         - visualizations
-  /complexity/project_lines: 
-    get: 
-      description: 'Returns project line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of lines in the project repository.' 
+  /complexity/project_lines:
+    get:
+      description: 'Returns project line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of lines in the project repository.'
       operationId: Total Lines (repo)
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Repository Id
       responses:
         '200':
           description: OK
@@ -5172,9 +5307,9 @@ paths:
             type: array
       tags:
       - complexity
-  /complexity/project_file_complexity: 
-    get: 
-      description: 'Returns project file complexity data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average file complexity of the project repository.' 
+  /complexity/project_file_complexity:
+    get:
+      description: 'Returns project file complexity data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average file complexity of the project repository.'
       operationId: File Complexity (repo)
       responses:
         '200':
@@ -5200,10 +5335,18 @@ paths:
             type: array
       tags:
       - complexity
-  /complexity/project_blank_lines: 
-    get: 
-      description: 'Returns project blank line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of blank lines in the project repository.' 
+  /complexity/project_blank_lines:
+    get:
+      description: 'Returns project blank line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of blank lines in the project repository.'
       operationId: Total Blank Lines (repo)
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Repository Id
       responses:
         '200':
           description: OK
@@ -5228,10 +5371,18 @@ paths:
             type: array
       tags:
       - complexity
-  /complexity/project_comment_lines: 
-    get: 
-      description: 'Returns project comment line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of comment lines in the project repository.' 
+  /complexity/project_comment_lines:
+    get:
+      description: 'Returns project comment line data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total and average number of comment lines in the project repository.'
       operationId: Total Comment Lines (repo)
+      parameters:
+        - in: query
+          name: repo_id
+          required: true
+          schema:
+            type: integer
+          type: integer
+          description: Repository Id
       responses:
         '200':
           description: OK
@@ -5256,9 +5407,9 @@ paths:
             type: array
       tags:
       - complexity
-  /complexity/project_files: 
-    get: 
-      description: 'Returns project file data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total number of files in the project repository.' 
+  /complexity/project_files:
+    get:
+      description: 'Returns project file data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the total number of files in the project repository.'
       operationId: Total Files (repo)
       responses:
         '200':
@@ -5281,9 +5432,9 @@ paths:
             type: array
       tags:
       - complexity
-  /complexity/project_languages: 
-    get: 
-      description: 'Returns project language data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the lines and files of a language in a repository.' 
+  /complexity/project_languages:
+    get:
+      description: 'Returns project language data for all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the lines and files of a language in a repository.'
       operationId: Project Languages (repo)
       responses:
         '200':
@@ -5317,7 +5468,7 @@ paths:
       description: 'The number of messages exchanged for a repository group over a specified period.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: 
+        url:
       operationId: Repository Messages (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -5400,3 +5551,237 @@ paths:
             type: array
       tags:
       - evolution
+
+# USER Endpoints
+
+  /user/session/generate:
+    post:
+      description: The final step in the Augur Oauth authorization process. The Client Application uses this endpoint to exchange a temporary authorization code (generated in the previous authorization step) with a valid Bearer token.
+      operationId: Generate User Session Token
+      parameters:
+      - description: Client [API_Key]
+        in: header
+        required: true
+        name: Authorization
+        schema:
+          type: string
+        type: string
+      - description: Temporary authorization code
+        in: query
+        required: true
+        name: code
+        schema:
+          type: string
+        type: string
+      - description: Required to be "code"
+        in: query
+        required: true
+        name: grant_type
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Validated, Invalid grant type, Invalid authorization code, Invalid user]
+                  example: Validated
+                username:
+                  type: string
+                  description: The login name of the User assocaited with this request. Only returned on success.
+                access_token:
+                  type: string
+                  description: The newly generated Bearer token for this User+Application authorization. Only returned on success.
+                refresh_token:
+                  type: string
+                  description: The refresh token associated with this transaction. Only returned on success.
+                token_type:
+                  type: string
+                  example: Bearer
+                  enum: [Bearer]
+                  description: Only returned on success.
+                expires:
+                  type: integer
+                  description: The number of seconds until the provided Bearer token expires.
+          headers:
+            Cache-Control:
+              description: Always set to "no-store"
+              content:
+                text/plain:
+                  schema:
+                    type: string
+                    enum: [no-store]
+                    example: no-store
+        '400':
+          description: Missing Argument
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: ["Missing argument: code"]
+      tags:
+      - login
+  /user/session/refresh:
+    post:
+      description: Exchange a valid refresh token for a new Bearer token and a new refresh token. The Bearer token returned from this endpoint may be the same as the current Bearer token. If the new Bearer token returned from this endpoint is not the same as the current Bearer token, then the current token is now invalid. The same is true for the existing refresh token.
+      operationId: Refresh User Session Token
+      parameters:
+      - description: Client [API_Key]
+        in: header
+        required: true
+        name: Authorization
+        schema:
+          type: string
+        type: string
+      - description: The refresh token generated in the previous authorization request.
+        in: query
+        required: true
+        name: refresh_token
+        schema:
+          type: string
+        type: string
+      - description: Required to be "refresh_token"
+        in: query
+        required: true
+        name: grant_type
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Validated, Invalid grant type, Invalid refresh token, Invalid application]
+                  example: Validated
+                  description: Status "Invalid application" is returned when the  issuing application (IE; that which the refresh token belongs to) is not the same as the requesting application (IE; that which is making the current request). Refresh tokens may only be used by the issuing application.
+                access_token:
+                  type: string
+                  description: The newly generated Bearer token for this User+Application authorization. Only returned on success.
+                refresh_token:
+                  type: string
+                  description: The refresh token associated with this transaction. Only returned on success.
+                expires:
+                  type: integer
+                  description: The number of seconds until the provided Bearer token expires.
+          headers:
+            Cache-Control:
+              description: Always set to "no-store"
+              content:
+                text/plain:
+                  schema:
+                    type: string
+                    enum: [no-store]
+                    example: no-store
+        '400':
+          description: Missing Argument
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: ["Missing argument: refresh_token"]
+      tags:
+      - login
+
+# DEI Endpoints
+
+  /dei/repo/add:
+    post:
+      description: Add and start repo for DEI Badging
+      operationId: DEI Badging Tracking
+      parameters:
+      - description: Client [API_Key]
+        in: header
+        required: true
+        name: Authorization
+        schema:
+          type: string
+        type: string
+      - description: The source badging ID
+        in: query
+        required: true
+        name: id
+        schema:
+          type: string
+        type: string
+      - description: The badging level
+        in: query
+        required: true
+        name: level
+        schema:
+          type: string
+        type: string
+      - description: The repo URL to track
+        in: query
+        required: true
+        name: url
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Success, Repo already exists, Error adding repo]
+                  example: Success
+        '400':
+          description: Missing Argument
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: ["Missing argument"]
+      tags:
+      - DEI Badging
+  /dei/report:
+    post:
+      description: Request the report for the given badging project. On success, the report PDF will be returned in a Binary response. On failure, a JSON response with a status will be returned.
+      operationId: DEI Badging Report
+      parameters:
+      - description: Client [API_Key]
+        in: header
+        required: true
+        name: Authorization
+        schema:
+          type: string
+        type: string
+      - description: The source badging ID
+        in: query
+        required: true
+        name: id
+        schema:
+          type: string
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Invalid ID]
+        '400':
+          description: Missing Argument
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: ["Missing argument"]
+      tags:
+      - DEI Badging

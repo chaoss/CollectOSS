@@ -2,9 +2,10 @@
 import datetime
 import sqlalchemy as s
 import pandas as pd
+from flask import current_app
+
 from augur.api.util import register_metric
 
-from ..server import engine
 
 @register_metric(type="toss") 
 def toss_pull_request_acceptance_rate(repo_id, begin_date=None, end_date=None, group_by='week'):
@@ -27,7 +28,7 @@ def toss_pull_request_acceptance_rate(repo_id, begin_date=None, end_date=None, g
             (
             SELECT COUNT
                 ( pull_request_events.pull_request_id ) AS num_approved,
-                repo_id
+                pull_requests.repo_id
             FROM
                 pull_requests
                 JOIN pull_request_events ON pull_request_events.pull_request_id = pull_requests.pull_request_id
@@ -38,12 +39,12 @@ def toss_pull_request_acceptance_rate(repo_id, begin_date=None, end_date=None, g
                 AND pull_request_events.created_at BETWEEN :begin_date
                 AND :end_date
             GROUP BY
-                repo_id
+                pull_requests.repo_id
             ) merged
             JOIN (
             SELECT COUNT
                 ( pull_request_events.pull_request_id ) AS num_opened,
-                repo_id
+                pull_requests.repo_id
             FROM
                 pull_requests
                 JOIN pull_request_events ON pull_request_events.pull_request_id = pull_requests.pull_request_id
@@ -53,12 +54,13 @@ def toss_pull_request_acceptance_rate(repo_id, begin_date=None, end_date=None, g
                 AND pull_request_events.created_at BETWEEN :begin_date
                 AND :end_date
             GROUP BY
-            repo_id
+            pull_requests.repo_id
             ) opened ON merged.repo_id = opened.repo_id
     """)
     
-    results = pd.read_sql(pr_acceptance_rate_sql, engine, params={'repo_id': repo_id, 'group_by': group_by,
-                                                    'begin_date': begin_date, 'end_date': end_date})
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(pr_acceptance_rate_sql, conn, params={'repo_id': repo_id, 'group_by': group_by,
+                                                        'begin_date': begin_date, 'end_date': end_date})
     return results
 
 
@@ -89,8 +91,9 @@ def toss_review_duration(repo_id, begin_date=None, end_date=None):
             AND :end_date
     """)
     
-    results = pd.read_sql(pr_acceptance_rate_sql, engine, params={'repo_id': repo_id,
-                                                        'begin_date': begin_date, 'end_date': end_date})
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(pr_acceptance_rate_sql, conn, params={'repo_id': repo_id,
+                                                            'begin_date': begin_date, 'end_date': end_date})
     if results.iloc[0]['duration'] is None:
         results.iloc[0]['duration'] = -1
     else:
@@ -120,5 +123,6 @@ def toss_repo_info(repo_id):
     LIMIT 1;
     """)
     
-    results = pd.read_sql(license_file_sql, engine, params={'repo_id': repo_id})
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(license_file_sql, conn, params={'repo_id': repo_id})
     return results

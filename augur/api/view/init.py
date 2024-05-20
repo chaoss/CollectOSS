@@ -1,14 +1,12 @@
 from pathlib import Path
 from .server import Environment
 from augur.application.logs import AugurLogger
-import logging, secrets, yaml
+import secrets, yaml
 
 env = Environment()
 
 # load configuration files and initialize globals
 configFile = Path(env.setdefault("CONFIG_LOCATION", "config.yml"))
-
-version = {"major": 0, "minor": 0.1, "series": "Alpha"}
 
 report_requests = {}
 settings = {}
@@ -22,7 +20,6 @@ def init_settings():
     settings["pagination_offset"] = 25
     settings["reports"] = "reports.yml"
     settings["session_key"] = secrets.token_hex()
-    settings["version"] = version
 
 def write_settings(current_settings):
     current_settings["caching"] = str(current_settings["caching"])
@@ -32,55 +29,6 @@ def write_settings(current_settings):
 
     with open(configFile, 'w') as file:
         yaml.dump(current_settings, file)
-
-""" ----------------------------------------------------------------
-"""
-def version_check(current_settings):
-    def to_version_string(version_object):
-        if version_object is None:
-            return "Undefined_version"
-        return f'{version_object["major"]}-{version_object["minor"]}-{version_object["series"]}'
-
-    def update_from(old):
-        if old == None:
-            if "pagination_offset" not in current_settings:
-                current_settings["pagination_offset"] = current_settings.pop("paginationOffset")
-            if "session_key" not in current_settings:
-                current_settings["session_key"] = secrets.token_hex()
-
-        else:
-            raise ValueError(f"Updating from {to_version_string(old)} to {to_version_string(version)} is unsupported")
-
-        current_settings["version"] = version
-        write_settings(current_settings)
-        logger.info(f"Configuration updated from {to_version_string(old)} to {to_version_string(version)}")
-
-    def compare_versions(old, new):
-        if old["major"] < new["major"]:
-            return -1, old["series"] == new["series"]
-        elif old["major"] > new["major"]:
-            return 1, old["series"] == new["series"]
-        elif old["minor"] < new["minor"]:
-            return -1, old["series"] == new["series"]
-        elif old["minor"] > new["minor"]:
-            return 1, old["series"] == new["series"]
-        return 0, old["series"] == new["series"]
-
-    if "version" not in current_settings:
-        update_from(None)
-
-    version_diff = compare_versions(current_settings["version"], version)
-
-    if current_settings["version"] == version:
-        return
-    elif version_diff[0] == -1:
-        update_from(current_settings["version"])
-    elif version_diff[0] == 1:
-        raise ValueError("Downgrading configuration versions is unsupported: " +
-        f"from {to_version_string(current_settings['version'])} to {to_version_string(version)}")
-
-    global settings
-    settings = current_settings
 
 # default reports definition
 reports = {

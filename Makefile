@@ -139,16 +139,16 @@ docs-view: docs
 
 
 compose-run:
-	@ docker-compose -f docker-compose.yml up --build
+	@ docker compose -f docker-compose.yml up --build
 
 compose-run-database:
 	@ echo "**************************************************************************"
 	@ echo "Make sure there are no database credentials in docker_env.txt!"
 	@ echo "**************************************************************************"
 	@ echo
-	@ docker-compose -f docker-compose.yml -f database-compose.yml up --build
+	@ docker compose -f docker-compose.yml -f database-compose.yml up --build
 
-docker-build: docker-build-backend docker-build-frontend docker-build-database
+docker-build: docker-build-backend docker-build-frontend docker-build-database docker-build-rabbitmq
 
 docker-build-backend:
 	@ docker build -t augurlabs/augur:backend -f util/docker/backend/Dockerfile .
@@ -159,6 +159,8 @@ docker-build-frontend:
 docker-build-database:
 	@ docker build -t augurlabs/augur:database -f util/docker/database/Dockerfile .
 
+docker-build-rabbitmq:
+	@ docker build -t augurlabs/augur:rabbitmq -f util/docker/rabbitmq/Dockerfile .
 
 docker-run-backend:
 	@ - docker stop augur_backend
@@ -174,3 +176,8 @@ docker-run-database:
 	@ - docker stop augur_database
 	@ - docker rm augur_database
 	docker run -p 5434:5432 --name augur_database augurlabs/augur:database
+
+docker-run-rabbitmq:
+	@ - docker stop augur_rabbitmq
+	@ - docker rm augur_rabbitmq
+	docker run -p 5434:5432 --name augur_rabbitmq augurlabs/augur:rabbitmq

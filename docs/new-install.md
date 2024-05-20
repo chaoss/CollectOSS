@@ -12,7 +12,7 @@ We default to this version of Ubuntu for the moment because Augur does not yet s
 2. Clone your fork. We recommend creating a `github` directory in your user's base directory. 
 
 ## Pre-Requisite Operating System Level Packages
-Here we ensure your system is up to date, install required python libraries, install postgresql, and install our queuing infrastrucutre, which is composed of redis-server and rabbitmq-server
+Here we ensure your system is up to date, install required python libraries, install postgresql, and install our queuing infrastructure, which is composed of redis-server and rabbitmq-server
 
 ### Executable
 ```shell 
@@ -29,7 +29,7 @@ sudo apt install rabbitmq-server && #required
 sudo snap install go --classic && #required: Go Needs to be version 1.19.x or higher. Snap is the package manager that gets you to the right version. Classic enables it to actually be installed at the correct version.
 sudo apt install nginx && # required for hosting
 sudo add-apt-repository ppa:mozillateam/firefox-next &&
-sudo apt install firefox=111.0~b8+build1-0ubuntu0.22.04.1 &&
+sudo apt install firefox=115.0~b2+build1-0ubuntu0.22.04.1 &&
 sudo apt install firefox-geckodriver
 
 # You will almost certainly need to reboot after this. 
@@ -71,11 +71,22 @@ CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
 GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
 ```
 
-Once you are successfully logged out, return to your user by exiting `psql`, then typing `exit` to exit the postgres user, and `exit` a SECOND time to exit the root user. 
+**If you're using PostgreSQL 15 or later**, default database permissions will prevent Augur's installer from configuring the database. Add one last line after the above to fix this:
+```sql
+GRANT ALL ON SCHEMA public TO augur;
+```
+
+After that, return to your user by exiting `psql`
 ```
 postgres=# \quit
 ```
 
+Here we want to start an SSL connection to the `augur` database on port 5432:
+```shell
+psql -h localhost -U postgres -p 5432
+```
+
+Now type `exit` to log off the postgres user, and `exit` a SECOND time to log off the root user.
 ```shell
 exit
 exit 
@@ -84,7 +95,7 @@ exit
 ## Rabbitmq Broker Configuration
 You have to setup a specific user, and broker host for your augur instance. You can accomplish this by running the below commands:
 ```shell
-sudo rabbitmq-plugins enable rabbitmq_management
+sudo rabbitmq-plugins enable rabbitmq_management &&
 sudo rabbitmqctl add_user augur password123 &&
 sudo rabbitmqctl add_vhost augur_vhost &&
 sudo rabbitmqctl set_user_tags augur augurTag administrator &&
@@ -97,6 +108,11 @@ sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
 - We then set permissions 
 
 NOTE: it is important to have a static hostname when using rabbitmq as it uses hostname to communicate with nodes.
+
+RabbitMQ's server can then be started from systemd:
+```shell
+sudo systemctl start rabbitmq-server
+```
 
 If your setup of rabbitmq is successful your broker url should look like this:
 
@@ -139,7 +155,7 @@ Where AugurB is the vhost. The management API at port 15672 will only exist if y
 ## Proxying Augur through Nginx
 Assumes nginx is installed. 
 
-Then you create a file for the server you want Augur to run under in the location of your `sites-enabled` directory for nginx (In this example, Augur is running on port 5038: (the long timeouts on the settings page is for when a user adds a large number of repos or orgs in a single session to prevent timeouts from nginx)
+Then you create a file for the server you want Augur to run under in the location of your `sites-enabled` directory for nginx. In this example, Augur is running on port 5038: (the long timeouts on the settings page is for when a user adds a large number of repos or orgs in a single session to prevent timeouts from nginx)
 
 ```
 server {
@@ -171,10 +187,10 @@ server {
 ### Setting up SSL (https)
 Install Certbot: 
 ```
-sudo apt update
-sudo apt upgrade
-sudo apt install certbot
-apt-get install python3-certbot-nginx
+sudo apt update &&
+sudo apt upgrade &&
+sudo apt install certbot &&
+sudo apt-get install python3-certbot-nginx
 ```
 
 Generate a certificate for the specific domain for which you have a file already in the sites-enabled directory for nginx (located at `/etc/nginx/sites-enabled` on Ubuntu): 
@@ -234,9 +250,17 @@ Create a Python Virtual Environment `python3 -m venv ~/virtual-env-directory`
 
 Activate your Python Virtual Environment `source ~/virtual-env-directory/bin/activate`
 
-From the root of the Augur Directory, type `make install`
+From the root of the Augur Directory, type `make install`. You will be prompted to provide:
 
-You will be prompted to provide your GitHub username and password, your GitLab username and password, and the postgresql database where you want to have the Augur Schema built. You will also be prompted to provide a directory where repositories will be clone into. 
+- "User" is the PSQL database user, which is `augur` if you followed instructions exactly
+- "Password" is the above user's password
+- "Host" is the domain used with nginx, e.g. `ai.chaoss.io`
+- "Port" is 5432 unless you reconfigured something
+- "Database" is the name of the Augur database, which is `augur` if you followed instructions exactly
+- The GitHub token created earlier
+- Then the username associated with it
+- Then the same for GitLab
+- and finally a directory to clone repositories to
 
 ## Post Installation of Augur
 
@@ -284,8 +308,8 @@ redis.exceptions.ConnectionError: Error 111 connecting to 127.0.0.1:6379. Connec
 
 **COMMAND**: 
 ```
-hugeadm --thp-never` &&
-echo never > /sys/kernel/mm/transparent_hugepage/enabled
+sudo hugeadm --thp-never &&
+sudo echo never > /sys/kernel/mm/transparent_hugepage/enabled
 ```
 
 
@@ -324,6 +348,8 @@ To access command line options, use `augur --help`. To load repos from GitHub or
 
 Start a Flower Dashboard, which you can use to monitor progress, and report any failed processes as issues on the Augur GitHub site. The error rate for tasks is currently 0.04%, and most errors involve unhandled platform API timeouts. We continue to identify and add fixes to handle these errors through additional retries. Starting Flower: `(nohup celery -A augur.tasks.init.celery_app.celery_app flower --port=8400 --max-tasks=1000000 &)` NOTE: You can use any open port on your server, and access the dashboard in a browser with http://servername-or-ip:8400 in the example above (assuming you have access to that port, and its open on your network.)
 
+If you're using a virtual machine within Windows and you get an error about missing AVX instructions, you should kill Hyper-V. Even if it doesn't *appear* to be active, it might still be affecting your VM. Follow [these instructions](https://stackoverflow.com/a/68214280) to disable Hyper-V, and afterward AVX should pass to the VM.
+
 ## Starting your Augur Instance
 Start Augur: `(nohup augur backend start &)`
 
@@ -340,11 +366,23 @@ Note: Augur will run on port 5000 by default (you probably need to change that i
 You can stop augur with `augur backend stop`, followed by `augur backend kill`. We recommend waiting 5 minutes between commands so Augur can shutdown more gently. There is no issue with data integrity if you issue them seconds apart, its just that stopping is nicer than killing. 
 
 ### Docker
-1. Make sure docker, and docker-compose are both installed
+*Note: `sudo` is not necessary on OSX or Windows
+
+1. Make sure docker, and docker compose are both installed
 2. Modify the `environment.txt` file in the root of the repository to include your GitHub and GitLab API keys.
 3. If you are already running postgresql on your server you have two choices: 
    - Change the port mappings in the `docker-compose.yml` file to match ports for Postgresql not currently in use.
    - Change to variables in `environment.txt` to include the correct values for your local, non-docker-container database.
-4. `sudo docker build -t augur-new -f docker/backend/Dockerfile .`
-5. `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to run the database in a Docker Container or 
-   `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. 
+4. `sudo docker build -t augur-new -f docker/backend/Dockerfile .` OSX: 
+5. `sudo docker compose --env-file ./environment.txt --file docker-compose.yml up` to run the database in a Docker Container or 
+   `sudo docker compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. *Note*: Environment file would be modified to point to an already running database. 
+
+
+#### Possible Apple Silicon Prerequisites: 
+```bash
+brew install libpq
+echo 'export LDFLAGS="-L/opt/homebrew/opt/libpq/lib"' >> ~/.zshrc
+echo 'export CPPFLAGS="-I/opt/homebrew/opt/libpq/include"' >> ~/.zshrc 
+```
+
+_Note: `AUGUR\_DB` and `RABBIT\_*` variables are optional when using the default docker-comopse.yml. `docker-compose-externalDB` does require `AUGUR\_DB` set to a postgresql installation._

@@ -48,12 +48,30 @@ body {
 }
 
 .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
-    background-color: var(--color-accent);
+    background-color: var(--color-accent)
 }
 
 .dashboard-sidebar {
-    width: 280px;
     background-color: var(--color-bg-light) !important;
+    color: var(--color-fg) !important;
+    max-height: 100vh;
+}
+
+.nav-link {
+    color: var(--color-fg);
+}
+
+.nav-pills li:has(a:not(.active)) :hover {
+    color: var(--color-notice);
+}
+
+.nav-pills li {
+    width: 100%;
+}
+
+.nav-pills li a {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
 }
 
 .dashboard-form-control {
@@ -66,6 +84,20 @@ body {
     color: #bcd0f7;
 }
 
+.circle-opaque {
+    border-radius: 50%;          /* Make it a circle */
+    display: inline-block;       
+    position: absolute;          /* Able to position it, overlaying the other image */
+    left:0px;                    /* Customise the position, but make sure it */
+    top:0px;                     /* is the same as .circle-transparent */
+    z-index: -1;                 /* Makes the image sit *behind* .circle-transparent */
+}
+
+.circle-opaque img {
+    border-radius: 50%;          /* Make it a circle */
+    z-index: -1;
+}
+
 table {
     background-color: var(--color-fg);
     color: var(--color-fg-contrast);
@@ -74,11 +106,12 @@ table {
 .toast-container {
     top: 80px !important;
     right: 16px !important;
+    z-index: 100000;
 }
 
 .toast {
     background-color: var(--color-notice);
-    color: var(--color-fg);
+    color: var(--color-bg);
 }
 
 #toast-placeholder {

@@ -1,5 +1,5 @@
 import sqlalchemy as s
-from sqlalchemy import or_, and_, update
+from sqlalchemy import and_, update
 import json
 from typing import List, Any, Optional
 import os
@@ -37,6 +37,7 @@ default_config = {
                 "github": "<gh_api_key>",
                 "gitlab": "<gl_api_key>"
             },
+            #TODO: a lot of these are deprecated.
             "Facade": {
                 "check_updates": 1,
                 "create_xlsx_summary_files": 1,
@@ -66,7 +67,8 @@ default_config = {
                 "log_level": "INFO",
             },
             "Celery": {
-                "concurrency": 12
+                "worker_process_vmem_cap": 0.25,
+                "refresh_materialized_views_interval_in_days": 1
             },
             "Redis": {
                 "cache_group": 0, 
@@ -138,7 +140,11 @@ def convert_type_of_value(config_dict, logger=None):
 
 class AugurConfig():
 
-    def __init__(self, logger, session):
+    from augur.application.db.session import DatabaseSession
+
+    session: DatabaseSession
+
+    def __init__(self, logger, session: DatabaseSession):
 
         self.session = session
         self.logger = logger

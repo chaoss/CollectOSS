@@ -25,20 +25,12 @@
 # and checks for any parents of HEAD that aren't already accounted for in the
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
-import sys
-import platform
-import imp
-import time
-import datetime
 import html.parser
 import subprocess
 import os
-import getopt
-import xlsxwriter
-import configparser
 import pathlib
 import sqlalchemy as s
-from .utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author, get_absolute_repo_path
+from .utilitymethods import update_repo_log, get_absolute_repo_path
 from augur.application.db.models.augur_data import *
 from augur.application.db.models.augur_operations import CollectionStatus
 from augur.application.db.util import execute_session_query, convert_orm_list_to_dict_list
@@ -68,22 +60,16 @@ def git_repo_initialize(session, repo_git):
 
         # Strip protocol from remote URL, set a unique path on the filesystem
         if git.find('://', 0) > 0:
-            repo_relative_path = git[git.find(
+            platform_org_git_url_section = git[git.find(
                 '://', 0)+3:][:git[git.find('://', 0)+3:].rfind('/', 0)+1]
             session.log_activity(
-                'Info', f"Repo Relative Path from facade05, from for row in new_repos, line 79: {repo_relative_path}")
+                'Info', f"Repo Relative Path from facade05, from for row in new_repos, line 79: {platform_org_git_url_section}")
             session.log_activity('Info', f"The git path used : {git}")
 
         else:
-            repo_relative_path = git[:git.rfind('/', 0)+1]
+            platform_org_git_url_section = git[:git.rfind('/', 0)+1]
             session.log_activity(
-                'Info', f"Repo Relative Path from facade05, line 80, reset at 86: {repo_relative_path}")
-
-        # Get the full path to the directory where we'll clone the repo
-        repo_path = (
-            f"{session.repo_base_directory}{row.repo_group_id}/{repo_relative_path}")
-        session.log_activity(
-            'Info', f"Repo Path from facade05, line 86: {repo_path}")
+                'Info', f"Repo Relative Path from facade05, line 80, reset at 86: {platform_org_git_url_section}")
 
         # Get the name of repo
         repo_name = git[git.rfind('/', 0)+1:]
@@ -91,21 +77,31 @@ def git_repo_initialize(session, repo_git):
             repo_name = repo_name[:repo_name.find('.git', 0)]
             session.log_activity(
                 'Info', f"Repo Name from facade05, line 93: {repo_name}")
+        
+        path_identifier = f"{platform_org_git_url_section}{repo_name}".replace('/','-')
+
+        # Get the full path to the directory where we'll clone the repo
+        repo_path = (
+            f"{session.repo_base_directory}{row.repo_id}-{path_identifier}")
+        session.log_activity(
+            'Info', f"Repo Path from facade05, line 86: {repo_path}")
+
+        
 
         # query = s.sql.text("""SELECT NULL FROM repo WHERE CONCAT(repo_group_id,'/',repo_path,repo_name) = :repo_group_id
-        #    """).bindparams(repo_group_id=f"{row.repo_group_id}/{repo_relative_path}{repo_name}")
+        #    """).bindparams(repo_group_id=f"{row.repo_group_id}/{platform_org_git_url_section}{repo_name}")
         #
         # result = session.fetchall_data_from_sql_text(query)
 
         query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
             repo_name=:nameParam WHERE repo_id=:idParam
-            """).bindparams(pathParam=repo_relative_path, nameParam=repo_name, idParam=row.repo_id)
+            """).bindparams(pathParam=path_identifier, nameParam=repo_name, idParam=row.repo_id)
 
         session.execute_sql(query)
         # Check if there will be a storage path collision
         # If there is a collision, throw an error so that it updates the existing repo instead of trying
         # to reclone.
-        if os.path.isdir(f"{repo_path}{repo_name}"):  # len(result):
+        if os.path.isdir(repo_path):  # len(result):
 
             session.log_activity(
                 'Verbose', f"Identical repo detected, storing {git} in {repo_name}")
@@ -121,7 +117,7 @@ def git_repo_initialize(session, repo_git):
             #Make sure repo in repo table reflects found path.
             query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
             repo_name=:nameParam WHERE repo_id=:idParam
-            """).bindparams(pathParam=repo_relative_path, nameParam=repo_name, idParam=row.repo_id)
+            """).bindparams(pathParam=path_identifier, nameParam=repo_name, idParam=row.repo_id)
 
             session.execute_sql(query)
             return
@@ -144,7 +140,7 @@ def git_repo_initialize(session, repo_git):
         #Make sure newly cloned repo path is recorded in repo table
         query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
             repo_name=:nameParam WHERE repo_id=:idParam
-            """).bindparams(pathParam=repo_relative_path, nameParam=repo_name, idParam=row.repo_id)
+            """).bindparams(pathParam=path_identifier, nameParam=repo_name, idParam=row.repo_id)
 
         session.execute_sql(query)
 
@@ -163,11 +159,6 @@ def git_repo_initialize(session, repo_git):
         else:
             # If cloning failed, log it and set the status back to new
             update_repo_log(session, row.repo_id, f"Failed ({return_code})")
-
-            query = s.sql.text("""UPDATE augur_operations.collection_status SET facade_status='Failed Clone', facade_task_id=NULL WHERE repo_id=:repo_id
-                """).bindparams(repo_id=row.repo_id)
-
-            session.execute_sql(query)
 
             session.log_activity('Error', f"Could not clone {git}")
 
@@ -319,7 +310,7 @@ def git_repo_updates(session, repo_git):
     # default_branch = ''
 
     absolute_path = get_absolute_repo_path(
-        session.repo_base_directory, row["repo_group_id"], row['repo_path'], row["repo_name"])
+        session.repo_base_directory, row["repo_id"], row['repo_path'],row['repo_name'])
 
     while attempt < 2:
 

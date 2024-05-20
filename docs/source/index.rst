@@ -5,8 +5,6 @@ Welcome!
 ~~~~~~~~
 ~~~~~~~~
 
-Augur's documentation; (pronounced awe-grrr), is split into seven (7) parts. If you’re new to the project you can find out more on the software `here <https://github.com/chaoss/augur#readme>`_. We recommend giving it a once-over as a gentle introduction, otherwise, feel free to hop right into the docs!
-
 .. toctree::
    :maxdepth: 2
 
@@ -17,6 +15,7 @@ Augur's documentation; (pronounced awe-grrr), is split into seven (7) parts. If 
    rest-api/api
    docker/toc
    schema/toc
+   login
 .. 
   library-documentation/toc
 .. 
@@ -49,7 +48,7 @@ Current maintainers
 - `Derek Howard <https://github.com/howderek>`_
 - `Andrew Brain <https://github.com/ABrain7710>`_
 - `Isaac Milarsky <https://github.com/IsaacMilarky>`_
-- `John McGinnis <https://github.com/Ulincys>`_ 
+- `John McGinnes <https://github.com/Ulincys>`_ 
 - `Sean P. Goggins <https://github.com/sgoggins>`_ 
 
 

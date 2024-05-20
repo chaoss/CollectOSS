@@ -1,14 +1,15 @@
 #SPDX-License-Identifier: MIT
-import os, json, requests, logging
-from flask import Flask, Response, jsonify, request
+import json
 #import gunicorn.app.base
 import numpy as np
 from celery import group
 from celery.result import AsyncResult
 from celery.result import allow_join_result
 
-from typing import Optional, List, Any, Tuple
-from datetime import datetime, timedelta
+from typing import List
+from datetime import datetime
+import json
+import subprocess
 
 def create_grouped_task_load(*args,processes=8,dataList=[],task=None):
     
@@ -38,7 +39,7 @@ def wait_child_tasks(ids_list):
 
 
 def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
-    """Removed duplicate dics from a list
+    """Remove duplicate dicts from a list
 
     Args:
         data: list of dicts that is being modified
@@ -122,6 +123,24 @@ def calculate_date_weight_from_timestamps(added,last_collection,domain_start_day
             #Else increase its weight
             return -1 * factor
 
+def parse_json_from_subprocess_call(logger, subprocess_arr, cwd=None):
+    logger.info(f"running subprocess {subprocess_arr[0]}")
+    if cwd:
+        p = subprocess.run(subprocess_arr,cwd=cwd,capture_output=True, text=True, timeout=None)
+    else:
+        p = subprocess.run(subprocess_arr,capture_output=True, text=True, timeout=None)
+    
+    logger.info('subprocess completed... ')
+
+    output = p.stdout
+
+    try:
+        required_output = json.loads(output)
+    except json.decoder.JSONDecodeError as e:
+        logger.error(f"Could not parse required output! \n output: {output} \n Error: {e}")
+        raise e
+    
+    return required_output
 
 
 # def create_server(app, worker=None):

@@ -28,6 +28,7 @@
 {%- set tableHeaders =
     [{"title" : "#"},
     {"title" : "Repo Name", "key" : "repo_name"},
+    {"title" : "Owner", "key" : "repo_owner"},
     {"title" : "Reports"},
     {"title" : "Commits", "key" : "commits_all_time"},
     {"title" : "Issues", "key" : "issues_all_time"},
@@ -58,6 +59,7 @@
                 <th scope="row">{{loop.index + (activePage) * offset}}</th>
                 <td><a href="{{ url_for('repo_repo_view', id=repo.repo_id) }}">{{ repo.repo_name }}</a></td>
                 {# <td><a href="{{ url_for('repo_groups_view', group=repo.repo_group_id) }}">{{ repo.rg_name }}</a></td> #}
+                <td><a href="https://github.com/{{ repo.repo_owner }}">{{ repo.repo_owner }}</a></td>
                 <td>TODO</td>
                 <td>{{ repo.commits_all_time|int }}</td>
                 <td>{{ repo.issues_all_time|int }}</td>
@@ -75,7 +77,7 @@
             <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage - 1), s=sorting, r=reverse)}}" {% if activePage == 0 %} tabindex="-1" {% endif %}>Previous</a>
         </li>
         <li class="page-item">
-            <a class="page-link" href="#">{{activePage}}</a>
+            <a class="page-link" href="#">{{activePage|int + 1}}</a>
         </li>
         <li class="page-item {% if activePage == pages|int %} disabled {% endif %}">
             <a class="page-link" href="{{ url_for(PS, q=query_key, p=(activePage + 1), s=sorting, r=reverse)}}" {% if activePage == pages|int %} tabindex="-1" {% endif %}>Next</a>
@@ -84,6 +86,10 @@
 </nav>
 {% elif query_key %}
 <h1>Your search did not match any repositories</h1>
+{% elif pages %}
+<h1>Pagination Error</h1>
+<p>Something went wrong displaying the requested section of results.</p>
+<P>Please go back and try again.</P>
 {% elif current_user.is_authenticated %}
 <h1>No Repos Tracked</h1>
 <p>Add repos to your personal tracker in your <a href="{{ url_for('user_settings') }}">profile page</a></p>

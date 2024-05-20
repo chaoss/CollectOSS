@@ -1,18 +1,14 @@
-import time
 import logging
 
-import traceback
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
+from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
-from augur.application.db.session import DatabaseSession
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Issue, IssueEvent, IssueLabel, IssueAssignee, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
-from augur.application.db.util import execute_session_query
+from augur.application.db.models import PullRequest, Message, Issue, PullRequestMessageRef, IssueMessageRef, Contributor, Repo
 
 
 
@@ -182,12 +178,13 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
     augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
 
     logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
-    message_natural_keys = ["platform_msg_id"]
+    message_natural_keys = ["platform_msg_id", "pltfrm_id"]
     message_return_columns = ["msg_id", "platform_msg_id"]
     message_string_fields = ["msg_text"]
     message_return_data = augur_db.insert_data(message_dicts, Message, message_natural_keys, 
                                                 return_columns=message_return_columns, string_fields=message_string_fields)
-    
+    if message_return_data is None:
+        return
 
     pr_message_ref_dicts = []
     issue_message_ref_dicts = []
@@ -198,7 +195,7 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
 
         ref = message_ref_mapping_data[platform_message_id]
         message_ref_data = ref["msg_ref_data"]
-        message_ref_data = ref["msg_id"] = augur_msg_id
+        message_ref_data["msg_id"] = augur_msg_id
 
         if ref["is_issue"] is True:
             issue_message_ref_dicts.append(message_ref_data)

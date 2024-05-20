@@ -44,18 +44,18 @@ To run Augur **without** the database container:
 
 .. code-block:: bash
 
-    docker-compose -f docker-compose.yml up
+    docker compose -f docker-compose.yml up
 
 To run Augur **with** the database container:
 
 .. code-block:: bash
 
-    docker-compose -f docker-compose.yml -f database-compose.yml up
+    docker compose -f docker-compose.yml -f database-compose.yml up
 
 
 Stopping the containers
 -------------------------
 
-To stop the containers, run ``docker-compose down --remove-orphans``. The flag is necessary to stop the database container if you used one; run the command again to delete them. 
+To stop the containers, run ``docker compose down --remove-orphans``. The flag is necessary to stop the database container if you used one; run the command again to delete them. 
 
 Once you've got your container up and running, checkout out `how to use them <usage.html>`_ 

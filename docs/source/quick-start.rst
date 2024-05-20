@@ -1,203 +1,177 @@
 Quickstart
 ===============
 
-Get going fast! Intended for folks familiar with setting up DevOps environments. These instructions were tested using Ubuntu 20.04. Ubuntu 18x is no longer supported because the versions of Python3 available on it are not current. 
+Select installation instructions from those most closely related to the operating system that you use below. Note that Augur's dependencies do not consistently support python 3.11 at this time. Python 3.8 - Python 3.10 have been tested on each platform. 
 
-:ref:`Complete installation instructions with more complete explanations are located in our "Getting Started" section.<Getting Started>`
+.. toctree::
+   :maxdepth: 2
 
-Setting up VirtualBox
-~~~~~~~~~~~~~~~~~~~~~~~
-- Go to the official box website to download using this `link <https://www.virtualbox.org/>`_.
-- Download VirtualBox for "Windows hosts".
-.. image:: development-guide/images/A2.png
-  :width: 600  
-- Click on the downloaded VirtualBox and continue clicking Next with the default options.
-.. image:: development-guide/images/A3.png
-  :width: 600  
-- Accept the warning for Network Interfaces.
-.. image:: development-guide/images/A5.png
-  :width: 600  
-- Allow all permissions
-.. image:: development-guide/images/A4.png
-  :width: 600  
-- Open the VirtualBox by clicking on the Windows desktop icon.
-- Click "Machine" and then "New".
-.. image:: development-guide/images/A6.png
-  :width: 600  
-- Name the Machine. In type select "Linux" and in version select "Ubuntu (64-bits)".
-.. image:: development-guide/images/A7.png
-  :width: 600  
-.. image:: development-guide/images/A8.png
-  :width: 600  
-- Choose memory size, then click Next.
-.. image:: development-guide/images/A9.png
-  :width: 600  
-- Choose "Create a virtual hard disk now" and click Create.
-.. image:: development-guide/images/A10.png
-  :width: 600  
-- Hard disk file type choose VDI (VirtualBox Disk Image) and click Next.
-.. image:: development-guide/images/A11.png
-  :width: 600  
-- Storage on physical hard disk choose "Dynamically allocated" and click Next.
-.. image:: development-guide/images/A12.png
-  :width: 600  
-- Continue with the default options by clicking Next. Your machine will be created.
-- Start the Machine.
-.. image:: development-guide/images/A13.png
-  :width: 600  
-
-Ubuntu download 
-~~~~~~~~~~~~~~~~~
-- Type "Download Ubuntu" in the search bar.
-- Click download (Prefer LTS version). Ubuntu will be downloaded.
-.. image:: development-guide/images/A14.png
-  :width: 600  
-
-Installing Ubuntu in VirtualBox
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Open the machine which we have created earlier.
-- Now in the pop-up, click on the disk image where you have downloaded your Ubuntu and click on finish.
-- In the welcome window select Install Ubuntu and move forward with the default options.
-.. image:: development-guide/images/Af.png
-  :width: 600  
-- Select Keyboard layout.
-- Select Installation type "Erase disk and install Ubuntu".
-.. image:: development-guide/images/Ad.png
-  :width: 600  
-- Enter your details and set a password.
-.. image:: development-guide/images/Ac.png
-  :width: 600  
-.. image:: development-guide/images/Ab.png
-  :width: 600  
-- Your Ubuntu will be ready to use in a few minutes.
-.. image:: development-guide/images/Aa.png
-  :width: 600  
+   getting-started/new-install
+   getting-started/dev-osx-install
 
 
-PostgreSQL Installation
-~~~~~~~~~~~~~~~~~~~~~~~~
-- Gain access to an Ubuntu 18.04 or later environment and install PostgreSQL. Ubuntu 20.04 is recommended because its long-term support (LTS) window is longer.
+Explanations of Technologies
+============================
 
-.. code-block:: bash
+What does Redis Do?
+^^^^^^^^^^^^^^^^^^^
 
-	sudo apt update
-	sudo apt upgrade
-	sudo apt install software-properties-common
-	sudo apt install python3-dev
-	sudo apt install postgresql postgresql-contrib postgresql-client
-	sudo apt install build-essential
+Redis is used to make the state of data collection jobs visible on an
+external dashboard, like Flower. Internally, Augur relies on Redis to
+cache GitHub API Keys, and for OAuth Authentication. Redis is used to
+maintain awareness of Augur’s internal state.
 
+What does RabbitMQ Do?
+^^^^^^^^^^^^^^^^^^^^^^
 
-- Create a PostgreSQL database for Augur to use
+Augur is a distributed system. Even on one server, there are many
+collection processes happening simultaneously. Each job to collect data
+is put on the RabbitMQ Queue by Augur’s “Main Brain”. Then independent
+workers pop messages off the RabbitMQ Queue and go collect the data.
+These tasks then become standalone processes that report their
+completion or failure states back to the Redis server.
 
-.. code-block:: bash
+**Edit** the ``/etc/redis/redis.conf`` file to ensure these parameters
+are configured in this way:
 
-    $ sudo service postgresql start
-    $ sudo su -
-    $ su - postgres
-    $ psql
+.. code:: shell
 
-Then, once you've connected to your PostgreSQL instance:
+   supervised systemd
+   databases 900
+   maxmemory-samples 10
+   maxmemory 20GB
 
-.. code-block:: postgresql
+**NOTE**: You may be able to have fewer databases and lower maxmemory
+settings. This is a function of how many repositories you are collecting
+data for at a given time. The more repositories you are managing data
+for, the close to these settings you will need to be.
 
-    postgres=# CREATE DATABASE augur;
-    postgres=# CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
-    postgres=# GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
+**Consequences** : If the settings are too low for Redis, Augur’s
+maintainer team has observed cases where collection appears to stall.
+(TEAM: This is a working theory as of 3/10/2023 for Ubuntu 22.x, based
+on EC2 experiments.)
 
-Install RabbitMQ
-~~~~~~~~~~~~~~~~~~~~~~~~
-To set up rabbitmq for augur you must install it with the relevant package manager
-for your distro. You can find more info on how to install rabbitmq `here <https://www.rabbitmq.com/download.html>`_.
+Possible EC2 Configuration Requirements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-After installation, you must also set up your rabbitmq instance by running the below commands:
+With virtualization there may be issues associated with redis-server
+connections exceeding available memory. In these cases, the following
+workarounds help to resolve issues.
 
-.. code-block:: bash
+Specifically, you may find this error in your augur logs:
 
-	sudo rabbitmqctl add_user augur password123
+.. code:: shell
 
-	sudo rabbitmqctl add_vhost augur_vhost
+   redis.exceptions.ConnectionError: Error 111 connecting to 127.0.0.1:6379. Connection refused.
 
-	sudo rabbitmqctl set_user_tags augur augurTag
+**INSTALL** ``sudo apt install libhugetlbfs-bin``
 
-	sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
+**COMMAND**:
 
-.. note::
-	it is important to have a static hostname when using rabbitmq as it uses hostname
-	to communicate with nodes.
+::
 
-Then, start rabbitmq server with 
-.. code-block:: bash
+   hugeadm --thp-never` &&
+   echo never > /sys/kernel/mm/transparent_hugepage/enabled
 
-    sudo systemctl start rabbitmq.service
+.. code:: shell
 
+   sudo vi /etc/rc.local
 
-If your setup of rabbitmq is successful your broker url should look like this:
+**paste** into ``/etc/rc.local``
 
-broker_url = 'amqp://augur:password123@localhost:5672/augur_vhost'
+.. code:: shell
 
-During installation you will be prompted for this broker url.
+   if test -f /sys/kernel/mm/transparent_hugepage/enabled; then
+      echo never > /sys/kernel/mm/transparent_hugepage/enabled
+   fi
 
+**EDIT** : ``/etc/default/grub`` add the following line:
 
-Install Go
-~~~~~~~~~~~~~~~~~~~~~~~~
-Two of Augur's workers use the Go programming language, which needs to be installed on your computer. Snap is the easiest way to install Go. If Snap does not work for you, see instructions here: https://www.digitalocean.com/community/tutorials/how-to-install-go-on-ubuntu-20-04
+.. code:: shell
 
-.. code-block:: bash
+   GRUB_DISABLE_OS_PROBER=true
 
-	sudo apt update
-	sudo apt install snapd
-	sudo snap install go --classic
+.. _postgresql-configuration-1:
 
-Incase you encounter any problem following the above commands, try doing these first:
+Postgresql Configuration
+------------------------
 
-.. code-block:: bash
+Your postgresql instance should optimally allow 1,000 connections:
 
-	sudo apt-get update && sudo apt-get install -yqq daemonize dbus-user-session fontconfig
-	sudo daemonize /usr/bin/unshare --fork --pid --mount-proc /lib/systemd/systemd --system-unit=basic.target
-	exec sudo nsenter -t $(pidof systemd) -a su - $LOGNAME
-	snap version
+.. code:: shell
 
-If the last command returns successfully, you can try installing Go again using either of the two options above.
-	
-Python Virtual Environment Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~
-- Set up a Python virtual environment (Python 3.8 and above are now required. Python 3.9 and python 3.10 work as well, though we have tested Python 3.9 on more platforms.)
-- Clone and install Augur as a regular user.
+   max_connections = 1000                  # (change requires restart)
+   shared_buffers = 8GB                    # min 128kB
+   work_mem = 2GB                  # min 64kB
 
-.. code-block:: bash
+Augur will generally hold up to 150 simultaneous connections while
+collecting data. The 1,000 number is recommended to accommodate both
+collection and analysis on the same database. Use of PGBouncer or other
+utility may change these characteristics.
 
-	# Ensure you are logged in as your user on Github and change the "<YOUR_GITHUB_USERNAME>" to your Github username (e.g. "sean")
-	git clone https://github.com/<YOUR_GITHUB_USERNAME>/augur.git
-	cd augur/
-	sudo apt install make
-	sudo apt-get install python3-venv
-	python3 -m venv $HOME/.virtualenvs/augur_env
-	source $HOME/.virtualenvs/augur_env/bin/activate
-	sudo apt install python-pip-whl
-	sudo apt install python3-pip
-	sudo apt install pythonpy
-	python -m pip install --upgrade pip
-	make install-dev {Follow prompts. You will need database credentials, a file location for cloned repositories, a GitHub Token, and a GitLab token.}
+Augur Commands
+--------------
 
-- Seven sample repositories will load by default. You can delete them if you want to use your repositories by deleting records from the `repo` table first, then deleting the records from the `repo_groups` table.
+To access command line options, use ``augur --help``. To load repos from
+GitHub organizations prior to collection, or in other ways, the direct
+route is ``augur db --help``.
 
+Start a Flower Dashboard, which you can use to monitor progress, and
+report any failed processes as issues on the Augur GitHub site. The
+error rate for tasks is currently 0.04%, and most errors involve
+unhandled platform API timeouts. We continue to identify and add fixes
+to handle these errors through additional retries. Starting Flower:
+``(nohup celery -A augur.tasks.init.celery_app.celery_app flower --port=8400 --max-tasks=1000000 &)``
+NOTE: You can use any open port on your server, and access the dashboard
+in a browser with http://servername-or-ip:8400 in the example above
+(assuming you have access to that port, and its open on your network.)
 
-.. code-block:: bash
+Starting your Augur Instance
+----------------------------
 
-	augur --help
-	augur db --help
-	augur backend --help
+Start Augur: ``(nohup augur backend start &)``
 
-Loading Repositories
-~~~~~~~~~~~~~~~~~~~~~~~~
-The commands for loading repos are:
+When data collection is complete you will see only a single task running
+in your flower Dashboard.
 
-.. code-block:: bash
+Accessing Repo Addition and Visualization Front End
+---------------------------------------------------
 
-	augur db add-github-org
-	augur db add-repo-groups
-	augur db add-repos
+Your Augur instance will now be available at
+http://hostname.io:port_number
 
-We recommend that you test your instance using 50 or fewer repositories before undertaking a more substantial data collection. When you do take on more collection, you can "collect data faster" by adding additional tokens to the `worker_oauth` table in the `augur_operations` schema and increasing the number of workers for the pull request and GitHub worker blocks in the `augur.config.json` file that generates at install.
+For example: http://chaoss.tv:5038
+
+Note: Augur will run on port 5000 by default (you probably need to
+change that in augur_operations.config for OSX)
+
+Stopping your Augur Instance
+----------------------------
+
+You can stop augur with ``augur backend stop``, followed by
+``augur backend kill``. We recommend waiting 5 minutes between commands
+so Augur can shutdown more gently. There is no issue with data integrity
+if you issue them seconds apart, its just that stopping is nicer than
+killing.
+
+Docker
+~~~~~~
+
+1. Make sure docker, and docker compose are both installed
+2. Modify the ``environment.txt`` file in the root of the repository to
+   include your GitHub and GitLab API keys.
+3. If you are already running postgresql on your server you have two
+   choices:
+
+   -  Change the port mappings in the ``docker-compose.yml`` file to
+      match ports for Postgresql not currently in use.
+   -  Change to variables in ``environment.txt`` to include the correct
+      values for your local, non-docker-container database.
+
+4. ``sudo docker build -t augur-new -f docker/backend/Dockerfile .``
+5. ``sudo docker compose --env-file ./environment.txt --file docker-compose.yml up``
+   to run the database in a Docker Container or
+   ``sudo docker compose --env-file ./environment.txt --file docker-compose.yml up``
+   to connect to an already running database.
+
 

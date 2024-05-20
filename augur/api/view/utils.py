@@ -1,83 +1,18 @@
+"""
+Defines utility functions used by the augur api views
+"""
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from flask import render_template, flash, url_for, Flask
+from flask import render_template, flash, url_for
+from .init import init_logging
 from .init import *
-from .server import User
-from ..server import app, db_session
-from augur.application.config import AugurConfig
-import urllib.request, urllib.error, json, os, math, yaml, urllib3, time, logging, re
+from augur.application.db.lib import get_value
+import urllib.error, math, yaml, urllib3, time, math
+
 
 init_logging()
 
 from .init import logger
-
-config = AugurConfig(logger, db_session)
-
-def parse_url(url):
-    from urllib.parse import urlparse
-
-    # localhost is not a valid host
-    if "localhost" in url:
-        url = url.replace("localhost", "127.0.0.1")
-    
-        if not url.startswith("http"):
-            url = f"http://{url}"
-
-    parts = urlparse(url)
-    directories = parts.path.strip('/').split('/')
-    queries = parts.query.strip('&').split('&')
-
-    elements = {
-        'scheme': parts.scheme,
-        'netloc': parts.netloc,
-        'path': parts.path,
-        'params': parts.params,
-        'query': parts.query,
-        'fragment': parts.fragment
-    }
-
-    return elements, directories, queries
-
-def validate_api_url(url):
-    from urllib.parse import urlunparse
-
-    parts = parse_url(url)[0]
-
-    if not parts["scheme"]:
-        parts["scheme"] = "http"
-
-    staged_url = urlunparse(parts.values())
-
-    def is_status_ok():
-        try:
-            with urllib.request.urlopen(staged_url) as request:
-                response = json.loads(request.read().decode())
-                if "status" in response:
-                    return request.url
-        except Exception as e:
-            logger.error(f"Error during serving URL verification: {str(e)}")
-
-        return False
-
-    status = is_status_ok()
-    if not status:
-        if "/api/unstable" not in parts["path"]:
-            # The URL does not point directly to the API
-            # try once more with a new suffix
-            parts["path"] = str(Path(parts["path"]).joinpath("api/unstable"))
-            staged_url = urlunparse(parts.values())
-
-            status = is_status_ok()
-            if not status:
-                # The URL does not point to a valid augur instance
-                return ""
-            else:
-                return status
-        else:
-            return ""
-
-    return status
-
 
 """ ----------------------------------------------------------------
 loadSettings:
@@ -121,14 +56,6 @@ def loadSettings():
     # Use the resolved path for cache directory access
     settings["caching"] = cachePath
 
-    staged_url = validate_api_url(settings["serving"])
-    if staged_url:
-        settings["serving"] = re.sub("/$", "", staged_url)
-        settings["valid"] = True
-    else:
-        settings["valid"] = False
-        raise ValueError(f"The provided serving URL is not valid: {settings['serving']}")
-
 """ ----------------------------------------------------------------
 """
 def getSetting(key, section = "View"):
@@ -137,14 +64,11 @@ def getSetting(key, section = "View"):
             return "http://127.0.0.1:5000/api/unstable"
         return settings[key]
     else:
-        return config.get_value(section, key)
+        return get_value(section, key)
 
 loadSettings()
 
-User.api = getSetting("serving")
-User.logger = logger
-
-version_check(settings)
+#version_check(settings)
 
 """ ----------------------------------------------------------------
 """
@@ -195,9 +119,6 @@ def cacheFileExists(filename):
     else:
         return False
 
-def stripStatic(url):
-    return url.replace("static/", "")
-
 """ ----------------------------------------------------------------
 """
 def toCacheFilename(endpoint, append = True):
@@ -208,67 +129,6 @@ def toCacheFilepath(endpoint, append = True):
 
 def toCacheURL(endpoint):
     return getSetting('approot') + str(toCacheFilepath(endpoint))
-
-""" ----------------------------------------------------------------
-requestJson:
-    Attempts to load JSON data from cache for the given endpoint.
-    If no cache file is found, a request is made to the URL for
-    the given endpoint and, if successful, the resulting JSON is
-    cached for future use. Cached files will be stored with all
-    '/' characters replaced with '.' for filesystem compatibility.
-
-@PARAM:     endpoint: String
-        A String representation of the requested
-        json endpoint (relative to the api root).
-
-@RETURN:    data: JSON
-        An object representing the JSON data read
-        from either the cache file or the enpoint
-        URL. Will return None if an error isreturn None
-        encountered.
-"""
-def requestJson(endpoint, cached = True):
-    filename = toCacheFilepath(endpoint)
-    requestURL = getSetting('serving') + "/" + endpoint
-    logger.info(f'requesting json from: {endpoint}')
-    try:
-        if cached and cacheFileExists(filename):
-            with open(filename) as f:
-                data = json.load(f)
-        else:
-            with urllib.request.urlopen(requestURL) as url:
-                if url.getcode() != 200:
-                    raise urllib.error.HTTPError(code = url.getcode())
-
-                data = json.loads(url.read().decode())
-
-                if cached:
-                    with open(filename, 'w') as f:
-                        json.dump(data, f)
-        if filename in cache_files_requested:
-            cache_files_requested.remove(filename)
-        return data
-    except Exception as err:
-        logger.error("An exception occurred while fulfilling a json request")
-        logger.error(err)
-        return False, str(err)
-
-""" ----------------------------------------------------------------
-"""
-def requestPNG(endpoint):
-    filename = toCacheFilepath(endpoint)
-    requestURL = getSetting('serving') + "/" + endpoint
-    try:
-        if cacheFileExists(filename):
-            return toCacheURL(endpoint)
-        else:
-            urllib.request.urlretrieve(requestURL, filename)
-        if filename in cache_files_requested:
-            cache_files_requested.remove(filename)
-        return toCacheURL(endpoint)
-    except Exception as err:
-        logger.error("An exception occurred while fulfilling a png request")
-        logger.error(err)
 
 """ ----------------------------------------------------------------
 """
@@ -440,19 +300,8 @@ def render_message(messageTitle, messageBody = None, title = None, redirect = No
 """ ----------------------------------------------------------------
 """
 def render_module(module, **args):
-    # args.setdefault("title", "Augur View")
-    args.setdefault("api_url", getSetting("serving"))
     args.setdefault("body", module)
-
-    if not getSetting("valid"):
-        args.setdefault("invalid", True)
-
     return render_template('index.j2', **args)
 
 """ ----------------------------------------------------------------
-    No longer used
 """
-# My attempt at a loading page
-def renderLoading(dest, query, request):
-    cache_files_requested.append(request)
-    return render_template('index.j2', body="loading", title="Loading", d=dest, query_key=query, api_url=getSetting('serving'))

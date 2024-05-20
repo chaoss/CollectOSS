@@ -1,9 +1,5 @@
-import os
-import re
 import time
-import sys
 import random
-import logging
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import OperationalError
@@ -12,8 +8,7 @@ from typing import Optional, List, Union
 from psycopg2.errors import DeadlockDetected
 
 # from augur.tasks.util.random_key_auth import RandomKeyAuth
-from augur.application.db.engine import EngineConnection
-from augur.tasks.util.worker_util import remove_duplicate_dicts, remove_duplicates_by_uniques
+from augur.tasks.util.worker_util import remove_duplicates_by_uniques
 
 
 def remove_null_characters_from_string(string):
@@ -49,7 +44,7 @@ def remove_null_characters_from_list_of_dicts(data_list, fields):
 
 class DatabaseSession(Session):
 
-    def __init__(self, logger, engine=None, from_msg=None):
+    def __init__(self, logger, engine=None, from_msg=None, **kwargs):
     
         self.logger = logger
         self.engine = engine
@@ -68,7 +63,7 @@ class DatabaseSession(Session):
             else:
                 logger.debug(f"ENGINE CREATE")
 
-        super().__init__(self.engine)
+        super().__init__(self.engine, **kwargs)
 
     def __enter__(self):
         return self
@@ -85,7 +80,7 @@ class DatabaseSession(Session):
     
     def execute_sql(self, sql_text):
 
-        with self.engine.connect() as connection:
+        with self.engine.begin() as connection:
 
             return_data = connection.execute(sql_text)  
 
@@ -93,10 +88,10 @@ class DatabaseSession(Session):
 
     def fetchall_data_from_sql_text(self,sql_text):
 
-        with self.engine.connect() as connection:
+        with self.engine.begin() as connection:
 
-            result = connection.execute(sql_text).fetchall()
-        return [dict(zip(row.keys(), row)) for row in result]
+            result = connection.execute(sql_text)
+        return [dict(row) for row in result.mappings()]
 
     def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
 
@@ -174,7 +169,9 @@ class DatabaseSession(Session):
 
             while attempts < 10:
                 try:
-                    with EngineConnection(self.engine) as connection:
+                    #begin keyword is needed for sqlalchemy 2.x
+                    #this is because autocommit support was removed in 2.0
+                    with self.engine.begin() as connection:
                         connection.execute(stmnt)
                         break
                 except OperationalError as e:
@@ -191,14 +188,16 @@ class DatabaseSession(Session):
                     raise e
 
                 except Exception as e:
-                    if(len(data) == 1):
+                    #self.logger.info(e)
+                    if len(data) == 1:
                         raise e
-                    else:
-                        first_half = data[:len(data)//2]
-                        second_half = data[len(data)//2:]
+                   
+                    time.sleep(3)
+                    first_half = data[:len(data)//2]
+                    second_half = data[len(data)//2:]
 
-                        self.insert_data(first_half, natural_keys, return_columns, string_fields, on_conflict_update)
-                        self.insert_data(second_half, natural_keys, return_columns, string_fields, on_conflict_update)
+                    self.insert_data(first_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
+                    self.insert_data(second_half,table, natural_keys, return_columns, string_fields, on_conflict_update)
 
             else:
                 self.logger.error("Unable to insert data in 10 attempts")
@@ -213,8 +212,8 @@ class DatabaseSession(Session):
         # othewise it gets the requested return columns and returns them as a list of dicts
         while attempts < 10:
             try:
-                with EngineConnection(self.engine) as connection:
-                    return_data_tuples = connection.execute(stmnt).fetchall()
+                with self.engine.begin() as connection:
+                    return_data_tuples = connection.execute(stmnt)
                     break
             except OperationalError as e:
                 if isinstance(e.orig, DeadlockDetected):
@@ -228,14 +227,15 @@ class DatabaseSession(Session):
                 raise e
 
             except Exception as e:
-                if(len(data) == 1):
+                if len(data) == 1:
                     raise e
-                else:
-                    first_half = data[:len(data)//2]
-                    second_half = data[len(data)//2:]
+                
+                time.sleep(3)
+                first_half = data[:len(data)//2]
+                second_half = data[len(data)//2:]
 
-                    self.insert_data(first_half, natural_keys, return_columns, string_fields, on_conflict_update)
-                    self.insert_data(second_half, natural_keys, return_columns, string_fields, on_conflict_update)
+                self.insert_data(first_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
+                self.insert_data(second_half, table, natural_keys, return_columns, string_fields, on_conflict_update)
 
         else:
             self.logger.error("Unable to insert and return data in 10 attempts")
@@ -244,9 +244,11 @@ class DatabaseSession(Session):
         if deadlock_detected is True:
             self.logger.error("Made it through even though Deadlock was detected")
 
-        return_data = []
-        for data_tuple in return_data_tuples:
-            return_data.append(dict(data_tuple))
+        return_data = [dict(row) for row in return_data_tuples.mappings()]
+        
+        #no longer working in sqlalchemy 2.x
+        #for data_tuple in return_data_tuples:
+        #    return_data.append(dict(data_tuple))
 
         # using on confilict do nothing does not return the 
         # present values so this does gets the return values

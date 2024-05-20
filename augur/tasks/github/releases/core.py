@@ -1,16 +1,8 @@
 #SPDX-License-Identifier: MIT
-import logging, os, sys, time, requests, json
-from datetime import datetime
-from multiprocessing import Process, Queue
-from urllib.parse import urlparse
-import pandas as pd
-import sqlalchemy as s
-from sqlalchemy import MetaData
-from sqlalchemy.ext.automap import automap_base
 from augur.tasks.github.util.github_task_session import *
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.github.util.gh_graphql_entities import hit_api_graphql, request_graphql_dict
+from augur.tasks.github.util.gh_graphql_entities import request_graphql_dict
 from augur.application.db.util import execute_session_query
 
 
@@ -84,7 +76,8 @@ def insert_release(augur_db, logger, repo_id, owner, release, tag_only = False):
     release_inf = get_release_inf(repo_id, release, tag_only)
 
     #Do an upsert
-    augur_db.insert_data(release_inf,Release,['release_id'])
+    string_fields = ["release_name", "release_description", "release_author", "release_tag_name"]
+    augur_db.insert_data(release_inf,Release,['release_id'], string_fields=string_fields)
 
     logger.info(f"Inserted info for {owner}/{repo_id}/{release['name']}\n")
 

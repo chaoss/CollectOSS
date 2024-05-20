@@ -3,17 +3,11 @@ from __future__ import annotations
 import logging
 import logging.config
 import logging.handlers
-from logging import FileHandler, StreamHandler, Formatter
-from multiprocessing import Process, Queue, Event, current_process
-from inspect import getmembers, isfunction
-from time import sleep
+from logging import FileHandler
 import os
 from pathlib import Path
-import atexit
 import shutil
 import coloredlogs
-from copy import deepcopy
-import typing
 from sqlalchemy.orm import Session
 
 from augur.application.db.models import Config 

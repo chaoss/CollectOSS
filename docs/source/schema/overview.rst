@@ -36,41 +36,42 @@ Augur Data
 -------------------------------------------------------
 
 The ``augur_data`` schema contains *most* of the information analyzed
-and constructed by Augur. The origin’s of the data inside of augur are:
+and constructed by Augur. The origin’s of the data inside of augur are
+from data collection tasks and populate this schema.:
 
-1. ``workers/augur_github_worker``: Pulls data from the GitHub API.
-Presently this is focused on issues, including issue_comments,
-issue_events, issue_labels and contributors. Note that all messages are
-stored in Augur in the ``messages`` table. This is to facilitate easy
-analysis of the tone and characteristics of text communication in a
-project from one place.
+1. ``augur.tasks.github.*``: Tasks that pull data from the GitHub API.
+Primarily, pull requests and issues are collected before more complicated 
+data. Note that all messages are stored in Augur in the ``messages`` table. 
+This is to facilitate easy analysis of the tone and characteristics of text 
+communication in a project from one place.
 
-2. ``workers/facade_worker``: Based on
+2. ``augur.tasks.git.facade_tasks``: Based on
 http://www.github.com/brianwarner/facade, but substantially modified in
 the fork located at http://github.com/sgoggins/facade. The modifications
 include modularization of code, connections to Postgresql data instead
-of MySQL and other changes noted in the commit logs.
+of MySQL and other changes noted in the commit logs. Further modifications
+have been made to work with augur as well as seemlessly integrate it into 
+data collection.
 
-3. ``workers/insight_worker``: Generates summarizations from raw data
+3. ``augur.tasks.data_analysis.insight_worker.tasks``: Generates summarizations from raw data
 gathered from commits, issues, and other info.
 
-4. ``workers/linux_badge_worker``: Pulls data from the Linux Foundation’s
-badging program.
-
-5. ``workers/value_worker``: Populates the table
-``repo_labor`` using the “SCC” tool provided the
-https://github.com/boyter/scc project. “SCC” required Go to be installed on your system. Visit `this resource <https://golang.org/doc/install>`__ for instructions on Go installation.
-
-6. ``workers/pull_request_worker``: Collects Pull Request related data such as commits, contributors,assignees, etc. from the Github API and stores it in the Augur database.
+4. ``augur.tasks.github.pull_requests.tasks``: Collects Pull Request related data such as commits, contributors,assignees, etc. from the Github API and stores it in the Augur database.
 
 Augur Operations
 -------------------------------------------------------
 
 The ``augur_operations`` tables are where most of the operations tables
-are going to exist. There are a few, like ``settings`` that remain in
+exist. There are a few, like ``settings`` that remain in
 ``augur_data`` for now, but will be moved. They keep records related to
 analytical history and data provenance for data in the schema. They also
 store information including API keys.
+
+Some key tables in this schema include:
+
+- ``config``, which contains the config options for the application. Key options include the facade repo_directory as well as primary api key.
+
+- ``collection_status``, contains the status of each aspect of data collection for each repo added to Augur. For example, it shows the status of the facade jobs for every repository.
 
 SPDX
 -------------------------------------------------------

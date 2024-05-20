@@ -1,10 +1,5 @@
-import logging
-from typing import Dict, List, Tuple, Optional
-import traceback
 import sqlalchemy as s
-from augur.application.db.session import DatabaseSession
-from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
-from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection, hit_api_graphql
+from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.util import execute_session_query
@@ -20,8 +15,8 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth):
     pr_numbers = []
     #pd.read_sql(pr_number_sql, self.db, params={})
 
-    result = augur_db.execute_sql(pr_number_sql).fetchall()
-    pr_numbers = [dict(zip(row.keys(), row)) for row in result]
+    result = augur_db.execute_sql(pr_number_sql)#.fetchall()
+    pr_numbers = [dict(row) for row in result.mappings()]
 
     query = augur_db.session.query(Repo).filter(Repo.repo_id == repo_id)
     repo = execute_session_query(query, 'one')

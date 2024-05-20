@@ -25,19 +25,8 @@
 # and checks for any parents of HEAD that aren't already accounted for in the
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
-import sys
-import platform
-import imp
-import time
-import datetime
-import html.parser
-import subprocess
-import os
-import getopt
-import xlsxwriter
-import configparser
 import sqlalchemy as s
-from .utilitymethods import update_repo_log, trim_commit, store_working_author, trim_author
+from .utilitymethods import store_working_author, trim_author
 # if platform.python_implementation() == 'PyPy':
 #   import pymysql
 # else:

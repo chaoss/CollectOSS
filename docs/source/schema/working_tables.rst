@@ -1,20 +1,20 @@
 List of Working Data Tables In Augur
 ===================================
 
-**This Is A List of Working Tables In Augur and The Workers Attached to Them.**
+**This Is A List of Working Tables In Augur and The Tasks Attached to Them.**
 
     They are in lowercase to represent exactly how they look like on the actual table.
 
-    * analysis_log - this table is a record of the analysis steps the facade worker has taken on an augur instance. A listing of all the analysis steps taken for every repository is recorded as they are completed.
+    * analysis_log - this table is a record of the analysis steps the facade tasks have taken on an augur instance. A listing of all the analysis steps taken for every repository is recorded as they are completed.
         
-        * Worker Associated With It? 
+        * Tasks Associated With It? 
 
-            * Facade Worker
+            * Facade Tasks
 
                 .. image:: images/analysis_log.png
                     :width: 200
 
-    * commit_parents - this table keeps a record of parent commits that are squashed during Facade Worker execution.
+    * commit_parents - this table keeps a record of parent commits that are squashed during Facade collection.
 
                 .. image:: images/commit_parents.png
                     :width: 200

@@ -1,10 +1,8 @@
 from augur.tasks.github.util.github_task_session import *
-from typing import List, Optional, Union, Generator, Tuple
 #from gql import gql, Client
 #from gql.transport.aiohttp import AIOHTTPTransport
 import httpx
 import json
-from random import choice
 import collections
 import time
 import traceback

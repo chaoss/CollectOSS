@@ -1,34 +1,24 @@
 """Defines the Celery app."""
-from celery.signals import worker_process_init, worker_process_shutdown, eventlet_pool_started, eventlet_pool_preshutdown, eventlet_pool_postshutdown
+from celery.signals import worker_process_init, worker_process_shutdown
 import logging
 from typing import List, Dict
 import os
-from enum import Enum
+import datetime
 import traceback
 import celery
 from celery import Celery
 from celery import current_app 
 from celery.signals import after_setup_logger
-from sqlalchemy import create_engine, event, or_, and_
 
 
 from augur.application.logs import TaskLogConfig, AugurLogger
 from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import DatabaseEngine
+from augur.application.db import get_engine
 from augur.application.config import AugurConfig
-from augur.application.db.engine import get_database_string
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
-from augur.application.db.models import CollectionStatus, Repo
-
-class CollectionState(Enum):
-    SUCCESS = "Success"
-    PENDING = "Pending"
-    ERROR = "Error"
-    COLLECTING = "Collecting"
-    INITIALIZING = "Initializing"
-    UPDATE = "Update"
-    FAILED_CLONE = "Failed Clone"
-
+from augur.application.db.models import Repo
+from augur.tasks.util.collection_state import CollectionState
 
 logger = logging.getLogger(__name__)
 
@@ -49,22 +39,30 @@ github_tasks = ['augur.tasks.github.contributors.tasks',
                 'augur.tasks.github.pull_requests.commits_model.tasks',
                 'augur.tasks.github.traffic.tasks']
 
+gitlab_tasks = ['augur.tasks.gitlab.merge_request_task',
+                'augur.tasks.gitlab.issues_task',
+                'augur.tasks.gitlab.events_task']
+
 git_tasks = ['augur.tasks.git.facade_tasks',
             'augur.tasks.git.dependency_tasks.tasks',
-            'augur.tasks.git.dependency_libyear_tasks.tasks']
+            'augur.tasks.git.dependency_libyear_tasks.tasks',
+            'augur.tasks.git.scc_value_tasks.tasks']
 
 data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
                        'augur.tasks.data_analysis.clustering_worker.tasks',
                        'augur.tasks.data_analysis.discourse_analysis.tasks',
                        'augur.tasks.data_analysis.pull_request_analysis_worker.tasks',
-                       'augur.tasks.data_analysis.insight_worker.tasks']
+                       'augur.tasks.data_analysis.insight_worker.tasks',
+                       'augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker']
 
 materialized_view_tasks = ['augur.tasks.db.refresh_materialized_views']
 
+frontend_tasks = ['augur.tasks.frontend']
+
+tasks = start_tasks + github_tasks + gitlab_tasks + git_tasks + materialized_view_tasks + frontend_tasks
+
 if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
-    tasks = start_tasks + github_tasks + git_tasks + materialized_view_tasks + data_analysis_tasks
-else:
-    tasks = start_tasks + github_tasks + git_tasks + materialized_view_tasks
+    tasks += data_analysis_tasks
 
 redis_db_number, redis_conn_string = get_redis_conn_values()
 
@@ -76,8 +74,10 @@ BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 #Classes for tasks that take a repo_git as an argument.
 class AugurCoreRepoCollectionTask(celery.Task):
 
-    def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core'):
-        from augur.tasks.init.celery_app import engine
+    def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core',after_fail=CollectionState.ERROR.value):
+            
+        # Note: I think self.app.engine would work but leaving it to try later
+        engine = get_engine()
 
         logger = AugurLogger(logger_name).get_logger()
 
@@ -95,7 +95,7 @@ class AugurCoreRepoCollectionTask(celery.Task):
             prevStatus = getattr(repoStatus, f"{collection_hook}_status")
 
             if prevStatus == CollectionState.COLLECTING.value or prevStatus == CollectionState.INITIALIZING.value:
-                setattr(repoStatus, f"{collection_hook}_status", CollectionState.ERROR.value)
+                setattr(repoStatus, f"{collection_hook}_status", after_fail)
                 setattr(repoStatus, f"{collection_hook}_task_id", None)
                 session.commit()
 
@@ -115,6 +115,11 @@ class AugurFacadeRepoCollectionTask(AugurCoreRepoCollectionTask):
         repo_git = args[0]
         self.augur_handle_task_failure(exc, task_id, repo_git, "facade_task_failure",collection_hook='facade')
 
+class AugurMlRepoCollectionTask(AugurCoreRepoCollectionTask):
+    def on_failure(self,exc,task_id,args,kwargs,einfo):
+        repo_git = args[0]
+        self.augur_handle_task_failure(exc,task_id,repo_git, "ml_task_failure", collection_hook='ml')
+
 
 #task_cls='augur.tasks.init.celery_app:AugurCoreRepoCollectionTask'
 celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)
@@ -129,9 +134,12 @@ celery_app.conf.task_routes = {
     'augur.tasks.github.pull_requests.files_model.tasks.*': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.tasks.collect_pull_request_reviews': {'queue': 'secondary'},
     'augur.tasks.github.pull_requests.tasks.collect_pull_request_review_comments': {'queue': 'secondary'},
-    'augur.tasks.git.dependency_tasks.tasks.process_ossf_scorecard_metrics': {'queue': 'secondary'},
+    'augur.tasks.git.dependency_tasks.tasks.process_ossf_dependency_metrics': {'queue': 'secondary'},
     'augur.tasks.git.dependency_tasks.tasks.process_dependency_metrics': {'queue': 'facade'},
-    'augur.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'}
+    'augur.tasks.git.scc_value_tasks.tasks.process_scc_value_metrics' : {'queue': 'facade'},
+    'augur.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'},
+    'augur.tasks.frontend.*': {'queue': 'frontend'},
+    'augur.tasks.data_analysis.contributor_breadth_worker.*': {'queue': 'secondary'},
 }
 
 #Setting to be able to see more detailed states of running tasks
@@ -193,11 +201,14 @@ def setup_periodic_tasks(sender, **kwargs):
     """
     from celery.schedules import crontab
     from augur.tasks.start_tasks import augur_collection_monitor, augur_collection_update_weights
-    from augur.tasks.start_tasks import non_repo_domain_tasks
+    from augur.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos
     from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
-    
-    with DatabaseEngine() as engine, DatabaseSession(logger, engine) as session:
+    from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
+    from augur.application.db import temporary_database_engine
+
+    # Need to engine to be temporary so that there isn't an engine defined when the parent is forked to create worker processes
+    with temporary_database_engine() as engine, DatabaseSession(logger, engine) as session:
 
         config = AugurConfig(logger, session)
 
@@ -210,12 +221,19 @@ def setup_periodic_tasks(sender, **kwargs):
         logger.info(f"Scheduling non-repo-domain collection every {non_domain_collection_interval/60} minutes")
         sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks.s())
 
+        mat_views_interval = int(config.get_value('Celery', 'refresh_materialized_views_interval_in_days'))
         logger.info(f"Scheduling refresh materialized view every night at 1am CDT")
-        sender.add_periodic_task(crontab(hour=1, minute=0), refresh_materialized_views.s())
+        sender.add_periodic_task(datetime.timedelta(days=mat_views_interval), refresh_materialized_views.s())
 
         logger.info(f"Scheduling update of collection weights on midnight each day")
         sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
 
+        logger.info(f"Setting 404 repos to be marked for retry on midnight each day")
+        sender.add_periodic_task(crontab(hour=0, minute=0),retry_errored_repos.s())
+
+        logger.info(f"Scheduling contributor breadth every 30 days")
+        thirty_days_in_seconds = 30*24*60*60
+        sender.add_periodic_task(thirty_days_in_seconds, contributor_breadth_model.s())
 
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
@@ -228,23 +246,29 @@ def setup_loggers(*args,**kwargs):
     TaskLogConfig(split_tasks_into_groups(augur_tasks))
 
 
-engine = None
+#engine = None
 @worker_process_init.connect
 def init_worker(**kwargs):
 
-    global engine
+    celery_app.engine = get_engine()
 
-    from augur.application.db.engine import DatabaseEngine
-    from sqlalchemy.pool import NullPool, StaticPool
+    # global engine
 
-    engine = DatabaseEngine(poolclass=StaticPool).engine
+    # from augur.application.db.engine import DatabaseEngine
+    # from sqlalchemy.pool import NullPool, StaticPool
+
+    # engine = DatabaseEngine(poolclass=StaticPool).engine
 
 
 @worker_process_shutdown.connect
 def shutdown_worker(**kwargs):
-    global engine
-    if engine:
-        logger.info('Closing database connectionn for worker')
-        engine.dispose()
+
+    from augur.application.db import dispose_database_engine
+    dispose_database_engine()
+
+    # global engine
+    # if engine:
+    #     logger.info('Closing database connectionn for worker')
+    #     engine.dispose()
 
 

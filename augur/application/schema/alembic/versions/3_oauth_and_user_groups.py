@@ -10,7 +10,6 @@ import logging
 from alembic import op
 import sqlalchemy as sa
 from augur.application.db.session import DatabaseSession
-from augur.application.db.models.augur_operations import UserGroup, UserRepo
 
 CLI_USER_ID = 1
 
@@ -85,9 +84,9 @@ def upgrade():
 
 
         table_changes = """
-        ALTER TABLE user_repos
+        ALTER TABLE augur_operations.user_repos
             ADD COLUMN group_id BIGINT,
-            ADD CONSTRAINT user_repos_group_id_fkey FOREIGN KEY (group_id) REFERENCES user_groups(group_id),
+            ADD CONSTRAINT user_repos_group_id_fkey FOREIGN KEY (group_id) REFERENCES augur_operations.user_groups(group_id),
             DROP COLUMN user_id,
             ADD PRIMARY KEY (group_id, repo_id);
         """

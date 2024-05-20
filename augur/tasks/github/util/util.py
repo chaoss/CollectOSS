@@ -1,6 +1,5 @@
 """Utility functions that are useful for several Github tasks"""
 from typing import Any, List, Tuple
-from httpx import Response
 import logging
 import json
 import httpx
@@ -54,10 +53,21 @@ def parse_json_response(logger: logging.Logger, response: httpx.Response) -> dic
     try:
         return response.json()
     except json.decoder.JSONDecodeError as e:
-        logger.warning(f"invalid return from GitHub. Response was: {response.text}. Exception: {e}")
+        logger.warning(f"invalid return. Response was: {response.text}. Exception: {e}")
         return json.loads(json.dumps(response.text))
 
 def get_repo_weight_by_issue(logger,repo_git):
+    """
+    Retrieve the sum of the number of issues and prs in a repository from a graphql query.
+
+    Arguments:
+        logger: logger object
+        repo_git: repository url
+    
+    Returns:
+        Sum of issues and prs for that repo
+    """
+
     from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
 
     owner,name = get_owner_repo(repo_git)
@@ -70,7 +80,9 @@ def get_repo_weight_by_issue(logger,repo_git):
 
 #Get the weight for each repo for the core collection hook
 def get_repo_weight_core(logger,repo_git):
-    from augur.tasks.init.celery_app import engine
+    
+    from augur.application.db import get_engine
+    engine = get_engine()
 
     with DatabaseSession(logger,engine) as session:
         repo = Repo.get_by_repo_git(session, repo_git)

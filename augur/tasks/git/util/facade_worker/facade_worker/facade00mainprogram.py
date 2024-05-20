@@ -26,24 +26,14 @@
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
 from __future__ import annotations
-import traceback
-import sys, platform, imp, time, datetime, html.parser, subprocess, os, getopt, xlsxwriter, configparser, logging
-from multiprocessing import Process, Queue
+import html.parser
 from .config import FacadeSession as FacadeSession
-from .utilitymethods import trim_commit, store_working_author, trim_author   
-from .analyzecommit import analyze_commit
-from .postanalysiscleanup import git_repo_cleanup
-from .repofetch import git_repo_initialize, check_for_repo_updates, force_repo_updates, force_repo_analysis, git_repo_updates
 #.facade06analyze analysis moved to facade_tasks.py - IM 10/12/22
-from .rebuildcache import nuke_affiliations, fill_empty_affiliations, invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
 
 from augur.tasks.github.facade_github.contributor_interfaceable.contributor_interface import *
 
-from augur.tasks.github.util.github_task_session import GithubTaskSession
-from logging import Logger
-from sqlalchemy.sql.elements import TextClause
 
 
 

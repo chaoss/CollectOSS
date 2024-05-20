@@ -1,16 +1,15 @@
 import logging
-import traceback
 from augur.application.db.session import DatabaseSession
 from augur.tasks.git.dependency_libyear_tasks.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 from augur.application.db.util import execute_session_query
 
-@celery.task(base=AugurFacadeRepoCollectionTask)
-def process_libyear_dependency_metrics(repo_git):
+@celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
+def process_libyear_dependency_metrics(self, repo_git):
     #raise NotImplementedError
 
-    from augur.tasks.init.celery_app import engine
+    engine = self.app.engine
 
     logger = logging.getLogger(process_libyear_dependency_metrics.__name__)
 

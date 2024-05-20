@@ -1,25 +1,27 @@
 from augur.tasks.github.util.github_task_session import *
 from augur.application.db.models import *
-from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.util import parse_json_response
-import logging
 from datetime import datetime
-from enum import Enum
+from augur.tasks.util.collection_state import CollectionState
 from augur.application.db.util import execute_session_query
 
-class CollectionState(Enum):
-    SUCCESS = "Success"
-    PENDING = "Pending"
-    ERROR = "Error"
-    COLLECTING = "Collecting"
 
 
-def update_repo_with_dict(current_dict,new_dict,logger,db):
+def update_repo_with_dict(repo,new_dict,logger,db):
+    """
+        Update a repository record in the database using a dictionary tagged with
+        the appropriate table fields
+
+        Args:
+            repo: orm repo object to update
+            new_dict: dict of new values to add to the repo record
+            logger: logging object
+            db: db object
+    """
     
-    
-    to_insert = current_dict
+    to_insert = repo.__dict__
     del to_insert['_sa_instance_state']
     to_insert.update(new_dict)
 
@@ -45,7 +47,6 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
 
     owner, name = get_owner_repo(repo.repo_git)
     url = f"https://api.github.com/repos/{owner}/{name}"
-    current_repo_dict = repo.__dict__
 
     attempts = 0
     while attempts < 10:
@@ -56,61 +57,71 @@ def ping_github_for_repo_move(augur_db, key_auth, repo, logger,collection_hook='
 
         attempts += 1
 
-    #Mark as errored if not found
-    if response_from_gh.status_code == 404:
-        logger.error(f"Repo {repo.repo_git} responded 404 when pinged!")
+    #Update Url and retry if 301
+    #301 moved permanently 
+    if response_from_gh.status_code == 301:
 
+        owner, name = extract_owner_and_repo_from_endpoint(key_auth, response_from_gh.headers['location'], logger)
+
+        try:
+            old_description = str(repo.description)
+        except Exception:
+            old_description = ""
+
+        #Create new repo object to update existing
         repo_update_dict = {
-        'repo_git': repo.repo_git,
-        'repo_path': None,
-        'repo_name': None,
-        'description': f"During our check for this repo on {datetime.today().strftime('%Y-%m-%d')}, a 404 error was returned. The repository does not appear to have moved. Instead, it appears to be deleted"
+            'repo_git': f"https://github.com/{owner}/{name}",
+            'repo_path': None,
+            'repo_name': None,
+            'description': f"(Originally hosted at {url}) {old_description}"
         }
 
-        update_repo_with_dict(current_repo_dict, repo_update_dict, logger, augur_db)
+        update_repo_with_dict(repo, repo_update_dict, logger,augur_db)
 
-        raise Exception(f"ERROR: Repo not found at requested host {repo.repo_git}")
-    elif attempts >= 10:
-        logger.warning(f"Could not check if repo moved because the api timed out 10 times. Url: {url}")
-        return
+        raise Exception("ERROR: Repo has moved! Resetting Collection!")
     
+    #Mark as ignore if 404
+    if response_from_gh.status_code == 404:
+        repo_update_dict = {
+            'repo_git': repo.repo_git,
+            'repo_path': None,
+            'repo_name': None,
+            'description': f"During our check for this repo on {datetime.today().strftime('%Y-%m-%d')}, a 404 error was returned. The repository does not appear to have moved. Instead, it appears to be deleted",
+            'data_collection_date': datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
 
-    #skip if not moved
-    #301 moved permanently 
-    if response_from_gh.status_code != 301:
-        logger.info(f"Repo found at url: {url}")
-        return
-    
-    owner, name = extract_owner_and_repo_from_endpoint(key_auth, response_from_gh.headers['location'], logger)
+        update_repo_with_dict(repo, repo_update_dict, logger, augur_db)
 
+        statusQuery = augur_db.session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
 
-    try:
-        old_description = str(repo.description)
-    except:
-        old_description = ""
+        collectionRecord = execute_session_query(statusQuery,'one')
 
-    #Create new repo object to update existing
-    repo_update_dict = {
-        'repo_git': f"https://github.com/{owner}/{name}",
-        'repo_path': None,
-        'repo_name': None,
-        'description': f"(Originally hosted at {url}) {old_description}"
-    }
-
-    update_repo_with_dict(current_repo_dict, repo_update_dict, logger,augur_db)
-
-    statusQuery = augur_db.session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
-
-    collectionRecord = execute_session_query(statusQuery,'one')
-    if collection_hook == 'core':
-        collectionRecord.core_status = CollectionState.PENDING.value
+        collectionRecord.core_status = CollectionState.IGNORE.value
         collectionRecord.core_task_id = None
-    elif collection_hook == 'secondary':
-        collectionRecord.secondary_status = CollectionState.PENDING.value
+        collectionRecord.core_data_last_collected = datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        collectionRecord.secondary_status = CollectionState.IGNORE.value
         collectionRecord.secondary_task_id = None
+        collectionRecord.secondary_data_last_collected = datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    augur_db.session.commit()
+        collectionRecord.facade_status = CollectionState.IGNORE.value
+        collectionRecord.facade_task_id = None
+        collectionRecord.facade_data_last_collected = datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    raise Exception("ERROR: Repo has moved! Marked repo as pending and stopped collection")
+        collectionRecord.ml_status = CollectionState.IGNORE.value
+        collectionRecord.ml_task_id = None
+        collectionRecord.ml_data_last_collected = datetime.today().strftime('%Y-%m-%dT%H:%M:%SZ')
 
+
+        augur_db.session.commit()
+        raise Exception("ERROR: Repo has moved! Resetting Collection!")
+
+
+    if attempts >= 10:
+        logger.error(f"Could not check if repo moved because the api timed out 10 times. Url: {url}")
+        raise Exception(f"ERROR: Could not get api response for repo: {url}")
     
+    #skip if not 404
+    logger.info(f"Repo found at url: {url}")
+    return
+

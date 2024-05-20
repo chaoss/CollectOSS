@@ -4,21 +4,16 @@ Provides shared functions that do not fit in a class of their own
 """
 import os
 import re
-import inspect
-import types
-import sys
 import beaker
 
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 
-from .server import engine
+from augur.application.db import get_session
 from functools import wraps
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from augur.application.config import get_development_flag
-from augur.application.db.models import User, UserRepo, UserGroup, UserSessionToken, ClientApplication, RefreshToken
+from augur.application.db.models import ClientApplication
 
-Session = sessionmaker(bind=engine)
 development = get_development_flag()
 
 __ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -132,13 +127,14 @@ def api_key_required(fun):
 
         # If valid:
         if client_token:
-            session = Session()
-            try:
-                kwargs["application"] = session.query(ClientApplication).filter(ClientApplication.api_key == client_token).one()
-                return fun(*args, **kwargs)
-            except NoResultFound:
-                pass
+            with get_session() as session:
+                try:
+                    kwargs["application"] = session.query(ClientApplication).filter(ClientApplication.api_key == client_token).one()
+                except NoResultFound as e:
+                    return {"status": "Unauthorized client"}
 
+                return fun(*args, **kwargs)
+        
         return {"status": "Unauthorized client"}
     
     return wrapper

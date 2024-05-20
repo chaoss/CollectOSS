@@ -11,6 +11,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Repo, DiscourseInsight
 from augur.application.db.util import execute_session_query
+from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 
 #import os, sys, time, requests, json
 # from sklearn.model_selection import train_test_split
@@ -31,19 +32,13 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 DISCOURSE_ANALYSIS_DIR = f"{ROOT_AUGUR_DIRECTORY}/tasks/data_analysis/discourse_analysis/"
 
-@celery.task
-def discourse_analysis_task():
+@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+def discourse_analysis_task(self, repo_git):
 
     logger = logging.getLogger(discourse_analysis_task.__name__)
-    from augur.tasks.init.celery_app import engine
+    engine = self.app.engine
 
-    with DatabaseSession(logger, engine) as session:
-        query = session.query(Repo)
-        repos = execute_session_query(query, 'all')
-    
-
-    for repo in repos:
-        discourse_analysis_model(repo.repo_git, logger, engine)
+    discourse_analysis_model(repo_git, logger, engine)
 
 
 def discourse_analysis_model(repo_git: str,logger,engine) -> None:
@@ -76,7 +71,9 @@ def discourse_analysis_model(repo_git: str,logger,engine) -> None:
             """)
 
     # result = db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
-    msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, engine, params={"repo_id": repo_id})
+
+    with engine.connect() as conn:
+        msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, conn, params={"repo_id": repo_id})
     msg_df_cur_repo = msg_df_cur_repo.sort_values(by=['thread_id']).reset_index(drop=True)
     logger.info(msg_df_cur_repo.head())
 

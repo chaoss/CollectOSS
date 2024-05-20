@@ -1,23 +1,19 @@
-# coding: utf-8
+# encoding: utf-8
 from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey, update, CheckConstraint
-from sqlalchemy.dialects.postgresql import TIMESTAMP, UUID
+from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import text as sql_text
 from werkzeug.security import generate_password_hash, check_password_hash
-from typing import List, Any, Dict
+from typing import List
 
-import logging 
+import logging
 import secrets
 import traceback
-import importlib
 
 from augur.application.db.models import Repo, RepoGroup
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models.base import Base
-
-
 
 FRONTEND_REPO_GROUP_NAME = "Frontend Repos"
 logger = logging.getLogger(__name__)
@@ -39,15 +35,15 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
     OWNER_INFO_ENDPOINT = f"https://api.github.com/users/{owner}"
     ORG_REPOS_ENDPOINT = f"https://api.github.com/orgs/{owner}/repos?per_page=100"
     USER_REPOS_ENDPOINT = f"https://api.github.com/users/{owner}/repos?per_page=100"
-    
+
     if not session.oauths.list_of_keys:
         return None, {"status": "No valid github api keys to retrieve data with"}
-    
+
     # determine whether the owner is a user or an organization
     data, _ = retrieve_dict_from_endpoint(logger, session.oauths, OWNER_INFO_ENDPOINT)
     if not data:
         return None, {"status": "Invalid owner"}
-    
+
     owner_type = data["type"]
 
 
@@ -57,11 +53,11 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
         url = ORG_REPOS_ENDPOINT
     else:
         return None, {"status": f"Invalid owner type: {owner_type}"}
-    
-    
+
+
     # collect repo urls for the given owner
     repos = []
-    for page_data, page in GithubPaginator(url, session.oauths, logger).iter_pages():
+    for page_data, _ in GithubPaginator(url, session.oauths, logger).iter_pages():
 
         if page_data is None:
             break
@@ -72,7 +68,7 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
 
     return repo_urls, {"status": "success", "owner_type": owner_type}
 
-    
+
 metadata = Base.metadata
 
 t_all = Table(
@@ -221,6 +217,22 @@ t_working_commits = Table(
     comment="For future use when we move all working tables to the augur_operations schema. ",
 )
 
+class BadgingDEI(Base):
+    id = Column(Integer, primary_key=True, nullable=False)
+    badging_id = Column(Integer, nullable=False)
+    level = Column(String, nullable=False)
+
+    repo_id = Column(
+        ForeignKey("augur_data.repo.repo_id", name="user_repo_user_id_fkey"), primary_key=True, nullable=False
+    )
+
+    repo = relationship("Repo")
+
+    __tablename__ = 'dei_badging'
+    __table_args__ = (
+        {"schema": "augur_data"}
+    )
+
 
 class Config(Base):
     id = Column(SmallInteger, primary_key=True, nullable=False)
@@ -250,7 +262,7 @@ class User(Base):
     tool_version = Column(String)
     data_source = Column(String)
     data_collection_date = Column(TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP"))
-    
+
     __tablename__ = 'users'
     __table_args__ = (
         UniqueConstraint('email', name='user-unique-email'),
@@ -259,9 +271,9 @@ class User(Base):
         {"schema": "augur_operations"}
     )
 
-    groups = relationship("UserGroup")
-    tokens = relationship("UserSessionToken")
-    applications = relationship("ClientApplication")
+    groups = relationship("UserGroup", back_populates="user")
+    tokens = relationship("UserSessionToken", back_populates="user")
+    applications = relationship("ClientApplication", back_populates="user")
 
     _is_authenticated = False
     _is_active = True
@@ -317,12 +329,23 @@ class User(Base):
             return user
         except NoResultFound:
             return None
-                
+
+    @staticmethod
+    def get_by_id(session, user_id: int):
+
+        if not isinstance(user_id, int):
+            return None
+        try:
+            user = session.query(User).filter(User.user_id == user_id).one()
+            return user
+        except NoResultFound:
+            return None
+
     @staticmethod
     def create_user(username: str, password: str, email: str, first_name:str, last_name:str, admin=False):
 
         if username is None or password is None or email is None or first_name is None or last_name is None:
-            return False, {"status": "Missing field"} 
+            return False, {"status": "Missing field"}
 
         with DatabaseSession(logger) as session:
 
@@ -335,7 +358,7 @@ class User(Base):
                 return False, {"status": "A User already exists with that email"}
 
             try:
-                user = User(login_name = username, login_hashword = generate_password_hash(password), email = email, first_name = first_name, last_name = last_name, tool_source="User API", tool_version=None, data_source="API", admin=admin)
+                user = User(login_name = username, login_hashword = User.compute_hashsed_password(password), email = email, first_name = first_name, last_name = last_name, tool_source="User API", tool_version=None, data_source="API", admin=admin)
                 session.add(user)
                 session.commit()
 
@@ -344,7 +367,7 @@ class User(Base):
                     return False, {"status": "Failed to add default group for the user"}
 
                 return True, {"status": "Account successfully created"}
-            except AssertionError as exception_message: 
+            except AssertionError as exception_message:
                 return False, {"Error": f"{exception_message}."}
 
     def delete(self, session):
@@ -373,7 +396,7 @@ class User(Base):
         if not check_password_hash(self.login_hashword, old_password):
             return False, {"status": "Password did not match users password"}
 
-        self.login_hashword = generate_password_hash(new_password)
+        self.login_hashword = User.compute_hashsed_password(new_password)
         session.commit()
 
         return True, {"status": "Password updated"}
@@ -383,7 +406,7 @@ class User(Base):
         if not new_email:
             print("Need new email to update the email")
             return False, {"status": "Missing argument"}
-        
+
 
         existing_user = session.query(User).filter(User.email == new_email).first()
         if existing_user is not None:
@@ -426,14 +449,30 @@ class User(Base):
 
         return result
 
-    def add_repo(self, group_name, repo_url):
-        
-        from augur.tasks.github.util.github_task_session import GithubTaskSession
+    def add_github_repo(self, group_name, repo_url):
 
-        with GithubTaskSession(logger) as session:
-            result = UserRepo.add(session, repo_url, self.user_id, group_name)
+        from augur.tasks.github.util.github_task_session import GithubTaskSession
+        from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
+        try:
+            with GithubTaskSession(logger) as session:
+                result = UserRepo.add_github_repo(session, repo_url, self.user_id, group_name)
+        except NoValidKeysError:
+            return False, {"status": "No valid keys"}
 
         return result
+    
+    def add_gitlab_repo(self, group_name, repo_url):
+        
+        from augur.tasks.gitlab.gitlab_task_session import GitlabTaskSession
+        from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
+        try:
+            with GitlabTaskSession(logger) as session:
+                result = UserRepo.add_gitlab_repo(session, repo_url, self.user_id, group_name)
+        except NoValidKeysError:
+            return False, {"status": "No valid keys"}
+
+        return result
+
 
     def remove_repo(self, group_name, repo_id):
 
@@ -442,12 +481,16 @@ class User(Base):
 
         return result
 
-    def add_org(self, group_name, org_url):
+    def add_github_org(self, group_name, org_url):
 
         from augur.tasks.github.util.github_task_session import GithubTaskSession
+        from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
 
-        with GithubTaskSession(logger) as session:
-            result = UserRepo.add_org_repos(session, org_url, self.user_id, group_name)
+        try:
+            with GithubTaskSession(logger) as session:
+                result = UserRepo.add_github_org_repos(session, org_url, self.user_id, group_name)
+        except NoValidKeysError:
+            return False, {"status": "No valid keys"}
 
         return result
 
@@ -463,20 +506,20 @@ class User(Base):
             group_names = [group.name for group in user_groups]
         else:
             group_names = [group.name for group in user_groups if search.lower() in group.name.lower()]
-            
+
         group_names.sort(reverse = reversed)
 
         return group_names, {"status": "success"}
-    
+
     def get_groups_info(self, search=None, reversed=False, sort="group_name"):
         (groups, result) = self.get_groups()
 
         if search is not None:
             groups = [group for group in groups if search.lower() in group.name.lower()]
-        
+
         for group in groups:
             group.count = self.get_group_repo_count(group.name)[0]
-        
+
         def sorting_function(group):
             if sort == "group_name":
                 return group.name
@@ -484,7 +527,7 @@ class User(Base):
                 return group.count
             elif sort == "favorited":
                 return group.favorited
-        
+
         groups = sorted(groups, key=sorting_function, reverse=reversed)
 
         return groups, {"status": "success"}
@@ -579,11 +622,15 @@ class User(Base):
 
         return groups, {"status": "Success"}
 
+    @staticmethod
+    def compute_hashsed_password(password):
+        return generate_password_hash(password, method='pbkdf2:sha512', salt_length=32)
+
 
 
 class UserGroup(Base):
     group_id = Column(BigInteger, primary_key=True)
-    user_id = Column(Integer, 
+    user_id = Column(Integer,
                     ForeignKey("augur_operations.users.user_id", name="user_group_user_id_fkey")
     )
     name = Column(String, nullable=False)
@@ -594,8 +641,8 @@ class UserGroup(Base):
         {"schema": "augur_operations"}
     )
 
-    user = relationship("User")
-    repos = relationship("UserRepo")
+    user = relationship("User", back_populates="groups")
+    repos = relationship("UserRepo", back_populates="group")
 
     @staticmethod
     def insert(session, user_id:int, group_name:str) -> dict:
@@ -705,8 +752,8 @@ class UserRepo(Base):
         ForeignKey("augur_data.repo.repo_id", name="user_repo_user_id_fkey"), primary_key=True, nullable=False
     )
 
-    repo = relationship("Repo")
-    group = relationship("UserGroup")
+    repo = relationship("Repo", back_populates="user_repo")
+    group = relationship("UserGroup", back_populates="repos")
 
     @staticmethod
     def insert(session, repo_id: int, group_id:int = 1) -> bool:
@@ -735,9 +782,9 @@ class UserRepo(Base):
             return False
 
         return data[0]["group_id"] == group_id and data[0]["repo_id"] == repo_id
-
+    
     @staticmethod
-    def add(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_type=None, repo_group_id=None) -> dict:
+    def add_gitlab_repo(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_group_id=None) -> dict:
         """Add repo to the user repo table
 
         Args:
@@ -759,7 +806,67 @@ class UserRepo(Base):
 
         if not group_name and not group_id:
             return False, {"status": "Need group name or group id to add a repo"}
-        
+
+        if group_id is None:
+
+            group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
+            if group_id is None:
+                return False, {"status": "Invalid group name"}
+
+        if not from_org_list:
+            result = Repo.is_valid_gitlab_repo(session, url)
+            if not result[0]:
+                return False, {"status": result[1]["status"], "repo_url": url}
+
+        # if no repo_group_id is passed then assign the repo to the frontend repo group
+        if repo_group_id is None:
+
+            frontend_repo_group = session.query(RepoGroup).filter(RepoGroup.rg_name == FRONTEND_REPO_GROUP_NAME).first()
+            if not frontend_repo_group:
+                return False, {"status": "Could not find repo group with name 'Frontend Repos'", "repo_url": url}
+
+            repo_group_id = frontend_repo_group.repo_group_id
+
+
+        repo_id = Repo.insert_gitlab_repo(session, url, repo_group_id, "Frontend")
+        if not repo_id:
+            return False, {"status": "Repo insertion failed", "repo_url": url}
+
+        result = UserRepo.insert(session, repo_id, group_id)
+        if not result:
+            return False, {"status": "repo_user insertion failed", "repo_url": url}
+
+        #collection_status records are now only added during collection -IM 5/1/23
+        #status = CollectionStatus.insert(session, repo_id)
+        #if not status:
+        #    return False, {"status": "Failed to create status for repo", "repo_url": url}
+
+        return True, {"status": "Repo Added", "repo_url": url}
+
+    @staticmethod
+    def add_github_repo(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_type=None, repo_group_id=None) -> dict:
+        """Add repo to the user repo table
+
+        Args:
+            urls: list of repo urls
+            user_id: id of user_id from users table
+            group_name: name of group to add repo to.
+            group_id: id of the group
+            valid_repo: boolean that indicates whether the repo has already been validated
+
+        Note:
+            Either the group_name or group_id can be passed not both
+
+        Returns:
+            Dict that contains the key "status" and additional useful data
+        """
+
+        if group_name and group_id:
+            return False, {"status": "Pass only the group name or group id not both"}
+
+        if not group_name and not group_id:
+            return False, {"status": "Need group name or group id to add a repo"}
+
         if from_org_list and not repo_type:
             return False, {"status": "Repo type must be passed if the repo is from an organization's list of repos"}
 
@@ -768,25 +875,25 @@ class UserRepo(Base):
             group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
             if group_id is None:
                 return False, {"status": "Invalid group name"}
-            
+
         if not from_org_list:
             result = Repo.is_valid_github_repo(session, url)
             if not result[0]:
                 return False, {"status": result[1]["status"], "repo_url": url}
-            
+
             repo_type = result[1]["repo_type"]
-            
+
         # if no repo_group_id is passed then assign the repo to the frontend repo group
         if repo_group_id is None:
 
             frontend_repo_group = session.query(RepoGroup).filter(RepoGroup.rg_name == FRONTEND_REPO_GROUP_NAME).first()
             if not frontend_repo_group:
-                return False, {"status": "Could not find repo group with name 'Frontend Repos'", "repo_url": url} 
-            
+                return False, {"status": "Could not find repo group with name 'Frontend Repos'", "repo_url": url}
+
             repo_group_id = frontend_repo_group.repo_group_id
 
 
-        repo_id = Repo.insert(session, url, repo_group_id, "Frontend", repo_type)
+        repo_id = Repo.insert_github_repo(session, url, repo_group_id, "Frontend", repo_type)
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
@@ -828,7 +935,7 @@ class UserRepo(Base):
         return True, {"status": "Repo Removed"}
 
     @staticmethod
-    def add_org_repos(session, url: List[str], user_id: int, group_name: int):
+    def add_github_org_repos(session, url: List[str], user_id: int, group_name: int):
         """Add list of orgs and their repos to a users repos.
 
         Args:
@@ -839,7 +946,7 @@ class UserRepo(Base):
         group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
         if group_id is None:
             return False, {"status": "Invalid group name"}
-        
+
         # parse github owner url to get owner name
         owner = Repo.parse_github_org_url(url)
         if not owner:
@@ -850,10 +957,10 @@ class UserRepo(Base):
         # if the result is returns None or []
         if not result[0]:
             return False, result[1]
-        
+
         repos = result[0]
         type = result[1]["owner_type"]
-        
+
         # get repo group if it exists
         try:
             repo_group = RepoGroup.get_by_name(session, owner)
@@ -864,7 +971,7 @@ class UserRepo(Base):
 
         # if it doesn't exist create one
         if not repo_group:
-            repo_group = RepoGroup(rg_name=owner, rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
+            repo_group = RepoGroup(rg_name=owner.lower(), rg_description="", rg_website="", rg_recache=0, rg_type="Unknown",
                     tool_source="Loaded by user", tool_version="1.0", data_source="Git")
             session.add(repo_group)
             session.commit()
@@ -877,13 +984,13 @@ class UserRepo(Base):
         failed_repos = []
         for repo in repos:
 
-            result = UserRepo.add(session, repo, user_id, group_id=group_id, from_org_list=True, repo_type=type, repo_group_id=repo_group_id)
+            result = UserRepo.add_github_repo(session, repo, user_id, group_id=group_id, from_org_list=True, repo_type=type, repo_group_id=repo_group_id)
 
             # keep track of all the repos that failed
             if not result[0]:
                 failed_repos.append(repo)
 
-        # Update repo group id to new org's repo group id if the repo 
+        # Update repo group id to new org's repo group id if the repo
         # is a part of the org and existed before org added
         update_stmt = (
             update(Repo)
@@ -893,7 +1000,7 @@ class UserRepo(Base):
         )
         session.execute(update_stmt)
         session.commit()
-  
+
         failed_count = len(failed_repos)
         if failed_count > 0:
             # this should never happen because an org should never return invalid repos
@@ -915,17 +1022,17 @@ class UserSessionToken(Base):
     application_id = Column(ForeignKey("augur_operations.client_applications.id", name="user_session_token_application_id_fkey"), nullable=False)
     created_at = Column(BigInteger)
 
-    user = relationship("User")
-    application = relationship("ClientApplication")
-    refresh_tokens = relationship("RefreshToken")
+    user = relationship("User", back_populates="tokens")
+    application = relationship("ClientApplication", back_populates="sessions")
+    refresh_tokens = relationship("RefreshToken", back_populates="user_session")
 
     @staticmethod
     def create(session, user_id, application_id, seconds_to_expire=86400):
-        import time 
+        import time
 
         user_session_token = secrets.token_hex()
         expiration = int(time.time()) + seconds_to_expire
-        
+
         user_session = UserSessionToken(token=user_session_token, user_id=user_id, application_id = application_id, expiration=expiration)
 
         session.add(user_session)
@@ -957,15 +1064,16 @@ class ClientApplication(Base):
     redirect_url = Column(String, nullable=False)
     api_key = Column(String, nullable=False)
 
-    user = relationship("User")
+    user = relationship("User", back_populates="applications")
     sessions = relationship("UserSessionToken")
-    subscriptions = relationship("Subscription")
+    subscriptions = relationship("Subscription", back_populates="application")
+
+    def __eq__(self, other):
+        return isinstance(other, ClientApplication) and str(self.id) == str(other.id)
 
     @staticmethod
     def get_by_id(session, client_id):
-
         return session.query(ClientApplication).filter(ClientApplication.id == client_id).first()
-
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
@@ -978,8 +1086,8 @@ class Subscription(Base):
     application_id = Column(ForeignKey("augur_operations.client_applications.id", name="subscriptions_application_id_fkey"), primary_key=True)
     type_id = Column(ForeignKey("augur_operations.subscription_types.id", name="subscriptions_type_id_fkey"), primary_key=True)
 
-    application = relationship("ClientApplication")
-    type = relationship("SubscriptionType")
+    application = relationship("ClientApplication", back_populates="subscriptions")
+    type = relationship("SubscriptionType", back_populates="subscriptions")
 
 class SubscriptionType(Base):
     __tablename__ = "subscription_types"
@@ -992,7 +1100,7 @@ class SubscriptionType(Base):
     id = Column(BigInteger, primary_key=True)
     name = Column(String, nullable=False)
 
-    subscriptions = relationship("Subscription")
+    subscriptions = relationship("Subscription", back_populates="type")
 
 
 class RefreshToken(Base):
@@ -1005,7 +1113,7 @@ class RefreshToken(Base):
     id = Column(String, primary_key=True)
     user_session_token = Column(ForeignKey("augur_operations.user_session_tokens.token", name="refresh_token_session_token_id_fkey"), nullable=False)
 
-    user_session = relationship("UserSessionToken")
+    user_session = relationship("UserSessionToken", back_populates="refresh_tokens")
 
     @staticmethod
     def create(session, user_session_token_id):
@@ -1023,6 +1131,8 @@ class RefreshToken(Base):
 class CollectionStatus(Base):
     __tablename__ = "collection_status"
     __table_args__ = (
+
+        #TODO: normalize this table to have a record per repo and collection hook instead of just being per repo.
 
         #Constraint to prevent nonsensical relationship states between core_data_last_collected and core_status
         #Disallow core_data_last_collected status to not be set when the core_status column indicates data has been collected
@@ -1099,13 +1209,18 @@ class CollectionStatus(Base):
     facade_data_last_collected = Column(TIMESTAMP)
     facade_task_id = Column(String)
 
+    ml_status = Column(String,nullable=False, server_default=text("'Pending'"))
+    ml_data_last_collected = Column(TIMESTAMP)
+    ml_task_id = Column(String)
+
     core_weight = Column(BigInteger)
     facade_weight = Column(BigInteger)
     secondary_weight = Column(BigInteger)
+    ml_weight = Column(BigInteger)
 
     issue_pr_sum = Column(BigInteger)
     commit_sum = Column(BigInteger)
-    
+
     repo = relationship("Repo", back_populates="collection_status")
 
     @staticmethod
@@ -1117,24 +1232,38 @@ class CollectionStatus(Base):
         repo_git = repo.repo_git
 
         collection_status_unique = ["repo_id"]
+        pr_issue_count = 0
+        github_weight = 0
+        if "github" in repo_git:
 
-        try:
-            pr_issue_count = get_repo_weight_by_issue(session.logger, repo_git)
-            #session.logger.info(f"date weight: {calculate_date_weight_from_timestamps(repo.repo_added, None)}")
-            github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
-        except Exception as e:
-            pr_issue_count = None
-            github_weight = None
-            session.logger.error(
-                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
+            try:
+                pr_issue_count = get_repo_weight_by_issue(session.logger, repo_git)
+                #session.logger.info(f"date weight: {calculate_date_weight_from_timestamps(repo.repo_added, None)}")
+                github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
+            except Exception as e:
+                pr_issue_count = None
+                github_weight = None
+                session.logger.error(
+                        ''.join(traceback.format_exception(None, e, e.__traceback__)))
+        else:   
+            try:
+                pr_issue_count = 0
+                github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
+            except Exception as e:
+                pr_issue_count = None
+                github_weight = None
+                session.logger.error(
+                        ''.join(traceback.format_exception(None, e, e.__traceback__)))
 
-        
+
         record = {
             "repo_id": repo_id,
             "issue_pr_sum": pr_issue_count,
             "core_weight": github_weight,
-            "secondary_weight": github_weight
+            "secondary_weight": github_weight,
+            "ml_weight": github_weight
         }
+     
 
         result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)
 

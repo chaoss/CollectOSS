@@ -1,20 +1,16 @@
 #SPDX-License-Identifier: MIT
+from augur.api.routes import AUGUR_API_VERSION
+from ..server import app
 import base64
 import sqlalchemy as s
 import pandas as pd
 import json
-from flask import Response
-import logging
+from flask import Response, current_app
 
-from augur.application.db.session import DatabaseSession
+from augur.application.db.lib import get_value
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
 
 logger = AugurLogger("augur").get_logger()
-
-from augur.api.routes import AUGUR_API_VERSION
-from ..server import app, engine
-
 
 @app.route('/{}/repo-groups'.format(AUGUR_API_VERSION))
 def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
@@ -23,7 +19,9 @@ def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
         FROM repo_groups
         ORDER BY rg_name
     """)
-    results = pd.read_sql(repoGroupsSQL,  engine)
+
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(repoGroupsSQL,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
                     status=200,
@@ -52,13 +50,15 @@ def get_all_repos():
             (select * from api_get_all_repos_issues) b
             on
             repo.repo_id = b.repo_id
-            left outer join 
-            (select * from api_get_all_repo_prs) c 
-            on repo.repo_id=c.repo_id 
+            left outer join
+            (select * from api_get_all_repo_prs) c
+            on repo.repo_id=c.repo_id
             JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
         order by repo_name
     """)
-    results = pd.read_sql(get_all_repos_sql,  engine)
+
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(get_all_repos_sql,  conn)
     results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
 
     b64_urls = []
@@ -85,24 +85,68 @@ def get_repos_in_repo_group(repo_group_id):
         FROM
             repo
             left outer join
-            (select repo_id, COUNT ( distinct commits.cmt_commit_hash ) AS commits_all_time from commits group by repo_id ) a on
+            (select * from api_get_all_repos_commits) a on
             repo.repo_id = a.repo_id
             left outer join
-            (select repo_id, count ( issues.issue_id) as issues_all_time from issues where issues.pull_request IS NULL group by repo_id) b
+            (select * from api_get_all_repos_issues) b
             on
             repo.repo_id = b.repo_id
-            left outer join 
-            (select * from api_get_all_repo_prs) c 
-            on repo.repo_id=c.repo_id                 
+            left outer join
+            (select * from api_get_all_repo_prs) c
+            on repo.repo_id=c.repo_id
             JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
         WHERE
             repo_groups.repo_group_id = :repo_group_id
         ORDER BY repo.repo_git
     """)
 
-    results = pd.read_sql(repos_in_repo_groups_SQL, engine, params={'repo_group_id': repo_group_id})
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(repos_in_repo_groups_SQL, conn, params={'repo_group_id': repo_group_id})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
+                    status=200,
+                    mimetype="application/json")
+
+@app.route('/{}/repos/<repo_id>'.format(AUGUR_API_VERSION))
+def get_repo_by_id(repo_id: int) -> Response:
+    repo_by_id_SQL = s.sql.text("""
+        SELECT
+            repo.repo_id,
+            repo.repo_name,
+            repo.description,
+            repo.repo_git AS url,
+            a.commits_all_time,
+            b.issues_all_time,
+            c.pull_requests_all_time,
+            rg_name,
+            repo.repo_group_id
+        FROM
+            repo
+            LEFT OUTER JOIN
+                (SELECT * FROM api_get_all_repos_commits) a
+            ON repo.repo_id = a.repo_id
+            LEFT OUTER JOIN
+                (SELECT * FROM api_get_all_repos_issues) b
+            ON repo.repo_id = b.repo_id
+            LEFT OUTER JOIN
+                (SELECT * FROM api_get_all_repo_prs) c
+            ON repo.repo_id = c.repo_id
+            JOIN repo_groups ON repo_groups.repo_group_id = repo.repo_group_id
+        WHERE
+            repo.repo_id = :id
+    """)
+
+    results = pd.read_sql(repo_by_id_SQL, current_app.engine, params={"id": repo_id})
+    results["url"] = results["url"].apply(lambda datum: datum.split("//")[1])  # cut "https://" off the URL
+    results["base64_url"] = [base64.b64encode(results.at[i, "url"].encode()) for i in results.index]
+    data = results.to_json(orient="records", date_format="iso", date_unit="ms")
+
+    if not data or data == "[]":
+        return Response(response='{"status": "Repository ' + str(repo_id) + ' does not exist"}',
+                        status=400,
+                        mimetype="application/json")
+
+    return Response(response=data[1:-1],  # cut off brackets at each end, turns list of length 1 into single value
                     status=200,
                     mimetype="application/json")
 
@@ -116,7 +160,8 @@ def get_repo_by_git_name(owner, repo):
         GROUP BY repo_id, rg_name
     """)
 
-    results = pd.read_sql(get_repo_by_git_name_sql, engine, params={'owner': '%{}_'.format(owner), 'repo': repo,})
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(get_repo_by_git_name_sql, conn, params={'owner': '%{}%'.format(owner), 'repo': repo,})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
                     status=200,
@@ -132,7 +177,9 @@ def get_repo_by_name(rg_name, repo_name):
         AND LOWER(rg_name) = LOWER(:rg_name)
         AND LOWER(repo_name) = LOWER(:repo_name)
     """)
-    results = pd.read_sql(get_repo_by_name_sql, engine, params={'rg_name': rg_name, 'repo_name': repo_name})
+
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(get_repo_by_name_sql, conn, params={'rg_name': rg_name, 'repo_name': repo_name})
     results['url'] = results['url'].apply(lambda datum: datum.split('//')[1])
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -146,7 +193,9 @@ def get_group_by_name(rg_name):
         FROM repo_groups
         WHERE lower(rg_name) = lower(:rg_name)
     """)
-    results = pd.read_sql(groupSQL, engine, params={'rg_name': rg_name})
+
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(groupSQL, conn, params={'rg_name': rg_name})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
                     status=200,
@@ -160,7 +209,8 @@ def get_repos_for_dosocs():
         WHERE a.setting='repo_directory'
     """)
 
-    results = pd.read_sql(get_repos_for_dosocs_SQL,  engine)
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(get_repos_for_dosocs_SQL,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
                     status=200,
@@ -188,7 +238,9 @@ def get_issues(repo_group_id, repo_id=None):
             GROUP BY issues.issue_id
             ORDER by OPEN_DAY DESC
         """)
-        results = pd.read_sql(get_issues_sql, engine, params={'repo_group_id': repo_group_id})
+
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(get_issues_sql, conn, params={'repo_group_id': repo_group_id})
     else:
         get_issues_sql = s.sql.text("""
             SELECT issue_title,
@@ -208,7 +260,9 @@ def get_issues(repo_group_id, repo_id=None):
             GROUP BY issues.issue_id, repo_name
             ORDER by OPEN_DAY DESC
         """)
-        results = pd.read_sql(get_issues_sql, engine, params={'repo_id': repo_id})
+
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(get_issues_sql, conn, params={'repo_id': repo_id})
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
                     status=200,
@@ -217,9 +271,7 @@ def get_issues(repo_group_id, repo_id=None):
 @app.route('/{}/api-port'.format(AUGUR_API_VERSION))
 def api_port():
 
-    with DatabaseSession(logger) as session:
-
-        response = {'port': AugurConfig(logger, session).get_value('Server', 'port')}
-        return Response(response=json.dumps(response),
-                        status=200,
-                        mimetype="application/json")
+    response = {'port': get_value('Server', 'port')}
+    return Response(response=json.dumps(response),
+                    status=200,
+                    mimetype="application/json")
