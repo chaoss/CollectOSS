@@ -12,6 +12,7 @@ from augur.application.db.models import User, Repo, ClientApplication
 from .server import LoginException
 from augur.application.util import *
 from augur.application.db.lib import get_value
+from augur.application.config import AugurConfig
 from ..server import app, db_session
 
 logger = logging.getLogger(__name__)
