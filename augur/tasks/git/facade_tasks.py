@@ -439,32 +439,6 @@ def generate_analysis_sequence(logger,repo_git, session):
     return analysis_sequence
 
 
-
-def generate_contributor_sequence(logger,repo_git, session):
-    
-    contributor_sequence = []
-    #all_repo_ids = []
-    repo_id = None
-        
-    #contributor_sequence.append(facade_start_contrib_analysis_task.si())
-    query = s.sql.text("""SELECT repo_id FROM repo
-    WHERE repo_git=:value""").bindparams(value=repo_git)
-
-    repo = session.execute_sql(query).fetchone()
-    session.logger.info(f"repo: {repo}")
-    repo_id = repo[0]
-    #pdb.set_trace()
-    #breakpoint()
-    #for repo in all_repos:
-    #    contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
-    #all_repo_ids = [repo['repo_id'] for repo in all_repos]
-
-    #contrib_group = create_grouped_task_load(dataList=all_repo_ids,task=insert_facade_contributors)#group(contributor_sequence)
-    #contrib_group.link_error(facade_error_handler.s())
-    #return contrib_group#chain(facade_start_contrib_analysis_task.si(), contrib_group)
-    return insert_facade_contributors.si(repo_id)
-
-
 def facade_phase(repo_git, full_collection):
     logger = logging.getLogger(facade_phase.__name__)
     logger.info("Generating facade sequence")
@@ -506,7 +480,7 @@ def facade_phase(repo_git, full_collection):
 
         #Generate contributor analysis task group.
         if not limited_run or (limited_run and run_facade_contributors):
-            facade_core_collection.append(generate_contributor_sequence(logger,repo_git,session))
+            facade_core_collection.append(insert_facade_contributors.si(repo_git))
 
 
         #These tasks need repos to be cloned by facade before they can work.
