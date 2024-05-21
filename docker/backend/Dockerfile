@@ -2,7 +2,7 @@
 FROM python:3.10-bookworm
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.63.0"
+LABEL version="0.70.0"
 
 ENV DEBIAN_FRONTEND=noninteractive
 

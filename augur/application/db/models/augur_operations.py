@@ -329,6 +329,9 @@ class User(Base):
             return user
         except NoResultFound:
             return None
+        except Exception as e:
+            session.rollback()
+            raise e
 
     @staticmethod
     def get_by_id(session, user_id: int):
@@ -1073,7 +1076,13 @@ class ClientApplication(Base):
 
     @staticmethod
     def get_by_id(session, client_id):
-        return session.query(ClientApplication).filter(ClientApplication.id == client_id).first()
+
+        try:
+            return session.query(ClientApplication).filter(ClientApplication.id == client_id).first()
+        except Exception as e:
+            session.rollback()
+            raise e
+
 
 class Subscription(Base):
     __tablename__ = "subscriptions"

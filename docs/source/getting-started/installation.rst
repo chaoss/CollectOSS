@@ -69,6 +69,7 @@ After installation, you must also set up your rabbitmq instance by running the b
 	to communicate with nodes.
 
 Then, start rabbitmq server with 
+
 .. code-block:: bash
 
     sudo systemctl start rabbitmq.service
@@ -76,7 +77,7 @@ Then, start rabbitmq server with
 
 If your setup of rabbitmq is successful your broker url should look like this:
 
-broker_url = 'amqp://augur:password123@localhost:5672/augur_vhost'
+``broker_url = 'amqp://augur:password123@localhost:5672/augur_vhost'``
 
 During installation you will be prompted for this broker url.
 
