@@ -65,6 +65,8 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth):
         
         file_collection = GraphQlPageCollection(query, key_auth, logger,bind=params)
 
+        logger.debug(f"Results of file_collection: {file_collection}")
+
         pr_file_rows += [{
             'pull_request_id': pr_info['pull_request_id'],
             'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
