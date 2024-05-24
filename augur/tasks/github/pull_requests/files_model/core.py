@@ -67,6 +67,11 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth):
 
         logger.debug(f"Results of file_collection: {file_collection}")
 
+        for pr_file in file_collection: 
+            logger.debug(f"CHECK: {pr_file['path']}")
+            if pr_file and 'path' in pr_file: 
+                logger.debug(f"Checks out for {pr_info['pull_request_id']}")
+
         pr_file_rows += [{
             'pull_request_id': pr_info['pull_request_id'],
             'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
