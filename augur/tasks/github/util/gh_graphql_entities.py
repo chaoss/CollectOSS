@@ -295,6 +295,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
             #extract the content from the graphql query result
             coreData = self.extract_paginate_result(data)
 
+            self.logger.debug(f"for page in range 298: {data}")
+
             content = [data['node'] for data in list(coreData['edges'])]
 
             if self.repaginate:
@@ -325,6 +327,8 @@ class GraphQlPageCollection(collections.abc.Sequence):
         data = self.request_graphql_dict(variables=params)
         coreData = self.extract_paginate_result(data)
 
+        self.logger.debug(f"__len__: debug: {data}")
+
         totalCount = int(coreData['totalCount'])
 
         return totalCount
@@ -344,7 +348,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
             coreData = self.extract_paginate_result(data)
             if coreData is not None:
                 if coreData.get('totalCount') is not None: 
-                    self.logger.info("... core data obtained")
+                    self.logger.info("debug-gog: ... core data obtained")
                 else:
                     self.logger.info(f"Helen, the ghost in our machine, did not get a numerical result for core data (value): {data} \n Zero value assigned.")
                     coreData['totalCount'] = 0 
@@ -386,6 +390,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
                 data = self.request_graphql_dict(variables=params)
 
             coreData = self.extract_paginate_result(data)
+            self.logger.debug(f"while core data: {data}")
 
             #print(coreData)
             if len(coreData['edges']) == 0:
