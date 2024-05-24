@@ -69,9 +69,9 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth):
         logger.debug(f"Results of file_collection: {file_collection}")
 
         for pr_file in file_collection: 
-            logger.debug(f"CHECK: {pr_file['path']}")
+            logger.debug(f"CHECK: {repr(file_collection)}")
             if pr_file and 'path' in pr_file: 
-                logger.debug(f"Checks out for {pr_info['pull_request_id']}")
+                logger.debug(f"Checks out for {repr(pr_file)} and {repr(file_collection)}")
 
         try: 
             pr_file_rows += [{
