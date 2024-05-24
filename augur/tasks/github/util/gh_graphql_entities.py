@@ -250,9 +250,11 @@ class GraphQlPageCollection(collections.abc.Sequence):
     def extract_paginate_result(self,responseDict):
 
         if not responseDict:
+            self.logger.error(f"DEBUG CHECK THIS {responseDict}")
             raise TimeoutError("No data received from endpoint.")
         #err = process_graphql_dict_response(self.logger, responseObject, response)
         if 'data' not in responseDict:
+            self.logger.error(f"DEBUG CHECK THIS {responseDict}")
             self.logger.error(responseDict)
             raise KeyError
 
