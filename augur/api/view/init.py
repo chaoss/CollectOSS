@@ -1,6 +1,6 @@
 from pathlib import Path
 from augur.application.logs import AugurLogger
-import logging, secrets, yaml
+import secrets, yaml
 
 # load configuration files and initialize globals
 configFile = Path("config.yml")

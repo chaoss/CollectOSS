@@ -6,7 +6,7 @@ import warnings
 import datetime
 import json
 # from scipy import stats
-from flask import request, send_file, Response
+from flask import request, send_file, Response, current_app
 import math
 
 from bokeh.palettes import Colorblind, mpl, Category20
@@ -24,7 +24,7 @@ from bokeh.transform import dodge, factor_cmap, transform
 warnings.filterwarnings('ignore')
 
 from augur.api.routes import AUGUR_API_VERSION
-from ..server import app, engine
+from ..server import app
 
 def pull_request_data_collection(repo_id, start_date, end_date):
 
@@ -67,10 +67,10 @@ def pull_request_data_collection(repo_id, start_date, end_date):
                     unlabeled_count,
                     head_ref_deleted_count,
                     comment_count,
-                    COALESCE(lines_added, 0), 
-                    COALESCE(lines_removed, 0),
+                    COALESCE(lines_added, 0) as lines_added, 
+                    COALESCE(lines_removed, 0) as lines_removed,
                     commit_count, 
-                    COALESCE(file_count, 0)
+                    COALESCE(file_count, 0) as file_count
                 FROM
                     repo,
                     repo_groups,
@@ -97,7 +97,7 @@ def pull_request_data_collection(repo_id, start_date, end_date):
 												JOIN repo on repo.repo_id = pull_requests.repo_id 
 												LEFT OUTER JOIN pull_request_message_ref on pull_requests.pull_request_id = pull_request_message_ref.pull_request_id
 												LEFT OUTER JOIN message on pull_request_message_ref.msg_id = message.msg_id
-                        WHERE repo.repo_id = 1
+                        WHERE repo.repo_id = {repo_id} 
                         GROUP BY pull_requests.pull_request_id
                     ) response_times
                     ON pull_requests.pull_request_id = response_times.pull_request_id
@@ -106,7 +106,7 @@ def pull_request_data_collection(repo_id, start_date, end_date):
 												FROM pull_request_commits, pull_requests, pull_request_meta
                         WHERE pull_requests.pull_request_id = pull_request_commits.pull_request_id
                         AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
-                        AND pull_requests.repo_id = 1
+                        AND pull_requests.repo_id  = {repo_id} 
                         AND pr_cmt_sha <> pull_requests.pr_merge_commit_sha
                         AND pr_cmt_sha <> pull_request_meta.pr_sha
                         GROUP BY pull_request_commits.pull_request_id
@@ -116,7 +116,7 @@ def pull_request_data_collection(repo_id, start_date, end_date):
                         SELECT MAX(pr_repo_meta_id), pull_request_meta.pull_request_id, pr_head_or_base, pr_src_meta_label
                         FROM pull_requests, pull_request_meta
                         WHERE pull_requests.pull_request_id = pull_request_meta.pull_request_id
-                        AND pull_requests.repo_id = 1
+                        AND pull_requests.repo_id  = {repo_id} 
                         AND pr_head_or_base = 'base'
                         GROUP BY pull_request_meta.pull_request_id, pr_head_or_base, pr_src_meta_label
                     ) base_labels
@@ -127,7 +127,7 @@ def pull_request_data_collection(repo_id, start_date, end_date):
                         WHERE cmt_commit_hash = pr_cmt_sha
                         AND pull_requests.pull_request_id = pull_request_commits.pull_request_id
                         AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
-                        AND pull_requests.repo_id = 1
+                        AND pull_requests.repo_id  = {repo_id} 
                         AND commits.repo_id = pull_requests.repo_id
                         AND commits.cmt_commit_hash <> pull_requests.pr_merge_commit_sha
                         AND commits.cmt_commit_hash <> pull_request_meta.pr_sha
@@ -137,12 +137,12 @@ def pull_request_data_collection(repo_id, start_date, end_date):
                 WHERE 
                     repo.repo_group_id = repo_groups.repo_group_id 
                     AND repo.repo_id = pull_requests.repo_id 
-                    AND repo.repo_id = 1 
+                    AND repo.repo_id  = {repo_id} 
                 ORDER BY
                     merged_count DESC
                     """)
     
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         pr_all = pd.read_sql(pr_query,  conn)
 
     pr_all[['assigned_count',

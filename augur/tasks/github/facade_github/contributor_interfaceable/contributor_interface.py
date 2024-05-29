@@ -1,19 +1,9 @@
-from requests.api import head
 from augur.tasks.github.util.github_task_session import *
-import logging
-from logging import FileHandler, Formatter, StreamHandler, log
-from psycopg2.errors import UniqueViolation
-from random import randint
 import json
-import multiprocessing
 import time
-import numpy as np
 import sqlalchemy as s
-import math
-import traceback
 from augur.application.db.models import *
-from augur.tasks.util.AugurUUID import AugurUUID, GithubUUID, UnresolvableUUID
-from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api, process_dict_response, retrieve_dict_from_endpoint
+from augur.tasks.github.util.github_paginator import hit_api, process_dict_response, retrieve_dict_from_endpoint
 # Debugger
 import traceback
 from augur.tasks.github.util.github_paginator import GithubApiResult
@@ -367,7 +357,12 @@ def get_login_with_supplemental_data(logger,db,auth, commit_data):
         return None
 
     # Grab first result and make sure it has the highest match score
-    match = login_json['items'][0]
+    try:
+        match = login_json['items'][0]
+    except IndexError as e:
+        logger.error(f"Ran into error {e} when parsing users with search url: {url}\n return dict: {login_json}")
+        return None
+
     for item in login_json['items']:
         if item['score'] > match['score']:
             match = item

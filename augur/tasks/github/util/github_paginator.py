@@ -4,8 +4,6 @@ import collections
 import httpx
 import time
 import json
-import asyncio
-import datetime
 import logging
 
 
@@ -305,8 +303,7 @@ class GithubPaginator(collections.abc.Sequence):
             return
 
         # yield the first page data
-        for data in data_list:
-            yield data
+        yield from data_list
 
         while 'next' in response.links.keys():
             next_page = response.links['next']['url']
@@ -317,9 +314,8 @@ class GithubPaginator(collections.abc.Sequence):
             if result != GithubApiResult.SUCCESS:
                 self.logger.debug("Failed to retrieve the data even though 10 attempts were given")
                 return
-
-            for data in data_list:
-                yield data
+            
+            yield from data_list
 
     def iter_pages(self) -> Generator[Tuple[Optional[List[dict]], int], None, None]:
         """Provide data from Github API via a generator that yields a page of dicts at a time.
@@ -391,9 +387,37 @@ class GithubPaginator(collections.abc.Sequence):
             if response.status_code == 204:
                 return [], response, GithubApiResult.SUCCESS
             
+            if response.status_code == 404:
+                return None, response, GithubApiResult.REPO_NOT_FOUND
+            
+            if response.status_code in [403, 429]:
+
+                if "Retry-After" in response.headers:
+
+                    retry_after = int(response.headers["Retry-After"])
+                    self.logger.info(
+                        f'\n\n\n\nSleeping for {retry_after} seconds due to secondary rate limit issue.\n\n\n\n')
+                    time.sleep(retry_after)
+
+                elif "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) == 0:
+                    current_epoch = int(time.time())
+                    epoch_when_key_resets = int(response.headers["X-RateLimit-Reset"])
+                    key_reset_time =  epoch_when_key_resets - current_epoch
+                    
+                    if key_reset_time < 0:
+                        self.logger.error(f"Key reset time was less than 0 setting it to 0.\nThe current epoch is {current_epoch} and the epoch that the key resets at is {epoch_when_key_resets}")
+                        key_reset_time = 0
+                        
+                    self.logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
+                    time.sleep(key_reset_time)
+                    num_attempts = 0
+
+                else:
+                    time.sleep(60)
+
+                continue
             
             page_data = parse_json_response(self.logger, response)
-
 
             # if the data is a list, then return it and the response
             if isinstance(page_data, list) is True:
@@ -402,6 +426,8 @@ class GithubPaginator(collections.abc.Sequence):
             # if the data is a dict then call process_dict_response, and 
             if isinstance(page_data, dict) is True:
                 dict_processing_result = process_dict_response(self.logger, response, page_data)
+
+                self.logger.info(f"Used string interogation of dict to determine result. Response code: {response.status_code}. Processing result: {dict_processing_result}. Response body: {page_data}")
 
                 if dict_processing_result == GithubApiResult.NEW_RESULT:
                     self.logger.info(f"Encountered new dict response from api on url: {url}. Response: {page_data}")
@@ -587,6 +613,7 @@ def retrieve_dict_from_endpoint(logger, key_auth, url, timeout_wait=10) -> Tuple
         page_data = parse_json_response(logger, response)
 
         if isinstance(page_data, str):
+            # TODO: Define process_str_response as outside the class and fix this reference
             str_processing_result: Union[str, List[dict]] = process_str_response(logger,page_data)
 
             if isinstance(str_processing_result, dict):

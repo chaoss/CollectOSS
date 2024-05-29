@@ -1,10 +1,10 @@
-from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash
+from flask import request, jsonify, redirect, url_for, flash, current_app
 import re
 from flask_login import current_user, login_required
 from augur.application.db.models import Repo, RepoGroup, UserGroup, UserRepo
 from augur.tasks.frontend import add_org_repo_list, parse_org_and_repo_name, parse_org_name
 from .utils import *
-from ..server import app, engine
+from ..server import app
 from augur.application.db.session import DatabaseSession
 
 @app.route('/cache/file/')
@@ -68,7 +68,7 @@ def av_add_user_repo():
 
     invalid_urls = []
 
-    with DatabaseSession(logger, engine) as session:
+    with DatabaseSession(logger, current_app.engine) as session:
         for url in urls:  
 
             # matches https://github.com/{org}/ or htts://github.com/{org}

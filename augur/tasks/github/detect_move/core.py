@@ -1,10 +1,8 @@
 from augur.tasks.github.util.github_task_session import *
 from augur.application.db.models import *
-from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.util import parse_json_response
-import logging
 from datetime import datetime
 from augur.tasks.util.collection_state import CollectionState
 from augur.application.db.util import execute_session_query

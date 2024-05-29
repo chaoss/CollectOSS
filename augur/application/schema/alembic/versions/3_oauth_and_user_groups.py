@@ -10,7 +10,6 @@ import logging
 from alembic import op
 import sqlalchemy as sa
 from augur.application.db.session import DatabaseSession
-from augur.application.db.models.augur_operations import UserGroup, UserRepo
 
 CLI_USER_ID = 1
 

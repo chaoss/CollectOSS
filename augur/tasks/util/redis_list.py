@@ -6,7 +6,6 @@ from typing import Iterable, Any, Union
 from collections.abc import MutableSequence
 from augur.tasks.init.redis_connection import redis_connection as redis
 from augur import instance_id
-from redis import exceptions
 
 
 class RedisList(MutableSequence):

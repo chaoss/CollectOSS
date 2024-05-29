@@ -1,20 +1,16 @@
 from __future__ import annotations
 import logging
 import sqlalchemy as s
-from celery import signature
-from celery import group, chain, chord, signature
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
-from augur.application.logs import AugurLogger
 
-
-@celery.task
-def refresh_materialized_views():
+@celery.task(bind=True)
+def refresh_materialized_views(self):
 
     #self.logger = AugurLogger("data_collection_jobs").get_logger()
 
-    from augur.tasks.init.celery_app import engine
+    engine = self.app.engine
 
     logger = logging.getLogger(refresh_materialized_views.__name__)
     #self.logger = logging.getLogger(refresh_materialized_views.__name__)

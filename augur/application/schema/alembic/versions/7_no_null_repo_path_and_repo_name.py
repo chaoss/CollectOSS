@@ -6,10 +6,7 @@ Create Date: 2023-02-23 10:14:08.787528
 
 """
 from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import text
-import re
 from augur.application.db.models import Repo
 
 

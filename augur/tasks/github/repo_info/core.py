@@ -1,15 +1,10 @@
 #SPDX-License-Identifier: MIT
-import logging, os, sys, time, requests, json
-from datetime import datetime
-from multiprocessing import Process, Queue
-import pandas as pd
+import json
 import sqlalchemy as s
-import httpx
-import logging
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.github.util.gh_graphql_entities import hit_api_graphql, request_graphql_dict
+from augur.tasks.github.util.gh_graphql_entities import request_graphql_dict
 from augur.application.db.models import *
 from augur.tasks.github.util.github_task_session import *
 from augur.application.db.models.augur_data import RepoBadging

@@ -1,0 +1,68 @@
+#SPDX-License-Identifier: MIT
+version: '3'
+services:
+  augur-db:
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      - "POSTGRES_DB=augur"
+      - "POSTGRES_USER=${AUGUR_DB_USER:-augur}"
+      - "POSTGRES_PASSWORD=${AUGUR_DB_PASSWORD:-augur}"
+      - "PGDATA=/var/lib/postgresql/data/pgdata"
+    ports:
+      - "${AUGUR_DB_PORT:-5432}:5432"
+    volumes:
+      - augurpostgres:/var/lib/postgresql/data
+
+  redis:
+    image: "redis:alpine"
+    ports:
+     - 6379:6379
+
+  rabbitmq:
+    image: augur-rabbitmq
+    build:
+      context: .
+      dockerfile: ./docker/rabbitmq/Dockerfile
+      args:
+      - RABBIT_MQ_DEFAULT_USER=${AUGUR_RABBITMQ_USERNAME:-augur}
+      - RABBIT_MQ_DEFAULT_PASSWORD=${AUGUR_RABBITMQ_PASSWORD:-password123}
+      - RABBIT_MQ_DEFAULT_VHOST=${AUGUR_RABBITMQ_VHOST:-augur_vhost}
+    # ports for amqp connections / management api
+    ports:
+      - 5671:5671
+      - 5672:5672
+      - 15671:15671
+      - 15672:15672
+
+  augur:
+    image: augur-new:latest
+    build:
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    volumes:
+      - facade:/augur/facade
+    restart: unless-stopped
+    ports:
+      - 5002:5000
+    environment:
+      - "AUGUR_DB=postgresql+psycopg2://${AUGUR_DB_USER:-augur}:${AUGUR_DB_PASSWORD:-augur}@augur-db:5432/augur"
+      - "AUGUR_DB_SCHEMA_BUILD=1"
+      - "AUGUR_GITHUB_API_KEY=${AUGUR_GITHUB_API_KEY}"
+      - "AUGUR_GITLAB_API_KEY=${AUGUR_GITLAB_API_KEY}"
+      - "AUGUR_GITHUB_USERNAME=${AUGUR_GITHUB_USERNAME}"
+      - "AUGUR_GITLAB_USERNAME=${AUGUR_GITLAB_USERNAME}"
+      - REDIS_CONN_STRING=redis://redis:6379
+      - RABBITMQ_CONN_STRING=amqp://${AUGUR_RABBITMQ_USERNAME:-augur}:${AUGUR_RABBITMQ_PASSWORD:-password123}@rabbitmq:5672/${AUGUR_RABBITMQ_VHOST:-augur_vhost}
+    depends_on:
+      - augur-db
+      - redis
+      - rabbitmq
+  
+volumes:
+  facade:
+    driver: local
+  augurpostgres:
+    driver: local
+
+

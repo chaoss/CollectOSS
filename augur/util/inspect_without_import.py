@@ -1,7 +1,3 @@
-import os
-import os.path as path
-
-
 #needed as a workaround since python executes imported files
 #This presents a problem since importing the phase functions themselves needs information from the config
 #while the config needs the phase names before population

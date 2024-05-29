@@ -1,19 +1,18 @@
-import time
 import logging
-import traceback
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_paginator import GithubPaginator, hit_api
+from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
-from augur.application.db.session import DatabaseSession
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
-from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestEvent, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, PullRequestMessageRef, Contributor, Repo
+from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor, Repo
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
+
+from typing import Generator, List, Dict
 
 
 platform_id = 1
@@ -32,20 +31,32 @@ def collect_pull_requests(repo_git: str) -> int:
         Repo.repo_git == repo_git).one().repo_id
 
         owner, repo = get_owner_repo(repo_git)
-        pr_data = retrieve_all_pr_data(repo_git, logger, manifest.key_auth)
 
-        if pr_data:
-            process_pull_requests(pr_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+        total_count = 0
+        all_data = []
+        for page in retrieve_all_pr_data(repo_git, logger, manifest.key_auth):
+            all_data += page
 
-            return len(pr_data)
+            if len(all_data) >= 1000:
+                process_pull_requests(all_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+                total_count += len(all_data)
+                all_data.clear()
+
+        if len(all_data):
+            process_pull_requests(all_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+            total_count += len(all_data)
+
+        if total_count > 0:
+            return total_count
         else:
             logger.info(f"{owner}/{repo} has no pull requests")
             return 0
         
+        
     
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
-def retrieve_all_pr_data(repo_git: str, logger, key_auth) -> None:
+def retrieve_all_pr_data(repo_git: str, logger, key_auth): #-> Generator[List[Dict]]:
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -55,24 +66,21 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth) -> None:
     # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
     prs = GithubPaginator(url, key_auth, logger)
 
-    all_data = []
     num_pages = prs.get_num_pages()
     for page_data, page in prs.iter_pages():
 
         if page_data is None:
-            return all_data
+            return
 
         if len(page_data) == 0:
             logger.debug(
                 f"{owner}/{repo} Prs Page {page} contains no data...returning")
             logger.info(f"{owner}/{repo} Prs Page {page} of {num_pages}")
-            return all_data
+            return
 
         logger.info(f"{owner}/{repo} Prs Page {page} of {num_pages}")
-
-        all_data += page_data
-
-    return all_data
+        
+        yield page_data
 
 
 def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
@@ -282,7 +290,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
 
 
         logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
-        message_natural_keys = ["platform_msg_id"]
+        message_natural_keys = ["platform_msg_id", "pltfrm_id"]
         message_return_columns = ["msg_id", "platform_msg_id"]
         message_return_data = augur_db.insert_data(pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
         if message_return_data is None:

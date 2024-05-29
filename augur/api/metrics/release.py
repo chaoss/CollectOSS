@@ -6,9 +6,9 @@ Metrics that provide data about releases
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.api.util import register_metric
+from flask import current_app
 
-from ..server import engine
+from augur.api.util import register_metric
 
 @register_metric()
 def releases(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -50,7 +50,7 @@ def releases(repo_group_id, repo_id=None, period='day', begin_date=None, end_dat
             ORDER BY releases.release_published_at DESC
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(releases_SQL, conn,
                                     params={'period': period, 'repo_group_id': repo_group_id,
                                             'begin_date': begin_date, 'end_date': end_date })
@@ -80,7 +80,7 @@ def releases(repo_group_id, repo_id=None, period='day', begin_date=None, end_dat
             ORDER BY releases.release_published_at DESC
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(releases_SQL, conn,
                                     params={'period': period, 'repo_id': repo_id,
                                             'begin_date': begin_date, 'end_date': end_date})
@@ -127,7 +127,7 @@ def tag_only_releases(repo_group_id, repo_id=None, period='day', begin_date=None
             ORDER BY releases.release_published_at DESC
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(releases_SQL, conn,
                                     params={'period': period, 'repo_group_id': repo_group_id,
                                             'begin_date': begin_date, 'end_date': end_date })
@@ -150,7 +150,7 @@ def tag_only_releases(repo_group_id, repo_id=None, period='day', begin_date=None
             ORDER BY releases.release_published_at DESC
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(releases_SQL, conn,
                                 params={'period': period, 'repo_id': repo_id,
                                         'begin_date': begin_date, 'end_date': end_date})

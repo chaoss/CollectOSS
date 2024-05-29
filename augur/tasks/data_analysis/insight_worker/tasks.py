@@ -1,11 +1,7 @@
 # SPDX-License-Identifier: MIT
-from multiprocessing import Process, Queue
-from urllib.parse import urlparse
 import requests
 import pandas as pd
 import sqlalchemy as s
-from sqlalchemy.ext.automap import automap_base
-from sqlalchemy import MetaData, and_
 import logging, json
 import numpy as np
 import scipy.stats
@@ -15,7 +11,7 @@ import warnings
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.db.lib import get_value
 from augur.application.db.models import Repo, ChaossMetricStatus, RepoInsight, RepoInsightsRecord
 from augur.application.db.util import execute_session_query
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
@@ -23,11 +19,11 @@ from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 warnings.filterwarnings('ignore')
 
 
-@celery.task(base=AugurMlRepoCollectionTask)
-def insight_task(repo_git):
+@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+def insight_task(self, repo_git):
 
     logger = logging.getLogger(insight_task.__name__)
-    from augur.tasks.init.celery_app import engine
+    engine = self.app.engine
 
     with DatabaseSession(logger, engine) as session:
         insight_model(repo_git, logger, engine, session)
@@ -44,17 +40,15 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
     metrics = {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
                 "reviews": "pull_requests", "contributors-new": "new_contributors"}
 
-    config = AugurConfig(logger, session)
-
     query = session.query(Repo).filter(Repo.repo_git == repo_git)
     repo_id = execute_session_query(query, 'one').repo_id
 
-    anomaly_days = config.get_value('Insight_Task', 'anomaly_days')
-    training_days = config.get_value('Insight_Task', 'training_days')
-    contamination = config.get_value('Insight_Task', 'contamination')
-    confidence = config.get_value('Insight_Task', 'confidence_interval') / 100
-    api_host = config.get_value('Server', 'host')
-    api_port = config.get_value('Server', 'port')
+    anomaly_days = get_value('Insight_Task', 'anomaly_days')
+    training_days = get_value('Insight_Task', 'training_days')
+    contamination = get_value('Insight_Task', 'contamination')
+    confidence = get_value('Insight_Task', 'confidence_interval') / 100
+    api_host = get_value('Server', 'host')
+    api_port = get_value('Server', 'port')
 
     logger.info("Discovering insights for repo {}\n".format(repo_git))
 
@@ -114,7 +108,9 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
                 repo_id = :repo_id
                 AND ri_date < :min_date
     """)
-    result = engine.execute(delete_record_SQL, repo_id=repo_id, min_date=min_date)
+
+    with engine.connect() as conn:
+        result = conn.execute(delete_record_SQL, parameters=dict(repo_id=repo_id, min_date=min_date))
 
     logger.info("Deleting out of date data points ...\n")
     delete_points_SQL = s.sql.text("""
@@ -135,8 +131,8 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
             AND repo_insights.ri_field = to_delete.ri_field
     """)
 
-    with engine.connect as conn:
-        result = conn.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
+    with engine.connect() as conn:
+        result = conn.execute(delete_points_SQL, parameters=dict(repo_id=repo_id, min_date=min_date))
 
     # get table values to check for dupes later on
 
@@ -260,7 +256,7 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
                         repo_insight_record_obj.ri_id))
 
                 # Send insight to Jonah for slack bot
-                send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean), logger,engine)
+                send_insight(record, abs(next_recent_anomaly.iloc[0][metric] - mean), logger,engine, anomaly_days, send_insights)
 
                 insight_count += 1
             else:
@@ -522,7 +518,7 @@ def confidence_interval_insights(logger, engine):
             else:
                 logger.info("Key: {} has empty raw_values, should not have key here".format(key))
 
-def send_insight(insight, units_from_mean, logger, engine):
+def send_insight(insight, units_from_mean, logger, engine, anomaly_days, send_insights):
     try:
         repoSQL = s.sql.text("""
             SELECT repo_git, rg_name 

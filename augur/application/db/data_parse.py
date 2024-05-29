@@ -2,7 +2,7 @@
 This file contains functions that take the api response 
 and return only the data that the database needs
 """
-from augur.tasks.util.AugurUUID import GithubUUID
+from augur.tasks.util.AugurUUID import GithubUUID, GitlabUUID
 import sqlalchemy as s
 
 from typing import List
@@ -138,9 +138,8 @@ def extract_needed_merge_request_assignee_data(assignees: List[dict], repo_id: i
     for assignee in assignees:
 
         assignee_dict = {
-                'contrib_id': None,
+                'contrib_id': assignee["cntrb_id"],
                 'repo_id': repo_id,
-                # TODO: Temporarily setting this to id which the id of the contributor, unitl we can get the contrib_id set and create a unique on the contrib_id and the pull_request_id
                 'pr_assignee_src_id': assignee["id"],
                 'tool_source': tool_source,
                 'tool_version': tool_version,
@@ -375,7 +374,7 @@ def extract_needed_gitlab_issue_assignee_data(assignees: List[dict], repo_id: in
     for assignee in assignees:
 
         assignee_dict = {
-            "cntrb_id": None,
+            "cntrb_id": assignee["cntrb_id"],
             "tool_source": tool_source,
             "tool_version": tool_version,
             "data_source": data_source,
@@ -689,6 +688,51 @@ def extract_needed_contributor_data(contributor, tool_source, tool_version, data
 
     return contributor
 
+def extract_needed_gitlab_contributor_data(contributor, tool_source, tool_version,  data_source):
+
+    if not contributor:
+        return None
+
+    cntrb_id = GitlabUUID()   
+    cntrb_id["user"] = contributor["id"]
+
+    contributor = {
+            "cntrb_id": cntrb_id.to_UUID(),
+            "cntrb_login": contributor['username'],
+            "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,
+            "cntrb_email": contributor['email'] if 'email' in contributor else None,
+            "cntrb_company": contributor['company'] if 'company' in contributor else None,
+            "cntrb_location": contributor['location'] if 'location' in contributor else None,
+            # "cntrb_type": , dont have a use for this as of now ... let it default to null
+            "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
+            "gh_user_id": contributor['id'],
+            "gh_login": str(contributor['username']),  ## cast as string by SPG on 11/28/2021 due to `nan` user
+            "gh_url": contributor['web_url'],
+            "gh_html_url": None,
+            "gh_node_id": None,
+            "gh_avatar_url": contributor['avatar_url'],
+            "gh_gravatar_id": None,
+            "gh_followers_url": None,
+            "gh_following_url": None,
+            "gh_gists_url": None,
+            "gh_starred_url": None,
+            "gh_subscriptions_url": None,
+            "gh_organizations_url": None,
+            "gh_repos_url": None,
+            "gh_events_url": None,
+            "gh_received_events_url": None,
+            "gh_type": None,
+            "gh_site_admin": None,
+            "cntrb_last_used" : None,
+            "cntrb_full_name" : None,
+            "tool_source": tool_source,
+            "tool_version": tool_version,
+            "data_source": data_source
+        }
+
+    return contributor
+
+
 def extract_needed_clone_history_data(clone_history_data:List[dict], repo_id:int):
 
     if len(clone_history_data) == 0:
@@ -762,8 +806,7 @@ def extract_needed_pr_data_from_gitlab_merge_request(pr, repo_id, tool_source, t
         'pr_src_state': pr['state'],
         'pr_src_locked': pr['discussion_locked'],
         'pr_src_title': pr['title'],
-        # TODO: Add contributor logic for gitlab
-        'pr_augur_contributor_id': None,
+        'pr_augur_contributor_id': pr["cntrb_id"],
         'pr_body': pr['description'],
         'pr_created_at': pr['created_at'],
         'pr_updated_at': pr['updated_at'],
@@ -811,7 +854,7 @@ def extract_needed_issue_data_from_gitlab_issue(issue: dict, repo_id: int, tool_
 
     issue_dict = {
             "repo_id": repo_id,
-            "reporter_id": None,
+            "reporter_id": issue['cntrb_id'],
             "pull_request": None,
             "pull_request_id": None,
             "created_at": issue['created_at'],
@@ -1129,7 +1172,7 @@ def extract_needed_gitlab_message_data(comment: dict, platform_id: int, tool_sou
         "pltfrm_id": platform_id,
         "msg_text": comment['body'],
         "msg_timestamp": comment['created_at'],
-        "cntrb_id": None,
+        "cntrb_id": comment["cntrb_id"],
         "platform_msg_id": int(comment['id']),
         "tool_source": tool_source,
         "tool_version": tool_version,

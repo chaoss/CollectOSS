@@ -6,11 +6,11 @@ General repo metrics like provides general overview data about repositories, inc
 import datetime
 import sqlalchemy as s
 import pandas as pd
-import math
 import logging
+from flask import current_app
 
 from augur.api.util import register_metric
-from ..server import engine
+
 
 logger = logging.getLogger("augur")
 
@@ -46,7 +46,7 @@ def code_changes(repo_group_id, repo_id=None, period='week', begin_date=None, en
             ORDER BY week
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(code_changes_SQL, conn, params={'repo_group_id': repo_group_id, 'period': period,
                                                                     'begin_date': begin_date, 'end_date': end_date})
         results['week'] = results['week'].apply(lambda x: x - 1)
@@ -68,7 +68,7 @@ def code_changes(repo_group_id, repo_id=None, period='week', begin_date=None, en
             ORDER BY week
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(code_changes_SQL, conn, params={'repo_id': repo_id, 'period': period,
                                                                         'begin_date': begin_date, 'end_date': end_date})
 
@@ -111,7 +111,7 @@ def code_changes_lines(repo_group_id, repo_id=None, period='day', begin_date=Non
             ORDER BY commits.repo_id, date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(code_changes_lines_SQL, conn, params={'repo_group_id': repo_group_id, 'period': period,
                                                                         'begin_date': begin_date, 'end_date': end_date})
 
@@ -131,7 +131,7 @@ def code_changes_lines(repo_group_id, repo_id=None, period='day', begin_date=Non
             ORDER BY date;
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(code_changes_lines_SQL, conn, params={'repo_id': repo_id, 'period': period,
                                                                             'begin_date': begin_date, 'end_date': end_date})
         return results
@@ -164,7 +164,7 @@ def sub_projects(repo_group_id, repo_id=None, begin_date=None, end_date=None):
                 AND repo_added BETWEEN :begin_date AND :end_date
             """)
 
-            with engine.connect() as conn:
+            with current_app.engine.connect() as conn:
                 results = pd.read_sql(sub_projectsSQL, conn, params={'repo_id': repo_id,
                                                                         'begin_date': begin_date, 'end_date': end_date})
         else:
@@ -175,7 +175,7 @@ def sub_projects(repo_group_id, repo_id=None, begin_date=None, end_date=None):
                 AND repo_added BETWEEN :begin_date AND :end_date
             """)
 
-            with engine.connect() as conn:
+            with current_app.engine.connect() as conn:
                 results = pd.read_sql(sub_projectsSQL, conn, params={'repo_group_id': repo_group_id,
                                                                         'begin_date': begin_date, 'end_date': end_date})
     return results
@@ -197,9 +197,110 @@ def sbom_download(repo_group_id, repo_id=None):
     logger.debug(dosocs_SQL)
     params = {'repo_id': repo_id}
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         return pd.read_sql(dosocs_SQL, conn, params=params)
     #return [json.dumps(license_information)]
+
+
+def calculate_nadia_project_category(unique_contributor_count,stargazers_count):
+    """
+    Calculates the correct nadia eghbal project label based on Microsoft's cutoff
+    values for the taxonomy. 
+
+    A Club is a project with a lot of dev activity but not a lot of users
+
+    A Federation is a project that has a lot of contributors and users
+
+    A Stadium is a project with a lot of users but not a lot of devs
+
+    A toy is a project with not a lot of devs or users
+
+    ContribMid is a misc category.
+
+    :param unique_contributor_count: The count of contributors the repo has
+    :param stargazers_count: The count of stargazers the repo has
+    :return: String containing the project category
+    """
+    
+    ratio_stargazers_to_contribs = stargazers_count / unique_contributor_count
+
+    if unique_contributor_count > 75 and ratio_stargazers_to_contribs < 2:
+        return "club"
+    elif unique_contributor_count > 75 and ratio_stargazers_to_contribs > 2 and stargazers_count > 1000:
+        return "federation"
+    elif unique_contributor_count < 6 and stargazers_count > 100:
+        return "stadium"
+    elif unique_contributor_count < 6 and stargazers_count < 100:
+        return "toy"
+    
+    #"ContribMid" is the label for repos that don't make sense in the other
+    #categories. Contribs > 6 and < 75
+    return "contribMid"
+
+
+
+@register_metric()
+def nadia_project_labeling_badge(repo_group_id, repo_id=None):
+    """Returns the project type of the desired repo according to 
+    Microsoft's implementation of 'Road's and Bridges' style
+    project catagorization
+
+    :param repo_group_id: The repository's repo_group_id
+    :param repo_id: The repository's repo_id
+
+    :return: JSON object with project label and url to badge
+    """
+
+    if not repo_id:
+        return {}
+
+    get_unique_contributor_ids_sql = s.sql.text("""
+        SELECT repo_id, COUNT(*) AS repo_contributor_count FROM
+        (
+        SELECT cntrb_id, repo_id, COUNT(*) FROM explorer_contributor_actions GROUP BY cntrb_id, repo_id
+        ) a
+        WHERE repo_id= :repo_id_param
+        GROUP BY repo_id
+        ORDER BY repo_id;
+    """).bindparams(repo_id_param=repo_id)
+
+    with current_app.engine.connect() as conn:
+        raw_df = pd.read_sql(get_unique_contributor_ids_sql, conn)
+        #print(raw_df)
+        try:
+            unique_contribs = int(raw_df.at[0,'repo_contributor_count'])
+        except KeyError:
+            result = {
+                "nadia_badge_level": "unknown"
+            }
+            return pd.DataFrame(result, index=[0])
+    
+    stars_count_SQL = s.sql.text("""
+            SELECT repo_name, stars_count AS stars
+            FROM repo_info JOIN repo ON repo_info.repo_id = repo.repo_id
+            WHERE repo_info.repo_id = :repo_id_param
+            ORDER BY repo_info.data_collection_date DESC
+            LIMIT 1
+    """).bindparams(repo_id_param=repo_id)
+
+    with current_app.engine.connect() as conn:
+        raw_df = pd.read_sql(stars_count_SQL, conn)
+
+        if raw_df.empty:
+            return {"status": "Not enough data"}
+
+        stargazers_count = int(raw_df.at[0,'stars'])
+        repo_name = str(raw_df.at[0,'repo_name'])
+    
+    category = calculate_nadia_project_category(unique_contribs, stargazers_count)
+
+    result = {
+        "repo_name" : repo_name,
+        "nadia_badge_level": category
+    }
+
+    return pd.DataFrame(result, index=[0])
+
 
 @register_metric()
 def cii_best_practices_badge(repo_group_id, repo_id=None):
@@ -226,7 +327,7 @@ def cii_best_practices_badge(repo_group_id, repo_id=None):
             LIMIT 1
         """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         raw_df = pd.read_sql(cii_best_practices_badge_SQL, conn, params={'repo_id': repo_id})
 
     if len(raw_df) == 0:
@@ -267,7 +368,7 @@ def forks(repo_group_id, repo_id=None):
             ORDER BY repo_info.repo_id, date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(forks_SQL, conn, params={'repo_group_id': repo_group_id})
         return results
 
@@ -282,7 +383,7 @@ def forks(repo_group_id, repo_id=None):
             ORDER BY date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(forks_SQL, conn, params={'repo_id': repo_id})
         return results
 
@@ -307,7 +408,7 @@ def fork_count(repo_group_id, repo_id=None):
                  WHERE  repo_group_id = :repo_group_id)
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(fork_count_SQL, conn, params={'repo_group_id': repo_group_id})
         return results
     else:
@@ -319,7 +420,7 @@ def fork_count(repo_group_id, repo_id=None):
             LIMIT 1
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(fork_count_SQL, conn, params={'repo_id': repo_id})
         return results
 
@@ -338,7 +439,7 @@ def languages(repo_group_id, repo_id=None):
             WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(languages_SQL, conn, params={'repo_group_id': repo_group_id})
         return results
 
@@ -349,7 +450,7 @@ def languages(repo_group_id, repo_id=None):
             WHERE repo_id = :repo_id
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(languages_SQL, conn, params={'repo_id': repo_id})
         return results
 
@@ -386,7 +487,7 @@ def license_files(license_id, spdx_binary, repo_group_id, repo_id=None,):
                 b.license_id in ( 369,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,370,371,372,373,374,375,376,377,378,379,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,398,399,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473,474,475,476,477,478,479,480,481,482));
                 """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(license_data_SQL, conn, params={'repo_id': repo_id, 'spdx_binary': spdx_binary, 'license_id': license_id})
         return results
 
@@ -456,7 +557,7 @@ def license_declared(repo_group_id, repo_id=None):
     short_name;
     """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(license_declared_SQL, conn, params={'repo_id': repo_id})
     return results
 
@@ -541,7 +642,7 @@ def license_coverage(repo_group_id, repo_id=None):
             GROUP BY a.name, a.licensed, a.licensed, b.total
         """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(license_declared_SQL, conn, params={'repo_id': repo_id, 'repo_group_id':repo_group_id})
 
     return results
@@ -603,7 +704,7 @@ def license_count(repo_group_id, repo_id=None):
             GROUP BY a.name, a.number_of_license, a.licensed, b.total
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(license_declared_SQL, conn, params={'repo_id': repo_id, 'repo_group_id':repo_group_id})
 
         return results
@@ -632,7 +733,7 @@ def stars(repo_group_id, repo_id=None):
             ORDER BY repo_info.repo_id, date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(stars_SQL, conn, params={'repo_group_id': repo_group_id})
         return results
 
@@ -647,7 +748,7 @@ def stars(repo_group_id, repo_id=None):
             ORDER BY date
         """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(stars_SQL, conn, params={'repo_id': repo_id})
     return results
 
@@ -672,7 +773,7 @@ def stars_count(repo_group_id, repo_id=None):
                  WHERE  repo_group_id = :repo_group_id)
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(stars_count_SQL, conn, params={'repo_group_id': repo_group_id})
         return results
     else:
@@ -684,7 +785,7 @@ def stars_count(repo_group_id, repo_id=None):
             LIMIT 1
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(stars_count_SQL, conn, params={'repo_id': repo_id})
         return results
 
@@ -711,7 +812,7 @@ def watchers(repo_group_id, repo_id=None):
             ORDER BY repo_info.repo_id, date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(watchers_SQL, conn, params={'repo_group_id': repo_group_id})
         return results
 
@@ -726,7 +827,7 @@ def watchers(repo_group_id, repo_id=None):
             ORDER BY date
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(watchers_SQL, conn, params={'repo_id': repo_id})
         return results
 
@@ -751,7 +852,7 @@ def watchers_count(repo_group_id, repo_id=None):
                  WHERE  repo_group_id = :repo_group_id)
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(watchers_count_SQL, conn, params={'repo_group_id': repo_group_id})
         return results
     else:
@@ -763,7 +864,7 @@ def watchers_count(repo_group_id, repo_id=None):
             LIMIT 1
         """)
 
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(watchers_count_SQL, conn, params={'repo_id': repo_id})
         return results
 
@@ -808,7 +909,7 @@ calendar year (a new repo in that year), show all commits for that year (total f
             LIMIT 10
         """)
     
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(cdRgNewrepRankedCommitsSQL, conn, params={ "repo_group_id": repo_group_id,
         "repo_id": repo_id, "calendar_year": calendar_year})
     return results
@@ -905,7 +1006,7 @@ def annual_lines_of_code_count_ranked_by_repo_in_repo_group(repo_group_id, repo_
             """)
 
     
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(cdRgTpRankedCommitsSQL, conn, params={ "repo_group_id": repo_group_id,
             "repo_id": repo_id})
     return results
@@ -959,7 +1060,7 @@ def lines_of_code_commit_counts_by_calendar_year_grouped(repo_url, calendar_year
             GROUP BY week
         """)
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(cdRepTpIntervalLocCommitsSQL, conn, params={"repourl": '%{}%'.format(repo_url), 'calendar_year': calendar_year})
     return results
 
@@ -980,7 +1081,7 @@ def average_weekly_commits(repo_group_id=None, repo_id=None, calendar_year=None)
         ORDER BY repo_name
     """.format(extra_and))
 
-    with engine.connect() as conn:
+    with current_app.engine.connect() as conn:
         results = pd.read_sql(average_weekly_commits_sql, conn, params={"repo_group_id": repo_group_id,
                 "repo_id": repo_id, "calendar_year": calendar_year})
     return results
@@ -1065,7 +1166,7 @@ def aggregate_summary(repo_group_id, repo_id=None, begin_date=None, end_date=Non
             ) commit_data
         """)
         
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(summarySQL, conn, params={'repo_group_id': repo_group_id,
                                                             'begin_date': begin_date, 'end_date': end_date})
         return results
@@ -1135,7 +1236,7 @@ def aggregate_summary(repo_group_id, repo_id=None, begin_date=None, end_date=Non
             ) commit_data
         """)
         
-        with engine.connect() as conn:
+        with current_app.engine.connect() as conn:
             results = pd.read_sql(summarySQL, conn, params={'repo_id': repo_id,
                                                             'begin_date': begin_date, 'end_date': end_date})
         return results
