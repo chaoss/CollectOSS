@@ -63,7 +63,7 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth):
             'values' : values
         }
 
-        
+        logger.debug(f"query: {query}; key_auth: {key_auth}; params: {params}")
         file_collection = GraphQlPageCollection(query, key_auth, logger,bind=params)
 
         logger.debug(f"Results of file_collection: {file_collection}")
