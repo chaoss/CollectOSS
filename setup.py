@@ -86,7 +86,8 @@ setup(
         'Werkzeug~=2.0.0',
         "pylint==2.15.5",
 	    "mdpdf==0.0.18",
-        "typing-extensions==4.7.1"
+        "typing-extensions==4.7.1",
+        "tenacity==8.3.0",
     ],
     extras_require={
         "dev": [
