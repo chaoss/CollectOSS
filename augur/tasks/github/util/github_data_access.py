@@ -2,7 +2,7 @@ import logging
 import time
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, RetryError
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, urlencode
 
 
 class RatelimitException(Exception):
@@ -18,14 +18,32 @@ class GithubDataAccess:
         self.logger = logger
         self.key_manager = key_manager
 
+    def get_resource_count(self, url):
+
+        # set per_page to 100 explicitly so we know each page is 100 long
+        params = {"per_page": 100}
+        url = self.__add_query_params(url, params)
+
+        num_pages = self.get_resource_page_count(url)
+
+        # get data for last page
+        params = {"page": num_pages}
+        url = self.__add_query_params(url, params)
+
+        data = self.get_resource(url)
+
+        return (100 * (num_pages -1)) + len(data)
+
     def paginate_resource(self, url):
 
         response = self.make_request_with_retries(url)
         data = response.json()
+
+        # need to ensure data is a list so yield from works properly
         if not isinstance(data, list):
             raise Exception(f"GithubApiHandler.paginate_resource must be used with url that returns a list. Use GithubApiHandler.get_resource to retrieve data that is not paginated. The url of {url} returned a {type(data)}.")
 
-        yield data
+        yield from data
 
         while 'next' in response.links.keys():
 
@@ -33,10 +51,12 @@ class GithubDataAccess:
 
             response = self.make_request_with_retries(next_page)
             data = response.json()
+
+            # need to ensure data is a list so yield from works properly
             if not isinstance(data, list):
                 raise Exception(f"GithubApiHandler.paginate_resource must be used with url that returns a list. Use GithubApiHandler.get_resource to retrieve data that is not paginated. The url of {url} returned a {type(data)}. ")
 
-            yield data
+            yield from data
 
         return 
     
@@ -134,6 +154,25 @@ class GithubDataAccess:
             time.sleep(key_reset_time)
         else:
             time.sleep(60)
+
+    def __add_query_params(self, url: str, additional_params: dict) -> str:
+        """Add query params to a url.
+
+        Args:
+            url: the url that is being modified
+            additional_params: key value pairs specififying the paramaters to be added
+
+        Returns:
+            The url with the key value pairs in additional_params added as query params
+        """
+        url_components = urlparse(url)
+        original_params = parse_qs(url_components.query)
+        # Before Python 3.5 you could update original_params with
+        # additional_params, but here all the variables are immutable.
+        merged_params = {**original_params, **additional_params}
+        updated_query = urlencode(merged_params, doseq=True)
+        # _replace() is how you can create a new NamedTuple with a changed field
+        return url_components._replace(query=updated_query).geturl()
 
         
 
