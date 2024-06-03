@@ -131,7 +131,7 @@ class CollectionRequest:
 
     def get_valid_repos(self,session):
 
-        active_repo_count = get_active_repo_count(session)
+        active_repo_count = get_active_repo_count(self.name)
         limit = self.max_repo-active_repo_count
 
         if limit <= 0:
