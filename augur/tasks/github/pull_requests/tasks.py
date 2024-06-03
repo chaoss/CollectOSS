@@ -4,7 +4,7 @@ from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
@@ -34,8 +34,9 @@ def collect_pull_requests(repo_git: str) -> int:
 
         total_count = 0
         all_data = []
-        for page in retrieve_all_pr_data(repo_git, logger, manifest.key_auth):
-            all_data += page
+        for pr in retrieve_all_pr_data(repo_git, logger, manifest.key_auth):
+            
+            all_data.append(pr)
 
             if len(all_data) >= 1000:
                 process_pull_requests(all_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
@@ -63,24 +64,15 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth): #-> Generator[List[Di
     logger.info(f"Collecting pull requests for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc"
-    # returns an iterable of all prs at this url (this essentially means you can treat the prs variable as a list of the prs)
-    prs = GithubPaginator(url, key_auth, logger)
 
-    num_pages = prs.get_num_pages()
-    for page_data, page in prs.iter_pages():
+    github_data_access = GithubDataAccess(key_auth, logger)
 
-        if page_data is None:
-            return
+    num_pages = github_data_access.get_resource_page_count(url)
 
-        if len(page_data) == 0:
-            logger.debug(
-                f"{owner}/{repo} Prs Page {page} contains no data...returning")
-            logger.info(f"{owner}/{repo} Prs Page {page} of {num_pages}")
-            return
+    logger.info(f"{owner}/{repo}: Retrieving {num_pages} pages of pull requests")
 
-        logger.info(f"{owner}/{repo} Prs Page {page} of {num_pages}")
-        
-        yield page_data
+    # returns a generator so this method can be used by doing for x in retrieve_all_pr_data()
+    return github_data_access.paginate_resource(url)
 
 
 def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
