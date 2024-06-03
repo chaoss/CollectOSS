@@ -129,13 +129,9 @@ class CollectionRequest:
         if name == "facade":
             self.new_status = CollectionState.UPDATE.value
 
-    def get_active_repo_count(self,session):
-        return len(session.query(CollectionStatus).filter(getattr(CollectionStatus,f"{self.name}_status" ) == CollectionState.COLLECTING.value).all())
-
-
     def get_valid_repos(self,session):
 
-        active_repo_count = self.get_active_repo_count(session)
+        active_repo_count = get_active_repo_count(session)
         limit = self.max_repo-active_repo_count
 
         if limit <= 0:
