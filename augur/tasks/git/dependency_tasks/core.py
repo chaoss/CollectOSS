@@ -86,7 +86,6 @@ def generate_scorecard(logger, repo_git):
         key_handler = GithubApiKeyHandler(logger)       
         os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
     
-    required_output = parse_json_from_subprocess_call(logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
     
     logger.info('adding to database...')
     logger.debug(f"output: {required_output}")
