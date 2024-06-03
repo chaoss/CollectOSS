@@ -100,7 +100,7 @@ def start(ctx, disable_collection, development, port):
         create_collection_status_records.si().apply_async()
         time.sleep(3)
 
-        contributor_breadth_model.si().apply_async()
+        #contributor_breadth_model.si().apply_async()
 
         # start cloning repos when augur starts
         clone_repos.si().apply_async()
@@ -317,7 +317,7 @@ def assign_orphan_repos_to_default_user(session):
     repos = session.execute_sql(query).fetchall()
 
     for repo in repos:
-        UserRepo.insert(session,repo[0],1)
+        UserRepo.insert(session, repo[0],1)
 
 
 @cli.command('export-env')

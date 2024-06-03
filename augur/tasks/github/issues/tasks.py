@@ -8,59 +8,43 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.models import Issue, IssueLabel, IssueAssignee, Contributor, Repo
+from augur.application.db.models import Issue, IssueLabel, IssueAssignee, Contributor
 from augur.application.config import get_development_flag
-from augur.application.db.util import execute_session_query
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
+
 
 development = get_development_flag()
 
 @celery.task(base=AugurCoreRepoCollectionTask)
 def collect_issues(repo_git : str) -> int:
 
-
     logger = logging.getLogger(collect_issues.__name__) 
-    with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-        logger.info(f'this is the manifest.key_auth value: {str(manifest.key_auth)}')
+    owner, repo = get_owner_repo(repo_git)
 
-        try:
-        
-            query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-            repo_obj = execute_session_query(query, 'one')
-            repo_id = repo_obj.repo_id
+    key_auth = GithubRandomKeyAuth(logger)
 
-            #try this
-            # the_key = manifest.key_auth
-            # try: 
-            #     randomon = GithubApiKeyHandler(augur_db.session)
-            #     the_key = randomon.get_random_key()
-            #     logger.info(f'The Random Key {the_key}')
-            # except Exception as e: 
-            #     logger.info(f'error: {e}')
-            #     the_key = manifest.key_auth
-            #     pass 
+    logger.info(f'this is the manifest.key_auth value: {str(key_auth)}')
 
-            owner, repo = get_owner_repo(repo_git)
-        
-            issue_data = retrieve_all_issue_data(repo_git, logger, manifest.key_auth)
-            #issue_data = retrieve_all_issue_data(repo_git, logger, the_key)
+    try:    
+        issue_data = retrieve_all_issue_data(repo_git, logger, key_auth)
 
-            if issue_data:
-                total_issues = len(issue_data)
-                process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger, augur_db)
+        if issue_data:
+            total_issues = len(issue_data)
+            process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger)
 
-                return total_issues
-            else:
-                logger.info(f"{owner}/{repo} has no issues")
-                return 0
-        except Exception as e:
-            logger.error(f"Could not collect issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
-            return -1
+            return total_issues
+        else:
+            logger.info(f"{owner}/{repo} has no issues")
+            return 0
+    except Exception as e:
+        logger.error(f"Could not collect issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+        return -1
 
 
 
@@ -99,7 +83,7 @@ def retrieve_all_issue_data(repo_git, logger, key_auth) -> None:
 
     return all_data
     
-def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
+def process_issues(issues, task_name, repo_id, logger) -> None:
     
     # get repo_id or have it passed
     tool_source = "Issue Task"
@@ -153,7 +137,7 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
 
     # insert contributors from these issues
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
                         
 
     # insert the issues into the issues table. 
@@ -164,7 +148,7 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
     issue_return_columns = ["issue_url", "issue_id"]
     issue_string_columns = ["issue_title", "issue_body"]
     try:
-        issue_return_data = augur_db.insert_data(issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
+        issue_return_data = bulk_insert_dicts(logger, issue_dicts, Issue, issue_natural_keys, return_columns=issue_return_columns, string_fields=issue_string_columns)
     except IntegrityError as e:
         logger.error(f"Ran into integrity error:{e} \n Offending data: \n{issue_dicts}")
 
@@ -197,13 +181,13 @@ def process_issues(issues, task_name, repo_id, logger, augur_db) -> None:
     # we are using label_src_id and issue_id to determine if the label is already in the database.
     issue_label_natural_keys = ['label_src_id', 'issue_id']
     issue_label_string_fields = ["label_text", "label_description"]
-    augur_db.insert_data(issue_label_dicts, IssueLabel,
+    bulk_insert_dicts(logger, issue_label_dicts, IssueLabel,
                         issue_label_natural_keys, string_fields=issue_label_string_fields)
 
     # inserting issue assignees
     # we are using issue_assignee_src_id and issue_id to determine if the label is already in the database.
     issue_assignee_natural_keys = ['issue_assignee_src_id', 'issue_id']
-    augur_db.insert_data(issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
+    bulk_insert_dicts(logger, issue_assignee_dicts, IssueAssignee, issue_assignee_natural_keys)
 
 
 

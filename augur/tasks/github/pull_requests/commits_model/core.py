@@ -2,25 +2,20 @@ import sqlalchemy as s
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.util import execute_session_query
+from augur.application.db.lib import bulk_insert_dicts, fetchall_data_from_sql_text
 
-
-def pull_request_commits_model(repo_id,logger, augur_db, key_auth):
+def pull_request_commits_model(repo,logger, key_auth):
     
     # query existing PRs and the respective url we will append the commits url to
     pr_url_sql = s.sql.text("""
             SELECT DISTINCT pr_url, pull_requests.pull_request_id
             FROM pull_requests--, pull_request_meta
             WHERE repo_id = :repo_id
-        """).bindparams(repo_id=repo_id)
+        """).bindparams(repo_id=repo.repo_id)
     pr_urls = []
     #pd.read_sql(pr_number_sql, self.db, params={})
 
-    pr_urls = augur_db.fetchall_data_from_sql_text(pr_url_sql)#session.execute_sql(pr_number_sql).fetchall()
-    
-    query = augur_db.session.query(Repo).filter(Repo.repo_id == repo_id)
-    repo = execute_session_query(query, 'one')
-
+    pr_urls = fetchall_data_from_sql_text(pr_url_sql)
     owner, name = get_owner_repo(repo.repo_git)
 
     task_name = f"{owner}/{name} Pr commits"
@@ -49,7 +44,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth):
                     'tool_source': 'pull_request_commits_model',
                     'tool_version': '0.41',
                     'data_source': 'GitHub API',
-                    'repo_id': repo_id,
+                    'repo_id': repo.repo_id,
                 }
 
                 all_data.append(pr_commit_row)
@@ -57,7 +52,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth):
     if len(all_data) > 0:
         logger.info(f"{task_name}: Inserting {len(all_data)} rows")
         pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
-        augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
+        bulk_insert_dicts(logger, all_data,PullRequestCommit,pr_commits_natural_keys)
             
 
 

@@ -1,24 +1,31 @@
 from datetime import datetime
 import os
 from augur.application.db.models import *
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value
 from augur.tasks.util.worker_util import parse_json_from_subprocess_call
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 
-def value_model(session,repo_git,repo_id, path):
+def value_model(logger,repo_git):
     """Runs scc on repo and stores data in database
         :param repo_id: Repository ID
-        :param path: absolute file path of the Repostiory
     """
+    logger.info(f"repo_git: {repo_git}")
 
-    session.logger.info('Generating value data for repo')
-    session.logger.info(f"Repo ID: {repo_id}, Path: {path}")
-    session.logger.info('Running scc...')
+    repo = get_repo_by_repo_git(repo_git)
+    repo_id = repo.repo_id
+
+    path = get_absolute_repo_path(get_value("Facade", "repo_directory"),repo_id,repo.repo_path,repo.repo_name)
+
+    logger.info('Generating value data for repo')
+    logger.info(f"Repo ID: {repo_id}, Path: {path}")
+    logger.info('Running scc...')
 
     path_to_scc = os.environ['HOME'] + '/scc'
 
-    required_output = parse_json_from_subprocess_call(session.logger,['./scc', '-f','json','--by-file', path], cwd=path_to_scc)
+    required_output = parse_json_from_subprocess_call(logger,['./scc', '-f','json','--by-file', path], cwd=path_to_scc)
     
-    session.logger.info('adding scc data to database... ')
-    session.logger.debug(f"output: {required_output}")
+    logger.info('adding scc data to database... ')
+    logger.debug(f"output: {required_output}")
 
     to_insert = []
     for record in required_output:
@@ -42,6 +49,6 @@ def value_model(session,repo_git,repo_id, path):
 
             to_insert.append(repo_labor)
     
-    session.insert_data(to_insert, RepoLabor, ["repo_id", "rl_analysis_date", "file_path", "file_name" ])
+    bulk_insert_dicts(logger, to_insert, RepoLabor, ["repo_id", "rl_analysis_date", "file_path", "file_name" ])
 
-    session.logger.info(f"Done generating scc data for repo {repo_id} from path {path}")
+    logger.info(f"Done generating scc data for repo {repo_id} from path {path}")

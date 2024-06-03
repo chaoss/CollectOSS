@@ -27,6 +27,7 @@ from augur.application.db.models import CollectionStatus, Repo
 from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
+from augur.application.db.lib import execute_sql, get_session
 
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
@@ -153,7 +154,7 @@ def non_repo_domain_tasks(self):
     tasks.apply_async()
 
 
-def build_primary_repo_collect_request(session,enabled_phase_names, days_until_collect_again = 1):
+def build_primary_repo_collect_request(logger, enabled_phase_names, days_until_collect_again = 1):
     #Add all required tasks to a list and pass it to the CollectionRequest
     primary_enabled_phases = []
     primary_gitlab_enabled_phases = []
@@ -173,10 +174,10 @@ def build_primary_repo_collect_request(session,enabled_phase_names, days_until_c
     primary_gitlab_enabled_phases.append(core_task_success_util_gen)
 
     primary_request = CollectionRequest("core",primary_enabled_phases,max_repo=40, days_until_collect_again=7, gitlab_phases=primary_gitlab_enabled_phases)
-    primary_request.get_valid_repos(session)
+    primary_request.get_valid_repos(logger)
     return primary_request
 
-def build_secondary_repo_collect_request(session,enabled_phase_names, days_until_collect_again = 1):
+def build_secondary_repo_collect_request(logger, enabled_phase_names, days_until_collect_again = 1):
     #Deal with secondary collection
     secondary_enabled_phases = []
 
@@ -192,11 +193,11 @@ def build_secondary_repo_collect_request(session,enabled_phase_names, days_until
     secondary_enabled_phases.append(secondary_task_success_util_gen)
     request = CollectionRequest("secondary",secondary_enabled_phases,max_repo=10, days_until_collect_again=10)
 
-    request.get_valid_repos(session)
+    request.get_valid_repos(logger)
     return request
 
 
-def build_facade_repo_collect_request(session,enabled_phase_names, days_until_collect_again = 1):
+def build_facade_repo_collect_request(logger, enabled_phase_names, days_until_collect_again = 1):
     #Deal with facade collection
     facade_enabled_phases = []
 
@@ -214,10 +215,10 @@ def build_facade_repo_collect_request(session,enabled_phase_names, days_until_co
 
     request = CollectionRequest("facade",facade_enabled_phases,max_repo=30, days_until_collect_again=7)
 
-    request.get_valid_repos(session)
+    request.get_valid_repos(logger)
     return request
 
-def build_ml_repo_collect_request(session,enabled_phase_names, days_until_collect_again = 1):
+def build_ml_repo_collect_request(logger, enabled_phase_names, days_until_collect_again = 1):
     ml_enabled_phases = []
 
     ml_enabled_phases.append(machine_learning_phase)
@@ -228,7 +229,7 @@ def build_ml_repo_collect_request(session,enabled_phase_names, days_until_collec
     ml_enabled_phases.append(ml_task_success_util_gen)
 
     request = CollectionRequest("ml",ml_enabled_phases,max_repo=5, days_until_collect_again=10)
-    request.get_valid_repos(session)
+    request.get_valid_repos(logger)
     return request
 
 @celery.task(bind=True)
@@ -240,31 +241,32 @@ def augur_collection_monitor(self):
 
     logger.info("Checking for repos to collect")
 
-    with DatabaseSession(logger, engine) as session:
-        #Get list of enabled phases 
-        enabled_phase_names = get_enabled_phase_names_from_config()
+    
+    #Get list of enabled phases 
+    enabled_phase_names = get_enabled_phase_names_from_config()
 
-        enabled_collection_hooks = []
+    enabled_collection_hooks = []
 
-        if primary_repo_collect_phase.__name__ in enabled_phase_names:
-            enabled_collection_hooks.append(build_primary_repo_collect_request(session,enabled_phase_names))
-        
-        if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-            enabled_collection_hooks.append(build_secondary_repo_collect_request(session,enabled_phase_names))
-            #start_secondary_collection(session, max_repo=10)
+    if primary_repo_collect_phase.__name__ in enabled_phase_names:
+        enabled_collection_hooks.append(build_primary_repo_collect_request(logger, enabled_phase_names))
+    
+    if secondary_repo_collect_phase.__name__ in enabled_phase_names:
+        enabled_collection_hooks.append(build_secondary_repo_collect_request(logger, enabled_phase_names))
+        #start_secondary_collection(session, max_repo=10)
 
-        if facade_phase.__name__ in enabled_phase_names:
-            #start_facade_collection(session, max_repo=30)
-            enabled_collection_hooks.append(build_facade_repo_collect_request(session,enabled_phase_names))
-        
-        if machine_learning_phase.__name__ in enabled_phase_names:
-            enabled_collection_hooks.append(build_ml_repo_collect_request(session,enabled_phase_names))
-            #start_ml_collection(session,max_repo=5)
-        
-        logger.info(f"Starting collection phases: {[h.name for h in enabled_collection_hooks]}")
-        main_routine = AugurTaskRoutine(session,enabled_collection_hooks)
+    if facade_phase.__name__ in enabled_phase_names:
+        #start_facade_collection(session, max_repo=30)
+        enabled_collection_hooks.append(build_facade_repo_collect_request(logger, enabled_phase_names))
+    
+    if machine_learning_phase.__name__ in enabled_phase_names:
+        enabled_collection_hooks.append(build_ml_repo_collect_request(logger, enabled_phase_names))
+        #start_ml_collection(session,max_repo=5)
+    
+    logger.info(f"Starting collection phases: {[h.name for h in enabled_collection_hooks]}")
 
-        main_routine.start_data_collection()
+    main_routine = AugurTaskRoutine(logger, enabled_collection_hooks)
+
+    main_routine.start_data_collection()
 
 # have a pipe of 180
 
@@ -278,7 +280,7 @@ def augur_collection_update_weights(self):
 
     logger.info("Updating stale collection weights")
 
-    with DatabaseSession(logger,engine) as session:
+    with get_session() as session:
 
         core_weight_update_repos = session.query(CollectionStatus).filter(CollectionStatus.core_weight != None).all()
 
@@ -301,7 +303,7 @@ def augur_collection_update_weights(self):
             repo = Repo.get_by_id(session, status.repo_id)
 
             commit_count = status.commit_sum
-            date_factor = get_facade_weight_time_factor(session, repo.repo_git)
+            date_factor = get_facade_weight_time_factor(repo.repo_git)
             weight = commit_count - date_factor
 
             update_query = (
@@ -324,27 +326,26 @@ def retry_errored_repos(self):
 
     #TODO: Isaac needs to normalize the status's to be abstract in the 
     #collection_status table once augur dev is less unstable.
-    with DatabaseSession(logger,engine) as session:
-        query = s.sql.text(f"""UPDATE collection_status SET secondary_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE secondary_status = '{CollectionState.ERROR.value}' and secondary_data_last_collected is NULL;"""
-        f"""UPDATE collection_status SET core_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE core_status = '{CollectionState.ERROR.value}' and core_data_last_collected is NULL;"""
-        f"""UPDATE collection_status SET facade_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE facade_status = '{CollectionState.ERROR.value}' and facade_data_last_collected is NULL;"""
-        f"""UPDATE collection_status SET ml_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE ml_status = '{CollectionState.ERROR.value}' and ml_data_last_collected is NULL;"""
-        
-        f"""UPDATE collection_status SET secondary_status = '{CollectionState.SUCCESS.value}'"""
-        f""" WHERE secondary_status = '{CollectionState.ERROR.value}' and secondary_data_last_collected is not NULL;"""
-        f"""UPDATE collection_status SET core_status = '{CollectionState.SUCCESS.value}'"""
-        f""" WHERE core_status = '{CollectionState.ERROR.value}' and core_data_last_collected is not NULL;;"""
-        f"""UPDATE collection_status SET facade_status = '{CollectionState.SUCCESS.value}'"""
-        f""" WHERE facade_status = '{CollectionState.ERROR.value}' and facade_data_last_collected is not NULL;;"""
-        f"""UPDATE collection_status SET ml_status = '{CollectionState.SUCCESS.value}'"""
-        f""" WHERE ml_status = '{CollectionState.ERROR.value}' and ml_data_last_collected is not NULL;;"""
-        )
+    query = s.sql.text(f"""UPDATE collection_status SET secondary_status = '{CollectionState.PENDING.value}'"""
+    f""" WHERE secondary_status = '{CollectionState.ERROR.value}' and secondary_data_last_collected is NULL;"""
+    f"""UPDATE collection_status SET core_status = '{CollectionState.PENDING.value}'"""
+    f""" WHERE core_status = '{CollectionState.ERROR.value}' and core_data_last_collected is NULL;"""
+    f"""UPDATE collection_status SET facade_status = '{CollectionState.PENDING.value}'"""
+    f""" WHERE facade_status = '{CollectionState.ERROR.value}' and facade_data_last_collected is NULL;"""
+    f"""UPDATE collection_status SET ml_status = '{CollectionState.PENDING.value}'"""
+    f""" WHERE ml_status = '{CollectionState.ERROR.value}' and ml_data_last_collected is NULL;"""
+    
+    f"""UPDATE collection_status SET secondary_status = '{CollectionState.SUCCESS.value}'"""
+    f""" WHERE secondary_status = '{CollectionState.ERROR.value}' and secondary_data_last_collected is not NULL;"""
+    f"""UPDATE collection_status SET core_status = '{CollectionState.SUCCESS.value}'"""
+    f""" WHERE core_status = '{CollectionState.ERROR.value}' and core_data_last_collected is not NULL;;"""
+    f"""UPDATE collection_status SET facade_status = '{CollectionState.SUCCESS.value}'"""
+    f""" WHERE facade_status = '{CollectionState.ERROR.value}' and facade_data_last_collected is not NULL;;"""
+    f"""UPDATE collection_status SET ml_status = '{CollectionState.SUCCESS.value}'"""
+    f""" WHERE ml_status = '{CollectionState.ERROR.value}' and ml_data_last_collected is not NULL;;"""
+    )
 
-        session.execute_sql(query)
+    execute_sql(query)
 
 
 
@@ -361,16 +362,17 @@ def create_collection_status_records(self):
     engine = self.app.engine
     logger = logging.getLogger(create_collection_status_records.__name__)
 
-    with DatabaseSession(logger,engine) as session:
-        query = s.sql.text("""
-        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.collection_status)
-        """)
+    query = s.sql.text("""
+    SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.collection_status)
+    """)
 
-        repo = session.execute_sql(query).first()
+    repo = execute_sql(query).first()
+
+    with DatabaseSession(logger) as session:
 
         while repo is not None:
-            CollectionStatus.insert(session,repo[0])
-            repo = session.execute_sql(query).first()
-    
+            CollectionStatus.insert(session, logger, repo[0])
+            repo = execute_sql(query).first()
+
     #Check for new repos every seven minutes to be out of step with the clone_repos task
     create_collection_status_records.si().apply_async(countdown=60*7)

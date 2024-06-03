@@ -10,10 +10,8 @@ from sklearn.ensemble import IsolationForest
 import warnings
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.session import DatabaseSession
-from augur.application.db.lib import get_value
-from augur.application.db.models import Repo, ChaossMetricStatus, RepoInsight, RepoInsightsRecord
-from augur.application.db.util import execute_session_query
+from augur.application.db.lib import get_value, get_repo_by_repo_git, get_session
+from augur.application.db.models import ChaossMetricStatus, RepoInsight, RepoInsightsRecord
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 
 warnings.filterwarnings('ignore')
@@ -25,11 +23,10 @@ def insight_task(self, repo_git):
     logger = logging.getLogger(insight_task.__name__)
     engine = self.app.engine
 
-    with DatabaseSession(logger, engine) as session:
-        insight_model(repo_git, logger, engine, session)
+    insight_model(repo_git, logger, engine)
 
 
-def insight_model(repo_git: str,logger,engine,session) -> None:
+def insight_model(repo_git: str,logger,engine) -> None:
     refresh = True
     send_insights = True
 
@@ -40,8 +37,8 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
     metrics = {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
                 "reviews": "pull_requests", "contributors-new": "new_contributors"}
 
-    query = session.query(Repo).filter(Repo.repo_git == repo_git)
-    repo_id = execute_session_query(query, 'one').repo_id
+    repo = get_repo_by_repo_git(repo_git)
+    repo_id = repo.repo_id
 
     anomaly_days = get_value('Insight_Task', 'anomaly_days')
     training_days = get_value('Insight_Task', 'training_days')
@@ -247,7 +244,7 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
                     "data_source": data_source
                 }
 
-                with DatabaseSession(logger, engine) as session:
+                with get_session() as session:
                     repo_insight_record_obj = RepoInsightsRecord(**record)
                     session.add(repo_insight_record_obj)
                     session.commit()
@@ -292,7 +289,7 @@ def insight_model(repo_git: str,logger,engine,session) -> None:
                     "data_source": data_source
                 }
 
-                with DatabaseSession(logger, engine) as session:
+                with get_session() as session:
                     repo_insight_obj = RepoInsight(**data_point)
                     session.add(repo_insight_obj)
                     session.commit()

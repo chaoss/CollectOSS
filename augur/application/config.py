@@ -288,6 +288,7 @@ class AugurConfig():
             query = self.session.query(Config).filter(and_(Config.section_name == setting["section_name"],Config.setting_name == setting["setting_name"]) )
 
             if execute_session_query(query, 'first') is None:
+                # TODO: Update to use bulk insert dicts so config doesn't require database session
                 self.session.insert_data(setting,Config, ["section_name", "setting_name"])
             else:
                 #If setting exists. use raw update to not increase autoincrement
