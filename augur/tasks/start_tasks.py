@@ -247,7 +247,7 @@ def augur_collection_monitor(self):
 
     enabled_collection_hooks = []
 
-    with get_session() as session:
+    with DatabaseSession(logger, self.app.engine) as session:
 
         if primary_repo_collect_phase.__name__ in enabled_phase_names:
             enabled_collection_hooks.append(build_primary_repo_collect_request(session, logger, enabled_phase_names))
