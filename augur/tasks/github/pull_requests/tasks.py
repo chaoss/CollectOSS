@@ -8,6 +8,7 @@ from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor
+from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.application.db.lib import get_session, get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
