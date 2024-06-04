@@ -24,7 +24,8 @@ def collect_pull_requests(repo_git: str) -> int:
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
-    with GithubTaskManifest(logger) as manifest:
+   #with GithubTaskManifest(logger) as manifest:
+    with GithubTaskManifest() as manifest:
 
         augur_db = manifest.augur_db
 
