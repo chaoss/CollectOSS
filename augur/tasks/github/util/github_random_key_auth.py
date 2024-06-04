@@ -9,6 +9,23 @@ class GithubRandomKeyAuth(RandomKeyAuth):
     github collections can have a class randomly selects an api key for each request    
     """
 
+    def __init__(self, logger):
+        """Creates a GithubRandomKeyAuth object and initializes the RandomKeyAuth parent class"""
+
+    
+        # gets the github api keys from the database via the GithubApiKeyHandler
+        github_api_keys = GithubApiKeyHandler(logger).keys
+        #github_api_keys = random.sample(github_api_keys, len(github_api_keys))
+
+        if not github_api_keys:
+            print("Failed to find github api keys. This is usually because your key has expired")
+
+        # defines the structure of the github api key
+        header_name = "Authorization"
+        key_format = "token {0}"
+
+        super().__init__(github_api_keys, header_name, logger, key_format)
+        
     def __init__(self, session: Session, logger):
         """Creates a GithubRandomKeyAuth object and initializes the RandomKeyAuth parent class"""
 
