@@ -83,8 +83,8 @@ def generate_scorecard(logger, repo_git):
     #setting the environmental variable which is required by scorecard
 
     with get_session() as session:
-        key_handler = GithubRandomKeyAuth(logger)
-        #key_handler = GithubApiKeyHandler(logger)       
+        #key_handler = GithubRandomKeyAuth(logger)
+        key_handler = GithubApiKeyHandler(logger)       
         os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
 
     # This seems outdated
