@@ -85,7 +85,19 @@ def generate_scorecard(logger, repo_git):
 
         key_handler = GithubApiKeyHandler(logger)       
         os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
+    # start
+
+    #setting the environmental variable which is required by scorecard
+    key_handler = GithubApiKeyHandler(session, session.logger)       
+    os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
     
+    try: 
+        required_output = parse_json_from_subprocess_call(session.logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
+    except Exception as e: 
+        session.logger.error(f"Could not parse required output! Error: {e}")
+        raise e        
+
+    # end
     
     logger.info('adding to database...')
     logger.debug(f"output: {required_output}")
