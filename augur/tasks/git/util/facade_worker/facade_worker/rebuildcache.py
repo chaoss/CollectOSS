@@ -397,7 +397,8 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
     # ("DELETE c.* FROM dm_repo_group_weekly c "
     #   "JOIN repo_groups p ON c.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    execute_sql(clear_dm_repo_group_weekly)
+
+#    session.execute_sql(clear_dm_repo_group_weekly)
 
     clear_dm_repo_group_monthly = s.sql.text("""
             DELETE 
@@ -411,7 +412,8 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
     # ("DELETE c.* FROM dm_repo_group_monthly c "
     #   "JOIN repo_groups p ON c.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    execute_sql(clear_dm_repo_group_monthly)
+
+#    session.execute_sql(clear_dm_repo_group_monthly)
 
     clear_dm_repo_group_annual = s.sql.text("""
             DELETE 
@@ -425,7 +427,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
     # ("DELETE c.* FROM dm_repo_group_annual c "
     #   "JOIN repo_groups p ON c.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    execute_sql(clear_dm_repo_group_annual)
+#    session.execute_sql(clear_dm_repo_group_annual)
 
     clear_dm_repo_weekly = s.sql.text("""
             DELETE 
@@ -442,7 +444,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
     #   "JOIN repo r ON c.repo_id = r.repo_id "
     #   "JOIN repo_groups p ON r.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    execute_sql(clear_dm_repo_weekly)
+#    session.execute_sql(clear_dm_repo_weekly)
 
     clear_dm_repo_monthly = s.sql.text("""
             DELETE 
@@ -459,7 +461,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
     #   "JOIN repo r ON c.repo_id = r.repo_id "
     #   "JOIN repo_groups p ON r.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    execute_sql(clear_dm_repo_monthly)
+#    session.execute_sql(clear_dm_repo_monthly)
 
     clear_dm_repo_annual = s.sql.text("""
             DELETE 
@@ -476,7 +478,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
     #   "JOIN repo r ON c.repo_id = r.repo_id "
     #   "JOIN repo_groups p ON r.repo_group_id = p.repo_group_id WHERE "
     #   "p.rg_recache=TRUE")
-    execute_sql(clear_dm_repo_annual)
+#    session.execute_sql(clear_dm_repo_annual)
 
     clear_unknown_cache = s.sql.text("""
             DELETE 
@@ -574,7 +576,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
         "r.repo_group_id, info.a, info.b, info.c")
         ).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
-    execute_sql(cache_projects_by_week)
+#    session.execute_sql(cache_projects_by_week)
 
     cache_projects_by_month = s.sql.text(
         ("INSERT INTO dm_repo_group_monthly (repo_group_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source) "
@@ -610,7 +612,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
         "r.repo_group_id, info.a, info.b, info.c"
         )).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
-    execute_sql(cache_projects_by_month)
+#    session.execute_sql(cache_projects_by_month)
 
     cache_projects_by_year = s.sql.text((
         "INSERT INTO dm_repo_group_annual (repo_group_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source) "
@@ -650,7 +652,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
      
      
 
-    execute_sql(cache_projects_by_year)
+ #   session.execute_sql(cache_projects_by_year)
     # Start caching by repo
 
     facade_helper.log_activity('Verbose','Caching repos')
@@ -690,7 +692,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
         "a.repo_id, info.a, info.b, info.c"
         )).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
-    execute_sql(cache_repos_by_week)
+#    session.execute_sql(cache_repos_by_week)
 
     cache_repos_by_month = s.sql.text((
         "INSERT INTO dm_repo_monthly (repo_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
@@ -726,7 +728,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
         "a.repo_id, info.a, info.b, info.c"
         )).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
-    execute_sql(cache_repos_by_month)
+#    session.execute_sql(cache_repos_by_month)
 
     cache_repos_by_year = s.sql.text((
         "INSERT INTO dm_repo_annual (repo_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source)"
@@ -760,7 +762,7 @@ def rebuild_unknown_affiliation_and_web_caches(facade_helper):
         "a.repo_id, info.a, info.b, info.c"
         )).bindparams(tool_source=facade_helper.tool_source,tool_version=facade_helper.tool_version,data_source=facade_helper.data_source)
 
-    execute_sql(cache_repos_by_year)
+#    session.execute_sql(cache_repos_by_year)
 
     # Reset cache flags
 
