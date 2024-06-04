@@ -26,19 +26,23 @@ class GithubRandomKeyAuth(RandomKeyAuth):
 
         super().__init__(github_api_keys, header_name, logger, key_format)
         
-    def __init__(self, session: Session, logger):
-        """Creates a GithubRandomKeyAuth object and initializes the RandomKeyAuth parent class"""
+    # This is what it needs to be. And until it is, the PR task will fail: 
+    
+    # Right now many other tasks fail with the modified syntax
+    
+    # def __init__(self, session: Session, logger):
+    #     """Creates a GithubRandomKeyAuth object and initializes the RandomKeyAuth parent class"""
 
     
-        # gets the github api keys from the database via the GithubApiKeyHandler
-        github_api_keys = GithubApiKeyHandler(session, logger).keys
-        #github_api_keys = random.sample(github_api_keys, len(github_api_keys))
+    #     # gets the github api keys from the database via the GithubApiKeyHandler
+    #     github_api_keys = GithubApiKeyHandler(session, logger).keys
+    #     #github_api_keys = random.sample(github_api_keys, len(github_api_keys))
 
-        if not github_api_keys:
-            print("Failed to find github api keys. This is usually because your key has expired")
+    #     if not github_api_keys:
+    #         print("Failed to find github api keys. This is usually because your key has expired")
 
-        # defines the structure of the github api key
-        header_name = "Authorization"
-        key_format = "token {0}"
+    #     # defines the structure of the github api key
+    #     header_name = "Authorization"
+    #     key_format = "token {0}"
 
-        super().__init__(github_api_keys, header_name, logger, key_format)
+    #     super().__init__(github_api_keys, header_name, logger, key_format)
