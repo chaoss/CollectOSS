@@ -315,7 +315,7 @@ def git_repo_updates(facade_helper, repo_git):
 
         try:
 
-            firstpull = (f"git -C {absolute_path} pull")
+            firstpull = (f"git -C {absolute_path} pull --rebase")
 
             return_code_remote = subprocess.Popen(
                 [firstpull], shell=True).wait()
