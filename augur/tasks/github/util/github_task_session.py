@@ -11,7 +11,9 @@ class GithubTaskManifest:
         engine = get_engine()
 
         self.augur_db = DatabaseSession(logger, engine)
-        self.key_auth = GithubRandomKeyAuth(self.augur_db.session, logger)
+        #self.key_auth = GithubRandomKeyAuth(self.augur_db.session, logger)
+        #totalHack
+        self.key_auth = GithubRandomKeyAuth(logger)
         self.logger = logger
         self.platform_id = 1
 
