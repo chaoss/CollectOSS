@@ -9,7 +9,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.models import Message, PullRequestMessageRef, IssueMessageRef, Contributor, Repo 
+from augur.application.db.models import Message, PullRequestMessageRef, IssueMessageRef, Contributor, Repo, CollectionStatus
 from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id
 from augur.application.db import get_engine, get_session
 
