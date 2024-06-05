@@ -15,7 +15,8 @@ We default to this version of Ubuntu for the moment because Augur does not yet s
 Here we ensure your system is up to date, install required python libraries, install postgresql, and install our queuing infrastructure, which is composed of redis-server and rabbitmq-server
 
 ### Executable
-```shell 
+```shell
+sudo add-apt-repository ppa:deadsnakes/ppa &&
 sudo apt update && 
 sudo apt upgrade && 
 sudo apt install software-properties-common &&
