@@ -20,9 +20,9 @@ sudo apt update &&
 sudo apt upgrade && 
 sudo apt install software-properties-common &&
 sudo apt-get install libpq-dev &&
-sudo apt install python3-dev && 
-sudo apt install python3.10-venv &&
-sudo apt install postgresql postgresql-contrib postgresql-client && 
+sudo apt install python3.11-dev && 
+sudo apt install python3.11-venv &&
+sudo apt install postgresql-16 postgresql-contrib-16 postgresql-client-16 && 
 sudo apt install build-essential && 
 sudo apt install redis-server &&  # required 
 sudo apt install erlang && # required
