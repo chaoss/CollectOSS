@@ -32,27 +32,27 @@ def collect_github_repo_clones_data(repo_git: str) -> None:
         logger.info(f"{owner}/{repo} has no clones")
 
 def retrieve_all_clones_data(repo_git: str, logger, key_auth):
-    owner, repo = get_owner_repo(repo_git)
+    # owner, repo = get_owner_repo(repo_git)
 
-    url = f"https://api.github.com/repos/{owner}/{repo}/traffic/clones"
+    # url = f"https://api.github.com/repos/{owner}/{repo}/traffic/clones"
     
-    clones = GithubPaginator(url, key_auth, logger)
+    # clones = GithubPaginator(url, key_auth, logger)
 
-    num_pages = clones.get_num_pages()
+    # num_pages = clones.get_num_pages()
     all_data = []
-    for page_data, page in clones.iter_pages():
+    # for page_data, page in clones.iter_pages():
 
-        if page_data is None:
-            return all_data
+    #     if page_data is None:
+    #         return all_data
             
-        elif len(page_data) == 0:
-            logger.debug(f"{repo.capitalize()} Traffic Page {page} contains no data...returning")
-            logger.info(f"Traffic Page {page} of {num_pages}")
-            return all_data
+    #     elif len(page_data) == 0:
+    #         logger.debug(f"{repo.capitalize()} Traffic Page {page} contains no data...returning")
+    #         logger.info(f"Traffic Page {page} of {num_pages}")
+    #         return all_data
 
-        logger.info(f"{repo} Traffic Page {page} of {num_pages}")
+    #     logger.info(f"{repo} Traffic Page {page} of {num_pages}")
 
-        all_data += page_data
+    #     all_data += page_data
 
     return all_data
 
