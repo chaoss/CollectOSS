@@ -26,9 +26,7 @@ class GithubRandomKeyAuth(RandomKeyAuth):
 
         super().__init__(github_api_keys, header_name, logger, key_format)
         
-    # This is what it needs to be. And until it is, the PR task will fail: 
-    
-    # Right now many other tasks fail with the modified syntax
+    # It needs to be this at some point, however not all the method calls are sending 3 arguments
     
     # def __init__(self, session: Session, logger):
     #     """Creates a GithubRandomKeyAuth object and initializes the RandomKeyAuth parent class"""
