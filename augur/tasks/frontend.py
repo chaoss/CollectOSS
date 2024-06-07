@@ -21,7 +21,7 @@ def add_org_repo_list(user_id, group_name, urls):
 
     logger = logging.getLogger(add_org_repo_list.__name__)
 
-    with GithubTaskSession() as session:
+    with GithubTaskSession(logger) as session:
      
         user = User.get_by_id(session, user_id)
 
