@@ -125,14 +125,14 @@ def start_celery_collection_processes(vmem_cap_ratio):
     sleep_time += 6
 
     #60% of estimate, Maximum value of 45
-    core_num_processes = determine_worker_processes(.6, 45)
+    core_num_processes = determine_worker_processes(.35, 45)
     logger.info(f"Starting core worker processes with concurrency={core_num_processes}")
     core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_num_processes} -n core:{uuid.uuid4().hex}@%h"
     process_list.append(subprocess.Popen(core_worker.split(" ")))
     sleep_time += 6
 
     #20% of estimate, Maximum value of 25
-    secondary_num_processes = determine_worker_processes(.25, 45)
+    secondary_num_processes = determine_worker_processes(.55, 55)
     logger.info(f"Starting secondary worker processes with concurrency={secondary_num_processes}")
     secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_num_processes} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
     process_list.append(subprocess.Popen(secondary_worker.split(" ")))
