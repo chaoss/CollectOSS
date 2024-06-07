@@ -305,8 +305,8 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
 
     # print(str(stmnt.compile(dialect=postgresql.dialect())))
     attempts = 0
-    # creates list from 1 to 10
-    sleep_time_list = list(range(1,11))
+    # creates list from 1 to 10 / changed to 10-30 because deadlocks are taking longer
+    sleep_time_list = list(range(10,30))
     deadlock_detected = False
 
     engine = get_engine()

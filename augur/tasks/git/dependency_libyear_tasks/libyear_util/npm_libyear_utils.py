@@ -1,4 +1,7 @@
 import requests
+import logging 
+
+logger = logging.getLogger(__name__)
 
 def get_NPM_data(package):
     url = "https://registry.npmjs.org/%s" % package
@@ -42,10 +45,16 @@ def get_latest_patch(version, data):
 
 
 def get_lastest_minor(version, data):
-    versions = data['versions']
+    try: 
+        versions = data['versions']
+    except Exception as e: 
+        logger.info(f'error is {e} on the NPM. Hey, its NODEJS, of course it does not work :D ')
+        raise e 
+        
     try:
         index = list(versions.keys()).index(version)
     except ValueError as e:
+        logger.info(f'error is {e} on the NPM. Some kind of value error. Probably a VALUES error for Node, #AmIRight?')
         raise e
 
     major,minor,patch = split_version(version)

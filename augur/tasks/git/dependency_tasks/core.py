@@ -6,6 +6,7 @@ from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
 from augur.tasks.util.worker_util import parse_json_from_subprocess_call
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
 def generate_deps_data(logger, repo_git):
@@ -82,10 +83,22 @@ def generate_scorecard(logger, repo_git):
     #setting the environmental variable which is required by scorecard
 
     with get_session() as session:
-
+        #key_handler = GithubRandomKeyAuth(logger)
         key_handler = GithubApiKeyHandler(logger)       
         os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
+
+    # This seems outdated
+    #setting the environmental variable which is required by scorecard
+    #key_handler = GithubApiKeyHandler(session, session.logger)       
+    #os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
     
+    try: 
+        required_output = parse_json_from_subprocess_call(logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
+    except Exception as e: 
+        session.logger.error(f"Could not parse required output! Error: {e}")
+        raise e        
+
+    # end
     
     logger.info('adding to database...')
     logger.debug(f"output: {required_output}")
