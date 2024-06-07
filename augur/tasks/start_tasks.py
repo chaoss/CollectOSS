@@ -154,7 +154,7 @@ def non_repo_domain_tasks(self):
     tasks.apply_async()
 
 
-def build_primary_repo_collect_request(session, logger, enabled_phase_names, days_until_collect_again = 1):
+def build_primary_repo_collect_request(session, logger, enabled_phase_names, days_until_collect_again = 15):
     #Add all required tasks to a list and pass it to the CollectionRequest
     primary_enabled_phases = []
     primary_gitlab_enabled_phases = []
@@ -173,7 +173,7 @@ def build_primary_repo_collect_request(session, logger, enabled_phase_names, day
     primary_enabled_phases.append(core_task_success_util_gen)
     primary_gitlab_enabled_phases.append(core_task_success_util_gen)
 
-    primary_request = CollectionRequest("core",primary_enabled_phases,max_repo=40, days_until_collect_again=7, gitlab_phases=primary_gitlab_enabled_phases)
+    primary_request = CollectionRequest("core",primary_enabled_phases,max_repo=40, days_until_collect_again=15, gitlab_phases=primary_gitlab_enabled_phases)
     primary_request.get_valid_repos(session)
     return primary_request
 
