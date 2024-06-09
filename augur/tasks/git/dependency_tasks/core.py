@@ -63,7 +63,7 @@ def deps_model(session, repo_id,repo_git,repo_path,repo_name):
 def generate_scorecard(logger, repo_git):
     """Runs scorecard on repo and stores data in database
         :param repo_id: Repository ID
-        :param repo_git: URL path of the Repostiory
+        :param repo_git: URL path of the Repository
     """    
     repo = get_repo_by_repo_git(repo_git)
     repo_id = repo.repo_id

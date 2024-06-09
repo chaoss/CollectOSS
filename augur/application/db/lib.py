@@ -216,8 +216,8 @@ def facade_bulk_insert_commits(logger, records):
                 firsthalfRecords = records[:len(records)//2]
                 secondhalfRecords = records[len(records)//2:]
 
-                facade_bulk_insert_commits(logger, session,firsthalfRecords)
-                facade_bulk_insert_commits(logger, session,secondhalfRecords)
+                facade_bulk_insert_commits(logger, firsthalfRecords)
+                facade_bulk_insert_commits(logger, secondhalfRecords)
             elif len(records) == 1 and isinstance(e,DataError) and "time zone displacement" in f"{e}":
                 commit_record = records[0]
                 #replace incomprehensible dates with epoch.
@@ -225,7 +225,7 @@ def facade_bulk_insert_commits(logger, records):
                 placeholder_date = "1970-01-01 00:00:15 -0500"
 
                 #Check for improper utc timezone offset
-                #UTC timezone offset should be betwen -14:00 and +14:00
+                #UTC timezone offset should be between -14:00 and +14:00
 
                 commit_record['author_timestamp'] = placeholder_date
                 commit_record['committer_timestamp'] = placeholder_date
