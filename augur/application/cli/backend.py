@@ -100,7 +100,8 @@ def start(ctx, disable_collection, development, port):
         create_collection_status_records.si().apply_async()
         time.sleep(3)
 
-        #contributor_breadth_model.si().apply_async()
+        #put contributor breadth back in. Not sure why it was commented out
+        contributor_breadth_model.si().apply_async()
 
         # start cloning repos when augur starts
         clone_repos.si().apply_async()
@@ -164,15 +165,15 @@ def start_celery_worker_processes(vmem_cap_ratio, disable_collection=False):
         process_list.append(subprocess.Popen(scheduling_worker.split(" ")))
         sleep_time += 6
 
-        #60% of estimate, Maximum value of 45
-        core_num_processes = determine_worker_processes(.35, 45)
+        #60% of estimate, Maximum value of 45 : Reduced because it can be lower
+        core_num_processes = determine_worker_processes(.15, 10)
         logger.info(f"Starting core worker processes with concurrency={core_num_processes}")
         core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_num_processes} -n core:{uuid.uuid4().hex}@%h"
         process_list.append(subprocess.Popen(core_worker.split(" ")))
         sleep_time += 6
 
         #20% of estimate, Maximum value of 25
-        secondary_num_processes = determine_worker_processes(.55, 55)
+        secondary_num_processes = determine_worker_processes(.70, 60)
         logger.info(f"Starting secondary worker processes with concurrency={secondary_num_processes}")
         secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_num_processes} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
         process_list.append(subprocess.Popen(secondary_worker.split(" ")))
