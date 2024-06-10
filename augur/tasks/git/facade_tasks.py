@@ -109,8 +109,8 @@ def trim_commits_post_analysis_facade_task(repo_git):
     repo = get_repo_by_repo_git(repo_git)
 
     #Get the huge list of commits to process.
-    absoulte_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-    repo_loc = (f"{absoulte_path}/.git")
+    absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
+    repo_loc = (f"{absolute_path}/.git")
     # Grab the parents of HEAD
 
     parent_commits = get_parent_commits_set(repo_loc, start_date)
@@ -181,8 +181,8 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     repo = get_repo_by_repo_id(repo_id)
 
     #Get the huge list of commits to process.
-    absoulte_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
-    repo_loc = (f"{absoulte_path}/.git")
+    absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
+    repo_loc = (f"{absolute_path}/.git")
     # Grab the parents of HEAD
 
     parent_commits = get_parent_commits_set(repo_loc, start_date)
@@ -203,8 +203,8 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     queue = list(missing_commits)
 
     logger.info(f"Got to analysis!")
-    absoulte_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-    repo_loc = (f"{absoulte_path}/.git")
+    absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
+    repo_loc = (f"{absolute_path}/.git")
 
     pendingCommitRecordsToInsert = []
 
