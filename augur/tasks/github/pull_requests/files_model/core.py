@@ -5,7 +5,7 @@ from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.lib import bulk_insert_dicts, execute_sql
 import httpx  # Import httpx
 
-def pull_request_files_model(repo, logger, key_auth):
+def pull_request_files_model(repo_id,logger, augur_db, key_auth):
     
     # query existing PRs and the respective url we will append the commits url to
     pr_number_sql = s.sql.text("""
@@ -15,10 +15,9 @@ def pull_request_files_model(repo, logger, key_auth):
     """).bindparams(repo_id=repo.repo_id)
     pr_numbers = []
     #pd.read_sql(pr_number_sql, self.db, params={})
-
-    result = execute_sql(pr_number_sql) # .fetchall()
-    pr_numbers = [dict(row) for row in result.mappings()]
-
+    
+    query = augur_db.session.query(Repo).filter(Repo.repo_id == repo_id)
+    repo = execute_session_query(query, 'one')
     owner, name = get_owner_repo(repo.repo_git)
 
     pr_file_rows = []
