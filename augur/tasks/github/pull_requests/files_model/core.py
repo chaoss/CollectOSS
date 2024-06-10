@@ -12,7 +12,7 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth):
         SELECT DISTINCT pr_src_number as pr_src_number, pull_requests.pull_request_id
         FROM pull_requests--, pull_request_meta
         WHERE repo_id = :repo_id
-    """).bindparams(repo_id=repo.repo_id)
+    """).bindparams(repo_id=repo_id)
     pr_numbers = []
     #pd.read_sql(pr_number_sql, self.db, params={})
     
