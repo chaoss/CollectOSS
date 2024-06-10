@@ -1,0 +1,28 @@
+{ "title": "Database",
+    "subtitle": "{{ subtitle }}",
+    "settings": [
+        { "id": "user",
+            "display_name": "User Name",
+            "value": "{{ dbconf.user }}",
+            "description": "The database username to use for this connection"
+        },{ "id": "password",
+            "display_name": "Password",
+            "value": "{{ dbconf.password }}",
+            "description": "The password for the provided databse user"
+        },{ "id": "host",
+            "display_name": "Host",
+            "value": "{{ dbconf.host }}",
+            "description": "The location of the database (relative to the instance)"
+        },{
+            "id": "port",
+            "display_name": "Port",
+            "value": "{{ dbconf.port }}",
+            "description": "The port on the host where the databse is located"
+        },{
+            "id": "database_name",
+            "display_name": "Database Name",
+            "value": "{{ dbconf.database_name }}",
+            "description": "The name of the database to use"
+        }
+    ]
+}

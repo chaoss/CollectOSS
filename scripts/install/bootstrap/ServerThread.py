@@ -20,7 +20,7 @@ class ServerThread(threading.Thread):
 
         debug_app = DebuggedApplication(app, True)
 
-        self.server = make_server(address, port, debug_app, threaded = True)
+        self.server = make_server(address, port, debug_app, threaded = True, passthrough_errors=True)
         self.ctx = app.app_context()
         self.ctx.push()
 
