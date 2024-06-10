@@ -223,7 +223,11 @@
                         fetch(url).then(async () => {
                             modal = document.getElementById("modal-title");
                             modal.innerHTML = "Finished"
-                            displayError("The first time setup server has been shut down.")
+                            if(event.submitter.id == "Exit") {
+                                displayError("The first-time setup server has been shut down. You can close this window.")
+                            } else {
+                                displayError("Augur has been started, and the first-time setup server has been shut down. You can now access the Augur front-end at the address and port previously configured.");
+                            }
                         })
                     }
                 }
