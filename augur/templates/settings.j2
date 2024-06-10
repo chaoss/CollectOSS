@@ -56,7 +56,7 @@
                         </li>
                         <li>
                             <a id="tracker-link" href="#tracker" class="nav-link px-sm-0 px-2">
-                                <i class="fs-5 bi-git"></i><span class="ms-2 d-none d-md-inline">Repo Tracker</span></a>
+                                <i class="fs-5 bi-git"></i><span class="ms-2 d-none d-md-inline">My Repos</span></a>
                         </li>
                         <li>
                             <a id="application-link" href="#application" class="nav-link px-sm-0 px-2">
@@ -170,7 +170,7 @@
                         </div>
                     </div>
                     <div id="tracker-div" hidden>
-                        <h1 id="tracker-section">Repo Tracker</h1>
+                        <h1 id="tracker-section">My Repos</h1>
                         {# Start content card #}
                         <div class="card dashboard-content">
                             <div class="card-body">
@@ -288,7 +288,7 @@
                                         </blockquote>
                                         <blockquote>
                                             If you encounter any issues loading new repositories, please open an issue
-                                            at <a
+                                            at <a target="_blank"
                                                 href='https://github.com/chaoss/augur/issues'>https://github.com/chaoss/augur/issues</a>
                                         </blockquote>
                                         </p>
@@ -577,11 +577,27 @@
     });
 </script>
 <script type="text/javascript">
-    if(window.location.toString().includes("#")) {
-        var navID = window.location.toString().split("#").pop();
-        var navlink = document.getElementById(navID + "-link");
-        setActive(navlink);
+    function getActive() {
+        if(window.location.toString().includes("?")) {
+            var search_url = new URL(window.location);
+            if(!search_url.searchParams.has("section")) {
+                // No parameter named "section"
+                return;
+            }
+
+            var navID = search_url.searchParams.get("section");
+            var navlink = document.getElementById(navID + "-link");
+
+            if(!navlink) {
+                // section was invalid
+                return;
+            }
+            
+            setActive(navlink);
+        }
     }
+
+    getActive();
 </script>
 
 </html>

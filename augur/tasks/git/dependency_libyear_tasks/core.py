@@ -1,43 +1,39 @@
 from datetime import datetime
 from augur.application.db.models import *
-from augur.application.db.lib import get_value
-from augur.application.db.util import execute_session_query
+from augur.application.db.lib import get_value, bulk_insert_dicts, get_repo_by_repo_git
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.util import get_deps_libyear_data
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 
-def deps_libyear_model( session, repo_id,repo_git,repo_group_id):
+def deps_libyear_model(logger,repo_git):
         """ Data collection and storage method
         """
-        session.logger.info(f"This is the libyear deps model repo: {repo_git}")
+        logger.info(f"This is the libyear deps model repo: {repo_git}")
 
         #result = re.search(r"https:\/\/(github\.com\/[A-Za-z0-9 \- _]+\/)([A-Za-z0-9 \- _ .]+)$", repo_git).groups()
 
         #relative_repo_path = f"{repo_group_id}/{result[0]}{result[1]}"
-        query = session.query(Repo).filter(
-            Repo.repo_git == repo_git)
+
+        repo = get_repo_by_repo_git(repo_git)
         
-        result = execute_session_query(query, 'one')
-        
-        absolute_repo_path = get_absolute_repo_path(get_value("Facade", "repo_directory"),repo_id,result.repo_path,result.repo_name)
+        absolute_repo_path = get_absolute_repo_path(get_value("Facade", "repo_directory"),repo.repo_id,repo.repo_path,repo.repo_name)
         #config.get_section("Facade")['repo_directory'] + relative_repo_path#self.config['repo_directory'] + relative_repo_path
 
-        generate_deps_libyear_data(session,repo_id, absolute_repo_path)
+        generate_deps_libyear_data(logger, repo.repo_id, absolute_repo_path)
 
 
-def generate_deps_libyear_data(session, repo_id, path):
+def generate_deps_libyear_data(logger, repo_id, path):
         """Scans for package files and calculates libyear
-        :param session: Task manifest and database session. 
         :param repo_id: Repository ID
         :param path: Absolute path of the Repostiory
         """
         date_scanned = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-        session.logger.info('Searching for deps in repo')
-        session.logger.info(f'Repo ID: {repo_id}, Path: {path}')
+        logger.info('Searching for deps in repo')
+        logger.info(f'Repo ID: {repo_id}, Path: {path}')
 
-        deps = get_deps_libyear_data(path,session.logger)
+        deps = get_deps_libyear_data(path,logger)
 
         if not deps:
-            session.logger.info(f"No deps found for repo {repo_id} on path {path}")
+            logger.info(f"No deps found for repo {repo_id} on path {path}")
             return
 
         to_insert = []
@@ -66,6 +62,6 @@ def generate_deps_libyear_data(session, repo_id, path):
             #    VALUES (:repo_id, :name,:requirement,:type,:package_manager,:current_verion,:latest_version,:current_release_date,:latest_release_date,:libyear,:tool_source,:tool_version,:data_source, :data_collection_date)
             #""").bindparams(**repo_deps)
 #
-            #session.execute_sql(insert_statement)
             to_insert.append(repo_deps)
-        session.insert_data(to_insert, RepoDepsLibyear, ["repo_id","name","data_collection_date"])
+
+        bulk_insert_dicts(logger, to_insert, RepoDepsLibyear, ["repo_id","name","data_collection_date"])

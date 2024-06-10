@@ -4,16 +4,17 @@ import logging
 from celery import group, chain
 import sqlalchemy as s
 
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id, facade_bulk_insert_commits
 
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count, facade_bulk_insert_commits
+from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
 from augur.tasks.git.util.facade_worker.facade_worker.rebuildcache import fill_empty_affiliations, invalidate_caches, nuke_affiliations, rebuild_unknown_affiliation_and_web_caches
-from augur.tasks.git.util.facade_worker.facade_worker.postanalysiscleanup import git_repo_cleanup
 
 
 from augur.tasks.github.facade_github.tasks import *
+from augur.tasks.git.util.facade_worker.facade_worker.config import FacadeHelper
 from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import get_collection_status_repo_git_from_filter
 from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneError, git_repo_initialize, git_repo_updates
@@ -58,13 +59,10 @@ def facade_error_handler(request,exc,traceback):
 def facade_analysis_init_facade_task(repo_git):
 
     logger = logging.getLogger(facade_analysis_init_facade_task.__name__)
-    with FacadeSession(logger) as session:
+    facade_helper = FacadeHelper(logger)
 
-        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
-        repo_id = repo.repo_id
-
-        session.update_status('Running analysis')
-        session.log_activity('Info',f"Beginning analysis.")
+    facade_helper.update_status('Running analysis')
+    facade_helper.log_activity('Info',f"Beginning analysis.")
 
 
 @celery.task(base=AugurFacadeRepoCollectionTask)
@@ -72,107 +70,76 @@ def trim_commits_facade_task(repo_git):
 
     logger = logging.getLogger(trim_commits_facade_task.__name__)
 
-    with FacadeSession(logger) as session:
+    facade_helper = FacadeHelper(logger)
 
-        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
-        repo_id = repo.repo_id
+    repo = get_repo_by_repo_git(repo_git)
 
-        def update_analysis_log(repos_id,status):
+    repo_id = repo.repo_id
 
-        # Log a repo's analysis status
+    facade_helper.inc_repos_processed()
+    facade_helper.update_analysis_log(repo_id,"Beginning analysis.")
+    # First we check to see if the previous analysis didn't complete
 
-            log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
-                VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
+    working_commits = get_working_commits_by_repo_id(repo_id)
 
-            try:
-                session.execute_sql(log_message)
-            except:
-                pass
+    # If there's a commit still there, the previous run was interrupted and
+    # the commit data may be incomplete. It should be trimmed, just in case.
+    commits_to_trim = [commit['working_commit'] for commit in working_commits]
+    
+    trim_commits(facade_helper,repo_id,commits_to_trim)
+    # Start the main analysis
 
-
-        session.inc_repos_processed()
-        update_analysis_log(repo_id,"Beginning analysis.")
-        # First we check to see if the previous analysis didn't complete
-
-        get_status = s.sql.text("""SELECT working_commit FROM working_commits WHERE repos_id=:repo_id
-            """).bindparams(repo_id=repo_id)
-
-        try:
-            working_commits = session.fetchall_data_from_sql_text(get_status)
-        except:
-            working_commits = []
-
-        # If there's a commit still there, the previous run was interrupted and
-        # the commit data may be incomplete. It should be trimmed, just in case.
-        commits_to_trim = [commit['working_commit'] for commit in working_commits]
-        
-        trim_commits(session,repo_id,commits_to_trim)
-        # Start the main analysis
-
-        update_analysis_log(repo_id,'Collecting data')
-        logger.info(f"Got past repo {repo_id}")
+    facade_helper.update_analysis_log(repo_id,'Collecting data')
+    logger.info(f"Got past repo {repo_id}")
 
 @celery.task(base=AugurFacadeRepoCollectionTask)
 def trim_commits_post_analysis_facade_task(repo_git):
 
     logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
     
+    facade_helper = FacadeHelper(logger)
 
-    with FacadeSession(logger) as session:
-        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
-        repo_id = repo.repo_id
+    repo = repo = get_repo_by_repo_git(repo_git)
+    repo_id = repo.repo_id
 
-        start_date = session.get_setting('start_date')
-        def update_analysis_log(repos_id,status):
+    start_date = facade_helper.get_setting('start_date')
+    
+    logger.info(f"Generating sequence for repo {repo_id}")
 
-            # Log a repo's analysis status
+    repo = get_repo_by_repo_git(repo_git)
 
-            log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
-                VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
+    #Get the huge list of commits to process.
+    absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
+    repo_loc = (f"{absolute_path}/.git")
+    # Grab the parents of HEAD
 
-            
-            session.execute_sql(log_message)
-        
-        session.logger.info(f"Generating sequence for repo {repo_id}")
+    parent_commits = get_parent_commits_set(repo_loc, start_date)
 
-        query = session.query(Repo).filter(Repo.repo_id == repo_id)
-        repo = execute_session_query(query, 'one')
+    # Grab the existing commits from the database
+    existing_commits = get_existing_commits_set(repo_id)
 
-        #Get the huge list of commits to process.
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-        repo_loc = (f"{absoulte_path}/.git")
-        # Grab the parents of HEAD
+    # Find missing commits and add them
 
-        parent_commits = get_parent_commits_set(repo_loc, start_date)
+    missing_commits = parent_commits - existing_commits
 
-        # Grab the existing commits from the database
-        existing_commits = get_existing_commits_set(session, repo_id)
+    facade_helper.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
+    
+    # Find commits which are out of the analysis range
 
-        # Find missing commits and add them
+    trimmed_commits = existing_commits - parent_commits
 
-        missing_commits = parent_commits - existing_commits
+    facade_helper.update_analysis_log(repo_id,'Data collection complete')
 
-        session.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
-        
-        # Find commits which are out of the analysis range
+    facade_helper.update_analysis_log(repo_id,'Beginning to trim commits')
 
-        trimmed_commits = existing_commits - parent_commits
+    facade_helper.log_activity('Debug',f"Commits to be trimmed from repo {repo_id}: {len(trimmed_commits)}")
 
-        update_analysis_log(repo_id,'Data collection complete')
+    #for commit in trimmed_commits:
+    trim_commits(facade_helper,repo_id,trimmed_commits)
+    
+    facade_helper.update_analysis_log(repo_id,'Commit trimming complete')
 
-        update_analysis_log(repo_id,'Beginning to trim commits')
-
-        session.log_activity('Debug',f"Commits to be trimmed from repo {repo_id}: {len(trimmed_commits)}")
-
-
-
-        #for commit in trimmed_commits:
-        trim_commits(session,repo_id,trimmed_commits)
-        
-
-        update_analysis_log(repo_id,'Commit trimming complete')
-
-        update_analysis_log(repo_id,'Complete')
+    facade_helper.update_analysis_log(repo_id,'Complete')
     
 
 
@@ -180,8 +147,8 @@ def trim_commits_post_analysis_facade_task(repo_git):
 def facade_analysis_end_facade_task():
 
     logger = logging.getLogger(facade_analysis_end_facade_task.__name__)
-    with FacadeSession(logger) as session:
-        session.log_activity('Info','Running analysis (complete)')
+    facade_helper = FacadeHelper(logger)
+    facade_helper.log_activity('Info','Running analysis (complete)')
 
 
 
@@ -189,9 +156,9 @@ def facade_analysis_end_facade_task():
 def facade_start_contrib_analysis_task():
 
     logger = logging.getLogger(facade_start_contrib_analysis_task.__name__)
-    with FacadeSession(logger) as session:
-        session.update_status('Updating Contributors')
-        session.log_activity('Info', 'Updating Contributors with commits')
+    facade_helper = FacadeHelper(logger)
+    facade_helper.update_status('Updating Contributors')
+    facade_helper.log_activity('Info', 'Updating Contributors with commits')
 
 
 #enable celery multithreading
@@ -202,78 +169,69 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
 
     #create new session for celery thread.
     logger = logging.getLogger(analyze_commits_in_parallel.__name__)
-    with FacadeSession(logger) as session:
-        
-        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
-        repo_id = repo.repo_id
+    facade_helper = FacadeHelper(logger)
 
-        start_date = session.get_setting('start_date')
+    repo = get_repo_by_repo_git(repo_git)
+    repo_id = repo.repo_id
 
-        session.logger.info(f"Generating sequence for repo {repo_id}")
-        
-        query = session.query(Repo).filter(Repo.repo_id == repo_id)
-        repo = execute_session_query(query, 'one')
+    start_date = facade_helper.get_setting('start_date')
 
-        #Get the huge list of commits to process.
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
-        repo_loc = (f"{absoulte_path}/.git")
-        # Grab the parents of HEAD
-
-        parent_commits = get_parent_commits_set(repo_loc, start_date)
-
-        # Grab the existing commits from the database
-        existing_commits = get_existing_commits_set(session, repo_id)
-
-        # Find missing commits and add them
-        missing_commits = parent_commits - existing_commits
-
-        session.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
-
-        
-        if not len(missing_commits) or repo_id is None:
-            #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
-            return
-        
-        queue = list(missing_commits)
-
-        logger.info(f"Got to analysis!")
-        absoulte_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-        repo_loc = (f"{absoulte_path}/.git")
-
-        pendingCommitRecordsToInsert = []
-
-        for count, commitTuple in enumerate(queue):
-            quarterQueue = int(len(queue) / 4)
-
-            if quarterQueue == 0:
-                quarterQueue = 1 # prevent division by zero with integer math
-
-            #Log progress when another quarter of the queue has been processed
-            if (count + 1) % quarterQueue == 0:
-                logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
-
-
-            #logger.info(f"Got to analysis!")
-            commitRecords = analyze_commit(session, repo_id, repo_loc, commitTuple)
-            #logger.debug(commitRecord)
-            if len(commitRecords):
-                pendingCommitRecordsToInsert.extend(commitRecords)
-                if len(pendingCommitRecordsToInsert) >= 1000:
-                    facade_bulk_insert_commits(session,pendingCommitRecordsToInsert)
-                    pendingCommitRecordsToInsert = []
-
-        
-        facade_bulk_insert_commits(session,pendingCommitRecordsToInsert)
-
-        
-
-
-        # Remove the working commit.
-        remove_commit = s.sql.text("""DELETE FROM working_commits 
-        	WHERE repos_id = :repo_id AND working_commit IN :hashes
-        	""").bindparams(repo_id=repo_id,hashes=tuple(queue))
-        session.execute_sql(remove_commit)  
+    logger.info(f"Generating sequence for repo {repo_id}")
     
+    repo = get_repo_by_repo_id(repo_id)
+
+    #Get the huge list of commits to process.
+    absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
+    repo_loc = (f"{absolute_path}/.git")
+    # Grab the parents of HEAD
+
+    parent_commits = get_parent_commits_set(repo_loc, start_date)
+
+    # Grab the existing commits from the database
+    existing_commits = get_existing_commits_set(repo_id)
+
+    # Find missing commits and add them
+    missing_commits = parent_commits - existing_commits
+
+    facade_helper.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
+
+    
+    if not len(missing_commits) or repo_id is None:
+        #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
+        return
+    
+    queue = list(missing_commits)
+
+    logger.info(f"Got to analysis!")
+    absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
+    repo_loc = (f"{absolute_path}/.git")
+
+    pendingCommitRecordsToInsert = []
+
+    for count, commitTuple in enumerate(queue):
+        quarterQueue = int(len(queue) / 4)
+
+        if quarterQueue == 0:
+            quarterQueue = 1 # prevent division by zero with integer math
+
+        #Log progress when another quarter of the queue has been processed
+        if (count + 1) % quarterQueue == 0:
+            logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
+
+        #logger.info(f"Got to analysis!")
+        commitRecords = analyze_commit(logger, repo_id, repo_loc, commitTuple)
+        #logger.debug(commitRecord)
+        if len(commitRecords):
+            pendingCommitRecordsToInsert.extend(commitRecords)
+            if len(pendingCommitRecordsToInsert) >= 1000:
+                facade_bulk_insert_commits(logger,pendingCommitRecordsToInsert)
+                pendingCommitRecordsToInsert = []
+    
+    facade_bulk_insert_commits(logger,pendingCommitRecordsToInsert)
+
+    # Remove the working commit.
+    remove_working_commits_by_repo_id_and_hashes(repo_id, queue)
+
     logger.info("Analysis complete")
     return
 
@@ -282,40 +240,31 @@ def nuke_affiliations_facade_task():
 
     logger = logging.getLogger(nuke_affiliations_facade_task.__name__)
     
-    with FacadeSession(logger) as session:
-        nuke_affiliations(session)
+    facade_helper = FacadeHelper(logger)
+    nuke_affiliations(facade_helper)
 
 @celery.task
 def fill_empty_affiliations_facade_task():
 
     logger = logging.getLogger(fill_empty_affiliations_facade_task.__name__)
-    with FacadeSession(logger) as session:
-        fill_empty_affiliations(session)
+    facade_helper = FacadeHelper(logger)
+    fill_empty_affiliations(facade_helper)
 
 @celery.task
 def invalidate_caches_facade_task():
 
     logger = logging.getLogger(invalidate_caches_facade_task.__name__)
 
-    with FacadeSession(logger) as session:
-        invalidate_caches(session)
+    facade_helper = FacadeHelper(logger)
+    invalidate_caches(facade_helper)
 
 @celery.task
 def rebuild_unknown_affiliation_and_web_caches_facade_task():
 
     logger = logging.getLogger(rebuild_unknown_affiliation_and_web_caches_facade_task.__name__)
     
-    with FacadeSession(logger) as session:
-        rebuild_unknown_affiliation_and_web_caches(session)
-
-
-@celery.task
-def git_repo_cleanup_facade_task(repo_git):
-
-    logger = logging.getLogger(git_repo_cleanup_facade_task.__name__)
-
-    with FacadeSession(logger) as session:
-        git_repo_cleanup(session, repo_git)
+    facade_helper = FacadeHelper(logger)
+    rebuild_unknown_affiliation_and_web_caches(facade_helper)
 
 # retry this task indefinitely every 5 minutes if it errors. Since the only way it gets scheduled is by itself, so if it stops running no more clones will happen till the instance is restarted
 @celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
@@ -325,27 +274,29 @@ def clone_repos():
     
     is_pending = CollectionStatus.facade_status == CollectionState.PENDING.value
 
-    with FacadeSession(logger) as session:
+    facade_helper = FacadeHelper(logger)
+
+    with get_session() as session:
 
         # process up to 1000 repos at a time
         repo_git_identifiers = get_collection_status_repo_git_from_filter(session, is_pending, 999999)
         for repo_git in repo_git_identifiers:
             # set repo to intializing
-            repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
+            repo = Repo.get_by_repo_git(session, repo_git)
             repoStatus = repo.collection_status[0]
             setattr(repoStatus,"facade_status", CollectionState.INITIALIZING.value)
             session.commit()
 
             # clone repo
             try:
-                git_repo_initialize(session, repo_git)
+                git_repo_initialize(facade_helper, session, repo_git)
                 session.commit()
 
                 # get the commit count
-                commit_count = get_repo_commit_count(session, repo_git)
-                facade_weight = get_facade_weight_with_commit_count(session, repo_git, commit_count)
+                commit_count = get_repo_commit_count(logger, facade_helper, repo_git)
+                facade_weight = get_facade_weight_with_commit_count(repo_git, commit_count)
 
-                update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
+                update_facade_scheduling_fields(repo_git, facade_weight, commit_count)
 
                 # set repo to update
                 setattr(repoStatus,"facade_status", CollectionState.UPDATE.value)
@@ -361,9 +312,7 @@ def clone_repos():
                 setattr(repoStatus,"facade_status", CollectionState.ERROR.value)
                 session.commit()
 
-        clone_repos.si().apply_async(countdown=60*5)
-
-
+            clone_repos.si().apply_async(countdown=60*5)
 
 
 #@celery.task(bind=True)
@@ -373,7 +322,7 @@ def clone_repos():
 #
 #    logger = logging.getLogger(check_for_repo_updates_facade_task.__name__)
 #
-#    with FacadeSession(logger) as session:
+#    facade_helper = FacadeHelper(logger)
 #        check_for_repo_updates(session, repo_git)
 
 @celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
@@ -383,11 +332,12 @@ def git_update_commit_count_weight(self, repo_git):
     logger = logging.getLogger(git_update_commit_count_weight.__name__)
     
     # Change facade session to take in engine
-    with FacadeSession(logger) as session:
-        commit_count = get_repo_commit_count(session, repo_git)
-        facade_weight = get_facade_weight_with_commit_count(session, repo_git, commit_count)
+    facade_helper = FacadeHelper(logger)
 
-        update_facade_scheduling_fields(session, repo_git, facade_weight, commit_count)
+    commit_count = get_repo_commit_count(logger, facade_helper, repo_git)
+    facade_weight = get_facade_weight_with_commit_count(repo_git, commit_count)
+    
+    update_facade_scheduling_fields(repo_git, facade_weight, commit_count)
 
 
 @celery.task(base=AugurFacadeRepoCollectionTask)
@@ -395,11 +345,12 @@ def git_repo_updates_facade_task(repo_git):
 
     logger = logging.getLogger(git_repo_updates_facade_task.__name__)
 
-    with FacadeSession(logger) as session:
-        git_repo_updates(session, repo_git)
+    facade_helper = FacadeHelper(logger)
+
+    git_repo_updates(facade_helper, repo_git)
 
 
-def generate_analysis_sequence(logger,repo_git, session):
+def generate_analysis_sequence(logger,repo_git, facade_helper):
     """Run the analysis by looping over all active repos. For each repo, we retrieve
     the list of commits which lead to HEAD. If any are missing from the database,
     they are filled in. Then we check to see if any commits in the database are
@@ -410,19 +361,16 @@ def generate_analysis_sequence(logger,repo_git, session):
     commit being analyzed at the time) we can recover.
     """
 
-    
-    
     analysis_sequence = []
 
-    repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
-    WHERE repo_git=:value""").bindparams(value=repo_git)
-    repos = session.fetchall_data_from_sql_text(repo_list)
+    #repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_git=:value""").bindparams(value=repo_git)
+    #repos = fetchall_data_from_sql_text(repo_list)
 
-    start_date = session.get_setting('start_date')
+    start_date = facade_helper.get_setting('start_date')
 
-    repo_ids = [repo['repo_id'] for repo in repos]
+    #repo_ids = [repo['repo_id'] for repo in repos]
 
-    repo_id = repo_ids.pop(0)
+    #repo_id = repo_ids.pop(0)
 
     analysis_sequence.append(facade_analysis_init_facade_task.si(repo_git))
 
@@ -439,110 +387,132 @@ def generate_analysis_sequence(logger,repo_git, session):
     return analysis_sequence
 
 
+
+def generate_contributor_sequence(logger,repo_git, session):
+    
+    contributor_sequence = []
+    #all_repo_ids = []
+    repo_id = None
+        
+    #contributor_sequence.append(facade_start_contrib_analysis_task.si())
+    repo = get_repo_by_repo_git(repo_git)
+    repo_id = repo.repo_id
+
+    #pdb.set_trace()
+    #breakpoint()
+    #for repo in all_repos:
+    #    contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
+    #all_repo_ids = [repo['repo_id'] for repo in all_repos]
+
+    #contrib_group = create_grouped_task_load(dataList=all_repo_ids,task=insert_facade_contributors)#group(contributor_sequence)
+    #contrib_group.link_error(facade_error_handler.s())
+    #return contrib_group#chain(facade_start_contrib_analysis_task.si(), contrib_group)
+    return insert_facade_contributors.si(repo_id)
+
+
 def facade_phase(repo_git):
     logger = logging.getLogger(facade_phase.__name__)
     logger.info("Generating facade sequence")
-    with FacadeSession(logger) as session:
-        #Get the repo_id
-        repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo 
-        WHERE repo_git=:value""").bindparams(value=repo_git)
-        repos = session.fetchall_data_from_sql_text(repo_list)
+    facade_helper = FacadeHelper(logger)
+    #Get the repo_id
+    #repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_git=:value""").bindparams(value=repo_git)
+    #repos = fetchall_data_from_sql_text(repo_list)
 
-        start_date = session.get_setting('start_date')
+    start_date = facade_helper.get_setting('start_date')
 
-        repo_ids = [repo['repo_id'] for repo in repos]
+    #repo_ids = [repo['repo_id'] for repo in repos]
 
-        repo_id = repo_ids.pop(0)
+    #repo_id = repo_ids.pop(0)
 
-        #Get the collectionStatus
-        query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id)
+    #Get the collectionStatus
+    #query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id)
 
-        status = execute_session_query(query,'one')
-        
-        # Figure out what we need to do
-        limited_run = session.limited_run
-        run_analysis = session.run_analysis
-        pull_repos = session.pull_repos
-        #force_analysis = session.force_analysis
-        run_facade_contributors = session.run_facade_contributors
+    #status = execute_session_query(query,'one')
+    
+    # Figure out what we need to do
+    limited_run = facade_helper.limited_run
+    run_analysis = facade_helper.run_analysis
+    pull_repos = facade_helper.pull_repos
+    #force_analysis = session.force_analysis
+    run_facade_contributors = facade_helper.run_facade_contributors
 
-        facade_sequence = []
-        facade_core_collection = []
+    facade_sequence = []
+    facade_core_collection = []
 
-        if not limited_run or (limited_run and pull_repos):
-            facade_core_collection.append(git_repo_updates_facade_task.si(repo_git))
-        
-        facade_core_collection.append(git_update_commit_count_weight.si(repo_git))
+    if not limited_run or (limited_run and pull_repos):
+        facade_core_collection.append(git_repo_updates_facade_task.si(repo_git))
+    
+    facade_core_collection.append(git_update_commit_count_weight.si(repo_git))
 
-        #Generate commit analysis task order.
-        if not limited_run or (limited_run and run_analysis):
-            facade_core_collection.extend(generate_analysis_sequence(logger,repo_git,session))
+    #Generate commit analysis task order.
+    if not limited_run or (limited_run and run_analysis):
+        facade_core_collection.extend(generate_analysis_sequence(logger,repo_git,facade_helper))
 
-        #Generate contributor analysis task group.
-        if not limited_run or (limited_run and run_facade_contributors):
-            facade_core_collection.append(insert_facade_contributors.si(repo_git))
+    #Generate contributor analysis task group.
+    if not limited_run or (limited_run and run_facade_contributors):
+        facade_core_collection.append(generate_contributor_sequence(logger,repo_git,facade_helper))
 
 
-        #These tasks need repos to be cloned by facade before they can work.
-        facade_sequence.append(
-            group(
-                chain(*facade_core_collection),
-                process_dependency_metrics.si(repo_git),
-                process_libyear_dependency_metrics.si(repo_git),
-                process_scc_value_metrics.si(repo_git)
-            )
+    #These tasks need repos to be cloned by facade before they can work.
+    facade_sequence.append(
+        group(
+            chain(*facade_core_collection),
+            process_dependency_metrics.si(repo_git),
+            process_libyear_dependency_metrics.si(repo_git),
+            process_scc_value_metrics.si(repo_git)
         )
+    )
 
-        logger.info(f"Facade sequence: {facade_sequence}")
-        return chain(*facade_sequence)
+    logger.info(f"Facade sequence: {facade_sequence}")
+    return chain(*facade_sequence)
 
 def generate_non_repo_domain_facade_tasks(logger):
     logger.info("Generating facade sequence")
-    with FacadeSession(logger) as session:
+    facade_helper = FacadeHelper(logger)
         
-        # Figure out what we need to do
-        limited_run = session.limited_run
-        delete_marked_repos = session.delete_marked_repos
-        pull_repos = session.pull_repos
-        # clone_repos = session.clone_repos
-        check_updates = session.check_updates
-        # force_updates = session.force_updates
-        run_analysis = session.run_analysis
-        # force_analysis = session.force_analysis
-        nuke_stored_affiliations = session.nuke_stored_affiliations
-        fix_affiliations = session.fix_affiliations
-        force_invalidate_caches = session.force_invalidate_caches
-        rebuild_caches = session.rebuild_caches
-        #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
-            # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
-            #   'update_frequency')) else 0
-        force_invalidate_caches = session.force_invalidate_caches
-        create_xlsx_summary_files = session.create_xlsx_summary_files
-        multithreaded = session.multithreaded
+    # Figure out what we need to do
+    limited_run = facade_helper.limited_run
+    delete_marked_repos = facade_helper.delete_marked_repos
+    pull_repos = facade_helper.pull_repos
+    # clone_repos = facade_helper.clone_repos
+    check_updates = facade_helper.check_updates
+    # force_updates = facade_helper.force_updates
+    run_analysis = facade_helper.run_analysis
+    # force_analysis = facade_helper.force_analysis
+    nuke_stored_affiliations = facade_helper.nuke_stored_affiliations
+    fix_affiliations = facade_helper.fix_affiliations
+    force_invalidate_caches = facade_helper.force_invalidate_caches
+    rebuild_caches = facade_helper.rebuild_caches
+    #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
+        # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
+        #   'update_frequency')) else 0
+    force_invalidate_caches = facade_helper.force_invalidate_caches
+    create_xlsx_summary_files = facade_helper.create_xlsx_summary_files
+    multithreaded = facade_helper.multithreaded
 
-        facade_sequence = []
+    facade_sequence = []
 
-        if nuke_stored_affiliations:
-            #facade_sequence.append(nuke_affiliations_facade_task.si().on_error(facade_error_handler.s()))#nuke_affiliations(session.cfg)
-            logger.info("Nuke stored affiliations is deprecated.")
-            # deprecated because the UI component of facade where affiliations would be 
-            # nuked upon change no longer exists, and this information can easily be derived 
-            # from queries and materialized views in the current version of Augur.
-            # This method is also a major performance bottleneck with little value.
+    if nuke_stored_affiliations:
+        #facade_sequence.append(nuke_affiliations_facade_task.si().on_error(facade_error_handler.s()))#nuke_affiliations(session.cfg)
+        logger.info("Nuke stored affiliations is deprecated.")
+        # deprecated because the UI component of facade where affiliations would be 
+        # nuked upon change no longer exists, and this information can easily be derived 
+        # from queries and materialized views in the current version of Augur.
+        # This method is also a major performance bottleneck with little value.
 
-        #session.logger.info(session.cfg)
-        if not limited_run or (limited_run and fix_affiliations):
-            #facade_sequence.append(fill_empty_affiliations_facade_task.si().on_error(facade_error_handler.s()))#fill_empty_affiliations(session)
-            logger.info("Fill empty affiliations is deprecated.")
-            # deprecated because the UI component of facade where affiliations would need 
-            # to be fixed upon change no longer exists, and this information can easily be derived 
-            # from queries and materialized views in the current version of Augur.
-            # This method is also a major performance bottleneck with little value.
+    #logger.info(session.cfg)
+    if not limited_run or (limited_run and fix_affiliations):
+        #facade_sequence.append(fill_empty_affiliations_facade_task.si().on_error(facade_error_handler.s()))#fill_empty_affiliations(session)
+        logger.info("Fill empty affiliations is deprecated.")
+        # deprecated because the UI component of facade where affiliations would need 
+        # to be fixed upon change no longer exists, and this information can easily be derived 
+        # from queries and materialized views in the current version of Augur.
+        # This method is also a major performance bottleneck with little value.
 
-        if force_invalidate_caches:
-            facade_sequence.append(invalidate_caches_facade_task.si().on_error(facade_error_handler.s()))#invalidate_caches(session.cfg)
+    if force_invalidate_caches:
+        facade_sequence.append(invalidate_caches_facade_task.si().on_error(facade_error_handler.s()))#invalidate_caches(session.cfg)
 
-        if not limited_run or (limited_run and rebuild_caches):
-            facade_sequence.append(rebuild_unknown_affiliation_and_web_caches_facade_task.si().on_error(facade_error_handler.s()))#rebuild_unknown_affiliation_and_web_caches(session.cfg)
-        
-        return facade_sequence
+    if not limited_run or (limited_run and rebuild_caches):
+        facade_sequence.append(rebuild_unknown_affiliation_and_web_caches_facade_task.si().on_error(facade_error_handler.s()))#rebuild_unknown_affiliation_and_web_caches(session.cfg)
+    
+    return facade_sequence

@@ -3,9 +3,8 @@ from typing import Any, List, Tuple
 import logging
 import json
 import httpx
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
-from augur.application.db.session import DatabaseSession
-from augur.application.db.models import Repo
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from augur.application.db.lib import get_repo_by_repo_git
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
 
@@ -72,29 +71,27 @@ def get_repo_weight_by_issue(logger,repo_git):
 
     owner,name = get_owner_repo(repo_git)
 
-    with GithubTaskManifest(logger) as manifest:
-        repo_graphql = GitHubRepoGraphql(logger, manifest.key_auth, owner, name)
-        number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
+    key_auth = GithubRandomKeyAuth(logger)
+
+    repo_graphql = GitHubRepoGraphql(logger, key_auth, owner, name)
+    number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
     
     return number_of_issues_and_prs
 
 #Get the weight for each repo for the core collection hook
 def get_repo_weight_core(logger,repo_git):
     
-    from augur.application.db import get_engine
-    engine = get_engine()
+    repo = get_repo_by_repo_git(repo_git)
 
-    with DatabaseSession(logger,engine) as session:
-        repo = Repo.get_by_repo_git(session, repo_git)
-        if not repo:
-            raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
-        
-        #try to get the collection status if it exists at this point
-        try:
-            status = repo.collection_status[0]
-            time_factor = calculate_date_weight_from_timestamps(repo.repo_added,status.core_data_last_collected)
-        except IndexError:
-            time_factor = calculate_date_weight_from_timestamps(repo.repo_added,None)
+    if not repo:
+        raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
+    
+    #try to get the collection status if it exists at this point
+    try:
+        status = repo.collection_status[0]
+        time_factor = calculate_date_weight_from_timestamps(repo.repo_added,status.core_data_last_collected)
+    except IndexError:
+        time_factor = calculate_date_weight_from_timestamps(repo.repo_added,None)
 
 
     #Don't go below zero.

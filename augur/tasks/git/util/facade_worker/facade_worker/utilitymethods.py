@@ -29,52 +29,44 @@ import subprocess
 from subprocess import check_output
 import os
 import sqlalchemy as s
-from sqlalchemy.exc import DataError
 from augur.application.db.models import *
-from .config import FacadeSession as FacadeSession
+from .config import FacadeHelper as FacadeHelper
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_working_commits_by_repo_id_and_hashes, remove_commits_by_repo_id_and_hashes, get_repo_by_repo_git, get_session
+from augur.application.db.util import execute_session_query
 #from augur.tasks.git.util.facade_worker.facade
 
-def update_repo_log(session, repos_id,status):
+def update_repo_log(logger, facade_helper, repos_id,status):
 
 # Log a repo's fetch status
-	session.log_activity("Info",f"{status} {repos_id}")
+	facade_helper.log_activity("Info",f"{status} {repos_id}")
 	#log_message = ("INSERT INTO repos_fetch_log (repos_id,status) "
 	#	"VALUES (%s,%s)")
 	try:
 		log_message = s.sql.text("""INSERT INTO repos_fetch_log (repos_id,status) 
             VALUES (:repo_id,:repo_status)""").bindparams(repo_id=repos_id,repo_status=status)
 
-		#session.insert_data(data,t_repos_fetch_log,['repos_id','status'])
-		session.execute_sql(log_message)
+		#bulk_insert_dicts(data,t_repos_fetch_log,['repos_id','status'])
+		execute_sql(log_message)
 	except Exception as e:
-		session.logger.error(f"Ran into error in update_repo_log: {e}")
+		logger.error(f"Ran into error in update_repo_log: {e}")
 		pass
 
-def trim_commits(session, repo_id,commits):
+def trim_commits(facade_helper, repo_id,commits):
 
 	# Quickly remove a given commit
 
 	if len(commits):
-		remove_commit = s.sql.text("""DELETE FROM commits
-			WHERE repo_id=:repo_id
-			AND cmt_commit_hash IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
-	
-	
-		session.execute_sql(remove_commit)
+		remove_commits_by_repo_id_and_hashes(repo_id, commits)
 	
 		# Remove the working commit.
-		remove_commit = s.sql.text("""DELETE FROM working_commits
-		    WHERE repos_id = :repo_id AND 
-		    working_commit IN :hashes""").bindparams(repo_id=repo_id,hashes=tuple(commits))
-		
-		session.execute_sql(remove_commit)
+		remove_working_commits_by_repo_id_and_hashes(repo_id, commits)
 
 	for commit in commits:
-		session.log_activity('Debug',f"Trimmed commit: {commit}")
-		session.log_activity('Debug',f"Removed working commit: {commit}")
+		facade_helper.log_activity('Debug',f"Trimmed commit: {commit}")
+		facade_helper.log_activity('Debug',f"Removed working commit: {commit}")
 
-def store_working_author(session, email):
+def store_working_author(facade_helper, email):
 
 # Store the working author during affiliation discovery, in case it is
 # interrupted and needs to be trimmed.
@@ -84,11 +76,11 @@ def store_working_author(session, email):
 		WHERE setting = 'working_author'
 		""").bindparams(email=email)
 
-	session.execute_sql(store)
+	execute_sql(store)
 
-	session.log_activity('Debug',f"Stored working author: {email}")
+	facade_helper.log_activity('Debug',f"Stored working author: {email}")
 
-def trim_author(session, email):
+def trim_author(facade_helper, email):
 
 # Remove the affiliations associated with an email. Used when an analysis is
 # interrupted during affiliation layering, and the data will be corrupt.
@@ -97,21 +89,17 @@ def trim_author(session, email):
 		SET cmt_author_affiliation = NULL 
 		WHERE cmt_author_email = :email
 		""").bindparams(email=email)
-
-	 
-	 
-	session.execute_sql(trim)
+	execute_sql(trim)
 
 	trim = s.sql.text("""UPDATE commits
 		SET cmt_committer_affiliation = NULL
 		WHERE cmt_committer_email = :email
 		""").bindparams(email=email)
+	execute_sql(trim)
 
-	session.execute_sql(trim)
+	store_working_author(facade_helper, 'done')
 
-	store_working_author(session, 'done')
-
-	session.log_activity('Debug',f"Trimmed working author: {email}")
+	facade_helper.log_activity('Debug',f"Trimmed working author: {email}")
 
 def get_absolute_repo_path(repo_base_dir, repo_id, repo_path,repo_name):
 	
@@ -134,12 +122,12 @@ def get_parent_commits_set(absolute_repo_path, start_date):
 	return parent_commits
 
 
-def get_existing_commits_set(session, repo_id):
+def get_existing_commits_set(repo_id):
 
 	find_existing = s.sql.text("""SELECT DISTINCT cmt_commit_hash FROM commits WHERE repo_id=:repo_id
 		""").bindparams(repo_id=repo_id)
 
-	existing_commits = [commit['cmt_commit_hash'] for commit in session.fetchall_data_from_sql_text(find_existing)]
+	existing_commits = [commit['cmt_commit_hash'] for commit in fetchall_data_from_sql_text(find_existing)]
 
 	return set(existing_commits)
 
@@ -148,15 +136,15 @@ def count_branches(git_dir):
     branches_dir = os.path.join(git_dir, 'refs', 'heads')
     return sum(1 for _ in os.scandir(branches_dir))
 
-def get_repo_commit_count(session, repo_git):
-    
-	repo = Repo.get_by_repo_git(session, repo_git)
+def get_repo_commit_count(logger, facade_helper, repo_git):
 
-	absolute_path = get_absolute_repo_path(session.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
+	repo = get_repo_by_repo_git(repo_git)
+    
+	absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
 	repo_loc = (f"{absolute_path}/.git")
 
-	session.logger.debug(f"loc: {repo_loc}")
-	session.logger.debug(f"path: {repo.repo_path}")
+	logger.debug(f"loc: {repo_loc}")
+	logger.debug(f"path: {repo.repo_path}")
 
 	# Check if the .git directory exists
 	if not os.path.exists(repo_loc):
@@ -171,77 +159,47 @@ def get_repo_commit_count(session, repo_git):
 
 	return commit_count
 
-def get_facade_weight_time_factor(session,repo_git):
-	repo = Repo.get_by_repo_git(session, repo_git)
-	
-	try:
-		status = repo.collection_status[0]
-		time_factor = calculate_date_weight_from_timestamps(repo.repo_added, status.facade_data_last_collected)
-	except IndexError:
-		time_factor = calculate_date_weight_from_timestamps(repo.repo_added, None)
-	
-	#Adjust for commits.
-	time_factor *= 1.2
+def get_facade_weight_time_factor(repo_git):
 
-	return  time_factor
+	with get_session() as session:
 
-def get_facade_weight_with_commit_count(session, repo_git, commit_count):
-	return commit_count - get_facade_weight_time_factor(session, repo_git)
+		query = session.query(Repo).filter(Repo.repo_git == repo_git)
+		repo = execute_session_query(query, 'one')
 
-
-def get_repo_weight_by_commit(logger,repo_git):
-	with FacadeSession(logger) as session:
-		return get_repo_commit_count(session, repo_git) - get_facade_weight_time_factor(session, repo_git)
-	
-
-def update_facade_scheduling_fields(session, repo_git, weight, commit_count):
-	repo = Repo.get_by_repo_git(session, repo_git)
-
-	update_query = (
-		s.update(CollectionStatus)
-		.where(CollectionStatus.repo_id == repo.repo_id)
-		.values(facade_weight=weight,commit_sum=commit_count)
-	)
-
-	session.execute(update_query)
-	session.commit()
-
-def facade_bulk_insert_commits(session,records):
-
-	try:
-		session.execute(
-				s.insert(Commit),
-				records,
-			)
-		session.commit()
-	except Exception as e:
+		try:
+			status = repo.collection_status[0]
+			time_factor = calculate_date_weight_from_timestamps(repo.repo_added, status.facade_data_last_collected)
+		except IndexError:
+			time_factor = calculate_date_weight_from_timestamps(repo.repo_added, None)
 		
-		if len(records) > 1:
-			session.logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
+		#Adjust for commits.
+		time_factor *= 1.2
 
-			#split list into halves and retry insert until we isolate offending record
-			firsthalfRecords = records[:len(records)//2]
-			secondhalfRecords = records[len(records)//2:]
+		return  time_factor
 
-			facade_bulk_insert_commits(session,firsthalfRecords)
-			facade_bulk_insert_commits(session,secondhalfRecords)
-		elif len(records) == 1 and isinstance(e,DataError) and "time zone displacement" in f"{e}":
-			commit_record = records[0]
-			#replace incomprehensible dates with epoch.
-			#2021-10-11 11:57:46 -0500
-			placeholder_date = "1970-01-01 00:00:15 -0500"
+def get_facade_weight_with_commit_count(repo_git, commit_count):
+	return commit_count - get_facade_weight_time_factor(repo_git)
 
-			#Check for improper utc timezone offset
-			#UTC timezone offset should be betwen -14:00 and +14:00
 
-			commit_record['author_timestamp'] = placeholder_date
-			commit_record['committer_timestamp'] = placeholder_date
+def get_repo_weight_by_commit(logger, repo_git):
+	facade_helper = FacadeHelper(logger)
+	return get_repo_commit_count(logger, facade_helper, repo_git) - get_facade_weight_time_factor(repo_git)
+	
 
-			session.execute(
-				s.insert(Commit),
-				[commit_record],
-			)
-			session.commit()
-		else:
-			raise e
+def update_facade_scheduling_fields(repo_git, weight, commit_count):
+
+	repo = get_repo_by_repo_git(repo_git)
+
+	with get_session() as session:
+
+		update_query = (
+			s.update(CollectionStatus)
+			.where(CollectionStatus.repo_id == repo.repo_id)
+			.values(facade_weight=weight,commit_sum=commit_count)
+		)
+
+		session.execute(update_query)
+		session.commit()
+
+
 

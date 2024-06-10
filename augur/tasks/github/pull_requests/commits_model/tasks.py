@@ -2,8 +2,9 @@ import logging
 from augur.tasks.github.pull_requests.commits_model.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurSecondaryRepoCollectionTask
-from augur.application.db.util import execute_session_query
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from augur.application.db.lib import get_repo_by_repo_git
+
 
 
 @celery.task(base=AugurSecondaryRepoCollectionTask)
@@ -11,11 +12,8 @@ def process_pull_request_commits(repo_git: str) -> None:
 
     logger = logging.getLogger(process_pull_request_commits.__name__)
 
-    with GithubTaskManifest(logger) as manifest:
+    repo = get_repo_by_repo_git(repo_git)
 
-        augur_db = manifest.augur_db
+    key_auth = GithubRandomKeyAuth(logger)
 
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo = execute_session_query(query, 'one')
-
-        pull_request_commits_model(repo.repo_id, logger, augur_db, manifest.key_auth)
+    pull_request_commits_model(repo, logger, key_auth)
