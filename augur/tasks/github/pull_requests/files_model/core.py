@@ -3,6 +3,8 @@ from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.lib import bulk_insert_dicts, execute_sql
+from augur.application.db.util import execute_session_query
+import traceback 
 import httpx  # Import httpx
 
 def pull_request_files_model(repo_id,logger, augur_db, key_auth):
