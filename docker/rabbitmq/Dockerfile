@@ -1,7 +1,7 @@
 FROM rabbitmq:3.12-management-alpine
 
 LABEL maintainer="574/augur@simplelogin.com"
-LABEL version="0.70.0"
+LABEL version="0.71.0"
 
 ARG RABBIT_MQ_DEFAULT_USER=augur
 ARG RABBIT_MQ_DEFAULT_PASSWORD=password123

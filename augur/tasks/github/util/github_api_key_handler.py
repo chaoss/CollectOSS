@@ -6,8 +6,7 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from augur.tasks.util.redis_list import RedisList
-from augur.application.db.session import DatabaseSession
-from augur.application.db.lib import get_value
+from augur.application.db.lib import get_value, get_worker_oauth_keys
 from sqlalchemy import func 
 
 
@@ -19,7 +18,6 @@ class GithubApiKeyHandler():
     """Handles Github API key retrieval from the database and redis
 
     Attributes:
-        session (DatabaseSession): Database connection
         logger (logging.Logger): Handles all logs
         oauth_redis_key (str): The key where the github api keys are cached in redis
         redis_key_list (RedisList): Acts like a python list, and interacts directly with the redis cache
@@ -27,9 +25,8 @@ class GithubApiKeyHandler():
         key: (List[str]): List of keys retrieve from database or cache
     """
 
-    def __init__(self, session: Session, logger):
+    def __init__(self, logger):
 
-        self.session = session
         self.logger = logger
 
         self.oauth_redis_key = "github_oauth_keys_list"
@@ -69,16 +66,12 @@ class GithubApiKeyHandler():
         Returns:
             Github api keys that are in the database
         """
-        from augur.application.db.models import WorkerOauth
 
-        select = WorkerOauth.access_token
-        # randomizing the order at db time
-        #select.order_by(func.random())
-        where = [WorkerOauth.access_token != self.config_key, WorkerOauth.platform == 'github']
+        keys = get_worker_oauth_keys('github')
 
-        return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).order_by(func.random()).all()]
-        #return [key_tuple[0] for key_tuple in self.session.query(select).filter(*where).all()]
+        filtered_keys = [item for item in keys if item != self.config_key]
 
+        return filtered_keys
 
     def get_api_keys(self) -> List[str]:
         """Retrieves all valid Github API Keys

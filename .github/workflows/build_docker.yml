@@ -2,10 +2,12 @@ name: Build Docker images
 on:
   push:
     branches:
-      - startup-wizard
+      - main
+      - dev
   pull_request:
     branches:
-      - startup-wizard
+      - main
+      - dev
   release:
     types:
       - published

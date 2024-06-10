@@ -6,11 +6,12 @@ import logging
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
-from augur.tasks.gitlab.gitlab_task_session import GitlabTaskManifest
 from augur.application.db.data_parse import extract_gitlab_mr_event_data, extract_gitlab_issue_event_data
 from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.models import Repo, Issue, IssueEvent, PullRequest, PullRequestEvent
-from augur.application.db.util import execute_session_query
+from augur.application.db.models import Issue, IssueEvent, PullRequest, PullRequestEvent
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session
+from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
+
 
 platform_id = 2
 
@@ -26,19 +27,18 @@ def collect_gitlab_issue_events(repo_git) -> int:
     owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_gitlab_issue_events.__name__) 
-    with GitlabTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
+    key_auth = GitlabRandomKeyAuth(logger)
 
-        events = retrieve_all_gitlab_event_data("issue", repo_git, logger, manifest.key_auth)
+    events = retrieve_all_gitlab_event_data("issue", repo_git, logger, key_auth)
+
+    with get_session() as session:
 
         if events:
             logger.info(f"Length of gitlab issue events: {len(events)}")
-            process_issue_events(events, f"{owner}/{repo}: Gitlab Issue Events task", repo_id, logger, augur_db)
+            process_issue_events(events, f"{owner}/{repo}: Gitlab Issue Events task", repo_id, logger, session)
         else:
             logger.info(f"{owner}/{repo} has no gitlab issue events")
 
@@ -52,23 +52,21 @@ def collect_gitlab_merge_request_events(repo_git) -> int:
         repo_git: the repo url string
     """
 
-
     owner, repo = get_owner_repo(repo_git)
 
     logger = logging.getLogger(collect_gitlab_issue_events.__name__) 
-    with GitlabTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_obj = execute_session_query(query, 'one')
-        repo_id = repo_obj.repo_id
+    key_auth = GitlabRandomKeyAuth(logger)
 
-        events = retrieve_all_gitlab_event_data("merge_request", repo_git, logger, manifest.key_auth)
+    events = retrieve_all_gitlab_event_data("merge_request", repo_git, logger, key_auth)
+
+    with get_session() as session:
 
         if events:
             logger.info(f"Length of gitlab merge request events: {len(events)}")
-            process_mr_events(events, f"{owner}/{repo}: Gitlab MR Events task", repo_id, logger, augur_db)
+            process_mr_events(events, f"{owner}/{repo}: Gitlab MR Events task", repo_id, logger, session)
         else:
             logger.info(f"{owner}/{repo} has no gitlab merge request events")
 
@@ -110,7 +108,7 @@ def retrieve_all_gitlab_event_data(gtype, repo_git, logger, key_auth) -> None:
 
     return all_data
 
-def process_issue_events(events, task_name, repo_id, logger, augur_db):
+def process_issue_events(events, task_name, repo_id, logger, session):
     """
     Retrieve only the needed data for mr label data from the api response
 
@@ -119,7 +117,7 @@ def process_issue_events(events, task_name, repo_id, logger, augur_db):
         task_name: name of the task as well as the repo being processed
         repo_id: augur id of the repo
         logger: logging object
-        augur_db: sqlalchemy db object 
+        session: sqlalchemy db object 
     """
 
     tool_source = "Gitlab issue events task"
@@ -130,7 +128,7 @@ def process_issue_events(events, task_name, repo_id, logger, augur_db):
 
     # create mapping from issue number to issue id of current issues
     issue_url_to_id_map = {}
-    issues = augur_db.session.query(Issue).filter(Issue.repo_id == repo_id).all()
+    issues = session.query(Issue).filter(Issue.repo_id == repo_id).all()
     for issue in issues:
         issue_url_to_id_map[issue.gh_issue_number] = issue.issue_id
 
@@ -153,10 +151,10 @@ def process_issue_events(events, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(issue_event_dicts)} gitlab issue events")
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
-    augur_db.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
+    bulk_insert_dicts(logger, issue_event_dicts, IssueEvent, issue_event_natural_keys)
 
 
-def process_mr_events(events, task_name, repo_id, logger, augur_db):
+def process_mr_events(events, task_name, repo_id, logger, session):
     """
     Retrieve only the needed data for mr events from the api response
 
@@ -180,7 +178,7 @@ def process_mr_events(events, task_name, repo_id, logger, augur_db):
 
     # create mapping from mr number to pull request id of current mrs
     mr_number_to_id_map = {}
-    mrs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    mrs = session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
     for mr in mrs:
         mr_number_to_id_map[mr.pr_src_number] = mr.pull_request_id
 
@@ -203,6 +201,6 @@ def process_mr_events(events, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(mr_event_dicts)} gitlab mr events")
     mr_event_natural_keys = ["platform_id", "node_id"]
-    augur_db.insert_data(mr_event_dicts, PullRequestEvent, mr_event_natural_keys)
+    bulk_insert_dicts(logger, mr_event_dicts, PullRequestEvent, mr_event_natural_keys)
 
 

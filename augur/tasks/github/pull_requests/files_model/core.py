@@ -3,6 +3,7 @@ from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.util import execute_session_query
+import traceback 
 
 def pull_request_files_model(repo_id,logger, augur_db, key_auth):
     
@@ -62,17 +63,28 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth):
             'values' : values
         }
 
-        
+        logger.debug(f"query: {query}; key_auth: {key_auth}; params: {params}")
         file_collection = GraphQlPageCollection(query, key_auth, logger,bind=params)
 
-        pr_file_rows += [{
-            'pull_request_id': pr_info['pull_request_id'],
-            'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
-            'pr_file_deletions': pr_file['deletions'] if 'deletions' in pr_file else None,
-            'pr_file_path': pr_file['path'],
-            'data_source': 'GitHub API',
-            'repo_id': repo_id, 
-            } for pr_file in file_collection if pr_file and 'path' in pr_file]
+        logger.debug(f"Results of file_collection: {file_collection}")
+
+        for pr_file in file_collection: 
+            logger.debug(f"CHECK: {repr(file_collection)}")
+            if pr_file and 'path' in pr_file: 
+                logger.debug(f"Checks out for {repr(pr_file)} and {repr(file_collection)}")
+
+        try: 
+            pr_file_rows += [{
+                'pull_request_id': pr_info['pull_request_id'],
+                'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
+                'pr_file_deletions': pr_file['deletions'] if 'deletions' in pr_file else None,
+                'pr_file_path': pr_file['path'],
+                'data_source': 'GitHub API',
+                'repo_id': repo_id, 
+                } for pr_file in file_collection if pr_file and 'path' in pr_file]
+        except Exception as e: 
+            logger.error(f"PR Files Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+
 
 
     if len(pr_file_rows) > 0:

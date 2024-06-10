@@ -80,7 +80,7 @@ def add_repo(user_id, group_name, repo_url):
 
     logger = logging.getLogger(add_org.__name__) 
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession() as session:
         result = UserRepo.add_github_repo(session, repo_url, user_id, group_name)
 
     print(repo_url, result)
@@ -92,7 +92,7 @@ def add_org(user_id, group_name, org_url):
 
     logger = logging.getLogger(add_org.__name__) 
 
-    with GithubTaskSession(logger) as session:
+    with GithubTaskSession() as session:
             result = UserRepo.add_github_org_repos(session, org_url, user_id, group_name)
 
     print(org_url, result)

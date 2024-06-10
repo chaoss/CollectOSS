@@ -30,6 +30,8 @@ import json
 
 from augur.application.db.models.base import Base
 from augur.application.db.util import execute_session_query
+from augur.application.db import get_session
+
 DEFAULT_REPO_GROUP_ID = 1
 
 metadata = Base.metadata
@@ -588,12 +590,13 @@ class RepoGroup(Base):
     @staticmethod
     def get_by_name(session, rg_name):
 
-        query = session.query(RepoGroup).filter(RepoGroup.rg_name == rg_name)
+        with get_session() as session:
 
-        try:
-            result = execute_session_query(query, 'one')
-        except NoResultFound:
-            return None
+            try:
+                query = session.query(RepoGroup).filter(RepoGroup.rg_name == rg_name)
+                result = execute_session_query(query, 'one')
+            except NoResultFound:
+                return None
         
         return result
 

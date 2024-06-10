@@ -13,8 +13,8 @@ from celery.signals import after_setup_logger
 
 from augur.application.logs import TaskLogConfig, AugurLogger
 from augur.application.db.session import DatabaseSession
-from augur.application.db.engine import DatabaseEngine
 from augur.application.db import get_engine
+from augur.application.db.lib import get_session
 from augur.application.config import AugurConfig
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
 from augur.application.db.models import Repo
@@ -83,7 +83,7 @@ class AugurCoreRepoCollectionTask(celery.Task):
 
         logger.error(f"Task {task_id} raised exception: {exc}\n Traceback: {''.join(traceback.format_exception(None, exc, exc.__traceback__))}")
 
-        with DatabaseSession(logger,engine) as session:
+        with get_session() as session:
             logger.info(f"Repo git: {repo_git}")
             repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
 
