@@ -1,5 +1,6 @@
 import requests
 import logging 
+import traceback 
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +49,9 @@ def get_lastest_minor(version, data):
     try: 
         versions = data['versions']
     except Exception as e: 
-        logger.info(f'error is {e} on the NPM. Hey, its NODEJS, of course it does not work :D ')
-        raise e 
+        logger.info(
+                    ''.join(traceback.format_exception(None, e, e.__traceback__)))
+      #  raise e 
         
     try:
         index = list(versions.keys()).index(version)
