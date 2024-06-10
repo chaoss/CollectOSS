@@ -370,7 +370,9 @@ def collect_pull_request_reviews(repo_git: str) -> None:
                 break
             
             if '\x00' in page_data.decode('utf-8'):
-                break 
+                page_data = page_data.replace('\x00', ' ')
+                logger.info(f"NUL characters were found in PR Reviews and replaced with spaces.") 
+                
             
             pr_reviews.extend(page_data)
         
