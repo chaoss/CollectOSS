@@ -24,7 +24,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'Flask==2.0.2',
-        'Flask-Cors==3.0.10',
+        'Flask-Cors==4.0.1',
         'Flask-Login==0.5.0',
         'Flask-WTF==1.0.0',
         'requests==2.28.0',
