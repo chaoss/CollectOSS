@@ -188,7 +188,7 @@ def first_time(setup_key, port = 5000):
             env[key] = value
         result = subprocess.Popen(f"{config_script}", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
-            result.wait(10)
+            result.wait(120)
         except:
             return "Timeout reached waiting for database update to complete", 500
 
