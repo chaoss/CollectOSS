@@ -2,7 +2,7 @@
 basePath: /api/unstable/
 externalDocs:
   description: CHAOSS Metric Definitions
-  url: https://chaoss.community/metrics/
+  url: https://chaoss.community/kb-metrics-and-metrics-models/
 host: ai.chaoss.io
 info:
   title: Augur REST API
@@ -330,9 +330,6 @@ paths:
   /metadata/repo_info:
     get:
       description: 'Returns the metadata about all repositories in an Augur instance, using information from a git platform (GitHub, GitLab, etc.). Each record includes the default branch name, repository license file, forks, stars, watchers, and committers. Also includes metadata about current repository issue and pull request status and counts.'
-      externalDocs:
-        description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
       operationId: Activity Metadata (Repo)
       responses:
         '200':
@@ -399,7 +396,7 @@ paths:
       description: 'Returns a list of repositories contributed to by all the contributors in an Augur Instance: INCLUDING all repositories on a platform, *not* merely those repositories in the Augur Instance. Numerical totals represent total CONTRIBUTIONS.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
+        url: https://chaoss.community/kb/metric-contributors/
       operationId: Contributions Count (Repo)
       responses:
         '200':
@@ -421,7 +418,7 @@ paths:
       description: 'Returns a list of repositories contributed to by all the contributors in an Augur Instance: INCLUDING all repositories on a platform, *not* merely those repositories in the Augur Instance. Numerical totals represent total CONTRIBUTORS.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
+        url: https://chaoss.community/kb/metric-contributors/
       operationId: Contributors Count (Repo)
       responses:
         '200':
@@ -443,7 +440,7 @@ paths:
       description: 'The average issue resolution time. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
+        url: https://chaoss.community/kb/metric-issue-resolution-duration/
       operationId: Average Issue Resolution Time (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -475,7 +472,7 @@ paths:
       description: 'The average issue resolution time. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
+        url: https://chaoss.community/kb/metric-issue-resolution-duration/
       operationId: Average Issue Resolution Time (Repo)
       parameters:
       - description: Repository ID.
@@ -504,7 +501,7 @@ paths:
       description: 'The CII Best Practices Badge level. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/security.md
+        url: https://chaoss.community/kb/metric-open-source-security-foundation-openssf-best-practices-badge/
       operationId: CII Best Practices Badge (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -536,7 +533,7 @@ paths:
       description: 'The CII Best Practices Badge level. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/security.md
+        url: https://chaoss.community/kb/metric-open-source-security-foundation-openssf-best-practices-badge/
       operationId: CII Best Practices Badge (Repo)
       parameters:
       - description: Repository ID.
@@ -565,7 +562,7 @@ paths:
       description: 'Number of persons opening an issue for the first time. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/metrics/Committers.md
+        url: https://chaoss.community/kb/metric-committers/
       operationId: Committers (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -612,11 +609,10 @@ paths:
       - risk
   /repos/:repo_id/committers:
     get:
-      description: 'Number of persons contributing with an accepted commit for the
-        first time. '
+      description: 'Number of persons contributing with an accepted commit for the first time.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/metrics/Committers.md
+        url: https://chaoss.community/kb/metric-committers/
       operationId: Committers (Repo)
       parameters:
       - description: Repository ID.
@@ -666,10 +662,10 @@ paths:
       - risk
   /repo-groups/:repo_group_id/fork-count:
     get:
-      description: 'Fork count. '
+      description: 'A technical fork is a distributed version control copy of a project. The number of technical forks indicates the number of copies of a project on the same code development platform.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
+        url: https://chaoss.community/kb/metric-technical-fork/
       operationId: Fork Count (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -698,10 +694,10 @@ paths:
       - risk
   /repos/:repo_id/fork-count:
     get:
-      description: 'Fork count. '
+      description: 'A technical fork is a distributed version control copy of a project. The number of technical forks indicates the number of copies of a project on the same code development platform.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
+        url: https://chaoss.community/kb/metric-technical-fork/
       operationId: Fork Count (Repo)
       parameters:
       - description: Repository ID.
@@ -730,7 +726,7 @@ paths:
       description: 'A time series of fork count. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
+        url: https://chaoss.community/kb/metric-technical-fork/
       operationId: Forks (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -765,7 +761,7 @@ paths:
       description: 'A time series of fork count. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/business-risk.md
+        url: https://chaoss.community/kb/metric-technical-fork/
       operationId: Forks (Repo)
       parameters:
       - description: Repository ID.
@@ -794,10 +790,10 @@ paths:
       - risk
   /repo-groups/:repo_group_id/license-coverage:
     get:
-      description: 'Number of persons opening an issue for the first time. '
+      description: 'How much of the code base has declared licenses that scanners can recognize which may not be just OSI-approved. This includes both software and documentation source files and is represented as a percentage of total coverage.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/metrics/License_Coverage.md
+        url: https://chaoss.community/kb/metric-license-coverage/
       operationId: License Coverage (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -829,11 +825,10 @@ paths:
       - risk
   /repos/:repo_id/license-coverage:
     get:
-      description: 'Number of persons contributing with an accepted commit for the
-        first time. '
+      description: 'How much of the code base has declared licenses that scanners can recognize which may not be just OSI-approved. This includes both software and documentation source files and is represented as a percentage of total coverage.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/metrics/License_Coverage.md
+        url: https://chaoss.community/kb/metric-license-coverage/
       operationId: License Coverage (Repo)
       parameters:
       - description: Repository ID.
@@ -865,10 +860,10 @@ paths:
       - risk
   /repo-groups/:repo_group_id/license-declared:
     get:
-      description: 'An enumeration of all the licenses declared in a repo group at the file level.'
+      description: 'The total number and specific licenses declared in a software package. This can include both software and documentation source files. This metric is an enumeration of licenses, and the number of files with that particular license declaration.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/metrics/License_Coverage.md
+        url: https://chaoss.community/kb/metric-licenses-declared/
       operationId: License Declared (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -897,10 +892,10 @@ paths:
       - risk
   /repos/:repo_id/license-declared:
     get:
-      description: 'An enumeration of all the licenses declared in a repo at the file level.'
+      description: 'The total number and specific licenses declared in a software package. This can include both software and documentation source files. This metric is an enumeration of licenses, and the number of files with that particular license declaration.'
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/licensing/license-declared.md
+        url: https://chaoss.community/kb/metric-licenses-declared/
       operationId: License Declared (Repo)
       parameters:
       - description: Repository ID.
@@ -932,7 +927,7 @@ paths:
       description: 'The primary language of the repository. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/security.md
+        url: https://chaoss.community/kb/metric-programming-language-distribution/
       operationId: Languages (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -961,7 +956,7 @@ paths:
       description: 'The primary language of the repository. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/security.md
+        url: https://chaoss.community/kb/metric-programming-language-distribution/
       operationId: Languages (Repo)
       parameters:
       - description: Repository ID.
@@ -991,7 +986,7 @@ paths:
         badging data). '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/licensing.md
+        url: https://chaoss.community/kb/metric-osi-approved-licenses/
       operationId: License Count (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -1024,7 +1019,7 @@ paths:
         badging data). '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-risk/blob/main/focus-areas/licensing.md
+        url: https://chaoss.community/kb/metric-osi-approved-licenses/
       operationId: License Count (Repo)
       parameters:
       - description: Repository ID.
@@ -2034,10 +2029,10 @@ paths:
       - experimental
   /repo-groups/:repo_group_id/lines-changed-by-author:
     get:
-      description: 'Count of closed issues. '
+      description: 'Code Changes Lines measures the sum of lines added and removed in all source code changes during a specified period by an author. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/contributors-new.md
+        url: https://chaoss.community/kb/metric-code-changes-lines/
       operationId: Lines Changed by Author (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -2075,10 +2070,10 @@ paths:
       - experimental
   /repo-groups/:repo_id/lines-changed-by-author:
     get:
-      description: 'Count of closed issues. '
+      description: 'Code Changes Lines measures the sum of lines added and removed in all source code changes during a specified period by an author.  '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/contributors-new.md
+        url: https://chaoss.community/kb/metric-code-changes-lines/
       operationId: Lines Changed by Author (Repo)
       parameters:
       - description: Repository ID.
@@ -2123,7 +2118,7 @@ paths:
       description: 'Time series of number of commits during a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Code_Changes.md
+        url: https://chaoss.community/kb/metric-code-changes-commits/
       operationId: Code Changes (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -2176,7 +2171,7 @@ paths:
       description: 'Time series number of commits during a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Code_Changes.md
+        url: https://chaoss.community/kb/metric-code-changes-commits/
       operationId: Code Changes (Repo)
       parameters:
       - description: Repository ID.
@@ -2226,7 +2221,7 @@ paths:
       description: 'Time series of lines added and removed during a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Code_Changes_Lines.md
+        url: https://chaoss.community/kb/metric-code-changes-lines/
       operationId: Code Changes Lines (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -2282,7 +2277,7 @@ paths:
       description: 'Time series of lines added and removed during a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Code_Changes_Lines.md
+        url: https://chaoss.community/kb/metric-code-changes-lines/
       operationId: Code Changes Lines (Repo)
       parameters:
       - description: Repository ID.
@@ -2335,7 +2330,7 @@ paths:
       description: 'List of contributors and their contributions. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/contributors.md
+        url: https://chaoss.community/kb/metric-contributors/
       operationId: Contributors (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -2400,7 +2395,7 @@ paths:
       description: 'List of contributors and their contributions. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/contributors.md
+        url: https://chaoss.community/kb/metric-contributors/
       operationId: Contributors (Repo)
       parameters:
       - description: Repository ID.
@@ -2459,7 +2454,7 @@ paths:
       description: 'Time series of number of new contributors during a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/contributors-new.md
+        url: https://chaoss.community/kb/metric-new-contributors/
       operationId: New Contributors (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -2512,7 +2507,7 @@ paths:
       description: 'Time series of number of new contributors during a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/contributors-new.md
+        url: https://chaoss.community/kb/metric-new-contributors/
       operationId: New Contributors (Repo)
       parameters:
       - description: Repository ID.
@@ -2565,7 +2560,7 @@ paths:
       description: 'Number of issues currently open. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/focus_areas/code_development.md
+        url: https://chaoss.community/kb/metric-issues-active/
       operationId: Issue Backlog (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -2597,7 +2592,7 @@ paths:
       description: 'Time since an issue is proposed until it is closed. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/focus_areas/code_development.md
+        url: https://chaoss.community/kb/metric-issues-active/
       operationId: Issue Backlog (Repo)
       parameters:
       - description: Repository ID.
@@ -2732,7 +2727,7 @@ paths:
       description: 'Ratio of issues closed to total issues. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/focus_areas/code_development.md
+        url: https://chaoss.community/kb/metric-issues-closed/
       operationId: Issue Throughput (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -2764,7 +2759,7 @@ paths:
       description: 'Ratio of issues closed to total issues. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/focus_areas/code_development.md
+        url: https://chaoss.community/kb/metric-issues-closed/
       operationId: Issue Throughput (Repo)
       parameters:
       - description: Repository ID.
@@ -2794,7 +2789,7 @@ paths:
         a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_Active.md
+        url: https://chaoss.community/kb/metric-issues-active/
       operationId: Issues Active (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -2848,7 +2843,7 @@ paths:
         a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_Active.md
+        url: https://chaoss.community/kb/metric-issues-active/
       operationId: Issues Active (Repo)
       parameters:
       - description: Repository ID.
@@ -2951,7 +2946,7 @@ paths:
       description: 'Time series of number of issues closed during a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_New.md
+        url: https://chaoss.community/kb/metric-issues-closed/
       operationId: Issues Closed (Repo)
       parameters:
       - description: Repository ID.
@@ -3001,7 +2996,7 @@ paths:
       description: 'Duration of time for issues to be resolved. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-closed-resolution-duration.md
+        url: https://chaoss.community/kb/metric-issue-resolution-duration/
       operationId: Closed Issue Resolution Duration (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -3042,7 +3037,7 @@ paths:
       description: 'Duration of time for issues to be resolved. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-closed-resolution-duration.md
+        url: https://chaoss.community/kb/metric-issue-resolution-duration/
       operationId: Closed Issue Resolution Duration (Repo)
       parameters:
       - description: Repository ID.
@@ -3086,7 +3081,7 @@ paths:
       description: 'Number of persons closing an issue for the first time. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-first-time-closed.md
+        url: https://chaoss.community/kb/metric-new-contributors-closing-issues/
       operationId: Closed Issues New Contributor (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -3139,7 +3134,7 @@ paths:
       description: 'Number of persons closing an issue for the first time. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-first-time-closed.md
+        url: https://chaoss.community/kb/metric-new-contributors-closing-issues/
       operationId: Closed Issues New Contributors (Repo)
       parameters:
       - description: Repository ID.
@@ -3292,7 +3287,7 @@ paths:
       description: 'Duration of time for issues to be resolved. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-maintainer-response-duration.md
+        url: https://chaoss.community/kb/metric-issue-resolution-duration/
       operationId: Issue Response Time (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -3336,7 +3331,7 @@ paths:
       description: 'Duration of time for issues to be resolved. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-maintainer-response-duration.md
+        url: https://chaoss.community/kb/metric-issue-resolution-duration/
       operationId: Issue Response Time (Repo)
       parameters:
       - description: Repository ID.
@@ -3380,7 +3375,7 @@ paths:
       description: 'Time series of number of new issues opened during a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_New.md
+        url: https://chaoss.community/kb/metric-issues-new/
       operationId: Issues New (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -3433,7 +3428,7 @@ paths:
       description: 'Time series of number of new issues opened during a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Issues_New.md
+        url: https://chaoss.community/kb/metric-issues-new/
       operationId: Issues New (Repo)
       parameters:
       - description: Repository ID.
@@ -3483,7 +3478,7 @@ paths:
       description: 'Age of open issues. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-open-age.md
+        url: https://chaoss.community/kb/metric-issue-age/
       operationId: Open Issue Age (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -3521,7 +3516,7 @@ paths:
       description: 'Age of open issues. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/issues-open-age.md
+        url: https://chaoss.community/kb/metric-issue-age/
       operationId: Open Issue Age (Repo)
       parameters:
       - description: Repository ID.
@@ -3664,7 +3659,7 @@ paths:
       description: 'Time since an review/pull request is proposed until it is accepted. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Reviews_Duration.md
+        url: https://chaoss.community/kb/metric-change-requests-duration/
       operationId: Review Duration (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -3717,7 +3712,7 @@ paths:
       description: 'Time since an review/pull request is proposed until it is accepted. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Reviews_Duration.md
+        url: https://chaoss.community/kb/metric-change-requests-duration/
       operationId: Review Duration (Repo)
       parameters:
       - description: Repository ID.
@@ -3768,7 +3763,7 @@ paths:
         a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/reviews.md
+        url: https://chaoss.community/kb/metric-change-request-reviews/
       operationId: Reviews (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -3822,7 +3817,7 @@ paths:
         a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/reviews.md
+        url: https://chaoss.community/kb/metric-change-request-reviews/
       operationId: Reviews (Repo)
       parameters:
       - description: Repository ID.
@@ -3873,7 +3868,7 @@ paths:
         within a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Reviews_Accepted.md
+        url: https://chaoss.community/kb/metric-change-requests-accepted/
       operationId: Reviews Accepted (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -3927,7 +3922,7 @@ paths:
         within a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Reviews_Accepted.md
+        url: https://chaoss.community/kb/metric-change-requests-accepted/
       operationId: Reviews Accepted (Repo)
       parameters:
       - description: Repository ID.
@@ -3978,7 +3973,7 @@ paths:
         within a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Reviews_Accepted.md
+        url: https://chaoss.community/kb/metric-change-requests-declined/
       operationId: Reviews Declined (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -4032,7 +4027,7 @@ paths:
         within a certain period. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Reviews_Accepted.md
+        url: https://chaoss.community/kb/metric-change-requests-declined/
       operationId: Reviews Declined (Repo)
       parameters:
       - description: Repository ID.
@@ -4158,7 +4153,7 @@ paths:
       description: 'Count of closed issues. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/contributors-new.md
+        url: https://chaoss.community/kb/metric-issues-closed/
       operationId: Closed Issues Count (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -4196,7 +4191,7 @@ paths:
       description: 'Count of closed issues. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/contributors-new.md
+        url: https://chaoss.community/kb/metric-issues-closed/
       operationId: Closed Issues Count (Repo)
       parameters:
       - description: Repository ID
@@ -4228,7 +4223,7 @@ paths:
       description: 'Time since an issue is proposed until it is closed. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/focus_areas/code_development.md
+        url: https://chaoss.community/kb/metric-issue-resolution-duration/
       operationId: Issue Duration (Repo Group)
       parameters:
       - description: Repository Group ID
@@ -4281,7 +4276,7 @@ paths:
       description: 'Time since an issue is proposed until it is closed. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/focus_areas/code_development.md
+        url: https://chaoss.community/kb/metric-issue-resolution-duration/
       operationId: Issue Duration (Repo)
       parameters:
       - description: Repository ID
@@ -4331,7 +4326,7 @@ paths:
       description: 'Time since an review/pull request is proposed until it is accepted. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Reviews_Duration.md
+        url: https://chaoss.community/kb/metric-release-frequency/
       operationId: Number of Releases (Repo)
       parameters:
       - description: Repository Group ID.
@@ -4366,7 +4361,7 @@ paths:
       description: 'Time since an review/pull request is proposed until it is accepted. '
       externalDocs:
         description: CHAOSS Metric Definition
-        url: https://github.com/chaoss/wg-evolution/blob/main/metrics/Reviews_Duration.md
+        url: https://chaoss.community/kb/metric-release-frequency/
       operationId: Number of Releases (Repo)
       parameters:
       - description: Repository ID.
