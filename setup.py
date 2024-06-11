@@ -45,7 +45,7 @@ setup(
         "itsdangerous==2.0.1", # 2.1.2
         'Jinja2~=3.0.3',
         "Flask==2.0.2", # 2.2.2
-        "Flask-Cors==3.0.10",
+        "Flask-Cors==4.0.1",
         "Flask-Login==0.5.0",
         "Flask-WTF==1.0.0",
         "pandas==1.5.3", # 1.4.3
