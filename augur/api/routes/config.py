@@ -8,6 +8,7 @@ import sqlalchemy as s
 
 # Disable the requirement for SSL by setting env["AUGUR_DEV"] = True
 from augur.api.util import ssl_required
+from augur.application.db.lib import get_session
 from augur.application.db.models import Config
 from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
@@ -32,7 +33,7 @@ def get_config():
 def update_config():
     update_dict = request.get_json()
 
-    with DatabaseSession(logger, engine=current_app.engine) as session:
+    with get_session() as session:
 
         for section, data in update_dict.items():
 

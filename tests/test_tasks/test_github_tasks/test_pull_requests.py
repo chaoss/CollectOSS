@@ -259,7 +259,7 @@ def test_insert_pr_contributors(github_api_key_headers, test_db_session, pr_numb
                 unique_contributors.append(cntrb["login"])
         
 
-        insert_pr_contributors(contributors_to_pass_to_insert, test_db_session, "Insert contrbibutors test")
+        insert_pr_contributors(contributors_to_pass_to_insert, logger, "Insert contrbibutors test")
 
         with test_db_session.engine.connect() as connection:
 
@@ -332,7 +332,7 @@ def test_insert_prs(github_api_key_headers, test_db_session, repo):
                 )
                
 
-            return_data = insert_prs(prs_insert, test_db_session, "Insert contrbibutors test")
+            return_data = insert_prs(prs_insert, logger, "Insert contrbibutors test")
 
             with test_db_session.engine.connect() as connection:
 

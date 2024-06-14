@@ -22,6 +22,7 @@ from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
+from time import sleep, mktime, gmtime, time, localtime
 import logging
 import re
 import json
@@ -29,6 +30,8 @@ import json
 
 from augur.application.db.models.base import Base
 from augur.application.db.util import execute_session_query
+from augur.application.db import get_session
+
 DEFAULT_REPO_GROUP_ID = 1
 
 metadata = Base.metadata
@@ -587,12 +590,13 @@ class RepoGroup(Base):
     @staticmethod
     def get_by_name(session, rg_name):
 
-        query = session.query(RepoGroup).filter(RepoGroup.rg_name == rg_name)
+        with get_session() as session:
 
-        try:
-            result = execute_session_query(query, 'one')
-        except NoResultFound:
-            return None
+            try:
+                query = session.query(RepoGroup).filter(RepoGroup.rg_name == rg_name)
+                result = execute_session_query(query, 'one')
+            except NoResultFound:
+                return None
         
         return result
 
@@ -878,7 +882,13 @@ class Repo(Base):
     @staticmethod
     def get_by_id(session, repo_id):
 
-        return session.query(Repo).filter(Repo.repo_id == repo_id).first()
+        try:
+            return session.query(Repo).filter(Repo.repo_id == repo_id).first()
+        except Exception as e:
+            session.rollback()
+            raise e
+
+        
 
     @staticmethod
     def get_by_repo_git(session, repo_git):
@@ -918,6 +928,17 @@ class Repo(Base):
                 continue
 
             data = result.json()
+            if result.status_code == 403: #GH Rate limiting
+                wait_until = int(result.headers.get("x-ratelimit-reset"))
+                # use time package to find how many seconds to wait
+                wait_in_seconds = int(
+                    mktime(gmtime(wait_until)) -
+                    mktime(gmtime(time()))
+                )
+                wait_until_time = localtime(wait_until)
+                logger.error(f"rate limited fetching {url}z")
+                logger.error(f"sleeping until {wait_until_time.tm_hour}:{wait_until_time.tm_min} ({wait_in_seconds} seconds)")
+                sleep(wait_in_seconds)
             # if there was an error return False
             if "message" in data.keys():
 
@@ -927,6 +948,8 @@ class Repo(Base):
                 return False, {"status": f"Github Error: {data['message']}"}
 
             return True, {"status": "Valid repo", "repo_type": data["owner"]["type"]}
+        
+        return False, {"status": "Failed to validate repo after multiple attempts"}
         
     @staticmethod
     def is_valid_gitlab_repo(gl_session, url: str) -> bool:
@@ -955,6 +978,11 @@ class Repo(Base):
         while attempts < 10:
             response = hit_api(gl_session.oauths, url, logger)
 
+            if wait_in_seconds := response.headers.get("Retry-After") is not None:
+                logger.info(f"rate limited fetching {url}, sleeping for {wait_in_seconds}")
+                print(f"rate limited fetching {url}, sleeping for {wait_in_seconds}")
+                sleep(int(wait_in_seconds))
+
             if response.status_code == 404:
                 return False, {"status": "Invalid repo"}
 
@@ -962,6 +990,8 @@ class Repo(Base):
                 return True, {"status": "Valid repo"}
 
             attempts += 1
+            logger.info(f"could not validate {url}, will attempt again in {attempts*5} seconds")
+            sleep(attempts*3)
 
         return False, {"status": "Failed to validate repo after multiple attempts"}
 

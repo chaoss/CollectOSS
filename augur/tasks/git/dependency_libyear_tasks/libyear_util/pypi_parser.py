@@ -160,7 +160,14 @@ def parse_conda(file_handle):
     pip = None
     if not contents:
         return []
-    dependencies = contents['dependencies']
+    #dependencies = contents['dependencies']
+    dependencies = contents.get('dependencies', [])
+    
+    if not dependencies:
+        print("No dependencies found.")
+        return []
+    else:
+        print("Dependencies found.")
     for dep in dependencies:
         if (type(dep) is dict) and dep['pip']:
             pip = dep

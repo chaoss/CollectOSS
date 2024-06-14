@@ -92,7 +92,7 @@ def dei_track_repo(application: ClientApplication):
     deiHook = CollectionRequest("core",primary_enabled_phases)
     deiHook.repo_list = [repo_url]
 
-    singleRoutine = AugurTaskRoutine(session,[deiHook])
+    singleRoutine = AugurTaskRoutine(logger, session,[deiHook])
     singleRoutine.start_data_collection()
     #start_block_of_repos(logger, session, [repo_url], primary_enabled_phases, "new")
 

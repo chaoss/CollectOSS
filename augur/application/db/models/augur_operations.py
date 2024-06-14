@@ -329,6 +329,9 @@ class User(Base):
             return user
         except NoResultFound:
             return None
+        except Exception as e:
+            session.rollback()
+            raise e
 
     @staticmethod
     def get_by_id(session, user_id: int):
@@ -1073,7 +1076,13 @@ class ClientApplication(Base):
 
     @staticmethod
     def get_by_id(session, client_id):
-        return session.query(ClientApplication).filter(ClientApplication.id == client_id).first()
+
+        try:
+            return session.query(ClientApplication).filter(ClientApplication.id == client_id).first()
+        except Exception as e:
+            session.rollback()
+            raise e
+
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
@@ -1224,7 +1233,7 @@ class CollectionStatus(Base):
     repo = relationship("Repo", back_populates="collection_status")
 
     @staticmethod
-    def insert(session, repo_id):
+    def insert(session, logger, repo_id):
         from augur.tasks.github.util.util import get_repo_weight_by_issue
         from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
@@ -1237,13 +1246,13 @@ class CollectionStatus(Base):
         if "github" in repo_git:
 
             try:
-                pr_issue_count = get_repo_weight_by_issue(session.logger, repo_git)
+                pr_issue_count = get_repo_weight_by_issue(logger, repo_git)
                 #session.logger.info(f"date weight: {calculate_date_weight_from_timestamps(repo.repo_added, None)}")
                 github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
             except Exception as e:
                 pr_issue_count = None
                 github_weight = None
-                session.logger.error(
+                logger.error(
                         ''.join(traceback.format_exception(None, e, e.__traceback__)))
         else:   
             try:
@@ -1252,7 +1261,7 @@ class CollectionStatus(Base):
             except Exception as e:
                 pr_issue_count = None
                 github_weight = None
-                session.logger.error(
+                logger.error(
                         ''.join(traceback.format_exception(None, e, e.__traceback__)))
 
 
@@ -1267,7 +1276,7 @@ class CollectionStatus(Base):
 
         result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)
 
-        session.logger.info(f"Trying to insert repo \n issue and pr sum: {record['issue_pr_sum']}")
+        logger.info(f"Trying to insert repo \n issue and pr sum: {record['issue_pr_sum']}")
 
         if not result:
             return False

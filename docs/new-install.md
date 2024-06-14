@@ -15,13 +15,15 @@ We default to this version of Ubuntu for the moment because Augur does not yet s
 Here we ensure your system is up to date, install required python libraries, install postgresql, and install our queuing infrastructure, which is composed of redis-server and rabbitmq-server
 
 ### Executable
-```shell 
+```shell
+sudo add-apt-repository ppa:deadsnakes/ppa &&
 sudo apt update && 
 sudo apt upgrade && 
-sudo apt install software-properties-common && 
-sudo apt install python3-dev && 
-sudo apt install python3.10-venv &&
-sudo apt install postgresql postgresql-contrib postgresql-client && 
+sudo apt install software-properties-common &&
+sudo apt-get install libpq-dev &&
+sudo apt install python3.11-dev && 
+sudo apt install python3.11-venv &&
+sudo apt install postgresql-16 postgresql-contrib-16 postgresql-client-16 && 
 sudo apt install build-essential && 
 sudo apt install redis-server &&  # required 
 sudo apt install erlang && # required
@@ -29,7 +31,7 @@ sudo apt install rabbitmq-server && #required
 sudo snap install go --classic && #required: Go Needs to be version 1.19.x or higher. Snap is the package manager that gets you to the right version. Classic enables it to actually be installed at the correct version.
 sudo apt install nginx && # required for hosting
 sudo add-apt-repository ppa:mozillateam/firefox-next &&
-sudo apt install firefox=115.0~b2+build1-0ubuntu0.22.04.1 &&
+sudo apt install firefox=127.0~b9+build1-0ubuntu0.24.04.1
 sudo apt install firefox-geckodriver
 
 # You will almost certainly need to reboot after this. 

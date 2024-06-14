@@ -27,7 +27,7 @@
 # aliases, and caches data for display.
 from __future__ import annotations
 import html.parser
-from .config import FacadeSession as FacadeSession
+from .config import FacadeHelper as FacadeHelper
 #.facade06analyze analysis moved to facade_tasks.py - IM 10/12/22
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable

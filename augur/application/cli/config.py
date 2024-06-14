@@ -7,6 +7,7 @@ import click
 import json
 import logging
 
+from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.cli import DatabaseContext, test_connection, test_db_connection, with_database
@@ -160,7 +161,7 @@ def add_section(ctx, section_name, file):
 @click.option('--section', required=True)
 @click.option('--setting', required=True)
 @click.option('--value', required=True)
-@click.option('--data-type', required=True)
+@click.option('--data-type')
 @test_connection
 @test_db_connection
 @with_database
@@ -169,6 +170,12 @@ def config_set(ctx, section, setting, value, data_type):
 
     with DatabaseSession(logger, engine=ctx.obj.engine) as session:
         config = AugurConfig(logger, session)
+        
+        if not data_type:
+            result = session.query(Config).filter(Config.section_name == section, Config.setting_name == setting).all()
+            if not result:
+                return click.echo("You must specify a data-type if the setting does not already exist")
+            data_type = result[0].type
 
         if data_type not in config.accepted_types:
             print(f"Error invalid type for config. Please use one of these types: {config.accepted_types}")
@@ -217,6 +224,22 @@ def config_get(ctx, section, setting):
 
             else:
                 print(f"Error: {section} section not found in config")
+
+@cli.command('get_all_json')
+def config_get_all_json():
+    data = {}
+    try:
+        with DatabaseSession(logger) as session:
+            sections = session.query(Config.section_name).distinct().all()
+            for section in sections:
+                data[section[0]] = {}
+
+            for row in session.query(Config).all():
+                data[row.section_name][row.setting_name] = row.value
+    except:
+        pass
+    
+    print(json.dumps(data, indent=4))
 
 @cli.command('clear')
 @test_connection
