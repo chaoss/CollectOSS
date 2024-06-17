@@ -69,13 +69,14 @@ if [ -d "$HOME/scorecard" ]; then
   go build; 
   echo "Scorecard build done."
   cd $CURRENT_DIR
+
 else
   echo "Cloning OSSF Scorecard to generate scorecard data ..."
-  git clone https://github.com/ossf/scorecard $HOME/scorecard
-  cd $HOME/scorecard
+  git clone https://github.com/ossf/scorecard $SCORECARD_DIR
+  cd $SCORECARD_DIR
   CURRENT_DIR=$PWD;
   cd $CURRENT_DIR
-  cd $HOME/scorecard;
+  cd $SCORECARD_DIR;
   go build;
   echo "scorecard build done"
   cd $CURRENT_DIR

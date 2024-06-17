@@ -23,7 +23,7 @@ def key_handler(test_db_session):
     
     redis.flushdb()
 
-    yield GithubApiKeyHandler(test_db_session)
+    yield GithubApiKeyHandler(logger)
 
 def test_get_config_key(key_handler, test_db_engine):
 

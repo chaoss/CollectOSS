@@ -64,7 +64,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
                     'tool_source': 'pull_request_commits_model',
                     'tool_version': '0.41',
                     'data_source': 'GitHub API',
-                    'repo_id': repo_id,
+                    'repo_id': repo.repo_id,
                 }
 
                 all_data.append(pr_commit_row)
@@ -72,6 +72,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
     if len(all_data) > 0:
         logger.info(f"{task_name}: Inserting {len(all_data)} rows")
         pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
+        bulk_insert_dicts(logger, all_data,PullRequestCommit,pr_commits_natural_keys)
         augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
             
 

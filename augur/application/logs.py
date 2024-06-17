@@ -36,12 +36,29 @@ def getFormatter(logLevel):
         return logging.Formatter(fmt=ERROR_FORMAT_STRING)
 
 # create a file handler and set the format and log level
-def create_file_handler(file, formatter, level):
-    handler = FileHandler(filename=file, mode='a')
-    handler.setFormatter(fmt=formatter)
-    handler.setLevel(level)
+# def create_file_handler(file, formatter, level):
+#     handler = FileHandler(filename=file, mode='a')
+#     handler.setFormatter(fmt=formatter)
+#     handler.setLevel(level)
 
-    return handler
+#     return handler
+
+def create_file_handler(file, formatter, level):
+    try:
+        # Ensure the directory exists
+        directory = os.path.dirname(file)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        
+        # Create the file handler
+        handler = logging.FileHandler(filename=file, mode='a')
+        handler.setFormatter(formatter)
+        handler.setLevel(level)
+        
+        return handler
+    except Exception as e:
+        print(f"Failed to create file handler: {e}")
+        return None
 
 # function to create two file handlers and add them to a logger  
 def initialize_file_handlers(logger, file, log_level):

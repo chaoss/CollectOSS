@@ -6,11 +6,12 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_paginator import GithubPaginator
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.models import PullRequest, PullRequestEvent, Issue, IssueEvent, Contributor, Repo
-from augur.application.db.util import execute_session_query
+from augur.application.db.models import PullRequestEvent, IssueEvent, Contributor
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id, update_issue_closed_cntrbs_by_repo_id
+
 
 platform_id = 1
 
@@ -19,32 +20,26 @@ def collect_events(repo_git: str):
 
     logger = logging.getLogger(collect_events.__name__)
     
-    with GithubTaskManifest(logger) as manifest:
+    try:
+        
+        repo_obj = get_repo_by_repo_git(repo_git)
+        repo_id = repo_obj.repo_id
 
-        augur_db = manifest.augur_db
+        owner, repo = get_owner_repo(repo_git)
 
-        try:
-            
-            query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
-            repo_obj = execute_session_query(query, 'one')
-            repo_id = repo_obj.repo_id
+        logger.info(f"Collecting Github events for {owner}/{repo}")
 
-            owner, repo = get_owner_repo(repo_git)
+        key_auth = GithubRandomKeyAuth(logger)
 
-            logger.info(f"Collecting Github events for {owner}/{repo}")
+        event_data = retrieve_all_event_data(repo_git, logger, key_auth)
 
-            url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
+        if event_data:
+            process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger)
+        else:
+            logger.info(f"{owner}/{repo} has no events")
 
-            event_data = retrieve_all_event_data(repo_git, logger, manifest.key_auth)
-
-            if event_data:
-            
-                process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger, manifest.augur_db)
-
-            else:
-                logger.info(f"{owner}/{repo} has no events")
-        except Exception as e:
-            logger.error(f"Could not collect events for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+    except Exception as e:
+        logger.error(f"Could not collect events for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
 
 def retrieve_all_event_data(repo_git: str, logger, key_auth):
@@ -77,7 +72,7 @@ def retrieve_all_event_data(repo_git: str, logger, key_auth):
 
     return all_data        
 
-def process_events(events, task_name, repo_id, logger, augur_db):
+def process_events(events, task_name, repo_id, logger):
     
     tool_source = "Github events task"
     tool_version = "2.0"
@@ -90,13 +85,13 @@ def process_events(events, task_name, repo_id, logger, augur_db):
 
     # create mapping from issue url to issue id of current issues
     issue_url_to_id_map = {}
-    issues = augur_db.session.query(Issue).filter(Issue.repo_id == repo_id).all()
+    issues = get_issues_by_repo_id(repo_id)
     for issue in issues:
         issue_url_to_id_map[issue.issue_url] = issue.issue_id
 
     # create mapping from pr url to pr id of current pull requests
     pr_url_to_id_map = {}
-    prs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    prs = get_pull_requests_by_repo_id(repo_id)
     for pr in prs:
         pr_url_to_id_map[pr.pr_url] = pr.pull_request_id
 
@@ -160,7 +155,7 @@ def process_events(events, task_name, repo_id, logger, augur_db):
     # remove contributors that were found in the data more than once
     contributors = remove_duplicate_dicts(contributors)
 
-    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
 
     issue_events_len = len(issue_event_dicts)
     pr_events_len = len(pr_event_dicts)
@@ -174,12 +169,12 @@ def process_events(events, task_name, repo_id, logger, augur_db):
 
     # TODO: Could replace this with "id" but it isn't stored on the table for some reason
     pr_event_natural_keys = ["node_id"]
-    augur_db.insert_data(pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
+    bulk_insert_dicts(logger, pr_event_dicts, PullRequestEvent, pr_event_natural_keys)
 
     issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
-    augur_db.insert_data(issue_event_dicts, IssueEvent, issue_event_natural_keys)
+    bulk_insert_dicts(logger, issue_event_dicts, IssueEvent, issue_event_natural_keys)
 
-    update_issue_closed_cntrbs_from_events(augur_db.engine, repo_id)
+    update_issue_closed_cntrbs_by_repo_id(repo_id)
 
 # TODO: Should we skip an event if there is no contributor to resolve it o
 def process_github_event_contributors(logger, event, tool_source, tool_version, data_source):
@@ -194,42 +189,4 @@ def process_github_event_contributors(logger, event, tool_source, tool_version, 
         return event, None
     
     return event, event_cntrb
-
-
-def update_issue_closed_cntrbs_from_events(engine, repo_id):
-
-    get_ranked_issues = s.text(f"""
-        WITH RankedIssues AS (
-            SELECT repo_id, issue_id, cntrb_id, 
-                ROW_NUMBER() OVER(PARTITION BY issue_id ORDER BY created_at DESC) AS rn
-            FROM issue_events 
-            WHERE "action" = 'closed'
-        )
-                                            
-        SELECT issue_id, cntrb_id from RankedIssues where rn=1 and repo_id={repo_id} and cntrb_id is not NULL
-    """)
-
-    with engine.connect() as conn:
-        result = conn.execute(get_ranked_issues).fetchall()
-
-    update_data = []
-    for row in result:
-        update_data.append(
-            {
-            'issue_id': row[0], 
-            'cntrb_id': row[1], 
-            'repo_id': repo_id
-            }
-        )
-
-    if update_data:
-        with engine.connect() as connection:
-            update_stmt = s.text("""
-                UPDATE issues
-                SET cntrb_id = :cntrb_id
-                WHERE issue_id = :issue_id
-                AND repo_id = :repo_id
-            """)
-            connection.execute(update_stmt, update_data)
-
 

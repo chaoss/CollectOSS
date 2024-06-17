@@ -29,7 +29,9 @@ import subprocess
 import os
 import sqlalchemy as s
 
-def analyze_commit(session, repo_id, repo_loc, commit):
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text
+
+def analyze_commit(logger, repo_id, repo_loc, commit):
 
 # This function analyzes a given commit, counting the additions, removals, and
 # whitespace changes. It collects all of the metadata about the commit, and
@@ -60,7 +62,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 	# Sometimes people mix up their name and email in their git settings
 
 		if name.find('@') >= 0 and email.find('@') == -1:
-			session.logger.debug(f"Found swapped email/name: {email}/{name}")
+			logger.debug(f"Found swapped email/name: {email}/{name}")
 			return email,name
 		else:
 			return name,email
@@ -71,7 +73,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 	# matching. This extra info is not used, so we discard it.
 
 		if email.count('@') > 1:
-			session.logger.debug(f"Found extra @: {email}")
+			logger.debug(f"Found extra @: {email}")
 			return email[:email.find('@',email.find('@')+1)]
 		else:
 			return email
@@ -84,7 +86,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 			WHERE alias_email=:alias_email 
 			AND cntrb_active = 1""").bindparams(alias_email=email)
 
-		canonical = session.fetchall_data_from_sql_text(fetch_canonical)#list(cursor_people_local)
+		canonical = fetchall_data_from_sql_text(fetch_canonical)#list(cursor_people_local)
 
 		if canonical:
 			for email in canonical:
@@ -111,7 +113,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 		#2021-10-11 11:57:46 -0500
 		placeholder_date = "1970-01-01 00:00:15 -0500"
 
-		#session.logger.info(f"Timestamp: {author_timestamp}")
+		#logger.info(f"Timestamp: {author_timestamp}")
 		commit_record = {
 			'repo_id' : repos_id,
 			'cmt_commit_hash' : str(commit),
@@ -173,7 +175,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 
 	#cursor_local.execute(store_working_commit, (repo_id,commit))
 	#db_local.commit()
-	session.execute_sql(store_working_commit)
+	execute_sql(store_working_commit)
 
 	#session.log_activity('Debug',f"Stored working commit and analyzing : {commit}")
 

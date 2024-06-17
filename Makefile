@@ -3,6 +3,7 @@
 default:
 	@ echo "Installation Commands:"
 	@ echo "    install                         Installs Augur's full stack for production"
+	@ echo "    wizard                          Install Augur and launch the graphical setup wizard"
 	@ echo "    clean                           Removes potentially troublesome compiled files"
 	@ echo "    rebuild                         Removes build/compiled files & binaries and reinstalls the project"
 	@ echo
@@ -33,6 +34,9 @@ default:
 .PHONY: clean rebuild
 install:
 	@ ./scripts/install/install.sh dev
+
+wizard:
+	@ ./scripts/install/install.sh graphical
 
 install-spdx:
 	@ ./scripts/install/install-spdx.sh

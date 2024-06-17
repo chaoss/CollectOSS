@@ -180,7 +180,7 @@ function create_config(){
     #Create and cache credentials for github and gitlab
     touch $facade_repo_directory/.git-credentials
     
-    echo "https://$github_username:$github_api_key@github.com" >> $facade_repo_directory/.git-credentials
+    echo "https://$github_username:$github_api_key@github.com" > $facade_repo_directory/.git-credentials
     echo "https://$gitlab_username:$gitlab_api_key@gitlab.com" >> $facade_repo_directory/.git-credentials
 
     git config --global credential.helper "store --file $facade_repo_directory/.git-credentials"

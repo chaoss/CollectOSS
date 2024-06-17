@@ -12,13 +12,13 @@ from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
 from augur.application.db.lib import get_section
 from augur.tasks.github.util.util import get_repo_weight_core, get_repo_weight_by_issue
-from augur.application.db.session import DatabaseSession
 from augur.application.db import get_engine
+from augur.application.db.lib import execute_sql, get_session, get_active_repo_count, get_repo_by_repo_git
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 from augur.tasks.util.collection_state import CollectionState
 
 
-def get_list_of_all_users(session):
+def get_list_of_all_users():
     #Get a list of all users.
     query = s.sql.text("""
         SELECT  
@@ -26,7 +26,7 @@ def get_list_of_all_users(session):
         FROM augur_operations.users
     """)
 
-    users = session.execute_sql(query).fetchall()
+    users = execute_sql(query).fetchall()
     return users
 
 
@@ -129,13 +129,9 @@ class CollectionRequest:
         if name == "facade":
             self.new_status = CollectionState.UPDATE.value
 
-    def get_active_repo_count(self,session):
-        return len(session.query(CollectionStatus).filter(getattr(CollectionStatus,f"{self.name}_status" ) == CollectionState.COLLECTING.value).all())
-
-
     def get_valid_repos(self,session):
 
-        active_repo_count = self.get_active_repo_count(session)
+        active_repo_count = get_active_repo_count(self.name)
         limit = self.max_repo-active_repo_count
 
         if limit <= 0:
@@ -243,7 +239,7 @@ def task_failed_util(self, request,exc,traceback):
     # log traceback to error file
     logger.error(f"Task {request.id} raised exception: {exc}\n{traceback}")
     
-    with DatabaseSession(logger,engine) as session:
+    with get_session() as session:
         core_id_match = CollectionStatus.core_task_id == request.id
         secondary_id_match = CollectionStatus.secondary_task_id == request.id
         facade_id_match = CollectionStatus.facade_task_id == request.id
@@ -302,7 +298,7 @@ def issue_pr_task_update_weight_util(self, issue_and_pr_nums,repo_git=None,sessi
     if session is not None:
         update_issue_pr_weights(logger, session, repo_git, sum(issue_and_pr_nums))
     else:
-        with DatabaseSession(logger,engine=engine) as session:
+        with get_session() as session:
             update_issue_pr_weights(logger,session,repo_git,sum(issue_and_pr_nums))
 
 
@@ -315,7 +311,7 @@ def core_task_success_util(self, repo_git):
 
     logger.info(f"Repo '{repo_git}' succeeded through core collection")
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
@@ -382,7 +378,7 @@ def secondary_task_success_util(self, repo_git):
 
     logger.info(f"Repo '{repo_git}' succeeded through secondary collection")
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
@@ -408,7 +404,7 @@ def get_repo_weight_secondary(logger,repo_git):
 
     engine = get_engine()
 
-    with DatabaseSession(logger,engine) as session:
+    with get_session() as session:
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
             raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
@@ -435,7 +431,7 @@ def facade_task_success_util(self, repo_git):
 
     logger.info(f"Repo '{repo_git}' succeeded through facade task collection")
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
@@ -458,7 +454,7 @@ def ml_task_success_util(self, repo_git):
 
     logger.info(f"Repo '{repo_git}' succeeded through machine learning task collection")
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
@@ -483,7 +479,7 @@ def facade_clone_success_util(self, repo_git):
 
     logger.info(f"Repo '{repo_git}' succeeded through facade update/clone")
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
 
         repo = Repo.get_by_repo_git(session, repo_git)
         if not repo:
@@ -554,21 +550,21 @@ class AugurTaskRoutine:
         collection_hook (str): String determining the attributes to update when collection for a repo starts. e.g. core
         session: Database session to use
     """
-    def __init__(self,session,collection_hooks):
-        self.logger = session.logger
+    def __init__(self, logger,collection_hooks):
+        self.logger = logger
 
         self.collection_hooks = collection_hooks
-        self.session = session
 
-    def update_status_and_id(self,repo_git, task_id, name):
-        repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
+    def update_status_and_id(self,repo_git, task_id, name, session):
+        # NOTE: Can't simply replace with lib method because it is doing .collection_status[0] afterwards
+        repo = session.query(Repo).filter(Repo.repo_git == repo_git).one()
 
         #Set status in database to collecting
         repoStatus = repo.collection_status[0]
         #
         setattr(repoStatus,f"{name}_task_id",task_id)
         setattr(repoStatus,f"{name}_status", CollectionState.COLLECTING.value)
-        self.session.commit()
+        session.commit()
 
 
     def start_data_collection(self):
@@ -582,8 +578,11 @@ class AugurTaskRoutine:
 
         #Send messages starts each repo and yields its running info
         #to concurrently update the correct field in the database.
-        for repo_git, task_id, hook_name in self.send_messages():
-            self.update_status_and_id(repo_git,task_id,hook_name)
+
+        with get_session() as session:
+
+            for repo_git, task_id, hook_name in self.send_messages():
+                self.update_status_and_id(repo_git,task_id,hook_name, session)
     
     def send_messages(self):
         augur_collection_list = []
@@ -594,7 +593,7 @@ class AugurTaskRoutine:
 
             for repo_git, full_collection in col_hook.repo_list:
 
-                repo = self.session.query(Repo).filter(Repo.repo_git == repo_git).one()
+                repo = get_repo_by_repo_git(repo_git)
                 if "github" in repo.repo_git:
                     augur_collection_sequence = []
                     for job in col_hook.phases:
