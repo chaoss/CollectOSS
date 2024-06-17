@@ -6,7 +6,7 @@ from augur.tasks.init.celery_app import AugurSecondaryRepoCollectionTask
 from augur.application.db.util import execute_session_query
 
 @celery.task(base=AugurSecondaryRepoCollectionTask)
-def process_pull_request_files(repo_git: str) -> None:
+def process_pull_request_files(repo_git: str, full_collection: bool) -> None:
 
     logger = logging.getLogger(process_pull_request_files.__name__)
 
@@ -15,4 +15,4 @@ def process_pull_request_files(repo_git: str) -> None:
         query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo = execute_session_query(query, 'one')
 
-        pull_request_files_model(repo.repo_id, logger, augur_db, manifest.key_auth)
+        pull_request_files_model(repo.repo_id, logger, augur_db, manifest.key_auth, full_collection)
