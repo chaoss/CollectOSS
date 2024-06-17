@@ -9,6 +9,7 @@ from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor, Repo
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
+from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.application.db.lib import get_session, get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
@@ -352,73 +353,73 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
             last_collected = get_secondary_data_last_collected(repo_id).date()
             prs = get_updated_prs(repo_id, last_collected)
 
-    pr_count = len(prs)
+        pr_count = len(prs)
 
-    all_pr_reviews = {}
-    for index, pr in enumerate(prs):
+        all_pr_reviews = {}
+        for index, pr in enumerate(prs):
 
-        pr_number = pr.pr_src_number
-        pull_request_id = pr.pull_request_id
+            pr_number = pr.pr_src_number
+            pull_request_id = pr.pull_request_id
 
-        logger.info(f"{owner}/{repo} Collecting Pr Reviews for pr {index + 1} of {pr_count}")
+            logger.info(f"{owner}/{repo} Collecting Pr Reviews for pr {index + 1} of {pr_count}")
 
-        pr_review_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
+            pr_review_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
+
+            pr_reviews = []
+            pr_reviews_generator = GithubPaginator(pr_review_url, manifest.key_auth, logger)
+            for page_data, page in pr_reviews_generator.iter_pages():
+
+                if page_data is None:
+                    break
+
+                if len(page_data) == 0:
+                    break
+
+                if isinstance(page_data, list):
+                    page_data = [
+                        element.decode('utf-8').replace('\x00', ' ') if isinstance(element, bytes) else element
+                        for element in page_data
+                    ]
+                    logger.info(f"NUL characters were found in PR Reviews and replaced with spaces.") 
+                elif isinstance(page_data, bytes):
+                    page_data = page_data.decode('utf-8').replace('\x00', ' ')
+                    logger.info(f"NUL characters were found in PR Reviews and replaced with spaces.") 
+                    
+                
+                pr_reviews.extend(page_data)
+            
+            if pr_reviews:
+                all_pr_reviews[pull_request_id] = pr_reviews
+
+        if not list(all_pr_reviews.keys()):
+            logger.info(f"{owner}/{repo} No pr reviews for repo")
+            return
+
+        contributors = []
+        for pull_request_id in all_pr_reviews.keys():
+
+            reviews = all_pr_reviews[pull_request_id]
+            for review in reviews:
+                contributor = process_pull_request_review_contributor(review, tool_source, tool_version, data_source)
+                if contributor:
+                    contributors.append(contributor)
+
+            logger.info(f"{owner}/{repo} Pr reviews: Inserting {len(contributors)} contributors")
+            augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+
 
         pr_reviews = []
-        pr_reviews_generator = GithubPaginator(pr_review_url, key_auth, logger)
-        for page_data, page in pr_reviews_generator.iter_pages():
+        for pull_request_id in all_pr_reviews.keys():
 
-            if page_data is None:
-                break
-
-            if len(page_data) == 0:
-                break
-
-            if isinstance(page_data, list):
-                page_data = [
-                    element.decode('utf-8').replace('\x00', ' ') if isinstance(element, bytes) else element
-                    for element in page_data
-                ]
-                logger.info(f"NUL characters were found in PR Reviews and replaced with spaces.") 
-            elif isinstance(page_data, bytes):
-                page_data = page_data.decode('utf-8').replace('\x00', ' ')
-                logger.info(f"NUL characters were found in PR Reviews and replaced with spaces.") 
+            reviews = all_pr_reviews[pull_request_id]
+            for review in reviews:
                 
-            
-            pr_reviews.extend(page_data)
-        
-        if pr_reviews:
-            all_pr_reviews[pull_request_id] = pr_reviews
+                if "cntrb_id" in review:
+                    pr_reviews.append(extract_needed_pr_review_data(review, pull_request_id, repo_id, platform_id, tool_source, tool_version))
 
-    if not list(all_pr_reviews.keys()):
-        logger.info(f"{owner}/{repo} No pr reviews for repo")
-        return
-
-    contributors = []
-    for pull_request_id in all_pr_reviews.keys():
-
-        reviews = all_pr_reviews[pull_request_id]
-        for review in reviews:
-            contributor = process_pull_request_review_contributor(review, tool_source, tool_version, data_source)
-            if contributor:
-                contributors.append(contributor)
-
-        logger.info(f"{owner}/{repo} Pr reviews: Inserting {len(contributors)} contributors")
-        augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
-
-
-    pr_reviews = []
-    for pull_request_id in all_pr_reviews.keys():
-
-        reviews = all_pr_reviews[pull_request_id]
-        for review in reviews:
-            
-            if "cntrb_id" in review:
-                pr_reviews.append(extract_needed_pr_review_data(review, pull_request_id, repo_id, platform_id, tool_source, tool_version))
-
-        logger.info(f"{owner}/{repo}: Inserting pr reviews of length: {len(pr_reviews)}")
-        pr_review_natural_keys = ["pr_review_src_id",]
-        augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys)
+            logger.info(f"{owner}/{repo}: Inserting pr reviews of length: {len(pr_reviews)}")
+            pr_review_natural_keys = ["pr_review_src_id",]
+            augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys)
 
 
 
