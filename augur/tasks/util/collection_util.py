@@ -142,7 +142,7 @@ class CollectionRequest:
             return
 
         new_collection_git_list = get_newly_added_repos(session, limit, hook=self.name)
-        collection_list = [tuple(repo_git, True) for repo_git in new_collection_git_list]
+        collection_list = [(repo_git, True) for repo_git in new_collection_git_list]
         self.repo_list.extend(collection_list)
         limit -= len(collection_list)
 
@@ -151,7 +151,7 @@ class CollectionRequest:
             return
 
         recollection_git_list = get_repos_for_recollection(session, limit, hook=self.name, days_until_collect_again=self.days_until_collect_again)
-        collection_list = [tuple(repo_git, False) for repo_git in recollection_git_list]
+        collection_list = [(repo_git, False) for repo_git in recollection_git_list]
         self.repo_list.extend(collection_list)
 
 
