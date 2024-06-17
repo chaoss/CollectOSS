@@ -25,6 +25,13 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
         prs = get_updated_prs(repo_id, last_collected)
         pr_urls = [pr.pr_url for pr in prs]
 
+        pr_urls = []
+        for pr in prs:
+            pr_urls.append({
+                'pr_url': pr.pr_url,
+                'pull_request_id': pr.pull_request_id
+            })
+
     
     query = augur_db.session.query(Repo).filter(Repo.repo_id == repo_id)
     repo = execute_session_query(query, 'one')
