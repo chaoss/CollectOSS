@@ -55,7 +55,7 @@
                     <th scope="row">{{loop.index}}</th>
                     <td><a href="{{ url_for('user_group_view', group=group.name) }}">{{ group.name }}</a></td>
                     <td>{{ group.count }}</td>
-                    <td><i onclick="toggleFavorite(this, '{{ group.name }}')" class="bi {% if group.favorited %} bi-star-fill {% else %} bi-star {% endif %} cursor-pointer"></i></td>
+                    <td><i role="button" onclick="toggleFavorite(this, '{{ group.name }}')" class="bi {% if group.favorited %} bi-star-fill {% else %} bi-star {% endif %} cursor-pointer"></i></td>
                 </tr>
         {% endfor %}
             </tbody>
