@@ -410,7 +410,7 @@ def generate_contributor_sequence(logger,repo_git, session):
     return insert_facade_contributors.si(repo_id)
 
 
-def facade_phase(repo_git):
+def facade_phase(repo_git, full_collection):
     logger = logging.getLogger(facade_phase.__name__)
     logger.info("Generating facade sequence")
     facade_helper = FacadeHelper(logger)

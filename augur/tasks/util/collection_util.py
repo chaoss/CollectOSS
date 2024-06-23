@@ -137,7 +137,8 @@ class CollectionRequest:
         if limit <= 0:
             return
 
-        collection_list = get_newly_added_repos(session, limit, hook=self.name)
+        new_collection_git_list = get_newly_added_repos(session, limit, hook=self.name)
+        collection_list = [(repo_git, True) for repo_git in new_collection_git_list]
         self.repo_list.extend(collection_list)
         limit -= len(collection_list)
 
@@ -145,8 +146,8 @@ class CollectionRequest:
         if limit <= 0:
             return
 
-        collection_list = get_repos_for_recollection(session, limit, hook=self.name, days_until_collect_again=self.days_until_collect_again)
-
+        recollection_git_list = get_repos_for_recollection(session, limit, hook=self.name, days_until_collect_again=self.days_until_collect_again)
+        collection_list = [(repo_git, False) for repo_git in recollection_git_list]
         self.repo_list.extend(collection_list)
 
 
@@ -589,8 +590,8 @@ class AugurTaskRoutine:
         for col_hook in self.collection_hooks:
 
             self.logger.info(f"Starting collection on {len(col_hook.repo_list)} {col_hook.name} repos")
-            
-            for repo_git in col_hook.repo_list:
+
+            for repo_git, full_collection in col_hook.repo_list:
 
                 repo = get_repo_by_repo_git(repo_git)
                 if "github" in repo.repo_git:
@@ -598,7 +599,7 @@ class AugurTaskRoutine:
                     for job in col_hook.phases:
                         #Add the phase to the sequence in order as a celery task.
                         #The preliminary task creates the larger task chain 
-                        augur_collection_sequence.append(job(repo_git))
+                        augur_collection_sequence.append(job(repo_git, full_collection))
 
                     #augur_collection_sequence.append(core_task_success_util.si(repo_git))
                     #Link all phases in a chain and send to celery
@@ -616,7 +617,7 @@ class AugurTaskRoutine:
                         for job in col_hook.gitlab_phases:
                             #Add the phase to the sequence in order as a celery task.
                             #The preliminary task creates the larger task chain 
-                            augur_collection_sequence.append(job(repo_git))
+                            augur_collection_sequence.append(job(repo_git, full_collection))
 
                         #augur_collection_sequence.append(core_task_success_util.si(repo_git))
                         #Link all phases in a chain and send to celery

@@ -43,13 +43,13 @@ CELERY_CHAIN_TYPE = type(chain())
 """
 
 #Prelim phases are used to detect if where the repo has hosted has moved or not.
-def prelim_phase(repo_git):
+def prelim_phase(repo_git, full_collection):
 
     logger = logging.getLogger(prelim_phase.__name__)
 
     return detect_github_repo_move_core.si(repo_git)
 
-def prelim_phase_secondary(repo_git):
+def prelim_phase_secondary(repo_git, full_collection):
     logger = logging.getLogger(prelim_phase.__name__)
 
     return detect_github_repo_move_secondary.si(repo_git)
@@ -57,7 +57,7 @@ def prelim_phase_secondary(repo_git):
 
 #This is the phase that defines the message for core augur collection
 #A chain is needed for each repo.
-def primary_repo_collect_phase(repo_git):
+def primary_repo_collect_phase(repo_git, full_collection):
     logger = logging.getLogger(primary_repo_collect_phase.__name__)
 
 
@@ -86,7 +86,7 @@ def primary_repo_collect_phase(repo_git):
 
     return repo_task_group
 
-def primary_repo_collect_phase_gitlab(repo_git):
+def primary_repo_collect_phase_gitlab(repo_git, full_collection):
 
     logger = logging.getLogger(primary_repo_collect_phase_gitlab.__name__)
 
@@ -110,13 +110,13 @@ def primary_repo_collect_phase_gitlab(repo_git):
 
 #This phase creates the message for secondary collection tasks.
 #These are less important and have their own worker.
-def secondary_repo_collect_phase(repo_git):
+def secondary_repo_collect_phase(repo_git, full_collection):
     logger = logging.getLogger(secondary_repo_collect_phase.__name__)
 
     repo_task_group = group(
-        process_pull_request_files.si(repo_git),
-        process_pull_request_commits.si(repo_git),
-        chain(collect_pull_request_reviews.si(repo_git), collect_pull_request_review_comments.si(repo_git)),
+        process_pull_request_files.si(repo_git, full_collection),
+        process_pull_request_commits.si(repo_git, full_collection),
+        chain(collect_pull_request_reviews.si(repo_git, full_collection), collect_pull_request_review_comments.si(repo_git)),
         process_ossf_dependency_metrics.si(repo_git)
     )
 
@@ -167,7 +167,7 @@ def build_primary_repo_collect_request(session, logger, enabled_phase_names, day
     primary_gitlab_enabled_phases.append(primary_repo_collect_phase_gitlab)
 
     #task success is scheduled no matter what the config says.
-    def core_task_success_util_gen(repo_git):
+    def core_task_success_util_gen(repo_git, full_collection):
         return core_task_success_util.si(repo_git)
 
     primary_enabled_phases.append(core_task_success_util_gen)
@@ -187,7 +187,7 @@ def build_secondary_repo_collect_request(session, logger, enabled_phase_names, d
 
     secondary_enabled_phases.append(secondary_repo_collect_phase)
 
-    def secondary_task_success_util_gen(repo_git):
+    def secondary_task_success_util_gen(repo_git, full_collection):
         return secondary_task_success_util.si(repo_git)
 
     secondary_enabled_phases.append(secondary_task_success_util_gen)
@@ -203,12 +203,12 @@ def build_facade_repo_collect_request(session, logger, enabled_phase_names, days
 
     facade_enabled_phases.append(facade_phase)
 
-    def facade_task_success_util_gen(repo_git):
+    def facade_task_success_util_gen(repo_git, full_collection):
         return facade_task_success_util.si(repo_git)
 
     facade_enabled_phases.append(facade_task_success_util_gen)
 
-    def facade_task_update_weight_util_gen(repo_git):
+    def facade_task_update_weight_util_gen(repo_git, full_collection):
         return git_update_commit_count_weight.si(repo_git)
 
     facade_enabled_phases.append(facade_task_update_weight_util_gen)
@@ -223,7 +223,7 @@ def build_ml_repo_collect_request(session, logger, enabled_phase_names, days_unt
 
     ml_enabled_phases.append(machine_learning_phase)
 
-    def ml_task_success_util_gen(repo_git):
+    def ml_task_success_util_gen(repo_git, full_collection):
         return ml_task_success_util.si(repo_git)
 
     ml_enabled_phases.append(ml_task_success_util_gen)
