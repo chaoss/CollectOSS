@@ -55,8 +55,9 @@ function get_facade_repo_path() {
     echo
 
     if ! [ -w $facade_repo_directory/.git-credentials ]; then
-      echo "User $(whoami) does not have permission to write git credentials!"
-      exit 1
+      echo "User $(whoami) does not have permission to write to that location"
+      echo "Please select another location"
+      continue
     fi
     
     if [[ -d "$facade_repo_directory" ]]; then
