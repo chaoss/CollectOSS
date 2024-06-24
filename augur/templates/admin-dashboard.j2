@@ -312,6 +312,7 @@ function submitEntry(input, icon) {
         if(!response.ok) {
             if(response.status != 500) {
                 response = response.json();
+                console.log(response);
                 flashToast(response.status);
             } else {
                 flashToast("An internal server error occurred");
