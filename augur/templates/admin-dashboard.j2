@@ -65,16 +65,7 @@
                         {# Start content card #}
                         <div class="card dashboard-content">
                             <div class="card-body">
-                                <div class="row justify-content-end">
-                                    <h1>TODO</h1>
-                                    {# <div class="column">
-                                        <button type="button" name="restart" class="btn btn-primary" onclick="restart_confirm()">Restart Augur</button>
-                                    </div>
-                                    <div class="column">
-                                        <button type="button" name="shutdown" class="btn btn-primary" onclick="shutdown_confirm()">Shutdown Augur</button>
-                                    </div> #}
-                                </div>
-                                <!--
+                                {# Start form body #}
                                 <form id="stats-form">
                                     {% for section in sections %}
                                     <div class="row mb-3">
@@ -98,7 +89,6 @@
                                         </div>
                                     </div> #}
                                 </form>
-                                -->
                             </div>
                         </div>
                     </div>
@@ -139,7 +129,6 @@
                             </table>
                         </div>
                         {% else %}
-                        {# Theoretically, unreachable #}
                         <p>What!?</p>
                         {% endif %}
                     </div>
@@ -181,6 +170,65 @@
                             </div>
                         </div>
                     </div>
+                    <!-- <h1 id="accounts-section">User Accounts</h1>
+                    {# Start content card #}
+                    <div class="card dashboard-content">
+                        <div class="card-body">
+                            <form id="accounts-form">
+                                {% for section in sections %}
+                                <div class="row mb-3">
+                                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                        <h6 class="mb-3 text-primary">{{ section.title }}</h6>
+                                    </div>
+                                    {% for setting in section.settings %}
+                                    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                                        <div class="form-group">
+                                            <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
+                                            <input type="text" class="form-control input-textbox" id="{{ setting.id }}" placeholder="{{ setting.value }}">
+                                            <div class="form-text mb-1">{{ setting.description or "No description available" }}</div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                                {# <div class="row">
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" id="submit" name="submit" class="btn btn-primary">Restart</button>
+                                    </div>
+                                </div> #}
+                            </form>
+                        </div>
+                    </div>
+                    <h1 id="config-section">Configuration</h1>
+                    {# Start content card #}
+                    <p>Double-click an empty input field to automatically populate it with the placeholder value</p>
+                    <div class="card dashboard-content">
+                        <div class="card-body">
+                            <form id="settings-form">
+                                {% for section in config.items() %}
+                                <div class="row mb-3">
+                                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                        <h6 class="mb-3 text-primary">{{ section[0] }}</h6>
+                                    </div>
+                                    {% for setting in section[1].items() %}
+                                    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                                        <div class="form-group">
+                                            <label for="config_{{ section[0] }}_{{ setting[0] }}" class="mb-1">{{ setting[0] }}</label>
+                                            <input type="text" section="{{ section[0] }}" setting="{{ setting[0] }}" class="form-control input-textbox" id="config_{{ section[0] }}_{{ setting[0] }}" placeholder="{{ setting[1] }}">
+                                            <div class="form-text mb-1">No description available</div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                                <div class="row">
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" id="submit" name="submit" class="btn btn-primary">Update Settings</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -212,7 +260,34 @@
         })
     });
 
-document.getElementById("settings-form").addEventListener("submit", (event) => {
+    function getDivFromNavLink(navLink) {
+        var href = navLink.getAttribute("href");
+        var div_id = href.replace("#", "");
+        return document.getElementById(div_id + "-div");
+    }
+
+    function setActive(navLink) {
+        if(!navLink) {
+            return;
+        }
+        
+        var elements = document.getElementsByClassName("nav-link");
+        range(elements.length).forEach((i) => {
+            if (elements[i].classList.contains("active")) {
+                elements[i].classList.remove("active");
+
+                div = getDivFromNavLink(elements[i]);
+                div.hidden = true;
+            }
+        });
+        navLink.classList.add("active");
+
+        div = getDivFromNavLink(navLink);
+        div.hidden = false;
+    }
+</script>
+<script type="text/javascript">
+{# document.getElementById("settings-form").addEventListener("submit", (event) => {
     event.preventDefault();
 
     var data = {};
@@ -243,7 +318,32 @@ document.getElementById("settings-form").addEventListener("submit", (event) => {
     .catch(reason => {
         alert("An error occurred: " + reason);
     });
-});
+}); #}
+
+function submitEntry(input, icon) {
+    input.toggleAttribute("disabled");
+    var section = input.getAttribute("section");
+    var setting = input.getAttribute("setting");
+    fetch(`{{ url_for('set_config_item') }}?setting=${setting}&section=${section}&value=${input.value}`)
+    .then((response) => {
+        if(!response.ok) {
+            if(response.status != 500) {
+                response = response.json();
+                flashToast(response.status);
+            } else {
+                flashToast("An internal server error occurred");
+            }
+            icon.classList.remove("bi-arrow-clockwise");
+            icon.classList.remove("rotating");
+            icon.classList.add("bi-x");
+        } else {
+            icon.classList.remove("bi-arrow-clockwise");
+            icon.classList.remove("rotating");
+            icon.classList.add("bi-check");
+        }
+        input.toggleAttribute("disabled");
+    });
+}
 
 for(var box of document.getElementsByClassName("input-textbox")) {
     box.addEventListener("dblclick", (event) => {

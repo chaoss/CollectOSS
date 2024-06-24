@@ -33,6 +33,13 @@ body {
     border-color: var(--color-accent-dark);
 }
 
+.input-group-text {
+    color: var(--color-fg);
+    background-color: var(--color-bg-light);
+    border-color: var(--color-accent-dark);
+    border-right: none;
+}
+
 .input-textbox::placeholder {
     color: var(--color-fg-dark);
 }
@@ -47,7 +54,8 @@ body {
     color: var(--color-fg-dark);
 }
 
-.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+.nav-pills .nav-link.active,
+.nav-pills .show>.nav-link {
     background-color: var(--color-accent)
 }
 

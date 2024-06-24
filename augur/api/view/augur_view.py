@@ -77,6 +77,11 @@ def escape_HTML_ID(data: str) -> str:
 def quote_surrounded(data: str) -> str:
     return '"' + data + '"'
 
+@app.template_filter("escape_ID")
+def escape_HTML_ID(data: str) -> str:
+    data = data.replace(".", "\\.")
+    return data
+
 @login_manager.unauthorized_handler
 def unauthorized():
     if AUGUR_API_VERSION in str(request.path):
@@ -89,16 +94,6 @@ def unauthorized():
 
     session["login_next"] = url_for(request.endpoint, **request.args)
     return redirect(url_for('user_login'))
-
-def admin_required(func):
-    @login_required
-    @wraps(func)
-    def inner_function(*args, **kwargs):
-        if current_user.admin:
-            return func(*args, **kwargs)
-        else:
-            return forbidden(None)
-    return inner_function
 
 @login_manager.user_loader
 def load_user(user_id):
