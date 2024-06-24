@@ -75,15 +75,9 @@ def start(ctx, disable_collection, development, port):
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file gunicorn.log"
     server = subprocess.Popen(gunicorn_command.split(" "))
 
-    try:
-        server.wait(5)
-
-        # IF we get to this point, Gunicorn did not start successfully
-        logger.error("Gunicorn failed to start in time: exiting")
-        exit(1)
-    except subprocess.TimeoutExpired as e:
-        logger.info('Gunicorn webserver started...')
-        logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
+    time.sleep(3)
+    logger.info('Gunicorn webserver started...')
+    logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
 
     processes = start_celery_worker_processes(float(worker_vmem_cap), disable_collection)
 

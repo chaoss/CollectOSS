@@ -5,7 +5,7 @@ import logging
 import math
 from flask import render_template, request, redirect, url_for, session, flash
 from .utils import *
-from .augur_view import admin_required
+from augur.api.util import admin_required, development_required
 from flask_login import login_user, logout_user, current_user, login_required
 
 from augur.application.db.models import User, Repo, ClientApplication
@@ -14,6 +14,8 @@ from augur.application.util import *
 from augur.application.db.lib import get_value
 from augur.application.config import AugurConfig
 from ..server import app, db_session
+
+from augur.application.db.lib import get_session
 
 logger = logging.getLogger(__name__)
 
@@ -324,6 +326,7 @@ def user_group_view(group = None):
     return render_module("user-group-repos-table", title="Repos", repos=data, query_key=query, activePage=params["page"], pages=page_count, offset=pagination_offset, PS="user_group_view", reverse = rev, sorting = params.get("sort"), group=group)
 
 @app.route('/error')
+@development_required
 def throw_exception():
     raise Exception("This Exception intentionally raised")
 
@@ -345,5 +348,8 @@ def dashboard_view():
     ]
 
     backend_config = AugurConfig(logger, db_session).load_config()
+    
+    with get_session() as session:
+        users = session.query(User).all()
 
-    return render_template('admin-dashboard.j2', sections = empty, config = backend_config)
+    return render_template('admin-dashboard.j2', sections = empty, config = backend_config, users = users)
