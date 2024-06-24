@@ -54,6 +54,11 @@ function get_facade_repo_path() {
     facade_repo_directory=$(realpath $facade_repo_directory)
     echo
 
+    if ! [ -w $facade_repo_directory/.git-credentials ]; then
+      echo "User $(whoami) does not have permission to write git credentials!"
+      exit 1
+    fi
+    
     if [[ -d "$facade_repo_directory" ]]; then
       read -r -p "That directory already exists. Use it? [Y/n]: " facade_response
       case "$facade_response" in
@@ -176,11 +181,6 @@ function create_config(){
     fi
 
 
-    
-    if ! [ -w $facade_repo_directory/.git-credentials ]; then
-      echo "User $(whoami) does not have permission to write git credentials!"
-      exit 1
-    fi
 
     #Create and cache credentials for github and gitlab
     touch $facade_repo_directory/.git-credentials
