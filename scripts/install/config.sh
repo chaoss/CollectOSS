@@ -177,6 +177,10 @@ function create_config(){
 
 
     
+    if ! [ -w $facade_repo_directory/.git-credentials ]; then
+      echo "User $(whoami) does not have permission to write git credentials!"
+      exit 1
+    fi
 
     #Create and cache credentials for github and gitlab
     touch $facade_repo_directory/.git-credentials
