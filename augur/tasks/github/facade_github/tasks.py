@@ -46,10 +46,10 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
 
         contributors_with_matching_name = get_contributors_by_full_name(name)
 
-        if not contributors_with_matching_name:
+        if not contributors_with_matching_name or len(contributors_with_matching_name) > 1:
             logger.debug("Failed local login lookup")
         else:
-            login = contributors_with_matching_name.gh_login
+            login = contributors_with_matching_name[0].gh_login
         
 
         # Try to get the login from the commit sha
