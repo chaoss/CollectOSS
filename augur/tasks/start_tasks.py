@@ -140,8 +140,6 @@ def non_repo_domain_tasks(self):
 
     enabled_tasks = []
 
-    enabled_tasks.extend(generate_non_repo_domain_facade_tasks(logger))
-
     if machine_learning_phase.__name__ in enabled_phase_names:
         #enabled_tasks.extend(machine_learning_phase())
         from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
