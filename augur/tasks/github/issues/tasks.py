@@ -13,13 +13,13 @@ from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import Issue, IssueLabel, IssueAssignee, Contributor
 from augur.application.config import get_development_flag
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected
 
 
 development = get_development_flag()
 
 @celery.task(base=AugurCoreRepoCollectionTask)
-def collect_issues(repo_git : str) -> int:
+def collect_issues(repo_git : str, full_collection: bool) -> int:
 
     logger = logging.getLogger(collect_issues.__name__) 
 
@@ -27,12 +27,17 @@ def collect_issues(repo_git : str) -> int:
 
     owner, repo = get_owner_repo(repo_git)
 
+    if full_collection:
+        core_data_last_collected = None
+    else:
+        core_data_last_collected = get_core_data_last_collected().date()
+
     key_auth = GithubRandomKeyAuth(logger)
 
     logger.info(f'this is the manifest.key_auth value: {str(key_auth)}')
 
     try:    
-        issue_data = retrieve_all_issue_data(repo_git, logger, key_auth)
+        issue_data = retrieve_all_issue_data(repo_git, logger, key_auth, core_data_last_collected)
 
         if issue_data:
             total_issues = len(issue_data)
@@ -48,13 +53,16 @@ def collect_issues(repo_git : str) -> int:
 
 
 
-def retrieve_all_issue_data(repo_git, logger, key_auth) -> None:
+def retrieve_all_issue_data(repo_git, logger, key_auth, since) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
     logger.info(f"Collecting issues for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
+
+    if since:
+        url += since.isoformat()
 
     # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
     # Reference the code documenation for GithubPaginator for more details

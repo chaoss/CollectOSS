@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
@@ -14,7 +15,7 @@ from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.application.db.lib import get_session, get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id
 from augur.application.db.util import execute_session_query
 from ..messages.tasks import process_github_comment_contributors
-from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs
+from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs, get_core_data_last_collected
 
 from typing import Generator, List, Dict
 
@@ -22,7 +23,7 @@ from typing import Generator, List, Dict
 platform_id = 1
 
 @celery.task(base=AugurCoreRepoCollectionTask)
-def collect_pull_requests(repo_git: str) -> int:
+def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
@@ -36,9 +37,14 @@ def collect_pull_requests(repo_git: str) -> int:
 
         owner, repo = get_owner_repo(repo_git)
 
+        if full_collection:
+            core_data_last_collected = None
+        else:
+            core_data_last_collected = get_core_data_last_collected().date()
+
         total_count = 0
         all_data = []
-        for pr in retrieve_all_pr_data(repo_git, logger, manifest.key_auth):
+        for pr in retrieve_all_pr_data(repo_git, logger, manifest.key_auth, core_data_last_collected):
             
             all_data.append(pr)
 
@@ -61,13 +67,13 @@ def collect_pull_requests(repo_git: str) -> int:
     
 # TODO: Rename pull_request_reviewers table to pull_request_requested_reviewers
 # TODO: Fix column names in pull request labels table
-def retrieve_all_pr_data(repo_git: str, logger, key_auth): #-> Generator[List[Dict]]:
+def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[List[Dict]]:
 
     owner, repo = get_owner_repo(repo_git)
 
     logger.info(f"Collecting pull requests for {owner}/{repo}")
 
-    url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc"
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc&sort=updated"
 
     github_data_access = GithubDataAccess(key_auth, logger)
 
@@ -76,7 +82,14 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth): #-> Generator[List[Di
     logger.info(f"{owner}/{repo}: Retrieving {num_pages} pages of pull requests")
 
     # returns a generator so this method can be used by doing for x in retrieve_all_pr_data()
-    return github_data_access.paginate_resource(url)
+
+    data = github_data_access.paginate_resource(url)
+
+    yield data
+
+    # return if last pr on the page was updated before the since date
+    if since and datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00")) < since:
+        return 
 
 def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
     """
