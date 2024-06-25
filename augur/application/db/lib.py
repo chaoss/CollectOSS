@@ -531,4 +531,9 @@ def get_updated_prs(repo_id, since):
     
     with get_session() as session:
         return session.query(PullRequest).filter(PullRequest.repo_id == repo_id, PullRequest.pr_updated_at >= since).order_by(PullRequest.pr_src_number).all()
+    
+def get_updated_issues(repo_id, since):
+
+    with get_session() as session:
+        return session.query(Issue).filter(Issue.repo_id == repo_id, Issue.updated_at >= since).order_by(Issue.gh_issue_number).all()
             
