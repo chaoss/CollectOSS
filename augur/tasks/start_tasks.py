@@ -29,6 +29,8 @@ from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 from augur.application.db.lib import execute_sql, get_session
 
+RUNNING_DOCKER = os.environ.get('AUGUR_DOCKER_DEPLOY') == "1"
+
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
 
@@ -140,7 +142,9 @@ def non_repo_domain_tasks(self):
 
     enabled_tasks = []
 
-    if machine_learning_phase.__name__ in enabled_phase_names:
+    enabled_tasks.extend(generate_non_repo_domain_facade_tasks(logger))
+
+    if not RUNNING_DOCKER and machine_learning_phase.__name__ in enabled_phase_names:
         #enabled_tasks.extend(machine_learning_phase())
         from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
         enabled_tasks.append(contributor_breadth_model.si())
@@ -258,7 +262,7 @@ def augur_collection_monitor(self):
             #start_facade_collection(session, max_repo=30)
             enabled_collection_hooks.append(build_facade_repo_collect_request(session, logger, enabled_phase_names))
         
-        if machine_learning_phase.__name__ in enabled_phase_names:
+        if not RUNNING_DOCKER and machine_learning_phase.__name__ in enabled_phase_names:
             enabled_collection_hooks.append(build_ml_repo_collect_request(session, logger, enabled_phase_names))
             #start_ml_collection(session,max_repo=5)
         
