@@ -161,7 +161,7 @@ class AugurConfig():
         Returns:
             The section data as a dict
         """
-        query = self.session.query(Config).filter_by(section_name=section_name)
+        query = self.session.query(Config).filter_by(section_name=section_name).order_by(Config.setting_name.asc())
         section_data = execute_session_query(query, 'all')
         
         section_dict = {}
@@ -213,7 +213,7 @@ class AugurConfig():
             The config from the database
         """
         # get all the sections in the config table
-        query = self.session.query(Config.section_name)
+        query = self.session.query(Config.section_name).order_by(Config.section_name.asc())
         section_names = execute_session_query(query, 'all')
 
         config = {}

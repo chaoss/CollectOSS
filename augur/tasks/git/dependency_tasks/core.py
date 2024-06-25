@@ -95,7 +95,7 @@ def generate_scorecard(logger, repo_git):
     try: 
         required_output = parse_json_from_subprocess_call(logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
     except Exception as e: 
-        session.logger.error(f"Could not parse required output! Error: {e}")
+        logger.error(f"Could not parse required output! Error: {e}")
         raise e        
 
     # end
