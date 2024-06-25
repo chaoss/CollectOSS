@@ -511,6 +511,14 @@ def update_issue_closed_cntrbs_by_repo_id(repo_id):
             """)
             connection.execute(update_stmt, update_data)
 
+def get_core_data_last_collected(repo_id):
+    
+    with get_session() as session:
+        try:
+           return session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id).one().core_data_last_collected 
+        except s.orm.exc.NoResultFound:
+            return None
+
 def get_secondary_data_last_collected(repo_id):
     
     with get_session() as session:
