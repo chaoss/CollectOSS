@@ -39,14 +39,15 @@ def collect_issues(repo_git : str, full_collection: bool) -> int:
     try:    
         issue_data = retrieve_all_issue_data(repo_git, logger, key_auth, core_data_last_collected)
 
-        if issue_data:
-            total_issues = len(issue_data)
-            process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger)
-
-            return total_issues
-        else:
+        if not issue_data:
             logger.info(f"{owner}/{repo} has no issues")
             return 0
+
+        total_issues = len(issue_data)
+        process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger)
+
+        return total_issues
+            
     except Exception as e:
         logger.error(f"Could not collect issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
         return -1

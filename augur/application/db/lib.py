@@ -25,7 +25,7 @@ def convert_type_of_value(config_dict, logger=None):
     if data_type == "str" or data_type is None:
         return config_dict
 
-    elif data_type == "int":
+    if data_type == "int":
         config_dict["value"] = int(config_dict["value"])
 
     elif data_type == "bool":

@@ -83,13 +83,13 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[
 
     # returns a generator so this method can be used by doing for x in retrieve_all_pr_data()
 
-    data = github_data_access.paginate_resource(url)
+    for pr in github_data_access.paginate_resource(url):
 
-    yield data
+        yield pr
 
-    # return if last pr on the page was updated before the since date
-    if since and datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00")) < since:
-        return 
+        # return if last pr on the page was updated before the since date
+        if since and datetime.fromisoformat(pr["updated_at"].replace("Z", "+00:00")) < since:
+            return 
 
 def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
     """
