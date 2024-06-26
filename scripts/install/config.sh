@@ -46,42 +46,43 @@ function get_gitlab_api_key(){
 function get_facade_repo_path() {
 
   echo "The Facade data collection worker will clone repositories to this machine to run its analysis."
-  echo "Would you like to clone to an existing directory, or create a new one?"
+  echo "Please select a new or existing directory for the Facade worker to use:"
+  echo
 
-  select create_facade_repo in "Use an existing directory" "Create a new directory"
-  do
-    case $create_facade_repo in
-      "Use an existing directory" )
-          echo "** You MUST use an absolute path. Variable expansion is currently not supported.**"
-          read -p "Facade repo path: " facade_repo_directory
-          echo
+  while true; do
+    read -e -p "Facade worker directory: " facade_repo_directory
+    facade_repo_directory=$(realpath $facade_repo_directory)
+    echo
 
-
-          while [[ ! -d "$facade_repo_directory" ]]; do
-            echo "That directory does not exist."
-            read -p "Facade repo path: " facade_repo_directory
-            echo
-          done
-
-          break
-        ;;
-      "Create a new directory" )
-          echo "** You MUST use an absolute path. Variable expansion is currently not supported.**"
-          read -p "Desired directory name: " facade_repo_directory
-          echo
-
-          if [[ -d "$facade_repo_directory" ]]; then
-            echo "That directory already exists. Using the given directory."
-            echo
-          else
-            mkdir "$facade_repo_directory"
-            echo "Directory created."
-            echo
-          fi
-
-          break
-        ;;
-    esac
+    if ! [ -w $facade_repo_directory/.git-credentials ]; then
+      echo "User $(whoami) does not have permission to write to that location"
+      echo "Please select another location"
+      continue
+    fi
+    
+    if [[ -d "$facade_repo_directory" ]]; then
+      read -r -p "That directory already exists. Use it? [Y/n]: " facade_response
+      case "$facade_response" in
+          [nN][oO]|[nN]) 
+              continue
+              ;;
+          *)
+              break
+              ;;
+      esac
+    else
+      read -r -p "That directory does not exist. Create it? [Y/n]: " facade_response
+      case "$facade_response" in
+          [nN][oO]|[nN]) 
+              continue
+              ;;
+          *)
+              mkdir "$facade_repo_directory"
+              echo "Directory created."
+              break
+              ;;
+      esac
+    fi
   done
 
   [[ "${facade_repo_directory}" != */ ]] && facade_repo_directory="${facade_repo_directory}/"
@@ -107,6 +108,7 @@ function create_config(){
     echo "Using it in the config" 
     echo "Please unset AUGUR_GITHUB_API_KEY if you would like to be prompted for a github api key"
       github_api_key=$AUGUR_GITHUB_API_KEY
+    echo
     fi
 
     if [[ -z "${AUGUR_GITHUB_USERNAME}" ]]
@@ -118,6 +120,7 @@ function create_config(){
     echo "Using it in the config" 
     echo "Please unset AUGUR_GITHUB_USERNAME if you would like to be prompted for a github username"
       github_username=$AUGUR_GITHUB_USERNAME
+    echo
     fi
 
     if [[ -z "${AUGUR_GITLAB_API_KEY}" ]]
@@ -129,6 +132,7 @@ function create_config(){
     echo "Using it in the config" 
     echo "Please unset AUGUR_GITLAB_API_KEY if you would like to be prompted for a gitlab api key"
       gitlab_api_key=$AUGUR_GITLAB_API_KEY
+    echo
     fi
 
 
@@ -141,6 +145,7 @@ function create_config(){
     echo "Using it in the config" 
     echo "Please unset AUGUR_GITLAB_USERNAME if you would like to be prompted for a gitlab username"
       gitlab_username=$AUGUR_GITLAB_USERNAME
+    echo
     fi
 
     if [[ -z "${AUGUR_FACADE_REPO_DIRECTORY}" ]]
@@ -153,6 +158,7 @@ function create_config(){
     echo "IMPORTANT NOTE: This assumes that this directory already exists"
     echo "Please unset AUGUR_FACADE_REPO_DIRECTORY if you would like to be prompted for the facade repo directory"
       facade_repo_directory=$AUGUR_FACADE_REPO_DIRECTORY
+    echo
     fi
 
     if [[ -z "${RABBITMQ_CONN_STRING}" ]]
@@ -164,6 +170,7 @@ function create_config(){
     echo "Using it in the config" 
     echo "Please unset RABBITMQ_CONN_STRING if you would like to be prompted for the rabbit MQ connection string"
       rabbitmq_conn_string=$RABBITMQ_CONN_STRING
+    echo
     fi
     
     #special case for docker entrypoint
@@ -175,7 +182,6 @@ function create_config(){
     fi
 
 
-    
 
     #Create and cache credentials for github and gitlab
     touch $facade_repo_directory/.git-credentials

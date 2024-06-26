@@ -298,7 +298,9 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
     logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
     message_natural_keys = ["platform_msg_id", "pltfrm_id"]
     message_return_columns = ["msg_id", "platform_msg_id"]
-    message_return_data = bulk_insert_dicts(logger, pr_review_comment_dicts, Message, message_natural_keys, message_return_columns)
+    message_string_fields = ["msg_text"]
+    message_return_data = bulk_insert_dicts(logger, pr_review_comment_dicts, Message, message_natural_keys, 
+                                            return_columns=message_return_columns, string_fields=message_string_fields)
     if message_return_data is None:
         return
 
