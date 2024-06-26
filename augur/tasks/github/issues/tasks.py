@@ -1,5 +1,6 @@
 import logging
 import traceback
+from datetime import timedelta, timezone
 
 from sqlalchemy.exc import IntegrityError
 
@@ -30,7 +31,8 @@ def collect_issues(repo_git : str, full_collection: bool) -> int:
     if full_collection:
         core_data_last_collected = None
     else:
-        core_data_last_collected = get_core_data_last_collected(repo_id).date()
+        # subtract 2 days to ensure all data is collected 
+        core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
     key_auth = GithubRandomKeyAuth(logger)
 

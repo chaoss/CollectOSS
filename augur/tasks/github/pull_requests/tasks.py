@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
@@ -38,14 +38,14 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
         owner, repo = get_owner_repo(repo_git)
 
         if full_collection:
-            core_data_last_collected_datetime = None
+            core_data_last_collected = None
         else:
-            core_data_last_collected_date = get_core_data_last_collected(repo_id).date()
-            core_data_last_collected_datetime = datetime.combine(core_data_last_collected_date, datetime.min.time())
+            # subtract 2 days to ensure all data is collected 
+            core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
         total_count = 0
         all_data = []
-        for pr in retrieve_all_pr_data(repo_git, logger, manifest.key_auth, core_data_last_collected_datetime):
+        for pr in retrieve_all_pr_data(repo_git, logger, manifest.key_auth, core_data_last_collected):
             
             all_data.append(pr)
 
@@ -89,7 +89,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[
         yield pr
 
         # return if last pr on the page was updated before the since date
-        if since and datetime.fromisoformat(pr["updated_at"].replace("Z", "+00:00")) < since:
+        if since and datetime.fromisoformat(pr["updated_at"].replace("Z", "+00:00")).replace(tzinfo=timezone.utc) < since:
             return 
 
 def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
