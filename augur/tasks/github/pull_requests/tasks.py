@@ -38,13 +38,14 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
         owner, repo = get_owner_repo(repo_git)
 
         if full_collection:
-            core_data_last_collected = None
+            core_data_last_collected_datetime = None
         else:
-            core_data_last_collected = get_core_data_last_collected(repo_id).date()
+            core_data_last_collected_date = get_core_data_last_collected(repo_id).date()
+            core_data_last_collected_datetime = datetime.combine(core_data_last_collected_date, datetime.min.time())
 
         total_count = 0
         all_data = []
-        for pr in retrieve_all_pr_data(repo_git, logger, manifest.key_auth, core_data_last_collected):
+        for pr in retrieve_all_pr_data(repo_git, logger, manifest.key_auth, core_data_last_collected_datetime):
             
             all_data.append(pr)
 
