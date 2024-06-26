@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
@@ -65,32 +65,14 @@ def retrieve_all_issue_data(repo_git, logger, key_auth, since) -> None:
     if since:
         url += since.isoformat()
 
-    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-    # Reference the code documenation for GithubPaginator for more details
-    issues = GithubPaginator(url, key_auth, logger)
+    github_data_access = GithubDataAccess(key_auth, logger)
 
-    # this is defined so we can decrement it each time 
-    # we come across a pr, so at the end we can log how 
-    # many issues were collected
-    # loop through the issues 
-    all_data = []
-    num_pages = issues.get_num_pages()
-    for page_data, page in issues.iter_pages():
+    num_pages = github_data_access.get_resource_page_count(url)
+    logger.info(f"{owner}/{repo}: Retrieving {num_pages} pages of issues")
 
-        if page_data is None:
-            return all_data
+    issues_paginator = github_data_access.paginate_resource(url)
 
-        if len(page_data) == 0:
-            logger.debug(
-                f"{owner}/{repo}: Issues Page {page} contains no data...returning")
-            logger.info(f"{owner}/{repo}: Issues Page {page} of {num_pages}")
-            return all_data
-
-        logger.info(f"{owner}/{repo}: Issues Page {page} of {num_pages}")
-
-        all_data += page_data
-
-    return all_data
+    return list(issues_paginator)
     
 def process_issues(issues, task_name, repo_id, logger) -> None:
     
