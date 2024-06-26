@@ -30,7 +30,7 @@ def collect_issues(repo_git : str, full_collection: bool) -> int:
     if full_collection:
         core_data_last_collected = None
     else:
-        core_data_last_collected = get_core_data_last_collected().date()
+        core_data_last_collected = get_core_data_last_collected(repo_id).date()
 
     key_auth = GithubRandomKeyAuth(logger)
 
