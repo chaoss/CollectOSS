@@ -60,15 +60,12 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
 
     # define logger for task
     logger.info(f"Collecting github comments for {owner}/{repo}")
-
-    # url to get issue and pull request comments
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
     
     github_data_access = GithubDataAccess(key_auth, logger)
 
-    num_pages = github_data_access.get_resource_count(url)
+    message_count = github_data_access.get_resource_count(url)
 
-    logger.info(f"{task_name}: Collecting {num_pages} github messages")
+    logger.info(f"{task_name}: Collecting {message_count} github messages")
 
     return list(github_data_access.paginate_resource(url))
 
