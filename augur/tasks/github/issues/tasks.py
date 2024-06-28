@@ -1,5 +1,6 @@
 import logging
 import traceback
+from datetime import timedelta, timezone
 
 from sqlalchemy.exc import IntegrityError
 
@@ -7,19 +8,19 @@ from sqlalchemy.exc import IntegrityError
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import Issue, IssueLabel, IssueAssignee, Contributor
 from augur.application.config import get_development_flag
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected
 
 
 development = get_development_flag()
 
 @celery.task(base=AugurCoreRepoCollectionTask)
-def collect_issues(repo_git : str) -> int:
+def collect_issues(repo_git : str, full_collection: bool) -> int:
 
     logger = logging.getLogger(collect_issues.__name__) 
 
@@ -27,28 +28,35 @@ def collect_issues(repo_git : str) -> int:
 
     owner, repo = get_owner_repo(repo_git)
 
+    if full_collection:
+        core_data_last_collected = None
+    else:
+        # subtract 2 days to ensure all data is collected 
+        core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
+
     key_auth = GithubRandomKeyAuth(logger)
 
     logger.info(f'this is the manifest.key_auth value: {str(key_auth)}')
 
     try:    
-        issue_data = retrieve_all_issue_data(repo_git, logger, key_auth)
+        issue_data = retrieve_all_issue_data(repo_git, logger, key_auth, core_data_last_collected)
 
-        if issue_data:
-            total_issues = len(issue_data)
-            process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger)
-
-            return total_issues
-        else:
+        if not issue_data:
             logger.info(f"{owner}/{repo} has no issues")
             return 0
+
+        total_issues = len(issue_data)
+        process_issues(issue_data, f"{owner}/{repo}: Issue task", repo_id, logger)
+
+        return total_issues
+            
     except Exception as e:
         logger.error(f"Could not collect issues for repo {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
         return -1
 
 
 
-def retrieve_all_issue_data(repo_git, logger, key_auth) -> None:
+def retrieve_all_issue_data(repo_git, logger, key_auth, since) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -56,32 +64,17 @@ def retrieve_all_issue_data(repo_git, logger, key_auth) -> None:
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
 
-    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-    # Reference the code documenation for GithubPaginator for more details
-    issues = GithubPaginator(url, key_auth, logger)
+    if since:
+        url += since.isoformat()
 
-    # this is defined so we can decrement it each time 
-    # we come across a pr, so at the end we can log how 
-    # many issues were collected
-    # loop through the issues 
-    all_data = []
-    num_pages = issues.get_num_pages()
-    for page_data, page in issues.iter_pages():
+    github_data_access = GithubDataAccess(key_auth, logger)
 
-        if page_data is None:
-            return all_data
+    num_pages = github_data_access.get_resource_page_count(url)
+    logger.info(f"{owner}/{repo}: Retrieving {num_pages} pages of issues")
 
-        if len(page_data) == 0:
-            logger.debug(
-                f"{owner}/{repo}: Issues Page {page} contains no data...returning")
-            logger.info(f"{owner}/{repo}: Issues Page {page} of {num_pages}")
-            return all_data
+    issues_paginator = github_data_access.paginate_resource(url)
 
-        logger.info(f"{owner}/{repo}: Issues Page {page} of {num_pages}")
-
-        all_data += page_data
-
-    return all_data
+    return list(issues_paginator)
     
 def process_issues(issues, task_name, repo_id, logger) -> None:
     

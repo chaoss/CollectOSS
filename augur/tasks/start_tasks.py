@@ -65,8 +65,8 @@ def primary_repo_collect_phase(repo_git, full_collection):
 
     #Define primary group of jobs for the primary collect phase: issues and pull requests.
     primary_repo_jobs = group(
-        collect_issues.si(repo_git),
-        collect_pull_requests.si(repo_git)
+        collect_issues.si(repo_git, full_collection),
+        collect_pull_requests.si(repo_git, full_collection)
     )
 
     #Define secondary group that can't run until after primary jobs have finished.
