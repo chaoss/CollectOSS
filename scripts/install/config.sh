@@ -10,6 +10,7 @@ function blank_confirm() {
     if [ -z "${1}" ]; then
         echo "Bad usage of blank_confirm at:"
         caller
+        return
     fi
 
     confirm_placeholder=${!1}
