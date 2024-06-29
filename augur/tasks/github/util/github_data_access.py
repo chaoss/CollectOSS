@@ -98,7 +98,7 @@ class GithubDataAccess:
 
         with httpx.Client() as client:
 
-            response = client.request(method=method, url=url, timeout=timeout, follow_redirects=True)
+            response = client.request(method=method, url=url, auth=self.key_manager, timeout=timeout, follow_redirects=True)
 
             if response.status_code in [403, 429]:
                 raise RatelimitException(response)
