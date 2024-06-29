@@ -1,5 +1,5 @@
 from augur.tasks.github.contributors import *
-from augur.tasks.github.events.tasks import *
+from augur.tasks.github.events import *
 from augur.tasks.github.issues.tasks import *
 from augur.tasks.github.messages.tasks import *
 from augur.tasks.github.pull_requests.tasks import *
