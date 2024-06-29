@@ -65,7 +65,7 @@ def retrieve_all_issue_data(repo_git, logger, key_auth, since) -> None:
     url = f"https://api.github.com/repos/{owner}/{repo}/issues?state=all"
 
     if since:
-        url += since.isoformat()
+        url += f"&since={since.isoformat()}"
 
     github_data_access = GithubDataAccess(key_auth, logger)
 
