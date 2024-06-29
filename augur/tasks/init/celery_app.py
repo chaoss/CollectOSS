@@ -27,7 +27,7 @@ start_tasks = ['augur.tasks.start_tasks',
                 'augur.tasks.util.collection_util']
 
 github_tasks = ['augur.tasks.github.contributors',
-                'augur.tasks.github.issues.tasks',
+                'augur.tasks.github.issues',
                 'augur.tasks.github.pull_requests.tasks',
                 'augur.tasks.github.events',
                 'augur.tasks.github.messages.tasks',
