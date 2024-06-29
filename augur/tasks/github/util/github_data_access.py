@@ -103,7 +103,7 @@ class GithubDataAccess:
             if response.status_code in [403, 429]:
                 raise RatelimitException(response)
 
-            elif response.status_code == 404:
+            if response.status_code == 404:
                 raise UrlNotFoundException(f"Could not find {url}")
             
             response.raise_for_status()
