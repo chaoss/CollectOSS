@@ -26,18 +26,18 @@ start_tasks = ['augur.tasks.start_tasks',
                 'augur.tasks.data_analysis',
                 'augur.tasks.util.collection_util']
 
-github_tasks = ['augur.tasks.github.contributors.tasks',
-                'augur.tasks.github.issues.tasks',
+github_tasks = ['augur.tasks.github.contributors',
+                'augur.tasks.github.issues',
                 'augur.tasks.github.pull_requests.tasks',
-                'augur.tasks.github.events.tasks',
-                'augur.tasks.github.messages.tasks',
+                'augur.tasks.github.events',
+                'augur.tasks.github.messages',
                 'augur.tasks.github.facade_github.tasks',
                 'augur.tasks.github.releases.tasks',
                 'augur.tasks.github.repo_info.tasks',
                 'augur.tasks.github.detect_move.tasks',
                 'augur.tasks.github.pull_requests.files_model.tasks',
                 'augur.tasks.github.pull_requests.commits_model.tasks',
-                'augur.tasks.github.traffic.tasks']
+                'augur.tasks.github.traffic']
 
 gitlab_tasks = ['augur.tasks.gitlab.merge_request_task',
                 'augur.tasks.gitlab.issues_task',
