@@ -310,12 +310,19 @@ function submitEntry(input, icon) {
     fetch(`{{ url_for('set_config_item') }}?setting=${setting}&section=${section}&value=${input.value}`)
     .then((response) => {
         if(!response.ok) {
-            if(response.status != 500) {
-                response = response.json();
-                console.log(response);
-                flashToast(response.status);
-            } else {
-                flashToast("An internal server error occurred");
+            switch(response.status) {
+                case 500: {
+                    flashToast("An internal server error occurred");
+                    break;
+                }
+                case 426: {
+                    flashToast("Request made with HTTP, but HTTPS is required");
+                    break;
+                }
+                default: {
+                    flashToast("An unknown error occurred:");
+                    flashToast(response.json().status);
+                }
             }
             icon.classList.remove("bi-arrow-clockwise");
             icon.classList.remove("rotating");
@@ -324,6 +331,8 @@ function submitEntry(input, icon) {
             icon.classList.remove("bi-arrow-clockwise");
             icon.classList.remove("rotating");
             icon.classList.add("bi-check");
+            input.placeholder = input.value;
+            input.value = "";
         }
         input.toggleAttribute("disabled");
     });
@@ -340,16 +349,24 @@ for(var box of document.getElementsByClassName("input-textbox")) {
     let cooldownTimer;
     box.addEventListener("input", (event) => {
         clearTimeout(cooldownTimer);
+
         icon = event.target.parentElement.getElementsByTagName("i")[0];
         if(icon.classList.contains("bi-check")) {
             icon.classList.remove("bi-check");
-            icon.classList.add("bi-arrow-clockwise");
-            icon.classList.add("rotating");
         } else if(icon.classList.contains("bi-x")) {
             icon.classList.remove("bi-x");
-            icon.classList.add("bi-arrow-clockwise");
-            icon.classList.add("rotating");
         }
+
+        if(event.target.value.length == 0) {
+            // Empty textbox
+            icon.classList.remove("rotating");
+            icon.classList.add("bi-check");
+            return;
+        }
+
+        icon.classList.add("bi-arrow-clockwise");
+        icon.classList.add("rotating");
+
         cooldownTimer = setTimeout(submitEntry, entryCooldown, event.target, icon);
     });
 }
