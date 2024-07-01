@@ -15,7 +15,7 @@ def machine_learning_phase(repo_git, full_collection):
     ml_tasks.append(discourse_analysis_task.si(repo_git))
     ml_tasks.append(insight_task.si(repo_git))
     ml_tasks.append(message_insight_task.si(repo_git))
-    ml_tasks.append(pull_request_analysis_task.si(repo_git)) 
+    #ml_tasks.append(pull_request_analysis_task.si(repo_git)) 
     
     logger.info(f"Machine learning sequence: {ml_tasks}")
     return chain(*ml_tasks)

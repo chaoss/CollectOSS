@@ -5,7 +5,7 @@ import sqlalchemy as s
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
@@ -50,27 +50,13 @@ def retrieve_all_event_data(repo_git: str, logger, key_auth):
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
         
-    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-    events = GithubPaginator(url, key_auth, logger)
+    github_data_access = GithubDataAccess(key_auth, logger)
 
+    event_count = github_data_access.get_resource_page_count(url)
 
-    num_pages = events.get_num_pages()
-    all_data = []
-    for page_data, page in events.iter_pages():
+    logger.info(f"{owner}/{repo}: Collecting {event_count} github events")
 
-        if page_data is None:
-            return all_data
-            
-        elif len(page_data) == 0:
-            logger.debug(f"{repo.capitalize()} Events Page {page} contains no data...returning")
-            logger.info(f"Events Page {page} of {num_pages}")
-            return all_data
-
-        logger.info(f"{repo} Events Page {page} of {num_pages}")
-
-        all_data += page_data
-
-    return all_data        
+    return list(github_data_access.paginate_resource(url))   
 
 def process_events(events, task_name, repo_id, logger):
     

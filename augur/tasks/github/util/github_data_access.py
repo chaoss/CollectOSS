@@ -6,7 +6,12 @@ from urllib.parse import urlparse, parse_qs, urlencode
 
 
 class RatelimitException(Exception):
-    pass
+
+    def __init__(self, response, message="Github Rate limit exceeded") -> None:
+
+        self.response = response
+
+        super().__init__(message)
 
 class UrlNotFoundException(Exception):
     pass
@@ -93,12 +98,12 @@ class GithubDataAccess:
 
         with httpx.Client() as client:
 
-            response = client.request(method=method, url=url, timeout=timeout, follow_redirects=True)
+            response = client.request(method=method, url=url, auth=self.key_manager, timeout=timeout, follow_redirects=True)
 
             if response.status_code in [403, 429]:
-                raise RatelimitException()
+                raise RatelimitException(response)
 
-            elif response.status_code == 404:
+            if response.status_code == 404:
                 raise UrlNotFoundException(f"Could not find {url}")
             
             response.raise_for_status()

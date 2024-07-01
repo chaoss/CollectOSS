@@ -10,8 +10,6 @@ from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
 from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
-from augur.tasks.git.util.facade_worker.facade_worker.rebuildcache import fill_empty_affiliations, invalidate_caches, nuke_affiliations, rebuild_unknown_affiliation_and_web_caches
-
 
 from augur.tasks.github.facade_github.tasks import *
 from augur.tasks.git.util.facade_worker.facade_worker.config import FacadeHelper
@@ -235,37 +233,6 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     logger.info("Analysis complete")
     return
 
-@celery.task
-def nuke_affiliations_facade_task():
-
-    logger = logging.getLogger(nuke_affiliations_facade_task.__name__)
-    
-    facade_helper = FacadeHelper(logger)
-    nuke_affiliations(facade_helper)
-
-@celery.task
-def fill_empty_affiliations_facade_task():
-
-    logger = logging.getLogger(fill_empty_affiliations_facade_task.__name__)
-    facade_helper = FacadeHelper(logger)
-    fill_empty_affiliations(facade_helper)
-
-@celery.task
-def invalidate_caches_facade_task():
-
-    logger = logging.getLogger(invalidate_caches_facade_task.__name__)
-
-    facade_helper = FacadeHelper(logger)
-    invalidate_caches(facade_helper)
-
-@celery.task
-def rebuild_unknown_affiliation_and_web_caches_facade_task():
-
-    logger = logging.getLogger(rebuild_unknown_affiliation_and_web_caches_facade_task.__name__)
-    
-    facade_helper = FacadeHelper(logger)
-    rebuild_unknown_affiliation_and_web_caches(facade_helper)
-
 # retry this task indefinitely every 5 minutes if it errors. Since the only way it gets scheduled is by itself, so if it stops running no more clones will happen till the instance is restarted
 @celery.task(autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=300, retry_jitter=True, max_retries=None)
 def clone_repos():
@@ -388,27 +355,6 @@ def generate_analysis_sequence(logger,repo_git, facade_helper):
 
 
 
-def generate_contributor_sequence(logger,repo_git, session):
-    
-    contributor_sequence = []
-    #all_repo_ids = []
-    repo_id = None
-        
-    #contributor_sequence.append(facade_start_contrib_analysis_task.si())
-    repo = get_repo_by_repo_git(repo_git)
-    repo_id = repo.repo_id
-
-    #pdb.set_trace()
-    #breakpoint()
-    #for repo in all_repos:
-    #    contributor_sequence.append(insert_facade_contributors.si(repo['repo_id']))
-    #all_repo_ids = [repo['repo_id'] for repo in all_repos]
-
-    #contrib_group = create_grouped_task_load(dataList=all_repo_ids,task=insert_facade_contributors)#group(contributor_sequence)
-    #contrib_group.link_error(facade_error_handler.s())
-    #return contrib_group#chain(facade_start_contrib_analysis_task.si(), contrib_group)
-    return insert_facade_contributors.si(repo_id)
-
 
 def facade_phase(repo_git, full_collection):
     logger = logging.getLogger(facade_phase.__name__)
@@ -450,7 +396,7 @@ def facade_phase(repo_git, full_collection):
 
     #Generate contributor analysis task group.
     if not limited_run or (limited_run and run_facade_contributors):
-        facade_core_collection.append(generate_contributor_sequence(logger,repo_git,facade_helper))
+        facade_core_collection.append(insert_facade_contributors.si(repo_git))
 
 
     #These tasks need repos to be cloned by facade before they can work.
@@ -465,54 +411,3 @@ def facade_phase(repo_git, full_collection):
 
     logger.info(f"Facade sequence: {facade_sequence}")
     return chain(*facade_sequence)
-
-def generate_non_repo_domain_facade_tasks(logger):
-    logger.info("Generating facade sequence")
-    facade_helper = FacadeHelper(logger)
-        
-    # Figure out what we need to do
-    limited_run = facade_helper.limited_run
-    delete_marked_repos = facade_helper.delete_marked_repos
-    pull_repos = facade_helper.pull_repos
-    # clone_repos = facade_helper.clone_repos
-    check_updates = facade_helper.check_updates
-    # force_updates = facade_helper.force_updates
-    run_analysis = facade_helper.run_analysis
-    # force_analysis = facade_helper.force_analysis
-    nuke_stored_affiliations = facade_helper.nuke_stored_affiliations
-    fix_affiliations = facade_helper.fix_affiliations
-    force_invalidate_caches = facade_helper.force_invalidate_caches
-    rebuild_caches = facade_helper.rebuild_caches
-    #if abs((datetime.datetime.strptime(session.cfg.get_setting('aliases_processed')[:-3], 
-        # '%Y-%m-%d %I:%M:%S.%f') - datetime.datetime.now()).total_seconds()) // 3600 > int(session.cfg.get_setting(
-        #   'update_frequency')) else 0
-    force_invalidate_caches = facade_helper.force_invalidate_caches
-    create_xlsx_summary_files = facade_helper.create_xlsx_summary_files
-    multithreaded = facade_helper.multithreaded
-
-    facade_sequence = []
-
-    if nuke_stored_affiliations:
-        #facade_sequence.append(nuke_affiliations_facade_task.si().on_error(facade_error_handler.s()))#nuke_affiliations(session.cfg)
-        logger.info("Nuke stored affiliations is deprecated.")
-        # deprecated because the UI component of facade where affiliations would be 
-        # nuked upon change no longer exists, and this information can easily be derived 
-        # from queries and materialized views in the current version of Augur.
-        # This method is also a major performance bottleneck with little value.
-
-    #logger.info(session.cfg)
-    if not limited_run or (limited_run and fix_affiliations):
-        #facade_sequence.append(fill_empty_affiliations_facade_task.si().on_error(facade_error_handler.s()))#fill_empty_affiliations(session)
-        logger.info("Fill empty affiliations is deprecated.")
-        # deprecated because the UI component of facade where affiliations would need 
-        # to be fixed upon change no longer exists, and this information can easily be derived 
-        # from queries and materialized views in the current version of Augur.
-        # This method is also a major performance bottleneck with little value.
-
-    if force_invalidate_caches:
-        facade_sequence.append(invalidate_caches_facade_task.si().on_error(facade_error_handler.s()))#invalidate_caches(session.cfg)
-
-    if not limited_run or (limited_run and rebuild_caches):
-        facade_sequence.append(rebuild_unknown_affiliation_and_web_caches_facade_task.si().on_error(facade_error_handler.s()))#rebuild_unknown_affiliation_and_web_caches(session.cfg)
-    
-    return facade_sequence

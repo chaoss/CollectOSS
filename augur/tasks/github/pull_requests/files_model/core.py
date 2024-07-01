@@ -1,4 +1,5 @@
 import sqlalchemy as s
+import httpx
 from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
