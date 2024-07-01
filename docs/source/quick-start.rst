@@ -1,330 +1,17 @@
 Quickstart
 ===============
 
-Ubuntu 22.x
-===========
+Select installation instructions from those most closely related to the operating system that you use below. Note that Augur's dependencies do not consistently support python 3.11 at this time. Python 3.8 - Python 3.10 have been tested on each platform. 
 
-We default to this version of Ubuntu for the moment because Augur does
-not yet support python3.10, which is the default version of python3.x
-distributed with Ubuntu 22.0x.x
+.. toctree::
+   :maxdepth: 2
 
-Git Platform Requirements (Things to have setup prior to initiating installation.)
-----------------------------------------------------------------------------------
+   getting-started/new-install
+   getting-started/dev-osx-install
 
-1. Obtain a GitHub Access Token: https://github.com/settings/tokens
-2. Obtain a GitLab Access Token:
-   https://gitlab.com/-/profile/personal_access_tokens
 
-Fork and Clone Augur
-~~~~~~~~~~~~~~~~~~~~
-
-1. Fork https://github.com/chaoss/augur
-2. Clone your fork. We recommend creating a ``github`` directory in your
-   user’s base directory.
-
-Pre-Requisite Operating System Level Packages
----------------------------------------------
-
-Here we ensure your system is up to date, install required python
-libraries, install postgresql, and install our queuing infrastrucutre,
-which is composed of redis-server and rabbitmq-server
-
-Executable
-~~~~~~~~~~
-
-.. code:: shell
-
-   sudo apt update && 
-   sudo apt upgrade && 
-   sudo apt install software-properties-common && 
-   sudo apt install python3-dev && 
-   sudo apt install python3.10-venv &&
-   sudo apt install postgresql postgresql-contrib postgresql-client && 
-   sudo apt install build-essential && 
-   sudo apt install redis-server &&  # required 
-   sudo apt install erlang && # required
-   sudo apt install rabbitmq-server && #required
-   sudo snap install go --classic && #required: Go Needs to be version 1.19.x or higher. Snap is the package manager that gets you to the right version. Classic enables it to actually be installed at the correct version.
-   sudo apt install nginx && # required for hosting
-   sudo add-apt-repository ppa:mozillateam/firefox-next &&
-   sudo apt install firefox=111.0~b8+build1-0ubuntu0.22.04.1 &&
-   sudo apt install firefox-geckodriver
-
-   # You will almost certainly need to reboot after this. 
-
-RabbitMQ Configuration
-~~~~~~~~~~~~~~~~~~~~~~
-
-The default timeout for RabbitMQ needs to be set on Ubuntu 22.x.
-
-.. code:: shell
-
-   sudo vi /etc/rabbitmq/advanced.config
-
-Add this one line to that file (the period at the end matters):
-
-.. code:: shell
-
-   [ {rabbit, [ {consumer_timeout, undefined} ]} ].
-
-Git Configuration
------------------
-
-There are some Git configuration parameters that help when you are
-cloning repos over time, and a platform prompts you for credentials when
-it finds a repo is deleted:
-
-.. code:: shell
-
-       git config --global diff.renames true
-       git config --global diff.renameLimit 200000
-       git config --global credential.helper cache
-       git config --global credential.helper 'cache --timeout=9999999999999'
-
-Postgresql Configuration
-------------------------
-
-Create a PostgreSQL database for Augur to use
-
-.. code:: shell
-
-   sudo su - &&
-   su - postgres &&
-   psql
-
-Then, from within the resulting postgresql shell:
-
-.. code:: sql
-
-   CREATE DATABASE augur;
-   CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
-   GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
-
-Once you are successfully logged out, return to your user by exiting
-``psql``, then typing ``exit`` to exit the postgres user, and ``exit`` a
-SECOND time to exit the root user.
-
-::
-
-   postgres=# \quit
-
-.. code:: shell
-
-   exit
-   exit 
-
-Rabbitmq Broker Configuration
------------------------------
-
-You have to setup a specific user, and broker host for your augur
-instance. You can accomplish this by running the below commands:
-
-.. code:: shell
-
-   sudo rabbitmq-plugins enable rabbitmq_management
-   sudo rabbitmqctl add_user augur password123 &&
-   sudo rabbitmqctl add_vhost augur_vhost &&
-   sudo rabbitmqctl set_user_tags augur augurTag administrator &&
-   sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
-
--  We need rabbitmq_management so we can purge our own queues with an
-   API call
--  We need a user
--  We need a vhost
--  We then set permissions
-
-NOTE: it is important to have a static hostname when using rabbitmq as
-it uses hostname to communicate with nodes.
-
-If your setup of rabbitmq is successful your broker url should look like
-this:
-
-**broker_url = ``amqp://augur:password123@localhost:5672/augur_vhost``**
-
-RabbitMQ Developer Note:
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-These are the queues we create: - celery (the main queue) - secondary -
-scheduling
-
-The endpoints to hit to purge queues on exit are:
-
-::
-
-   curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/celery
-
-   curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/secondary
-
-   curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/scheduling
-
-We provide this functionality to limit, as far as possible, the need for
-sudo privileges on the Augur operating system user. With sudo, you can
-accomplish the same thing with (Given a vhost named AugurB [case
-sensitive]):
-
-1. To list the queues
-
-::
-
-    sudo rabbitmqctl list_queues -p AugurB name messages consumers
-
-2. To empty the queues, simply execute the command for your queues.
-   Below are the 3 queues that Augur creates for you:
-
-::
-
-    sudo rabbitmqctl purge_queue celery -p AugurB
-    sudo rabbitmqctl purge_queue secondary -p AugurB
-    sudo rabbitmqctl purge_queue scheduling -p AugurB
-
-Where AugurB is the vhost. The management API at port 15672 will only
-exist if you have already installed the rabbitmq_management plugin.
-
-**During Augur installation, you will be prompted for this broker_url**
-
-Proxying Augur through Nginx
-----------------------------
-
-Assumes nginx is installed.
-
-Then you create a file for the server you want Augur to run under in the
-location of your ``sites-enabled`` directory for nginx (In this example,
-Augur is running on port 5038: (the long timeouts on the settings page
-is for when a user adds a large number of repos or orgs in a single
-session to prevent timeouts from nginx)
-
-::
-
-   server {
-           server_name  ai.chaoss.io;
-
-           location /api/unstable/ {
-                   proxy_pass http://ai.chaoss.io:5038;
-                   proxy_set_header Host $host;
-           }
-
-           location / {
-                   proxy_pass http://127.0.0.1:5038;
-           }
-
-           location /settings {
-
-                   proxy_read_timeout 800;
-                   proxy_connect_timeout 800;
-                   proxy_send_timeout 800;
-           }
-
-           error_log /var/log/nginx/augurview.osshealth.error.log;
-           access_log /var/log/nginx/augurview.osshealth.access.log;
-
-   }
-
-Setting up SSL (https)
-~~~~~~~~~~~~~~~~~~~~~~
-
-Install Certbot:
-
-::
-
-   sudo apt update
-   sudo apt upgrade
-   sudo apt install certbot
-   apt-get install python3-certbot-nginx
-
-Generate a certificate for the specific domain for which you have a file
-already in the sites-enabled directory for nginx (located at
-``/etc/nginx/sites-enabled`` on Ubuntu):
-
-::
-
-    sudo certbot -v --nginx  -d ai.chaoss.io
-
-In the example file above. Your resulting nginx sites-enabled file will
-look like this:
-
-::
-
-   server {
-           server_name  ai.chaoss.io;
-
-           location /api/unstable/ {
-                   proxy_pass http://ai.chaoss.io:5038;
-                   proxy_set_header Host $host;
-           }
-
-      location / {
-         proxy_pass http://127.0.0.1:5038;
-      }
-
-      location /settings {
-
-                   proxy_read_timeout 800;
-                   proxy_connect_timeout 800;
-                   proxy_send_timeout 800;
-      }
-
-           error_log /var/log/nginx/augurview.osshealth.error.log;
-           access_log /var/log/nginx/augurview.osshealth.access.log;
-
-       listen 443 ssl; # managed by Certbot
-       ssl_certificate /etc/letsencrypt/live/ai.chaoss.io/fullchain.pem; # managed by Certbot
-       ssl_certificate_key /etc/letsencrypt/live/ai.chaoss.io/privkey.pem; # managed by Certbot
-       include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-       ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
-
-   }
-
-   server {
-       if ($host = ai.chaoss.io) {
-           return 301 https://$host$request_uri;
-       } # managed by Certbot
-
-
-           listen 80;
-           server_name  ai.chaoss.io;
-       return 404; # managed by Certbot
-
-
-   }
-
-Installing and Configuring Augur!
----------------------------------
-
-Create a Python Virtual Environment
-``python3 -m venv ~/virtual-env-directory``
-
-Activate your Python Virtual Environment
-``source ~/virtual-env-directory/bin/activate``
-
-From the root of the Augur Directory, type ``make install``
-
-You will be prompted to provide your GitHub username and password, your
-GitLab username and password, and the postgresql database where you want
-to have the Augur Schema built. You will also be prompted to provide a
-directory where repositories will be clone into.
-
-Post Installation of Augur
---------------------------
-
-Redis Broker Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If applications other than Augur are running on the same server, and
-using ``redis-server`` it is important to ensure that Augur and these
-other applications (or additional instances of Augur) are using distinct
-“cache_group”. You can change from the default value of zero by editing
-the ``augur_operations.config`` table directly, looking for the “Redis”
-section_name, and the “cache_group” setting_name. This SQL is also a
-template:
-
-.. code:: sql
-
-   UPDATE augur_operations.config 
-   SET value = 2
-   WHERE
-   section_name='Redis' 
-   AND 
-   setting_name='cache_group';
+Explanations of Technologies
+============================
 
 What does Redis Do?
 ^^^^^^^^^^^^^^^^^^^
@@ -470,7 +157,7 @@ killing.
 Docker
 ~~~~~~
 
-1. Make sure docker, and docker-compose are both installed
+1. Make sure docker, and docker compose are both installed
 2. Modify the ``environment.txt`` file in the root of the repository to
    include your GitHub and GitLab API keys.
 3. If you are already running postgresql on your server you have two
@@ -482,9 +169,9 @@ Docker
       values for your local, non-docker-container database.
 
 4. ``sudo docker build -t augur-new -f docker/backend/Dockerfile .``
-5. ``sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up``
+5. ``sudo docker compose --env-file ./environment.txt --file docker-compose.yml up``
    to run the database in a Docker Container or
-   ``sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up``
+   ``sudo docker compose --env-file ./environment.txt --file docker-compose.yml up``
    to connect to an already running database.
 
 

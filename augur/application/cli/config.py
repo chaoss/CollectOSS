@@ -9,9 +9,8 @@ import logging
 
 from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
-from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
-from augur.application.cli import test_connection, test_db_connection 
+from augur.application.cli import DatabaseContext, test_connection, test_db_connection, with_database
 from augur.util.inspect_without_import import get_phase_names_without_import
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
@@ -20,8 +19,9 @@ logger = logging.getLogger(__name__)
 ENVVAR_PREFIX = "AUGUR_"
 
 @click.group('config', short_help='Generate an augur.config.json')
-def cli():
-    pass
+@click.pass_context
+def cli(ctx):
+    ctx.obj = DatabaseContext()
 
 @cli.command('init')
 @click.option('--github-api-key', help="GitHub API key for data collection from the GitHub API", envvar=ENVVAR_PREFIX + 'GITHUB_API_KEY')
@@ -31,7 +31,9 @@ def cli():
 @click.option('--rabbitmq-conn-string', help="String to connect to rabbitmq broker", envvar=ENVVAR_PREFIX + 'RABBITMQ_CONN_STRING')
 @test_connection
 @test_db_connection
-def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_conn_string, rabbitmq_conn_string):
+@with_database
+@click.pass_context
+def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redis_conn_string, rabbitmq_conn_string):
 
     if not github_api_key:
 
@@ -61,7 +63,7 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
     keys["github_api_key"] = github_api_key
     keys["gitlab_api_key"] = gitlab_api_key
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine=ctx.obj.engine) as session:
 
         config = AugurConfig(logger, session)
 
@@ -106,9 +108,11 @@ def init_config(github_api_key, facade_repo_directory, gitlab_api_key, redis_con
 @click.option('--file', required=True)
 @test_connection
 @test_db_connection
-def load_config(file):
+@with_database
+@click.pass_context
+def load_config(ctx, file):
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine=ctx.obj.engine) as session:
         config = AugurConfig(logger, session)
 
         print("WARNING: This will override your current config")
@@ -129,9 +133,11 @@ def load_config(file):
 @click.option('--file', required=True)
 @test_connection
 @test_db_connection
-def add_section(section_name, file):
+@with_database
+@click.pass_context
+def add_section(ctx, section_name, file):
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine=ctx.obj.engine) as session:
         config = AugurConfig(logger, session)
 
         if config.is_section_in_config(section_name):
@@ -155,13 +161,21 @@ def add_section(section_name, file):
 @click.option('--section', required=True)
 @click.option('--setting', required=True)
 @click.option('--value', required=True)
-@click.option('--data-type', required=True)
+@click.option('--data-type')
 @test_connection
 @test_db_connection
-def config_set(section, setting, value, data_type):
+@with_database
+@click.pass_context
+def config_set(ctx, section, setting, value, data_type):
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine=ctx.obj.engine) as session:
         config = AugurConfig(logger, session)
+        
+        if not data_type:
+            result = session.query(Config).filter(Config.section_name == section, Config.setting_name == setting).all()
+            if not result:
+                return click.echo("You must specify a data-type if the setting does not already exist")
+            data_type = result[0].type
 
         if data_type not in config.accepted_types:
             print(f"Error invalid type for config. Please use one of these types: {config.accepted_types}")
@@ -182,9 +196,11 @@ def config_set(section, setting, value, data_type):
 @click.option('--setting')
 @test_connection
 @test_db_connection
-def config_get(section, setting):
+@with_database
+@click.pass_context
+def config_get(ctx, section, setting):
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, engine=ctx.obj.engine) as session:
         config = AugurConfig(logger, session)
 
         if setting:
@@ -209,12 +225,30 @@ def config_get(section, setting):
             else:
                 print(f"Error: {section} section not found in config")
 
+@cli.command('get_all_json')
+def config_get_all_json():
+    data = {}
+    try:
+        with DatabaseSession(logger) as session:
+            sections = session.query(Config.section_name).distinct().all()
+            for section in sections:
+                data[section[0]] = {}
+
+            for row in session.query(Config).all():
+                data[row.section_name][row.setting_name] = row.value
+    except:
+        pass
+    
+    print(json.dumps(data, indent=4))
+
 @cli.command('clear')
 @test_connection
 @test_db_connection
-def clear_config():
+@with_database
+@click.pass_context
+def clear_config(ctx):
 
-    with DatabaseSession(logger) as session:
+    with DatabaseSession(logger, ctx.obj.engine) as session:
         config = AugurConfig(logger, session)
 
         if not config.empty():

@@ -1,19 +1,11 @@
 #SPDX-License-Identifier: MIT
-from flask import Response
-from flask import request
-import datetime
-import base64
+from flask import Response, current_app
 import sqlalchemy as s
 import pandas as pd
-from augur.api.util import metric_metadata
-import boto3
 import json
-from boto3.dynamodb.conditions import Key, Attr
-import os
-import requests
 
 from augur.api.routes import AUGUR_API_VERSION
-from ..server import app, engine
+from ..server import app
 
 @app.route('/{}/metadata/repo_info'.format(AUGUR_API_VERSION), methods=["GET"])
 def get_repo_info():
@@ -47,7 +39,9 @@ def get_repo_info():
         ORDER BY
             repo.repo_name;
     """)
-    results = pd.read_sql(repo_info_sql,  engine)
+    
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(repo_info_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     parsed_data = json.loads(data)
     return Response(response=data,
@@ -61,7 +55,9 @@ def contributions_count():
         group by repo_git 
         order by contributions desc;
     """)
-    results = pd.read_sql(repo_info_sql,  engine)
+    
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(repo_info_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     parsed_data = json.loads(data)
     return Response(response=data,
@@ -75,7 +71,9 @@ def contributors_count():
         group by repo_git 
         order by contributors desc;  
     """)
-    results = pd.read_sql(repo_info_sql,  engine)
+    
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(repo_info_sql,  conn)
     data = results.to_json(orient="records", date_format='iso', date_unit='ms')
     parsed_data = json.loads(data)
     return Response(response=data,

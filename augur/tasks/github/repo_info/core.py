@@ -1,16 +1,12 @@
 #SPDX-License-Identifier: MIT
-import logging, os, sys, time, requests, json
-from datetime import datetime
-from multiprocessing import Process, Queue
-import pandas as pd
+import json
 import sqlalchemy as s
-import httpx
-import logging
 from augur.tasks.github.util.github_paginator import GithubPaginator
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.github.util.gh_graphql_entities import hit_api_graphql, request_graphql_dict
+from augur.tasks.github.util.gh_graphql_entities import request_graphql_dict
 from augur.application.db.models import *
+from augur.application.db.lib import execute_sql
 from augur.tasks.github.util.github_task_session import *
 from augur.application.db.models.augur_data import RepoBadging
 from urllib.parse import quote
@@ -97,7 +93,7 @@ def grab_repo_info_from_graphql_endpoint(key_auth, logger, query):
     return data
     
 
-def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
+def repo_info_model(key_auth, repo_orm_obj, logger):
     logger.info("Beginning filling the repo_info model for repo: " + repo_orm_obj.repo_git + "\n")
 
     owner, repo = get_owner_repo(repo_orm_obj.repo_git)
@@ -150,10 +146,10 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
                 pr_merged: pullRequests(states: MERGED) {
                     totalCount
                 }
-                ref(qualifiedName: "master") {
+                defaultBranchRef {
                     target {
                         ... on Commit {
-                            history(first: 0){
+                            history {
                                 totalCount
                             }
                         }
@@ -248,7 +244,7 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
         'security_audit_file': None,
         'status': None,
         'keywords': None,
-        'commit_count': data['ref']['target']['history']['totalCount'] if data['ref'] else None,
+        'commit_count': data['defaultBranchRef']['target']['history']['totalCount'] if data['defaultBranchRef'] else None,
         'issues_count': data['issue_count']['totalCount'] if data['issue_count'] else None,
         'issues_closed': data['issues_closed']['totalCount'] if data['issues_closed'] else None,
         'pull_request_count': data['pr_count']['totalCount'] if data['pr_count'] else None,
@@ -256,11 +252,11 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
         'pull_requests_closed': data['pr_closed']['totalCount'] if data['pr_closed'] else None,
         'pull_requests_merged': data['pr_merged']['totalCount'] if data['pr_merged'] else None,
         'tool_source': 'Repo_info Model',
-        'tool_version': '0.42',
+        'tool_version': '0.50.0',
         'data_source': "Github"
     }
 
-    #result = session.insert_data(rep_inf,RepoInfo,['repo_info_id']) #result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
+    #result = bulk_insert_dicts(rep_inf,RepoInfo,['repo_info_id']) #result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
     insert_statement = s.sql.text("""INSERT INTO repo_info (repo_id,last_updated,issues_enabled,
 			open_issues,pull_requests_enabled,wiki_enabled,pages_enabled,fork_count,
 			default_branch,watchers_count,license,stars_count,
@@ -275,7 +271,7 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
             :tool_source, :tool_version, :data_source)
 			""").bindparams(**rep_inf)
 
-    augur_db.execute_sql(insert_statement)
+    execute_sql(insert_statement)
 
     # Note that the addition of information about where a repository may be forked from, and whether a repository is archived, updates the `repo` table, not the `repo_info` table.
     forked = is_forked(key_auth, logger, owner, repo)
@@ -288,7 +284,7 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
         archived = 0
 
     update_repo_data = s.sql.text("""UPDATE repo SET forked_from=:forked, repo_archived=:archived, repo_archived_date_collected=:archived_date_collected WHERE repo_id=:repo_id""").bindparams(forked=forked, archived=archived, archived_date_collected=archived_date_collected, repo_id=repo_orm_obj.repo_id)
-    augur_db.execute_sql(update_repo_data)
+    execute_sql(update_repo_data)
 
     logger.info(f"Inserted info for {owner}/{repo}\n")
 

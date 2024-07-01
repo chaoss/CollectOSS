@@ -6,10 +6,10 @@ Metrics that provides data about contributors & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.api.util import register_metric
-import uuid 
+from flask import current_app
 
-from ..server import engine
+from augur.api.util import register_metric
+
 
 @register_metric()
 def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -125,8 +125,9 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
             ORDER BY total DESC
         """)
 
-        results = pd.read_sql(contributorsSQL, engine, params={'repo_id': repo_id, 'period': period,
-                                                                'begin_date': begin_date, 'end_date': end_date})
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(contributorsSQL, conn, params={'repo_id': repo_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
     else:
         contributorsSQL = s.sql.text("""
         SELECT id::text                           AS user_id,
@@ -211,8 +212,9 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
             ORDER BY total DESC
         """)
 
-        results = pd.read_sql(contributorsSQL, engine, params={'repo_group_id': repo_group_id, 'period': period,
-                                                            'begin_date': begin_date, 'end_date': end_date})
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(contributorsSQL, conn, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                'begin_date': begin_date, 'end_date': end_date})
     return results
 
 @register_metric()
@@ -281,8 +283,9 @@ def contributors_new(repo_group_id, repo_id=None, period='day', begin_date=None,
             GROUP BY date, repo.repo_id, repo_name
             """)
 
-        results = pd.read_sql(contributorsNewSQL, engine, params={'repo_id': repo_id, 'period': period,
-                                                                'begin_date': begin_date, 'end_date': end_date})
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(contributorsNewSQL, conn, params={'repo_id': repo_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
     else:
         contributorsNewSQL = s.sql.text("""
             SELECT date_trunc(:period, b.created_at::DATE) AS date, COUNT(id) AS new_contributors, repo.repo_id, repo_name
@@ -330,8 +333,9 @@ def contributors_new(repo_group_id, repo_id=None, period='day', begin_date=None,
             GROUP BY date, repo.repo_id, repo_name
             """)
 
-        results = pd.read_sql(contributorsNewSQL, engine, params={'repo_group_id': repo_group_id, 'period': period,
-                                                                   'begin_date': begin_date, 'end_date': end_date})
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(contributorsNewSQL, conn, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                       'begin_date': begin_date, 'end_date': end_date})
     return results
     
 @register_metric()
@@ -351,7 +355,8 @@ def lines_changed_by_author(repo_group_id, repo_id=None):
             GROUP BY commits.repo_id, date_trunc('week', cmt_author_date::date), cmt_author_affiliation, cmt_author_email, repo_name
             ORDER BY date_trunc('week', cmt_author_date::date) ASC;
         """)
-        results = pd.read_sql(linesChangedByAuthorSQL, engine, params={"repo_id": repo_id})
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(linesChangedByAuthorSQL, conn, params={"repo_id": repo_id})
         return results
     else:
         linesChangedByAuthorSQL = s.sql.text("""
@@ -362,7 +367,8 @@ def lines_changed_by_author(repo_group_id, repo_id=None):
             GROUP BY repo_id, date_trunc('week', cmt_author_date::date), cmt_author_affiliation, cmt_author_email
             ORDER BY date_trunc('week', cmt_author_date::date) ASC;
         """)
-        results = pd.read_sql(linesChangedByAuthorSQL, engine, params={"repo_group_id": repo_group_id})
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(linesChangedByAuthorSQL, conn, params={"repo_group_id": repo_group_id})
         return results
 
 @register_metric()
@@ -420,8 +426,9 @@ def contributors_code_development(repo_group_id, repo_id=None, period='all', beg
             GROUP BY a.email, a.repo_id, repo_name
         """)
 
-        results = pd.read_sql(contributorsSQL, engine, params={'repo_id': repo_id, 'period': period,
-                                                                'begin_date': begin_date, 'end_date': end_date})
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(contributorsSQL, conn, params={'repo_id': repo_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
     else:
         contributorsSQL = s.sql.text("""
             SELECT 
@@ -455,6 +462,7 @@ def contributors_code_development(repo_group_id, repo_id=None, period='all', beg
             ORDER BY commits desc, email
         """)
 
-        results = pd.read_sql(contributorsSQL, engine, params={'repo_group_id': repo_group_id, 'period': period,
-                                                                'begin_date': begin_date, 'end_date': end_date})
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(contributorsSQL, conn, params={'repo_group_id': repo_group_id, 'period': period,
+                                                                    'begin_date': begin_date, 'end_date': end_date})
     return results

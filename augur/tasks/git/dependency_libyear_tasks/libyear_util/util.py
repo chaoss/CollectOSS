@@ -1,6 +1,4 @@
-from distutils.version import LooseVersion
 import dateutil.parser
-from distutils import version
 import os
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.pypi_parser import parse_conda, parse_pipfile,parse_pipfile_lock,parse_poetry,parse_poetry_lock,parse_requirement_txt,parse_setup_py
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.npm_parser import parse_package_json

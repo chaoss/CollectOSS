@@ -4,30 +4,35 @@
 import glob
 import sys
 import inspect
-import types
 import json
 import os
 import base64
-import logging
 import importlib
+import graphene
 
-from typing import Optional, List, Any, Tuple
+from typing import List, Any
 
 from pathlib import Path
 
-from flask import Flask, request, Response, redirect
+from flask import Flask, request, Response, redirect, jsonify
 from flask_cors import CORS
 import pandas as pd
 from beaker.util import parse_cache_config_options
 from beaker.cache import CacheManager, Cache
-from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
+from flask_graphql import GraphQLView
+from graphene_sqlalchemy import SQLAlchemyObjectType
+
 
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string, create_database_engine
+from augur.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
+
 from metadata import __version__ as augur_code_version
+
+
 
 # from augur.api.routes import AUGUR_API_VERSION
 AUGUR_API_VERSION = "api/unstable"
@@ -307,14 +312,14 @@ def create_cache_manager() -> CacheManager:
 
     return cache
 
-def get_server_cache(config, cache_manager) -> Cache:
+def get_server_cache(cache_manager) -> Cache:
     """Create the server cache, set expiration, and clear
     
     Returns:
         server cache
     """
 
-    expire = int(config.get_value('Server', 'cache_expire'))
+    expire = int(augur_config.get_value('Server', 'cache_expire'))
     server_cache = cache_manager.get_cache('server', expire=expire)
     server_cache.clear()
 
@@ -327,6 +332,335 @@ engine = create_database_engine(url, poolclass=StaticPool)
 db_session = DatabaseSession(logger, engine)
 augur_config = AugurConfig(logger, db_session)
 
+
+def get_connection(table, cursor_field_name, connection_class, after, limit, extra_condition=False):
+
+    cursor_field = getattr(table, cursor_field_name)
+    query = db_session.query(table).order_by(cursor_field)
+
+    if after:
+        cursor_id = after
+        query = query.filter(cursor_field > cursor_id)
+
+    if extra_condition:
+            field = getattr(table, extra_condition["field_name"])
+            query = query.filter(field == extra_condition["value"])
+
+    # get one more item to determine if there is a next page
+    items = query.limit(limit + 1).all()
+    has_next_page = len(items) > limit
+    items = items[:limit]
+
+    
+    if items:
+        next_cursor = getattr(items[-1], cursor_field_name)
+    else:
+        next_cursor = None
+
+    return connection_class(items=items, page_info=PageInfoType(next_cursor=next_cursor, has_next_page=has_next_page))
+
+
+
+
+########### Repo Types ##################
+class RepoType(SQLAlchemyObjectType):
+    class Meta:
+        model = Repo
+        use_connection = True
+
+    issues = graphene.Field(lambda: IssueConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
+    prs = graphene.Field(lambda: PullRequestConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
+    messages = graphene.Field(lambda: MessageConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
+    releases = graphene.List(lambda: ReleaseType)
+    cursor = graphene.String()
+        
+    def resolve_cursor(self, info):
+        return str(self.repo_id)
+
+    def resolve_issues(self, info, after=None, limit=None):
+        condition = {"field_name": "repo_id", "value": self.repo_id}
+        issue_connection = get_connection(Issue, "issue_id", IssueConnection, after, limit, condition)
+        return issue_connection
+    
+    def resolve_prs(self, info, after=None, limit=None):
+        condition = {"field_name": "repo_id", "value": self.repo_id}
+        pr_connection = get_connection(PullRequest, "pull_request_id", PullRequestConnection, after, limit, condition)
+        return pr_connection
+    
+    def resolve_messages(self, info, after=None, limit=None):
+        condition = {"field_name": "repo_id", "value": self.repo_id}
+        messages_connection = get_connection(Message, "msg_id", MessageConnection, after, limit,condition)
+        return messages_connection
+    
+    def resolve_releases(self, info):
+        return self.releases
+    
+class ReleaseType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Release
+        use_connection = True
+
+
+############### Issue Objects #############
+class IssueType(SQLAlchemyObjectType):
+    class Meta:
+        model = Issue
+        use_connection = True
+
+    repo = graphene.Field(RepoType)
+    messages = graphene.List(lambda: MessageType)
+    labels = graphene.List(lambda: IssueLabelType)
+    assignees = graphene.List(lambda: IssueAssigneeType)
+    cursor = graphene.String()
+
+    def resolve_cursor(self, info):
+        return str(self.issue_id)
+
+    def resolve_repo(self, info):
+        return self.repo
+    
+    def resolve_messages(self, info):
+        messages = [ref.message for ref in self.message_refs]
+        return messages
+    
+    def resolve_labels(self, info):
+        return self.labels
+    
+    def resolve_assignees(self, info):
+        return self.assignees
+    
+class IssueAssigneeType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = IssueAssignee
+        use_connection = True
+
+class IssueLabelType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = IssueLabel
+        use_connection = True
+
+
+################ Pull Request Objects ############
+class PullRequestType(SQLAlchemyObjectType):
+    class Meta:
+        model = PullRequest
+        use_connection = True
+
+    repo = graphene.Field(RepoType)
+    messages = graphene.List(lambda: MessageType)
+    reviews = graphene.List(lambda: PullRequestReviewType)
+    labels = graphene.List(lambda: PrLabelType)
+    assignees = graphene.List(lambda: PullRequestAssigneeType)
+    files = graphene.List(lambda: PullRequestFileType)
+    cursor = graphene.String()
+
+    def resolve_cursor(self, info):
+        return str(self.pull_request_id)
+
+    def resolve_repo(self, info):
+        return self.repo
+    
+    def resolve_messages(self, info):
+        messages = [ref.message for ref in self.message_refs]
+        return messages
+    
+    def resolve_reviews(self, info):
+        return self.reviews
+    
+    def resolve_labels(self, info):
+        return self.labels
+    
+    def resolve_assignees(self, info):
+        return self.assignees
+    
+    def resolve_files(self, info):
+        return self.files
+    
+class PullRequestAssigneeType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = PullRequestAssignee
+        use_connection = True
+    
+class PullRequestReviewType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = PullRequestReview
+        use_connection = True
+
+class PrLabelType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = PullRequestLabel
+        use_connection = True
+
+
+class PullRequestFileType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = PullRequestFile
+        use_connection = True
+
+class PullRequestCommitType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = PullRequestCommit
+        use_connection = True
+
+
+
+########### Contributor Types #############
+class ContributorType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Contributor
+        use_connection = True
+    
+    issues_opened = graphene.List(lambda: IssueType)
+    pull_requests = graphene.List(lambda: PullRequestType)
+    pull_request_reviews = graphene.List(lambda: PullRequestReviewType)
+    commits = graphene.List(lambda: CommitType)
+    cursor = graphene.String()
+
+    def resolve_cursor(self, info):
+        return str(self.cntrb_id)
+
+    def resolve_issues_opened(self, info):
+        return self.issues_opened
+    
+    def resolve_pull_requests(self, info):
+        return self.pull_requests
+
+    def resolve_pull_request_reviews(self, info):
+        return self.pull_request_reviews
+    
+    def resolve_commits(self, info):
+        return self.commits
+    
+class ContributorAliasType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = ContributorsAlias
+        use_connection = True
+
+
+
+########### Other Types ################
+class MessageType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Message
+        use_connection = True
+
+    def resolve_repo(self, info):
+        return self.repo
+    
+    cursor = graphene.String()
+
+    def resolve_cursor(self, info):
+        return str(self.msg_id)
+    
+class CommitType(SQLAlchemyObjectType):
+
+    class Meta:
+        model = Commit
+        use_connection = True
+
+    messages = graphene.List(MessageType)
+
+    def resolve_repo(self, info):
+        return self.repo
+
+class PageInfoType(graphene.ObjectType):
+    next_cursor = graphene.String()
+    has_next_page = graphene.Boolean()
+
+
+
+
+########### Connection Objects #############
+class GenericConnection(graphene.ObjectType):
+    page_info = graphene.Field(PageInfoType)
+
+class RepoConnection(GenericConnection):
+    items = graphene.List(RepoType)
+
+class IssueConnection(GenericConnection):
+    items = graphene.List(IssueType)
+
+class PullRequestConnection(GenericConnection):
+    items = graphene.List(PullRequestType)
+
+class CommitConnection(GenericConnection):
+    items = graphene.List(CommitType)
+
+class ContributorConnection(GenericConnection):
+    items = graphene.List(ContributorType)
+
+class MessageConnection(GenericConnection):
+    items = graphene.List(MessageType)
+
+
+############### Base Query object ##############
+class Query(graphene.ObjectType):
+
+    repos = graphene.Field(RepoConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
+    repo = graphene.Field(RepoType, id=graphene.Int())
+
+    issues = graphene.Field(IssueConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
+    issue = graphene.Field(IssueType, id=graphene.Int())
+
+    prs = graphene.Field(PullRequestConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
+    pr = graphene.List(PullRequestType, id=graphene.Int())
+
+    messages = graphene.Field(MessageConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
+    commits = graphene.Field(CommitConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
+
+    contributors = graphene.Field(ContributorConnection, after=graphene.String(), limit=graphene.Int(default_value=10))
+    contributor = graphene.Field(ContributorType, id=graphene.UUID())
+
+    def resolve_repos(self, info, after=None, limit=None):
+        repo_connection = get_connection(Repo, "repo_id", RepoConnection, after, limit)
+        return repo_connection
+
+    def resolve_repo(self, info, id):
+        return db_session.query(Repo).filter(Repo.repo_id==id).first()
+
+    def resolve_issues(self, info, after=None, limit=None):
+        issue_connection = get_connection(Issue, "issue_id", IssueConnection, after, limit)
+        return issue_connection
+    
+    def resolve_issue(self, info, id):
+        return db_session.query(Issue).filter(Issue.issue_id==id).first()
+
+    def resolve_prs(self, info, after=None, limit=None):
+        pr_connection = get_connection(PullRequest, "pull_request_id", PullRequestConnection, after, limit)
+        return pr_connection
+    
+    def resolve_pr(self, info, id):
+        return db_session.query(PullRequest).filter(PullRequest.pull_request_id==id).first()
+    
+    def resolve_messages(self, info, after=None, limit=None):
+        messages_connection = get_connection(Message, "msg_id", MessageConnection, after, limit)
+        return messages_connection
+    
+    def resolve_commits(self, info, after=None, limit=None):
+        commit_connection = get_connection(Commit, "cmt_id", CommitConnection, after, limit)
+        return commit_connection
+    
+    def resolve_contributors(self, info, after=None, limit=None):
+        contributors_connection = get_connection(Contributor, "cntrb_id", ContributorConnection, after, limit)
+        return contributors_connection
+    
+    def resolve_contributor(self, info, id):
+        return db_session.query(Contributor).filter(Contributor.cntrb_id==id).first()
+    
+
+
+
 template_dir = str(Path(__file__).parent.parent / "templates")
 static_dir = str(Path(__file__).parent.parent / "static")
 
@@ -337,7 +671,7 @@ logger.debug("Created Flask app")
 # so when we pass the flask app to the routes files we 
 # know can access the api version via the app variable
 app.augur_api_version = AUGUR_API_VERSION
-
+app.engine = engine
 
 CORS(app)
 app.url_map.strict_slashes = False
@@ -371,6 +705,25 @@ def status():
                     status=200,
                     mimetype="application/json")
 
+schema = graphene.Schema(query=Query)
+
+class AuthenticatedGraphQLView(GraphQLView):
+    def dispatch_request(self):
+        
+        api_key = request.headers.get('x-api-key')
+
+        client_applications = db_session.query(ClientApplication).all()
+        api_keys = [app.api_key for app in client_applications]
+        
+        if not api_key or api_key not in api_keys:
+            return jsonify(error="Invalid or missing API key"), 403
+        
+        return super().dispatch_request()
+
+schema = graphene.Schema(query=Query)
+
+app.add_url_rule(f'/{app.augur_api_version}/graphql', view_func=AuthenticatedGraphQLView.as_view('graphql', schema=schema, graphiql=True))
+
 from .routes import *
 
 # import frontend routes
@@ -379,7 +732,7 @@ from .view.routes import *
 from .view.api import *
 
 cache_manager = create_cache_manager()
-server_cache = get_server_cache(augur_config, cache_manager)
+server_cache = get_server_cache(cache_manager)
 
 
 

@@ -12,16 +12,18 @@ We default to this version of Ubuntu for the moment because Augur does not yet s
 2. Clone your fork. We recommend creating a `github` directory in your user's base directory. 
 
 ## Pre-Requisite Operating System Level Packages
-Here we ensure your system is up to date, install required python libraries, install postgresql, and install our queuing infrastrucutre, which is composed of redis-server and rabbitmq-server
+Here we ensure your system is up to date, install required python libraries, install postgresql, and install our queuing infrastructure, which is composed of redis-server and rabbitmq-server
 
 ### Executable
-```shell 
+```shell
+sudo add-apt-repository ppa:deadsnakes/ppa &&
 sudo apt update && 
 sudo apt upgrade && 
-sudo apt install software-properties-common && 
-sudo apt install python3-dev && 
-sudo apt install python3.10-venv &&
-sudo apt install postgresql postgresql-contrib postgresql-client && 
+sudo apt install software-properties-common &&
+sudo apt-get install libpq-dev &&
+sudo apt install python3.11-dev && 
+sudo apt install python3.11-venv &&
+sudo apt install postgresql-16 postgresql-contrib-16 postgresql-client-16 && 
 sudo apt install build-essential && 
 sudo apt install redis-server &&  # required 
 sudo apt install erlang && # required
@@ -29,7 +31,7 @@ sudo apt install rabbitmq-server && #required
 sudo snap install go --classic && #required: Go Needs to be version 1.19.x or higher. Snap is the package manager that gets you to the right version. Classic enables it to actually be installed at the correct version.
 sudo apt install nginx && # required for hosting
 sudo add-apt-repository ppa:mozillateam/firefox-next &&
-sudo apt install firefox=115.0~b2+build1-0ubuntu0.22.04.1 &&
+sudo apt install firefox=127.0~b9+build1-0ubuntu0.24.04.1
 sudo apt install firefox-geckodriver
 
 # You will almost certainly need to reboot after this. 
@@ -366,11 +368,23 @@ Note: Augur will run on port 5000 by default (you probably need to change that i
 You can stop augur with `augur backend stop`, followed by `augur backend kill`. We recommend waiting 5 minutes between commands so Augur can shutdown more gently. There is no issue with data integrity if you issue them seconds apart, its just that stopping is nicer than killing. 
 
 ### Docker
-1. Make sure docker, and docker-compose are both installed
+*Note: `sudo` is not necessary on OSX or Windows
+
+1. Make sure docker, and docker compose are both installed
 2. Modify the `environment.txt` file in the root of the repository to include your GitHub and GitLab API keys.
 3. If you are already running postgresql on your server you have two choices: 
    - Change the port mappings in the `docker-compose.yml` file to match ports for Postgresql not currently in use.
    - Change to variables in `environment.txt` to include the correct values for your local, non-docker-container database.
-4. `sudo docker build -t augur-new -f docker/backend/Dockerfile .`
-5. `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to run the database in a Docker Container or 
-   `sudo docker-compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. 
+4. `sudo docker build -t augur-new -f docker/backend/Dockerfile .` OSX: 
+5. `sudo docker compose --env-file ./environment.txt --file docker-compose.yml up` to run the database in a Docker Container or 
+   `sudo docker compose --env-file ./environment.txt --file docker-compose.yml up` to connect to an already running database. *Note*: Environment file would be modified to point to an already running database. 
+
+
+#### Possible Apple Silicon Prerequisites: 
+```bash
+brew install libpq
+echo 'export LDFLAGS="-L/opt/homebrew/opt/libpq/lib"' >> ~/.zshrc
+echo 'export CPPFLAGS="-I/opt/homebrew/opt/libpq/include"' >> ~/.zshrc 
+```
+
+_Note: `AUGUR\_DB` and `RABBIT\_*` variables are optional when using the default docker-comopse.yml. `docker-compose-externalDB` does require `AUGUR\_DB` set to a postgresql installation._

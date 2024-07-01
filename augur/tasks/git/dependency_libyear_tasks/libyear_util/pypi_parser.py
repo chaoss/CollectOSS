@@ -1,10 +1,6 @@
 import re, os
 import json
-from typing import Dict
 import toml 
-import dateutil.parser
-from augur.tasks.git.dependency_libyear_tasks.libyear_util.pypi_libyear_util import sort_dependency_requirement,get_pypi_data,get_latest_version,get_release_date
-from augur.tasks.git.dependency_libyear_tasks.libyear_util.pypi_libyear_util import get_libyear
 import logging
 import yaml
 
@@ -164,7 +160,14 @@ def parse_conda(file_handle):
     pip = None
     if not contents:
         return []
-    dependencies = contents['dependencies']
+    #dependencies = contents['dependencies']
+    dependencies = contents.get('dependencies', [])
+    
+    if not dependencies:
+        print("No dependencies found.")
+        return []
+    else:
+        print("Dependencies found.")
     for dep in dependencies:
         if (type(dep) is dict) and dep['pip']:
             pip = dep

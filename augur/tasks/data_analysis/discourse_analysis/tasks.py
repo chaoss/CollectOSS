@@ -8,7 +8,7 @@ import os
 from collections import Counter
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.session import DatabaseSession
+from augur.application.db.lib import get_session, get_repo_by_repo_git
 from augur.application.db.models import Repo, DiscourseInsight
 from augur.application.db.util import execute_session_query
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
@@ -32,14 +32,13 @@ stemmer = nltk.stem.snowball.SnowballStemmer("english")
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 DISCOURSE_ANALYSIS_DIR = f"{ROOT_AUGUR_DIRECTORY}/tasks/data_analysis/discourse_analysis/"
 
-@celery.task(base=AugurMlRepoCollectionTask)
-def discourse_analysis_task(repo_git):
+@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+def discourse_analysis_task(self, repo_git):
 
     logger = logging.getLogger(discourse_analysis_task.__name__)
-    from augur.tasks.init.celery_app import engine
+    engine = self.app.engine
 
-    with DatabaseSession(logger, engine) as session:
-        discourse_analysis_model(repo_git, logger, engine)
+    discourse_analysis_model(repo_git, logger, engine)
 
 
 def discourse_analysis_model(repo_git: str,logger,engine) -> None:
@@ -48,10 +47,7 @@ def discourse_analysis_model(repo_git: str,logger,engine) -> None:
     tool_version = '0.1.0'
     data_source = 'Analysis of Issue/PR Messages'
 
-    with DatabaseSession(logger, engine) as session:
-
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
-        repo_id = execute_session_query(query, 'one').repo_id
+    repo_id = get_repo_by_repo_git(repo_git).repo_id
 
     get_messages_for_repo_sql = s.sql.text("""
                 (SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, i.issue_id thread_id,m.msg_text,i.issue_title thread_title,m.msg_id
@@ -72,7 +68,9 @@ def discourse_analysis_model(repo_git: str,logger,engine) -> None:
             """)
 
     # result = db.execute(delete_points_SQL, repo_id=repo_id, min_date=min_date)
-    msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, engine, params={"repo_id": repo_id})
+
+    with engine.connect() as conn:
+        msg_df_cur_repo = pd.read_sql(get_messages_for_repo_sql, conn, params={"repo_id": repo_id})
     msg_df_cur_repo = msg_df_cur_repo.sort_values(by=['thread_id']).reset_index(drop=True)
     logger.info(msg_df_cur_repo.head())
 
@@ -95,7 +93,7 @@ def discourse_analysis_model(repo_git: str,logger,engine) -> None:
     logger.debug(f"y_pred_git_flat len: {len(y_pred_git_flat)}")
     msg_df_cur_repo['discourse_act'] = y_pred_git_flat
 
-    with DatabaseSession(logger, engine) as session:
+    with get_session() as session:
         for index, row in msg_df_cur_repo.iterrows():
             record = {
                 'msg_id': row['msg_id'],

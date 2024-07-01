@@ -2,38 +2,24 @@
 """
 Creates routes for user functionality
 """
+from augur.api.routes import AUGUR_API_VERSION
 
-import os
-import time
-import base64
 import logging
 import secrets
-import requests
-import pandas as pd
-
-from sqlalchemy.sql import text
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.exc import NoResultFound
-
-from augur.api.util import ssl_required
-from augur.api.util import api_key_required
-from augur.api.routes import AUGUR_API_VERSION
-from augur.application.db.session import DatabaseSession
-from augur.application.config import get_development_flag
-from augur.util.repo_load_controller import RepoLoadController
-from augur.tasks.init.redis_connection import redis_connection as redis
-from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.application.db.models import User, UserRepo, UserGroup, UserSessionToken, ClientApplication, RefreshToken
-
-from ..server import app, engine
-
-from werkzeug.security import check_password_hash
-from flask import request, Response, jsonify, session
+from flask import request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
+from werkzeug.security import check_password_hash
+from sqlalchemy.orm import object_session
+
+from augur.application.db import get_session
+from augur.api.util import api_key_required
+from augur.api.util import ssl_required
+
+from augur.application.db.models import User, UserSessionToken, RefreshToken
+from augur.tasks.init.redis_connection import redis_connection as redis
+from ..server import app
 
 logger = logging.getLogger(__name__)
-current_user: User = current_user
-Session = sessionmaker(bind=engine)
 
 # Enable type-hinting for the current_user object
 current_user: User = current_user
@@ -47,15 +33,14 @@ def validate_user():
         # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/400
         return jsonify({"status": "Missing argument"}), 400
 
-    session = Session()
-    user = session.query(User).filter(User.login_name == username).first()
-    session.close()
+    with get_session() as session:
+        user = session.query(User).filter(User.login_name == username).first()
 
     if user is None:
         return jsonify({"status": "Invalid username"})
 
     checkPassword = check_password_hash(user.login_hashword, password)
-    if checkPassword == False:
+    if not checkPassword:
         return jsonify({"status": "Invalid password"})
 
 
@@ -93,9 +78,9 @@ def generate_session(application):
     code = request.args.get("code") or request.form.get("code")
     if not code:
         return jsonify({"status": "Missing argument: code"}), 400
-    
+
     grant_type = request.args.get("grant_type") or request.form.get("grant_type")
-    
+
     if "code" not in grant_type:
         return jsonify({"status": "Invalid grant type"})
 
@@ -104,7 +89,7 @@ def generate_session(application):
     if not username:
         return jsonify({"status": "Invalid authorization code"})
 
-    with DatabaseSession(logger) as session:
+    with get_session() as session:
 
         user = User.get_user(session, username)
         if not user:
@@ -135,25 +120,25 @@ def refresh_session(application):
 
     if not refresh_token_str:
         return jsonify({"status": "Missing argument: refresh_token"}), 400
-    
+
     if request.args.get("grant_type") != "refresh_token":
         return jsonify({"status": "Invalid grant type"})
 
-    with DatabaseSession(logger) as session:
+    with get_session() as session:
 
         refresh_token = session.query(RefreshToken).filter(RefreshToken.id == refresh_token_str).first()
         if not refresh_token:
-            return jsonify({"status": "Invalid refresh token"})
+            return jsonify({"status": "Invalid refresh token"}), 400
 
         if refresh_token.user_session.application != application:
-            return jsonify({"status": "Invalid application"})
+            return jsonify({"status": "Invalid application"}), 400
 
         user_session = refresh_token.user_session
         user = user_session.user
 
         new_user_session_token = UserSessionToken.create(session, user.user_id, user_session.application.id).token
         new_refresh_token_id = RefreshToken.create(session, new_user_session_token).id
-        
+
         session.delete(refresh_token)
         session.delete(user_session)
         session.commit()
@@ -206,21 +191,20 @@ def update_user():
     new_login_name = request.args.get("new_username")
     new_password = request.args.get("new_password")
 
-    if email is not None:
-        existing_user = session.query(User).filter(User.email == email).one()
-        if existing_user is not None:
-            session = Session()
-            return jsonify({"status": "Already an account with this email"})
+    session = object_session(current_user)
 
+    if email is not None:
+        existing_user = session.query(User).filter(User.email == email).one_or_none()
+        if existing_user is not None:
+            return jsonify({"status": "Already an account with this email"})
+        
         current_user.email = email
         session.commit()
-        session = Session()
         return jsonify({"status": "Email Updated"})
 
     if new_password is not None:
         current_user.login_hashword = User.compute_hashsed_password(new_password)
         session.commit()
-        session = Session()
         return jsonify({"status": "Password Updated"})
 
     if new_login_name is not None:
@@ -230,7 +214,6 @@ def update_user():
 
         current_user.login_name = new_login_name
         session.commit()
-        session = Session()
         return jsonify({"status": "Username Updated"})
 
     return jsonify({"status": "Missing argument"}), 400
@@ -243,7 +226,7 @@ def add_user_repo():
     repo = request.args.get("repo_url")
     group_name = request.args.get("group_name")
 
-    result = current_user.add_repo(group_name, repo)
+    result = current_user.add_github_repo(group_name, repo)
 
     return jsonify(result[1])
 
@@ -276,7 +259,7 @@ def add_user_org():
     org = request.args.get("org_url")
     group_name = request.args.get("group_name")
 
-    result = current_user.add_org(group_name, org)
+    result = current_user.add_github_org(group_name, org)
 
     return jsonify(result[1])
 
@@ -289,12 +272,12 @@ def user_verify_otp():
     if otp == redis.get(current_user.email_otp_key):
         redis.delete(current_user.email_otp_key)
 
-        session = Session()
-        user = session.query(User).filter(User.user_id == current_user.user_id).one()
-        
-        user.email_verified = True
-        session.commit()
-        session.close()
+        with get_session() as session:
+            user = session.query(User).filter(User.user_id == current_user.user_id).one()
+            
+            user.email_verified = True
+            session.commit()
+            session.close()
         
         return jsonify({"status": "Success"})
 
@@ -360,11 +343,11 @@ def group_repos():
 
     result_dict = result[1]
     if result[0] is not None:
-        
+
         for repo in result[0]:
             repo["base64_url"] = str(repo["base64_url"].decode())
 
-        result_dict.update({"repos": result[0]})        
+        result_dict.update({"repos": result[0]})
 
     return jsonify(result_dict)
 
@@ -469,7 +452,7 @@ def toggle_user_group_favorite():
     Returns
     -------
     dict
-        A dictionairy with key of 'status' that indicates the success or failure of the operation
+        A dictionary with key of 'status' that indicates the success or failure of the operation
     """
     group_name = request.args.get("group_name")
 

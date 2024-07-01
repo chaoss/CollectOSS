@@ -7,9 +7,10 @@ Metrics that provide data about messages (of any form) & their associated activi
 import datetime
 import sqlalchemy as s
 import pandas as pd
+from flask import current_app
+
 from augur.api.util import register_metric
 
-from ..server import engine
 
 @register_metric()
 def repo_messages(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -56,9 +57,9 @@ def repo_messages(repo_group_id, repo_id=None, period='day', begin_date=None, en
 
         """)
 
-
-        results = pd.read_sql(repomessagesSQL, engine, params={'repo_id': repo_id, 'period': period,
-                                                                    'begin_date': begin_date, 'end_date': end_date})
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(repomessagesSQL, conn, params={'repo_id': repo_id, 'period': period,
+                                                                        'begin_date': begin_date, 'end_date': end_date})
     else: 
 
         repomessagesSQL = s.sql.text("""
@@ -85,10 +86,11 @@ def repo_messages(repo_group_id, repo_id=None, period='day', begin_date=None, en
                 rg_name,
                 message_date
         """)
-            
-        results = pd.read_sql(repomessagesSQL, engine,
-                            params={'repo_group_id': repo_group_id, 'period': period,
-                                    'begin_date': begin_date, 'end_date': end_date})
+
+        with current_app.engine.connect() as conn: 
+            results = pd.read_sql(repomessagesSQL, conn,
+                                params={'repo_group_id': repo_group_id, 'period': period,
+                                        'begin_date': begin_date, 'end_date': end_date})
 
     return results
 

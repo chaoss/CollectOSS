@@ -1,0 +1,287 @@
+{# https://www.bootdey.com/snippets/view/dark-profile-settings #}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <link href="{{ url_for('static', filename='css/first_time.css') }}" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+    <div class="container">
+        <div class="row">
+            {# Start sidebar #}
+            <div class="col-xl-3 col-lg-3 col-md-12 col-sm-12 col-12 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="sidebar">
+                            <div class="sidebar-top">
+                                <div class="brand-logo">
+                                    <img src="{{ url_for('static', filename='img/augur_logo.png')}}" alt="Augur Logo">
+                                </div>
+                            </div>
+                            <div class="about">
+                                <h1 class="mb-2 text-primary">First Time Setup</h1>
+                                <p>Take a moment to create or update the configuration for your instance.</p>
+                                <br>
+                                <p>Default values are shown. When you are done updating, click the restart button to
+                                    save the settings and bring the primary server up, or click the exit button to
+                                    save the settings and quit the startup wizard.</p>
+                                <p>Double-click an empty input field to automatically populate it with the placeholder
+                                    value</p>
+                                <p>The full config currently in the database (if it exists) is hidden by default. Click
+                                    the button below to reveal it. The full config cannot be updated via this form,
+                                    but you can make changes to the config after installation. Some values may be
+                                    overwritten during initialization (the next step). If you wish to retain the below
+                                    settings, you can download a copy below.</p>
+                                <button class="btn btn-primary" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#settings-form" aria-expanded="false" aria-controls="settings-form">
+                                    Show DB Config
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted">
+                        {% if version %}
+                        Version: {{ version }}
+                        {% else %}
+                        Version: Unspecified
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {# Start form body #}
+            <div class="col-xl-9 col-lg-9 col-md-12 col-sm-12 col-12 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <form id="essentials-form">
+                            <div class="row mb-3">
+                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 mb-2">
+                                    <h6 class="text-primary no-margin-bottom">{{ essential_config.title }}</h6>
+                                    <small class="subtitle">{{ essential_config.subtitle }}</small>
+                                </div>
+                                {% for setting in essential_config.settings %}
+                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                                    <div class="form-group">
+                                        <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
+                                        <input type="text" class="form-control input-textbox" id="{{ setting.id }}"
+                                            placeholder="{{ setting.value }}">
+                                        <div class="form-text mb-1">{{ setting.description }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="row mb-3">
+                                <div class="d-flex justify-content-end" style="column-gap: 10px;">
+                                    <button type="submit" id="Restart" name="submit" class="btn btn-primary">Restart</button>
+                                    <button type="submit" id="Exit" name="submit" class="btn btn-primary">Exit</button>
+                                </div>
+                            </div>
+                        </form>
+                        {% if not sections %}
+                            <div id="settings-form" class="collapse">
+                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                    <h6 class="mb-3 text-primary">Full Database Config</h6>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="d-flex justify-content-start">
+                                        <p>No database config exists</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                        <form id="settings-form" class="collapse">
+                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                <h6 class="mb-3 text-primary">Full Database Config</h6>
+                            </div>
+                            {% for section in sections %}
+                            <div class="row mb-3">
+                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 mb-2">
+                                    {% if section.subtitle %}
+                                    <h6 class="text-primary no-margin-bottom">{{ section.title }}</h6>
+                                    <small class="subtitle">{{ section.subtitle }}</small>
+                                    {% else %}
+                                    <h6 class="text-primary">{{ section.title }}</h6>
+                                    {% endif %}
+                                </div>
+                                {% for setting in section.settings %}
+                                <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                                    <div class="form-group">
+                                        <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
+                                        <input type="text" class="form-control input-textbox" id="{{ setting.id }}"
+                                            placeholder="{{ setting.value }}">
+                                        <div class="form-text mb-1">{{ setting.description }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                            <div class="row mb-3">
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" id="submit" name="submit" class="btn btn-primary">Download Config</button>
+                                </div>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="modal fade" id="error-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="modal-title" class="modal-title">Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="modal-text"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="loading-modal" class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false"
+        tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered spinner-container">
+            <svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+                <circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30">
+                </circle>
+            </svg>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.7.1/ace.js"
+        integrity="sha512-FKkEO4RZEQjFmU1hoUYdx6HJLdpHpNzgWspgnQCxx7OOkDVz4kiGJxR97yWc5bzjwcCpJC/CRCiQzuoGYAChhQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{{ url_for('static', filename='js/sleep.js') }}"></script>
+    <script>
+        var loadingModal = new bootstrap.Modal(document.getElementById('loading-modal'));
+
+        function submit_form(event) {
+            // Stop the form from submitting so we can execute a request instead
+            event.preventDefault();
+
+            // Convert the form into a dictionary
+
+            /* For some reason this didn't work here, so I did it another way
+            const formData = new FormData(event.target);
+            const formProperties = Object.fromEntries(formData);
+            */
+
+            var elements = event.target.querySelectorAll('input');
+            var config = new Object();
+
+            elements.forEach((element) => {
+                if (element.value != "") {
+                    config[element.id] = element.value;
+                } else {
+                    config[element.id] = element.placeholder;
+                }
+            });
+
+            // Submit the form dictionary to the server
+            xhr = new XMLHttpRequest();
+            xhr.open("POST", "{{ url_for('update_config_db') }}", true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify(config));
+
+            loadingModal.show();
+
+            var url;
+            if(event.submitter.id == "Exit") {
+                url = "{{ url_for('shutdown') }}";
+            } else {
+                url = "{{ url_for('shutdown', continue = 'True') }}";
+            }
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == XMLHttpRequest.DONE) {
+                    if (xhr.status != 200) {
+                        if (xhr.status) {
+                            // The first time setup server returned an error
+                            displayError(xhr.responseText);
+                        } else {
+                            // The first time setup server did not respond
+                            displayError("The first time setup server is unreachable");
+                        }
+                    } else {
+                        // Display a loading indicator while starting up the production server
+                        fetch(url).then(async () => {
+                            modal = document.getElementById("modal-title");
+                            modal.innerHTML = "Finished"
+                            if(event.submitter.id == "Exit") {
+                                displayError("The first-time setup server has been shut down. You can close this window.")
+                            } else {
+                                displayError("Augur has been started, and the first-time setup server has been shut down. You can now access the Augur front-end at the address and port previously configured.");
+                            }
+                        })
+                    }
+                }
+            }
+        }
+
+
+        async function waitToReload(new_url) {
+            console.log("Navigating to " + new_url)
+            // Shut down the temp server and wait for primary to initialize
+            fetch("{{ url_for('shutdown') }}").then(async () => {
+                // The response from the config endpoint is the new approot
+                let count = 5;
+                while (--count >= 0) {
+                    try {
+                        await sleep(1000);
+                        fetch(window.location + new_url).then(() => {
+                            window.location.replace(new_url);
+                        });
+                    } catch (e) {
+                        // do nothing for now
+                    }
+                }
+                displayError("Timeout reached waiting for production server");
+            });
+        }
+
+        // Pop up a modal window with the error text displayed
+        function displayError(error) {
+            loadingModal.hide();
+            var text = document.getElementById("modal-text");
+            text.innerHTML = error;
+            var errorModal = new bootstrap.Modal(document.getElementById('error-modal'))
+            errorModal.show();
+        }
+
+        for (var box of document.getElementsByClassName("input-textbox")) {
+            box.addEventListener("dblclick", (event) => {
+                if (event.target.value == "") {
+                    event.target.value = event.target.placeholder;
+                }
+            });
+        }
+
+        const essentials = document.getElementById("essentials-form");
+        essentials.addEventListener("submit", submit_form);
+
+        // Have the settings-form call submit_form when submitted
+        const form = document.getElementById("settings-form");
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            window.open("{{ url_for('get_config_db')}}", "_blank");
+        });
+    </script>
+</body>
+
+</html>

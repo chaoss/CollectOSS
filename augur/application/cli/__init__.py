@@ -3,11 +3,12 @@ import click
 from functools import update_wrapper
 import os
 import sys
-import socket
 import re
 import json
+import httpx
 
 from augur.application.db.engine import DatabaseEngine
+from augur.application.db import get_engine, dispose_database_engine
 from sqlalchemy.exc import OperationalError 
 
 
@@ -15,13 +16,22 @@ def test_connection(function_internet_connection):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
         usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
-        try:
-            #try to ping google's dns server
-            socket.create_connection(("8.8.8.8",53))
-            return ctx.invoke(function_internet_connection, *args, **kwargs)
-        except OSError as e:
-            print(e)
-            print(f"\n\n{usage} command setup failed\nYou are not connect to the internet. Please connect to the internet to run Augur\n")
+        with httpx.Client() as client:
+            try:
+                _ = client.request(
+                    method="GET", url="http://chaoss.community", timeout=10, follow_redirects=True)
+
+                return ctx.invoke(function_internet_connection, *args, **kwargs)
+            except (TimeoutError, httpx.TimeoutException):
+                print("Request timed out.")
+            except httpx.NetworkError:
+                print(f"Network Error: {httpx.NetworkError}")
+            except httpx.ProtocolError:
+                print(f"Protocol Error: {httpx.ProtocolError}")
+            print(f"\n\n{usage} command setup failed\n \
+                You are not connected to the internet.\n \
+                Please connect to the internet to run Augur\n \
+                Consider setting http_proxy variables for limited access installations.")
             sys.exit()        
         
     return update_wrapper(new_func, function_internet_connection)
@@ -71,6 +81,22 @@ def test_db_connection(function_db_connection):
             sys.exit()
         
     return update_wrapper(new_func, function_db_connection)
+
+
+class DatabaseContext():
+    def __init__(self):
+        self.engine = None
+
+def with_database(f):
+    @click.pass_context
+    def new_func(ctx, *args, **kwargs):
+        ctx.obj.engine = get_engine()
+        try:
+            return ctx.invoke(f, *args, **kwargs)
+        finally:
+            dispose_database_engine()
+    return new_func
+
 
 # def pass_application(f):
 #     @click.pass_context

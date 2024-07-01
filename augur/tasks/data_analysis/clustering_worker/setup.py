@@ -22,18 +22,18 @@ setup(
     packages=find_packages(),
     install_requires=[
         'Flask==2.0.2',
-        'Flask-Cors==3.0.10',
+        'Flask-Cors==4.0.1',
         'Flask-Login==0.5.0',
         'Flask-WTF==1.0.0',
-        'requests==2.28.0',
+        'requests==2.32.0',
         'psycopg2-binary==2.9.3',
         #'sklearn==0.0.0',
-        'scikit-learn==1.1.3',
-        'numpy==1.22.0',
+        'scikit-learn==1.5.0',
+        'numpy==1.26.0',
         'nltk==3.6.6',
         'seaborn==0.11.1',
-        'pandas==1.3.5',
-        'matplotlib==3.5.1'
+        'pandas==1.5.3',
+        'matplotlib>=3.5.1'
     ],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

@@ -1,10 +1,10 @@
-from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash
+from flask import request, jsonify, redirect, url_for, flash, current_app
 import re
 from flask_login import current_user, login_required
 from augur.application.db.models import Repo, RepoGroup, UserGroup, UserRepo
 from augur.tasks.frontend import add_org_repo_list, parse_org_and_repo_name, parse_org_name
 from .utils import *
-from ..server import app, engine
+from ..server import app
 from augur.application.db.session import DatabaseSession
 
 @app.route('/cache/file/')
@@ -68,7 +68,7 @@ def av_add_user_repo():
 
     invalid_urls = []
 
-    with DatabaseSession(logger, engine) as session:
+    with DatabaseSession(logger, current_app.engine) as session:
         for url in urls:  
 
             # matches https://github.com/{org}/ or htts://github.com/{org}
@@ -102,7 +102,18 @@ def av_add_user_repo():
                 if rg_obj:
                     # add the orgs repos to the group
                     add_existing_org_to_group(session, current_user.user_id, group, rg_obj.repo_group_id)
-            
+
+            # matches https://gitlab.com/{org}/{repo}/ or http://gitlab.com/{org}/{repo}
+            elif Repo.parse_gitlab_repo_url(url)[0]:
+
+                org_name, repo_name = Repo.parse_github_repo_url(url)
+                repo_git = f"https://gitlab.com/{org_name}/{repo_name}"
+
+                # TODO: gitlab ensure the whole repo git is inserted so it can be found here
+                repo_obj = Repo.get_by_repo_git(session, repo_git)
+                if repo_obj:
+                    add_existing_repo_to_group(session, current_user.user_id, group, repo_obj.repo_id)
+                
             else:
                 invalid_urls.append(url)
 

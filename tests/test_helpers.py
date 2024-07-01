@@ -1,7 +1,6 @@
 import pytest
-import os
-import json
 import sqlalchemy as s
+import logging
 from augur.application.db.session import DatabaseSession
 
 TEST_DB_STRING = "postgresql+psycopg2://augur:mcguire18@chaoss.tv:5432/augur-test"

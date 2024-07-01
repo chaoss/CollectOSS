@@ -2,10 +2,10 @@ import base64
 import sqlalchemy as s
 import pandas as pd
 import json
-from flask import Response
+from flask import Response, current_app
 
 from augur.api.routes import AUGUR_API_VERSION
-from ..server import app, engine
+from ..server import app
 
 
 @app.route('/{}/collection_status/commits'.format(AUGUR_API_VERSION))
@@ -25,7 +25,9 @@ def commit_collection_status():  # TODO: make this name automatic - wrapper?
 		AND
 			c.facade_status = 'Success';
     """)
-    results = pd.read_sql(commit_collection_sql,  engine)
+
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(commit_collection_sql,  conn)
     data = results.to_json(
         orient="records", date_format='iso', date_unit='ms')
     return Response(response=data,
@@ -86,7 +88,9 @@ def issue_collection_status():  # TODO: make this name automatic - wrapper?
             ) D
         WHERE d.issues_enabled = 'true';
     """)
-    results = pd.read_sql(issue_collection_sql,  engine)
+
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(issue_collection_sql,  conn)
     data = results.to_json(
         orient="records", date_format='iso', date_unit='ms')
     parsed_data = json.loads(data)
@@ -156,7 +160,9 @@ def pull_request_collection_status():  # TODO: make this name automatic - wrappe
         ORDER BY
             ratio_abs;
     """)
-    results = pd.read_sql(pull_request_collection_sql,  engine)
+
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(pull_request_collection_sql,  conn)
     data = results.to_json(
         orient="records", date_format='iso', date_unit='ms')
     parsed_data = json.loads(data)
