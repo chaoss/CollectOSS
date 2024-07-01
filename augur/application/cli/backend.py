@@ -10,9 +10,10 @@ import click
 import logging
 import psutil
 import signal
-from redis.exceptions import ConnectionError as RedisConnectionError
 import uuid
 import traceback
+import requests
+from redis.exceptions import ConnectionError as RedisConnectionError
 from urllib.parse import urlparse
 
 from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
@@ -75,9 +76,25 @@ def start(ctx, disable_collection, development, port):
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file gunicorn.log"
     server = subprocess.Popen(gunicorn_command.split(" "))
 
-    time.sleep(3)
+    logger.info("awaiting Gunicorn start")
+    while not server.poll():
+        try:
+            api_response = requests.get(f"http://{host}:{port}/api")
+        except requests.exceptions.ConnectionError as e:
+            time.sleep(0.5)
+            continue
+        
+        if not api_response.ok:
+            logger.critical("Gunicorn failed to start or was not reachable. Exiting")
+            exit(247)
+        break
+    else:
+        logger.critical("Gunicorn was shut down abnormally. Exiting")
+        exit(247)
+    
     logger.info('Gunicorn webserver started...')
     logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
+    logger.info(f"The API is available at '{api_response.json()['route']}'")
 
     processes = start_celery_worker_processes(float(worker_vmem_cap), disable_collection)
 
@@ -91,7 +108,6 @@ def start(ctx, disable_collection, development, port):
     celery_beat_process = subprocess.Popen(celery_command.split(" "))    
 
     if not disable_collection:
-
         with DatabaseSession(logger, engine=ctx.obj.engine) as session:
 
             clean_collection_status(session)
