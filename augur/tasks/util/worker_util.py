@@ -135,7 +135,7 @@ def parse_json_from_subprocess_call(logger, subprocess_arr, cwd=None):
     output = p.stdout
 
     try:
-        if output.strip():
+        if output and output.strip():
             required_output = json.loads(output)
         else:
             required_output = {}
