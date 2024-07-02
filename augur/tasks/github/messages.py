@@ -4,7 +4,7 @@ import logging
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
@@ -60,34 +60,14 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
 
     # define logger for task
     logger.info(f"Collecting github comments for {owner}/{repo}")
-
-    # url to get issue and pull request comments
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
-
-    # define database task session, that also holds authentication keys the GithubPaginator needs
     
-    # returns an iterable of all issues at this url (this essentially means you can treat the issues variable as a list of the issues)
-    messages = GithubPaginator(url, key_auth, logger)
+    github_data_access = GithubDataAccess(key_auth, logger)
 
-    num_pages = messages.get_num_pages()
-    all_data = []
-    for page_data, page in messages.iter_pages():
+    message_count = github_data_access.get_resource_count(url)
 
-        if page_data is None:
-            return all_data
+    logger.info(f"{task_name}: Collecting {message_count} github messages")
 
-        elif len(page_data) == 0:
-            logger.debug(f"{repo.capitalize()} Messages Page {page} contains no data...returning")
-            logger.info(
-                f"{task_name}: Page {page} of {num_pages}")
-            return all_data
-
-        logger.info(f"{task_name}: Page {page} of {num_pages}")
-
-        all_data += page_data
-        
-
-    return all_data
+    return list(github_data_access.paginate_resource(url))
 
 
 def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger, key_auth, task_name, augur_db) -> None:
@@ -110,20 +90,16 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
         result = connection.execute(query).fetchall()
     comment_urls = [x[0] for x in result]
 
+    github_data_access = GithubDataAccess(key_auth, logger)
+
+    logger.info(f"{task_name}: Collecting github messages for {len(comment_urls)} prs/issues")
+
     all_data = []
-    for index, comment_url in enumerate(comment_urls):
+    for comment_url in comment_urls:
 
-        logger.info(f"{task_name}: Github messages index {index+1} of {len(comment_urls)}")
+        messages = list(github_data_access.paginate_resource(comment_url))
 
-        messages = GithubPaginator(comment_url, key_auth, logger)
-        for page_data, _ in messages.iter_pages():
-
-            if page_data is None or len(page_data) == 0:
-                break
-
-            all_data += page_data
-
-        logger.info(f"All data size: {len(all_data)}")
+        all_data += messages
 
         if len(all_data) >= 20:
             process_messages(all_data, task_name, repo_id, logger, augur_db)

@@ -12,6 +12,11 @@ if [[ $target == *"dev"* ]]; then
   echo
   echo "*****INSTALLING FOR DEVELOPMENT*****"
   echo
+elif [[ $target == *"graphical"* ]]; then
+  echo
+  echo "*****INSTALLING WITH GRAPHICAL CONFIGURATION*****"
+  echo
+  GRAPHICAL=1
 else
   echo
   echo "*****INSTALLING FOR PRODUCTION*****"
@@ -26,6 +31,10 @@ echo "Done!"
 
 scripts/install/nltk_dictionaries.sh
 
+if [[ -n "$GRAPHICAL" ]]; then
+  python scripts/install/wizard.py
+  exit
+fi
 
 function create_db_config() {
     echo "Enter the database credentials to your database. This will create db.config.json"

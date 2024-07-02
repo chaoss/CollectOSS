@@ -15,7 +15,7 @@ from augur.tasks.github.repo_info.tasks import collect_repo_info, collect_linux_
 from augur.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
 from augur.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
-from augur.tasks.github.traffic.tasks import collect_github_repo_clones_data
+from augur.tasks.github.traffic import collect_github_repo_clones_data
 from augur.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests, collect_merge_request_metadata, collect_merge_request_commits, collect_merge_request_files, collect_merge_request_comments
 from augur.tasks.gitlab.issues_task import collect_gitlab_issues, collect_gitlab_issue_comments
 from augur.tasks.gitlab.events_task import collect_gitlab_issue_events, collect_gitlab_merge_request_events
@@ -28,6 +28,8 @@ from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 from augur.application.db.lib import execute_sql, get_session
+
+RUNNING_DOCKER = os.environ.get('AUGUR_DOCKER_DEPLOY') == "1"
 
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
@@ -43,13 +45,13 @@ CELERY_CHAIN_TYPE = type(chain())
 """
 
 #Prelim phases are used to detect if where the repo has hosted has moved or not.
-def prelim_phase(repo_git):
+def prelim_phase(repo_git, full_collection):
 
     logger = logging.getLogger(prelim_phase.__name__)
 
     return detect_github_repo_move_core.si(repo_git)
 
-def prelim_phase_secondary(repo_git):
+def prelim_phase_secondary(repo_git, full_collection):
     logger = logging.getLogger(prelim_phase.__name__)
 
     return detect_github_repo_move_secondary.si(repo_git)
@@ -57,14 +59,14 @@ def prelim_phase_secondary(repo_git):
 
 #This is the phase that defines the message for core augur collection
 #A chain is needed for each repo.
-def primary_repo_collect_phase(repo_git):
+def primary_repo_collect_phase(repo_git, full_collection):
     logger = logging.getLogger(primary_repo_collect_phase.__name__)
 
 
     #Define primary group of jobs for the primary collect phase: issues and pull requests.
     primary_repo_jobs = group(
-        collect_issues.si(repo_git),
-        collect_pull_requests.si(repo_git)
+        collect_issues.si(repo_git, full_collection),
+        collect_pull_requests.si(repo_git, full_collection)
     )
 
     #Define secondary group that can't run until after primary jobs have finished.
@@ -86,7 +88,7 @@ def primary_repo_collect_phase(repo_git):
 
     return repo_task_group
 
-def primary_repo_collect_phase_gitlab(repo_git):
+def primary_repo_collect_phase_gitlab(repo_git, full_collection):
 
     logger = logging.getLogger(primary_repo_collect_phase_gitlab.__name__)
 
@@ -110,13 +112,13 @@ def primary_repo_collect_phase_gitlab(repo_git):
 
 #This phase creates the message for secondary collection tasks.
 #These are less important and have their own worker.
-def secondary_repo_collect_phase(repo_git):
+def secondary_repo_collect_phase(repo_git, full_collection):
     logger = logging.getLogger(secondary_repo_collect_phase.__name__)
 
     repo_task_group = group(
-        process_pull_request_files.si(repo_git),
-        process_pull_request_commits.si(repo_git),
-        chain(collect_pull_request_reviews.si(repo_git), collect_pull_request_review_comments.si(repo_git)),
+        process_pull_request_files.si(repo_git, full_collection),
+        process_pull_request_commits.si(repo_git, full_collection),
+        chain(collect_pull_request_reviews.si(repo_git, full_collection), collect_pull_request_review_comments.si(repo_git)),
         process_ossf_dependency_metrics.si(repo_git)
     )
 
@@ -140,9 +142,7 @@ def non_repo_domain_tasks(self):
 
     enabled_tasks = []
 
-    enabled_tasks.extend(generate_non_repo_domain_facade_tasks(logger))
-
-    if machine_learning_phase.__name__ in enabled_phase_names:
+    if not RUNNING_DOCKER and machine_learning_phase.__name__ in enabled_phase_names:
         #enabled_tasks.extend(machine_learning_phase())
         from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
         enabled_tasks.append(contributor_breadth_model.si())
@@ -167,7 +167,7 @@ def build_primary_repo_collect_request(session, logger, enabled_phase_names, day
     primary_gitlab_enabled_phases.append(primary_repo_collect_phase_gitlab)
 
     #task success is scheduled no matter what the config says.
-    def core_task_success_util_gen(repo_git):
+    def core_task_success_util_gen(repo_git, full_collection):
         return core_task_success_util.si(repo_git)
 
     primary_enabled_phases.append(core_task_success_util_gen)
@@ -187,7 +187,7 @@ def build_secondary_repo_collect_request(session, logger, enabled_phase_names, d
 
     secondary_enabled_phases.append(secondary_repo_collect_phase)
 
-    def secondary_task_success_util_gen(repo_git):
+    def secondary_task_success_util_gen(repo_git, full_collection):
         return secondary_task_success_util.si(repo_git)
 
     secondary_enabled_phases.append(secondary_task_success_util_gen)
@@ -203,12 +203,12 @@ def build_facade_repo_collect_request(session, logger, enabled_phase_names, days
 
     facade_enabled_phases.append(facade_phase)
 
-    def facade_task_success_util_gen(repo_git):
+    def facade_task_success_util_gen(repo_git, full_collection):
         return facade_task_success_util.si(repo_git)
 
     facade_enabled_phases.append(facade_task_success_util_gen)
 
-    def facade_task_update_weight_util_gen(repo_git):
+    def facade_task_update_weight_util_gen(repo_git, full_collection):
         return git_update_commit_count_weight.si(repo_git)
 
     facade_enabled_phases.append(facade_task_update_weight_util_gen)
@@ -223,7 +223,7 @@ def build_ml_repo_collect_request(session, logger, enabled_phase_names, days_unt
 
     ml_enabled_phases.append(machine_learning_phase)
 
-    def ml_task_success_util_gen(repo_git):
+    def ml_task_success_util_gen(repo_git, full_collection):
         return ml_task_success_util.si(repo_git)
 
     ml_enabled_phases.append(ml_task_success_util_gen)
@@ -260,7 +260,7 @@ def augur_collection_monitor(self):
             #start_facade_collection(session, max_repo=30)
             enabled_collection_hooks.append(build_facade_repo_collect_request(session, logger, enabled_phase_names))
         
-        if machine_learning_phase.__name__ in enabled_phase_names:
+        if not RUNNING_DOCKER and machine_learning_phase.__name__ in enabled_phase_names:
             enabled_collection_hooks.append(build_ml_repo_collect_request(session, logger, enabled_phase_names))
             #start_ml_collection(session,max_repo=5)
         

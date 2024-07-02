@@ -9,7 +9,7 @@ from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
 
-from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,    UnresolvedCommitEmail, Contributor, CollectionStatus
+from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,UnresolvedCommitEmail, Contributor, CollectionStatus
 from augur.tasks.util.collection_state import CollectionState
 from augur.application.db import get_session, get_engine
 from augur.application.db.util import execute_session_query
@@ -25,7 +25,7 @@ def convert_type_of_value(config_dict, logger=None):
     if data_type == "str" or data_type is None:
         return config_dict
 
-    elif data_type == "int":
+    if data_type == "int":
         config_dict["value"] = int(config_dict["value"])
 
     elif data_type == "bool":
@@ -510,3 +510,30 @@ def update_issue_closed_cntrbs_by_repo_id(repo_id):
                 AND repo_id = :repo_id
             """)
             connection.execute(update_stmt, update_data)
+
+def get_core_data_last_collected(repo_id):
+    
+    with get_session() as session:
+        try:
+           return session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id).one().core_data_last_collected 
+        except s.orm.exc.NoResultFound:
+            return None
+
+def get_secondary_data_last_collected(repo_id):
+    
+    with get_session() as session:
+        try:
+           return session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id).one().secondary_data_last_collected 
+        except s.orm.exc.NoResultFound:
+            return None
+        
+def get_updated_prs(repo_id, since):
+    
+    with get_session() as session:
+        return session.query(PullRequest).filter(PullRequest.repo_id == repo_id, PullRequest.pr_updated_at >= since).order_by(PullRequest.pr_src_number).all()
+    
+def get_updated_issues(repo_id, since):
+
+    with get_session() as session:
+        return session.query(Issue).filter(Issue.repo_id == repo_id, Issue.updated_at >= since).order_by(Issue.gh_issue_number).all()
+            
