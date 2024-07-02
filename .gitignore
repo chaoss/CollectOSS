@@ -9,6 +9,7 @@ augur_export_env.sh
 !docker.config.json
 config.yml
 reports.yml
+*.pid
 
 node_modules/
 .idea/
