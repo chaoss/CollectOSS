@@ -330,7 +330,8 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
 
     logger.info(f"Inserting {len(pr_review_message_ref_insert_data)} pr review refs")
     pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
-    bulk_insert_dicts(logger, pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys)
+    pr_review_msg_ref_string_columns = ["pr_review_msg_diff_hunk"]
+    bulk_insert_dicts(logger, pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys, string_fields=pr_review_msg_ref_string_columns)
 
 
 
