@@ -364,6 +364,8 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
         pr_count = len(prs)
 
+        github_data_access = GithubDataAccess(manifest.key_auth, logger)
+
         all_pr_reviews = {}
         for index, pr in enumerate(prs):
 
@@ -375,27 +377,9 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
             pr_review_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
 
             pr_reviews = []
-            pr_reviews_generator = GithubPaginator(pr_review_url, manifest.key_auth, logger)
-            for page_data, page in pr_reviews_generator.iter_pages():
-
-                if page_data is None:
-                    break
-
-                if len(page_data) == 0:
-                    break
-
-                if isinstance(page_data, list):
-                    page_data = [
-                        element.decode('utf-8').replace('\x00', ' ') if isinstance(element, bytes) else element
-                        for element in page_data
-                    ]
-                    logger.info(f"NUL characters were found in PR Reviews and replaced with spaces.") 
-                elif isinstance(page_data, bytes):
-                    page_data = page_data.decode('utf-8').replace('\x00', ' ')
-                    logger.info(f"NUL characters were found in PR Reviews and replaced with spaces.") 
-                    
-                
-                pr_reviews.extend(page_data)
+            for pr_review in github_data_access.paginate_resource(pr_review_url):
+                        
+                pr_reviews.append(pr_review)
             
             if pr_reviews:
                 all_pr_reviews[pull_request_id] = pr_reviews
@@ -405,9 +389,8 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
             return
 
         contributors = []
-        for pull_request_id in all_pr_reviews.keys():
+        for pull_request_id, reviews in all_pr_reviews.items():
 
-            reviews = all_pr_reviews[pull_request_id]
             for review in reviews:
                 contributor = process_pull_request_review_contributor(review, tool_source, tool_version, data_source)
                 if contributor:
@@ -418,9 +401,8 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
 
         pr_reviews = []
-        for pull_request_id in all_pr_reviews.keys():
+        for pull_request_id, reviews in all_pr_reviews.items():
 
-            reviews = all_pr_reviews[pull_request_id]
             for review in reviews:
                 
                 if "cntrb_id" in review:
