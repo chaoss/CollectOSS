@@ -1,6 +1,7 @@
 import logging
 import traceback
 import sqlalchemy as s
+from sqlalchemy.sql import text
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
@@ -9,8 +10,8 @@ from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.models import PullRequestEvent, IssueEvent, Contributor
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id, update_issue_closed_cntrbs_by_repo_id
+from augur.application.db.models import PullRequestEvent, IssueEvent, Contributor, CollectionStatus
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id, update_issue_closed_cntrbs_by_repo_id, get_session, get_engine
 
 
 platform_id = 1
@@ -29,15 +30,34 @@ def collect_events(repo_git: str):
 
     key_auth = GithubRandomKeyAuth(logger)
 
-    event_data = retrieve_all_event_data(repo_git, logger, key_auth)
-
-    if event_data:
-        process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger)
+    if bulk_events_collection_endpoint_contains_all_data(repo_id):
+            event_generator = bulk_collect_pr_and_issue_events(repo_git, logger, key_auth)
     else:
-        logger.debug(f"{owner}/{repo} has no events")
+        event_generator = collect_pr_and_issues_events_by_number(repo_id, repo_git, logger, key_auth, f"{owner}/{repo}: Event task")
+
+    events = []
+    for event in event_generator:
+        events.append(event)
+
+        # making this a decent size since process_events retrieves all the issues and prs each time
+        if len(events) >= 500:
+            process_events(events, f"{owner}/{repo}: Event task", repo_id, logger)
+            events.clear()
+
+    if events:
+        process_events(events, f"{owner}/{repo}: Event task", repo_id, logger)
 
 
-def retrieve_all_event_data(repo_git: str, logger, key_auth):
+def bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, repo):
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
+
+    github_data_access = GithubDataAccess(key_auth, logger)
+
+    return github_data_access.does_pagination_contain_all_data(url)
+
+
+def bulk_collect_pr_and_issue_events(repo_git: str, logger, key_auth):
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -47,11 +67,35 @@ def retrieve_all_event_data(repo_git: str, logger, key_auth):
         
     github_data_access = GithubDataAccess(key_auth, logger)
 
-    event_count = github_data_access.get_resource_page_count(url)
+    return github_data_access.paginate_resource(url)
 
-    logger.debug(f"{owner}/{repo}: Collecting {event_count} github events")
 
-    return list(github_data_access.paginate_resource(url))   
+def collect_pr_and_issues_events_by_number(repo_id, repo_git: str, logger, key_auth, task_name) -> None:
+
+    owner, repo = get_owner_repo(repo_git)
+
+    # define logger for task
+    logger.debug(f"Collecting github events for {owner}/{repo}")
+
+    engine = get_engine()
+
+    with engine.connect() as connection:
+
+        query = text(f"""
+            (select pr_src_number as number from pull_requests WHERE repo_id={repo_id} order by pr_created_at desc)
+            UNION
+            (select gh_issues_number as number from issues WHERE repo_id={repo_id} order by created_at desc);
+        """)
+
+        result = connection.execute(query).fetchall()
+    numbers = [x[0] for x in result]
+
+    github_data_access = GithubDataAccess(key_auth, logger)
+    for number in numbers:
+
+        event_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{number}/events"
+        
+        yield from github_data_access.paginate_resource(event_url)
 
 def process_events(events, task_name, repo_id, logger):
     
