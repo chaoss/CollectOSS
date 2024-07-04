@@ -362,10 +362,7 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
             pr_review_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
 
-            pr_reviews = []
-            for pr_review in github_data_access.paginate_resource(pr_review_url):
-                        
-                pr_reviews.append(pr_review)
+            pr_reviews = list(github_data_access.paginate_resource(pr_review_url))
             
             if pr_reviews:
                 all_pr_reviews[pull_request_id] = pr_reviews
