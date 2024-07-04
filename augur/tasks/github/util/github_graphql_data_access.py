@@ -31,32 +31,23 @@ class GithubGraphQlDataAccess:
         }
         params.update(variables)
 
-        response = self.make_request_with_retries(query, params)
-        result_json = response.json()
+        result_json = self.make_request_with_retries(query, params).json()
 
         data = self.__extract_data_section(result_keys, result_json)
 
-        self.__raise_exception_for_invalid_total_count(data)  
-
-        if int(data["totalCount"]) == 0:
+        if self.__get_total_count(data) == 0:
             return 
         
         yield from self.__extract_raw_data_into_list(data) 
-            
-        self.__raise_exception_for_invalid_page_info(data)
-            
-        while data['pageInfo']['hasNextPage']:
-            params['cursor'] = data['pageInfo']['endCursor']
+                        
+        while self.__has_next_page():
+            params["cursor"] = self.__get_next_page_cursor(data)
 
-            response = self.make_request_with_retries(query, params)
-            result_json = response.json()
+            result_json = self.make_request_with_retries(query, params).json()
             
             data = self.__extract_data_section(result_keys, result_json)
 
             yield from self.__extract_raw_data_into_list(data)
-
-            self.__raise_exception_for_invalid_page_info(data)
-
 
     def make_request(self, query, variables={}, timeout=40):
 
@@ -163,17 +154,6 @@ class GithubGraphQlDataAccess:
             int(data["totalCount"])
         except ValueError:
             raise Exception(f"Error: totalCount is not an integer. Data: {data}")
-    
-    def __raise_exception_for_invalid_page_info(self, data):
-
-        if 'pageInfo' not in data:
-            raise Exception(f"Error: 'pageInfo' key not present in data. Data {data}")
-        
-        if 'hasNextPage' not in data['pageInfo']:
-            raise Exception(f"Error: 'hasNextPage' key not present in data. Data {data}")
-        
-        if 'endCursor' not in data['pageInfo']:
-            raise Exception(f"Error: 'endCursor' key not present in data. Data {data}")
 
     def __extract_raw_data_into_list(self, data):
 
@@ -189,6 +169,47 @@ class GithubGraphQlDataAccess:
             data_list.append(data['node'])
             
         return data_list
+    
+    def __has_next_page(data):
+
+        if 'pageInfo' not in data:
+            raise Exception(f"Error: 'pageInfo' key not present in data. Data {data}")
+        
+        if 'hasNextPage' not in data['pageInfo']:
+            raise Exception(f"Error: 'hasNextPage' key not present in data. Data {data}")
+        
+        if not isinstance(data['pageInfo']['hasNextPage'], bool):
+            raise Exception(f"Error: pageInfo.hasNextPage is not a bool. Data {data}")
+
+        return data['pageInfo']['hasNextPage']
+    
+    def __get_next_page_cursor(data):
+
+        if 'pageInfo' not in data:
+            raise Exception(f"Error: 'pageInfo' key not present in data. Data {data}")
+        
+        if 'endCursor' not in data['pageInfo']:
+            raise Exception(f"Error: 'endCursor' key not present in data. Data {data}")
+
+        return data['pageInfo']['endCursor']
+    
+    def __get_total_count(data):
+
+        if 'totalCount' not in data:
+            raise Exception(f"Error: totalCount key not found in data. Data: {data}")
+        
+        if not data["totalCount"]:
+            raise Exception(f"Error: totalCount is null. Data: {data}")
+        
+        if not data["totalCount"]:
+            raise Exception(f"Error: totalCount is null. Data: {data}")
+        
+        try:
+            return int(data["totalCount"])
+        except ValueError:
+            raise Exception(f"Error: totalCount is not an integer. Data: {data}")
+
+
 
         
 
