@@ -28,7 +28,6 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
     logger = logging.getLogger(collect_pull_requests.__name__)
 
     with GithubTaskManifest(logger) as manifest:
-    #with GithubTaskManifest() as manifest:
 
         augur_db = manifest.augur_db
 
@@ -50,18 +49,18 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
             all_data.append(pr)
 
             if len(all_data) >= 1000:
-                process_pull_requests(all_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+                process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, augur_db)
                 total_count += len(all_data)
                 all_data.clear()
 
         if len(all_data):
-            process_pull_requests(all_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+            process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, augur_db)
             total_count += len(all_data)
 
         if total_count > 0:
             return total_count
         else:
-            logger.info(f"{owner}/{repo} has no pull requests")
+            logger.debug(f"{owner}/{repo} has no pull requests")
             return 0
         
         
@@ -72,7 +71,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[
 
     owner, repo = get_owner_repo(repo_git)
 
-    logger.info(f"Collecting pull requests for {owner}/{repo}")
+    logger.debug(f"Collecting pull requests for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc&sort=updated"
 
@@ -80,7 +79,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[
 
     num_pages = github_data_access.get_resource_page_count(url)
 
-    logger.info(f"{owner}/{repo}: Retrieving {num_pages} pages of pull requests")
+    logger.debug(f"{owner}/{repo}: Retrieving {num_pages} pages of pull requests")
 
     # returns a generator so this method can be used by doing for x in retrieve_all_pr_data()
 
@@ -228,7 +227,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
     review_msg_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/comments"
 
     logger = logging.getLogger(collect_pull_request_review_comments.__name__)
-    logger.info(f"Collecting pull request review comments for {owner}/{repo}")
+    logger.debug(f"Collecting pull request review comments for {owner}/{repo}")
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
@@ -264,7 +263,6 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
     pr_review_msg_mapping_data = {}
 
     pr_review_comments_len = len(all_raw_pr_review_messages)
-    logger.info(f"{owner}/{repo}: Pr review comments len: {pr_review_comments_len}")
     for comment in all_raw_pr_review_messages:
 
         # pull_request_review_id is required to map it to the correct pr review
@@ -305,9 +303,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
         try:
             augur_pr_review_id = pr_review_id_mapping[github_pr_review_id]
         except KeyError:
-            logger.info(f"{owner}/{repo}: Could not find related pr review")
-            logger.info(f"{owner}/{repo}: We were searching for pr review with id: {github_pr_review_id}")
-            logger.info("Skipping")
+            logger.warning(f"{owner}/{repo}: Could not find related pr review. We were searching for pr review with id: {github_pr_review_id}")
             continue
 
         pr_review_message_ref = extract_pr_review_message_ref_data(comment, augur_pr_review_id, github_pr_review_id, repo_id, tool_version, data_source)
@@ -358,7 +354,7 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
             pr_number = pr.pr_src_number
             pull_request_id = pr.pull_request_id
 
-            logger.info(f"{owner}/{repo} Collecting Pr Reviews for pr {index + 1} of {pr_count}")
+            logger.debug(f"{owner}/{repo} Collecting Pr Reviews for pr {index + 1} of {pr_count}")
 
             pr_review_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
 
@@ -368,7 +364,7 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
                 all_pr_reviews[pull_request_id] = pr_reviews
 
         if not list(all_pr_reviews.keys()):
-            logger.info(f"{owner}/{repo} No pr reviews for repo")
+            logger.debug(f"{owner}/{repo} No pr reviews for repo")
             return
 
         contributors = []
