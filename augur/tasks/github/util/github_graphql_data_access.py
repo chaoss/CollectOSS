@@ -138,22 +138,6 @@ class GithubGraphQlDataAccess:
             core = core[value]
 
         return core
-    
-    def __raise_exception_for_invalid_total_count(self, data):
-
-        if 'totalCount' not in data:
-            raise Exception(f"Error: totalCount key not found in data. Data: {data}")
-        
-        if not data["totalCount"]:
-            raise Exception(f"Error: totalCount is null. Data: {data}")
-        
-        if not data["totalCount"]:
-            raise Exception(f"Error: totalCount is null. Data: {data}")
-        
-        try:
-            int(data["totalCount"])
-        except ValueError:
-            raise Exception(f"Error: totalCount is not an integer. Data: {data}")
 
     def __extract_raw_data_into_list(self, data):
 
