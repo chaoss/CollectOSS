@@ -80,6 +80,7 @@ class GithubDataAccess:
         response = self.make_request_with_retries(url, method="HEAD")
 
         if 'last' not in response.links.keys():
+            self.logger.warning(f"Github response without links. Headers: {response.headers}.")
             return 1
         
         try:
