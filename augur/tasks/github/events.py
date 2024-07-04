@@ -19,34 +19,29 @@ platform_id = 1
 def collect_events(repo_git: str):
 
     logger = logging.getLogger(collect_events.__name__)
-    
-    try:
-        
-        repo_obj = get_repo_by_repo_git(repo_git)
-        repo_id = repo_obj.repo_id
 
-        owner, repo = get_owner_repo(repo_git)
+    repo_obj = get_repo_by_repo_git(repo_git)
+    repo_id = repo_obj.repo_id
 
-        logger.info(f"Collecting Github events for {owner}/{repo}")
+    owner, repo = get_owner_repo(repo_git)
 
-        key_auth = GithubRandomKeyAuth(logger)
+    logger.debug(f"Collecting Github events for {owner}/{repo}")
 
-        event_data = retrieve_all_event_data(repo_git, logger, key_auth)
+    key_auth = GithubRandomKeyAuth(logger)
 
-        if event_data:
-            process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger)
-        else:
-            logger.info(f"{owner}/{repo} has no events")
+    event_data = retrieve_all_event_data(repo_git, logger, key_auth)
 
-    except Exception as e:
-        logger.error(f"Could not collect events for {repo_git}\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
+    if event_data:
+        process_events(event_data, f"{owner}/{repo}: Event task", repo_id, logger)
+    else:
+        logger.debug(f"{owner}/{repo} has no events")
 
 
 def retrieve_all_event_data(repo_git: str, logger, key_auth):
 
     owner, repo = get_owner_repo(repo_git)
 
-    logger.info(f"Collecting Github events for {owner}/{repo}")
+    logger.debug(f"Collecting Github events for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
         
@@ -54,7 +49,7 @@ def retrieve_all_event_data(repo_git: str, logger, key_auth):
 
     event_count = github_data_access.get_resource_page_count(url)
 
-    logger.info(f"{owner}/{repo}: Collecting {event_count} github events")
+    logger.debug(f"{owner}/{repo}: Collecting {event_count} github events")
 
     return list(github_data_access.paginate_resource(url))   
 
@@ -104,9 +99,7 @@ def process_events(events, task_name, repo_id, logger):
                 # query = augur_db.session.query(PullRequest).filter(PullRequest.pr_url == pr_url)
                 # related_pr = execute_session_query(query, 'one')
             except KeyError:
-                logger.info(f"{task_name}: Could not find related pr")
-                logger.info(f"{task_name}: We were searching for: {pr_url}")
-                logger.info(f"{task_name}: Skipping")
+                logger.warning(f"{task_name}: Could not find related pr. We were searching for: {pr_url}")
                 continue
 
             pr_event_dicts.append(
@@ -122,9 +115,7 @@ def process_events(events, task_name, repo_id, logger):
                 # query = augur_db.session.query(Issue).filter(Issue.issue_url == issue_url)
                 # related_issue = execute_session_query(query, 'one')
             except KeyError:
-                logger.info(f"{task_name}: Could not find related pr")
-                logger.info(f"{task_name}: We were searching for: {issue_url}")
-                logger.info(f"{task_name}: Skipping")
+                logger.warning(f"{task_name}: Could not find related issue. We were searching for: {issue_url}")
                 continue
 
             issue_event_dicts.append(
