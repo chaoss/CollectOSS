@@ -245,23 +245,9 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
     data_source = "Github API"
 
     key_auth = GithubRandomKeyAuth(logger)
-    pr_review_messages = GithubPaginator(review_msg_url, key_auth, logger)
-    num_pages = pr_review_messages.get_num_pages()
+    github_data_access = GithubDataAccess(key_auth, logger)
 
-    all_raw_pr_review_messages = []
-    for page_data, page in pr_review_messages.iter_pages():
-
-        if page_data is None:
-            break
-
-        if len(page_data) == 0:
-            logger.debug(f"{owner}/{repo} Pr Review Messages Page {page} contains no data...returning")
-            logger.info(f"{owner}/{repo} Pr Review Messages Page {page} of {num_pages}")
-            break
-
-        logger.info(f"{owner}/{repo} Pr Review Messages Page {page} of {num_pages}")
-
-        all_raw_pr_review_messages += page_data
+    all_raw_pr_review_messages = list(github_data_access.paginate_resource(review_msg_url))
 
     contributors = []
     for comment in all_raw_pr_review_messages:
@@ -279,7 +265,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
 
     pr_review_comments_len = len(all_raw_pr_review_messages)
     logger.info(f"{owner}/{repo}: Pr review comments len: {pr_review_comments_len}")
-    for index, comment in enumerate(all_raw_pr_review_messages):
+    for comment in all_raw_pr_review_messages:
 
         # pull_request_review_id is required to map it to the correct pr review
         if not comment["pull_request_review_id"]:
