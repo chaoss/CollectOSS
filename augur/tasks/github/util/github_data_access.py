@@ -65,11 +65,15 @@ class GithubDataAccess:
 
         return 
     
-    def is_pagination_limited_by_max_github_pages(self, url):
+    def does_pagination_contain_all_data(self, url):
         
         page_count = self.get_resource_page_count(url)
 
-        return page_count <= 299
+        if page_count > 300:
+            raise Exception(f"Either github raised the paginator page limit for things like events and messages, or 
+                            is_pagination_limited_by_max_github_pages is being used on a resource that does not have a page limit. Url: {url}")
+
+        return page_count == 300
     
     def get_resource_page_count(self, url):
 
