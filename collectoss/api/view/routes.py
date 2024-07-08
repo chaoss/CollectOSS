@@ -116,6 +116,10 @@ status:
 @app.route('/collection/status')
 def status_view():
     return render_module("status", title="Status")
+    
+@app.route('/connection_status')
+def server_ping_frontend():
+    return render_module("ping")
 
 """ ----------------------------------------------------------------
 login:

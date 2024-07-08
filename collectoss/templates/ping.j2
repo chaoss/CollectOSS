@@ -1,0 +1,25 @@
+<h1>Connection Status</h1>
+<h2>This page will automatically update</h2>
+<p id="status-text"></p>
+
+<script type="text/javascript">
+    status_text = document.getElementById("status-text");
+
+    async function get_connection_status() {
+        while(true) {
+            fetch("{{ url_for('get_api_version') }}").then(response => {
+                if(!response.ok) {
+                    status_text.innerHTML = "Could not reach server: " + response.statusText;
+                } else {
+                    status_text.innerHTML = "Connection: OK";
+                }
+            }, rejected => {
+                status_text.innerHTML = "Request rejected: " + rejected;
+            });
+
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    get_connection_status();
+</script>
