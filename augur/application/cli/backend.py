@@ -39,14 +39,17 @@ def cli(ctx):
 @cli.command("start")
 @click.option("--disable-collection", is_flag=True, default=False, help="Turns off data collection workers")
 @click.option("--development", is_flag=True, default=False, help="Enable development mode, implies --disable-collection")
+@click.option("--pidfile", default="main.pid", help="File to store the controlling process ID in")
 @click.option('--port')
 @test_connection
 @test_db_connection
 @with_database
 @click.pass_context
-def start(ctx, disable_collection, development, port):
+def start(ctx, disable_collection, development, pidfile, port):
     """Start Augur's backend server."""
-
+    with open(pidfile, "w") as pidfile:
+        pidfile.write(str(os.getpid()))
+        
     try:
         if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
             raise_open_file_limit(100000)

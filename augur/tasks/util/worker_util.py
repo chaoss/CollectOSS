@@ -135,7 +135,10 @@ def parse_json_from_subprocess_call(logger, subprocess_arr, cwd=None):
     output = p.stdout
 
     try:
-        required_output = json.loads(output)
+        if output and output.strip():
+            required_output = json.loads(output)
+        else:
+            required_output = {}
     except json.decoder.JSONDecodeError as e:
         logger.error(f"Could not parse required output! \n output: {output} \n Error: {e}")
         raise e
