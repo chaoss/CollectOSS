@@ -66,6 +66,9 @@
                         <div class="card dashboard-content">
                             <div class="card-body">
                                 {# Start form body #}
+                                <button type="button" name="restart" class="btn btn-primary" onclick="restart_confirm()">Restart Augur</button>
+                                <button type="button" name="shutdown" class="btn btn-primary" onclick="shutdown_confirm()">Shutdown Augur</button>
+                                <!--
                                 <form id="stats-form">
                                     {% for section in sections %}
                                     <div class="row mb-3">
@@ -89,6 +92,7 @@
                                         </div>
                                     </div> #}
                                 </form>
+                                -->
                             </div>
                         </div>
                     </div>
@@ -285,6 +289,40 @@
         div = getDivFromNavLink(navLink);
         div.hidden = false;
     }
+</script>
+<script type="text/javascript">
+function restart_confirm() {
+    var text = document.getElementById("modal-text");
+    text.innerHTML = "Restarting Augur can take several minutes, and will interrupt collection. Do you want to continue?";
+    var confirmModal = new bootstrap.Modal(document.getElementById('confirmation-modal'));
+    var confirmButton = document.getElementById("confirmation-button");
+    confirmButton.onclick = () => {
+        fetch("{{ url_for('restart_system') }}").then(response => {
+            if(response.ok) {
+                window.location.replace("{{ url_for('server_ping_frontend') }}");
+            } else {
+                flashToast("An error occurred: HTTP " + response.status)
+            }
+        });
+    }
+    confirmModal.show();
+}
+function shutdown_confirm() {
+    var text = document.getElementById("modal-text");
+    text.innerHTML = "Once shut down, Augur can only be started again from the CLI. Do you want to continue?";
+    var confirmModal = new bootstrap.Modal(document.getElementById('confirmation-modal'));
+    var confirmButton = document.getElementById("confirmation-button");
+    confirmButton.onclick = () => {
+        fetch("{{ url_for('shutdown_system') }}").then(response => {
+            if(response.ok) {
+                flashToast("Shutdown request acknowledged");
+            } else {
+                flashToast("An error occurred: HTTP " + response.status)
+            }
+        });
+    }
+    confirmModal.show();
+}
 </script>
 <script type="text/javascript">
 {# document.getElementById("settings-form").addEventListener("submit", (event) => {
