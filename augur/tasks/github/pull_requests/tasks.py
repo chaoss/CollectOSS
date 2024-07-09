@@ -28,7 +28,6 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
     logger = logging.getLogger(collect_pull_requests.__name__)
 
     with GithubTaskManifest(logger) as manifest:
-    #with GithubTaskManifest() as manifest:
 
         augur_db = manifest.augur_db
 
@@ -50,18 +49,18 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
             all_data.append(pr)
 
             if len(all_data) >= 1000:
-                process_pull_requests(all_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+                process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, augur_db)
                 total_count += len(all_data)
                 all_data.clear()
 
         if len(all_data):
-            process_pull_requests(all_data, f"{owner}/{repo}: Pr task", repo_id, logger, augur_db)
+            process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, augur_db)
             total_count += len(all_data)
 
         if total_count > 0:
             return total_count
         else:
-            logger.info(f"{owner}/{repo} has no pull requests")
+            logger.debug(f"{owner}/{repo} has no pull requests")
             return 0
         
         
@@ -72,7 +71,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[
 
     owner, repo = get_owner_repo(repo_git)
 
-    logger.info(f"Collecting pull requests for {owner}/{repo}")
+    logger.debug(f"Collecting pull requests for {owner}/{repo}")
 
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all&direction=desc&sort=updated"
 
@@ -80,7 +79,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[
 
     num_pages = github_data_access.get_resource_page_count(url)
 
-    logger.info(f"{owner}/{repo}: Retrieving {num_pages} pages of pull requests")
+    logger.debug(f"{owner}/{repo}: Retrieving {num_pages} pages of pull requests")
 
     # returns a generator so this method can be used by doing for x in retrieve_all_pr_data()
 
@@ -228,7 +227,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
     review_msg_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/comments"
 
     logger = logging.getLogger(collect_pull_request_review_comments.__name__)
-    logger.info(f"Collecting pull request review comments for {owner}/{repo}")
+    logger.debug(f"Collecting pull request review comments for {owner}/{repo}")
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
@@ -245,23 +244,9 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
     data_source = "Github API"
 
     key_auth = GithubRandomKeyAuth(logger)
-    pr_review_messages = GithubPaginator(review_msg_url, key_auth, logger)
-    num_pages = pr_review_messages.get_num_pages()
+    github_data_access = GithubDataAccess(key_auth, logger)
 
-    all_raw_pr_review_messages = []
-    for page_data, page in pr_review_messages.iter_pages():
-
-        if page_data is None:
-            break
-
-        if len(page_data) == 0:
-            logger.debug(f"{owner}/{repo} Pr Review Messages Page {page} contains no data...returning")
-            logger.info(f"{owner}/{repo} Pr Review Messages Page {page} of {num_pages}")
-            break
-
-        logger.info(f"{owner}/{repo} Pr Review Messages Page {page} of {num_pages}")
-
-        all_raw_pr_review_messages += page_data
+    all_raw_pr_review_messages = list(github_data_access.paginate_resource(review_msg_url))
 
     contributors = []
     for comment in all_raw_pr_review_messages:
@@ -278,8 +263,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
     pr_review_msg_mapping_data = {}
 
     pr_review_comments_len = len(all_raw_pr_review_messages)
-    logger.info(f"{owner}/{repo}: Pr review comments len: {pr_review_comments_len}")
-    for index, comment in enumerate(all_raw_pr_review_messages):
+    for comment in all_raw_pr_review_messages:
 
         # pull_request_review_id is required to map it to the correct pr review
         if not comment["pull_request_review_id"]:
@@ -319,9 +303,7 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
         try:
             augur_pr_review_id = pr_review_id_mapping[github_pr_review_id]
         except KeyError:
-            logger.info(f"{owner}/{repo}: Could not find related pr review")
-            logger.info(f"{owner}/{repo}: We were searching for pr review with id: {github_pr_review_id}")
-            logger.info("Skipping")
+            logger.warning(f"{owner}/{repo}: Could not find related pr review. We were searching for pr review with id: {github_pr_review_id}")
             continue
 
         pr_review_message_ref = extract_pr_review_message_ref_data(comment, augur_pr_review_id, github_pr_review_id, repo_id, tool_version, data_source)
@@ -365,50 +347,30 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
         pr_count = len(prs)
 
+        github_data_access = GithubDataAccess(manifest.key_auth, logger)
+
         all_pr_reviews = {}
         for index, pr in enumerate(prs):
 
             pr_number = pr.pr_src_number
             pull_request_id = pr.pull_request_id
 
-            logger.info(f"{owner}/{repo} Collecting Pr Reviews for pr {index + 1} of {pr_count}")
+            logger.debug(f"{owner}/{repo} Collecting Pr Reviews for pr {index + 1} of {pr_count}")
 
             pr_review_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
 
-            pr_reviews = []
-            pr_reviews_generator = GithubPaginator(pr_review_url, manifest.key_auth, logger)
-            for page_data, page in pr_reviews_generator.iter_pages():
-
-                if page_data is None:
-                    break
-
-                if len(page_data) == 0:
-                    break
-
-                if isinstance(page_data, list):
-                    page_data = [
-                        element.decode('utf-8').replace('\x00', ' ') if isinstance(element, bytes) else element
-                        for element in page_data
-                    ]
-                    logger.info(f"NUL characters were found in PR Reviews and replaced with spaces.") 
-                elif isinstance(page_data, bytes):
-                    page_data = page_data.decode('utf-8').replace('\x00', ' ')
-                    logger.info(f"NUL characters were found in PR Reviews and replaced with spaces.") 
-                    
-                
-                pr_reviews.extend(page_data)
+            pr_reviews = list(github_data_access.paginate_resource(pr_review_url))
             
             if pr_reviews:
                 all_pr_reviews[pull_request_id] = pr_reviews
 
         if not list(all_pr_reviews.keys()):
-            logger.info(f"{owner}/{repo} No pr reviews for repo")
+            logger.debug(f"{owner}/{repo} No pr reviews for repo")
             return
 
         contributors = []
-        for pull_request_id in all_pr_reviews.keys():
+        for pull_request_id, reviews in all_pr_reviews.items():
 
-            reviews = all_pr_reviews[pull_request_id]
             for review in reviews:
                 contributor = process_pull_request_review_contributor(review, tool_source, tool_version, data_source)
                 if contributor:
@@ -419,9 +381,8 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
 
         pr_reviews = []
-        for pull_request_id in all_pr_reviews.keys():
+        for pull_request_id, reviews in all_pr_reviews.items():
 
-            reviews = all_pr_reviews[pull_request_id]
             for review in reviews:
                 
                 if "cntrb_id" in review:
