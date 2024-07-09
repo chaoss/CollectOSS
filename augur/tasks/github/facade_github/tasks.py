@@ -25,7 +25,7 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
         alias_table_data = get_contributor_aliases_by_email(email)
         if len(alias_table_data) >= 1:
             # Move on if email resolved
-            logger.info(
+            logger.debug(
                 f"Email {email} has been resolved earlier.")
 
             continue
@@ -37,7 +37,7 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
 
         if len(unresolved_query_result) >= 1:
 
-            logger.info(f"Commit data with email {email} has been unresolved in the past, skipping...")
+            logger.debug(f"Commit data with email {email} has been unresolved in the past, skipping...")
             continue
 
         login = None
@@ -57,7 +57,7 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
             login = get_login_with_commit_hash(logger, auth, contributor, repo_id)
     
         if login == None or login == "":
-            logger.info("Failed to get login from commit hash")
+            logger.warning("Failed to get login from commit hash")
             # Try to get the login from supplemental data if not found with the commit hash
             login = get_login_with_supplemental_data(logger, auth,contributor)
     
@@ -133,9 +133,9 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
             # Update alias after insertion. Insertion needs to happen first so we can get the autoincrementkey
             insert_alias(logger, cntrb, emailFromCommitData)
         except LookupError as e:
-            logger.info(
+            logger.error(
                 ''.join(traceback.format_exception(None, e, e.__traceback__)))
-            logger.info(
+            logger.error(
                 f"Contributor id not able to be found in database despite the user_id existing. Something very wrong is happening. Error: {e}")
             return 
         
@@ -152,12 +152,12 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
             WHERE email='{}'
         """.format(escapedEmail))
 
-        logger.info(f"Updating now resolved email {email}")
+        logger.debug(f"Updating now resolved email {email}")
 
         try:
             execute_sql(query)
         except Exception as e:
-            logger.info(
+            logger.error(
                 f"Deleting now resolved email failed with error: {e}")
             raise e
     
@@ -288,10 +288,6 @@ def insert_facade_contributors(self, repo_git):
             AND commits.repo_id = :repo_id
     """).bindparams(repo_id=repo_id)
 
-    #self.logger.info("DEBUG: got passed the sql statement declaration")
-    # Get a list of dicts that contain the emails and cntrb_id's of commits that appear in the contributor's table.
-    #existing_cntrb_emails = json.loads(pd.read_sql(resolve_email_to_cntrb_id_sql, self.db, params={
-    #                                    'repo_id': repo_id}).to_json(orient="records"))
 
     result = execute_sql(resolve_email_to_cntrb_id_sql)
     existing_cntrb_emails = [dict(row) for row in result.mappings()]
@@ -299,6 +295,5 @@ def insert_facade_contributors(self, repo_git):
     print(existing_cntrb_emails)
     link_commits_to_contributor(logger, facade_helper,list(existing_cntrb_emails))
 
-    logger.info("Done with inserting and updating facade contributors")
     return
 
