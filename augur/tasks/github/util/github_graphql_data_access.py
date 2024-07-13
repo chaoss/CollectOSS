@@ -30,7 +30,7 @@ class GithubGraphQlDataAccess:
 
         data = self.__extract_data_section(result_keys, result_json)
         
-        return self.__extract_raw_data_into_list(data)   
+        return data
     
 
     def paginate_resource(self, query, variables, result_keys):
