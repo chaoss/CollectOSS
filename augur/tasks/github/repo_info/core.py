@@ -164,7 +164,7 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
         "repo": repo
     }
 
-    result_keys = ("repository")
+    result_keys = ["repository"]
 
     data = github_graphql_data_access.get_resource(query, variables, result_keys)
 
