@@ -70,7 +70,7 @@ class GithubGraphQlDataAccess:
             if variables:
                 json_dict['variables'] = variables
             
-        response = client.post(url=URL,auth=self.key_manager,json=json_dict, timeout=timeout)
+            response = client.post(url=URL,auth=self.key_manager,json=json_dict, timeout=timeout)
 
         if response.status_code in [403, 429]:
             raise RatelimitException(response)
