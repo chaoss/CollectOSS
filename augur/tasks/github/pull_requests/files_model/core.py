@@ -70,7 +70,7 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
             }
         """
         
-        values = ("repository", "pullRequest", "files")
+        values = ["repository", "pullRequest", "files"]
         params = {
             'owner': owner,
             'repo': name,
