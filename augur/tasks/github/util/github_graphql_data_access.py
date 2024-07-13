@@ -135,7 +135,7 @@ class GithubGraphQlDataAccess:
         
     def __extract_data_section(self, keys, json_response):
 
-        if not json_response or not json_response.strip():
+        if not json_response:
             raise Exception(f"Empty data returned. Data: {json_response}")
         
         if 'data' not in json_response:
