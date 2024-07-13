@@ -17,16 +17,26 @@ class UrlNotFoundException(Exception):
     pass
 
 class GithubGraphQlDataAccess:
+    
 
     def __init__(self, key_manager, logger: logging.Logger):
     
         self.logger = logger
         self.key_manager = key_manager
 
+    def get_resource(self, query, variables, result_keys):
+
+        result_json = self.make_request_with_retries(query, variables).json()
+
+        data = self.__extract_data_section(result_keys, result_json)
+        
+        return self.__extract_raw_data_into_list(data)   
+    
+
     def paginate_resource(self, query, variables, result_keys):
 
         params = {
-            "numRecords" : self.per_page,
+            "numRecords" : 100,
             "cursor"    : None
         }
         params.update(variables)
@@ -36,7 +46,7 @@ class GithubGraphQlDataAccess:
         data = self.__extract_data_section(result_keys, result_json)
 
         if self.__get_total_count(data) == 0:
-            return 
+            return
         
         yield from self.__extract_raw_data_into_list(data) 
                         
@@ -49,7 +59,7 @@ class GithubGraphQlDataAccess:
 
             yield from self.__extract_raw_data_into_list(data)
 
-    def make_request(self, query, variables={}, timeout=40):
+    def make_request(self, query, variables, timeout=40):
 
         with httpx.Client() as client:
 
@@ -181,9 +191,6 @@ class GithubGraphQlDataAccess:
 
         if 'totalCount' not in data:
             raise Exception(f"Error: totalCount key not found in data. Data: {data}")
-        
-        if not data["totalCount"]:
-            raise Exception(f"Error: totalCount is null. Data: {data}")
         
         if not data["totalCount"]:
             raise Exception(f"Error: totalCount is null. Data: {data}")
