@@ -31,7 +31,7 @@ def collect_events(repo_git: str):
     key_auth = GithubRandomKeyAuth(logger)
 
     if bulk_events_collection_endpoint_contains_all_data(repo_id):
-            event_generator = bulk_collect_pr_and_issue_events(repo_git, logger, key_auth)
+        event_generator = bulk_collect_pr_and_issue_events(repo_git, logger, key_auth)
     else:
         event_generator = collect_pr_and_issues_events_by_number(repo_id, repo_git, logger, key_auth, f"{owner}/{repo}: Event task")
 
