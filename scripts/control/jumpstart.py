@@ -11,6 +11,7 @@ from pathlib import Path
 # Preemt globals declared later in scope
 # Purely performative
 globals().update({
+    "messages": None,
     "console": None,
     "clients": None,
     "server": None
@@ -31,7 +32,7 @@ def init_logging(console = logging.Logger("jumpstart") , errlog_file = Path("log
     console.addHandler(stdout)
     console.setLevel(logging.INFO)
 
-def handle_terminate(*args):
+def handle_terminate(*args, **kwargs):
     console.info("shutting down")
     
     global server, socketfile, clients
@@ -46,8 +47,9 @@ def handle_terminate(*args):
 
 def input_loop(wake_lock: threading.Lock, server: socket.socket):
     server.listen()
-    global clients
+    global clients, messages
     clients = []
+    messages = []
     
     while True:
         conn, addr = server.accept()
@@ -59,6 +61,7 @@ def input_loop(wake_lock: threading.Lock, server: socket.socket):
 class Client:
     def __init__(self, sock: socket.socket, wake_lock: threading.Lock, ID: int):
         self.socket = sock
+        sock.setblocking(True)
         self.io = socket.SocketIO(sock, "rw")
         self.lock = wake_lock
         self.ID = ID
@@ -69,6 +72,14 @@ class Client:
         
         while line := self.io.readline().decode():
             console.info(f"Recieved message: {line}")
+            
+            try:
+                body = json.loads(line)
+            except json.JSONDecodeError:
+                self.io.write(json.dumps({
+                    "status": "E",
+                    "detail": "Invalid JSON"
+                }) + "\n")
         
         console.info(f"Client disconnect: {self.ID}")
     
@@ -91,6 +102,7 @@ if __name__ == "__main__":
     global server
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     server.bind(str(socketfile))
+    server.setblocking(True)
     
     signal.signal(signal.SIGTERM, handle_terminate)
     signal.signal(signal.SIGINT, handle_terminate)
@@ -105,4 +117,5 @@ if __name__ == "__main__":
         if input_lock.acquire(True, 1):
             # The input thread has notified us of a new message
             pass
-        
+        else:
+            pass
