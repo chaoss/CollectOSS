@@ -160,7 +160,7 @@ class GithubGraphQlDataAccess:
             if 'node' not in edge:
                 raise Exception(f"Error: 'node' key not present in data. Data {data}")
             
-            data_list.append(data['node'])
+            data_list.append(edge['node'])
             
         return data_list
     
