@@ -76,7 +76,7 @@ class GithubGraphQlDataAccess:
             raise RatelimitException(response)
 
         if response.status_code == 404:
-            raise UrlNotFoundException(f"404 for {self.url} with query of {query}")
+            raise UrlNotFoundException(f"404 for {URL} with query of {query}")
 
         response.raise_for_status()
 
@@ -192,7 +192,7 @@ class GithubGraphQlDataAccess:
         if 'totalCount' not in data:
             raise Exception(f"Error: totalCount key not found in data. Data: {data}")
         
-        if not data["totalCount"]:
+        if data["totalCount"] is None:
             raise Exception(f"Error: totalCount is null. Data: {data}")
         
         try:
