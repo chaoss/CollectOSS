@@ -79,8 +79,13 @@ def quote_surrounded(data: str) -> str:
 
 @app.template_filter("escape_ID")
 def escape_HTML_ID(data: str) -> str:
+    # Done this way in case we want to add more replacements in the future
     data = data.replace(".", "\\.")
     return data
+
+@app.template_filter("quoted")
+def quote_surrounded(data: str) -> str:
+    return '"' + data + '"'
 
 @login_manager.unauthorized_handler
 def unauthorized():

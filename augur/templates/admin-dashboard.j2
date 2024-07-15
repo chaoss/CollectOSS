@@ -65,9 +65,14 @@
                         {# Start content card #}
                         <div class="card dashboard-content">
                             <div class="card-body">
-                                {# Start form body #}
-                                <button type="button" name="restart" class="btn btn-primary" onclick="restart_confirm()">Restart Augur</button>
-                                <button type="button" name="shutdown" class="btn btn-primary" onclick="shutdown_confirm()">Shutdown Augur</button>
+                                <div class="row justify-content-end">
+                                    <div class="column">
+                                        <button type="button" name="restart" class="btn btn-primary" onclick="restart_confirm()">Restart Augur</button>
+                                    </div>
+                                    <div class="column">
+                                        <button type="button" name="shutdown" class="btn btn-primary" onclick="shutdown_confirm()">Shutdown Augur</button>
+                                    </div>
+                                </div>
                                 <!--
                                 <form id="stats-form">
                                     {% for section in sections %}
@@ -133,6 +138,7 @@
                             </table>
                         </div>
                         {% else %}
+                        {# Theoretically, unreachable #}
                         <p>What!?</p>
                         {% endif %}
                     </div>
@@ -174,65 +180,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- <h1 id="accounts-section">User Accounts</h1>
-                    {# Start content card #}
-                    <div class="card dashboard-content">
-                        <div class="card-body">
-                            <form id="accounts-form">
-                                {% for section in sections %}
-                                <div class="row mb-3">
-                                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                        <h6 class="mb-3 text-primary">{{ section.title }}</h6>
-                                    </div>
-                                    {% for setting in section.settings %}
-                                    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                                        <div class="form-group">
-                                            <label for="{{ setting.id }}" class="mb-1">{{ setting.display_name }}</label>
-                                            <input type="text" class="form-control input-textbox" id="{{ setting.id }}" placeholder="{{ setting.value }}">
-                                            <div class="form-text mb-1">{{ setting.description or "No description available" }}</div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                {% endfor %}
-                                {# <div class="row">
-                                    <div class="d-flex justify-content-end">
-                                        <button type="submit" id="submit" name="submit" class="btn btn-primary">Restart</button>
-                                    </div>
-                                </div> #}
-                            </form>
-                        </div>
-                    </div>
-                    <h1 id="config-section">Configuration</h1>
-                    {# Start content card #}
-                    <p>Double-click an empty input field to automatically populate it with the placeholder value</p>
-                    <div class="card dashboard-content">
-                        <div class="card-body">
-                            <form id="settings-form">
-                                {% for section in config.items() %}
-                                <div class="row mb-3">
-                                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                        <h6 class="mb-3 text-primary">{{ section[0] }}</h6>
-                                    </div>
-                                    {% for setting in section[1].items() %}
-                                    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                                        <div class="form-group">
-                                            <label for="config_{{ section[0] }}_{{ setting[0] }}" class="mb-1">{{ setting[0] }}</label>
-                                            <input type="text" section="{{ section[0] }}" setting="{{ setting[0] }}" class="form-control input-textbox" id="config_{{ section[0] }}_{{ setting[0] }}" placeholder="{{ setting[1] }}">
-                                            <div class="form-text mb-1">No description available</div>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                {% endfor %}
-                                <div class="row">
-                                    <div class="d-flex justify-content-end">
-                                        <button type="submit" id="submit" name="submit" class="btn btn-primary">Update Settings</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div> -->
                 </div>
             </div>
         </div>
@@ -297,7 +244,7 @@ function restart_confirm() {
     var confirmModal = new bootstrap.Modal(document.getElementById('confirmation-modal'));
     var confirmButton = document.getElementById("confirmation-button");
     confirmButton.onclick = () => {
-        fetch("{{ url_for('restart_system') }}").then(response => {
+        fetch({{ url_for('restart_system') | quoted }}).then(response => {
             if(response.ok) {
                 window.location.replace("{{ url_for('server_ping_frontend') }}");
             } else {
@@ -313,7 +260,7 @@ function shutdown_confirm() {
     var confirmModal = new bootstrap.Modal(document.getElementById('confirmation-modal'));
     var confirmButton = document.getElementById("confirmation-button");
     confirmButton.onclick = () => {
-        fetch("{{ url_for('shutdown_system') }}").then(response => {
+        fetch({{ url_for('shutdown_system') | quoted }}).then(response => {
             if(response.ok) {
                 flashToast("Shutdown request acknowledged");
             } else {
