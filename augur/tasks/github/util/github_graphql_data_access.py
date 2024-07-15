@@ -164,7 +164,7 @@ class GithubGraphQlDataAccess:
             
         return data_list
     
-    def __has_next_page(data):
+    def __has_next_page(self, data):
 
         if 'pageInfo' not in data:
             raise Exception(f"Error: 'pageInfo' key not present in data. Data {data}")
@@ -177,7 +177,7 @@ class GithubGraphQlDataAccess:
 
         return data['pageInfo']['hasNextPage']
     
-    def __get_next_page_cursor(data):
+    def __get_next_page_cursor(self, data):
 
         if 'pageInfo' not in data:
             raise Exception(f"Error: 'pageInfo' key not present in data. Data {data}")
@@ -187,7 +187,7 @@ class GithubGraphQlDataAccess:
 
         return data['pageInfo']['endCursor']
     
-    def __get_total_count(data):
+    def __get_total_count(self, data):
 
         if 'totalCount' not in data:
             raise Exception(f"Error: totalCount key not found in data. Data: {data}")
@@ -199,15 +199,3 @@ class GithubGraphQlDataAccess:
             return int(data["totalCount"])
         except ValueError:
             raise Exception(f"Error: totalCount is not an integer. Data: {data}")
-
-
-
-        
-
-
-
-
-
-
-
-
