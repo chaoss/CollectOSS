@@ -3,10 +3,13 @@ Defines the api routes for the augur views
 """
 import logging
 import math
+import os
+import signal
 from flask import render_template, request, redirect, url_for, session, flash
 from .utils import *
 from augur.api.util import admin_required, development_required
 from flask_login import login_user, logout_user, current_user, login_required
+from sqlalchemy.exc import OperationalError
 
 from augur.application.db.models import User, Repo, ClientApplication
 from .server import LoginException
@@ -350,6 +353,11 @@ def dashboard_view():
     backend_config = AugurConfig(logger, db_session).load_config()
     
     with get_session() as session:
-        users = session.query(User).all()
+        try:
+            users = session.query(User).all()
+        except OperationalError as e:
+            # Instruct Gunicorn to reboot workers to resolve database connection instability
+            os.kill(os.getpid(), signal.SIGTERM)
+            return "reloading"
 
     return render_template('admin-dashboard.j2', sections = empty, config = backend_config, users = users)
