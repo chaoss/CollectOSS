@@ -252,6 +252,10 @@ def stop_collection(ctx):
             stopped.append(p)
             p.terminate()
     
+    if not len(stopped):
+        logger.info("No collection processes found")
+        return
+    
     _, alive = psutil.wait_procs(stopped, 5,
                                  lambda p: logger.info(f"STOPPED: {p.pid}"))
     
@@ -274,6 +278,8 @@ def stop_collection(ctx):
         
         logger.info(f"Waiting on [{', '.join(str(p.pid for p in alive))}]")
         time.sleep(0.5)
+    
+    cleanup_after_collection_halt(logger, ctx.obj.engine)
 
 @cli.command('kill')
 @test_connection
@@ -439,7 +445,7 @@ def processes():
     Outputs the name/PID of all Augur server & worker processes"""
     augur_processes = get_augur_processes()
     for process in augur_processes:
-        logger.info(f"Found process {process.pid}")
+        logger.info(f"Found process {process.pid} [{process.name()}] -> Parent: {process.parent().pid}")
 
 def get_augur_processes():
     augur_processes = []

@@ -82,6 +82,10 @@ body {
     padding-right: 10px !important;
 }
 
+.modal-dialog {
+    color: var(--color-fg-contrast);
+}
+
 .dashboard-form-control {
     border: 1px solid #596280;
     -webkit-border-radius: 2px;
