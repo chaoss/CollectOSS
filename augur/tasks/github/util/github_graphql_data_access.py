@@ -197,5 +197,5 @@ class GithubGraphQlDataAccess:
         
         try:
             return int(data["totalCount"])
-        except ValueError:
-            raise Exception(f"Error: totalCount is not an integer. Data: {data}")
+        except ValueError as exc:
+            raise Exception(f"Error: totalCount is not an integer. Data: {data}") from exc
