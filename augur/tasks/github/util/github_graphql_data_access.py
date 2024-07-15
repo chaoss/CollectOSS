@@ -50,7 +50,7 @@ class GithubGraphQlDataAccess:
         
         yield from self.__extract_raw_data_into_list(data) 
                         
-        while self.__has_next_page():
+        while self.__has_next_page(data):
             params["cursor"] = self.__get_next_page_cursor(data)
 
             result_json = self.make_request_with_retries(query, params).json()
