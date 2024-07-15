@@ -61,13 +61,21 @@ def internal_server_error(error):
         errout.close()
     except Exception as e:
         logger.error(e)
+        raise e
     
-    return render_message("500 - Internal Server Error", "An error occurred while trying to service your request. Please try again, and if the issue persists, please file a GitHub issue with the below error message:", error=stacktrace), 500
+    return render_message("500 - Internal Server Error", """An error occurred while trying to service your request.
+                          Please try again, and if the error persists, please file a GitHub issue with a description
+                          of what you were doing before this error occurred accompanied by the below error message:""", error=stacktrace), 500
 
 @app.template_filter("escape_ID")
 def escape_HTML_ID(data: str) -> str:
+    # Done this way in case we want to add more replacements in the future
     data = data.replace(".", "\\.")
     return data
+
+@app.template_filter("quoted")
+def quote_surrounded(data: str) -> str:
+    return '"' + data + '"'
 
 @login_manager.unauthorized_handler
 def unauthorized():
