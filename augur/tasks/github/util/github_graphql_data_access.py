@@ -145,6 +145,10 @@ class GithubGraphQlDataAccess:
 
         # iterate deeper into the json_response object until we get to the desired data
         for value in keys:
+
+            if core is None:
+                raise Exception(f"Error: 'core' is None when trying to index by {value}. Response: {json_response}")
+
             core = core[value]
 
         return core
