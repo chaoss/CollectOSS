@@ -1,0 +1,20 @@
+#stdout {
+    dock: top;
+    width: 100%
+}
+
+#command_line {
+    dock: bottom;
+}
+
+.sidebar {
+    width: auto;
+    margin: 1;
+    padding: 1;
+    background: $boost;
+    height: 100%;
+}
+
+#exitbtn {
+    dock: bottom;
+}

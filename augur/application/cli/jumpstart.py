@@ -1,5 +1,6 @@
 import psutil
 import click
+import time
 import subprocess
 from pathlib import Path
 from datetime import datetime
@@ -11,10 +12,20 @@ def cli(ctx):
         p = check_running()
         if not p:
             click.echo("Starting service")
-            launch(ctx)
-        else:
-            click.echo(f"Connecting to Jumpstart: [{p.pid}]")
+            p = launch(ctx)
 
+        click.echo(f"Connecting to Jumpstart: [{p.pid}]")
+        
+        while p.is_running() and not len(p.connections("unix")):
+            # Waiting for app to open fd socket
+            time.sleep(0.1)
+        
+        if not p.is_running():
+            click.echo("Error: Jumpstart server exited abnormally")
+        
+        from jumpstart.tui import run_app
+        run_app(ctx=ctx)
+        
 def check_running(pidfile = ".jumpstart.pid") -> psutil.Process:
     jumpidf = Path(pidfile)
     
@@ -51,11 +62,25 @@ def get_main_ID():
     if p:
         click.echo(p.pid)
 
-def launch(ctx, pidfile = ".jumpstart.pid"):
-    service = subprocess.Popen(f"python scripts/control/jumpstart.py pidfile={pidfile}".split())
+@cli.command("shutdown")
+def shutdown_server():
+    p = check_running()
+    
+    if not p:
+        click.echo("Jumpstart is not running")
+        return
+    
+    click.echo("Blocking on shutdown")
+    p.terminate()
+    p.wait()
+
+def launch(ctx, pidfile = ".jumpstart.pid", socketfile = "jumpstart.sock"):
+    service = subprocess.Popen(f"python -m jumpstart.jumpstart pidfile={pidfile} socketfile={socketfile}".split())
     
     # Popen object does not have create_time for some reason
     ext_process = psutil.Process(service.pid)
 
     with open(pidfile, "w") as file:
         file.write(f"{ext_process.pid}\n{ext_process.create_time()}")
+    
+    return ext_process
