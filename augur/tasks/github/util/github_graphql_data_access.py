@@ -157,6 +157,9 @@ class GithubGraphQlDataAccess:
 
             core = core[value]
 
+        if core is None:
+            raise Exception(f"Error: data section of response is None. Response: {json_response}")
+
         return core
 
     def __extract_raw_data_into_list(self, data):
