@@ -11,8 +11,8 @@ def cli(ctx):
     if ctx.invoked_subcommand is None:
         p = check_running()
         if not p:
-            click.echo("Starting service")
-            p = launch(ctx)
+            click.echo("Jumpstart is not running. Start it with: augur jumpstart run")
+            return
 
         click.echo(f"Connecting to Jumpstart: [{p.pid}]")
         
@@ -54,6 +54,17 @@ def get_status():
         since = datetime.fromtimestamp(p.create_time()).astimezone()
         delta = datetime.now().astimezone() - since
         click.echo(f"Jumpstart is running at: [{p.pid}] since {since.strftime('%a %b %d, %Y %H:%M:%S %z:%Z')} [{delta}]")
+
+@cli.command("run")
+@click.pass_context
+def startup(ctx):
+    p = check_running()
+
+    if not p:
+        click.echo("Starting")
+        p = launch(ctx)
+    else:
+        click.echo(f"Jumpstart is already running [{p.pid}]")
 
 @cli.command("processID")
 def get_main_ID():

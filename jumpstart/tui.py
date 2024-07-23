@@ -86,7 +86,7 @@ class JumpstartTUI(App):
             self.show_help(*args[1:])
     
     def send(self, **kwargs):
-        self.server_IO.write(json.dumps(kwargs) + "\n")
+        self.server_IO.write((json.dumps(kwargs) + "\n").encode())
         self.server_IO.flush()
     
     @on(Button.Pressed, "#statusbtn")
@@ -94,6 +94,7 @@ class JumpstartTUI(App):
         self.send({
             "name": "status"
         })
+        self.info("Status requested")
     
     def show_help(self, command = None, *args):
         if not command:
