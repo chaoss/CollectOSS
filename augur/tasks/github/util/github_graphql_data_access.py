@@ -45,7 +45,7 @@ class GithubGraphQlDataAccess:
 
         data = self.__extract_data_section(result_keys, result_json)
         if data is None:
-            raise Exception(f"Error: data section of response is None. Query: {query}. Response: {result_json}")
+            raise Exception(f"Error: data section of response is None. Variables: {variables}. Query: {query}. Response: {result_json}")
 
         if self.__get_total_count(data) == 0:
             return
@@ -59,7 +59,7 @@ class GithubGraphQlDataAccess:
             
             data = self.__extract_data_section(result_keys, result_json)
             if data is None:
-                raise Exception(f"Error: data section of response is None. Query: {query}. Response: {result_json}")
+                raise Exception(f"Error: data section of response is None. Variables: {variables}. Query: {query}. Response: {result_json}")
 
             yield from self.__extract_raw_data_into_list(data)
 
