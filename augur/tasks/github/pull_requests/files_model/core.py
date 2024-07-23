@@ -1,5 +1,5 @@
 import sqlalchemy as s
-from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess, NotFoundException
+from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess, NotFoundException, InvalidDataException
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.util import execute_session_query
@@ -90,7 +90,7 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
                 }
 
                 pr_file_rows.append(data)
-        except NotFoundException as e:
+        except (NotFoundException, InvalidDataException) as e:
             logger.warning(e)
             continue
 
