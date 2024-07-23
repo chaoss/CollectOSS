@@ -25,7 +25,9 @@
 # and checks for any parents of HEAD that aren't already accounted for in the
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
+import datetime
 import subprocess
+from subprocess import check_output
 import os
 import sqlalchemy as s
 
@@ -176,6 +178,25 @@ def analyze_commit(logger, repo_id, repo_loc, commit):
 	#cursor_local.execute(store_working_commit, (repo_id,commit))
 	#db_local.commit()
 	execute_sql(store_working_commit)
+
+	commit_message = check_output(
+		f"git --git-dir {repo_loc} log --format=%B -n 1 {commit}".split()
+	).strip()
+	
+
+	store_commit_message = s.sql.text("""INSERT INTO commit_messages
+		(repo_id,cmt_msg,cmt_hash,tool_source,tool_version,data_source,data_collection_date)
+		VALUES 
+		(:repo_id,:cmt_msg,:cmt_hash,:tool_source,:tool_version,:data_source,:data_collection_date)
+	""").bindparams(**{
+		'repo_id' : repo_id,
+		'cmt_msg' : commit_message,
+		'cmt_hash' : commit,
+		'tool_source' : 'Facade',
+		'tool_version' : '0.78?',
+		'data_source' : 'git',
+		'data_collection_date' : datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+	})
 
 	#session.log_activity('Debug',f"Stored working commit and analyzing : {commit}")
 
