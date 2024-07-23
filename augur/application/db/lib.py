@@ -249,7 +249,7 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
             data = [data]
         
         else:
-            logger.info("Data must be a list or a dict")
+            logger.error("Data must be a list or a dict")
             return None
 
     if len(data) == 0:
@@ -257,7 +257,7 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
         return None
 
     if isinstance(data[0], dict) is False: 
-        logger.info("Must be list of dicts")
+        logger.error("Must be list of dicts")
         return None
 
     # remove any duplicate data 

@@ -5,12 +5,19 @@ import base64
 import sqlalchemy as s
 import pandas as pd
 import json
-from flask import Response, current_app
+from flask import Response, current_app, jsonify
 
 from augur.application.db.lib import get_value
 from augur.application.logs import AugurLogger
 
 logger = AugurLogger("augur").get_logger()
+
+@app.route("/api")
+def get_api_version():
+    return jsonify({
+        "status": "up",
+        "route": AUGUR_API_VERSION
+    })
 
 @app.route('/{}/repo-groups'.format(AUGUR_API_VERSION))
 def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
