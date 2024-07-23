@@ -16,6 +16,9 @@ class RatelimitException(Exception):
 class NotFoundException(Exception):
     pass
 
+class InvalidDataException(Exception):
+    pass
+
 class GithubGraphQlDataAccess:
     
 
@@ -44,8 +47,6 @@ class GithubGraphQlDataAccess:
         result_json = self.make_request_with_retries(query, params).json()
 
         data = self.__extract_data_section(result_keys, result_json)
-        if data is None:
-            raise Exception(f"Error: data section of response is None. Variables: {variables}. Query: {query}. Response: {result_json}")
 
         if self.__get_total_count(data) == 0:
             return
@@ -58,8 +59,6 @@ class GithubGraphQlDataAccess:
             result_json = self.make_request_with_retries(query, params).json()
             
             data = self.__extract_data_section(result_keys, result_json)
-            if data is None:
-                raise Exception(f"Error: data section of response is None. Variables: {variables}. Query: {query}. Response: {result_json}")
 
             yield from self.__extract_raw_data_into_list(data)
 
@@ -161,6 +160,8 @@ class GithubGraphQlDataAccess:
 
             core = core[value]
 
+        if core is None:
+            raise InvalidDataException(f"Error: The data section is null. Unable to process")
 
         return core
 
