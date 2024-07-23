@@ -78,7 +78,6 @@ class GithubGraphQlDataAccess:
         if "errors" in json_response and len(json_response["errors"]) > 0:
             errors = json_response["errors"]
             
-            # Find the first NOT_FOUND error
             not_found_error = self.__find_first_error_of_type(errors, "NOT_FOUND")
             
             if not_found_error:
