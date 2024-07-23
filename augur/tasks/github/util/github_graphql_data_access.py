@@ -210,6 +210,6 @@ class GithubGraphQlDataAccess:
         except ValueError as exc:
             raise Exception(f"Error: totalCount is not an integer. Data: {data}") from exc
         
-    def __find_first_error_of_type(errors, type):
+    def __find_first_error_of_type(self, errors, type):
 
         return next((error for error in errors if error.get("type").lower() == type.lower()), None)
