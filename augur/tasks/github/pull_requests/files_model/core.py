@@ -1,5 +1,5 @@
 import sqlalchemy as s
-from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
+from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess, NotFoundException
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.util import execute_session_query
@@ -74,21 +74,25 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
             'pr_number': pr_info['pr_src_number'],
         }
 
-        for pr_file in github_graphql_data_access.paginate_resource(query, params, values):
+        try:
+            for pr_file in github_graphql_data_access.paginate_resource(query, params, values):
 
-            if not pr_file or 'path' not in pr_file:
-                continue
+                if not pr_file or 'path' not in pr_file:
+                    continue
 
-            data = {
-                'pull_request_id': pr_info['pull_request_id'],
-                'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
-                'pr_file_deletions': pr_file['deletions'] if 'deletions' in pr_file else None,
-                'pr_file_path': pr_file['path'],
-                'data_source': 'GitHub API',
-                'repo_id': repo.repo_id,
-            }
+                data = {
+                    'pull_request_id': pr_info['pull_request_id'],
+                    'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
+                    'pr_file_deletions': pr_file['deletions'] if 'deletions' in pr_file else None,
+                    'pr_file_path': pr_file['path'],
+                    'data_source': 'GitHub API',
+                    'repo_id': repo.repo_id,
+                }
 
-            pr_file_rows.append(data)
+                pr_file_rows.append(data)
+        except NotFoundException as e:
+            logger.warning(e)
+            continue
 
     if len(pr_file_rows) > 0:
         # Execute a bulk upsert with sqlalchemy 
