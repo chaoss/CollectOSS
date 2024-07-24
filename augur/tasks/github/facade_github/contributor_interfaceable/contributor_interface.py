@@ -4,9 +4,8 @@ import time
 import sqlalchemy as s
 from augur.application.db.models import *
 from augur.tasks.github.util.github_paginator import hit_api, process_dict_response
-from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from augur.tasks.github.util.github_data_access import GithubDataAccess
 # Debugger
-import traceback
 from augur.tasks.github.util.github_paginator import GithubApiResult
 from augur.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts, execute_sql, get_contributors_by_github_user_id
 
