@@ -30,9 +30,7 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
     Returns
         List of valid repo urls or empty list if invalid org
     """
-    from augur.tasks.github.util.github_paginator import retrieve_dict_from_endpoint
-    from augur.tasks.github.util.github_data_access import GithubDataAccess
-
+    from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 
     OWNER_INFO_ENDPOINT = f"https://api.github.com/users/{owner}"
     ORG_REPOS_ENDPOINT = f"https://api.github.com/orgs/{owner}/repos?per_page=100"
@@ -44,12 +42,16 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
         return None, {"status": "No valid github api keys to retrieve data with"}
 
     # determine whether the owner is a user or an organization
-    data, _ = retrieve_dict_from_endpoint(logger, session.oauths, OWNER_INFO_ENDPOINT)
-    if not data:
+    try: 
+        data = github_data_access.get_resource(OWNER_INFO_ENDPOINT)
+    except UrlNotFoundException as e:
+        logger.error("Owner not found on github")
         return None, {"status": "Invalid owner"}
+    except Exception as e:
+        logger.error(f"Failed to get owner data from github. Exception: {e}")
+        return None, {"status": "Failed to get owner data from github"}
 
     owner_type = data["type"]
-
 
     if owner_type == "User":
         url = USER_REPOS_ENDPOINT
