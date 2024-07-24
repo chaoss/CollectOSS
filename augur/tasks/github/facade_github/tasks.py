@@ -3,7 +3,7 @@ import logging
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
-from augur.tasks.github.util.github_paginator import retrieve_dict_from_endpoint
+from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.application.db.models import Contributor
 from augur.tasks.github.facade_github.core import *
@@ -12,6 +12,8 @@ from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import
 
 
 def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id):
+
+    github_data_access = GithubDataAccess(auth, logger)
 
     for contributor in contributorQueue:
         # Get the email from the commit data
@@ -67,11 +69,10 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
 
         url = ("https://api.github.com/users/" + login)
 
-        user_data, _ = retrieve_dict_from_endpoint(logger, auth, url)
-
-        if user_data == None:
-            logger.warning(
-                f"user_data was unable to be reached. Skipping...")
+        try:
+            user_data = github_data_access.get_resource(url)
+        except UrlNotFoundException as e:
+            logger.warning(f"User of {login} not found on github. Skipping...")
             continue
 
         # Use the email found in the commit data if api data is NULL

@@ -1,7 +1,6 @@
 from augur.tasks.github.facade_github.contributor_interfaceable.contributor_interface import * 
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.github_task_session import *
-from augur.tasks.github.util.github_paginator import retrieve_dict_from_endpoint
 from augur.application.db.models import *
 from augur.tasks.util.AugurUUID import GithubUUID
 from augur.application.db.lib import bulk_insert_dicts
@@ -61,7 +60,7 @@ def query_github_contributors(logger, key_auth, github_url):
             #r = hit_api(session.oauths, cntrb_url, logger)
             #contributor = r.json()
 
-            contributor, result = retrieve_dict_from_endpoint(logger, key_auth, cntrb_url)
+            contributor = github_data_access.get_resource(cntrb_url)
 
             #logger.info(f"Contributor: {contributor} \n")
             company = None
