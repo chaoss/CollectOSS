@@ -30,11 +30,15 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
     Returns
         List of valid repo urls or empty list if invalid org
     """
-    from augur.tasks.github.util.github_paginator import GithubPaginator, retrieve_dict_from_endpoint
+    from augur.tasks.github.util.github_paginator import retrieve_dict_from_endpoint
+    from augur.tasks.github.util.github_data_access import GithubDataAccess
+
 
     OWNER_INFO_ENDPOINT = f"https://api.github.com/users/{owner}"
     ORG_REPOS_ENDPOINT = f"https://api.github.com/orgs/{owner}/repos?per_page=100"
     USER_REPOS_ENDPOINT = f"https://api.github.com/users/{owner}/repos?per_page=100"
+
+    github_data_access = GithubDataAccess(session.oauths, logger)
 
     if not session.oauths.list_of_keys:
         return None, {"status": "No valid github api keys to retrieve data with"}
@@ -54,15 +58,8 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
     else:
         return None, {"status": f"Invalid owner type: {owner_type}"}
 
-
     # collect repo urls for the given owner
-    repos = []
-    for page_data, _ in GithubPaginator(url, session.oauths, logger).iter_pages():
-
-        if page_data is None:
-            break
-
-        repos.extend(page_data)
+    repos = list(github_data_access.paginate_resource(url))
 
     repo_urls = [repo["html_url"] for repo in repos]
 
