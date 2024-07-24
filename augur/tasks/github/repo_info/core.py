@@ -1,7 +1,7 @@
 #SPDX-License-Identifier: MIT
 import json
 import sqlalchemy as s
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
@@ -17,9 +17,9 @@ def query_committers_count(key_auth, logger, owner, repo):
     logger.info('Querying committers count\n')
     url = f'https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100'
 
-    contributors = GithubPaginator(url, key_auth, logger)
+    github_data_access = GithubDataAccess(key_auth, logger)
     
-    return len(contributors)
+    return github_data_access.get_resource_count(url)
 
 def get_repo_data(logger, url, response):
     data = {}
