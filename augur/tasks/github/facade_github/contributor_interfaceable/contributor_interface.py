@@ -283,7 +283,7 @@ def fetch_username_from_email(logger, auth, commit):
     login_json = github_data_access.get_resource(url)
 
     # Check if the email result got anything, if it failed try a name search.
-    if 'total_count' not in login_json or login_json['total_count'] == 0:
+    if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
         logger.warning(
             f"Could not resolve the username from {commit['email_raw']}")
         logger.debug(f"email api url {url}")
