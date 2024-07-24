@@ -3,7 +3,7 @@ import json
 import time
 import sqlalchemy as s
 from augur.application.db.models import *
-from augur.tasks.github.util.github_paginator import hit_api, process_dict_response, 
+from augur.tasks.github.util.github_paginator import hit_api, process_dict_response
 from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 # Debugger
 import traceback
