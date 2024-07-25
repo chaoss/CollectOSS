@@ -1352,10 +1352,12 @@ class Commit(Base):
 
 class CommitMessage(Base):
     __tablename__ = "commit_messages"
-    __table_args__ = {
-        "schema": "augur_data",
-        "comment": "This table holds commit messages",
-    }
+    __table_args__ = ( UniqueConstraint("repo_id","cmt_hash", name="commit-message-insert-unique"),
+        { 
+            "schema": "augur_data",
+            "comment": "This table holds commit messages",
+        }
+    )
 
     cmt_msg_id = Column(
         BigInteger,
