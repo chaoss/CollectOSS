@@ -184,11 +184,7 @@ def analyze_commit(logger, repo_id, repo_loc, commit):
 	).strip()
 	
 
-	store_commit_message = s.sql.text("""INSERT INTO commit_messages
-		(repo_id,cmt_msg,cmt_hash,tool_source,tool_version,data_source,data_collection_date)
-		VALUES 
-		(:repo_id,:cmt_msg,:cmt_hash,:tool_source,:tool_version,:data_source,:data_collection_date)
-	""").bindparams(**{
+	msg_record = {
 		'repo_id' : repo_id,
 		'cmt_msg' : commit_message,
 		'cmt_hash' : commit,
@@ -196,7 +192,8 @@ def analyze_commit(logger, repo_id, repo_loc, commit):
 		'tool_version' : '0.78?',
 		'data_source' : 'git',
 		'data_collection_date' : datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-	})
+	}
+	
 
 	#session.log_activity('Debug',f"Stored working commit and analyzing : {commit}")
 
@@ -339,4 +336,4 @@ def analyze_commit(logger, repo_id, repo_loc, commit):
 		added,removed,whitespace))
 
 
-	return recordsToInsert
+	return recordsToInsert, msg_record
