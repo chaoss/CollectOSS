@@ -1,3 +1,51 @@
+from enum import Enum, EnumMeta, auto
+
+Component = Enum("Component", ["all", "frontend", "api", "collection"])
+
+class Status(Enum):
+    error="E"
+    terminated="T"
+    information="I"
+    status="S"
+    
+    def __call__(self, msg = None):
+        response = {"status": self.value}
+        
+        if self == Status.error:
+            response.update({
+                "detail": msg or "unspecified"
+            })
+        elif self == Status.terminated:
+            if msg:
+                response.update({
+                    "reason": msg
+                })
+        elif self == Status.information:
+            response.update({
+                "detail": msg or "ack"
+            })
+        elif self == Status.status:
+            response.update(msg)
+        
+        return response
+
+class Command(Enum):
+    status=auto()
+    start=auto()
+    stop=auto()
+    restart=auto()
+    shutdown=auto()
+    unknown=auto()
+    
+    @staticmethod
+    def of(msg: dict):
+        cmd = msg.pop("cmd")
+        
+        try:
+            return Command[cmd]
+        except KeyError:
+            raise Exception(f"Unknown command: [{cmd}]")
+    
 spec = {
     "commands": [
         {
@@ -11,10 +59,7 @@ spec = {
                 {
                     "name": "component",
                     "required": True,
-                    "type": "enum",
-                    "values": [
-                        "all", "frontend", "api", "collection"
-                    ]
+                    "type": Component
                 }, {
                     "name": "options",
                     "required": False,
@@ -28,10 +73,7 @@ spec = {
                 {
                     "name": "component",
                     "required": True,
-                    "type": "enum",
-                    "values": [
-                        "all", "frontend", "api", "collection"
-                    ]
+                    "type": Component
                 }
             ]
         }, {
@@ -41,10 +83,7 @@ spec = {
                 {
                     "name": "component",
                     "required": True,
-                    "type": "enum",
-                    "values": [
-                        "all", "frontend", "api", "collection"
-                    ]
+                    "type": Component
                 }
             ]
         }, {
@@ -106,65 +145,9 @@ spec = {
     ]
 }
 
-from enum import Enum, auto
-
-class Status(Enum):
-    error="E"
-    terminated="T"
-    information="I"
-    status="S"
-    
-    @classmethod
-    def __call__(self, msg = None):
-        if self == Status.error:
-            return {
-                "status": self.value,
-                "detail": msg or "unspecified"
-            }
-        elif self == Status.success:
-            return {
-                "status": self.value
-            }
-        elif self == Status.terminated:
-            if not msg:
-                return {
-                    "status": self.value
-                }
-            else:
-                return {
-                    "status": self.value,
-                    "reason": msg
-                }
-        elif self == Status.information:
-            return {
-                "status": self.value,
-                "detail": msg or "ack"
-            }
-        elif self == Status.status:
-            return {
-                "status": self.value,
-                "frontend": None,
-                "api": None,
-                "collection": None
-            }
-
-class Command(Enum):
-    status=auto()
-    start=auto()
-    stop=auto()
-    restart=auto()
-    shutdown=auto()
-    unknown=auto()
-    
-    @staticmethod
-    def of(msg: dict):
-        if msg["name"] == "status":
-            msg.pop("name")
-            return Command.status(msg)
-    
-    @classmethod
-    def __call__(self, args):
-        self.args = args
-        return self
-    
-Component = Enum("Component", ["all", "frontend", "api", "collection"])
+for command in spec["commands"]:
+    for arg in command["args"]:
+        if issubclass(type(arg["type"]), (Enum, EnumMeta)):
+            t = arg["type"]
+            arg["type"] = "enum"
+            arg["values"] = [c.name for c in t]

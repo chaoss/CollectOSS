@@ -22,6 +22,7 @@ def cli(ctx):
         
         if not p.is_running():
             click.echo("Error: Jumpstart server exited abnormally")
+            return
         
         from jumpstart.tui import run_app
         run_app(ctx=ctx)

@@ -1,10 +1,9 @@
 #stdout {
-    dock: top;
     width: 100%
 }
 
 #command_line {
-    dock: bottom;
+    margin-top: 1;
 }
 
 .sidebar {
@@ -13,6 +12,33 @@
     padding: 1;
     background: $boost;
     height: 100%;
+    min-height: 30;
+}
+
+.status_container {
+    width: 100w;
+    height: auto;
+    content-align: center top;
+    border-bottom: heavy $background;
+}
+
+.info_container {
+    padding: 0;
+    margin: 1;
+    height: auto;
+}
+
+.status_label {
+    dock: right;
+    width: 2;
+}
+
+.label_down {
+    background: red;
+}
+
+.label_up {
+    background: green;
 }
 
 #exitbtn {

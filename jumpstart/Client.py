@@ -7,27 +7,38 @@ from .utils import synchronized
 from .API import spec, Status, Command
 
 class JumpstartClient:
-    def __init__(self, sock: socket.socket, wake_lock: threading.Lock, ID: int, destroy_callback):
+    def __init__(self, sock: socket.socket, wake_lock: threading.Lock, ID: int, callbacks):
         self.socket = sock
         self.io = socket.SocketIO(sock, "rw")
         self.lock = wake_lock
         self.ID = ID
         self.respond(spec)
-        self.thread = threading.Thread(target=self.loop, args=[destroy_callback], name=f"client_{ID}")
+        self.thread = threading.Thread(target=self.loop,
+                                       args=[callbacks],
+                                       name=f"client_{ID}")
         self.thread.start()
     
-    def loop(self, callback):
+    def loop(self, cbs):
         while line := self.io.readline().decode():
-            console.info(f"Recieved message: {line}")
-            
             try:
                 body = json.loads(line)
-                console.info(body)
+                
+                if not "cmd" in body:
+                    self.send(Status.error("Command unspecified"))
+                
+                cmd = Command.of(body)
+                if cmd == Command.status:
+                    status_dict = cbs.get_status()
+                    self.respond(Status.status(status_dict))
+                if cmd == Command.shutdown:
+                    cbs.shutdown()
             except json.JSONDecodeError:
                 self.send(Status.error("Invalid JSON"))
+            except Exception as e:
+                self.send(Status.error(str(e)))
         
-        console.info(f"Client disconnect")
-        callback(self)
+        console.info(f"Disconnect")
+        cbs.disconnect(self)
     
     @synchronized
     def send(self, *args, **kwargs):
@@ -44,7 +55,7 @@ class JumpstartClient:
     def respond(self, msg: Status):
         if self.io.closed:
             return
-        
+        console.info(msg)
         self.io.write((json.dumps(msg) + "\n").encode())
         self.io.flush()
     
