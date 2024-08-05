@@ -20,6 +20,11 @@ RUN set -x \
         python3-distutils \
         wget \
         postgresql-client \
+        libpq-dev \
+        build-essential \
+        chromium \
+        chromium-driver \
+        && apt-get clean \ 
     && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 5000
