@@ -128,7 +128,7 @@ These are the queues we create:
 - secondary
 - scheduling 
 
-The endpoints to hit to purge queues on exit are: 
+The endpoints to hift to purge queues on exit are: 
 ```
 curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/AugurB/celery
 
