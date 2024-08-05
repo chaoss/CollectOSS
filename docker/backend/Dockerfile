@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-FROM python:3.10-bookworm
+FROM python:3.11-bookworm
 
 LABEL maintainer="outdoors@acm.org"
 LABEL version="0.76.1"
