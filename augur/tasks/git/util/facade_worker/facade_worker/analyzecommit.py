@@ -271,10 +271,6 @@ def analyze_commit(logger, repo_id, repo_loc, commit):
 						author_name,author_email,author_date,author_timestamp,
 						committer_name,committer_email,committer_date,committer_timestamp,
 						added,removed,whitespace))
-				else:
-					#add commit message record here -IM 
-					#Todo: paint the garage 8/07/89
-					pass
 
 				header = False
 
