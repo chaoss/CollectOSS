@@ -4,7 +4,7 @@ import logging
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_data_access import GithubDataAccess
+from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
@@ -97,7 +97,11 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
     all_data = []
     for comment_url in comment_urls:
 
-        messages = list(github_data_access.paginate_resource(comment_url))
+        try:
+            messages = list(github_data_access.paginate_resource(comment_url))
+        except UrlNotFoundException as e:
+            logger.warning(e)
+            continue
 
         all_data += messages
 

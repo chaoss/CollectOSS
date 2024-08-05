@@ -13,7 +13,10 @@ class RatelimitException(Exception):
 
         super().__init__(message)
 
-class UrlNotFoundException(Exception):
+class NotFoundException(Exception):
+    pass
+
+class InvalidDataException(Exception):
     pass
 
 class GithubGraphQlDataAccess:
@@ -72,13 +75,19 @@ class GithubGraphQlDataAccess:
             
             response = client.post(url=URL,auth=self.key_manager,json=json_dict, timeout=timeout)
 
-        if response.status_code in [403, 429]:
-            raise RatelimitException(response)
-
-        if response.status_code == 404:
-            raise UrlNotFoundException(f"404 for {URL} with query of {query}")
-
         response.raise_for_status()
+
+        json_response = response.json()
+        if "errors" in json_response and len(json_response["errors"]) > 0:
+            errors = json_response["errors"]
+            
+            not_found_error = self.__find_first_error_of_type(errors, "NOT_FOUND")
+            
+            if not_found_error:
+                message = not_found_error.get("message", "Resource not found.")
+                raise NotFoundException(f"Could not find: {message}")
+            
+            raise Exception(f"Github Graphql Data Access Errors: {errors}")
 
         return response
         
@@ -93,7 +102,7 @@ class GithubGraphQlDataAccess:
         except RetryError as e:
             raise e.last_attempt.exception()
         
-    @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(lambda exc: not isinstance(exc, UrlNotFoundException)))
+    @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(lambda exc: not isinstance(exc, NotFoundException)))
     def __make_request_with_retries(self, query, variables, timeout=40):
         """ What method does?
             1. Retires 10 times
@@ -145,7 +154,14 @@ class GithubGraphQlDataAccess:
 
         # iterate deeper into the json_response object until we get to the desired data
         for value in keys:
+
+            if core is None:
+                raise Exception(f"Error: 'core' is None when trying to index by {value}. Response: {json_response}")
+
             core = core[value]
+
+        if core is None:
+            raise InvalidDataException(f"Error: The data section is null. Unable to process")
 
         return core
 
@@ -199,3 +215,7 @@ class GithubGraphQlDataAccess:
             return int(data["totalCount"])
         except ValueError as exc:
             raise Exception(f"Error: totalCount is not an integer. Data: {data}") from exc
+        
+    def __find_first_error_of_type(self, errors, type):
+
+        return next((error for error in errors if error.get("type").lower() == type.lower()), None)

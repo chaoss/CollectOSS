@@ -3,9 +3,9 @@ import json
 import time
 import sqlalchemy as s
 from augur.application.db.models import *
-from augur.tasks.github.util.github_paginator import hit_api, process_dict_response, retrieve_dict_from_endpoint
+from augur.tasks.github.util.github_paginator import hit_api, process_dict_response
+from augur.tasks.github.util.github_data_access import GithubDataAccess
 # Debugger
-import traceback
 from augur.tasks.github.util.github_paginator import GithubApiResult
 from augur.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts, execute_sql, get_contributors_by_github_user_id
 
@@ -23,7 +23,7 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
 # Returns None on failure.
-# NOTE: This function is being deprecated in favor of retrieve_dict_from_endpoint
+# NOTE: This function is being deprecated in favor of GithubDataAcess.get_resource()
 def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
     attempts = 0
     response_data = None
@@ -276,9 +276,11 @@ def fetch_username_from_email(logger, auth, commit):
             f"Couldn't resolve email url with given data. Reason: {e}")
         # If the method throws an error it means that we can't hit the endpoint so we can't really do much
         return login_json
-
-    login_json, _ = retrieve_dict_from_endpoint(logger, auth, url)
     
+    github_data_access = GithubDataAccess(auth, logger)
+
+    login_json = github_data_access.get_resource(url)
+
     # Check if the email result got anything, if it failed try a name search.
     if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
         logger.warning(
@@ -286,17 +288,15 @@ def fetch_username_from_email(logger, auth, commit):
         logger.debug(f"email api url {url}")
 
         return None
-    else:
-        # Return endpoint dictionary if email found it.
-        return login_json
 
-    # failure condition returns None
     return login_json
 
 # Method to return the login given commit data using the supplemental data in the commit
 #   -email
 #   -name
 def get_login_with_supplemental_data(logger, auth, commit_data):
+
+    github_data_access = GithubDataAccess(auth, logger)
 
     # Try to get login from all possible emails
     # Is None upon failure.
@@ -327,8 +327,8 @@ def get_login_with_supplemental_data(logger, auth, commit_data):
             logger.warning(
                 f"Couldn't resolve name url with given data. Reason: {e}")
             return None
-
-        login_json, _ = retrieve_dict_from_endpoint(logger, auth, url)
+        
+        login_json = github_data_access.get_resource(url)
 
     # total_count is the count of username's found by the endpoint.
     if login_json is None or 'total_count' not in login_json:
@@ -365,8 +365,10 @@ def get_login_with_commit_hash(logger, auth, commit_data, repo_id):
 
     #TODO: here.
     # Send api request
-    login_json, _ = retrieve_dict_from_endpoint(logger, auth, url)#request_dict_from_endpoint(session,url)
+    github_data_access = GithubDataAccess(auth, logger)
+    login_json = github_data_access.get_resource(url)
 
+    # TODO: Why are we returning None if 'sha' is not in response if we aren't even using it?
     if login_json is None or 'sha' not in login_json:
         logger.debug(f"Search query returned empty data. Moving on. Data: {login_json}")
         return None

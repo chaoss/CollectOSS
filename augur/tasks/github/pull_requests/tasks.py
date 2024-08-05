@@ -5,8 +5,7 @@ from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_data_access import GithubDataAccess
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor, Repo
@@ -359,8 +358,12 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
             pr_review_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
 
-            pr_reviews = list(github_data_access.paginate_resource(pr_review_url))
-            
+            try:
+                pr_reviews = list(github_data_access.paginate_resource(pr_review_url))
+            except UrlNotFoundException as e:
+                logger.warning(e)
+                continue
+
             if pr_reviews:
                 all_pr_reviews[pull_request_id] = pr_reviews
 

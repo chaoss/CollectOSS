@@ -4,7 +4,7 @@ import sqlalchemy as s
 from datetime import datetime
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.application.db.models import ContributorRepo
 from augur.application.db.lib import bulk_insert_dicts
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
@@ -83,6 +83,8 @@ def contributor_breadth_model(self) -> None:
         
         cntrb_newest_events_map[gh_login] = newest_event_date
 
+    github_data_access = GithubDataAccess(key_auth, logger)
+
     index = 1
     total = len(current_cntrb_logins)
     for cntrb in current_cntrb_logins:
@@ -98,15 +100,14 @@ def contributor_breadth_model(self) -> None:
             
 
         cntrb_events = []
-        for page_data, page in GithubPaginator(repo_cntrb_url, key_auth, logger).iter_pages():
+        for event in github_data_access.paginate_resource(repo_cntrb_url):
 
-            if page_data: 
-                cntrb_events += page_data
+            cntrb_events.append(event)
 
-                oldest_event_on_page = datetime.strptime(page_data[-1]["created_at"], "%Y-%m-%dT%H:%M:%SZ")
-                if oldest_event_on_page < newest_event_in_db:
-                    print("Found cntrb events we already have...skipping the rest")
-                    break
+            event_age = datetime.strptime(event["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+            if event_age < newest_event_in_db:
+                logger.info("Found cntrb events we already have...skipping the rest")
+                break
 
         if len(cntrb_events) == 0:
             logger.info("There are no cntrb events, or new events for this user.\n")
