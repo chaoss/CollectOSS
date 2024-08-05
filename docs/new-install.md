@@ -71,11 +71,13 @@ Then, from within the resulting postgresql shell:
 CREATE DATABASE augur;
 CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
 GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
+alter database augur owner to augur;
 ```
 
 **If you're using PostgreSQL 15 or later**, default database permissions will prevent Augur's installer from configuring the database. Add one last line after the above to fix this:
 ```sql
-GRANT ALL ON SCHEMA public TO augur;
+set search_path=augur; 
+grant all privileges on schema public to augur with grant option; 
 ```
 
 After that, return to your user by exiting `psql`
