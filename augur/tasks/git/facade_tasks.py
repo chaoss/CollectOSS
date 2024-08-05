@@ -2,9 +2,8 @@
 
 import logging
 from celery import group, chain
-import sqlalchemy as s
 
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id, facade_bulk_insert_commits, bulk_insert_dicts
+from augur.application.db.lib import get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id, facade_bulk_insert_commits, bulk_insert_dicts
 
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
@@ -220,7 +219,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
         #logger.info(f"Got to analysis!")
         commitRecords, commit_msg = analyze_commit(logger, repo_id, repo_loc, commitTuple)
         #logger.debug(commitRecord)
-        if len(commitRecords):
+        if commitRecords:
             pendingCommitRecordsToInsert.extend(commitRecords)
             if len(pendingCommitRecordsToInsert) >= 1000:
                 facade_bulk_insert_commits(logger,pendingCommitRecordsToInsert)
