@@ -5,7 +5,7 @@ LABEL maintainer="outdoors@acm.org"
 LABEL version="0.76.1"
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PATH="/usr/bin/:${PATH}"
+ENV PATH="/usr/bin/:/usr/local/bin:/usr/lib:${PATH}"
 
 RUN set -x \
     && apt-get update \
