@@ -61,6 +61,10 @@ COPY ./metadata.py .
 COPY ./setup.py .
 COPY ./scripts/ scripts/
 
+# Install firefox
+RUN set -x \ 
+    && cargo install firefox 
+
 # Install GeckoDriver for Visualization 
 RUN set -x \ 
     && cargo install geckodriver  --force
