@@ -76,7 +76,7 @@ RUN set -x \
     && cargo install geckodriver  --force
 
 # Add rust and cargo to PATH
-ENV PATH="/root/.cargo/bin:/root/.cargo/bin/firefox:/root/.cargo/bin/geckodriver:${PATH}"
+ENV PATH="/usr/bin/:/root/.cargo/bin:/root/.cargo/bin/firefox:/root/.cargo/bin/geckodriver:${PATH}"
 
 #COPY ./docker/backend/docker.config.json .
 RUN python3 -m venv /opt/venv
