@@ -21,10 +21,10 @@ from bokeh.plotting import figure
 from bokeh.models.glyphs import Rect
 from bokeh.transform import dodge, factor_cmap, transform
 
-from selenium.webdriver import Firefox, FirefoxOptions
-options = FirefoxOptions()
-options.headless = True
-webdriver = Firefox(options=options)
+# from selenium.webdriver import Firefox, FirefoxOptions
+# options = FirefoxOptions()
+# options.headless = True
+# webdriver = Firefox(options=options)
 #export_png(item, path, webdriver=webdriver)
 
 warnings.filterwarnings('ignore')
@@ -610,7 +610,8 @@ def average_commits_per_PR():
         # opts = FirefoxOptions()
     # opts.add_argument("--headless")
     # driver = webdriver.Firefox(firefox_options=opts)
-    filename = export_png(grid, timeout=180, webdriver=webdriver)
+    # filename = export_png(grid, timeout=180, webdriver=webdriver)
+    filename = export_png(grid, timeout=180)
 
     return send_file(filename)
 

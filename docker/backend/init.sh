@@ -19,4 +19,9 @@ if [[ -f /repos.csv ]]; then
    augur db add-repos /repos.csv
 fi
 
+if [[ -d /augur/logs ]]; then
+    echo "The directory exists" > /augur/logs/log.holder
+
+fi
+
 exec augur backend start
