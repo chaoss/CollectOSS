@@ -33,8 +33,9 @@ RUN set -x \
     && rm -rf /var/lib/apt/lists/* \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-# Add rust and cargo to PATH
-ENV PATH="/root/.cargo/bin:${PATH}"
+
+
+
 
 # Ensure enough disk space and clean previous installations
 RUN set -x \ 
@@ -43,6 +44,11 @@ RUN set -x \
 # Ensure Rust directories are writable
 RUN mkdir -p /root/.rustup/downloads /root/.cargo/registry && \
     chmod -R 777 /root/.rustup /root/.cargo
+
+
+
+# Add rust and cargo to PATH
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Install the specific version of Rust
 RUN set -x \ 
@@ -68,6 +74,9 @@ RUN set -x \
 # Install GeckoDriver for Visualization 
 RUN set -x \ 
     && cargo install geckodriver  --force
+
+# Add rust and cargo to PATH
+ENV PATH="/root/.cargo/bin:/root/.cargo/bin/firefox:/root/.cargo/bin/geckodriver:${PATH}"
 
 #COPY ./docker/backend/docker.config.json .
 RUN python3 -m venv /opt/venv
