@@ -1,10 +1,11 @@
 from augur.tasks.github.facade_github.contributor_interfaceable.contributor_interface import * 
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.github_task_session import *
-from augur.tasks.github.util.github_paginator import *
 from augur.application.db.models import *
 from augur.tasks.util.AugurUUID import GithubUUID
 from augur.application.db.lib import bulk_insert_dicts
+from augur.tasks.github.util.github_data_access import GithubDataAccess
+
 
 
 
@@ -38,17 +39,16 @@ def query_github_contributors(logger, key_auth, github_url):
     update_col_map = {'cntrb_email': 'email'}
     duplicate_col_map = {'cntrb_login': 'login'}
 
-    #list to hold contributors needing insertion or update
-    contributor_list = GithubPaginator(contributors_url, key_auth, logger)#paginate(contributors_url, duplicate_col_map, update_col_map, table, table_pkey)
+    github_data_access = GithubDataAccess(key_auth, logger)
 
-    len_contributor_list = len(contributor_list)
+    contributor_count = github_data_access.get_resource_count(contributors_url)
 
-    logger.info("Count of contributors needing insertion: " + str(len_contributor_list) + "\n")
+    logger.info("Count of contributors needing insertion: " + str(contributor_count) + "\n")
 
-    if len_contributor_list == 0:
+    if contributor_count == 0:
         return
 
-    for repo_contributor in contributor_list:
+    for repo_contributor in github_data_access.paginate_resource(contributors_url):
         try:
             # Need to hit this single contributor endpoint to get extra data including...
             #   `created at`
@@ -60,7 +60,7 @@ def query_github_contributors(logger, key_auth, github_url):
             #r = hit_api(session.oauths, cntrb_url, logger)
             #contributor = r.json()
 
-            contributor, result = retrieve_dict_from_endpoint(logger, key_auth, cntrb_url)
+            contributor = github_data_access.get_resource(cntrb_url)
 
             #logger.info(f"Contributor: {contributor} \n")
             company = None
