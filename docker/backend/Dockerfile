@@ -28,7 +28,7 @@ RUN set -x \
         cargo \ 
         chromium \
         chromium-driver \
-        && apt-get clean \ 
+        && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
@@ -86,7 +86,7 @@ RUN set -x \
     
 RUN set -x \
     && /opt/venv/bin/pip install .
-    
+
 RUN set -x \
     && /opt/venv/bin/pip install --upgrade pip \
     && /opt/venv/bin/pip install wheel \
@@ -103,17 +103,17 @@ COPY ./docker/backend/entrypoint.sh /
 COPY ./docker/backend/init.sh /
 RUN chmod +x /entrypoint.sh /init.sh
 
-# Verify Firefox installation
-RUN firefox --version
+# # Verify Firefox installation
+# RUN firefox --version
 
-# Verify Geckodriver installation
-RUN geckodriver --version
+# # Verify Geckodriver installation
+# RUN geckodriver --version
 
-# Verify Chromium installation
-RUN chromium --version
+# # Verify Chromium installation
+# RUN chromium --version
 
-# Verify Chromedriver installation
-RUN chromedriver --version
+# # Verify Chromedriver installation
+# RUN chromedriver --version
 
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
 #ENTRYPOINT ["/entrypoint.sh"]
