@@ -1,4 +1,4 @@
-#SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: MIT
 FROM python:3.12-bookworm
 
 LABEL maintainer="outdoors@acm.org"
@@ -10,7 +10,6 @@ ENV PATH="/usr/bin/:/usr/local/bin:/usr/lib:${PATH}"
 RUN set -x \
     && apt-get update \
     && apt-get -y install \
-     # --no-install-recommends \
         git \
         bash \
         curl \
@@ -29,17 +28,23 @@ RUN set -x \
         cargo \ 
         chromium \
         chromium-driver \
-        firefox \
         && apt-get clean \ 
     && rm -rf /var/lib/apt/lists/* \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
+# Install Firefox
+RUN FIREFOX_VERSION=$(curl -s https://product-details.mozilla.org/1.0/firefox_versions.json | grep 'LATEST_FIREFOX_VERSION' | cut -d\" -f4) \
+    && wget "https://ftp.mozilla.org/pub/firefox/releases/${FIREFOX_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_VERSION}.tar.bz2" \
+    && tar -xjf "firefox-${FIREFOX_VERSION}.tar.bz2" -C /opt/ \
+    && ln -s /opt/firefox/firefox /usr/local/bin/firefox \
+    && rm "firefox-${FIREFOX_VERSION}.tar.bz2"
+
 # Install Geckodriver
-RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep 'tag_name' | cut -d\" -f4) \
-    && wget "https://github.com/mozilla/geckodriver/releases/download/${GECKODRIVER_VERSION}/geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz" \
-    && tar -xzf "geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz" \
+RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep 'tag_name' | cut -d\" -f4 | sed 's/v//') \
+    && wget "https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz" \
+    && tar -xzf "geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz" \
     && mv geckodriver /usr/local/bin/ \
-    && rm "geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz"
+    && rm "geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz"
 
 # Ensure enough disk space and clean previous installations
 RUN set -x \
@@ -97,6 +102,7 @@ RUN mkdir -p repos/ logs/ /augur/facade/
 COPY ./docker/backend/entrypoint.sh /
 COPY ./docker/backend/init.sh /
 RUN chmod +x /entrypoint.sh /init.sh
+
 # Verify Firefox installation
 RUN firefox --version
 
@@ -108,6 +114,7 @@ RUN chromium --version
 
 # Verify Chromedriver installation
 RUN chromedriver --version
+
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
 #ENTRYPOINT ["/entrypoint.sh"]
 CMD /init.sh
