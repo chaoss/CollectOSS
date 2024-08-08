@@ -19,36 +19,42 @@ RUN set -x \
         musl-dev \
         python3-dev \
         python3-distutils \
-        python3-venv \ 
+        python3-venv \
         wget \
         postgresql-client \
         libpq-dev \
         build-essential \
-        rustc \ 
-        cargo \ 
+        rustc \
+        cargo \
         chromium \
         chromium-driver \
         && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-# Install Firefox
-RUN FIREFOX_VERSION=$(curl -s https://product-details.mozilla.org/1.0/firefox_versions.json | grep 'LATEST_FIREFOX_VERSION' | cut -d\" -f4) \
-    && wget "https://ftp.mozilla.org/pub/firefox/releases/${FIREFOX_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_VERSION}.tar.bz2" \
-    && tar -xjf "firefox-${FIREFOX_VERSION}.tar.bz2" -C /opt/ \
-    && ln -s /opt/firefox/firefox /usr/local/bin/firefox \
-    && rm "firefox-${FIREFOX_VERSION}.tar.bz2"
+# Install Firefox from Debian repositories for ARM64 architecture
+RUN set -x \
+    && apt-get update \
+    && apt-get install -y firefox-esr
 
 # Install Geckodriver
 RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep 'tag_name' | cut -d\" -f4 | sed 's/v//') \
-    && wget "https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz" \
-    && tar -xzf "geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz" \
+    && ARCH=$(uname -m) \
+    && if [ "$ARCH" = "aarch64" ]; then \
+         GECKODRIVER_URL="https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux-aarch64.tar.gz"; \
+         GECKODRIVER_FILE="geckodriver-v${GECKODRIVER_VERSION}-linux-aarch64.tar.gz"; \
+       else \
+         GECKODRIVER_URL="https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz"; \
+         GECKODRIVER_FILE="geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz"; \
+       fi \
+    && wget $GECKODRIVER_URL \
+    && tar -xzf $GECKODRIVER_FILE \
     && mv geckodriver /usr/local/bin/ \
-    && rm "geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz"
+    && rm $GECKODRIVER_FILE
 
-# Ensure enough disk space and clean previous installations
-RUN set -x \
-    rustup self update
+# Verify installations
+RUN firefox --version
+RUN geckodriver --version
 
 # Ensure Rust directories are writable
 RUN mkdir -p /root/.rustup/downloads /root/.cargo/registry && \
@@ -102,19 +108,6 @@ RUN mkdir -p repos/ logs/ /augur/facade/
 COPY ./docker/backend/entrypoint.sh /
 COPY ./docker/backend/init.sh /
 RUN chmod +x /entrypoint.sh /init.sh
-
-# # Verify Firefox installation
-# RUN firefox --version
-
-# # Verify Geckodriver installation
-# RUN geckodriver --version
-
-# # Verify Chromium installation
-# RUN chromium --version
-
-# # Verify Chromedriver installation
-# RUN chromedriver --version
-
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
 #ENTRYPOINT ["/entrypoint.sh"]
 CMD /init.sh
