@@ -29,34 +29,33 @@ RUN set -x \
         cargo \ 
         chromium \
         chromium-driver \
-        firefox \
         && apt-get clean \ 
     && rm -rf /var/lib/apt/lists/* \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-# Install Geckodriver
-RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep 'tag_name' | cut -d\" -f4) \
-    && wget "https://github.com/mozilla/geckodriver/releases/download/${GECKODRIVER_VERSION}/geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz" \
-    && tar -xzf "geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz" \
-    && mv geckodriver /usr/local/bin/ \
-    && rm "geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz"
+
+
+
 
 # Ensure enough disk space and clean previous installations
-RUN set -x \
+RUN set -x \ 
     rustup self update
 
 # Ensure Rust directories are writable
 RUN mkdir -p /root/.rustup/downloads /root/.cargo/registry && \
     chmod -R 777 /root/.rustup /root/.cargo
 
+
+
 # Add rust and cargo to PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Install the specific version of Rust
-RUN set -x \
+RUN set -x \ 
     && rustup install 1.78.0
-RUN set -x \
+RUN set -x \ 
     && rustup default 1.78.0
+
 
 EXPOSE 5000
 
@@ -68,9 +67,18 @@ COPY ./metadata.py .
 COPY ./setup.py .
 COPY ./scripts/ scripts/
 
-# Add rust and cargo to PATH
-ENV PATH="/usr/bin/:/root/.cargo/bin:/usr/local/bin:${PATH}"
+# Install firefox
+RUN set -x \ 
+    && cargo install firefox 
 
+# Install GeckoDriver for Visualization 
+RUN set -x \ 
+    && cargo install geckodriver  --force
+
+# Add rust and cargo to PATH
+ENV PATH="/usr/bin/:/root/.cargo/bin:/root/.cargo/bin/firefox:/root/.cargo/bin/geckodriver:${PATH}"
+
+#COPY ./docker/backend/docker.config.json .
 RUN python3 -m venv /opt/venv
 
 RUN set -x \
@@ -97,17 +105,6 @@ RUN mkdir -p repos/ logs/ /augur/facade/
 COPY ./docker/backend/entrypoint.sh /
 COPY ./docker/backend/init.sh /
 RUN chmod +x /entrypoint.sh /init.sh
-# Verify Firefox installation
-RUN firefox --version
-
-# Verify Geckodriver installation
-RUN geckodriver --version
-
-# Verify Chromium installation
-RUN chromium --version
-
-# Verify Chromedriver installation
-RUN chromedriver --version
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
 #ENTRYPOINT ["/entrypoint.sh"]
 CMD /init.sh
