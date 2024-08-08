@@ -24,4 +24,6 @@ if [[ -d /augur/logs ]]; then
 
 fi
 
+echo $PATH
+
 exec augur backend start
