@@ -57,7 +57,8 @@ def bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, r
     page_count = github_data_access.get_resource_page_count(url)
 
     if page_count > 300:
-        raise Exception(f"Either github raised the paginator page limit for things like events and messages, or is_pagination_limited_by_max_github_pages is being used on a resource that does not have a page limit. Url: {url}")
+        raise Exception(f"Page Count is {page_count}. Either github raised the paginator page limit for things like events and messages, \n 
+                        or is_pagination_limited_by_max_github_pages is being used on a resource that does not have a page limit. Url: {url}")
 
     return page_count != 300
 
