@@ -179,10 +179,13 @@ def analyze_commit(logger, repo_id, repo_loc, commit):
 	#db_local.commit()
 	execute_sql(store_working_commit)
 
+	# commit_message = check_output(
+	# 	f"git --git-dir {repo_loc} log --format=%B -n 1 {commit}".split()
+	# ).strip()
+	
 	commit_message = check_output(
 		f"git --git-dir {repo_loc} log --format=%B -n 1 {commit}".split()
-	).strip()
-	
+	).decode('utf-8').strip()
 
 	msg_record = {
 		'repo_id' : repo_id,
