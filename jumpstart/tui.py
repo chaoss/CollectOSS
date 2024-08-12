@@ -41,13 +41,13 @@ class JumpstartTUI(App):
                 with Vertical(classes="status_container"):
                     with Horizontal(classes="info_container"):
                         yield Label("Frontend")
-                        yield Label(id="frontend_label", classes="status_label label_down")
+                        yield Label(id="frontend_label", classes="status_label")
                     with Horizontal(classes="info_container"):
                         yield Label("API")
-                        yield Label(id="api_label", classes="status_label label_down")
+                        yield Label(id="api_label", classes="status_label")
                     with Horizontal(classes="info_container"):
                         yield Label("Collection")
-                        yield Label(id="collection_label", classes="status_label label_down")
+                        yield Label(id="collection_label", classes="status_label")
                         
                 yield Button("Status", id="statusbtn")
                 yield Button("Exit", variant="error", id="exitbtn")
@@ -97,6 +97,15 @@ class JumpstartTUI(App):
         
         def __str__(self):
             return self.msg
+    
+    class Status(Message):
+        """Notify the UI of an updated status"""
+        
+        def __init__(self, frontend: bool, api: bool, collection: bool):
+            self.f = frontend
+            self.a = api
+            self.c = collection
+            super().__init__()
     
     def action_kb_exit(self, force = False):
         """Called when the user requests to exit"""
@@ -202,9 +211,10 @@ class JumpstartTUI(App):
                             break
                 break
         if packet:
-            pass
+            self.send(**packet)
         else:
             self.error("Unknown command")
+        
 
     @on(Button.Pressed, "#statusbtn")
     def get_status(self):
@@ -213,6 +223,27 @@ class JumpstartTUI(App):
     @on(ServerMessage)
     def server_send(self, carrier: ServerMessage):
         self.send(**carrier.msg)
+        
+    @on(Status)
+    def status_update(self, status):
+        labels = self.query(".status_label")
+        
+        for label in labels:
+            if label.id == "frontend_label":
+                if status.f:
+                    label.add_class("label_up")
+                else:
+                    label.remove_class("label_up")
+            elif label.id == "api_label":
+                if status.a:
+                    label.add_class("label_up")
+                else:
+                    label.remove_class("label_up")
+            elif label.id == "collection_label":
+                if status.c:
+                    label.add_class("label_up")
+                else:
+                    label.remove_class("label_up")
     
     # Server communication
     def send(self, **kwargs):
@@ -314,7 +345,11 @@ class JumpstartTUI(App):
                 elif msg["status"] == "I":
                     info(msg["detail"])
                 elif msg["status"] == "S":
-                    log(msg)
+                    self.post_message(self.Status(
+                        msg["frontend"],
+                        msg["api"],
+                        msg["collection"]
+                    ))
             except json.JSONDecodeError:
                 error("Bad packet from server", "console")
                 log(line)
@@ -336,7 +371,7 @@ def run_app(socket_file = Path("jumpstart.sock"), ctx = None):
         import click
         click.echo("Exited application")
     
-    if app.server_IO:
+    if hasattr(app, "server_IO"):
         app.server.shutdown(sockets.SHUT_RDWR)
         app.server_IO.close()
         app.server.close()

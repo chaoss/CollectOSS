@@ -26,3 +26,10 @@ class CallbackCollection:
             if not callable(cb):
                 raise TypeError("A callback must be callable")
             setattr(self, name, cb)
+
+class UniversalPlaceholder:
+    def __getattr__(self, name, default=...):
+        return self
+    
+    def __call__(self, *args, **kwargs):
+        pass

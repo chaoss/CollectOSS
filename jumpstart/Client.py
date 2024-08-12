@@ -3,11 +3,11 @@ import socket
 import threading
 
 from .Logging import console
-from .utils import synchronized
 from .API import spec, Status, Command
+from .utils import synchronized, CallbackCollection
 
 class JumpstartClient:
-    def __init__(self, sock: socket.socket, wake_lock: threading.Lock, ID: int, callbacks):
+    def __init__(self, sock: socket.socket, wake_lock: threading.Lock, ID: int, callbacks: CallbackCollection):
         self.socket = sock
         self.io = socket.SocketIO(sock, "rw")
         self.lock = wake_lock
@@ -24,18 +24,23 @@ class JumpstartClient:
                 body = json.loads(line)
                 
                 if not "cmd" in body:
-                    self.send(Status.error("Command unspecified"))
+                    self.respond(Status.error("Command unspecified"))
                 
                 cmd = Command.of(body)
                 if cmd == Command.status:
-                    status_dict = cbs.get_status()
+                    status_dict = cbs.status()
                     self.respond(Status.status(status_dict))
                 if cmd == Command.shutdown:
-                    cbs.shutdown()
+                    cbs.shutdown(self)
+                if cmd == Command.start:
+                    cbs.start(body["component"], self, *body.get("options", []))
+                if cmd == Command.stop:
+                    cbs.stop(body["component"], self)
             except json.JSONDecodeError:
-                self.send(Status.error("Invalid JSON"))
+                self.respone(Status.error("Invalid JSON"))
             except Exception as e:
-                self.send(Status.error(str(e)))
+                self.respond(Status.error(str(e)))
+                console.exception("Exception while handling request: " + line)
         
         console.info(f"Disconnect")
         cbs.disconnect(self)
@@ -55,7 +60,7 @@ class JumpstartClient:
     def respond(self, msg: Status):
         if self.io.closed:
             return
-        console.info(msg)
+        # console.info(msg)
         self.io.write((json.dumps(msg) + "\n").encode())
         self.io.flush()
     
@@ -63,4 +68,6 @@ class JumpstartClient:
     def close(self, **kwargs):
         self.send(status="T", **kwargs)
         self.io.close()
-        self.thread.join()
+        
+        if not self.thread is threading.currentThread():
+            self.thread.join()

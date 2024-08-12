@@ -6,53 +6,52 @@ import socket
 import signal
 import logging
 import threading
+
 from pathlib import Path
+from subprocess import Popen, PIPE, STDOUT
 
+from .API import Status
+from .API import Component
 from .Logging import console
+from .procman import ProcessManager
 from .Server import JumpstartServer
-from .utils import synchronized, CallbackCollection
+from .utils import CallbackCollection
+from .utils import UniversalPlaceholder
 
-global server
+global server, manager
 
 def handle_terminate(*args, **kwargs):
     console.info("shutting down")
     
+    manager.stop(Component.all, UniversalPlaceholder())
     server.close()
     
     exit(0)
-
-frontend = False
-collection = False
-
-@synchronized
-def start_component(component) -> bool:
-    """Returns True if the given component was not already running"""
-
-@synchronized
-def stop_component(component) -> bool:
-    """Returns True if the given component was running and was stopped"""
-
-@synchronized
-def get_status():
-    return {
-        "frontend": frontend,
-        "api": frontend,
-        "collection": bool(collection)
-    }
     
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, handle_terminate)
     signal.signal(signal.SIGINT, handle_terminate)
     threading.current_thread().setName("main")
     
-    callbacks = CallbackCollection(start=start_component, stop=stop_component, status=get_status)
+    manager = ProcessManager()
+    
+    callbacks = CallbackCollection(start=manager.start, stop=manager.stop, status=manager.status)
     server = JumpstartServer(callbacks)
     server.start()
     
     while not server.closed():
+        try:
+            manager.refresh()
+        except:
+            console.exception("Exception while refreshing status")
+            server.broadcast("Exception while refreshing status, going down", Status.error)
+            break
+        
         if server.lock.acquire(True, 0.1):
             # The input thread has notified us of a new message
             server.lock.release()
             pass
         else:
             time.sleep(0.1)
+
+    handle_terminate()

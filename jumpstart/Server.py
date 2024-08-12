@@ -2,6 +2,7 @@ import socket
 import threading
 from pathlib import Path
 
+from .API import Status
 from .Logging import console
 from .Client import JumpstartClient as Client
 from .utils import synchronized, CallbackCollection
@@ -51,9 +52,14 @@ class JumpstartServer:
         self.clients.remove(client)
     
     @synchronized
-    def _shutdown_callback(self, client):
-        console.info("Server shutdown requested")
+    def _shutdown_callback(self, client: Client):
+        console.info(f"Server shutdown requested by {client.thread.name}")
         self.close()
+        
+    @synchronized
+    def broadcast(self, msg, level=Status.information):
+        for client in self.clients:
+            client.respond(level(f"BROADCAST: {msg}"))
     
     def start(self):
         self.loop.start()

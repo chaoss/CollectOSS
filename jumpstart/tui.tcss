@@ -31,9 +31,6 @@
 .status_label {
     dock: right;
     width: 2;
-}
-
-.label_down {
     background: red;
 }
 

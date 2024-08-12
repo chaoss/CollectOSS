@@ -1,6 +1,20 @@
 from enum import Enum, EnumMeta, auto
 
-Component = Enum("Component", ["all", "frontend", "api", "collection"])
+class Component(Enum):
+    all = auto()
+    frontend = auto()
+    api = auto()
+    collection = auto()
+    
+    @staticmethod
+    def from_str(s):
+        if isinstance(s, Component):
+            return s
+
+        try:
+            return Component[s]
+        except:
+            return None
 
 class Status(Enum):
     error="E"
