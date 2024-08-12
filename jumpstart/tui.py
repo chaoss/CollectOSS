@@ -113,6 +113,8 @@ class JumpstartTUI(App):
         value = inbox.value
         
         if not value or force:
+            self.server.shutdown(sockets.SHUT_RDWR)
+            self.server_IO.close()
             self.app.exit()
     
     # Logging
@@ -372,6 +374,7 @@ def run_app(socket_file = Path("jumpstart.sock"), ctx = None):
         click.echo("Exited application")
     
     if hasattr(app, "server_IO"):
+        # This is duplicated above in case of partial shutdown
         app.server.shutdown(sockets.SHUT_RDWR)
         app.server_IO.close()
         app.server.close()
