@@ -89,7 +89,7 @@ def collect_pr_and_issues_events_by_number(repo_id, repo_git: str, logger, key_a
         query = text(f"""
             (select pr_src_number as number from pull_requests WHERE repo_id={repo_id} order by pr_created_at desc)
             UNION
-            (select gh_issues_number as number from issues WHERE repo_id={repo_id} order by created_at desc);
+            (select gh_issue_number as number from issues WHERE repo_id={repo_id} order by created_at desc);
         """)
 
         result = connection.execute(query).fetchall()
