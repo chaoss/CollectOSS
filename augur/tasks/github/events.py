@@ -130,7 +130,7 @@ def process_events(events, task_name, repo_id, logger):
     for event in events:
 
         event, contributor = process_github_event_contributors(logger, event, tool_source, tool_version, data_source)
-
+        logger.info(f'This is the event pack: {event}')
         # event_mapping_data is the pr or issue data needed to relate the event to an issue or pr
         event_mapping_data = event["issue"]
 
