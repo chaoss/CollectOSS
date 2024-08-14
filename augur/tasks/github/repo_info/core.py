@@ -14,12 +14,21 @@ from urllib.parse import quote
 
 def query_committers_count(key_auth, logger, owner, repo):
 
+    data = {}
     logger.info('Querying committers count\n')
     url = f'https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100'
-
-    github_data_access = GithubDataAccess(key_auth, logger)
     
-    return github_data_access.get_resource_count(url)
+    try: 
+        github_data_access = GithubDataAccess(key_auth, logger)
+        data = github_data_access.get_resource_count(url) 
+        if not data: 
+            logger.warning("The API Returned an empty JSON object.")
+        else: 
+            logger.warning("Committer count data returned in JSON")
+    except ValueError: 
+        logger.warning("The API did not return valid JSON for committer count.")
+    
+    return data 
 
 def get_repo_data(logger, url, response):
     data = {}
