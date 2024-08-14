@@ -20,13 +20,18 @@ def query_committers_count(key_auth, logger, owner, repo):
     
     try: 
         github_data_access = GithubDataAccess(key_auth, logger)
-        data = github_data_access.get_resource_count(url) 
+        try: 
+            data = github_data_access.get_resource_count(url) 
+        except Exception as e: 
+            logger.warning(f"JSON Decode error: {e} indicating there are no committers or the repository is empty or archived.")
+            data = 0 
+            pass 
         if not data: 
             logger.warning("The API Returned an empty JSON object.")
         else: 
             logger.warning("Committer count data returned in JSON")
     except ValueError: 
-        logger.warning("The API did not return valid JSON for committer count.")
+        logger.warning("The API did not return valid JSON for committer count. This usually occurs on empty or archived repositories.")
         data=0
     
     return data 
