@@ -27,6 +27,7 @@ def query_committers_count(key_auth, logger, owner, repo):
             logger.warning("Committer count data returned in JSON")
     except ValueError: 
         logger.warning("The API did not return valid JSON for committer count.")
+        data=0
     
     return data 
 
