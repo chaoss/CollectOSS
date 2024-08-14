@@ -130,11 +130,15 @@ def process_events(events, task_name, repo_id, logger):
     for event in events:
 
         event, contributor = process_github_event_contributors(logger, event, tool_source, tool_version, data_source)
-        logger.info(f'This is the event pack: {event}')
+        #logger.info(f'This is the event pack: {event}')
         # event_mapping_data is the pr or issue data needed to relate the event to an issue or pr
         
-        if event["issue"] is not None: 
-            event_mapping_data = event["issue"] 
+        if 'issue' in event: 
+            if event["issue"] is not None: 
+                event_mapping_data = event["issue"] 
+        else: 
+            event_mapping_data = None 
+            logger.warning(f'issue is not a value in event JSON: {event}')
 
         if event_mapping_data is None:
             not_mapable_event_count += 1
