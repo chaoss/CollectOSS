@@ -3,6 +3,7 @@ import traceback
 from augur.tasks.git.dependency_tasks.core import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask, AugurSecondaryRepoCollectionTask
+from augur.tasks.util.metadata_exception import MetadataException 
 
 
 @celery.task(base=AugurFacadeRepoCollectionTask)
