@@ -21,11 +21,13 @@ def process_ossf_dependency_metrics(self, repo_git):
     
     logger = logging.getLogger(process_ossf_dependency_metrics.__name__)
 
-    try: 
+    try:
         generate_scorecard(logger, repo_git)
-    except Exception as e: 
+    except Exception as e:
         logger.warning(f'Exception generating scorecard: {e}')
-        raise MetadataException 
+        tracer = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
+        logger.warning(f'Full stack trace of OpenSSF scorecard error: {tracer}')
+        raise MetadataException(f"An error occurred while generating the scorecard: {str(e)}")
     
     """
         This try/except block is an attempt to get more information about this occasional error: 
