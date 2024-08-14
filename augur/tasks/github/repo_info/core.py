@@ -17,7 +17,8 @@ def query_committers_count(key_auth, logger, owner, repo):
     data = {}
     logger.info('Querying committers count\n')
     url = f'https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100'
-    
+    ## If the repository is empty there are zero committers, and the API returns nothing at all. Response 
+    ## header of 200 along with an empty JSON. 
     try: 
         github_data_access = GithubDataAccess(key_auth, logger)
         try: 
