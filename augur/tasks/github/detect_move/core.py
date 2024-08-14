@@ -115,7 +115,7 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
 
 
         session.commit()
-        raise Exception("ERROR: Repo has moved! Resetting Collection!")
+        raise Exception("ERROR: Repo has moved, and there is no redirection! 404 returned, not 301. Resetting Collection!")
 
 
     if attempts >= 10:
