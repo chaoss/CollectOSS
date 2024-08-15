@@ -4,7 +4,7 @@ import sqlalchemy as s
 from datetime import datetime
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.github.util.github_data_access import GithubDataAccess
+from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.application.db.models import ContributorRepo
 from augur.application.db.lib import bulk_insert_dicts
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
@@ -100,17 +100,22 @@ def contributor_breadth_model(self) -> None:
             
 
         cntrb_events = []
-        for event in github_data_access.paginate_resource(repo_cntrb_url):
+        try:
+            for event in github_data_access.paginate_resource(repo_cntrb_url):
 
-            cntrb_events.append(event)
+                cntrb_events.append(event)
 
-            event_age = datetime.strptime(event["created_at"], "%Y-%m-%dT%H:%M:%SZ")
-            if event_age < newest_event_in_db:
-                logger.info("Found cntrb events we already have...skipping the rest")
-                break
+                event_age = datetime.strptime(event["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+                if event_age < newest_event_in_db:
+                    logger.info("Found cntrb events we already have...skipping the rest")
+                    break
 
-        if len(cntrb_events) == 0:
-            logger.info("There are no cntrb events, or new events for this user.\n")
+            if len(cntrb_events) == 0:
+                logger.info("There are no cntrb events, or new events for this user.\n")
+                continue
+
+        except UrlNotFoundException as e:
+            logger.warning(e)
             continue
 
         events = process_contributor_events(cntrb, cntrb_events, logger, tool_source, tool_version, data_source)

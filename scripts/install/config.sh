@@ -83,10 +83,25 @@ function get_facade_repo_path() {
         facade_repo_directory=$(realpath $facade_repo_directory)
         echo
 
-        if ! [ -w $facade_repo_directory/.git-credentials ]; then
-            echo "User $(whoami) does not have permission to write to that location"
+        # if ! [ -w $facade_repo_directory/.git-credentials ]; then
+        #     echo "User $(whoami) does not have permission to write to that location"
+        #     echo "Please select another location"
+        #     continue
+        # fi
+
+        # Check if the file exists and create it if it doesn't
+        if [ ! -f "$facade_repo_directory/.git-credentials" ]; then
+            echo "File .git-credentials does not exist. Creating it..."
+            touch "$facade_repo_directory/.git-credentials"
+        fi
+
+        # Check for write permissions
+        if ! [ -w "$facade_repo_directory/.git-credentials" ]; then
+            echo "User $(whoami) does not have permission to write to $facade_repo_directory/.git-credentials"
             echo "Please select another location"
             continue
+        else
+            echo "Permission check passed for $facade_repo_directory/.git-credentials"
         fi
 
         if [[ -d "$facade_repo_directory" ]]; then

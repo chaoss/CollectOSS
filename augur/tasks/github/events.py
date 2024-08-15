@@ -50,14 +50,14 @@ def collect_events(repo_git: str):
 
 def bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, repo):
 
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues/events?per_page=100"
 
     github_data_access = GithubDataAccess(key_auth, logger)
 
     page_count = github_data_access.get_resource_page_count(url)
 
     if page_count > 300:
-        raise Exception(f"Either github raised the paginator page limit for things like events and messages, or is_pagination_limited_by_max_github_pages is being used on a resource that does not have a page limit. Url: {url}")
+        raise Warning(f"Page Count is {page_count}. Either github raised the paginator page limit for things like events and messages, or is_pagination_limited_by_max_github_pages is being used on a resource that does not have a page limit. Url: {url}")
 
     return page_count != 300
 
@@ -89,7 +89,7 @@ def collect_pr_and_issues_events_by_number(repo_id, repo_git: str, logger, key_a
         query = text(f"""
             (select pr_src_number as number from pull_requests WHERE repo_id={repo_id} order by pr_created_at desc)
             UNION
-            (select gh_issues_number as number from issues WHERE repo_id={repo_id} order by created_at desc);
+            (select gh_issue_number as number from issues WHERE repo_id={repo_id} order by created_at desc);
         """)
 
         result = connection.execute(query).fetchall()
@@ -130,9 +130,15 @@ def process_events(events, task_name, repo_id, logger):
     for event in events:
 
         event, contributor = process_github_event_contributors(logger, event, tool_source, tool_version, data_source)
-
+        #logger.info(f'This is the event pack: {event}')
         # event_mapping_data is the pr or issue data needed to relate the event to an issue or pr
-        event_mapping_data = event["issue"]
+        
+        if 'issue' in event: 
+            if event["issue"] is not None: 
+                event_mapping_data = event["issue"] 
+        else: 
+            event_mapping_data = None 
+            logger.warning(f'issue is not a value in event JSON: {event}')
 
         if event_mapping_data is None:
             not_mapable_event_count += 1
