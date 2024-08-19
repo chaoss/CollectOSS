@@ -50,7 +50,7 @@ def collect_events(repo_git: str):
 
 def bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, repo):
 
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues/events?per_page=100"
 
     github_data_access = GithubDataAccess(key_auth, logger)
 
