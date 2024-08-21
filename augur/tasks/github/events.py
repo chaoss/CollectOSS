@@ -216,3 +216,200 @@ def process_github_event_contributors(logger, event, tool_source, tool_version, 
     
     return event, event_cntrb
 
+import abc
+class NotMappableException(Exception):
+    pass
+
+class GithubEventCollection(abc.ABC):
+    
+    def __init__(self, logger):
+        self.logger = logger
+        self.tool_source = "Github events task"
+        self.tool_version = "2.0"
+        self.data_source = "Github API"
+
+    @abc.abstractmethod
+    def process_events(self, events, repo_id):
+        pass
+
+    @abc.abstractmethod
+    def collect_events(self, repo_git: str, key_auth):
+        pass
+
+    def run(self, repo_git, key_auth):
+        repo_obj = get_repo_by_repo_git(repo_git)
+        repo_id = repo_obj.repo_id
+
+        owner, repo = get_owner_repo(repo_git)
+        self.repo_identifier = f"{owner}/{repo}"
+
+        events = []
+        for event in self.collect_events(repo_git, key_auth):
+            events.append(event)
+
+            # making this a decent size since process_events retrieves all the issues and prs each time
+            if len(events) >= 500:
+                self.process_events(events, repo_id)
+                events.clear()
+
+        if events:
+            self.process_events(events, repo_id)
+
+    def insert_issue_events(self, events):
+        issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
+        bulk_insert_dicts(self.logger, events, IssueEvent, issue_event_natural_keys)
+
+    def insert_pr_events(self, events):
+        pr_event_natural_keys = ["node_id"]
+        bulk_insert_dicts(self.logger, events, PullRequestEvent, pr_event_natural_keys)
+
+    def insert_contributors(self, contributors):
+        bulk_insert_dicts(self.logger, contributors, Contributor, ["cntrb_id"])
+
+
+class BulkGithubEventCollection(GithubEventCollection):
+
+    def __init__(self, logger):
+
+        self.task_name = f"Bulk Github Event task"
+        self.repo_identifier = ""
+
+        super().__init__(logger)
+        
+    def collect_events(self, repo_git: str, key_auth):
+
+        owner, repo = get_owner_repo(repo_git)
+
+        self.logger.debug(f"Collecting Github events for {owner}/{repo}")
+
+        url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
+            
+        github_data_access = GithubDataAccess(key_auth, self.logger)
+
+        return github_data_access.paginate_resource(url)    
+
+    def process_events(self, events, repo_id):
+
+        issue_events = []
+        pr_events = []
+        not_mappable_events = []
+        for event in events:
+
+            try:
+                if self.__is_pr_event(event):
+                    pr_events.append(event)
+                else:
+                    issue_events.append(event)
+            except NotMappableException:
+                not_mappable_events.append(event)
+
+        self.logger.warning(f"{self.repo_identifier} - {self.task_name}: Unable to map these github events to an issue or pr: {not_mappable_events}")
+
+        self.__process_issue_events(issue_events, repo_id)
+        self.__process_pr_events(pr_events, repo_id)
+
+        update_issue_closed_cntrbs_by_repo_id(repo_id)
+
+    def __process_issue_events(self, issue_events, repo_id):
+        
+        issue_event_dicts = []
+        contributors = []
+
+        issue_url_to_id_map = self.__get_map_from_issue_url_to_id(repo_id)
+
+        for event in issue_events:
+
+            event, contributor = process_github_event_contributors(self.logger, event, self.tool_source, self.tool_version, self.data_source)
+
+            issue_url = event["issue"]["url"]
+
+            try:
+                issue_id = issue_url_to_id_map[issue_url]
+            except KeyError:
+                self.logger.warning(f"{self.repo_identifier} - {self.task_name}: Could not find related issue. We were searching for: {issue_url}")
+                continue
+
+            issue_event_dicts.append(
+                extract_issue_event_data(event, issue_id, platform_id, repo_id,
+                                        self.tool_source, self.tool_version, self.data_source)
+            )
+
+            if contributor:
+                contributors.append(contributor)
+
+        contributors = remove_duplicate_dicts(contributors)
+
+        self.insert_contributors(contributors)
+
+        self.insert_issue_events(issue_event_dicts)
+
+    def __process_pr_events(self, pr_events, repo_id):
+                
+        pr_event_dicts = []
+        contributors = []
+
+        pr_url_to_id_map = self.__get_map_from_pr_url_to_id(repo_id)
+
+        for event in pr_events:
+
+            event, contributor = process_github_event_contributors(self.logger, event, self.tool_source, self.tool_version, self.data_source)
+
+            pr_url = event["issue"]["pull_request"]["url"]
+
+            try:
+                pull_request_id = pr_url_to_id_map[pr_url]
+            except KeyError:
+                self.logger.warning(f"{self.repo_identifier} - {self.task_name}: Could not find related pr. We were searching for: {pr_url}")
+                continue
+
+            pr_event_dicts.append(
+                extract_pr_event_data(event, pull_request_id, platform_id, repo_id,
+                                    self.tool_source, self.tool_version, self.data_source)
+            )
+
+            if contributor:
+                contributors.append(contributor)
+
+        contributors = remove_duplicate_dicts(contributors)
+
+        self.insert_contributors(contributors)
+
+        self.insert_pr_events(pr_event_dicts)
+
+    def __get_map_from_pr_url_to_id(self, repo_id):
+
+        pr_url_to_id_map = {}
+        prs = get_pull_requests_by_repo_id(repo_id)
+        for pr in prs:            
+            pr_url_to_id_map[pr.pr_url] = pr.pull_request_id
+
+        return pr_url_to_id_map
+    
+    def __get_map_from_issue_url_to_id(self, repo_id):
+
+        issue_url_to_id_map = {}
+        issues = get_issues_by_repo_id(repo_id)
+        for issue in issues:
+            issue_url_to_id_map[issue.issue_url] = issue.issue_id
+
+        return issue_url_to_id_map
+
+    def __is_pr_event(self, event):
+
+        if event["issue"] is None:
+            raise NotMappableException("Not mappable to pr or issue")
+
+        return event["issue"].get('pull_request', None) != None
+
+
+class ThoroughGithubEventCollection(GithubEventCollection):
+
+    def __init__(self, logger):
+        super().__init__(logger)
+
+    def collect_events(self, repo_git: str, key_auth):
+        pass
+
+    def process_events(self, events, repo_id):
+        pass
+
