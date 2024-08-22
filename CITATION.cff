@@ -1,33 +1,12 @@
 # This CITATION.cff reference content was generated from Zotero.
 references:
-  - title: >-
+  - title: >
       Open Source Community Health: Analytical Metrics and Their Corresponding Narratives
-    type: conferencePaper
-    collection-title: 2021 IEEE/ACM 4th International Workshop on Software Health in Projects, Ecosystems and Communities (SoHeal)
+    type: conference-paper
+    event: 2021 IEEE/ACM 4th International Workshop on Software Health in Projects, Ecosystems and Communities (SoHeal)
     pages: 25–33
     publisher: IEEE Computer Society
     authors: 
-      - family-names: Goggins
-        given-names: Sean
-      - family-names: Lumbard
-        given-names: Kevin
-      - family-names: Germonprez
-        given-names: Matt
-    editors: 
-      - family-names: Goggins
-        given-names: Sean
-      - family-names: Lumbard
-        given-names: Kevin
-      - family-names: Germonprez
-        given-names: Matt
-    recipients: 
-      - family-names: Goggins
-        given-names: Sean
-      - family-names: Lumbard
-        given-names: Kevin
-      - family-names: Germonprez
-        given-names: Matt
-    translators: 
       - family-names: Goggins
         given-names: Sean
       - family-names: Lumbard
