@@ -1,0 +1,81 @@
+# This CITATION.cff reference content was generated from Zotero.
+references:
+  - title: >-
+      Open Source Community Health: Analytical Metrics and Their Corresponding Narratives
+    type: conferencePaper
+    collection-title: 2021 IEEE/ACM 4th International Workshop on Software Health in Projects, Ecosystems and Communities (SoHeal)
+    pages: 25–33
+    publisher: IEEE Computer Society
+    authors: 
+      - family-names: Goggins
+        given-names: Sean
+      - family-names: Lumbard
+        given-names: Kevin
+      - family-names: Germonprez
+        given-names: Matt
+    editors: 
+      - family-names: Goggins
+        given-names: Sean
+      - family-names: Lumbard
+        given-names: Kevin
+      - family-names: Germonprez
+        given-names: Matt
+    recipients: 
+      - family-names: Goggins
+        given-names: Sean
+      - family-names: Lumbard
+        given-names: Kevin
+      - family-names: Germonprez
+        given-names: Matt
+    translators: 
+      - family-names: Goggins
+        given-names: Sean
+      - family-names: Lumbard
+        given-names: Kevin
+      - family-names: Germonprez
+        given-names: Matt
+    date-published: 2021
+
+# This CITATION.cff reference content was generated from Zotero.
+references:
+  - title: >-
+      Making Open Source Project Health Transparent
+    type: journalArticle
+    issn: 1558-0814
+    issue: 08
+    pages: 104-111
+    volume: 54
+    keywords: 
+      - open source software
+    authors: 
+      - family-names: Goggins
+        given-names: S.
+      - family-names: Germonprez
+        given-names: M.
+      - family-names: Lumbard
+        given-names: K.
+    editors: 
+      - family-names: Goggins
+        given-names: S.
+      - family-names: Germonprez
+        given-names: M.
+      - family-names: Lumbard
+        given-names: K.
+    recipients: 
+      - family-names: Goggins
+        given-names: S.
+      - family-names: Germonprez
+        given-names: M.
+      - family-names: Lumbard
+        given-names: K.
+    translators: 
+      - family-names: Goggins
+        given-names: S.
+      - family-names: Germonprez
+        given-names: M.
+      - family-names: Lumbard
+        given-names: K.
+    date-published: 2021
+    identifiers: 
+      - type: doi
+        value: 10.1109/MC.2021.3084015
