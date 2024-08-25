@@ -228,15 +228,42 @@ class GithubEventCollection(abc.ABC):
         self.tool_version = "2.0"
         self.data_source = "Github API"
 
-    @abc.abstractmethod
-    def process_events(self, events, repo_id):
-        pass
+    def insert_issue_events(self, events):
+        issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
+        bulk_insert_dicts(self.logger, events, IssueEvent, issue_event_natural_keys)
 
-    @abc.abstractmethod
-    def collect_events(self, repo_git: str, key_auth):
-        pass
+    def insert_pr_events(self, events):
+        pr_event_natural_keys = ["node_id"]
+        bulk_insert_dicts(self.logger, events, PullRequestEvent, pr_event_natural_keys)
 
-    def run(self, repo_git, key_auth):
+    def insert_contributors(self, contributors):
+        bulk_insert_dicts(self.logger, contributors, Contributor, ["cntrb_id"])
+
+    def process_github_event_contributors(self, event):
+
+        if event["actor"]:
+
+            event_cntrb = extract_needed_contributor_data(event["actor"], self.tool_source, self.tool_version, self.data_source)
+            event["cntrb_id"] = event_cntrb["cntrb_id"]
+
+        else:
+            event["cntrb_id"] = None
+            return event, None
+        
+        return event, event_cntrb
+
+
+class BulkGithubEventCollection(GithubEventCollection):
+
+    def __init__(self, logger):
+
+        self.task_name = f"Bulk Github Event task"
+        self.repo_identifier = ""
+
+        super().__init__(logger)
+
+    def collect(self, repo_git, key_auth):
+
         repo_obj = get_repo_by_repo_git(repo_git)
         repo_id = repo_obj.repo_id
 
@@ -251,30 +278,9 @@ class GithubEventCollection(abc.ABC):
             if len(events) >= 500:
                 self.process_events(events, repo_id)
                 events.clear()
-
+    
         if events:
             self.process_events(events, repo_id)
-
-    def insert_issue_events(self, events):
-        issue_event_natural_keys = ["issue_id", "issue_event_src_id"]
-        bulk_insert_dicts(self.logger, events, IssueEvent, issue_event_natural_keys)
-
-    def insert_pr_events(self, events):
-        pr_event_natural_keys = ["node_id"]
-        bulk_insert_dicts(self.logger, events, PullRequestEvent, pr_event_natural_keys)
-
-    def insert_contributors(self, contributors):
-        bulk_insert_dicts(self.logger, contributors, Contributor, ["cntrb_id"])
-
-
-class BulkGithubEventCollection(GithubEventCollection):
-
-    def __init__(self, logger):
-
-        self.task_name = f"Bulk Github Event task"
-        self.repo_identifier = ""
-
-        super().__init__(logger)
         
     def collect_events(self, repo_git: str, key_auth):
 
@@ -319,7 +325,7 @@ class BulkGithubEventCollection(GithubEventCollection):
 
         for event in issue_events:
 
-            event, contributor = process_github_event_contributors(self.logger, event, self.tool_source, self.tool_version, self.data_source)
+            event, contributor = self.process_github_event_contributors(event)
 
             issue_url = event["issue"]["url"]
 
@@ -352,7 +358,7 @@ class BulkGithubEventCollection(GithubEventCollection):
 
         for event in pr_events:
 
-            event, contributor = process_github_event_contributors(self.logger, event, self.tool_source, self.tool_version, self.data_source)
+            event, contributor = self.process_github_event_contributors(event)
 
             pr_url = event["issue"]["pull_request"]["url"]
 
@@ -363,7 +369,7 @@ class BulkGithubEventCollection(GithubEventCollection):
                 continue
 
             pr_event_dicts.append(
-                extract_pr_event_data(event, pull_request_id, platform_id, repo_id,
+                extract_pr_event_data(event, pull_request_id, int(event['issue']["id"]), platform_id, repo_id,
                                     self.tool_source, self.tool_version, self.data_source)
             )
 
@@ -407,9 +413,107 @@ class ThoroughGithubEventCollection(GithubEventCollection):
     def __init__(self, logger):
         super().__init__(logger)
 
-    def collect_events(self, repo_git: str, key_auth):
-        pass
+    def run(self, repo_git, key_auth):
 
-    def process_events(self, events, repo_id):
-        pass
+        repo_obj = get_repo_by_repo_git(repo_git)
+        repo_id = repo_obj.repo_id
 
+        owner, repo = get_owner_repo(repo_git)
+        self.repo_identifier = f"{owner}/{repo}"
+
+        self.collect_issue_events(owner, repo, repo_id, key_auth)
+        self.collect_pr_events(owner, repo, repo_id, key_auth)
+
+    def collect_and_process_issue_events(self, owner, repo, repo_id, key_auth):
+
+        # define logger for task
+        self.logger.debug(f"Collecting github events for {owner}/{repo}")
+
+        engine = get_engine()
+
+        with engine.connect() as connection:
+
+            # TODO: Remove src id if it ends up not being needed
+            query = text(f"""
+                select issue_id as issue_id, gh_issue_number as issue_number, gh_issue_id as gh_src_id  from issues WHERE repo_id={repo_id} order by created_at desc;
+            """)
+
+            issue_result = connection.execute(query).fetchall()
+
+        events = []
+        contributors = []
+        github_data_access = GithubDataAccess(key_auth, self.logger)
+        for db_issue in issue_result:
+            issue = dict(db_issue)
+
+            issue_number = issue["issue_number"]
+
+            event_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/events"
+            
+            for event in github_data_access.paginate_resource(event_url):
+
+                event, contributor = self.process_github_event_contributors(event)
+
+                contributors.append(contributor)
+
+                events.append(
+                    extract_issue_event_data(event, issue["issue_id"], platform_id, repo_id,
+                                        self.tool_source, self.tool_version, self.data_source)
+                )
+
+            if len(events) > 500:
+                self.insert_contributors(contributors)
+                self.insert_issue_events(events)
+                events.clear()
+        
+        if events:
+            self.insert_contributors(contributors)
+            self.insert_issue_events(events)
+            events.clear()
+            
+
+    def collect_and_process_pr_events(self, owner, repo, repo_id, key_auth):
+
+        # define logger for task
+        self.logger.debug(f"Collecting github events for {owner}/{repo}")
+
+        engine = get_engine()
+
+        with engine.connect() as connection:
+
+            query = text(f"""
+                select pull_request_id, pr_src_number as gh_pr_number, pr_src_id from pull_requests order by pr_created_at desc; from pull_requests WHERE repo_id={repo_id} order by pr_created_at desc;
+            """)
+
+            pr_result = connection.execute(query).fetchall()
+
+        events = []
+        contributors = []
+        github_data_access = GithubDataAccess(key_auth, self.logger)
+        for db_pr in pr_result:
+            pr = dict(db_pr)
+
+            pr_number = pr["gh_pr_number"]
+
+            event_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{pr_number}/events"
+            
+            for event in github_data_access.paginate_resource(event_url):
+
+                event, contributor = self.process_github_event_contributors(event)
+
+                contributors.append(contributor)
+
+                events.append(
+                    extract_pr_event_data(event, pr["pull_request_id"], pr["pr_src_id"] , platform_id, repo_id,
+                                        self.tool_source, self.tool_version, self.data_source)
+                )
+
+            if len(events) > 500:
+                self.insert_contributors(contributors)
+                self.insert_pr_events(events)
+                events.clear()
+        
+        if events:
+            self.insert_contributors(contributors)
+            self.insert_pr_events(events)
+            events.clear()
