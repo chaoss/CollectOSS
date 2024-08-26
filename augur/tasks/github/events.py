@@ -110,7 +110,7 @@ class BulkGithubEventCollection(GithubEventCollection):
 
             # making this a decent size since process_events retrieves all the issues and prs each time
             if len(events) >= 500:
-                self.process_events(events, repo_id)
+                self._process_events(events, repo_id)
                 events.clear()
     
         if events:
@@ -252,8 +252,8 @@ class ThoroughGithubEventCollection(GithubEventCollection):
         owner, repo = get_owner_repo(repo_git)
         self.repo_identifier = f"{owner}/{repo}"
 
-        self._collect_issue_events(owner, repo, repo_id, key_auth)
-        self._collect_pr_events(owner, repo, repo_id, key_auth)
+        self._collect_and_process_issue_events(owner, repo, repo_id, key_auth)
+        self._collect_and_process_pr_events(owner, repo, repo_id, key_auth)
 
     def _collect_and_process_issue_events(self, owner, repo, repo_id, key_auth):
 
@@ -272,7 +272,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
         contributors = []
         github_data_access = GithubDataAccess(key_auth, self._logger)
         for db_issue in issue_result:
-            issue = dict(db_issue)
+            issue = db_issue._asdict()
 
             issue_number = issue["issue_number"]
 
@@ -316,7 +316,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
         contributors = []
         github_data_access = GithubDataAccess(key_auth, self._logger)
         for db_pr in pr_result:
-            pr = dict(db_pr)
+            pr = db_pr._asdict()
 
             pr_number = pr["gh_pr_number"]
 
