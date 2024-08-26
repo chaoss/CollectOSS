@@ -283,7 +283,8 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
                 event, contributor = self._process_github_event_contributors(event)
 
-                contributors.append(contributor)
+                if contributor:
+                    contributors.append(contributor)
 
                 events.append(
                     extract_issue_event_data(event, issue["issue_id"], platform_id, repo_id,
@@ -327,7 +328,8 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
                 event, contributor = self._process_github_event_contributors(event)
 
-                contributors.append(contributor)
+                if contributor:
+                    contributors.append(contributor)
 
                 events.append(
                     extract_pr_event_data(event, pr["pull_request_id"], pr["pr_src_id"] , platform_id, repo_id,
