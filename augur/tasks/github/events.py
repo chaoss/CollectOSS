@@ -33,7 +33,7 @@ def collect_events(repo_git: str):
     else:
         collection_strategy = ThoroughGithubEventCollection(logger)
 
-    collection_strategy.collect()
+    collection_strategy.collect(repo_git, key_auth)
 
 def bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, repo):
 
