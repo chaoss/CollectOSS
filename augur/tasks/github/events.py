@@ -141,7 +141,8 @@ class BulkGithubEventCollection(GithubEventCollection):
             except NotMappableException:
                 not_mappable_events.append(event)
 
-        self._logger.warning(f"{self.repo_identifier} - {self.task_name}: Unable to map these github events to an issue or pr: {not_mappable_events}")
+        if not_mappable_events:
+            self._logger.warning(f"{self.repo_identifier} - {self.task_name}: Unable to map these github events to an issue or pr: {not_mappable_events}")
 
         self._process_issue_events(issue_events, repo_id)
         self._process_pr_events(pr_events, repo_id)
