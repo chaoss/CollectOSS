@@ -252,8 +252,8 @@ class ThoroughGithubEventCollection(GithubEventCollection):
         owner, repo = get_owner_repo(repo_git)
         self.repo_identifier = f"{owner}/{repo}"
 
-        self.collect_issue_events(owner, repo, repo_id, key_auth)
-        self.collect_pr_events(owner, repo, repo_id, key_auth)
+        self._collect_issue_events(owner, repo, repo_id, key_auth)
+        self._collect_pr_events(owner, repo, repo_id, key_auth)
 
     def _collect_and_process_issue_events(self, owner, repo, repo_id, key_auth):
 
