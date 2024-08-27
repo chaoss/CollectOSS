@@ -75,7 +75,9 @@ GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
 
 **If you're using PostgreSQL 15 or later**, default database permissions will prevent Augur's installer from configuring the database. Add one last line after the above to fix this:
 ```sql
-GRANT ALL ON SCHEMA public TO augur;
+\connect augur
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO augur;
+GRANT ALL PRIVILEGES ON SCHEMA public TO augur;
 ```
 
 After that, return to your user by exiting `psql`
