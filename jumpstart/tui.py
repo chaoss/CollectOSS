@@ -41,15 +41,16 @@ class JumpstartTUI(App):
                 with Vertical(classes="status_container"):
                     with Horizontal(classes="info_container"):
                         yield Label("Frontend")
-                        yield Label(id="frontend_label", classes="status_label")
+                        yield Label("X", id="frontend_label", classes="status_label")
                     with Horizontal(classes="info_container"):
                         yield Label("API")
-                        yield Label(id="api_label", classes="status_label")
+                        yield Label("X", id="api_label", classes="status_label")
                     with Horizontal(classes="info_container"):
                         yield Label("Collection")
-                        yield Label(id="collection_label", classes="status_label")
+                        yield Label("X", id="collection_label", classes="status_label")
                         
-                yield Button("Status", id="statusbtn")
+                yield Button("Start", id="startbtn")
+                yield Button("Stop", id="stopbtn")
                 yield Button("Exit", variant="error", id="exitbtn")
             
             with Vertical():

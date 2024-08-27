@@ -41,6 +41,12 @@ class ProcessManager:
             client.respond(Status.error(f"Invalid component for start: {component}"))
             return
         
+        check_db = run("augur db test-connection".split())
+        
+        if check_db.returncode != 0:
+            client.respond(Status.error(f"Could not communicate with the database: {check_db.returncode}"))
+            return
+        
         if c in (Component.api, Component.frontend, Component.all):
             if self.frontend:
                 client.respond(Status.information(f"The frontend/api is already running"))

@@ -32,10 +32,13 @@
     dock: right;
     width: 2;
     background: red;
+    color: black;
+    text-align: center;
 }
 
 .label_up {
     background: green;
+    color: green;
 }
 
 #exitbtn {
