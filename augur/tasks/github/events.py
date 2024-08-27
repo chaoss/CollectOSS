@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_data_access import GithubDataAccess
+from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
@@ -280,17 +280,20 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
             event_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/events"
             
-            for event in github_data_access.paginate_resource(event_url):
+            try:
+                for event in github_data_access.paginate_resource(event_url):
 
-                event, contributor = self._process_github_event_contributors(event)
+                    event, contributor = self._process_github_event_contributors(event)
 
-                if contributor:
-                    contributors.append(contributor)
+                    if contributor:
+                        contributors.append(contributor)
 
-                events.append(
-                    extract_issue_event_data(event, issue["issue_id"], platform_id, repo_id,
-                                        self._tool_source, self._tool_version, self._data_source)
-                )
+                    events.append(
+                        extract_issue_event_data(event, issue["issue_id"], platform_id, repo_id,
+                                            self._tool_source, self._tool_version, self._data_source)
+                    )
+            except UrlNotFoundException as e:
+                self._logger.warning(f"{self.repo_identifier}: Url not found for {event_url}")
 
             if len(events) > 500:
                 self._insert_contributors(contributors)
