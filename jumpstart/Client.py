@@ -37,7 +37,7 @@ class JumpstartClient:
                 if cmd == Command.stop:
                     cbs.stop(body["component"], self)
             except json.JSONDecodeError:
-                self.respone(Status.error("Invalid JSON"))
+                self.respond(Status.error("Invalid JSON"))
             except Exception as e:
                 self.respond(Status.error(str(e)))
                 console.exception("Exception while handling request: " + line)
