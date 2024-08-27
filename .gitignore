@@ -10,6 +10,7 @@ augur_export_env.sh
 config.yml
 reports.yml
 *.pid
+*.sock
 
 node_modules/
 .idea/

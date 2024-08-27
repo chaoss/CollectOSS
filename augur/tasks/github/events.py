@@ -155,6 +155,7 @@ class BulkGithubEventCollection(GithubEventCollection):
         issue_event_dicts = []
         contributors = []
 
+
         issue_url_to_id_map = self._get_map_from_issue_url_to_id(repo_id)
 
         for event in issue_events:
@@ -199,6 +200,7 @@ class BulkGithubEventCollection(GithubEventCollection):
             try:
                 pull_request_id = pr_url_to_id_map[pr_url]
             except KeyError:
+
                 self._logger.warning(f"{self.repo_identifier} - {self.task_name}: Could not find related pr. We were searching for: {pr_url}")
                 continue
 
@@ -281,6 +283,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
             event_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/events"
             
             try:
+
                 for event in github_data_access.paginate_resource(event_url):
 
                     event, contributor = self._process_github_event_contributors(event)
