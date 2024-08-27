@@ -30,7 +30,6 @@ class AugurMultiCommand(click.MultiCommand):
 
         # Check that the command exists before importing
         if not cmdfile.is_file():
-
             return
 
         # Prefer to raise exception instead of silcencing it

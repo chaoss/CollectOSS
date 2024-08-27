@@ -283,7 +283,7 @@ def extract_pr_review_message_ref_data(comment: dict, augur_pr_review_id, github
     return pr_review_comment_message_ref
 
 
-def extract_pr_event_data(event: dict, pr_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
+def extract_pr_event_data(event: dict, pr_id: int, gh_src_id: int, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
 
     pr_event = {
         'pull_request_id': pr_id,
@@ -291,13 +291,13 @@ def extract_pr_event_data(event: dict, pr_id: int, platform_id: int, repo_id: in
         'action': event['event'],
         'action_commit_hash': None,
         'created_at': event['created_at'],
-        'issue_event_src_id': int(event['issue']["id"]),
+        'issue_event_src_id': gh_src_id,
         'node_id': event['node_id'],
         'node_url': event['url'],
         'tool_source': tool_source,
         'tool_version': tool_version,
         'data_source': data_source,
-        'pr_platform_event_id': int(event['issue']["id"]),
+        'pr_platform_event_id': gh_src_id,
         'platform_id': platform_id,
         'repo_id': repo_id
     }
