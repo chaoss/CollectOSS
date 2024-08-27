@@ -1,0 +1,14 @@
+# This CITATION.cff reference content was generated from Zotero.
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+    - family-names: Goggins
+      given-names: Sean
+    - family-names: Lumbard
+      given-names: Kevin
+    - family-names: Germonprez
+      given-names: Matt
+title: "Open Source Community Health: Analytical Metrics and Their Corresponding Narratives"
+doi: 10.1109/SoHeal52568.2021.00010
+date-released: 2021
+url: https://www.seangoggins.net/wp-content/plugins/zotpress/lib/request/request.dl.php?api_user_id=655145&dlkey=HNG22ZSU&content_type=application/pdf
