@@ -170,6 +170,8 @@ def facade_fetch_missing_commit_messages(repo_git):
 
     missing_message_hashes = get_missing_commit_message_hashes(repo.repo_id)
 
+    to_insert = []
+
     for hash in missing_message_hashes:
 
         absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
@@ -188,6 +190,14 @@ def facade_fetch_missing_commit_messages(repo_git):
             'data_source' : 'git',
             'data_collection_date' : datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
+        
+        if len(to_insert) >= 1000:
+            bulk_insert_dicts(logger,to_insert, CommitMessage, ["repo_id","cmt_hash"])
+        
+        to_insert.append(msg_record)
+
+    if to_insert:
+        bulk_insert_dicts(logger, to_insert, CommitMessage, ["repo_id","cmt_hash"])
 
 
 #enable celery multithreading
