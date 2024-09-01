@@ -193,6 +193,7 @@ def facade_fetch_missing_commit_messages(repo_git):
         
         if len(to_insert) >= 1000:
             bulk_insert_dicts(logger,to_insert, CommitMessage, ["repo_id","cmt_hash"])
+            to_insert = []
         
         to_insert.append(msg_record)
 
