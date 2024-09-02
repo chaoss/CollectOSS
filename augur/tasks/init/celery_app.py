@@ -37,7 +37,8 @@ github_tasks = ['augur.tasks.github.contributors',
                 'augur.tasks.github.detect_move.tasks',
                 'augur.tasks.github.pull_requests.files_model.tasks',
                 'augur.tasks.github.pull_requests.commits_model.tasks',
-                'augur.tasks.github.traffic']
+                'augur.tasks.github.traffic', 
+                'augur.tasks.github.util.populate_repo_src_id']
 
 gitlab_tasks = ['augur.tasks.gitlab.merge_request_task',
                 'augur.tasks.gitlab.issues_task',

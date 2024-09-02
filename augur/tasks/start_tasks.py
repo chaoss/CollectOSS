@@ -14,6 +14,7 @@ from augur.tasks.github.releases.tasks import collect_releases
 from augur.tasks.github.repo_info.tasks import collect_repo_info, collect_linux_badge_info
 from augur.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
+from augur.tasks.github.util.populate_repo_src_id import populate_repo_src_id_task
 from augur.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
 from augur.tasks.github.traffic import collect_github_repo_clones_data
 from augur.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests, collect_merge_request_metadata, collect_merge_request_commits, collect_merge_request_files, collect_merge_request_comments
@@ -65,6 +66,7 @@ def primary_repo_collect_phase(repo_git, full_collection):
 
     #Define primary group of jobs for the primary collect phase: issues and pull requests.
     primary_repo_jobs = group(
+        populate_repo_src_id_task.si(repo_git)
         collect_issues.si(repo_git, full_collection),
         collect_pull_requests.si(repo_git, full_collection)
     )
