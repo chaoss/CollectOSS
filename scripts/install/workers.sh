@@ -72,6 +72,7 @@ if [ -d "$HOME/scorecard" ]; then
 
 else
   echo "Cloning OSSF Scorecard to generate scorecard data ..."
+  SCORECARD_DIR = $HOME/scorecard 
   git clone https://github.com/ossf/scorecard $SCORECARD_DIR
   cd $SCORECARD_DIR
   CURRENT_DIR=$PWD;
