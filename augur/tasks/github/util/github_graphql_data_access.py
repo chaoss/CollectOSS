@@ -22,10 +22,11 @@ class InvalidDataException(Exception):
 class GithubGraphQlDataAccess:
     
 
-    def __init__(self, key_manager, logger: logging.Logger):
+    def __init__(self, key_manager, logger: logging.Logger, ingore_not_found_error=False):
     
         self.logger = logger
         self.key_manager = key_manager
+        self.ingore_not_found_error = ingore_not_found_error
 
     def get_resource(self, query, variables, result_keys):
 
@@ -77,17 +78,19 @@ class GithubGraphQlDataAccess:
 
         response.raise_for_status()
 
-        json_response = response.json()
-        if "errors" in json_response and len(json_response["errors"]) > 0:
-            errors = json_response["errors"]
-            
-            not_found_error = self.__find_first_error_of_type(errors, "NOT_FOUND")
-            
-            if not_found_error:
-                message = not_found_error.get("message", "Resource not found.")
-                raise NotFoundException(f"Could not find: {message}")
-            
-            raise Exception(f"Github Graphql Data Access Errors: {errors}")
+        if not self.ingore_not_found_error:
+
+            json_response = response.json()
+            if "errors" in json_response and len(json_response["errors"]) > 0:
+                errors = json_response["errors"]
+                
+                not_found_error = self.__find_first_error_of_type(errors, "NOT_FOUND")
+                
+                if not_found_error:
+                    message = not_found_error.get("message", "Resource not found.")
+                    raise NotFoundException(f"Could not find: {message}")
+                
+                raise Exception(f"Github Graphql Data Access Errors: {errors}")
 
         return response
         

@@ -869,6 +869,7 @@ class Repo(Base):
     data_collection_date = Column(
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
+    repo_src_id = Column(BigInteger)
 
     repo_group = relationship("RepoGroup", back_populates="repo")
     user_repo = relationship("UserRepo", back_populates="repo")
