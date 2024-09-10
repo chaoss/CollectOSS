@@ -75,7 +75,7 @@ def add_orgs_and_repos(user_id, group_name, org_urls, repo_urls):
 
 
             # These two things really need to be done in one commit
-            repo_id = Repo.insert_github_repo(session, url, repo_group_id, "Frontend", repo_type)
+            repo_id = Repo.insert_github_repo(session, url, repo_group_id, "Frontend", repo_type, repo_src_id)
             if not repo_id:
                 #    log a warning
                 continue
