@@ -2,7 +2,7 @@ from flask import request, jsonify, redirect, url_for, flash, current_app
 import re
 from flask_login import current_user, login_required
 from augur.application.db.models import Repo, RepoGroup, UserGroup, UserRepo
-from augur.tasks.frontend import add_org_repo_list, parse_org_and_repo_name, parse_org_name
+from augur.tasks.frontend import add_orgs_and_repos, parse_org_and_repo_name, parse_org_name
 from .utils import *
 from ..server import app
 from augur.application.db.session import DatabaseSession
@@ -68,11 +68,16 @@ def av_add_user_repo():
 
     invalid_urls = []
 
+    orgs = []
+    repo_urls = []
     with DatabaseSession(logger, current_app.engine) as session:
         for url in urls:  
 
             # matches https://github.com/{org}/ or htts://github.com/{org}
             if (org_name := Repo.parse_github_org_url(url)):
+
+                orgs.append(org_name)
+
                 rg_obj = RepoGroup.get_by_name(session, org_name)
                 if rg_obj:
                     # add the orgs repos to the group
@@ -80,6 +85,9 @@ def av_add_user_repo():
 
             # matches https://github.com/{org}/{repo}/ or htts://github.com/{org}/{repo}
             elif Repo.parse_github_repo_url(url)[0]:
+
+                repo_urls.append(url)
+
                 org_name, repo_name = Repo.parse_github_repo_url(url)
                 repo_git = f"https://github.com/{org_name}/{repo_name}"
                 repo_obj = Repo.get_by_repo_git(session, repo_git)
@@ -90,6 +98,9 @@ def av_add_user_repo():
             elif (match := parse_org_and_repo_name(url)):
                 org, repo = match.groups()
                 repo_git = f"https://github.com/{org}/{repo}"
+
+                repo_urls.append(repo_git)
+
                 repo_obj = Repo.get_by_repo_git(session, repo_git)
                 if repo_obj:
                     add_existing_repo_to_group(session, current_user.user_id, group, repo_obj.repo_id)
@@ -97,6 +108,9 @@ def av_add_user_repo():
             # matches /{org}/ or /{org} or {org}/ or {org}
             elif (match := parse_org_name(url)):
                 org_name = match.group(1)
+
+                orgs.append(org)
+
                 rg_obj = RepoGroup.get_by_name(session, org_name)
                 logger.info(rg_obj)
                 if rg_obj:
@@ -117,9 +131,10 @@ def av_add_user_repo():
             else:
                 invalid_urls.append(url)
 
-    if urls:
-        urls = [url.lower() for url in urls]
-        add_org_repo_list.si(current_user.user_id, group, urls).apply_async()
+    if orgs or repo_urls:
+        repo_urls = [url.lower() for url in repo_urls]
+        orgs = [url.lower() for url in orgs]
+        add_orgs_and_repos.si(current_user.user_id, group, orgs, repo_urls).apply_async()
 
     flash("Adding repos and orgs in the background")
             
