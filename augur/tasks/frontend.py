@@ -21,6 +21,7 @@ def parse_org_and_repo_name(string):
     match = re.match(r'^\/?([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$', string)
     return match
 
+# TODO: Add support for gitlab
 @celery.task
 def add_orgs_and_repos(user_id, group_name, orgs, repo_urls):
 
