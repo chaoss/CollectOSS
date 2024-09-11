@@ -1,4 +1,4 @@
-"""Add commit message table
+"""Add repo src id
 
 Revision ID: 30
 Revises: 29

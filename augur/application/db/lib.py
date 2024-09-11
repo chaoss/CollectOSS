@@ -558,7 +558,7 @@ def get_group_by_name(user_id, group_name):
         except s.orm.exc.NoResultFound:
             return None
 
-        return user_group.group_id
+        return user_group
     
 def get_repo_group_by_name(name):
 

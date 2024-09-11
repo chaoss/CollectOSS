@@ -7,7 +7,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
 from augur.application.db.lib import get_group_by_name, get_repo_group_by_name, get_repo_by_repo_git, get_repo_by_src_id
 from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.models.augur_operations import retrieve_owner_repos, FRONTEND_REPO_GROUP_NAME, RepoGroup
+from augur.application.db.models.augur_operations import retrieve_owner_repos, FRONTEND_REPO_GROUP_NAME, RepoGroup, UserGroup
 
 from augur.application.db.models import UserRepo, Repo, User
 
@@ -30,7 +30,7 @@ def add_orgs_and_repos(user_id, group_name, orgs, repo_urls):
     with GithubTaskSession(logger) as session:
      
         # determine group id from name
-        group = get_group_by_name(session, user_id, group_name)
+        group = get_group_by_name(user_id, group_name)
         if not group:
             logger.error(f"Error while adding repo. Invalid group name of {group_name}. Cannot insert repos")
             return
@@ -38,7 +38,7 @@ def add_orgs_and_repos(user_id, group_name, orgs, repo_urls):
         group_id = group.group_id
 
         # get frontend repo group
-        frontend_repo_group = RepoGroup.get_by_name(FRONTEND_REPO_GROUP_NAME)
+        frontend_repo_group = RepoGroup.get_by_name(session, FRONTEND_REPO_GROUP_NAME)
         if not frontend_repo_group:
             logger.error("Error while adding repo: Could not find frontend repo group so repos cannot be inserted")
             return
@@ -47,27 +47,28 @@ def add_orgs_and_repos(user_id, group_name, orgs, repo_urls):
 
 
         # define repo_data and assoicate repos with frontend repo group
-        repo_data = [tuple(url, repo_group_id) for url in repo_urls]
+        repo_data = [(url, repo_group_id) for url in repo_urls]
 
         for org in orgs:
 
             # create repo group for org if it doesn't exist
-            repo_group = RepoGroup.get_by_name(org)
+            repo_group = RepoGroup.get_by_name(session, org)
             if not repo_group:
                 repo_group = create_repo_group(session, org)
 
             # retrieve repo urls for org
-            org_repos, _ = retrieve_owner_repos(url)
+            org_repos, _ = retrieve_owner_repos(session, org)
             if not org_repos:
                 continue
 
             # define urls and repo_group_id of org and then add to repo_data
-            org_repo_data = [tuple(url, repo_group.repo_group_id) for url in org_repos]
+            org_repo_data = [(url, repo_group.repo_group_id) for url in org_repos]
             repo_data.extend(org_repo_data)
 
 
         # get data for repos to determine type, src id, and if they exist
         data = get_repos_data(repo_data, session, logger)
+        print(f"Repo data: {data}")
 
         for url, repo_group_id in repo_data:
 
@@ -83,14 +84,12 @@ def add_orgs_and_repos(user_id, group_name, orgs, repo_urls):
             if repo:
                 # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
                 add_existing_repo_to_group(logger, session, user_id, group_name, repo.repo_id)
-                logger.warning(f"Error while adding repo: Repo already exists with {url}")
                 continue
 
             repo = get_repo_by_src_id(repo_src_id)
             if repo:
                 # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
                 add_existing_repo_to_group(logger, session, user_id, group_name, repo.repo_id)
-                logger.warning(f"Error while adding repo: Repo found with same src id. Inserting url: {url}. Inserting src_id {repo_src_id}") 
                 continue        
 
             add_repo(logger, session, url, repo_group_id, group_id, repo_type, repo_src_id)
@@ -98,6 +97,7 @@ def add_orgs_and_repos(user_id, group_name, orgs, repo_urls):
         return 
 
 
+# TODO: Make it only get like 100 at a time
 def get_repos_data(repo_data, session, logger):
 
     repo_urls = [x[0] for x in repo_data]
@@ -108,10 +108,10 @@ def get_repos_data(repo_data, session, logger):
     repo_map = {}
     for i, url in enumerate(repo_urls):
         owner, repo = get_owner_repo(url)
-        query_parts.append(f"""{i}: repository(owner: "{owner}", name: "{repo}") {{ 
+        query_parts.append(f"""repo_{i}: repository(owner: "{owner}", name: "{repo}") {{ 
                                 databaseId, owner {{ __typename }} 
                         }}""")
-        repo_map[url] = i
+        repo_map[url] = f"repo_{i}"
     
     query = f"query GetRepoIds {{    {'    '.join(query_parts)}}}"
 
