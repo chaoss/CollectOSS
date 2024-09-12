@@ -204,6 +204,7 @@ def facade_fetch_missing_commit_messages(repo_git):
 
         except Exception as e: 
             logger.info(f'The error message is {e}')
+            continue 
 
 
 #enable celery multithreading
