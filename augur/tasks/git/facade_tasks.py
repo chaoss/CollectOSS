@@ -198,7 +198,7 @@ def facade_fetch_missing_commit_messages(repo_git):
             
             to_insert.append(msg_record)
         except Exception as e: 
-            logger.info(f'The exception is : {3}.')
+            logger.info(f'The exception is : {e}.')
 
     if to_insert:
         bulk_insert_dicts(logger, to_insert, CommitMessage, ["repo_id","cmt_hash"])
