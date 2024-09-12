@@ -177,28 +177,33 @@ def facade_fetch_missing_commit_messages(repo_git):
         absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
         repo_loc = (f"{absolute_path}/.git")
 
-        commit_message = check_output(
-            f"git --git-dir {repo_loc} log --format=%B -n 1 {hash}".split()
-        ).decode('utf-8').strip()
+        try:  
 
-        msg_record = {
-            'repo_id' : repo.repo_id,
-            'cmt_msg' : commit_message,
-            'cmt_hash' : hash,
-            'tool_source' : 'Facade',
-            'tool_version' : '0.78?',
-            'data_source' : 'git',
-            'data_collection_date' : datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-        
-        if len(to_insert) >= 1000:
-            bulk_insert_dicts(logger,to_insert, CommitMessage, ["repo_id","cmt_hash"])
-            to_insert = []
-        
-        to_insert.append(msg_record)
+            commit_message = check_output(
+                f"git --git-dir {repo_loc} log --format=%B -n 1 {hash}".split()
+            ).decode('utf-8').strip()
 
-    if to_insert:
-        bulk_insert_dicts(logger, to_insert, CommitMessage, ["repo_id","cmt_hash"])
+            msg_record = {
+                'repo_id' : repo.repo_id,
+                'cmt_msg' : commit_message,
+                'cmt_hash' : hash,
+                'tool_source' : 'Facade',
+                'tool_version' : '0.78?',
+                'data_source' : 'git',
+                'data_collection_date' : datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+            if len(to_insert) >= 1000:
+                bulk_insert_dicts(logger,to_insert, CommitMessage, ["repo_id","cmt_hash"])
+                to_insert = []
+            
+            to_insert.append(msg_record)
+
+        if to_insert:
+            bulk_insert_dicts(logger, to_insert, CommitMessage, ["repo_id","cmt_hash"])
+
+        except Exception as e: 
+            logger.info(f'The error message is {e}')
 
 
 #enable celery multithreading
