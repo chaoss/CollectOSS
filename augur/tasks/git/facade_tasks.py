@@ -175,7 +175,7 @@ def facade_fetch_missing_commit_messages(repo_git):
     for hash in missing_message_hashes:
 
         absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-        repo_loc = (f"{absolute_path}.git")
+        repo_loc = (f"{absolute_path}")
 
         commit_message = check_output(
             f"git --git-dir {repo_loc} log --format=%B -n 1 {hash}".split()
