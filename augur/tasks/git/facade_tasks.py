@@ -177,8 +177,7 @@ def facade_fetch_missing_commit_messages(repo_git):
         absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
         repo_loc = (f"{absolute_path}/.git")
 
-        try:  
-
+        try: 
             commit_message = check_output(
                 f"git --git-dir {repo_loc} log --format=%B -n 1 {hash}".split()
             ).decode('utf-8').strip()
@@ -198,13 +197,11 @@ def facade_fetch_missing_commit_messages(repo_git):
                 to_insert = []
             
             to_insert.append(msg_record)
-
-        if to_insert:
-            bulk_insert_dicts(logger, to_insert, CommitMessage, ["repo_id","cmt_hash"])
-
         except Exception as e: 
-            logger.info(f'The error message is {e}')
-            continue 
+            logger.info(f'The exception is : {3}.')
+
+    if to_insert:
+        bulk_insert_dicts(logger, to_insert, CommitMessage, ["repo_id","cmt_hash"])
 
 
 #enable celery multithreading
