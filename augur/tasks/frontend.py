@@ -23,9 +23,9 @@ def parse_org_and_repo_name(string):
 
 # TODO: Add support for gitlab
 @celery.task
-def add_orgs_and_repos(user_id, group_name, orgs, repo_urls):
+def add_github_orgs_and_repos(user_id, group_name, orgs, repo_urls):
 
-    logger = logging.getLogger(add_orgs_and_repos.__name__)
+    logger = logging.getLogger(add_github_orgs_and_repos.__name__)
 
     with GithubTaskSession(logger) as session:
      

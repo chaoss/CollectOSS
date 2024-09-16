@@ -2,7 +2,7 @@ from flask import request, jsonify, redirect, url_for, flash, current_app
 import re
 from flask_login import current_user, login_required
 from augur.application.db.models import Repo, RepoGroup, UserGroup, UserRepo
-from augur.tasks.frontend import add_orgs_and_repos, parse_org_and_repo_name, parse_org_name
+from augur.tasks.frontend import add_github_orgs_and_repos, parse_org_and_repo_name, parse_org_name
 from .utils import *
 from ..server import app
 from augur.application.db.session import DatabaseSession
@@ -97,7 +97,7 @@ def av_add_user_repo():
         orgs = [url.lower() for url in orgs]
         flash(f"Adding repos: {repo_urls}")
         flash(f"Adding orgs: {orgs}")
-        add_orgs_and_repos.si(current_user.user_id, group, orgs, repo_urls).apply_async()
+        add_github_orgs_and_repos.si(current_user.user_id, group, orgs, repo_urls).apply_async()
 
     flash("Adding repos and orgs in the background")
             
