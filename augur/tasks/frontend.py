@@ -55,7 +55,40 @@ def add_github_orgs_and_repos(user_id, group_name, orgs, repo_urls):
         # break list of repos into lists of 100 so that graphql query isn't overwhelmed
         for chunk in divide_list_into_chunks(repo_data, 100):
 
-            add_new_repos(chunk, group_id, session, logger)
+            add_new_github_repos(chunk, group_id, session, logger)
+
+
+# TODO: Add support for gitlab
+@celery.task
+def add_gitlab_repos(user_id, group_name, repo_urls):
+
+    logger = logging.getLogger(add_github_orgs_and_repos.__name__)
+
+    with GithubTaskSession(logger) as session:
+     
+        # determine group id from name
+        group = get_group_by_name(user_id, group_name)
+        if not group:
+            logger.error(f"Error while adding repo. Invalid group name of {group_name}. Cannot insert repos")
+            return
+        
+        group_id = group.group_id
+
+        # get frontend repo group
+        frontend_repo_group = RepoGroup.get_by_name(session, FRONTEND_REPO_GROUP_NAME)
+        if not frontend_repo_group:
+            logger.error("Error while adding repo: Could not find frontend repo group so repos cannot be inserted")
+            return
+
+        repo_group_id = frontend_repo_group.repo_group_id
+
+        # define repo_data and assoicate repos with frontend repo group
+        repo_data = [(url, repo_group_id) for url in repo_urls]
+
+        # break list of repos into lists of 100 so that graphql query isn't overwhelmed
+        for chunk in divide_list_into_chunks(repo_data, 100):
+
+            add_new_github_repos(chunk, group_id, session, logger)
 
     
 def get_org_repo_data(orgs, session):
@@ -80,10 +113,10 @@ def get_org_repo_data(orgs, session):
     return repo_data
 
 
-def add_new_repos(repo_data, group_id, session, logger):
+def add_new_github_repos(repo_data, group_id, session, logger):
 
       # get data for repos to determine type, src id, and if they exist
-    data = get_repos_data(repo_data, session, logger)
+    data = get_github_repos_data(repo_data, session, logger)
 
     for url, repo_group_id in repo_data:
 
@@ -122,7 +155,7 @@ def divide_list_into_chunks(data, size):
 
 
 # TODO: Make it only get like 100 at a time
-def get_repos_data(repo_data, session, logger):
+def get_github_repos_data(repo_data, session, logger):
 
     repo_urls = [x[0] for x in repo_data]
 
