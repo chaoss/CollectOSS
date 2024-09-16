@@ -45,33 +45,40 @@ def add_orgs_and_repos(user_id, group_name, orgs, repo_urls):
 
         repo_group_id = frontend_repo_group.repo_group_id
 
-
         # define repo_data and assoicate repos with frontend repo group
         repo_data = [(url, repo_group_id) for url in repo_urls]
 
-        for org in orgs:
-
-            # create repo group for org if it doesn't exist
-            repo_group = RepoGroup.get_by_name(session, org)
-            if not repo_group:
-                repo_group = create_repo_group(session, org)
-
-            # retrieve repo urls for org
-            org_repos, _ = retrieve_owner_repos(session, org)
-            if not org_repos:
-                continue
-
-            # define urls and repo_group_id of org and then add to repo_data
-            org_repo_data = [(url, repo_group.repo_group_id) for url in org_repos]
-            repo_data.extend(org_repo_data)
+        # get org repos and associate them with their org repo group
+        org_repo_data = get_org_repo_data(orgs, session)
+        repo_data.extend(org_repo_data)
 
         # break list of repos into lists of 100 so that graphql query isn't overwhelmed
         for chunk in divide_list_into_chunks(repo_data, 100):
 
             add_new_repos(chunk, group_id, session, logger)
 
-        return 
     
+def get_org_repo_data(orgs, session):
+
+    repo_data = []
+    for org in orgs:
+
+        # create repo group for org if it doesn't exist
+        repo_group = RepoGroup.get_by_name(session, org)
+        if not repo_group:
+            repo_group = create_repo_group(session, org)
+
+        # retrieve repo urls for org
+        org_repos, _ = retrieve_owner_repos(session, org)
+        if not org_repos:
+            continue
+
+        # define urls and repo_group_id of org and then add to repo_data
+        org_repo_data = [(url, repo_group.repo_group_id) for url in org_repos]
+        repo_data.extend(org_repo_data)
+
+    return repo_data
+
 
 def add_new_repos(repo_data, group_id, session, logger):
 
@@ -104,12 +111,8 @@ def add_new_repos(repo_data, group_id, session, logger):
 
 
 def add_existing_repo_to_group(logger, session, group_id, repo_id):
-
-    logger.info("Adding existing repo to group")
     
-    result = UserRepo.insert(session, repo_id, group_id)
-    if not result:
-        return False
+    UserRepo.insert(session, repo_id, group_id)
 
 
 def divide_list_into_chunks(data, size):

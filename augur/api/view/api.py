@@ -64,58 +64,28 @@ def av_add_user_repo():
 
         # matches https://github.com/{org}/ or htts://github.com/{org}
         if (org_name := Repo.parse_github_org_url(url)):
-
             orgs.append(org_name)
-
-            # rg_obj = RepoGroup.get_by_name(session, org_name)
-            # if rg_obj:
-            #     # add the orgs repos to the group
-            #     add_existing_org_to_group(session, current_user.user_id, group, rg_obj.repo_group_id)
 
         # matches https://github.com/{org}/{repo}/ or htts://github.com/{org}/{repo}
         elif Repo.parse_github_repo_url(url)[0]:
-
             repo_urls.append(url)
-
-            # org_name, repo_name = Repo.parse_github_repo_url(url)
-            # repo_git = f"https://github.com/{org_name}/{repo_name}"
-            # repo_obj = Repo.get_by_repo_git(session, repo_git)
-            # if repo_obj:
-            #     add_existing_repo_to_group(session, current_user.user_id, group, repo_obj.repo_id)
 
         # matches /{org}/{repo}/ or /{org}/{repo} or {org}/{repo}/ or {org}/{repo}
         elif (match := parse_org_and_repo_name(url)):
             org, repo = match.groups()
             repo_git = f"https://github.com/{org}/{repo}"
-
             repo_urls.append(repo_git)
-
-            # repo_obj = Repo.get_by_repo_git(session, repo_git)
-            # if repo_obj:
-            #     add_existing_repo_to_group(session, current_user.user_id, group, repo_obj.repo_id)
         
         # matches /{org}/ or /{org} or {org}/ or {org}
         elif (match := parse_org_name(url)):
             org_name = match.group(1)
-
             orgs.append(org_name)
-
-            # rg_obj = RepoGroup.get_by_name(session, org_name)
-            # logger.info(rg_obj)
-            # if rg_obj:
-            #     # add the orgs repos to the group
-            #     add_existing_org_to_group(session, current_user.user_id, group, rg_obj.repo_group_id)
 
         # matches https://gitlab.com/{org}/{repo}/ or http://gitlab.com/{org}/{repo}
         elif Repo.parse_gitlab_repo_url(url)[0]:
 
             org_name, repo_name = Repo.parse_github_repo_url(url)
             repo_git = f"https://gitlab.com/{org_name}/{repo_name}"
-
-            # TODO: gitlab ensure the whole repo git is inserted so it can be found here
-            # repo_obj = Repo.get_by_repo_git(session, repo_git)
-            # if repo_obj:
-            #     add_existing_repo_to_group(session, current_user.user_id, group, repo_obj.repo_id)
             
         else:
             invalid_urls.append(url)
