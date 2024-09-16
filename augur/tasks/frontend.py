@@ -68,7 +68,6 @@ def add_orgs_and_repos(user_id, group_name, orgs, repo_urls):
 
         # get data for repos to determine type, src id, and if they exist
         data = get_repos_data(repo_data, session, logger)
-        print(f"Repo data: {data}")
 
         for url, repo_group_id in repo_data:
 
@@ -80,17 +79,17 @@ def add_orgs_and_repos(user_id, group_name, orgs, repo_urls):
             repo_src_id = repo_data["databaseId"]
             repo_type = repo_data["owner"]["__typename"]
 
+            repo = get_repo_by_src_id(repo_src_id)
+            if repo:
+                # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
+                add_existing_repo_to_group(logger, session, user_id, group_name, repo.repo_id)
+                continue     
+
             repo = get_repo_by_repo_git(session, url)
             if repo:
                 # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
                 add_existing_repo_to_group(logger, session, user_id, group_name, repo.repo_id)
                 continue
-
-            repo = get_repo_by_src_id(repo_src_id)
-            if repo:
-                # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
-                add_existing_repo_to_group(logger, session, user_id, group_name, repo.repo_id)
-                continue        
 
             add_repo(logger, session, url, repo_group_id, group_id, repo_type, repo_src_id)
 
