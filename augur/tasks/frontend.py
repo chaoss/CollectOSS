@@ -65,35 +65,57 @@ def add_orgs_and_repos(user_id, group_name, orgs, repo_urls):
             org_repo_data = [(url, repo_group.repo_group_id) for url in org_repos]
             repo_data.extend(org_repo_data)
 
+        # break list of repos into lists of 100 so that graphql query isn't overwhelmed
+        for chunk in divide_list_into_chunks(repo_data, 100):
 
-        # get data for repos to determine type, src id, and if they exist
-        data = get_repos_data(repo_data, session, logger)
-
-        for url, repo_group_id in repo_data:
-
-            repo_data = data[url]
-            if not repo_data:
-                # skip since cause the repo is not valid (doesn't exist likely)
-                continue
-
-            repo_src_id = repo_data["databaseId"]
-            repo_type = repo_data["owner"]["__typename"]
-
-            repo = get_repo_by_src_id(repo_src_id)
-            if repo:
-                # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
-                add_existing_repo_to_group(logger, session, user_id, group_name, repo.repo_id)
-                continue     
-
-            repo = get_repo_by_repo_git(session, url)
-            if repo:
-                # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
-                add_existing_repo_to_group(logger, session, user_id, group_name, repo.repo_id)
-                continue
-
-            add_repo(logger, session, url, repo_group_id, group_id, repo_type, repo_src_id)
+            add_new_repos(chunk, group_id, session, logger)
 
         return 
+    
+
+def add_new_repos(repo_data, group_id, session, logger):
+
+      # get data for repos to determine type, src id, and if they exist
+    data = get_repos_data(repo_data, session, logger)
+
+    for url, repo_group_id in repo_data:
+
+        repo_data = data[url]
+        if not repo_data:
+            # skip since cause the repo is not valid (doesn't exist likely)
+            continue
+
+        repo_src_id = repo_data["databaseId"]
+        repo_type = repo_data["owner"]["__typename"]
+
+        repo = get_repo_by_src_id(repo_src_id)
+        if repo:
+            # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
+            add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
+            continue     
+
+        repo = get_repo_by_repo_git(session, url)
+        if repo:
+            # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
+            add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
+            continue
+
+        add_repo(logger, session, url, repo_group_id, group_id, repo_type, repo_src_id)
+
+
+def add_existing_repo_to_group(logger, session, group_id, repo_id):
+
+    logger.info("Adding existing repo to group")
+    
+    result = UserRepo.insert(session, repo_id, group_id)
+    if not result:
+        return False
+
+
+def divide_list_into_chunks(data, size):
+    
+    for i in range(0, len(data), size): 
+        yield data[i:i + size]
 
 
 # TODO: Make it only get like 100 at a time
@@ -128,19 +150,6 @@ def get_repos_data(repo_data, session, logger):
 def get_repo_by_repo_git(session, url):
 
     return session.query(Repo).filter(Repo.repo_git == url).first()
-
-
-def add_existing_repo_to_group(logger, session, user_id, group_name, repo_id):
-
-    logger.info("Adding existing repo to group")
-
-    group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
-    if group_id is None:
-        return False
-    
-    result = UserRepo.insert(session, repo_id, group_id)
-    if not result:
-        return False
     
 def create_repo_group(session, owner):
 

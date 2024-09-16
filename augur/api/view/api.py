@@ -14,18 +14,6 @@ def cache(file=None):
         return redirect(url_for('static', filename="cache"))
     return redirect(url_for('static', filename="cache/" + toCacheFilename(file, False)))
 
-
-def add_existing_repo_to_group(session, user_id, group_name, repo_id):
-
-    logger.info("Adding existing repo to group")
-
-    group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
-    if group_id is None:
-        return False
-    
-    result = UserRepo.insert(session, repo_id, group_id)
-    if not result:
-        return False
     
 def add_existing_org_to_group(session, user_id, group_name, rg_id):
 
