@@ -2,7 +2,7 @@ from flask import request, jsonify, redirect, url_for, flash, current_app
 import re
 from flask_login import current_user, login_required
 from augur.application.db.models import Repo, RepoGroup, UserGroup, UserRepo
-from augur.tasks.frontend import add_github_orgs_and_repos, parse_org_and_repo_name, parse_org_name
+from augur.tasks.frontend import add_github_orgs_and_repos, parse_org_and_repo_name, parse_org_name, add_gitlab_repos
 from .utils import *
 from ..server import app
 from augur.application.db.session import DatabaseSession
@@ -60,6 +60,7 @@ def av_add_user_repo():
 
     orgs = []
     repo_urls = []
+    gitlab_repo_urls = []
     for url in urls:  
 
         # matches https://github.com/{org}/ or htts://github.com/{org}
@@ -87,6 +88,7 @@ def av_add_user_repo():
             org_name, repo_name = Repo.parse_github_repo_url(url)
             repo_git = f"https://gitlab.com/{org_name}/{repo_name}"
             
+            gitlab_repo_urls.append(repo_git)
         else:
             invalid_urls.append(url)
 
@@ -98,6 +100,9 @@ def av_add_user_repo():
         flash(f"Adding repos: {repo_urls}")
         flash(f"Adding orgs: {orgs}")
         add_github_orgs_and_repos.si(current_user.user_id, group, orgs, repo_urls).apply_async()
+
+    if gitlab_repo_urls:
+        add_gitlab_repos(current_user.user_id, group, gitlab_repo_urls)
 
     flash("Adding repos and orgs in the background")
             

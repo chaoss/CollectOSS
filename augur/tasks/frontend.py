@@ -82,15 +82,33 @@ def add_gitlab_repos(user_id, group_name, repo_urls):
 
         repo_group_id = frontend_repo_group.repo_group_id
 
-        # define repo_data and assoicate repos with frontend repo group
-        repo_data = [(url, repo_group_id) for url in repo_urls]
+        for url in repo_urls:
 
-        # break list of repos into lists of 100 so that graphql query isn't overwhelmed
-        for chunk in divide_list_into_chunks(repo_data, 100):
+            result = Repo.is_valid_gitlab_repo(session, url)
+            if not result[0]:
+                continue
 
-            add_new_github_repos(chunk, group_id, session, logger)
+            # TODO: Add logic to get gitlab src id
 
-    
+            repo = get_repo_by_repo_git(session, url)
+            if repo:
+                # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
+                add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
+            
+            add_gitlab_repo(session, url, repo_group_id, group_id)
+
+
+def add_gitlab_repo(session, url, repo_group_id, group_id):
+
+    repo_id = Repo.insert_gitlab_repo(session, url, repo_group_id, "Frontend")
+    if not repo_id:
+        return False, {"status": "Repo insertion failed", "repo_url": url}
+
+    result = UserRepo.insert(session, repo_id, group_id)
+    if not result:
+        return False, {"status": "repo_user insertion failed", "repo_url": url}
+
+
 def get_org_repo_data(orgs, session):
 
     repo_data = []
@@ -140,7 +158,7 @@ def add_new_github_repos(repo_data, group_id, session, logger):
             add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
             continue
 
-        add_repo(logger, session, url, repo_group_id, group_id, repo_type, repo_src_id)
+        add_github_repo(logger, session, url, repo_group_id, group_id, repo_type, repo_src_id)
 
 
 def add_existing_repo_to_group(logger, session, group_id, repo_id):
@@ -196,7 +214,7 @@ def create_repo_group(session, owner):
 
     return repo_group
 
-def add_repo(logger, session, url, repo_group_id, group_id, repo_type, repo_src_id):
+def add_github_repo(logger, session, url, repo_group_id, group_id, repo_type, repo_src_id):
 
     # These two things really need to be done in one commit in the future to prevent one existing without the other
     repo_id = Repo.insert_github_repo(session, url, repo_group_id, "Frontend", repo_type, repo_src_id)
