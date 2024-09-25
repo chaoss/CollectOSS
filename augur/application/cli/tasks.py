@@ -17,7 +17,7 @@ from augur.tasks.init.redis_connection import redis_connection
 from augur.application.cli import test_connection, test_db_connection 
 from augur.application.cli.backend import clear_rabbitmq_messages, raise_open_file_limit
 
-logger = AugurLogger("augur", reset_logfiles=True).get_logger()
+logger = AugurLogger("augur", reset_logfiles=False).get_logger()
 
 @click.group('celery', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():
@@ -36,8 +36,8 @@ def start():
     secondary_worker_process = None
 
     scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=50 -n core:{uuid.uuid4().hex}@%h"
-    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=50 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=90 -n core:{uuid.uuid4().hex}@%h"
+    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
     
     scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
     core_worker_process = subprocess.Popen(core_worker.split(" "))

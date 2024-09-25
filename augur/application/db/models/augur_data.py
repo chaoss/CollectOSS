@@ -1350,6 +1350,36 @@ class Commit(Base):
     repo = relationship("Repo", back_populates="commits")
     message_ref = relationship("CommitCommentRef", back_populates="cmt")
 
+class CommitMessage(Base):
+    __tablename__ = "commit_messages"
+    __table_args__ = ( UniqueConstraint("repo_id","cmt_hash", name="commit-message-insert-unique"),
+        { 
+            "schema": "augur_data",
+            "comment": "This table holds commit messages",
+        }
+    )
+
+    cmt_msg_id = Column(
+        BigInteger,
+        primary_key=True,
+        server_default=text("nextval('augur_data.commits_cmt_id_seq'::regclass)"),
+    )
+
+    repo_id = Column(
+        ForeignKey("augur_data.repo.repo_id", ondelete="RESTRICT", onupdate="CASCADE"),
+        nullable=False,
+    )
+
+    cmt_msg = Column(String, nullable=False)
+
+    cmt_hash = Column(String(80), nullable=False)
+
+    tool_source = Column(String)
+    tool_version = Column(String)
+    data_source = Column(String)
+    data_collection_date = Column(
+        TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
+    )
 
 class Issue(Base):
     __tablename__ = "issues"

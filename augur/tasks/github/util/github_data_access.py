@@ -65,17 +65,12 @@ class GithubDataAccess:
 
         return 
     
-    def is_pagination_limited_by_max_github_pages(self, url):
-        
-        page_count = self.get_resource_page_count(url)
-
-        return page_count <= 299
-    
     def get_resource_page_count(self, url):
 
         response = self.make_request_with_retries(url, method="HEAD")
 
         if 'last' not in response.links.keys():
+            self.logger.warning(f"Github response without links. Headers: {response.headers}.")
             return 1
         
         try:

@@ -47,8 +47,8 @@ def cli(ctx):
 @click.pass_context
 def start(ctx, disable_collection, development, pidfile, port):
     """Start Augur's backend server."""
-    with open(pidfile, "w") as pidfile:
-        pidfile.write(str(os.getpid()))
+    with open(pidfile, "w") as pidfile_io:
+        pidfile_io.write(str(os.getpid()))
         
     try:
         if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
@@ -63,6 +63,8 @@ def start(ctx, disable_collection, development, pidfile, port):
     if development:
         os.environ["AUGUR_DEV"] = "1"
         logger.info("Starting in development mode")
+    
+    os.environ["AUGUR_PIDFILE"] = pidfile
 
     try:
         gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
@@ -73,6 +75,11 @@ def start(ctx, disable_collection, development, pidfile, port):
 
     if not port:
         port = get_value("Server", "port")
+    
+    os.environ["AUGUR_PORT"] = str(port)
+    
+    if disable_collection:
+        os.environ["AUGUR_DISABLE_COLLECTION"] = "1"
     
     worker_vmem_cap = get_value("Celery", 'worker_process_vmem_cap')
 
@@ -128,7 +135,7 @@ def start(ctx, disable_collection, development, pidfile, port):
         augur_collection_monitor.si().apply_async()
         
     else:
-        logger.info("Collection disabled")   
+        logger.info("Collection disabled")
     
     try:
         server.wait()
@@ -153,6 +160,8 @@ def start(ctx, disable_collection, development, pidfile, port):
                 cleanup_after_collection_halt(logger, ctx.obj.engine)
             except RedisConnectionError:
                 pass
+            
+    os.unlink(pidfile)
 
 def start_celery_worker_processes(vmem_cap_ratio, disable_collection=False):
 
@@ -185,7 +194,7 @@ def start_celery_worker_processes(vmem_cap_ratio, disable_collection=False):
         sleep_time += 6
 
         #60% of estimate, Maximum value of 45 : Reduced because it can be lower
-        core_num_processes = determine_worker_processes(.40, 50)
+        core_num_processes = determine_worker_processes(.40, 90)
         logger.info(f"Starting core worker processes with concurrency={core_num_processes}")
         core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_num_processes} -n core:{uuid.uuid4().hex}@%h"
         process_list.append(subprocess.Popen(core_worker.split(" ")))
@@ -223,6 +232,54 @@ def stop(ctx):
     logger = logging.getLogger("augur.cli")
 
     augur_stop(signal.SIGTERM, logger, ctx.obj.engine)
+
+@cli.command('stop-collection-blocking')
+@test_connection
+@test_db_connection
+@with_database
+@click.pass_context
+def stop_collection(ctx):
+    """
+    Stop collection tasks if they are running, block until complete
+    """
+    processes = get_augur_processes()
+    
+    stopped = []
+    
+    p: psutil.Process
+    for p in processes:
+        if p.name() == "celery":
+            stopped.append(p)
+            p.terminate()
+    
+    if not len(stopped):
+        logger.info("No collection processes found")
+        return
+    
+    _, alive = psutil.wait_procs(stopped, 5,
+                                 lambda p: logger.info(f"STOPPED: {p.pid}"))
+    
+    killed = []
+    while True:
+        for i in range(len(alive)):
+            if alive[i].status() == psutil.STATUS_ZOMBIE:
+                logger.info(f"KILLING ZOMBIE: {alive[i].pid}")
+                alive[i].kill()
+                killed.append(i)
+            elif not alive[i].is_running():
+                logger.info(f"STOPPED: {p.pid}")
+                killed.append(i)
+        
+        for i in reversed(killed):
+            alive.pop(i)
+        
+        if not len(alive):
+            break
+        
+        logger.info(f"Waiting on [{', '.join(str(p.pid for p in alive))}]")
+        time.sleep(0.5)
+    
+    cleanup_after_collection_halt(logger, ctx.obj.engine)
 
 @cli.command('kill')
 @test_connection
@@ -388,7 +445,7 @@ def processes():
     Outputs the name/PID of all Augur server & worker processes"""
     augur_processes = get_augur_processes()
     for process in augur_processes:
-        logger.info(f"Found process {process.pid}")
+        logger.info(f"Found process {process.pid} [{process.name()}] -> Parent: {process.parent().pid}")
 
 def get_augur_processes():
     augur_processes = []
