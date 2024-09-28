@@ -130,7 +130,7 @@ def get_org_repo_data(orgs, session):
 
     return repo_data
 
-
+# TODO: Do we need to check if the repo already exists in the user group?
 def add_new_github_repos(repo_data, group_id, session, logger):
 
       # get data for repos to determine type, src id, and if they exist
@@ -186,18 +186,14 @@ def get_github_repos_data(repo_data, session, logger):
         query_parts.append(f"""repo_{i}: repository(owner: "{owner}", name: "{repo}") {{ 
                                 databaseId, owner {{ __typename }} 
                         }}""")
-        repo_map[url] = f"repo_{i}"
     
     query = f"query GetRepoIds {{    {'    '.join(query_parts)}}}"
 
     data = github_graphql_data_access.get_resource(query, {}, [])
 
     result_data = {}
-    for url in repo_urls:
-        key =repo_map[url]
-        repo_data = data[key]
-
-        result_data[url] = repo_data
+    for i, url in enumerate(repo_urls):
+        result_data[url] = data[f"repo_{i}"]
     
     return result_data
 
