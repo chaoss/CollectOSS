@@ -7,8 +7,8 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.application.db.data_parse import extract_gitlab_mr_event_data, extract_gitlab_issue_event_data
-from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.models import Issue, IssueEvent, PullRequest, PullRequestEvent
+from augur.tasks.github.util.util import get_gitlab_repo_identifier
+from augur.application.db.models import Issue, IssueEvent, PullRequest, PullRequestEvent, Repo
 from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session
 from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 
@@ -24,7 +24,7 @@ def collect_gitlab_issue_events(repo_git) -> int:
         repo_git: the repo url string
     """
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
 
     logger = logging.getLogger(collect_gitlab_issue_events.__name__) 
 
@@ -52,7 +52,7 @@ def collect_gitlab_merge_request_events(repo_git) -> int:
         repo_git: the repo url string
     """
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
 
     logger = logging.getLogger(collect_gitlab_issue_events.__name__) 
 
@@ -82,11 +82,13 @@ def retrieve_all_gitlab_event_data(gtype, repo_git, logger, key_auth) -> None:
         key_auth: key auth cache and rotator object 
     """
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
+
+    repo_identifier = get_gitlab_repo_identifier(owner, repo)
 
     logger.info(f"Collecting gitlab issue events for {owner}/{repo}")
 
-    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/events?target_type={gtype}"
+    url = f"https://gitlab.com/api/v4/projects/{repo_identifier}/events?target_type={gtype}"
     events = GitlabApiHandler(key_auth, logger)
 
     all_data = []

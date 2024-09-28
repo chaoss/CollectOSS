@@ -8,8 +8,8 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.application.db.data_parse import extract_needed_issue_data_from_gitlab_issue, extract_needed_gitlab_issue_label_data, extract_needed_gitlab_issue_assignee_data, extract_needed_gitlab_issue_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
-from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
-from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Contributor
+from augur.tasks.github.util.util import get_gitlab_repo_identifier, add_key_value_pair_to_dicts
+from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Contributor, Repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session
 from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
@@ -32,7 +32,7 @@ def collect_gitlab_issues(repo_git : str) -> int:
     key_auth = GitlabRandomKeyAuth(logger)
 
     try:
-        owner, repo = get_owner_repo(repo_git)
+        owner, repo = Repo.parse_gitlab_repo_url(repo_git)
     
         issue_data = retrieve_all_gitlab_issue_data(repo_git, logger, key_auth)
 
@@ -57,11 +57,13 @@ def retrieve_all_gitlab_issue_data(repo_git, logger, key_auth) -> None:
         key_auth: key auth cache and rotator object 
     """
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_github_repo_url(repo_git)
+
+    repo_identifier = get_gitlab_repo_identifier(owner, repo)
 
     logger.info(f"Collecting gitlab issues for {owner}/{repo}")
 
-    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/issues?with_labels_details=True"
+    url = f"https://gitlab.com/api/v4/projects/{repo_identifier}/issues?with_labels_details=True"
     issues = GitlabApiHandler(key_auth, logger)
 
     all_data = []
@@ -207,7 +209,7 @@ def collect_gitlab_issue_comments(issue_ids, repo_git) -> int:
         repo_git: repo url
     """
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
 
     logger = logging.getLogger(collect_gitlab_issues.__name__) 
 
@@ -237,7 +239,9 @@ def retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git):
         repo_git: repo url
     """
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
+
+    repo_identifier = get_gitlab_repo_identifier(owner, repo)
 
     all_comments = {}
     issue_count = len(issue_ids)
@@ -249,7 +253,7 @@ def retrieve_all_gitlab_issue_comments(key_auth, logger, issue_ids, repo_git):
 
         logger.info(f"Collecting {owner}/{repo} gitlab issue comments for issue {index} of {issue_count}")
 
-        url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/issues/{id}/notes"
+        url = f"https://gitlab.com/api/v4/projects/{repo_identifier}/issues/{id}/notes"
         
         for page_data, _ in comments.iter_pages(url):
 

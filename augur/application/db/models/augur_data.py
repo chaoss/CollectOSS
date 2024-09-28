@@ -1030,7 +1030,7 @@ class Repo(Base):
             Tuple of owner and repo. Or a tuple of None and None if the url is invalid.
         """
         
-        result = re.search(r"https?:\/\/gitlab\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
+        result = re.search(r"https?:\/\/gitlab\.com\/([A-Za-z0-9\-_\/]+)\/([A-Za-z0-9\-_]+)(\.git)?\/?$", url)
 
         if not result:
             return None, None
