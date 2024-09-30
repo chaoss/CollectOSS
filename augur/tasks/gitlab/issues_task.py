@@ -57,7 +57,7 @@ def retrieve_all_gitlab_issue_data(repo_git, logger, key_auth) -> None:
         key_auth: key auth cache and rotator object 
     """
 
-    owner, repo = Repo.parse_github_repo_url(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
 
     repo_identifier = get_gitlab_repo_identifier(owner, repo)
 
