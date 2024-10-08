@@ -26,6 +26,7 @@ from time import sleep, mktime, gmtime, time, localtime
 import logging
 import re
 import json
+import urllib.parse
 
 
 from augur.application.db.models.base import Base
@@ -972,7 +973,7 @@ class Repo(Base):
             return False, {"status": "Invalid repo URL"}
 
         # Encode namespace and project name for the API request
-        project_identifier = f"{owner}%2F{repo}"
+        project_identifier = urllib.parse.quote(f"{owner}/{repo}", safe='')
         url = REPO_ENDPOINT.format(project_identifier)
 
         attempts = 0
@@ -1031,7 +1032,7 @@ class Repo(Base):
             Tuple of owner and repo. Or a tuple of None and None if the url is invalid.
         """
         
-        result = re.search(r"https?:\/\/gitlab\.com\/([A-Za-z0-9 \- _]+)\/([A-Za-z0-9 \- _ \.]+)(.git)?\/?$", url)
+        result = re.search(r"https?:\/\/gitlab\.com\/([A-Za-z0-9\-_\/]+)\/([A-Za-z0-9\-_]+)(\.git)?\/?$", url)
 
         if not result:
             return None, None

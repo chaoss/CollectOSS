@@ -1,6 +1,7 @@
 """Utility functions that are useful for several Github tasks"""
 from typing import Any, List, Tuple
 import logging
+import urllib.parse
 import json
 import httpx
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
@@ -72,6 +73,10 @@ def get_owner_repo(git_url: str) -> Tuple[str, str]:
         repo = repo[:-4]
 
     return owner, repo
+
+def get_gitlab_repo_identifier(owner, repo):
+
+    return urllib.parse.quote(f"{owner}/{repo}", safe='')
 
 
 def parse_json_response(logger: logging.Logger, response: httpx.Response) -> dict:

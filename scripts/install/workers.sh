@@ -39,7 +39,7 @@ do
 
 done
 
-if [ -f "/usr/local/go/bin/go" ] || [ -f "/usr/local/bin/go" ] || [ -f "/usr/bin/go" ] || [ -f "/snap/bin/go" ] || [ -f "/opt/homebrew/bin/go" ]; then
+if [[ ! -z "$(which go)" ]]; then
   echo "found go!"
 else
   echo "Installing go!"
@@ -49,52 +49,69 @@ else
   export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 fi
 
-if [ -d "$HOME/scorecard" ]; then
-  echo " Scorecard already exists, skipping cloning ..."
-  echo " Updating Scorecard ... "
-  #rm -rf $HOME/scorecard 
-  #echo "Cloning OSSF Scorecard to generate scorecard data ..."
-  #git clone https://github.com/ossf/scorecard $HOME/scorecard
-  #cd $HOME/scorecard
-  CURRENT_DIR=$PWD;
-  cd $CURRENT_DIR
-  cd $HOME/scorecard;
-  #go build;
-  #echo "scorecard build done"
-  #cd $CURRENT_DIR
-  #CURRENT_DIR=$PWD;
-  #cd $HOME/scorecard; 
-  git pull;
-  go mod tidy; 
-  go build; 
-  echo "Scorecard build done."
-  cd $CURRENT_DIR
+SCORECARD_DIR="$HOME/scorecard"
 
+# read -r -p "What directory would you like to use for OSSF Scorecard? [$HOME/scorecard] " response
+# TODO: scorecard directory must be configurable
+
+if [ -d "$SCORECARD_DIR" ]; then
+  echo " Scorecard directory already exists, would you like to skip cloning and building?"
+  echo " Only do this if Scorecard has been cloned and built in this directory before."
+  read -r -p "If you choose NO (the default), Scorecard will be updated [y/N]: " response
+  case "$response" in
+    [yY][eE][sS]|[yY])
+      echo " Skipping scorecard build"
+      ;;
+    *)
+      echo "Updating OSSF Scorecard..."
+      CURRENT_DIR=$PWD;
+      cd $SCORECARD_DIR
+
+      # Check that dir is valid scorecard repo
+      SCORECARD_URL="$(git remote get-url origin || true)"
+      if [[ "$SCORECARD_URL" != *"ossf/scorecard"* ]]; then
+        echo "ERROR: $PWD is not an existing scorecard directory"
+        exit 127
+      fi
+      
+      git pull
+      go mod tidy
+      go build;
+      echo "scorecard build done"
+      cd $CURRENT_DIR
+      ;;
+  esac
 else
   echo "Cloning OSSF Scorecard to generate scorecard data ..."
   git clone https://github.com/ossf/scorecard $SCORECARD_DIR
-  cd $SCORECARD_DIR
   CURRENT_DIR=$PWD;
-  cd $CURRENT_DIR
-  cd $SCORECARD_DIR;
+  cd $SCORECARD_DIR
   go build;
   echo "scorecard build done"
   cd $CURRENT_DIR
 fi
 
 #Do the same thing for scc for value worker
-if [ -d "$HOME/scc" ]; then
-  echo " Scc already exists, skipping cloning ..."
-  echo " Updating Scc ... "
-  rm -rf $HOME/scc  
+SCC_DIR="$HOME/scc"
+CURRENT_DIR=$PWD;
+
+if [ -d "$SCC_DIR" ]; then
+  echo " Scc already exists, updating..."
+  cd $SCC_DIR
+  # Check that dir is valid scc repo
+  SCC_URL="$(git remote get-url origin || true)"
+  if [[ "$SCC_URL" != *"boyter/scc"* ]]; then
+    echo "ERROR: $PWD is not an existing scc directory"
+    exit 127
+  fi
+
+  git pull
+else
+  echo "Cloning Sloc Cloc and Code (SCC) to generate value data ..."
+  git clone https://github.com/boyter/scc "$SCC_DIR"
+  cd $SCC_DIR
 fi
 
-echo "Cloning Sloc Cloc and Code (SCC) to generate value data ..."
-git clone https://github.com/boyter/scc $HOME/scc
-cd $HOME/scc
-CURRENT_DIR=$PWD;
-cd $CURRENT_DIR
-cd $HOME/scc;
 go build;
 echo "scc build done"
 cd $CURRENT_DIR

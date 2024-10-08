@@ -4,7 +4,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_mr_reviewer_data, extract_needed_mr_commit_data, extract_needed_mr_file_data, extract_needed_mr_metadata, extract_needed_gitlab_mr_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
-from augur.tasks.github.util.util import get_owner_repo, add_key_value_pair_to_dicts
+from augur.tasks.github.util.util import get_gitlab_repo_identifier, add_key_value_pair_to_dicts
 from augur.application.db.models import PullRequest, PullRequestLabel, PullRequestMeta, PullRequestCommit, PullRequestFile, PullRequestMessageRef, Repo, Message, Contributor, PullRequestAssignee
 from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 from augur.tasks.util.worker_util import remove_duplicate_dicts
@@ -26,7 +26,7 @@ def collect_gitlab_merge_requests(repo_git: str) -> int:
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
 
     key_auth = GitlabRandomKeyAuth(logger)
 
@@ -51,11 +51,13 @@ def retrieve_all_mr_data(repo_git: str, logger, key_auth) -> None:
         key_auth: key auth cache and rotator object 
     """
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
+
+    repo_identifier = get_gitlab_repo_identifier(owner, repo)
 
     logger.info(f"Collecting pull requests for {owner}/{repo}")
 
-    url = f"https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests?with_labels_details=True"
+    url = f"https://gitlab.com/api/v4/projects/{repo_identifier}/merge_requests?with_labels_details=True"
     mrs = GitlabApiHandler(key_auth, logger)
 
     all_data = []
@@ -171,15 +173,17 @@ def collect_merge_request_comments(mr_ids, repo_git) -> int:
         repo_git: the repo url string
     """
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
 
     logger = logging.getLogger(collect_merge_request_comments.__name__) 
+
+    repo_identifier = get_gitlab_repo_identifier(owner, repo)
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
     key_auth = GitlabRandomKeyAuth(logger)
 
-    url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/notes".format(owner=owner, repo=repo, id="{id}")
+    url = "https://gitlab.com/api/v4/projects/{repo_identifier}/merge_requests/{id}/notes".format(repo_identifier=repo_identifier, id="{id}")
     comments = retrieve_merge_request_data(mr_ids, url, "comments", owner, repo, key_auth, logger, response_type="list")
 
     with get_session() as session:
@@ -282,7 +286,9 @@ def collect_merge_request_metadata(mr_ids, repo_git) -> int:
         repo_git: the repo url string
     """
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
+
+    repo_identifier = get_gitlab_repo_identifier(owner, repo)
 
     logger = logging.getLogger(collect_merge_request_metadata.__name__) 
 
@@ -290,7 +296,7 @@ def collect_merge_request_metadata(mr_ids, repo_git) -> int:
 
     key_auth = GitlabRandomKeyAuth(logger)
 
-    url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}".format(owner=owner, repo=repo, id="{id}")
+    url = "https://gitlab.com/api/v4/projects/{repo_identifier}/merge_requests/{id}".format(repo_identifier=repo_identifier, id="{id}")
     metadata_list = retrieve_merge_request_data(mr_ids, url, "metadata", owner, repo, key_auth, logger, response_type="dict")
 
     with get_session() as session:
@@ -347,7 +353,9 @@ def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
         repo_git: the repo url string
     """
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
+
+    repo_identifier = get_gitlab_repo_identifier(owner, repo)
 
     logger = logging.getLogger(collect_merge_request_reviewers.__name__) 
 
@@ -355,7 +363,7 @@ def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
 
     key_auth = GitlabRandomKeyAuth(logger)
 
-    url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/approvals".format(owner=owner, repo=repo, id="{id}")
+    url = "https://gitlab.com/api/v4/projects/{repo_identifier}/merge_requests/{id}/approvals".format(repo_identifier=repo_identifier, id="{id}")
     reviewers = retrieve_merge_request_data(mr_ids, url, "reviewers", owner, repo, key_auth, logger, response_type="dict")
 
     with get_session() as session:
@@ -414,7 +422,9 @@ def collect_merge_request_commits(mr_ids, repo_git) -> int:
         repo_git: the repo url string
     """
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
+
+    repo_identifier = get_gitlab_repo_identifier(owner, repo)
 
     logger = logging.getLogger(collect_merge_request_commits.__name__) 
 
@@ -422,7 +432,7 @@ def collect_merge_request_commits(mr_ids, repo_git) -> int:
 
     key_auth = GitlabRandomKeyAuth(logger)
 
-    url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/commits".format(owner=owner, repo=repo, id="{id}")
+    url = "https://gitlab.com/api/v4/projects/{repo_identifier}/merge_requests/{id}/commits".format(repo_identifier=repo_identifier, id="{id}")
     commits = retrieve_merge_request_data(mr_ids, url, "commits", owner, repo, key_auth, logger, response_type="list")
 
     with get_session() as session:
@@ -484,13 +494,15 @@ def collect_merge_request_files(mr_ids, repo_git) -> int:
 
     logger = logging.getLogger(collect_merge_request_files.__name__) 
 
-    owner, repo = get_owner_repo(repo_git)
+    owner, repo = Repo.parse_gitlab_repo_url(repo_git)
+
+    repo_identifier = get_gitlab_repo_identifier(owner, repo)
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
     key_auth = GitlabRandomKeyAuth(logger)
 
-    url = "https://gitlab.com/api/v4/projects/{owner}%2f{repo}/merge_requests/{id}/changes".format(owner=owner, repo=repo, id="{id}")
+    url = "https://gitlab.com/api/v4/projects/{repo_identifier}/merge_requests/{id}/changes".format(repo_identifier=repo_identifier, id="{id}")
     files = retrieve_merge_request_data(mr_ids, url, "files", owner, repo, key_auth, logger, response_type="dict")
 
     with get_session() as session:

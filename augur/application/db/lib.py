@@ -191,6 +191,22 @@ def get_working_commits_by_repo_id(repo_id):
 
     return working_commits
 
+def get_missing_commit_message_hashes(repo_id):
+
+    fetch_missing_hashes_sql = s.sql.text("""
+    SELECT DISTINCT cmt_commit_hash FROM commits
+    WHERE repo_id=:repo_id 
+    AND cmt_commit_hash NOT IN 
+    (SELECT DISTINCT cmt_hash FROM commit_messages WHERE repo_id=:repo_id);
+    """).bindparams(repo_id=repo_id)
+
+    try:
+        missing_commit_hashes = fetchall_data_from_sql_text(fetch_missing_hashes_sql)
+    except:
+        missing_commit_hashes = []
+    
+    return missing_commit_hashes
+
 def get_worker_oauth_keys(platform: str):
 
     with get_session() as session:
