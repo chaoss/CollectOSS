@@ -7,7 +7,7 @@ from time import sleep
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
-from augur.application.db.lib import get_group_by_name, get_repo_by_repo_git, get_repo_by_src_id
+from augur.application.db.lib import get_group_by_name, get_repo_by_repo_git, get_github_repo_by_src_id, get_gitlab_repo_by_src_id
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models.augur_operations import retrieve_owner_repos, FRONTEND_REPO_GROUP_NAME, RepoGroup
 from augur.tasks.github.util.github_paginator import hit_api
@@ -97,7 +97,7 @@ def add_gitlab_repos(user_id, group_name, repo_urls):
 
             repo_src_id = result["id"]
 
-            repo = get_repo_by_src_id(repo_src_id)
+            repo = get_gitlab_repo_by_src_id(repo_src_id)
             if repo:
                 # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
                 add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
@@ -160,7 +160,7 @@ def add_new_github_repos(repo_data, group_id, session, logger):
         repo_src_id = repo_data["databaseId"]
         repo_type = repo_data["owner"]["__typename"]
 
-        repo = get_repo_by_src_id(repo_src_id)
+        repo = get_github_repo_by_src_id(repo_src_id)
         if repo:
             # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
             add_existing_repo_to_group(logger, session, group_id, repo.repo_id)

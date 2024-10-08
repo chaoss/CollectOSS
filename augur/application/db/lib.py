@@ -144,14 +144,24 @@ def get_repo_by_repo_id(repo_id):
 
         return repo
     
-def get_repo_by_src_id(src_id):
+def get_github_repo_by_src_id(src_id):
     
     with get_session() as session:
 
-        query = session.query(Repo).filter(Repo.repo_src_id == src_id)
+        query = session.query(Repo).filter(Repo.repo_src_id == src_id, Repo.repo_git.ilike(f'%https://github.com%'))
         repo = execute_session_query(query, 'first')
 
         return repo
+    
+def get_gitlab_repo_by_src_id(src_id):
+    
+    with get_session() as session:
+
+        query = session.query(Repo).filter(Repo.repo_src_id == src_id, Repo.repo_git.ilike(f'%https://gitlab.com%'))
+        repo = execute_session_query(query, 'first')
+
+        return repo
+        
     
 def remove_working_commits_by_repo_id_and_hashes(repo_id, commit_hashes):
 
