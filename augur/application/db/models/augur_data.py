@@ -1065,7 +1065,7 @@ class Repo(Base):
         return result.groups()[0]
 
     @staticmethod
-    def insert_gitlab_repo(session, url: str, repo_group_id: int, tool_source):
+    def insert_gitlab_repo(session, url: str, repo_group_id: int, tool_source, repo_src_id):
         """Add a repo to the repo table.
 
         Args:
@@ -1099,7 +1099,8 @@ class Repo(Base):
             "repo_type": None,
             "tool_source": tool_source,
             "tool_version": "1.0",
-            "data_source": "Git"
+            "data_source": "Git",
+            "repo_src_id": repo_src_id
         }
 
         repo_unique = ["repo_git"]

@@ -1,15 +1,18 @@
 import logging
 import re
 import sqlalchemy as s
+import urllib.parse
+from time import sleep
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
-from augur.application.db.lib import get_group_by_name, get_repo_group_by_name, get_repo_by_repo_git, get_repo_by_src_id
+from augur.application.db.lib import get_group_by_name, get_repo_by_repo_git, get_repo_by_src_id
 from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.models.augur_operations import retrieve_owner_repos, FRONTEND_REPO_GROUP_NAME, RepoGroup, UserGroup
+from augur.application.db.models.augur_operations import retrieve_owner_repos, FRONTEND_REPO_GROUP_NAME, RepoGroup
+from augur.tasks.github.util.github_paginator import hit_api
 
-from augur.application.db.models import UserRepo, Repo, User
+from augur.application.db.models import UserRepo, Repo
 
 def parse_org_name(string):
 
@@ -84,18 +87,29 @@ def add_gitlab_repos(user_id, group_name, repo_urls):
 
         for url in repo_urls:
 
-            result = Repo.is_valid_gitlab_repo(session, url)
-            if not result[0]:
+            result = get_gitlab_repo_data(session, url, logger)
+            if not result:
                 continue
 
-            # TODO: Add logic to get gitlab src id
+            if "id" not in result:
+                logger.error(f"Gitlab repo data returned without id. Url: {url}. Data: {result}")
+                continue
+
+            repo_src_id = result["id"]
+
+            repo = get_repo_by_src_id(repo_src_id)
+            if repo:
+                # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
+                add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
+                continue   
 
             repo = get_repo_by_repo_git(session, url)
             if repo:
                 # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
                 add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
+                continue
             
-            add_gitlab_repo(session, url, repo_group_id, group_id)
+            add_github_repo(logger, session, url, repo_group_id, group_id, repo_src_id)
 
 
 def add_gitlab_repo(session, url, repo_group_id, group_id):
@@ -214,6 +228,53 @@ def add_github_repo(logger, session, url, repo_group_id, group_id, repo_type, re
 
     # These two things really need to be done in one commit in the future to prevent one existing without the other
     repo_id = Repo.insert_github_repo(session, url, repo_group_id, "Frontend", repo_type, repo_src_id)
+    if not repo_id:
+        logger.error("Error while adding repo: Failed to insert github repo")
+        return
+
+    result = UserRepo.insert(session, repo_id, group_id)
+    if not result:
+        logger.error(f"Error while adding repo: Failed to insert user repo record. A record with a repo_id of {repo_id} and a group id of {group_id} needs to be added to the user repo table so that this repo shows up in the users group")
+        return
+    
+
+def get_gitlab_repo_data(gl_session, url: str, logger) -> bool:
+
+    REPO_ENDPOINT = "https://gitlab.com/api/v4/projects/{}/"
+
+    owner, repo = Repo.parse_gitlab_repo_url(url)
+    if not owner or not repo:
+        logger.error(f"Tried to get gitlab repo data for invalid url: {url}")
+        return None
+
+    # Encode namespace and project name for the API request
+    project_identifier = urllib.parse.quote(f"{owner}/{repo}", safe='')
+    url = REPO_ENDPOINT.format(project_identifier)
+
+    attempts = 0
+    while attempts < 10:
+        response = hit_api(gl_session.oauths, url, logger)
+
+        if wait_in_seconds := response.headers.get("Retry-After") is not None:
+            sleep(int(wait_in_seconds))
+
+        if response.status_code == 404:
+            return None
+
+        if response.status_code == 200:
+            return response.json()
+
+        attempts += 1
+        sleep(attempts*3)
+
+    logger.error(f"Failed to get gitlab repo data after multiple attemps. Url: {url}")
+
+    return None
+
+def add_gitlab_repo(logger, session, url, repo_group_id, group_id, repo_src_id):
+
+    # These two things really need to be done in one commit in the future to prevent one existing without the other
+    repo_id = Repo.insert_gitlab_repo(session, url, repo_group_id, "Frontend", repo_src_id)
     if not repo_id:
         logger.error("Error while adding repo: Failed to insert github repo")
         return
