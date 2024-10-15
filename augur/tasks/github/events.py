@@ -316,7 +316,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
         with engine.connect() as connection:
 
             query = text(f"""
-                select pull_request_id, pr_src_number as gh_pr_number, pr_src_id from pull_requests order by pr_created_at desc; from pull_requests WHERE repo_id={repo_id} order by pr_created_at desc;
+                select pull_request_id, pr_src_number as gh_pr_number, pr_src_id from pull_requests WHERE repo_id={repo_id} order by pr_created_at desc;
             """)
 
             pr_result = connection.execute(query).fetchall()
