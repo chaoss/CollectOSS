@@ -24,7 +24,6 @@ def parse_org_and_repo_name(string):
     match = re.match(r'^\/?([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$', string)
     return match
 
-# TODO: Add support for gitlab
 @celery.task
 def add_github_orgs_and_repos(user_id, group_name, orgs, repo_urls):
 
@@ -61,7 +60,6 @@ def add_github_orgs_and_repos(user_id, group_name, orgs, repo_urls):
             add_new_github_repos(chunk, group_id, session, logger)
 
 
-# TODO: Add support for gitlab
 @celery.task
 def add_gitlab_repos(user_id, group_name, repo_urls):
 
@@ -109,7 +107,7 @@ def add_gitlab_repos(user_id, group_name, repo_urls):
                 add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
                 continue
             
-            add_github_repo(logger, session, url, repo_group_id, group_id, repo_src_id)
+            add_gitlab_repo(logger, session, url, repo_group_id, group_id, repo_src_id)
 
 
 def add_gitlab_repo(session, url, repo_group_id, group_id):
