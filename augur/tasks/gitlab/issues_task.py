@@ -319,7 +319,7 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, session):
             }
 
             message_dicts.append(
-                extract_needed_gitlab_message_data(message, platform_id, tool_source, tool_version, data_source)
+                extract_needed_gitlab_message_data(message, platform_id, repo_id, tool_source, tool_version, data_source)
             )
 
     contributors = remove_duplicate_dicts(contributors)

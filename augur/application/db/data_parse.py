@@ -1151,7 +1151,7 @@ def extract_needed_gitlab_issue_message_ref_data(message: dict, issue_id: int, r
     return message_ref_dict
 
 
-def extract_needed_gitlab_message_data(comment: dict, platform_id: int, tool_source: str, tool_version: str, data_source: str):
+def extract_needed_gitlab_message_data(comment: dict, platform_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str):
     """
     Extract specific metadata for a comment from an api response
     and connect it to the relevant platform id.
@@ -1169,6 +1169,7 @@ def extract_needed_gitlab_message_data(comment: dict, platform_id: int, tool_sou
     """
 
     comment_dict = {
+        "repo_id": repo_id,
         "pltfrm_id": platform_id,
         "msg_text": comment['body'],
         "msg_timestamp": comment['created_at'],
