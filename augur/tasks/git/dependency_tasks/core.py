@@ -76,7 +76,7 @@ def generate_scorecard(logger, repo_git):
     path = repo_git[8:]
     if path[-4:] == '.git':
         path = path.replace(".git", "")
-    command = '--repo=' + path
+    command = '--local=' + path
     
     #this is path where our scorecard project is located
     path_to_scorecard = os.environ['HOME'] + '/scorecard'
@@ -99,7 +99,7 @@ def generate_scorecard(logger, repo_git):
         logger.info('adding to database...')
         logger.debug(f"output: {required_output}")
 
-        if not required_output['checks']:
+        if not required_output.get('checks'):
             logger.info('No scorecard checks found!')
             return
         
