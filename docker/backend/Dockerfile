@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-FROM python:3.12-bookworm
+FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
 LABEL version="0.76.1"
@@ -27,6 +27,7 @@ RUN set -x \
         rustc \
         cargo \
         chromium \
+        tar \
         chromium-driver \
         && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \

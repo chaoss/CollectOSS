@@ -82,7 +82,7 @@ git remote add upstream https://github.com/chaoss/augur.git
 ```
 Whenever you need to make changes, make sure your ```main``` branch is in sync with the main repository, by checking out to the ```main``` branch and running:
 ```
-git pull upstream master
+git pull upstream main
 git push origin master
 ```
 
