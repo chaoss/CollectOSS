@@ -11,7 +11,9 @@ We follow the [First Timers Only](https://www.firsttimersonly.com/) philosophy o
 ## NEW RELEASE ALERT!
 **If you want to jump right in, the updated docker, docker-compose and bare metal installation instructions are available [here](docs/new-install.md)**.
 
+
 Augur is now releasing a dramatically improved new version to the ```main``` branch. It is also available [here](https://github.com/chaoss/augur/releases/tag/v0.76.2).
+
 
 - The `main` branch is a stable version of our new architecture, which features:
   - Dramatic improvement in the speed of large scale data collection (100,000+ repos). All data is obtained for 100k+ repos within 2 weeks.
