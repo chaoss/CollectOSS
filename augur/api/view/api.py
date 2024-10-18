@@ -106,7 +106,7 @@ def av_add_user_repo():
             # matches https://gitlab.com/{org}/{repo}/ or http://gitlab.com/{org}/{repo}
             elif Repo.parse_gitlab_repo_url(url)[0]:
 
-                org_name, repo_name = Repo.parse_github_repo_url(url)
+                org_name, repo_name = Repo.parse_gitlab_repo_url(url)
                 repo_git = f"https://gitlab.com/{org_name}/{repo_name}"
 
                 # TODO: gitlab ensure the whole repo git is inserted so it can be found here
