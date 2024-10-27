@@ -140,12 +140,12 @@ def parse_poetry_lock(file_handle):
     group = 'runtime'
     for package in manifest['package']:
         req = None
-        if package['category'] == 'main':
+        if package.get('category') == 'main':
             group = 'runtime'
-        if package['category'] == 'dev':
+        if package.get('category') == 'dev':
             group = 'develop'
         if 'version' in package:
-            req = package['version']
+            req = package.get('version')
         elif 'git' in package:
             req = package['git']+'#'+package['ref']
         Dict = {'name': package['name'], 'requirement': req, 'type': group, 'package': 'PYPI'}
