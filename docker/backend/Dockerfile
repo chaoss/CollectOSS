@@ -2,7 +2,7 @@
 FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.76.1"
+LABEL version="0.76.5"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/usr/bin/:/usr/local/bin:/usr/lib:${PATH}"
@@ -28,6 +28,7 @@ RUN set -x \
         cargo \
         chromium \
         tar \
+	jq \
         chromium-driver \
         && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
@@ -39,7 +40,7 @@ RUN set -x \
     && apt-get install -y firefox-esr
 
 # Install Geckodriver
-RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep 'tag_name' | cut -d\" -f4 | sed 's/v//') \
+RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | jq -r '.tag_name' | sed 's/v//') \
     && ARCH=$(uname -m) \
     && if [ "$ARCH" = "aarch64" ]; then \
          GECKODRIVER_URL="https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux-aarch64.tar.gz"; \
