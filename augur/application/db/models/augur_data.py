@@ -938,9 +938,12 @@ class Repo(Base):
                     mktime(gmtime(time()))
                 )
                 wait_until_time = localtime(wait_until)
-                logger.error(f"rate limited fetching {url}z")
+                logger.error(f"rate limited fetching {url}")
                 logger.error(f"sleeping until {wait_until_time.tm_hour}:{wait_until_time.tm_min} ({wait_in_seconds} seconds)")
                 sleep(wait_in_seconds)
+                attempts+=1
+                continue
+
             # if there was an error return False
             if "message" in data.keys():
 
