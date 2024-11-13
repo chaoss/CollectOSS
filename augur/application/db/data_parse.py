@@ -791,6 +791,11 @@ def extract_needed_pr_data_from_gitlab_merge_request(pr, repo_id, tool_source, t
     Returns:
         Parsed pr dict
     """
+    pr_closed_datetime = pr['closed_at']
+    pr_merged_datetime = pr['merged_at']
+
+    if not pr_closed_datetime:
+        pr_closed_datetime = pr_merged_datetime
 
     pr_dict = {
         'repo_id': repo_id,
@@ -810,8 +815,8 @@ def extract_needed_pr_data_from_gitlab_merge_request(pr, repo_id, tool_source, t
         'pr_body': pr['description'],
         'pr_created_at': pr['created_at'],
         'pr_updated_at': pr['updated_at'],
-        'pr_closed_at': pr['closed_at'],
-        'pr_merged_at': pr['merged_at'],
+        'pr_closed_at': pr_closed_datetime,
+        'pr_merged_at': pr_merged_datetime,
         'pr_merge_commit_sha': pr['merge_commit_sha'],
         'pr_teams': None,
         'pr_milestone': pr['milestone'].get('title') if pr['milestone'] else None,
