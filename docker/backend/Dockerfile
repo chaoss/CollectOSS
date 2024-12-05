@@ -100,9 +100,10 @@ RUN set -x \
     && /opt/venv/bin/pip install wheel \
     && /opt/venv/bin/pip install .
 
+RUN ./scripts/docker/install-go.sh
+ENV PATH="${PATH}:/usr/local/go/bin"
 RUN ./scripts/docker/install-workers-deps.sh
 
-RUN ./scripts/docker/install-go.sh
 # RUN ./scripts/install/workers.sh 
 
 RUN mkdir -p repos/ logs/ /augur/facade/
