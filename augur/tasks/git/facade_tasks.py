@@ -174,12 +174,19 @@ def facade_fetch_missing_commit_messages(repo_git):
 
     for hash in missing_message_hashes:
         #Get the huge list of commits to process.
+        logger.debug(f"The hash object is: {hash}. It has a type of: {type(hash)}")
+
+        try:
+            escaped_hash = hash['cmt_commit_hash']
+        except (TypeError, IndexError):
+            escaped_hash = hash
+
         absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
         repo_loc = (f"{absolute_path}/.git")
 
         try: 
             commit_message = check_output(
-                f"git --git-dir {repo_loc} log --format=%B -n 1 {hash}".split()
+                f"git --git-dir {repo_loc} log --format=%B -n 1 {escaped_hash}".split()
             ).decode('utf-8').strip()
 
             msg_record = {
