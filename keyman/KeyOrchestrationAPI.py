@@ -2,7 +2,7 @@
 """ This is a hybrid-fixed specification
 
 The names of the channels *MUST NOT* change,
-but the channel IDs and message types are free to
+but the channel IDs are free to
 """
 spec = {
     "channels": [
@@ -25,14 +25,26 @@ spec = {
             "id": "worker-oath-request",
             "message_types": {
                 "NEW": {
-                    "key_platform": str,
-                    "requester_id": str
+                    "fields": {
+                        "key_platform": { "required": str },
+                        "requester_id": { "required": str }
+                    },
+                    "response": {
+                        "key": { "optional": str },
+                        "wait": { "optional": int }
+                    }
                 },
                 "EXPIRE": {
-                    "key_str": str,
-                    "key_platform": str,
-                    "refresh_time": int,
-                    "requester_id": str
+                    "fields": {
+                        "key_str": str,
+                        "key_platform": str,
+                        "refresh_time": int,
+                        "requester_id": str
+                    },
+                    "response": {
+                        "key": { "optional": str },
+                        "wait": { "optional": int }
+                    }
                 }
             }
         }
