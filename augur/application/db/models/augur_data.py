@@ -870,6 +870,7 @@ class Repo(Base):
     data_collection_date = Column(
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
+    repo_src_id = Column(BigInteger)
 
     repo_group = relationship("RepoGroup", back_populates="repo")
     user_repo = relationship("UserRepo", back_populates="repo")
@@ -937,9 +938,12 @@ class Repo(Base):
                     mktime(gmtime(time()))
                 )
                 wait_until_time = localtime(wait_until)
-                logger.error(f"rate limited fetching {url}z")
+                logger.error(f"rate limited fetching {url}")
                 logger.error(f"sleeping until {wait_until_time.tm_hour}:{wait_until_time.tm_min} ({wait_in_seconds} seconds)")
                 sleep(wait_in_seconds)
+                attempts+=1
+                continue
+
             # if there was an error return False
             if "message" in data.keys():
 
@@ -1064,7 +1068,7 @@ class Repo(Base):
         return result.groups()[0]
 
     @staticmethod
-    def insert_gitlab_repo(session, url: str, repo_group_id: int, tool_source):
+    def insert_gitlab_repo(session, url: str, repo_group_id: int, tool_source, repo_src_id):
         """Add a repo to the repo table.
 
         Args:
@@ -1098,7 +1102,8 @@ class Repo(Base):
             "repo_type": None,
             "tool_source": tool_source,
             "tool_version": "1.0",
-            "data_source": "Git"
+            "data_source": "Git",
+            "repo_src_id": repo_src_id
         }
 
         repo_unique = ["repo_git"]
@@ -1111,7 +1116,7 @@ class Repo(Base):
         return result[0]["repo_id"]
 
     @staticmethod
-    def insert_github_repo(session, url: str, repo_group_id: int, tool_source, repo_type):
+    def insert_github_repo(session, url: str, repo_group_id: int, tool_source, repo_type, repo_src_id):
         """Add a repo to the repo table.
 
         Args:
@@ -1146,7 +1151,8 @@ class Repo(Base):
             "repo_type": repo_type,
             "tool_source": tool_source,
             "tool_version": "1.0",
-            "data_source": "Git"
+            "data_source": "Git",
+            "repo_src_id": repo_src_id
         }
 
         repo_unique = ["repo_git"]

@@ -9,7 +9,7 @@ from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
 
-from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,UnresolvedCommitEmail, Contributor, CollectionStatus
+from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,UnresolvedCommitEmail, Contributor, CollectionStatus, UserGroup, RepoGroup
 from augur.tasks.util.collection_state import CollectionState
 from augur.application.db import get_session, get_engine
 from augur.application.db.util import execute_session_query
@@ -143,6 +143,25 @@ def get_repo_by_repo_id(repo_id):
         repo = execute_session_query(query, 'one')
 
         return repo
+    
+def get_github_repo_by_src_id(src_id):
+    
+    with get_session() as session:
+
+        query = session.query(Repo).filter(Repo.repo_src_id == src_id, Repo.repo_git.ilike(f'%https://github.com%'))
+        repo = execute_session_query(query, 'first')
+
+        return repo
+    
+def get_gitlab_repo_by_src_id(src_id):
+    
+    with get_session() as session:
+
+        query = session.query(Repo).filter(Repo.repo_src_id == src_id, Repo.repo_git.ilike(f'%https://gitlab.com%'))
+        repo = execute_session_query(query, 'first')
+
+        return repo
+        
     
 def remove_working_commits_by_repo_id_and_hashes(repo_id, commit_hashes):
 
@@ -553,3 +572,24 @@ def get_updated_issues(repo_id, since):
     with get_session() as session:
         return session.query(Issue).filter(Issue.repo_id == repo_id, Issue.updated_at >= since).order_by(Issue.gh_issue_number).all()
             
+
+
+def get_group_by_name(user_id, group_name):
+
+
+    with get_session() as session:
+        
+        try:
+            user_group = session.query(UserGroup).filter(UserGroup.user_id == user_id, UserGroup.name == group_name).one()
+        except s.orm.exc.NoResultFound:
+            return None
+
+        return user_group
+    
+def get_repo_group_by_name(name):
+
+
+    with get_session() as session:
+        
+        return  session.query(RepoGroup).filter(RepoGroup.rg_name == name).first()
+        
