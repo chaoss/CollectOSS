@@ -1116,7 +1116,7 @@ class Repo(Base):
         return result[0]["repo_id"]
 
     @staticmethod
-    def insert_github_repo(session, url: str, repo_group_id: int, tool_source, repo_type, repo_src_id):
+    def insert_github_repo(session, url: str, repo_group_id: int, tool_source, repo_type, repo_src_id = None):
         """Add a repo to the repo table.
 
         Args:
