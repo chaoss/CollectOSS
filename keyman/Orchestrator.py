@@ -2,7 +2,7 @@ from augur.tasks.init.redis_connection import redis_connection as conn
 from augur.application.logs import AugurLogger
 import json, random, time
 
-from .KeyOrchestrationAPI import spec
+from keyman.KeyOrchestrationAPI import spec, WaitKeyTimeout
 
 class KeyOrchestrator:
     def __init__(self) -> None:
@@ -15,15 +15,15 @@ class KeyOrchestrator:
             setattr(self, channel["name"], channel["id"])
             self.stdin.subscribe(channel["id"])
 
-        self.fresh_keys: dict[str, set[str]] = {}
+        self.fresh_keys: dict[str, list[str]] = {}
         self.expired_keys: dict[str, dict[str, int]] = {}
 
     def publish_key(self, key, platform):
         if platform not in self.fresh_keys:
-            self.fresh_keys[platform] = {key,}
+            self.fresh_keys[platform] = [key]
             self.expired_keys[platform] = {}
         else:
-            self.fresh_keys[platform].add(key)
+            self.fresh_keys[platform].append(key)
 
     def unpublish_key(self, key, platform):
         if platform not in self.fresh_keys:
@@ -53,7 +53,7 @@ class KeyOrchestrator:
                     refreshed_keys.append(key)
 
             for key in refreshed_keys:
-                self.fresh_keys[platform].add(key)
+                self.fresh_keys[platform].append(key)
                 self.expired_keys[platform].pop(key)
 
     def new_key(self, platform):
@@ -74,7 +74,8 @@ class KeyOrchestrator:
         return random.choice(self.fresh_keys[platform])
 
     def run(self):
-        while msg := self.stdin.listen():
+        self.logger.info("Ready")
+        for msg in self.stdin.listen():
             try:
                 if msg.get("type") != "message":
                     # Filter out unwanted events
@@ -83,7 +84,8 @@ class KeyOrchestrator:
                     # The pub/sub API makes no guarantee that a channel will be specified
                     continue
             
-                channel: str = channel.decode()
+                # The docs say that msg.channel is a bytes, but testing shows it's a str ?
+                channel: str = channel.decode() if isinstance(channel, bytes) else channel
 
                 request = json.loads(msg.get("data"))
             except Exception as e:
@@ -99,18 +101,31 @@ class KeyOrchestrator:
                 channel that we have actions prepared for.
             """
             if channel == self.ANNOUNCE:
+                if "requester_id" in request:
+                    stdout = f"{self.ANNOUNCE}-{request['requester_id']}"
                 try:
                     if request["type"] == "PUBLISH":
                         self.publish_key(request["key_str"], request["key_platform"])
                     elif request["type"] == "UNPUBLISH":
                         self.unpublish_key(request["key_str"], request["key_platform"])
+                    elif request["type"] == "ACK":
+                        conn.publish(stdout, "")
+                    elif request["type"] == "LIST_PLATFORMS":
+                        platforms = [ p for p in self.fresh_keys.keys() ]
+                        conn.publish(stdout, json.dumps(platforms))
+                    elif request["type"] == "LIST_KEYS":
+                        keys = list(self.fresh_keys[request["key_platform"]])
+                        keys += list(self.expired_keys[request["key_platform"]].keys())
+                        conn.publish(stdout, json.dumps(keys))
                     elif request["type"] == "SHUTDOWN":
+                        self.logger.info("Shutting down")
                         # Close
                         return
                 except Exception as e:
                     # This is a bare exception, because we don't really care why failure happened
                     self.logger.exception("Error during ANNOUNCE")
                     continue
+                
             elif channel == self.REQUEST:
                 self.refresh_keys()
                 stdout = f"{self.REQUEST}-{request['requester_id']}"
@@ -120,7 +135,7 @@ class KeyOrchestrator:
                         new_key = self.new_key(request["key_platform"])
                     elif request["type"] == "EXPIRE":
                         self.expire_key(request["key_str"], request["key_platform"], request["refresh_time"])
-                        new_key = self.new_key(request["key_platform"])
+                        continue
                 except WaitKeyTimeout as w:
                     timeout = w.tiemout_seconds
                     conn.publish(stdout, json.dumps({
@@ -135,14 +150,13 @@ class KeyOrchestrator:
                 conn.publish(stdout, json.dumps({
                     "key": new_key
                 }))
-        
-        self.logger.info("Got no message on listen(), shutting down")
-
-class WaitKeyTimeout:
-    def __init__(self, timeout_seconds) -> None:
-        self.tiemout_seconds = timeout_seconds
                     
 if __name__ == "__main__":
     manager = KeyOrchestrator()
     
-    manager.run()
+    try:
+        manager.run()
+    except KeyboardInterrupt:
+        # Exit silently on sigint
+        manager.logger.info("Interrupted")
+        pass

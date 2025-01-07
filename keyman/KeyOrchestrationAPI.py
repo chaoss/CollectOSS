@@ -18,6 +18,30 @@ spec = {
                     "key_str": str,
                     "key_platform": str
                 },
+                "ACK": {
+                    "fields": {
+                        "requester_id": { "required": str }
+                    },
+                    "response": ""
+                },
+                "LIST_PLATFORMS": {
+                    "fields": {
+                        "requester_id": { "required": str }
+                    },
+                    "response": [
+                        { "required": list[str] }
+                    ]
+                },
+                "LIST_KEYS": {
+                    "fields": {
+                        "requester_id": { "required": str },
+                        "key_platform": { "required": str }
+                    },
+                    "response": [
+                        { "optional": list[str] },
+                        { "optional": { "status": "error" } }
+                    ]
+                },
                 "SHUTDOWN": {}
             }
         }, {
@@ -42,11 +66,14 @@ spec = {
                         "requester_id": str
                     },
                     "response": {
-                        "key": { "optional": str },
-                        "wait": { "optional": int }
+
                     }
                 }
             }
         }
     ]
 }
+
+class WaitKeyTimeout(Exception):
+    def __init__(self, timeout_seconds) -> None:
+        self.tiemout_seconds = timeout_seconds
