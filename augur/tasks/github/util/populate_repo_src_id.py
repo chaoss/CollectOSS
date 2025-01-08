@@ -18,7 +18,8 @@ def populate_repo_src_id_task(repo_git):
     repo_src_id = get_repo_src_id(owner, repo, logger)
 
     update_repo_src_id(repo_id, repo_src_id)
-    
+
+    return 0    
 
 def update_repo_src_id(repo_id, repo_src_id):
     
