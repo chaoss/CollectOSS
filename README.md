@@ -1,4 +1,4 @@
-# Augur NEW Release v0.76.6
+# Augur NEW Release v0.76.7
 
 Augur is primarily a data engineering tool that makes it possible for data scientists to gather open source software community data - less data carpentry for everyone else! 
 The primary way of looking at Augur data is through [8Knot](https://github.com/oss-aspen/8knot), a public instance of 8Knot is available [here](https://metrix.chaoss.io) - this is tied to a public instance of [Augur](https://ai.chaoss.io). 
@@ -12,7 +12,7 @@ We follow the [First Timers Only](https://www.firsttimersonly.com/) philosophy o
 **If you want to jump right in, the updated docker, docker-compose and bare metal installation instructions are available [here](docs/new-install.md)**.
 
 
-Augur is now releasing a dramatically improved new version to the ```main``` branch. It is also available [here](https://github.com/chaoss/augur/releases/tag/v0.76.6).
+Augur is now releasing a dramatically improved new version to the ```main``` branch. It is also available [here](https://github.com/chaoss/augur/releases/tag/v0.76.7).
 
 
 - The `main` branch is a stable version of our new architecture, which features:
