@@ -66,7 +66,7 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/comments"
 
     if since:
-        url += f"&since={since.isoformat()}"
+        url += f"?since={since.isoformat()}"
 
     # define logger for task
     logger.info(f"Collecting github comments for {owner}/{repo}")
