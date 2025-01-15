@@ -93,9 +93,9 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
 
         if since:
              query = text(f"""
-                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_updated_at > {since} order by pr_created_at desc)
+                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_updated_at > timestamptz(timestamp '{since}') order by pr_created_at desc)
                 UNION
-                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND updated_at > {since} order by created_at desc);
+                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND updated_at > timestamptz(timestamp '{since}') order by created_at desc);
             """)
         else:
 
