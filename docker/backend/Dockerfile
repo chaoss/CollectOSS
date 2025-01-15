@@ -2,7 +2,7 @@
 FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.76.5"
+LABEL version="0.76.6"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/usr/bin/:/usr/local/bin:/usr/lib:${PATH}"
@@ -100,9 +100,10 @@ RUN set -x \
     && /opt/venv/bin/pip install wheel \
     && /opt/venv/bin/pip install .
 
+RUN ./scripts/docker/install-go.sh
+ENV PATH="${PATH}:/usr/local/go/bin"
 RUN ./scripts/docker/install-workers-deps.sh
 
-RUN ./scripts/docker/install-go.sh
 # RUN ./scripts/install/workers.sh 
 
 RUN mkdir -p repos/ logs/ /augur/facade/
