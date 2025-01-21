@@ -288,7 +288,7 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, session):
 
     # create mapping from mr number to pull request id of current mrs
     issue_number_to_id_map = {}
-    issues = session.session.query(Issue).filter(Issue.repo_id == repo_id).all()
+    issues = session.query(Issue).filter(Issue.repo_id == repo_id).all()
     for issue in issues:
         issue_number_to_id_map[issue.gh_issue_number] = issue.issue_id
 
