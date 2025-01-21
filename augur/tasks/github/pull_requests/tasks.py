@@ -219,7 +219,7 @@ def process_pull_request_review_contributor(pr_review: dict, tool_source: str, t
     return pr_review_cntrb
 
 @celery.task(base=AugurSecondaryRepoCollectionTask)
-def collect_pull_request_review_comments(repo_git: str) -> None:
+def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -> None:
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -229,6 +229,11 @@ def collect_pull_request_review_comments(repo_git: str) -> None:
     logger.debug(f"Collecting pull request review comments for {owner}/{repo}")
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
+
+    if not full_collection:
+        # subtract 2 days to ensure all data is collected 
+        core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
+        review_msg_url += f"?since={core_data_last_collected.isoformat()}"        
 
     pr_reviews = get_pull_request_reviews_by_repo_id(repo_id)
 
