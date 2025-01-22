@@ -158,8 +158,7 @@ class GithubDataAccess:
                 key_reset_time = 0
                 
             self.logger.info(f"\n\n\nAPI rate limit exceeded. Key resets in {key_reset_time} seconds. Informing key manager that key is expired")
-            self.key_client.expire(self.key, epoch_when_key_resets)
-            self.key = None
+            self.key = self.key_client.expire(self.key, epoch_when_key_resets)
 
         else:
             time.sleep(60)
