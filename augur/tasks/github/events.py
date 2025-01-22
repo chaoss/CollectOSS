@@ -31,7 +31,7 @@ def collect_events(repo_git: str, full_collection: bool):
     if full_collection:
         core_data_last_collected = None
     else:
-        repo_id = get_repo_by_repo_git().repo_id
+        repo_id = get_repo_by_repo_git(repo_git).repo_id
 
         # subtract 2 days to ensure all data is collected 
         core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
@@ -43,7 +43,7 @@ def collect_events(repo_git: str, full_collection: bool):
     else:
         collection_strategy = ThoroughGithubEventCollection(logger)
 
-    collection_strategy.collect(repo_git, key_auth)
+    collection_strategy.collect(repo_git, key_auth, core_data_last_collected)
 
 def bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, repo):
 
