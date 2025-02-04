@@ -13,6 +13,7 @@ from .util import get_repo_ids, UserGroupRequest, repo_metrics_route, group_metr
 
 from ...server import app
 
+
 @repo_metrics_route('/metrics/issues-first-time-opened/repo/<int:repo_id>')
 def issues_first_time_opened_repo(repo_id, period, begin_date, end_date):
 
@@ -36,335 +37,175 @@ def issues_first_time_closed_group(user_group_request, period, begin_date, end_d
 
 
 @repo_metrics_route('/metrics/issues-new/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_new_repo(repo_id, period, begin_date, end_date):
 
     return get_new_issues(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
 
 @group_metrics_route('/metrics/issues-new/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_new_group(user_group_request, period, begin_date, end_date):
 
     return get_new_issues(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 
 @repo_metrics_route('/metrics/issues-active/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_active_repo(repo_id, period, begin_date, end_date):
 
     return get_active_issues(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
 
 @group_metrics_route('/metrics/issues-active/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_active_group(user_group_request, period, begin_date, end_date):
 
     return get_active_issues(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 
 @repo_metrics_route('/metrics/issues-closed/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_closed_repo(repo_id, period, begin_date, end_date):
 
     return get_closed_issues(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
 
 @group_metrics_route('/metrics/issues-closed/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_closed_group(user_group_request, period, begin_date, end_date):
 
     return get_closed_issues(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 
 @repo_metrics_route('/metrics/issues-duration/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_duration_repo(repo_id, period, begin_date, end_date):
 
     return get_issue_duration(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
 
 @group_metrics_route('/metrics/issues-duration/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_duration_group(user_group_request, period, begin_date, end_date):
 
     return get_issue_duration(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 
 @repo_metrics_route('/metrics/issues-participants/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_participants_repo(repo_id, period, begin_date, end_date):
 
     return get_issue_participants(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
 
 @group_metrics_route('/metrics/issues-participants/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_participants_group(user_group_request, period, begin_date, end_date):
 
     return get_issue_participants(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 
 @repo_metrics_route('/metrics/issues-backlog/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_backlog_repo(repo_id, period, begin_date, end_date):
 
     return get_issue_backlog(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
 
 @group_metrics_route('/metrics/issues-backlog/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_backlog_group(user_group_request, period, begin_date, end_date):
 
     return get_issue_backlog(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 
 @repo_metrics_route('/metrics/issues-throughput/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_throughput_repo(repo_id, period, begin_date, end_date):
 
     return get_issue_throughput(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
 
 @group_metrics_route('/metrics/issues-throughput/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_throughput_group(user_group_request, period, begin_date, end_date):
 
     return get_issue_throughput(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 
 @repo_metrics_route('/metrics/issues-open-age/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_open_age_repo(repo_id, period, begin_date, end_date):
 
     return get_issue_open_age(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
 
 @group_metrics_route('/metrics/issues-open-age/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_open_age_group(user_group_request, period, begin_date, end_date):
 
     return get_issue_open_age(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 @repo_metrics_route('/metrics/issues-closed-resolution-duration/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_closed_resolution_duration_repo(repo_id, period, begin_date, end_date):
 
     return get_issue_closed_resolution_duration(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
 
 @group_metrics_route('/metrics/issues-closed-resolution-duration/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_closed_resolution_duration_group(user_group_request, period, begin_date, end_date):
 
     return get_issue_closed_resolution_duration(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 @repo_metrics_route('/metrics/issues-average-issue-resolution-time/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_average_resolution_time_repo(repo_id, period, begin_date, end_date):
 
-    return get_issue_closed_resolution_duration(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
+    return get_average_issue_resolution_time(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
 
 @group_metrics_route('/metrics/issues-average-issue-resolution-time/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_average_resolution_time_group(user_group_request, period, begin_date, end_date):
 
     return get_average_issue_resolution_time(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 
 @repo_metrics_route('/metrics/issues-maintainer-response-duration/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_maintainer_response_duration_repo(repo_id, period, begin_date, end_date):
 
     return get_issue_maintainer_response_duration(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date)
 
 @group_metrics_route('/metrics/issues-maintainer-response-duration/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_maintainer_response_duration_group(user_group_request, period, begin_date, end_date):
 
     return get_issue_maintainer_response_duration(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 # TODO: Look into what to do here. These routes only took in repo_id and repo_group_id
 @repo_metrics_route('/metrics/open-issues-count/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_open_count_repo(repo_id, period, begin_date, end_date):
 
     return get_open_issue_count(repo_id=repo_id)
 
 @group_metrics_route('/metrics/open-issues-count/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_open_count_group(user_group_request, period, begin_date, end_date):
 
     return get_open_issue_count(user_group_request=user_group_request)
 
 @repo_metrics_route('/metrics/closed-issues-count/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_closed_count_repo(repo_id, period, begin_date, end_date):
 
     return get_closed_issue_count(repo_id=repo_id)
 
 @group_metrics_route('/metrics/closed-issues-count/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_closed_count_group(user_group_request, period, begin_date, end_date):
 
     return get_closed_issue_count(user_group_request=user_group_request)
 
 @repo_metrics_route('/metrics/abandoned-issues/repo/<int:repo_id>')
-def issues_first_time_closed_repo(repo_id, period, begin_date, end_date):
+def issues_abandonded_repo(repo_id, period, begin_date, end_date):
 
     return get_abandoned_issues(repo_id=repo_id)
 
 @group_metrics_route('/metrics/abandoned-issues/group/<string:group_name>')
-def issues_first_time_closed_group(user_group_request, period, begin_date, end_date):
+def issues_abandonded_group(user_group_request, period, begin_date, end_date):
 
     return get_abandoned_issues(user_group_request=user_group_request)
 
 
-# TODO: Look into how to handle these metrics that have a group by
-@register_metric()
-def issue_comments_mean(repo_group_id, repo_id=None, group_by='week'):
-    group_by = group_by.lower()
+@repo_metrics_route('/metrics/issue-comments-mean/repo/<int:repo_id>', grouped_metric=True)
+def issues_comments_mean_repo(repo_id, period, begin_date, end_date, group_by):
 
-    if not repo_id:
-        if group_by == 'week':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('week', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 7.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND im.msg_id = m.msg_id
-                AND i.repo_id IN
-                    (SELECT repo_id FROM repo
-                     WHERE  repo_group_id = :repo_group_id)
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
+    return get_issue_comments_mean(group_by=group_by, repo_id=repo_id)
 
-        elif group_by == 'month':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('month', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 30.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND im.msg_id = m.msg_id
-                AND i.repo_id IN
-                    (SELECT repo_id FROM repo
-                     WHERE  repo_group_id = :repo_group_id)
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
+@group_metrics_route('/metrics/issue-comments-mean/group/<string:group_name>', grouped_metric=True)
+def issues_comments_mean_group(user_group_request, period, begin_date, end_date, group_by):
 
-        elif group_by == 'year':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('year', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 365.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND im.msg_id = m.msg_id
-                AND i.pull_request IS NULL 
-                AND i.repo_id IN
-                    (SELECT repo_id FROM repo
-                     WHERE  repo_group_id = :repo_group_id)
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
-
-        else:
-            raise ValueError("Incorrect value for 'group_by'")
-
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(issue_comments_mean_std_SQL, conn,
-                                params={'repo_group_id': repo_group_id})
-        return results
-
-    else:
-        if group_by == 'week':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('week', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 7.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND i.repo_id = :repo_id
-                AND im.msg_id = m.msg_id
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
-
-        elif group_by == 'month':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('month', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 30.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND i.repo_id = :repo_id
-                AND im.msg_id = m.msg_id
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
-
-        elif group_by == 'year':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('year', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 365.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND i.repo_id = :repo_id
-                AND im.msg_id = m.msg_id
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
-
-        else:
-            raise ValueError("Incorrect value for 'group_by'")
-
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(issue_comments_mean_std_SQL, conn,
-                                params={'repo_id': repo_id})
-        return results
-
-@register_metric()
-def issue_comments_mean_std(repo_group_id, repo_id=None, group_by='week'):
-    if not repo_id:
-        issue_comments_mean_std_SQL = s.sql.text("""
-            SELECT
-                repo_id,
-                DATE_TRUNC(:group_by, daily) AS date,
-                avg(total) AS average,
-                stddev(total) AS standard_deviation
-            FROM
-                (SELECT
-                    i.repo_id,
-                    DATE_TRUNC('day', m.msg_timestamp) AS daily,
-                    COUNT(*) AS total
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND im.msg_id = m.msg_id
-                AND i.repo_id IN
-                    (SELECT repo_id FROM repo
-                     WHERE  repo_group_id = :repo_group_id)
-                GROUP BY i.repo_id, daily
-                ORDER BY i.repo_id) a
-            GROUP BY repo_id, date
-            ORDER BY repo_id, date
-        """)
+    return get_issue_comments_mean(group_by=group_by, user_group_request=user_group_request)
 
 
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(issue_comments_mean_std_SQL, conn,
-                                params={'repo_group_id': repo_group_id,
-                                        'group_by': group_by})
-        return results
+@repo_metrics_route('/metrics/issue-comments-mean-std/repo/<int:repo_id>', grouped_metric=True)
+def issues_comments_mean_std_repo(repo_id, period, begin_date, end_date, group_by):
 
-    else:
-        issue_comments_mean_std_SQL = s.sql.text("""
-            SELECT
-                repo_id,
-                DATE_TRUNC(:group_by, daily) AS date,
-                avg(total) AS average,
-                stddev(total) AS standard_deviation
-            FROM
-                (SELECT
-                    i.repo_id,
-                    DATE_TRUNC('day', m.msg_timestamp) AS daily,
-                    COUNT(*) AS total
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND im.msg_id = m.msg_id
-                AND i.repo_id = :repo_id
-                GROUP BY i.repo_id, daily
-                ORDER BY i.repo_id) a
-            GROUP BY repo_id, date
-            ORDER BY date
-        """)
+    return get_issue_comments_mean_std(group_by=group_by, repo_id=repo_id)
 
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(issue_comments_mean_std_SQL, conn,
-                                params={'repo_id': repo_id, 'group_by': group_by})
-        return results
+@group_metrics_route('/metrics/issue-comments-mean-std/group/<string:group_name>', grouped_metric=True)
+def issues_comments_mean_std_group(user_group_request, period, begin_date, end_date, group_by):
+
+    return get_issue_comments_mean_std(group_by=group_by, user_group_request=user_group_request)
 
 
 
@@ -851,3 +692,104 @@ def get_abandoned_issues(repo_id : int = None, user_group_request : UserGroupReq
                 
         return results
     
+
+
+def get_issue_comments_mean_by_week(repo_id : int = None, user_group_request : UserGroupRequest = None):
+
+    with current_app.engine.connect() as conn:
+    
+        repo_ids = get_repo_ids(conn, repo_id, user_group_request)
+
+        issue_comments_mean_std_SQL = s.sql.text("""
+            SELECT
+                i.repo_id,
+                DATE_TRUNC('week', m.msg_timestamp::DATE) AS date,
+                COUNT(*) / 7.0 AS mean
+            FROM issues i, issue_message_ref im, message m
+            WHERE i.issue_id = im.issue_id
+            AND i.pull_request IS NULL 
+            AND im.msg_id = m.msg_id
+            AND i.repo_id IN :repo_ids
+            GROUP BY i.repo_id, date
+            ORDER BY i.repo_id
+        """)
+
+        results = pd.read_sql(issue_comments_mean_std_SQL, conn, params={'repo_ids': repo_ids})
+                
+        return results
+    
+group_by_day_counts = {"week": 7, "month": 30, "year": 365}
+
+    
+def get_issue_comments_mean(group_by, repo_id : int = None, user_group_request : UserGroupRequest = None):
+
+    with current_app.engine.connect() as conn:
+    
+        repo_ids = get_repo_ids(conn, repo_id, user_group_request)
+
+        issue_comments_mean_SQL = s.sql.text("""
+            SELECT
+                i.repo_id,
+                DATE_TRUNC(':group_by', m.msg_timestamp::DATE) AS date,
+                COUNT(*) / :day_count AS mean
+            FROM issues i, issue_message_ref im, message m
+            WHERE i.issue_id = im.issue_id
+            AND i.pull_request IS NULL 
+            AND im.msg_id = m.msg_id
+            AND i.repo_id IN :repo_ids
+            GROUP BY i.repo_id, date
+            ORDER BY i.repo_id
+        """)
+
+        results = pd.read_sql(issue_comments_mean_SQL, 
+                              conn, 
+                              params={
+                                  'repo_ids': repo_ids,
+                                  'group_by': group_by,
+                                  'day_count': group_by_day_counts[group_by]
+                                  }
+                            )
+                
+        return results
+    
+
+
+def get_issue_comments_mean_std(group_by, repo_id : int = None, user_group_request : UserGroupRequest = None):
+
+    with current_app.engine.connect() as conn:
+    
+        repo_ids = get_repo_ids(conn, repo_id, user_group_request)
+
+        issue_comments_mean_std_SQL = s.sql.text("""
+            SELECT
+                repo_id,
+                DATE_TRUNC(:group_by, daily) AS date,
+                avg(total) AS average,
+                stddev(total) AS standard_deviation
+            FROM
+                (SELECT
+                    i.repo_id,
+                    DATE_TRUNC('day', m.msg_timestamp) AS daily,
+                    COUNT(*) AS total
+                FROM issues i, issue_message_ref im, message m
+                WHERE i.issue_id = im.issue_id
+                AND i.pull_request IS NULL 
+                AND im.msg_id = m.msg_id
+                AND i.repo_id IN :repo_ids
+                GROUP BY i.repo_id, daily
+                ORDER BY i.repo_id) a
+            GROUP BY repo_id, date
+            ORDER BY repo_id, date
+        """)
+
+
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(issue_comments_mean_std_SQL, conn,
+                                params={'repo_ids': repo_ids,
+                                        'group_by': group_by})
+                
+        return results
+    
+
+
+

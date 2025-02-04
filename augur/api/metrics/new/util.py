@@ -4,6 +4,7 @@ from flask import request, jsonify
 
 from ...server import app
 
+VALID_GROUP_BYS = ["week", "month", "year"]
 
 class UserGroupRequest:
     user_id: int
@@ -18,7 +19,7 @@ def get_repo_ids(conn, repo_id, user_group_request):
     else:
         repo_ids.append(get_repo_ids_by_user_group(conn, user_group_request.name, user_group_request.user_id))
 
-    return repo_ids
+    return tuple(repo_ids)
 
 
 def get_repo_ids_by_user_group(conn, name: str, user_id: int) -> list:
@@ -47,7 +48,7 @@ def get_repo_ids_by_user_group(conn, name: str, user_id: int) -> list:
 
 
 
-def repo_metrics_route(route_path):
+def repo_metrics_route(route_path, grouped_metric=False):
     def decorator(func):
         @wraps(func)
         def wrapper(repo_id, *args, **kwargs):
@@ -56,9 +57,27 @@ def repo_metrics_route(route_path):
             begin_date = request.args.get('begin_date')
             end_date = request.args.get('end_date')
 
+            if grouped_metric:
+
+                group_by = request.args.get('group_by')
+
+                if not group_by:
+                    return 400, "group_by must be provided"
+
+                if group_by not in VALID_GROUP_BYS:
+                    return 400, "Invalid group_by"
+
+                kwargs['group_by'] = group_by
+
             try:
                 # Call the original function with the parameters
-                data = func(repo_id=repo_id, period=period, begin_date=begin_date, end_date=end_date, *args, **kwargs)
+                data = func(
+                    repo_id=repo_id, 
+                    period=period, 
+                    begin_date=begin_date, 
+                    end_date=end_date, 
+                    *args, 
+                    **kwargs)
                 # NOTE: Probably remove data transformation to allow for more use cases
                 return data.to_json(orient='records')
             except Exception as e:
@@ -74,7 +93,7 @@ def repo_metrics_route(route_path):
     return decorator
 
 
-def group_metrics_route(route_path):
+def group_metrics_route(route_path, grouped_metric=False):
     def decorator(func):
         @wraps(func)
         def wrapper(group_name, *args, **kwargs):
@@ -84,6 +103,18 @@ def group_metrics_route(route_path):
             begin_date = request.args.get('begin_date')
             end_date = request.args.get('end_date')
 
+            if grouped_metric:
+
+                group_by = request.args.get('group_by')
+
+                if not group_by:
+                    return 400, "group_by must be provided"
+
+                if group_by not in VALID_GROUP_BYS:
+                    return 400, "Invalid group_by"
+
+                kwargs['group_by'] = group_by
+
             # Create a UserGroupRequest object and populate it with parameters
             user_group_request = UserGroupRequest()
             user_group_request.name = group_name
@@ -91,7 +122,13 @@ def group_metrics_route(route_path):
 
             try:
                 # Call the original function with the populated parameters
-                data = func(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date, *args, **kwargs)
+                data = func(
+                    user_group_request=user_group_request, 
+                    period=period, 
+                    begin_date=begin_date, 
+                    end_date=end_date, 
+                    *args, 
+                    **kwargs)
                 # NOTE: Probably remove data transformation to allow for more use cases
                 return data.to_json(orient='records')
             except Exception as e:
