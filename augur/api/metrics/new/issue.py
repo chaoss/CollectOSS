@@ -692,36 +692,9 @@ def get_abandoned_issues(repo_id : int = None, user_group_request : UserGroupReq
                 
         return results
     
-
-
-def get_issue_comments_mean_by_week(repo_id : int = None, user_group_request : UserGroupRequest = None):
-
-    with current_app.engine.connect() as conn:
-    
-        repo_ids = get_repo_ids(conn, repo_id, user_group_request)
-
-        issue_comments_mean_std_SQL = s.sql.text("""
-            SELECT
-                i.repo_id,
-                DATE_TRUNC('week', m.msg_timestamp::DATE) AS date,
-                COUNT(*) / 7.0 AS mean
-            FROM issues i, issue_message_ref im, message m
-            WHERE i.issue_id = im.issue_id
-            AND i.pull_request IS NULL 
-            AND im.msg_id = m.msg_id
-            AND i.repo_id IN :repo_ids
-            GROUP BY i.repo_id, date
-            ORDER BY i.repo_id
-        """)
-
-        results = pd.read_sql(issue_comments_mean_std_SQL, conn, params={'repo_ids': repo_ids})
-                
-        return results
-    
-group_by_day_counts = {"week": 7, "month": 30, "year": 365}
-
-    
 def get_issue_comments_mean(group_by, repo_id : int = None, user_group_request : UserGroupRequest = None):
+
+    group_by_day_counts = {"week": 7, "month": 30, "year": 365}
 
     with current_app.engine.connect() as conn:
     
