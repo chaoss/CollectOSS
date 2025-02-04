@@ -144,6 +144,16 @@ def get_repo_by_repo_id(repo_id):
 
         return repo
     
+def get_repos_in_legacy_repo_group(repo_group_id):
+
+    with get_session() as session:
+
+        query = session.query(Repo).filter(Repo.repo_group_id == repo_group_id)
+        repo = execute_session_query(query, 'all')
+
+        return repo
+
+
 def get_github_repo_by_src_id(src_id):
     
     with get_session() as session:

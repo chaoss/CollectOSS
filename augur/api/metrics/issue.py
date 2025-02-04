@@ -321,20 +321,19 @@ def issue_backlog(repo_group_id, repo_id=None):
 
     repo_ids = get_request_repo_ids(repo_id, repo_group_id)
 
-    if not repo_id:
-        issue_backlog_SQL = s.sql.text("""
-            SELECT issues.repo_id, repo_name, COUNT(issue_id) as issue_backlog
-            FROM issues JOIN repo ON issues.repo_id = repo.repo_id
-            WHERE issues.repo_id IN :repo_ids
-            AND issue_state = 'open'
-            AND issues.pull_request IS NULL
-            GROUP BY issues.repo_id, repo_name
-            ORDER BY issues.repo_id
-        """)
+    issue_backlog_SQL = s.sql.text("""
+        SELECT issues.repo_id, repo_name, COUNT(issue_id) as issue_backlog
+        FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+        WHERE issues.repo_id IN :repo_ids
+        AND issue_state = 'open'
+        AND issues.pull_request IS NULL
+        GROUP BY issues.repo_id, repo_name
+        ORDER BY issues.repo_id
+    """)
 
-        with current_app.engine.connect() as conn:
-            result = pd.read_sql(issue_backlog_SQL, conn, params={'repo_ids': repo_ids})
-        return result
+    with current_app.engine.connect() as conn:
+        result = pd.read_sql(issue_backlog_SQL, conn, params={'repo_ids': repo_ids})
+    return result
 
 @register_metric()
 def issue_throughput(repo_group_id, repo_id=None):
@@ -458,43 +457,27 @@ def average_issue_resolution_time(repo_group_id, repo_id=None):
     :param repo_id: The repository's repo_id, defaults to None
     :return: Average issue resolution time
     """
-    if not repo_id:
-        avg_issue_resolution_SQL = s.sql.text("""
-            SELECT
-                issues.repo_id,
-                repo.repo_name,
-                AVG(issues.closed_at - issues.created_at)::text AS avg_issue_resolution_time
-            FROM issues JOIN repo ON issues.repo_id = repo.repo_id
-            WHERE issues.repo_id IN
-                (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
-            AND closed_at IS NOT NULL
-            AND pull_request IS NULL 
-            GROUP BY issues.repo_id, repo.repo_name
-            ORDER BY issues.repo_id
-        """)
+
+    repo_ids = get_request_repo_ids(repo_id, repo_group_id)
+
+    avg_issue_resolution_SQL = s.sql.text("""
+        SELECT
+            issues.repo_id,
+            repo.repo_name,
+            AVG(issues.closed_at - issues.created_at)::text AS avg_issue_resolution_time
+        FROM issues JOIN repo ON issues.repo_id = repo.repo_id
+        WHERE issues.repo_id IN :repo_ids
+        AND closed_at IS NOT NULL
+        AND pull_request IS NULL 
+        GROUP BY issues.repo_id, repo.repo_name
+        ORDER BY issues.repo_id
+    """)
 
 
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(avg_issue_resolution_SQL, conn,
-                                params={'repo_group_id': repo_group_id})
-        return results
-
-    else:
-        avg_issue_resolution_SQL = s.sql.text("""
-            SELECT
-                repo.repo_name,
-                AVG(issues.closed_at - issues.created_at)::text AS avg_issue_resolution_time
-            FROM issues JOIN repo ON issues.repo_id = repo.repo_id
-            WHERE issues.repo_id = :repo_id
-            AND closed_at IS NOT NULL
-            AND pull_request IS NULL 
-            GROUP BY repo.repo_name
-        """)
-
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(avg_issue_resolution_SQL, conn,
-                                params={'repo_id': repo_id})
-        return results
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(avg_issue_resolution_SQL, conn,
+                            params={'repo_ids': repo_ids})
+    return results
 
 @register_metric()
 def issues_maintainer_response_duration(repo_group_id, repo_id=None, begin_date=None, end_date=None):
@@ -504,70 +487,40 @@ def issues_maintainer_response_duration(repo_group_id, repo_id=None, begin_date=
     if not end_date:
         end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    issuesSQL = None
-    if repo_id:
-        issuesSQL = s.sql.text("""
-            SELECT repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
-            from (
-                    select repo_id,
-                            repo_name,
-                            earliest_member_comments.issue_id                  as issue_id,
-                            extract(day from first_response_time - created_at) as time_to_first_commit
-                    from (
-                            select issues.issue_id            as issue_id,
-                                    issues.created_at          as created_at,
-                                    MIN(message.msg_timestamp) as first_response_time,
-                                    repo_name,
-                                    repo.repo_id
-                            from repo,
-                                issues,
-                                issue_message_ref,
-                                message
-                            where repo.repo_id = :repo_id
-                                and repo.repo_id = issues.repo_id
-                                AND issues.pull_request IS NULL
-                                and issues.issue_id = issue_message_ref.issue_id
-                                and issue_message_ref.msg_id = message.msg_id
-                                and issues.created_at between :begin_date and :end_date
-                            group by issues.issue_id, issues.created_at, repo.repo_id
-                        ) as earliest_member_comments
-                    group by repo_id, repo_name,issue_id, time_to_first_commit
-                ) as time_to_comment
-            group by repo_id, repo_name
-        """)
-    else:
-        issuesSQL = s.sql.text("""
-            SELECT repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
-            from (
-                    select repo_id,
-                            repo_name,
-                            earliest_member_comments.issue_id                  as issue_id,
-                            extract(day from first_response_time - created_at) as time_to_first_commit
-                    from (
-                            select issues.issue_id            as issue_id,
-                                    issues.created_at          as created_at,
-                                    MIN(message.msg_timestamp) as first_response_time,
-                                    repo_name,
-                                    repo.repo_id
-                            from repo,
-                                issues,
-                                issue_message_ref,
-                                message
-                            where repo.repo_id IN (SELECT repo.repo_id from repo where repo_group_id = :repo_group_id)
-                                and repo.repo_id = issues.repo_id
-                                AND issues.pull_request IS NULL
-                                and issues.issue_id = issue_message_ref.issue_id
-                                and issue_message_ref.msg_id = message.msg_id
-                                and issues.created_at between :begin_date and :end_date
-                            group by issues.issue_id, issues.created_at, repo.repo_id
-                        ) as earliest_member_comments
-                    group by repo_id, repo_name,issue_id, time_to_first_commit
-                ) as time_to_comment
-            group by repo_id, repo_name
-        """)
+    repo_ids = get_request_repo_ids(repo_id, repo_group_id)
+
+    issuesSQL = s.sql.text("""
+        SELECT repo_id, repo_name, AVG(time_to_first_commit) as average_days_comment
+        from (
+                select repo_id,
+                        repo_name,
+                        earliest_member_comments.issue_id                  as issue_id,
+                        extract(day from first_response_time - created_at) as time_to_first_commit
+                from (
+                        select issues.issue_id            as issue_id,
+                                issues.created_at          as created_at,
+                                MIN(message.msg_timestamp) as first_response_time,
+                                repo_name,
+                                repo.repo_id
+                        from repo,
+                            issues,
+                            issue_message_ref,
+                            message
+                        where repo.repo_id IN repo_ids
+                            and repo.repo_id = issues.repo_id
+                            AND issues.pull_request IS NULL
+                            and issues.issue_id = issue_message_ref.issue_id
+                            and issue_message_ref.msg_id = message.msg_id
+                            and issues.created_at between :begin_date and :end_date
+                        group by issues.issue_id, issues.created_at, repo.repo_id
+                    ) as earliest_member_comments
+                group by repo_id, repo_name,issue_id, time_to_first_commit
+            ) as time_to_comment
+        group by repo_id, repo_name
+    """)
 
     with current_app.engine.connect() as conn:
-        results = pd.read_sql(issuesSQL, conn, params={'repo_id': repo_id, 'repo_group_id': repo_group_id,'begin_date': begin_date, 'end_date': end_date})
+        results = pd.read_sql(issuesSQL, conn, params={'repo_ids': repo_ids, 'begin_date': begin_date, 'end_date': end_date})
 
     return results
 
@@ -578,36 +531,24 @@ def open_issues_count(repo_group_id, repo_id=None):
 
     :param repo_url: the repository's URL
     """
-    if not repo_id:
-        openIssueCountSQL = s.sql.text("""
-            SELECT rg_name, count(issue_id) AS open_count, date_trunc('week', issues.created_at) AS DATE
-            FROM issues, repo, repo_groups
-            WHERE issue_state = 'open'
-            AND issues.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
-            AND repo.repo_id = issues.repo_id
-            AND repo.repo_group_id = repo_groups.repo_group_id
-            AND issues.pull_request IS NULL 
-            GROUP BY date, repo_groups.rg_name
-            ORDER BY date
-        """)
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(openIssueCountSQL, conn, params={'repo_group_id': repo_group_id})
-        return results
-    else:
-        openIssueCountSQL = s.sql.text("""
-            SELECT repo.repo_id, count(issue_id) AS open_count, date_trunc('week', issues.created_at) AS DATE, repo_name
-            FROM issues, repo, repo_groups
-            WHERE issue_state = 'open'
-            AND issues.repo_id = :repo_id
-            AND repo.repo_id = issues.repo_id
-            AND repo.repo_group_id = repo_groups.repo_group_id
-            AND issues.pull_request IS NULL 
-            GROUP BY date, repo.repo_id
-            ORDER BY date
-        """)
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(openIssueCountSQL, conn, params={'repo_id': repo_id})
-        return results
+
+    repo_ids = get_request_repo_ids(repo_id, repo_group_id)
+
+    # TODO: Do we need to remove repo group stuff from here?
+    openIssueCountSQL = s.sql.text("""
+        SELECT rg_name, count(issue_id) AS open_count, date_trunc('week', issues.created_at) AS DATE
+        FROM issues, repo, repo_groups
+        WHERE issue_state = 'open'
+        AND issues.repo_id IN :repo_ids
+        AND repo.repo_id = issues.repo_id
+        AND repo.repo_group_id = repo_groups.repo_group_id
+        AND issues.pull_request IS NULL 
+        GROUP BY date, repo_groups.rg_name
+        ORDER BY date
+    """)
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(openIssueCountSQL, conn, params={'repo_ids': repo_ids})
+    return results
 
 
 @register_metric()
@@ -617,216 +558,90 @@ def closed_issues_count(repo_group_id, repo_id=None):
 
     :param repo_url: the repository's URL
     """
-    if not repo_id:
-        closedIssueCountSQL = s.sql.text("""
-            SELECT rg_name, count(issue_id) AS closed_count, date_trunc('week', issues.created_at) AS DATE
-            FROM issues, repo, repo_groups
-            WHERE issue_state = 'closed'
-            AND issues.repo_id IN (SELECT repo_id FROM repo WHERE  repo_group_id = :repo_group_id)
-            AND repo.repo_id = issues.repo_id
-            AND repo.repo_group_id = repo_groups.repo_group_id
-            AND issues.pull_request IS NULL 
-            GROUP BY date, repo_groups.rg_name
-            ORDER BY date
-        """)
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(closedIssueCountSQL, conn, params={'repo_group_id': repo_group_id})
-        return results
-    else:
-        closedIssueCountSQL = s.sql.text("""
-            SELECT repo.repo_id, count(issue_id) AS closed_count, date_trunc('week', issues.created_at) AS DATE, repo_name
-            FROM issues, repo, repo_groups
-            WHERE issue_state = 'closed'
-            AND issues.repo_id = :repo_id
-            AND repo.repo_id = issues.repo_id
-            AND repo.repo_group_id = repo_groups.repo_group_id
-            AND issues.pull_request IS NULL 
-            GROUP BY date, repo.repo_id
-            ORDER BY date
-        """)
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(closedIssueCountSQL, conn, params={'repo_id': repo_id})
-        return results
+
+    repo_ids = get_request_repo_ids(repo_id, repo_group_id)
+
+    # TODO: Do we need to remove repo group from here?
+    closedIssueCountSQL = s.sql.text("""
+        SELECT rg_name, count(issue_id) AS closed_count, date_trunc('week', issues.created_at) AS DATE
+        FROM issues, repo, repo_groups
+        WHERE issue_state = 'closed'
+        AND issues.repo_id IN :repo_ids
+        AND repo.repo_id = issues.repo_id
+        AND repo.repo_group_id = repo_groups.repo_group_id
+        AND issues.pull_request IS NULL 
+        GROUP BY date, repo_groups.rg_name
+        ORDER BY date
+    """)
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(closedIssueCountSQL, conn, params={'repo_ids': repo_ids})
+    return results
 
 @register_metric()
 def issue_comments_mean(repo_group_id, repo_id=None, group_by='week'):
     group_by = group_by.lower()
 
-    if not repo_id:
-        if group_by == 'week':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('week', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 7.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND im.msg_id = m.msg_id
-                AND i.repo_id IN
-                    (SELECT repo_id FROM repo
-                     WHERE  repo_group_id = :repo_group_id)
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
+    if group_by not in ["week", "month", "year"]:
+        raise ValueError("Incorrect value for 'group_by'")
 
-        elif group_by == 'month':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('month', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 30.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND im.msg_id = m.msg_id
-                AND i.repo_id IN
-                    (SELECT repo_id FROM repo
-                     WHERE  repo_group_id = :repo_group_id)
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
+    group_by_day_counts = {"week": 7, "month": 30, "year": 365}
 
-        elif group_by == 'year':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('year', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 365.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND im.msg_id = m.msg_id
-                AND i.pull_request IS NULL 
-                AND i.repo_id IN
-                    (SELECT repo_id FROM repo
-                     WHERE  repo_group_id = :repo_group_id)
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
+    repo_ids = get_request_repo_ids(repo_id, repo_group_id)
 
-        else:
-            raise ValueError("Incorrect value for 'group_by'")
+    issue_comments_mean_SQL = s.sql.text("""
+        SELECT
+            i.repo_id,
+            DATE_TRUNC(:group_by, m.msg_timestamp::DATE) AS date,
+            COUNT(*) / :day_count AS mean
+        FROM issues i, issue_message_ref im, message m
+        WHERE i.issue_id = im.issue_id
+        AND i.pull_request IS NULL 
+        AND im.msg_id = m.msg_id
+        AND i.repo_id IN :repo_ids
+        GROUP BY i.repo_id, date
+        ORDER BY i.repo_id
+    """)       
 
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(issue_comments_mean_std_SQL, conn,
-                                params={'repo_group_id': repo_group_id})
-        return results
-
-    else:
-        if group_by == 'week':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('week', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 7.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND i.repo_id = :repo_id
-                AND im.msg_id = m.msg_id
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
-
-        elif group_by == 'month':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('month', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 30.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND i.repo_id = :repo_id
-                AND im.msg_id = m.msg_id
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
-
-        elif group_by == 'year':
-            issue_comments_mean_std_SQL = s.sql.text("""
-                SELECT
-                    i.repo_id,
-                    DATE_TRUNC('year', m.msg_timestamp::DATE) AS date,
-                    COUNT(*) / 365.0 AS mean
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND i.repo_id = :repo_id
-                AND im.msg_id = m.msg_id
-                GROUP BY i.repo_id, date
-                ORDER BY i.repo_id
-            """)
-
-        else:
-            raise ValueError("Incorrect value for 'group_by'")
-
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(issue_comments_mean_std_SQL, conn,
-                                params={'repo_id': repo_id})
-        return results
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(issue_comments_mean_SQL, conn,
+                            params={'repo_ids': repo_ids, 
+                                    'group_by': group_by, 
+                                    'day_count': group_by_day_counts[group_by]})
+    return results
 
 @register_metric()
 def issue_comments_mean_std(repo_group_id, repo_id=None, group_by='week'):
-    if not repo_id:
-        issue_comments_mean_std_SQL = s.sql.text("""
-            SELECT
-                repo_id,
-                DATE_TRUNC(:group_by, daily) AS date,
-                avg(total) AS average,
-                stddev(total) AS standard_deviation
-            FROM
-                (SELECT
-                    i.repo_id,
-                    DATE_TRUNC('day', m.msg_timestamp) AS daily,
-                    COUNT(*) AS total
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND im.msg_id = m.msg_id
-                AND i.repo_id IN
-                    (SELECT repo_id FROM repo
-                     WHERE  repo_group_id = :repo_group_id)
-                GROUP BY i.repo_id, daily
-                ORDER BY i.repo_id) a
-            GROUP BY repo_id, date
-            ORDER BY repo_id, date
-        """)
+
+    repo_ids = get_request_repo_ids(repo_id, repo_group_id)
+
+    issue_comments_mean_std_SQL = s.sql.text("""
+        SELECT
+            repo_id,
+            DATE_TRUNC(:group_by, daily) AS date,
+            avg(total) AS average,
+            stddev(total) AS standard_deviation
+        FROM
+            (SELECT
+                i.repo_id,
+                DATE_TRUNC('day', m.msg_timestamp) AS daily,
+                COUNT(*) AS total
+            FROM issues i, issue_message_ref im, message m
+            WHERE i.issue_id = im.issue_id
+            AND i.pull_request IS NULL 
+            AND im.msg_id = m.msg_id
+            AND i.repo_id IN :repo_ids
+            GROUP BY i.repo_id, daily
+            ORDER BY i.repo_id) a
+        GROUP BY repo_id, date
+        ORDER BY repo_id, date
+    """)
 
 
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(issue_comments_mean_std_SQL, conn,
-                                params={'repo_group_id': repo_group_id,
-                                        'group_by': group_by})
-        return results
-
-    else:
-        issue_comments_mean_std_SQL = s.sql.text("""
-            SELECT
-                repo_id,
-                DATE_TRUNC(:group_by, daily) AS date,
-                avg(total) AS average,
-                stddev(total) AS standard_deviation
-            FROM
-                (SELECT
-                    i.repo_id,
-                    DATE_TRUNC('day', m.msg_timestamp) AS daily,
-                    COUNT(*) AS total
-                FROM issues i, issue_message_ref im, message m
-                WHERE i.issue_id = im.issue_id
-                AND i.pull_request IS NULL 
-                AND im.msg_id = m.msg_id
-                AND i.repo_id = :repo_id
-                GROUP BY i.repo_id, daily
-                ORDER BY i.repo_id) a
-            GROUP BY repo_id, date
-            ORDER BY date
-        """)
-
-        with current_app.engine.connect() as conn:
-            results = pd.read_sql(issue_comments_mean_std_SQL, conn,
-                                params={'repo_id': repo_id, 'group_by': group_by})
-        return results
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(issue_comments_mean_std_SQL, conn,
+                            params={'repo_ids': repo_ids,
+                                    'group_by': group_by})
+    return results
 
 @register_metric()
 def abandoned_issues(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):
@@ -835,47 +650,28 @@ def abandoned_issues(repo_group_id, repo_id=None, period='day', begin_date=None,
     if not end_date:
         end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    abandonedSQL = None
+    repo_ids = get_request_repo_ids(repo_id, repo_group_id)
 
-    if repo_id:
-        abandonedSQL = s.sql.text(
-            '''
-            SELECT
-	            updated_at,
-	            issue_id
-            FROM
-	            issues
-            WHERE
-	            repo_id = :repo_id
-	            AND issue_state = 'open'
-	            AND DATE_PART('year',current_date) - DATE_PART('year', updated_at) >= 1
-            GROUP BY
-	            updated_at, issue_id
-            ORDER BY 
-                updated_at, issue_id
-            '''
-        )
-    else:
-        abandonedSQL = s.sql.text(
-            '''
-            SELECT
-	            updated_at,
-	            issue_id,
-                repo_id
-            FROM
-	            issues
-            WHERE
-	            repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
-	            AND issue_state = 'open'
-	            AND DATE_PART('year',current_date) - DATE_PART('year', updated_at) >= 1
-            GROUP BY
-	            updated_at, issue_id, repo_id
-            ORDER BY 
-                updated_at, issue_id, repo_id
-            '''
-        )
+    abandonedSQL = s.sql.text(
+        '''
+        SELECT
+            updated_at,
+            issue_id,
+            repo_id
+        FROM
+            issues
+        WHERE
+            repo_id IN :repo_ids
+            AND issue_state = 'open'
+            AND DATE_PART('year',current_date) - DATE_PART('year', updated_at) >= 1
+        GROUP BY
+            updated_at, issue_id, repo_id
+        ORDER BY 
+            updated_at, issue_id, repo_id
+        '''
+    )
 
     with current_app.engine.connect() as conn:
-        results = pd.read_sql(abandonedSQL, conn, params={'repo_id': repo_id, 'repo_group_id': repo_group_id, 'period': period,
-                                                                    'begin_date': begin_date, 'end_date': end_date})
+        results = pd.read_sql(abandonedSQL, conn, params={'repo_ids': repo_ids, 'period': period,
+                                                            'begin_date': begin_date, 'end_date': end_date})
     return results
