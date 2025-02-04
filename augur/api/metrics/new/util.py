@@ -48,14 +48,28 @@ def get_repo_ids_by_user_group(conn, name: str, user_id: int) -> list:
 
 
 
-def repo_metrics_route(route_path, grouped_metric=False):
+def repo_metrics_route(route_path, include_period=True, include_date_range=True, grouped_metric=False):
     def decorator(func):
         @wraps(func)
         def wrapper(repo_id, *args, **kwargs):
             # Extract query parameters from the request
-            period = request.args.get('period', default='day')
-            begin_date = request.args.get('begin_date')
-            end_date = request.args.get('end_date')
+
+            # TODO: Add vaidator to ensure period is valid
+            if include_period:
+                period = request.args.get('period', default='day')
+
+                kwargs['period'] = period
+
+            
+            # TODO: Add vaidator to ensure dates are valid
+            if include_date_range:
+
+                begin_date = request.args.get('begin_date')
+                end_date = request.args.get('end_date')
+
+                kwargs['begin_date'] = begin_date
+                kwargs['end_date'] = end_date
+                
 
             if grouped_metric:
 
@@ -73,9 +87,6 @@ def repo_metrics_route(route_path, grouped_metric=False):
                 # Call the original function with the parameters
                 data = func(
                     repo_id=repo_id, 
-                    period=period, 
-                    begin_date=begin_date, 
-                    end_date=end_date, 
                     *args, 
                     **kwargs)
                 # NOTE: Probably remove data transformation to allow for more use cases
@@ -93,15 +104,31 @@ def repo_metrics_route(route_path, grouped_metric=False):
     return decorator
 
 
-def group_metrics_route(route_path, grouped_metric=False):
+def group_metrics_route(route_path, include_period=True, include_date_range=True, grouped_metric=False):
     def decorator(func):
         @wraps(func)
         def wrapper(group_name, *args, **kwargs):
             # Extract query parameters from the request
             user_id = request.args.get('user_id')
-            period = request.args.get('period', default='day')
-            begin_date = request.args.get('begin_date')
-            end_date = request.args.get('end_date')
+            if not user_id:
+                return 400, "user id is required"
+
+
+            # TODO: Add vaidator to ensure period is valid
+            if include_period:
+                period = request.args.get('period', default='day')
+
+                kwargs['period'] = period
+
+            
+            # TODO: Add vaidator to ensure dates are valid
+            if include_date_range:
+
+                begin_date = request.args.get('begin_date')
+                end_date = request.args.get('end_date')
+
+                kwargs['begin_date'] = begin_date
+                kwargs['end_date'] = end_date
 
             if grouped_metric:
 
@@ -124,9 +151,6 @@ def group_metrics_route(route_path, grouped_metric=False):
                 # Call the original function with the populated parameters
                 data = func(
                     user_group_request=user_group_request, 
-                    period=period, 
-                    begin_date=begin_date, 
-                    end_date=end_date, 
                     *args, 
                     **kwargs)
                 # NOTE: Probably remove data transformation to allow for more use cases

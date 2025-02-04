@@ -6,7 +6,7 @@ Metrics that provides data about issues & their associated activity
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from flask import current_app, request, jsonify
+from flask import current_app
 
 from augur.api.util import register_metric
 from .util import get_repo_ids, UserGroupRequest, repo_metrics_route, group_metrics_route
@@ -155,55 +155,55 @@ def issues_maintainer_response_duration_group(user_group_request, period, begin_
     return get_issue_maintainer_response_duration(user_group_request=user_group_request, period=period, begin_date=begin_date, end_date=end_date)
 
 # TODO: Look into what to do here. These routes only took in repo_id and repo_group_id
-@repo_metrics_route('/metrics/open-issues-count/repo/<int:repo_id>')
-def issues_open_count_repo(repo_id, period, begin_date, end_date):
+@repo_metrics_route('/metrics/open-issues-count/repo/<int:repo_id>', include_period=False, include_date_range=False)
+def issues_open_count_repo(repo_id):
 
     return get_open_issue_count(repo_id=repo_id)
 
-@group_metrics_route('/metrics/open-issues-count/group/<string:group_name>')
-def issues_open_count_group(user_group_request, period, begin_date, end_date):
+@group_metrics_route('/metrics/open-issues-count/group/<string:group_name>', include_period=False, include_date_range=False)
+def issues_open_count_group(user_group_request):
 
     return get_open_issue_count(user_group_request=user_group_request)
 
-@repo_metrics_route('/metrics/closed-issues-count/repo/<int:repo_id>')
-def issues_closed_count_repo(repo_id, period, begin_date, end_date):
+@repo_metrics_route('/metrics/closed-issues-count/repo/<int:repo_id>', include_period=False, include_date_range=False)
+def issues_closed_count_repo(repo_id):
 
     return get_closed_issue_count(repo_id=repo_id)
 
-@group_metrics_route('/metrics/closed-issues-count/group/<string:group_name>')
-def issues_closed_count_group(user_group_request, period, begin_date, end_date):
+@group_metrics_route('/metrics/closed-issues-count/group/<string:group_name>', include_period=False, include_date_range=False)
+def issues_closed_count_group(user_group_request):
 
     return get_closed_issue_count(user_group_request=user_group_request)
 
-@repo_metrics_route('/metrics/abandoned-issues/repo/<int:repo_id>')
-def issues_abandonded_repo(repo_id, period, begin_date, end_date):
+@repo_metrics_route('/metrics/abandoned-issues/repo/<int:repo_id>', include_period=False, include_date_range=False)
+def issues_abandonded_repo(repo_id):
 
     return get_abandoned_issues(repo_id=repo_id)
 
-@group_metrics_route('/metrics/abandoned-issues/group/<string:group_name>')
-def issues_abandonded_group(user_group_request, period, begin_date, end_date):
+@group_metrics_route('/metrics/abandoned-issues/group/<string:group_name>', include_period=False, include_date_range=False)
+def issues_abandonded_group(user_group_request):
 
     return get_abandoned_issues(user_group_request=user_group_request)
 
 
-@repo_metrics_route('/metrics/issue-comments-mean/repo/<int:repo_id>', grouped_metric=True)
-def issues_comments_mean_repo(repo_id, period, begin_date, end_date, group_by):
+@repo_metrics_route('/metrics/issue-comments-mean/repo/<int:repo_id>', include_period=False, include_date_range=False, grouped_metric=True)
+def issues_comments_mean_repo(repo_id, group_by):
 
     return get_issue_comments_mean(group_by=group_by, repo_id=repo_id)
 
-@group_metrics_route('/metrics/issue-comments-mean/group/<string:group_name>', grouped_metric=True)
-def issues_comments_mean_group(user_group_request, period, begin_date, end_date, group_by):
+@group_metrics_route('/metrics/issue-comments-mean/group/<string:group_name>', include_period=False, include_date_range=False, grouped_metric=True)
+def issues_comments_mean_group(user_group_request, group_by):
 
     return get_issue_comments_mean(group_by=group_by, user_group_request=user_group_request)
 
 
-@repo_metrics_route('/metrics/issue-comments-mean-std/repo/<int:repo_id>', grouped_metric=True)
-def issues_comments_mean_std_repo(repo_id, period, begin_date, end_date, group_by):
+@repo_metrics_route('/metrics/issue-comments-mean-std/repo/<int:repo_id>', include_period=False, include_date_range=False, grouped_metric=True)
+def issues_comments_mean_std_repo(repo_id, group_by):
 
     return get_issue_comments_mean_std(group_by=group_by, repo_id=repo_id)
 
-@group_metrics_route('/metrics/issue-comments-mean-std/group/<string:group_name>', grouped_metric=True)
-def issues_comments_mean_std_group(user_group_request, period, begin_date, end_date, group_by):
+@group_metrics_route('/metrics/issue-comments-mean-std/group/<string:group_name>', include_period=False, include_date_range=False, grouped_metric=True)
+def issues_comments_mean_std_group(user_group_request, group_by):
 
     return get_issue_comments_mean_std(group_by=group_by, user_group_request=user_group_request)
 
