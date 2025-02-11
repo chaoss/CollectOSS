@@ -29,3 +29,9 @@ GSoC Mentors
 
 
 **UPDATE:** This repository requires [Developer Certificate of Origin](https://developercertificate.org/) (DCO) sign-off; see [CONTRIBUTING.md](https://github.com/chaoss/governance/blob/master/CONTRIBUTING.md#code-or-document-change-contributions-github-interface) for details on how to sign your commits. 
+
+
+| Name | Email | Idea | Micro-Task Repository | Project Proposal | Submitted on GSOC | 
+| --- | --- | --- | --- | --- | --- |
+| Your Name Here | Your Email Here |  Idea You Hoping to Work On | Link to your Mico-task Repo | Link to Your Proposal | YES/NO |
+
