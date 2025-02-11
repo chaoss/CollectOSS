@@ -128,8 +128,9 @@ class GitlabApiKeyHandler():
         # add all the keys to redis
         self.redis_key_list.extend(valid_keys)
 
-        if not valid_keys:
-            raise NoValidKeysError("No valid gitlab api keys found in the config or worker oauth table")
+        # Removed because most people do not collect gitlab and this blows up on startup if they don't have any gitlab keys
+        # if not valid_keys:
+        #     raise NoValidKeysError("No valid gitlab api keys found in the config or worker oauth table")
 
 
         # shuffling the keys so not all processes get the same keys in the same order
