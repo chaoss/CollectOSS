@@ -11,7 +11,6 @@ We follow the [First Timers Only](https://www.firsttimersonly.com/) philosophy o
 ## NEW RELEASE ALERT!
 **If you want to jump right in, the updated docker, docker-compose and bare metal installation instructions are available [here](docs/new-install.md)**.
 
-<<<<<<< HEAD
 Augur is now releasing a dramatically improved new version to the ```main``` branch. It is also available [here](https://github.com/chaoss/augur/releases/tag/v0.81.0).
 
 
