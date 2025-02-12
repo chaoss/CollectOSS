@@ -110,6 +110,7 @@ class KeyOrchestrator:
                         self.unpublish_key(request["key_str"], request["key_platform"])
                     elif request["type"] == "ACK":
                         conn.publish(stdout, "")
+                        self.logger.info(f"ACK; for: {request['requester_id']}")
                     elif request["type"] == "LIST_PLATFORMS":
                         platforms = [ p for p in self.fresh_keys.keys() ]
                         conn.publish(stdout, json.dumps(platforms))
@@ -135,6 +136,7 @@ class KeyOrchestrator:
                         new_key = self.new_key(request["key_platform"])
                     elif request["type"] == "EXPIRE":
                         self.expire_key(request["key_str"], request["key_platform"], request["refresh_time"])
+                        self.logger.debug(f"EXPIRE; from: {request['requester_id']}, platform: {request['key_platform']}")
                         continue
                 except WaitKeyTimeout as w:
                     timeout = w.tiemout_seconds
@@ -147,6 +149,7 @@ class KeyOrchestrator:
                     self.logger.exception("Error during REQUEST")
                     continue
 
+                self.logger.debug(f"REPLY; for: {request['requester_id']}, platform: {request['key_platform']}")
                 conn.publish(stdout, json.dumps({
                     "key": new_key
                 }))
