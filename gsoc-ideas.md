@@ -55,7 +55,7 @@ The aims of the project are as follows:
 
 **Hours: 350**
 
-[Micro-tasks and place for questions]([https://github.com/chaoss/community/issues/305](https://github.com/chaoss/augur/issues/2992))
+[Micro-tasks and place for questions](https://github.com/chaoss/augur/issues/2992)
  
 ### Conversion Rate 
 
@@ -161,7 +161,7 @@ The following is an example from the [openEuler](https://www.openeuler.org/en/) 
 
 **Hours: 300**
 
-[Micro-tasks and place for questions](https://github.com/chaoss/augur-community-reports/issues/34)
+[Micro-tasks and place for questions]([https://github.com/chaoss/augur-community-reports/issues/34](https://github.com/chaoss/augur/issues/2993))
 
 The CHAOSS Community currently delivers pre-packaged visualizations of open source software health data through Augur APIs (https://github.com/chaoss/augur/blob/main/augur/routes/pull_request_reports.py and https://github.com/chaoss/augur/blob/main/augur/routes/contributor_reports.py), and the https://github.com/chaoss/augur-community-reports repository. This project seeks to expand, refine, and standardize the visualization of different classes of community health metrics data. Specifically, some analyses are temporal, others are anomaly driven, and in some cases contrasts across repositories and communities are required. In each case, the visualization of data is an essential component for metrics, and what we are now referring to as metrics models (https://github.com/chaoss/wg-metrics-models). 
 
