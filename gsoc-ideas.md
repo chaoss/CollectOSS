@@ -161,7 +161,7 @@ The following is an example from the [openEuler](https://www.openeuler.org/en/) 
 
 **Hours: 300**
 
-[Micro-tasks and place for questions]([https://github.com/chaoss/augur-community-reports/issues/34](https://github.com/chaoss/augur/issues/2993))
+[Micro-tasks and place for questions](https://github.com/chaoss/augur/issues/2993)
 
 The CHAOSS Community currently delivers pre-packaged visualizations of open source software health data through Augur APIs (https://github.com/chaoss/augur/blob/main/augur/routes/pull_request_reports.py and https://github.com/chaoss/augur/blob/main/augur/routes/contributor_reports.py), and the https://github.com/chaoss/augur-community-reports repository. This project seeks to expand, refine, and standardize the visualization of different classes of community health metrics data. Specifically, some analyses are temporal, others are anomaly driven, and in some cases contrasts across repositories and communities are required. In each case, the visualization of data is an essential component for metrics, and what we are now referring to as metrics models (https://github.com/chaoss/wg-metrics-models). 
 
@@ -176,29 +176,3 @@ The aims of the project are as follows:
 * _Requirements:_ Strong interest in data visualization. 
 * _Recommended:_ Experience with Python is desirable, and experience designing, or developing visualizations is desirable. 
 * _Mentors:_ Isaac Milarsky, Andrew Brain 
-
-## Idea: Build Knowledgebase Application on CHAOSS Website
-
-**Hours: 350**
-
-Micro-tasks and place for questions: https://github.com/chaoss/website/issues/708
-
-While much of the work of CHAOSS is done in GitHub, the CHAOSS website is often the first place people visit to get information [https://chaoss.community/](https://chaoss.community/). The goal of the website is to create clear paths for new members who want to contribute, metrics users who want information about metrics, and existing members who need information about project operations. As project grows, there is a need for alternative display and categorization options for knowledgebase topics to reduce the burden on website visitors in finding the information that they need. 
-
-Work on this project would require the student to work closely with the mentors and the community to come up with different display and categorization options for CHAOSS Knowledge Base topics. CHAOSS knowledgebase topics that are currently under consideration for this application are released metrics, metrics models, and contributor handbook information. Information about these topics are captured and stored in GitHub repositories by the relevant working groups. The application will need to pull information from github markdown documents to display on the website knowledge base application (we have existing code that does this). 
-
-The aims of the project are as follows:
-* Use Wordpress to implement a knowledge application (example knowledgebase plugin up for consideration - https://wordpress.org/plugins/basepress/)
-* Research and ideate different display options and categorizations for knowledgebase topics.
-* Build web pages to display different knowledgebase topics.
-
-The aims will require working with front-end web development technologies and WordPress to build a knowledgebase application that can display information about knowledgebase topics. 
-
-* _Difficulty:_ Low
-* _Requirements:_ Interest in front-end web development
-* _Recommended:_ Experience with Wordpress, HTML, CSS, JavaScript, and GitHub Markdown
-* _Mentors:_ John McGinness, Sean Goggins
-* _Difficulty:_ Medium
-* _Requirements:_ Interest in software analytics. Python programming. Conceptual understanding of machine learning, and an eagerness to learn maching learning, and SQL knowledge.
-* _Recommended:_ Experience with Python
-* _Mentors:_ Sean Goggins, Andrew Brain, Isaac Milarsky
