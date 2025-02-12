@@ -55,7 +55,7 @@ The aims of the project are as follows:
 
 **Hours: 350**
 
-[Micro-tasks and place for questions](https://github.com/chaoss/community/issues/305)
+[Micro-tasks and place for questions]([https://github.com/chaoss/community/issues/305](https://github.com/chaoss/augur/issues/2992))
  
 ### Conversion Rate 
 
