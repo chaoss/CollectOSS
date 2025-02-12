@@ -18,6 +18,8 @@ from urllib.parse import urlparse
 
 from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
+from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
+from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.tasks.init.redis_connection import redis_connection 
 from augur.application.db.models import UserRepo
@@ -27,6 +29,7 @@ from augur.application.db.lib import get_value
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 import sqlalchemy as s
 
+from keyman.KeyClient import KeyClient, KeyPublisher
 
 logger = AugurLogger("augur", reset_logfiles=True).get_logger()
 
@@ -116,8 +119,27 @@ def start(ctx, disable_collection, development, pidfile, port):
     celery_beat_process = None
     celery_command = f"celery -A augur.tasks.init.celery_app.celery_app beat -l {log_level.lower()}"
     celery_beat_process = subprocess.Popen(celery_command.split(" "))    
-
+    keypub = KeyPublisher()
+    
     if not disable_collection:
+        orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
+
+        # Wait for orchestrator startup
+        if not keypub.wait(republish=True):
+            logger.critical("Key orchestrator did not respond in time")
+            return
+        
+        # load keys
+        ghkeyman = GithubApiKeyHandler(logger)
+        glkeyman = GitlabApiKeyHandler(logger)
+
+        for key in ghkeyman.keys:
+            keypub.publish(key, "github_rest")
+            keypub.publish(key, "github_graphql")
+
+        for key in glkeyman.keys:
+            keypub.publish(key, "gitlab_rest")
+        
         with DatabaseSession(logger, engine=ctx.obj.engine) as session:
 
             clean_collection_status(session)
@@ -157,6 +179,7 @@ def start(ctx, disable_collection, development, pidfile, port):
         if not disable_collection:
 
             try:
+                keypub.shutdown()
                 cleanup_after_collection_halt(logger, ctx.obj.engine)
             except RedisConnectionError:
                 pass
