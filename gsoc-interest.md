@@ -1,5 +1,7 @@
 # Google Summer of Code 2025 Interested Candidates
 
+[IDEAS PAGE](https://github.com/chaoss/augur/blob/main/gsoc-ideas.md)
+
 Hi potential GSoC students,
 
 You can ask questions and meet the community on Slack here: https://join.slack.com/t/chaoss-workspace/shared_invite/zt-289zxh6tu-3oQaFlutPFY039MjKpnWcA ... look for the `wg-augur-8knot` channel.
