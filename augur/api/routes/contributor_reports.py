@@ -6,7 +6,7 @@ import warnings
 import datetime
 import pandas as pd
 from math import pi
-from flask import request, send_file, Response
+from flask import request, send_file, Response, current_app
 
 # import visualization libraries
 from bokeh.io import export_png
@@ -18,7 +18,7 @@ from bokeh.layouts import gridplot
 from bokeh.transform import cumsum
 
 from augur.api.routes import AUGUR_API_VERSION
-from ..server import app, engine
+from ..server import app
 
 warnings.filterwarnings('ignore')
 
@@ -293,7 +293,9 @@ def new_contributor_data_collection(repo_id, required_contributions):
             WHERE RANK IN {rank_tuple}
 
         """)
-    df = pd.read_sql(contributor_query,  engine)
+
+    with current_app.engine.connect() as conn:
+        df = pd.read_sql(contributor_query,  conn)
 
     df = df.loc[~df['full_name'].str.contains('bot', na=False)]
     df = df.loc[~df['login'].str.contains('bot', na=False)]
@@ -334,7 +336,9 @@ def months_data_collection(start_date, end_date):
                     FROM generate_series (TIMESTAMP '{start_date}', TIMESTAMP '{end_date}', INTERVAL '1 month' ) created_month ) d ) x 
         ) y
     """)
-    months_df = pd.read_sql(months_query,  engine)
+
+    with current_app.engine.connect() as conn:
+        months_df = pd.read_sql(months_query,  conn)
 
     # add yearmonths to months_df
     months_df[['year', 'month']] = months_df[['year', 'month']].astype(float).astype(int).astype(str)

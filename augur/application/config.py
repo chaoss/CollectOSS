@@ -1,5 +1,5 @@
 import sqlalchemy as s
-from sqlalchemy import or_, and_, update
+from sqlalchemy import and_, update
 import json
 from typing import List, Any, Optional
 import os
@@ -68,7 +68,7 @@ default_config = {
             },
             "Celery": {
                 "worker_process_vmem_cap": 0.25,
-                "refresh_materialized_views_interval_in_days": 7
+                "refresh_materialized_views_interval_in_days": 1
             },
             "Redis": {
                 "cache_group": 0, 
@@ -140,7 +140,11 @@ def convert_type_of_value(config_dict, logger=None):
 
 class AugurConfig():
 
-    def __init__(self, logger, session):
+    from augur.application.db.session import DatabaseSession
+
+    session: DatabaseSession
+
+    def __init__(self, logger, session: DatabaseSession):
 
         self.session = session
         self.logger = logger
@@ -157,7 +161,7 @@ class AugurConfig():
         Returns:
             The section data as a dict
         """
-        query = self.session.query(Config).filter_by(section_name=section_name)
+        query = self.session.query(Config).filter_by(section_name=section_name).order_by(Config.setting_name.asc())
         section_data = execute_session_query(query, 'all')
         
         section_dict = {}
@@ -209,7 +213,7 @@ class AugurConfig():
             The config from the database
         """
         # get all the sections in the config table
-        query = self.session.query(Config.section_name)
+        query = self.session.query(Config.section_name).order_by(Config.section_name.asc())
         section_names = execute_session_query(query, 'all')
 
         config = {}
@@ -284,6 +288,7 @@ class AugurConfig():
             query = self.session.query(Config).filter(and_(Config.section_name == setting["section_name"],Config.setting_name == setting["setting_name"]) )
 
             if execute_session_query(query, 'first') is None:
+                # TODO: Update to use bulk insert dicts so config doesn't require database session
                 self.session.insert_data(setting,Config, ["section_name", "setting_name"])
             else:
                 #If setting exists. use raw update to not increase autoincrement

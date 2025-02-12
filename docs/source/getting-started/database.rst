@@ -1,7 +1,7 @@
 Database setup
 ===============
 
-One of the reasons that Augur is so powerful is because of its `unified data model <../schema/data-model.html>`_.
+One of the reasons that Augur is so powerful is because of its `unified data model <../schema/overview.html>`_.
 To ensure this data model remains performant with large amounts of data, we use PostgreSQL as our database engine. 
 We'll need to set up a PostgreSQL instance and create a database, after which Augur can take care of the rest.
 Make sure to save off the credentials you use when creating the database; you'll need them again to configure Augur.

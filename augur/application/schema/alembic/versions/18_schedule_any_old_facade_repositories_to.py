@@ -6,13 +6,11 @@ Create Date: 2023-05-02 17:35:18.891913
 
 """
 from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import text
 import pathlib
 import shutil
 from augur.application.config import AugurConfig
-from augur.application.db.session import DatabaseSession
+from augur.application.db.lib import get_value
 import logging
 
 # revision identifiers, used by Alembic.
@@ -43,9 +41,7 @@ def total_facade_reset():
     
 
     try:
-        with DatabaseSession(logger) as session:
-            config = AugurConfig(logger, session)
-            facade_base_dir = config.get_section("Facade")['repo_directory']
+        facade_base_dir = get_value("Facade", "repo_directory")
         
         #remove path
         path = pathlib.Path(facade_base_dir)

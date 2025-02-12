@@ -1,16 +1,18 @@
 #SPDX-License-Identifier: MIT
-import os, json, requests, logging
-from flask import Flask, Response, jsonify, request
+import json
 #import gunicorn.app.base
 import numpy as np
 from celery import group
 from celery.result import AsyncResult
 from celery.result import allow_join_result
 
-from typing import Optional, List, Any, Tuple
-from datetime import datetime, timedelta
+from typing import List
+from datetime import datetime
 import json
 import subprocess
+
+from augur.tasks.util.metadata_exception import MetadataException
+
 
 def create_grouped_task_load(*args,processes=8,dataList=[],task=None):
     
@@ -136,10 +138,13 @@ def parse_json_from_subprocess_call(logger, subprocess_arr, cwd=None):
     output = p.stdout
 
     try:
-        required_output = json.loads(output)
+        if output and output.strip():
+            required_output = json.loads(output)
+        else:
+            required_output = {}
     except json.decoder.JSONDecodeError as e:
-        session.logger.error(f"Could not parse required output! \n output: {output} \n Error: {e}")
-        raise e
+        logger.error(f"Could not parse required output! \n output: {output} \n Error: {e}")
+        raise MetadataException(e, f"output : {output}")
     
     return required_output
 

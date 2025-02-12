@@ -1,0 +1,33 @@
+{ "title": "Essential Config",
+    "subtitle": "Please ensure the accuracy of these config items",
+    "settings": [
+        { "id": "AUGUR_GITHUB_API_KEY",
+            "display_name": "GitHub API Key",
+            "value": "{{ conf.Keys.github_api_key or "" if conf.Keys else "" }}",
+            "description": "Your GitHub API Key for use with Augur"
+        },{ "id": "AUGUR_GITHUB_USERNAME",
+            "display_name": "GitHub Username",
+            "value": "{{ gh_name or "" }}",
+            "description": "The username for the provided API Key"
+        },{ "id": "AUGUR_GITLAB_API_KEY",
+            "display_name": "GitLab API Key",
+            "value": "{{ conf.Keys.gitlab_api_key or "" if conf.Keys else "" }}",
+            "description": "Your GitLab API Key for use with Augur"
+        },{
+            "id": "AUGUR_GITLAB_USERNAME",
+            "display_name": "GitLab Username",
+            "value": "{{ gl_name or "" }}",
+            "description": "The username for the provided API Key"
+        },{
+            "id": "AUGUR_FACADE_REPO_DIRECTORY",
+            "display_name": "Facade Directory",
+            "value": "{{ conf.Facade.repo_directory or "" if conf.Facade else "" }}",
+            "description": "The directory for use with Facade"
+        },{
+            "id": "RABBITMQ_CONN_STRING",
+            "display_name": "RabbitMQ Connection String",
+            "value": "{{ conf.RabbitMQ.connection_string or "" if conf.RabbitMQ else "" }}",
+            "description": "The connection string to use for RabbitMQ"
+        }
+    ]
+}

@@ -6,7 +6,6 @@ Create Date: 2023-05-15 12:03:57.171011
 
 """
 from alembic import op
-import sqlalchemy as sa
 from augur.application.db.session import DatabaseSession
 from augur.application.config import *
 from sqlalchemy.sql import text

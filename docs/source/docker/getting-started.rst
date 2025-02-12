@@ -22,7 +22,7 @@ If you are less familiar with Docker, or experience issues you cannot resolve at
 
 Credentials
 ------------
-Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. Alternatively, you can also set up the database within a docker container either manually or through docker-compose.
+Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. Alternatively, you can also set up the database within a docker container either manually or through docker compose.
 
 .. note::
 
@@ -58,7 +58,7 @@ First, you'll need to clone the repository. In your terminal, run:
 
 Now that you've got your external database credentials (if you are using one) and your access token, we'll need to set environment variables manually.
 
-Your database credentials and other environment variables used at runtime are stored in a file when running manually and are taken from the active bash session when using docker-compose.
+Your database credentials and other environment variables used at runtime are stored in a file when running manually and are taken from the active bash session when using docker compose.
 
 You can provide your own ``.env`` file to pull from. The file should have the below format and set all the variables to some value.
 

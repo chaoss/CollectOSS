@@ -1,14 +1,16 @@
+"""
+Defines the api routes for the augur views
+"""
 import logging
-from flask import Flask, render_template, render_template_string, request, abort, jsonify, redirect, url_for, session, flash
-from sqlalchemy.orm.exc import NoResultFound
+import math
+from flask import render_template, request, redirect, url_for, session, flash
 from .utils import *
 from flask_login import login_user, logout_user, current_user, login_required
 
 from augur.application.db.models import User, Repo, ClientApplication
 from .server import LoginException
-from augur.tasks.init.redis_connection import redis_connection as redis
 from augur.application.util import *
-from augur.application.config import AugurConfig
+from augur.application.db.lib import get_value
 from ..server import app, db_session
 
 logger = logging.getLogger(__name__)
@@ -37,9 +39,9 @@ logo:
 def logo(brand=None):
     if brand is None:
         return redirect(url_for('static', filename='img/augur_logo.png'))
-    elif "augur" in brand:
+    if "augur" in brand:
         return logo(None)
-    elif "chaoss" in brand:
+    if "chaoss" in brand:
         return redirect(url_for('static', filename='img/Chaoss_Logo_white.png'))
     return ""
 
@@ -69,16 +71,20 @@ def repo_table_view():
     
     direction = "DESC" if rev else "ASC"
 
-    config = AugurConfig(logger, db_session)
-
-    pagination_offset = config.get_value("frontend", "pagination_offset")
+    pagination_offset = get_value("frontend", "pagination_offset")
     
     if current_user.is_authenticated:
         data = current_user.get_repos(page = page, sort = sorting, direction = direction, search=query)[0]
-        page_count = (current_user.get_repo_count(search = query)[0] or 0) // pagination_offset
+        repos_count = (current_user.get_repo_count(search = query)[0] or 0)
     else:
         data = get_all_repos(page = page, sort = sorting, direction = direction, search=query)[0]
-        page_count = (get_all_repos_count(search = query)[0] or 0) // pagination_offset
+        repos_count = (get_all_repos_count(search = query)[0] or 0)
+
+    page_count = math.ceil(repos_count / pagination_offset) - 1
+    
+    if not data:
+        data = None
+
 
     return render_module("repos-table", title="Repos", repos=data, query_key=query, activePage=page, pages=page_count, offset=pagination_offset, PS="repo_table_view", reverse = rev, sorting = sorting)
 
@@ -233,9 +239,7 @@ table:
 def user_groups_view():
     params = {}
 
-    config = AugurConfig(logger, db_session)
-
-    pagination_offset = config.get_value("frontend", "pagination_offset")
+    pagination_offset = get_value("frontend", "pagination_offset")
 
     params = {}
     
@@ -309,9 +313,7 @@ def user_group_view(group = None):
             rev = True
             params["direction"] = "DESC"
 
-    config = AugurConfig(logger, db_session)
-
-    pagination_offset = config.get_value("frontend", "pagination_offset")
+    pagination_offset = get_value("frontend", "pagination_offset")
 
     data = current_user.get_group_repos(group, **params)[0]
     page_count = current_user.get_group_repo_count(group, search = query)[0] or 0

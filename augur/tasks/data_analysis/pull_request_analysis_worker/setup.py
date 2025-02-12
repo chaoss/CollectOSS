@@ -22,19 +22,19 @@ setup(
     packages=find_packages(),
     install_requires=[
         'Flask==2.0.2',
-        'Flask-Cors==3.0.10',
+        'Flask-Cors==4.0.1',
         'Flask-Login==0.5.0',
         'Flask-WTF==1.0.0',
-        'requests==2.28.0',
+        'requests==2.32.0',
         'psycopg2-binary==2.9.3',
         'sklearn==0.0',
         'nltk==3.6.6',
-        'numpy==1.22.0',
-        'pandas==1.3.5',
+        'numpy==1.26.0',
+        'pandas==1.5.3',
         'emoji==1.2.0',
-        'joblib==1.0.1',
+        'joblib==1.2.0',
         'xgboost==1.4.2',
-        'scipy==1.7.3'
+        'scipy>=1.10.0'
     ],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

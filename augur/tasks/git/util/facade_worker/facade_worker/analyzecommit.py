@@ -25,22 +25,15 @@
 # and checks for any parents of HEAD that aren't already accounted for in the
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
-import sys
-import platform
-import imp
-import time
 import datetime
-import html.parser
 import subprocess
+from subprocess import check_output
 import os
-import getopt
-import xlsxwriter
-import configparser
-import traceback 
 import sqlalchemy as s
-from sqlalchemy.exc import IntegrityError, DataError
 
-def analyze_commit(session, repo_id, repo_loc, commit):
+from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text
+
+def analyze_commit(logger, repo_id, repo_loc, commit):
 
 # This function analyzes a given commit, counting the additions, removals, and
 # whitespace changes. It collects all of the metadata about the commit, and
@@ -71,7 +64,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 	# Sometimes people mix up their name and email in their git settings
 
 		if name.find('@') >= 0 and email.find('@') == -1:
-			session.logger.debug(f"Found swapped email/name: {email}/{name}")
+			logger.debug(f"Found swapped email/name: {email}/{name}")
 			return email,name
 		else:
 			return name,email
@@ -82,7 +75,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 	# matching. This extra info is not used, so we discard it.
 
 		if email.count('@') > 1:
-			session.logger.debug(f"Found extra @: {email}")
+			logger.debug(f"Found extra @: {email}")
 			return email[:email.find('@',email.find('@')+1)]
 		else:
 			return email
@@ -95,7 +88,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 			WHERE alias_email=:alias_email 
 			AND cntrb_active = 1""").bindparams(alias_email=email)
 
-		canonical = session.fetchall_data_from_sql_text(fetch_canonical)#list(cursor_people_local)
+		canonical = fetchall_data_from_sql_text(fetch_canonical)#list(cursor_people_local)
 
 		if canonical:
 			for email in canonical:
@@ -103,7 +96,7 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 		else:
 			return email
 
-	def store_commit(repos_id,commit,filename,
+	def generate_commit_record(repos_id,commit,filename,
 		author_name,author_email,author_date,author_timestamp,
 		committer_name,committer_email,committer_date,committer_timestamp,
 		added,removed, whitespace):
@@ -122,72 +115,31 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 		#2021-10-11 11:57:46 -0500
 		placeholder_date = "1970-01-01 00:00:15 -0500"
 
-
-		#session.logger.info(f"Timestamp: {author_timestamp}")
+		#logger.info(f"Timestamp: {author_timestamp}")
 		commit_record = {
 			'repo_id' : repos_id,
-			'commit' : str(commit),
-			'filename' : filename,
-			'author_name' : str(author_name),
-			'author_email_raw' : author_email,
-			'author_email' : discover_alias(author_email),
-			'author_date' : author_date,
-			'author_timestamp' : author_timestamp if len(author_timestamp.replace(" ", "")) != 0 else placeholder_date,
-			'committer_name' : committer_name,
-			'committer_email_raw' : committer_email,
-			'committer_email' : discover_alias(committer_email),
-			'committer_date' : committer_date if len(committer_date.replace(" ", "")) != 0 else placeholder_date,
-			'committer_timestamp' : committer_timestamp if len(committer_timestamp.replace(" ","")) != 0 else placeholder_date,
-			'added' : added,
-			'removed' : removed,
-			'whitespace' : whitespace,
-			'committer_date' : committer_date if len(committer_date.replace(" ","")) != 0 else placeholder_date,
+			'cmt_commit_hash' : str(commit),
+			'cmt_filename' : filename,
+			'cmt_author_name' : str(author_name),
+			'cmt_author_raw_email' : author_email,
+			'cmt_author_email' : discover_alias(author_email),
+			'cmt_author_date' : author_date,
+			'cmt_author_timestamp' : author_timestamp if len(author_timestamp.replace(" ", "")) != 0 else placeholder_date,
+			'cmt_committer_name' : committer_name,
+			'cmt_committer_raw_email' : committer_email,
+			'cmt_committer_email' : discover_alias(committer_email),
+			'cmt_committer_date' : committer_date if len(committer_date.replace(" ", "")) != 0 else placeholder_date,
+			'cmt_committer_timestamp' : committer_timestamp if len(committer_timestamp.replace(" ","")) != 0 else placeholder_date,
+			'cmt_added' : added,
+			'cmt_removed' : removed,
+			'cmt_whitespace' : whitespace,
+			'cmt_date_attempted' : committer_date if len(committer_date.replace(" ","")) != 0 else placeholder_date,
 			'tool_source' : "Facade",
 			'tool_version' : "0.42",
 			'data_source' : "git"
 		}
 
-		#TODO: replace with a postgres on conflict do nothing. - IM 10/11/22
-		store = s.sql.text("""INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
-			cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,cmt_author_timestamp,
-			cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,cmt_committer_timestamp,
-			cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source)
-			VALUES (:repo_id,:commit,:filename,:author_name,:author_email_raw,:author_email,:author_date,:author_timestamp,
-			:committer_name,:committer_email_raw,:committer_email,:committer_date,:committer_timestamp,
-			:added,:removed,:whitespace,:committer_date,:tool_source,:tool_version,:data_source)
-			""").bindparams(**commit_record)
-
-		try:
-			session.execute_sql(store)
-		except DataError as e:
-			session.logger.error(f"Ran into bad data when trying to insert commit with values: \n {commit_record} \n Error: {e}")
-
-			#Check for improper utc timezone offset
-			#UTC timezone offset should be betwen -14:00 and +14:00
-
-			if "time zone displacement" in f"{e}":
-				commit_record['author_timestamp'] = placeholder_date
-				commit_record['committer_timestamp'] = placeholder_date
-
-				store = s.sql.text("""INSERT INTO commits (repo_id,cmt_commit_hash,cmt_filename,
-					cmt_author_name,cmt_author_raw_email,cmt_author_email,cmt_author_date,cmt_author_timestamp,
-					cmt_committer_name,cmt_committer_raw_email,cmt_committer_email,cmt_committer_date,cmt_committer_timestamp,
-					cmt_added,cmt_removed,cmt_whitespace, cmt_date_attempted, tool_source, tool_version, data_source)
-					VALUES (:repo_id,:commit,:filename,:author_name,:author_email_raw,:author_email,:author_date,:author_timestamp,
-					:committer_name,:committer_email_raw,:committer_email,:committer_date,:committer_timestamp,
-					:added,:removed,:whitespace,:committer_date,:tool_source,:tool_version,:data_source)
-					""").bindparams(**commit_record)
-				
-				session.execute_sql(store)
-			else:
-				raise e
-		except Exception as e:
-		
-			session.logger.error(f"Ran into issue when trying to insert commit with values: \n {commit_record} \n Error: {e}")
-			raise e
-
-
-		#session.log_activity('Debug',f"Stored commit: {commit}")
+		return commit_record
 
 
 ### The real function starts here ###
@@ -198,6 +150,8 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 	added = 0
 	removed = 0
 	whitespace = 0
+
+	recordsToInsert = []
 
 	# Go get the contributors (committers) for this repo here: 
 	# curl https://api.github.com/repos/chaoss/augur/contributors
@@ -223,7 +177,26 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 
 	#cursor_local.execute(store_working_commit, (repo_id,commit))
 	#db_local.commit()
-	session.execute_sql(store_working_commit)
+	execute_sql(store_working_commit)
+
+	# commit_message = check_output(
+	# 	f"git --git-dir {repo_loc} log --format=%B -n 1 {commit}".split()
+	# ).strip()
+	
+	commit_message = check_output(
+		f"git --git-dir {repo_loc} log --format=%B -n 1 {commit}".split()
+	).decode('utf-8').strip()
+
+	msg_record = {
+		'repo_id' : repo_id,
+		'cmt_msg' : commit_message,
+		'cmt_hash' : commit,
+		'tool_source' : 'Facade',
+		'tool_version' : '0.78?',
+		'data_source' : 'git',
+		'data_collection_date' : datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+	}
+	
 
 	#session.log_activity('Debug',f"Stored working commit and analyzing : {commit}")
 
@@ -297,10 +270,10 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 
 				if not header:
 
-					store_commit(repo_id,commit,filename,
+					recordsToInsert.append(generate_commit_record(repo_id,commit,filename,
 						author_name,author_email,author_date,author_timestamp,
 						committer_name,committer_email,committer_date,committer_timestamp,
-						added,removed,whitespace)
+						added,removed,whitespace))
 
 				header = False
 
@@ -356,19 +329,10 @@ def analyze_commit(session, repo_id, repo_loc, commit):
 					whitespaceCheck.append(line[1:].strip())
 
 	# Store the last stats from the git log
-	store_commit(repo_id,commit,filename,
+	recordsToInsert.append(generate_commit_record(repo_id,commit,filename,
 		author_name,author_email,author_date,author_timestamp,
 		committer_name,committer_email,committer_date,committer_timestamp,
-		added,removed,whitespace)
+		added,removed,whitespace))
 
-	# Remove the working commit.
-	try: 
-		remove_commit = s.sql.text("""DELETE FROM working_commits 
-			WHERE repos_id = :repo_id AND working_commit = :hash
-			""").bindparams(repo_id=repo_id,hash=commit)
-		session.execute_sql(remove_commit)
 
-		#session.log_activity('Debug',f"Completed and removed working commit: {commit}")
-	except:
-		session.log_activity('Info', f"Working Commit: {commit}")
-	# If multithreading, clean up the local database
+	return recordsToInsert, msg_record

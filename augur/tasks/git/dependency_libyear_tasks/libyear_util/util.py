@@ -1,6 +1,4 @@
-from distutils.version import LooseVersion
 import dateutil.parser
-from distutils import version
 import os
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.pypi_parser import parse_conda, parse_pipfile,parse_pipfile_lock,parse_poetry,parse_poetry_lock,parse_requirement_txt,parse_setup_py
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.npm_parser import parse_package_json
@@ -34,54 +32,56 @@ def get_parsed_deps(path,logger):
 
     deps_file = None
     dependency_list = list()
-
     for f in file_list:
         deps_file = find(f, path)
-        if not deps_file:
+
+        if not deps_file or not f:
             continue
         file_handle= open(deps_file)
 
-        if f == 'Requirement.txt':
-            dependency_list = parse_requirement_txt(file_handle)
+        short_file_name = os.path.split(deps_file)[-1]
+
+        if short_file_name == 'Requirement.txt':
+            dependency_list.extend(parse_requirement_txt(file_handle))
         
-        elif f == 'requirements.txt':
-            dependency_list = parse_requirement_txt(file_handle)
+        if short_file_name == 'requirements.txt':
+            dependency_list.extend(parse_requirement_txt(file_handle))
 
-        elif f == 'setup.py':
-            dependency_list = parse_setup_py(file_handle)
+        if short_file_name == 'setup.py':
+            dependency_list.extend(parse_setup_py(file_handle))
 
-        elif f == 'Pipfile':
-            dependency_list = parse_pipfile(file_handle)
+        if short_file_name == 'Pipfile':
+            dependency_list.extend(parse_pipfile(file_handle))
 
-        elif f == 'Pipfile.lock':
-            dependency_list = parse_pipfile_lock(file_handle)
+        if short_file_name == 'Pipfile.lock':
+            dependency_list.extend(parse_pipfile_lock(file_handle))
 
-        elif f == 'pyproject.toml':
-            dependency_list = parse_poetry(file_handle)
+        if short_file_name == 'pyproject.toml':
+            dependency_list.extend(parse_poetry(file_handle))
 
-        elif f == 'poetry.lock':
-            dependency_list = parse_poetry_lock(file_handle)
+        if short_file_name == 'poetry.lock':
+            dependency_list.extend(parse_poetry_lock(file_handle))
 
-        elif f == 'environment.yml':
-            dependency_list = parse_conda(file_handle)
+        if short_file_name == 'environment.yml':
+            dependency_list.extend(parse_conda(file_handle))
 
-        elif f == 'environment.yaml':
-            dependency_list = parse_conda(file_handle)
+        if short_file_name == 'environment.yaml':
+            dependency_list.extend(parse_conda(file_handle))
 
-        elif f == 'environment.yml.lock':
-            dependency_list = parse_conda(file_handle)
+        if f == 'environment.yml.lock':
+            dependency_list.extend(parse_conda(file_handle))
 
-        elif f == 'environment.yaml.lock':
-            dependency_list = parse_conda(file_handle) 
+        if short_file_name == 'environment.yaml.lock':
+            dependency_list.extend(parse_conda(file_handle)) 
             
-        elif f == 'package.json':
+        if short_file_name == 'package.json':
             try:
-                dependency_list = parse_package_json(file_handle)
+                dependency_list.extend(parse_package_json(file_handle))
             except KeyError as e:
                 logger.error(f"package.json for repo at path {path} is missing required key: {e}\n Skipping file...")
 
         
-        return dependency_list
+    return dependency_list
 
 
 def get_libyear(current_version, current_release_date, latest_version, latest_release_date):

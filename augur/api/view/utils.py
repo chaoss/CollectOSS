@@ -1,16 +1,18 @@
+"""
+Defines utility functions used by the augur api views
+"""
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from flask import render_template, flash, url_for, Flask
+from flask import render_template, flash, url_for
+from .init import init_logging
 from .init import *
-from ..server import app, db_session
-from augur.application.config import AugurConfig
-import urllib.request, urllib.error, json, os, math, yaml, urllib3, time, logging, re
+from augur.application.db.lib import get_value
+import urllib.error, math, yaml, urllib3, time, math
+
 
 init_logging()
 
 from .init import logger
-
-config = AugurConfig(logger, db_session)
 
 """ ----------------------------------------------------------------
 loadSettings:
@@ -62,9 +64,11 @@ def getSetting(key, section = "View"):
             return "http://127.0.0.1:5000/api/unstable"
         return settings[key]
     else:
-        return config.get_value(section, key)
+        return get_value(section, key)
 
 loadSettings()
+
+#version_check(settings)
 
 """ ----------------------------------------------------------------
 """
@@ -298,3 +302,6 @@ def render_message(messageTitle, messageBody = None, title = None, redirect = No
 def render_module(module, **args):
     args.setdefault("body", module)
     return render_template('index.j2', **args)
+
+""" ----------------------------------------------------------------
+"""

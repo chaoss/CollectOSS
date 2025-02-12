@@ -1,28 +1,41 @@
 #SPDX-License-Identifier: MIT
-import logging, os, sys, time, requests, json
-from datetime import datetime
-from multiprocessing import Process, Queue
-import pandas as pd
+import json
 import sqlalchemy as s
-import httpx
-import logging
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_data_access import GithubDataAccess
+from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.github.util.gh_graphql_entities import hit_api_graphql, request_graphql_dict
+from augur.tasks.github.util.gh_graphql_entities import request_graphql_dict
 from augur.application.db.models import *
+from augur.application.db.lib import execute_sql
 from augur.tasks.github.util.github_task_session import *
 from augur.application.db.models.augur_data import RepoBadging
 from urllib.parse import quote
 
 def query_committers_count(key_auth, logger, owner, repo):
 
+    data = {}
     logger.info('Querying committers count\n')
     url = f'https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100'
-
-    contributors = GithubPaginator(url, key_auth, logger)
+    ## If the repository is empty there are zero committers, and the API returns nothing at all. Response 
+    ## header of 200 along with an empty JSON. 
+    try: 
+        github_data_access = GithubDataAccess(key_auth, logger)
+        try: 
+            data = github_data_access.get_resource_count(url) 
+        except Exception as e: 
+            logger.warning(f"JSON Decode error: {e} indicating there are no committers or the repository is empty or archived.")
+            data = 0 
+            pass 
+        if not data: 
+            logger.warning("The API Returned an empty JSON object.")
+        else: 
+            logger.warning("Committer count data returned in JSON")
+    except ValueError: 
+        logger.warning("The API did not return valid JSON for committer count. This usually occurs on empty or archived repositories.")
+        data=0
     
-    return len(contributors)
+    return data 
 
 def get_repo_data(logger, url, response):
     data = {}
@@ -97,128 +110,79 @@ def grab_repo_info_from_graphql_endpoint(key_auth, logger, query):
     return data
     
 
-def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
+def repo_info_model(key_auth, repo_orm_obj, logger):
     logger.info("Beginning filling the repo_info model for repo: " + repo_orm_obj.repo_git + "\n")
 
     owner, repo = get_owner_repo(repo_orm_obj.repo_git)
 
-    url = 'https://api.github.com/graphql'
-
-    query = """
-        {
-            repository(owner:"%s", name:"%s"){
-                updatedAt
-                hasIssuesEnabled
-                issues(states:OPEN) {
+    query = """query($repo: String!, $owner: String!) {
+                repository(name: $repo, owner: $owner) {
+                    updatedAt
+                    hasIssuesEnabled
+                    issues(states: OPEN) {
                     totalCount
-                }
-                hasWikiEnabled
-                forkCount
-                defaultBranchRef {
+                    }
+                    hasWikiEnabled
+                    forkCount
+                    defaultBranchRef {
                     name
-                }
-                watchers {
+                    }
+                    watchers {
                     totalCount
-                }
-                id
-                licenseInfo {
+                    }
+                    id
+                    licenseInfo {
                     name
                     url
-                }
-                stargazers {
+                    }
+                    stargazers {
                     totalCount
-                }
-                codeOfConduct {
+                    }
+                    codeOfConduct {
                     name
                     url
-                }
-                issue_count: issues {
+                    }
+                    issue_count: issues {
                     totalCount
-                }
-                issues_closed: issues(states:CLOSED) {
+                    }
+                    issues_closed: issues(states: CLOSED) {
                     totalCount
-                }
-                pr_count: pullRequests {
+                    }
+                    pr_count: pullRequests {
                     totalCount
-                }
-                pr_open: pullRequests(states: OPEN) {
+                    }
+                    pr_open: pullRequests(states: OPEN) {
                     totalCount
-                }
-                pr_closed: pullRequests(states: CLOSED) {
+                    }
+                    pr_closed: pullRequests(states: CLOSED) {
                     totalCount
-                }
-                pr_merged: pullRequests(states: MERGED) {
+                    }
+                    pr_merged: pullRequests(states: MERGED) {
                     totalCount
-                }
-                ref(qualifiedName: "master") {
+                    }
+                    defaultBranchRef {
                     target {
                         ... on Commit {
-                            history(first: 0){
-                                totalCount
-                            }
+                        history {
+                            totalCount
+                        }
                         }
                     }
+                    }
                 }
-            }
-        }
+                }
+                """
+    
+    github_graphql_data_access = GithubGraphQlDataAccess(key_auth, logger)
 
-    """ % (owner, repo)
+    variables = {
+        "owner": owner,
+        "repo": repo
+    }
 
-    ##############################
-    # {
-    #   repository(owner: "chaoss", name: "augur") {
-    #     updatedAt
-    #     hasIssuesEnabled
-    #     issues(states: OPEN) {
-    #       totalCount
-    #     }
-    #     hasWikiEnabled
-    #     forkCount
-    #     defaultBranchRef {
-    #       name
-    #     }
-    #     watchers {
-    #       totalCount
-    #     }
-    #     id
-    #     licenseInfo {
-    #       name
-    #       url
-    #     }
-    #     stargazers {
-    #       totalCount
-    #     }
-    #     codeOfConduct {
-    #       name
-    #       url
-    #     }
-    #     issue_count: issues {
-    #       totalCount
-    #     }
-    #     issues_closed: issues(states: CLOSED) {
-    #       totalCount
-    #     }
-    #     pr_count: pullRequests {
-    #       totalCount
-    #     }
-    #     pr_open: pullRequests(states: OPEN) {
-    #       totalCount
-    #     }
-    #     pr_closed: pullRequests(states: CLOSED) {
-    #       totalCount
-    #     }
-    #     pr_merged: pullRequests(states: MERGED) {
-    #       totalCount
-    #     }
-    #     stargazerCount
-    #   }
-    # }
+    result_keys = ["repository"]
 
-    try:
-        data = grab_repo_info_from_graphql_endpoint(key_auth, logger, query)
-    except Exception as e:
-        logger.error(f"Could not grab info for repo {repo_orm_obj.repo_id}")
-        raise e
+    data = github_graphql_data_access.get_resource(query, variables, result_keys)
 
     # Get committers count info that requires seperate endpoint  
     committers_count = query_committers_count(key_auth, logger, owner, repo)
@@ -248,7 +212,7 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
         'security_audit_file': None,
         'status': None,
         'keywords': None,
-        'commit_count': data['ref']['target']['history']['totalCount'] if data['ref'] else None,
+        'commit_count': data['defaultBranchRef']['target']['history']['totalCount'] if data['defaultBranchRef'] else None,
         'issues_count': data['issue_count']['totalCount'] if data['issue_count'] else None,
         'issues_closed': data['issues_closed']['totalCount'] if data['issues_closed'] else None,
         'pull_request_count': data['pr_count']['totalCount'] if data['pr_count'] else None,
@@ -256,11 +220,11 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
         'pull_requests_closed': data['pr_closed']['totalCount'] if data['pr_closed'] else None,
         'pull_requests_merged': data['pr_merged']['totalCount'] if data['pr_merged'] else None,
         'tool_source': 'Repo_info Model',
-        'tool_version': '0.42',
+        'tool_version': '0.50.0',
         'data_source': "Github"
     }
 
-    #result = session.insert_data(rep_inf,RepoInfo,['repo_info_id']) #result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
+    #result = bulk_insert_dicts(rep_inf,RepoInfo,['repo_info_id']) #result = self.db.execute(self.repo_info_table.insert().values(rep_inf))
     insert_statement = s.sql.text("""INSERT INTO repo_info (repo_id,last_updated,issues_enabled,
 			open_issues,pull_requests_enabled,wiki_enabled,pages_enabled,fork_count,
 			default_branch,watchers_count,license,stars_count,
@@ -275,7 +239,7 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
             :tool_source, :tool_version, :data_source)
 			""").bindparams(**rep_inf)
 
-    augur_db.execute_sql(insert_statement)
+    execute_sql(insert_statement)
 
     # Note that the addition of information about where a repository may be forked from, and whether a repository is archived, updates the `repo` table, not the `repo_info` table.
     forked = is_forked(key_auth, logger, owner, repo)
@@ -288,7 +252,7 @@ def repo_info_model(augur_db, key_auth, repo_orm_obj, logger):
         archived = 0
 
     update_repo_data = s.sql.text("""UPDATE repo SET forked_from=:forked, repo_archived=:archived, repo_archived_date_collected=:archived_date_collected WHERE repo_id=:repo_id""").bindparams(forked=forked, archived=archived, archived_date_collected=archived_date_collected, repo_id=repo_orm_obj.repo_id)
-    augur_db.execute_sql(update_repo_data)
+    execute_sql(update_repo_data)
 
     logger.info(f"Inserted info for {owner}/{repo}\n")
 

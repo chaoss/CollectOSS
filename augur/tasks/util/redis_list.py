@@ -6,7 +6,6 @@ from typing import Iterable, Any, Union
 from collections.abc import MutableSequence
 from augur.tasks.init.redis_connection import redis_connection as redis
 from augur import instance_id
-from redis import exceptions
 
 
 class RedisList(MutableSequence):
@@ -168,8 +167,10 @@ class RedisList(MutableSequence):
         """
 
         if index is None:
-
-            redis.rpop(self.redis_list_key)
+            # This will get a random index from the list and remove it, 
+            # decreasing the likelihood of everyone using the same key all the time
+            #redis.rpop(self.redis_list_key)
+            redis.spop(self.redis_list_key)
 
         else:
             # calls __delitem__

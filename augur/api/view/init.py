@@ -1,7 +1,7 @@
 from pathlib import Path
 from .server import Environment
 from augur.application.logs import AugurLogger
-import logging, secrets, yaml
+import secrets, yaml
 
 env = Environment()
 
@@ -91,4 +91,4 @@ reports = {
 # Initialize logging
 def init_logging():
     global logger
-    logger = AugurLogger("augur_view", reset_logfiles=True).get_logger()
+    logger = AugurLogger("augur_view", reset_logfiles=False).get_logger()

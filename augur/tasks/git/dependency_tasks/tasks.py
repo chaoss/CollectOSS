@@ -1,48 +1,46 @@
 import logging
 import traceback
-from augur.application.db.session import DatabaseSession
 from augur.tasks.git.dependency_tasks.core import *
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask, AugurCoreRepoCollectionTask
-from augur.application.db.util import execute_session_query
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
-from augur.application.config import AugurConfig
+from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask, AugurSecondaryRepoCollectionTask
+from augur.tasks.util.metadata_exception import MetadataException 
 
 
 @celery.task(base=AugurFacadeRepoCollectionTask)
 def process_dependency_metrics(repo_git):
-    #raise NotImplementedError
-
-    from augur.tasks.init.celery_app import engine
 
     logger = logging.getLogger(process_dependency_metrics.__name__)
 
-    with DatabaseSession(logger, engine) as session:
-        logger.info(f"repo_git: {repo_git}")
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
-        
-
-        repo = execute_session_query(query,'one')
-
-        config = AugurConfig(session.logger, session)
-    
-        absolute_repo_path = get_absolute_repo_path(config.get_section("Facade")['repo_directory'],repo.repo_id,repo.repo_path,repo.repo_name)
-
-        session.logger.debug(f"This is the deps model repo: {repo_git}.")
-
-        generate_deps_data(session,repo.repo_id,absolute_repo_path)
+    generate_deps_data(logger, repo_git)
 
 
-@celery.task(base=AugurCoreRepoCollectionTask)
-def process_ossf_dependency_metrics(repo_git):
-    from augur.tasks.init.celery_app import engine
+@celery.task(base=AugurSecondaryRepoCollectionTask, bind=True)
+def process_ossf_dependency_metrics(self, repo_git):
+
+    engine = self.app.engine
     
     logger = logging.getLogger(process_ossf_dependency_metrics.__name__)
 
-    with DatabaseSession(logger, engine) as session:
-        logger.info(f"repo_git: {repo_git}")
-
-        query = session.query(Repo).filter(Repo.repo_git == repo_git)
+    try:
+        generate_scorecard(logger, repo_git)
+    except Exception as e:
+        logger.warning(f'Exception generating scorecard: {e}')
+        tracer = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
+        logger.warning(f'Full stack trace of OpenSSF scorecard error: {tracer}')
+        raise MetadataException(e,f"An error occurred while generating the scorecard: {str(e)}")
+    
+    """
+        This try/except block is an attempt to get more information about this occasional error: 
         
-        repo = execute_session_query(query,'one')
-        generate_scorecard(session, repo.repo_id, repo_git)
+        ```bash
+        Traceback (most recent call last):
+        File "/home/ubuntu/github/virtualenvs/hosted/lib/python3.11/site-packages/billiard/pool.py", line 366, in workloop
+            put((READY, (job, i, result, inqW_fd)))
+        File "/home/ubuntu/github/virtualenvs/hosted/lib/python3.11/site-packages/billiard/queues.py", line 366, in put
+            self.send_payload(ForkingPickler.dumps(obj))
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/home/ubuntu/github/virtualenvs/hosted/lib/python3.11/site-packages/billiard/reduction.py", line 56, in dumps
+            cls(buf, protocol).dump(obj)
+        billiard.pool.MaybeEncodingError: Error sending result: ''(1, <ExceptionInfo: MetadataException("\'checks\' | Additional metadata: required_output: {}")>, None)''. Reason: ''PicklingError("Can\'t pickle <class \'augur.tasks.util.metadata_exception.MetadataException\'>: it\'s not the same object as augur.tasks.util.metadata_exception.MetadataException")''.
+        ```
+    """

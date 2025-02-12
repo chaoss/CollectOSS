@@ -45,5 +45,5 @@ Before you get off to such a quick start, go ahead and
   .. code-block:: bash
 
     sudo docker build -t augur-docker -f docker/backend/Dockerfile .
-    sudo docker-compose up
+    sudo docker compose up
 

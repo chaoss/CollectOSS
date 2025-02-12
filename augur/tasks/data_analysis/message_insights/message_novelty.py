@@ -1,20 +1,8 @@
 #SPDX-License-Identifier: MIT
 ## Added  imports
-import re
-import unicodedata
-import nltk
-import string
-from nltk.tokenize import word_tokenize 
-from nltk.stem.snowball import SnowballStemmer
-from bs4 import BeautifulSoup
-import matplotlib.pyplot as plt
-from datetime import date
 
 ##
-import logging
-import multiprocessing
 import os
-import traceback 
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -22,7 +10,6 @@ import pandas as pd
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from keras.layers import Dense, Input
 from keras.models import Model, load_model
-from scipy.spatial.distance import cosine
 from skimage.filters import threshold_otsu
 from sklearn import utils as skl_utils
 
