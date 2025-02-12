@@ -226,8 +226,8 @@ def setup_periodic_tasks(sender, **kwargs):
         logger.info(f"Scheduling refresh materialized view every night at 1am CDT")
         sender.add_periodic_task(datetime.timedelta(days=mat_views_interval), refresh_materialized_views.s())
 
-        logger.info(f"Scheduling update of collection weights on midnight each day")
-        sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
+        # logger.info(f"Scheduling update of collection weights on midnight each day")
+        # sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
 
         logger.info(f"Setting 404 repos to be marked for retry on midnight each day")
         sender.add_periodic_task(crontab(hour=0, minute=0),retry_errored_repos.s())
