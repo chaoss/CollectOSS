@@ -17,6 +17,8 @@ import sqlalchemy as s
 
 from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
+from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
+from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
@@ -24,6 +26,8 @@ from augur.application.logs import AugurLogger
 from augur.application.db.lib import get_value
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 from augur.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
+
+from keyman.KeyClient import KeyClient, KeyPublisher
 
 logger = AugurLogger("augur", reset_logfiles=False).get_logger()
 
@@ -50,6 +54,26 @@ def start(ctx, development):
         
         logger.error("Failed to raise open file limit!")
         raise e
+    
+    keypub = KeyPublisher()
+
+    orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
+
+    # Wait for orchestrator startup
+    if not keypub.wait(republish=True):
+        logger.critical("Key orchestrator did not respond in time")
+        return
+    
+    # load keys
+    ghkeyman = GithubApiKeyHandler(logger)
+    glkeyman = GitlabApiKeyHandler(logger)
+
+    for key in ghkeyman.keys:
+        keypub.publish(key, "github_rest")
+        keypub.publish(key, "github_graphql")
+
+    for key in glkeyman.keys:
+        keypub.publish(key, "gitlab_rest")
     
     if development:
         os.environ["AUGUR_DEV"] = "1"
@@ -93,6 +117,8 @@ def start(ctx, development):
         for p in processes:
             if p:
                 p.terminate()
+
+        keypub.shutdown()
 
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
