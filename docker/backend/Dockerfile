@@ -80,6 +80,7 @@ COPY ./augur/ augur/
 COPY ./metadata.py .
 COPY ./setup.py .
 COPY ./scripts/ scripts/
+COPY ./keyman/ keyman/
 
 # Add rust and cargo to PATH
 ENV PATH="/usr/bin/:/root/.cargo/bin:/usr/local/bin:${PATH}"
