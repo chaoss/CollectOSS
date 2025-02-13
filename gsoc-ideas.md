@@ -159,7 +159,7 @@ The following is an example from the [openEuler](https://www.openeuler.org/en/) 
 
 ## IDEA: Open Source Software Health Metrics Visualization Exploration
 
-**Hours: 300**
+**Hours: 350**
 
 [Micro-tasks and place for questions](https://github.com/chaoss/augur/issues/2993)
 
