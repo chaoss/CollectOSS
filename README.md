@@ -1,4 +1,4 @@
-# Augur NEW Release v0.81.0
+# Augur NEW Release v0.81.1
 
 Augur is primarily a data engineering tool that makes it possible for data scientists to gather open source software community data - less data carpentry for everyone else! 
 The primary way of looking at Augur data is through [8Knot](https://github.com/oss-aspen/8knot), a public instance of 8Knot is available [here](https://metrix.chaoss.io) - this is tied to a public instance of [Augur](https://ai.chaoss.io). 
@@ -11,7 +11,7 @@ We follow the [First Timers Only](https://www.firsttimersonly.com/) philosophy o
 ## NEW RELEASE ALERT!
 **If you want to jump right in, the updated docker, docker-compose and bare metal installation instructions are available [here](docs/new-install.md)**.
 
-Augur is now releasing a dramatically improved new version to the ```main``` branch. It is also available [here](https://github.com/chaoss/augur/releases/tag/v0.81.0).
+Augur is now releasing a dramatically improved new version to the ```main``` branch. It is also available [here](https://github.com/chaoss/augur/releases/tag/v0.81.1).
 
 
 - The `main` branch is a stable version of our new architecture, which features:
@@ -43,9 +43,9 @@ For more information on [how to get involved on the CHAOSS website](https://chao
 
 ## Collecting Data
 
-Augur supports ```Python3.6``` through ```Python3.9``` on all platforms. ```Python3.10``` and above do not yet work because of machine learning worker dependencies. On OSX, you can create a ```Python3.9``` environment, by running:
+Augur supports ```Python3.7``` through ```Python3.8``` on all platforms. ```Python3.12``` and above do not yet work because of machine learning worker dependencies. On OSX, you can create a ```Python3.11``` environment, by running:
 ```
-$ python3.9 -m venv path/to/venv
+$ python3.11 -m venv path/to/venv
 ```
 
 Augur's main focus is to measure the overall health and sustainability of open source projects.
