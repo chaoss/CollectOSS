@@ -27,10 +27,10 @@ def test_connection(function_internet_connection):
                 print("Request timed out.")
             except httpx.NetworkError as e:
                 print(f"Network Error: {httpx.NetworkError}")
-                print(traceback.format_exc(e))
+                print(traceback.format_exc())
             except httpx.ProtocolError as e:
                 print(f"Protocol Error: {httpx.ProtocolError}")
-                print(traceback.format_exc(e))
+                print(traceback.format_exc())
                 
             print(f"\n\n{usage} command setup failed\n \
                 There was an error while testing for network connectivity.\n \
