@@ -6,6 +6,7 @@ import sys
 import re
 import json
 import httpx
+import traceback
 
 from augur.application.db.engine import DatabaseEngine
 from augur.application.db import get_engine, dispose_database_engine
@@ -16,23 +17,32 @@ def test_connection(function_internet_connection):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
         usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
+        success = False
         with httpx.Client() as client:
             try:
                 _ = client.request(
                     method="GET", url="http://chaoss.community", timeout=10, follow_redirects=True)
-
-                return ctx.invoke(function_internet_connection, *args, **kwargs)
+                success = True
             except (TimeoutError, httpx.TimeoutException):
                 print("Request timed out.")
-            except httpx.NetworkError:
+            except httpx.NetworkError as e:
                 print(f"Network Error: {httpx.NetworkError}")
-            except httpx.ProtocolError:
+                print(traceback.format_exc())
+            except httpx.ProtocolError as e:
                 print(f"Protocol Error: {httpx.ProtocolError}")
-            print(f"\n\n{usage} command setup failed\n \
-                You are not connected to the internet.\n \
-                Please connect to the internet to run Augur\n \
-                Consider setting http_proxy variables for limited access installations.")
-            sys.exit(-1)        
+                print(traceback.format_exc())
+
+            if not success:
+                print(
+                    f"""
+                    \n\n{usage} command setup failed.
+                    There was an error while testing for network connectivity
+                    Please check your connection to the internet to run Augur
+                    Consider setting http_proxy variables for limited access installations."""
+                )
+                sys.exit(-1)
+        
+        return ctx.invoke(function_internet_connection, *args, **kwargs)
         
     return update_wrapper(new_func, function_internet_connection)
 
