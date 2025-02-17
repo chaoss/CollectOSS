@@ -21,8 +21,6 @@ def test_connection(function_internet_connection):
             try:
                 _ = client.request(
                     method="GET", url="http://chaoss.community", timeout=10, follow_redirects=True)
-
-                return ctx.invoke(function_internet_connection, *args, **kwargs)
             except (TimeoutError, httpx.TimeoutException):
                 print("Request timed out.")
             except httpx.NetworkError as e:
@@ -36,7 +34,9 @@ def test_connection(function_internet_connection):
                 There was an error while testing for network connectivity.\n \
                 Please check your connection to the internet to run Augur\n \
                 Consider setting http_proxy variables for limited access installations.")
-            sys.exit(-1)        
+            sys.exit(-1)
+        
+        return ctx.invoke(function_internet_connection, *args, **kwargs)
         
     return update_wrapper(new_func, function_internet_connection)
 
