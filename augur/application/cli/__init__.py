@@ -6,6 +6,7 @@ import sys
 import re
 import json
 import httpx
+import traceback
 
 from augur.application.db.engine import DatabaseEngine
 from augur.application.db import get_engine, dispose_database_engine
@@ -24,13 +25,16 @@ def test_connection(function_internet_connection):
                 return ctx.invoke(function_internet_connection, *args, **kwargs)
             except (TimeoutError, httpx.TimeoutException):
                 print("Request timed out.")
-            except httpx.NetworkError:
+            except httpx.NetworkError as e:
                 print(f"Network Error: {httpx.NetworkError}")
-            except httpx.ProtocolError:
+                print(traceback.format_exc(e))
+            except httpx.ProtocolError as e:
                 print(f"Protocol Error: {httpx.ProtocolError}")
+                print(traceback.format_exc(e))
+                
             print(f"\n\n{usage} command setup failed\n \
-                You are not connected to the internet.\n \
-                Please connect to the internet to run Augur\n \
+                There was an error while testing for network connectivity.\n \
+                Please check your connection to the internet to run Augur\n \
                 Consider setting http_proxy variables for limited access installations.")
             sys.exit(-1)        
         
