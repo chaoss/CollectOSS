@@ -32,7 +32,7 @@ def update_api_key():
             """
             SELECT value as github_key from config Where section_name='Keys' AND setting_name='github_api_key'
             UNION All
-            SELECT access_token as github_key from worker_oauth ORDER BY github_key DESC;
+            SELECT access_token as github_key from worker_oauth where platform='github' ORDER BY github_key DESC;
             """
         )
 
