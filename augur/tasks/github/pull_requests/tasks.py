@@ -231,13 +231,14 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
     if not full_collection:
-        last_collected_date = get_core_data_last_collected(repo_id)
+        last_collected_date = get_secondary_data_last_collected(repo_id)
         
-        # the full_collection parameter is hardcoded to False, so we must check if there actually is a last_collected date
         if last_collected_date:
             # subtract 2 days to ensure all data is collected 
             core_data_last_collected = (last_collected_date - timedelta(days=2)).replace(tzinfo=timezone.utc)
-            review_msg_url += f"?since={core_data_last_collected.isoformat()}"        
+            review_msg_url += f"?since={core_data_last_collected.isoformat()}"
+        else:
+            logger.warning(f"core_data_last_collected is NULL for recollection on repo: {repo_git}")
 
     pr_reviews = get_pull_request_reviews_by_repo_id(repo_id)
 
