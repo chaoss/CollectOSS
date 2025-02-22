@@ -9,6 +9,25 @@ ENV PATH="${PATH}:/usr/local/go/bin"
 RUN ./scripts/docker/install-golang-deps.sh
 
 
+FROM rust:1.78 as rust
+
+# Ensure Rust directories are writable
+RUN mkdir -p /root/.rustup/downloads /root/.cargo/registry && \
+    chmod -R 777 /root/.rustup /root/.cargo
+
+# Add rust and cargo to PATH
+# ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install the specific version of Rust
+# RUN set -x \
+#     && rustup install 1.78.0
+# RUN set -x \
+#     && rustup default 1.78.0
+
+
+# Add rust and cargo to PATH
+ENV PATH="/usr/bin/:/root/.cargo/bin:/usr/local/bin:${PATH}"
+
 FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
@@ -34,15 +53,12 @@ RUN set -x \
         postgresql-client \
         libpq-dev \
         build-essential \
-        rustc \
-        cargo \
         chromium \
         tar \
 	jq \
         chromium-driver \
         && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Firefox from Debian repositories for ARM64 architecture
 RUN set -x \
@@ -68,18 +84,9 @@ RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriv
 RUN firefox --version
 RUN geckodriver --version
 
-# Ensure Rust directories are writable
-RUN mkdir -p /root/.rustup/downloads /root/.cargo/registry && \
-    chmod -R 777 /root/.rustup /root/.cargo
 
-# Add rust and cargo to PATH
-ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Install the specific version of Rust
-RUN set -x \
-    && rustup install 1.78.0
-RUN set -x \
-    && rustup default 1.78.0
+
 
 EXPOSE 5000
 
@@ -92,8 +99,7 @@ COPY ./setup.py .
 COPY ./scripts/ scripts/
 COPY ./keyman/ keyman/
 
-# Add rust and cargo to PATH
-ENV PATH="/usr/bin/:/root/.cargo/bin:/usr/local/bin:${PATH}"
+
 
 RUN python3 -m venv /opt/venv
 
