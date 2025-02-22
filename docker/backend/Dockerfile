@@ -9,24 +9,24 @@ ENV PATH="${PATH}:/usr/local/go/bin"
 RUN ./scripts/docker/install-golang-deps.sh
 
 
-FROM rust:1.78 as rust
+# FROM rust:1.78 as rust
 
-# Ensure Rust directories are writable
-RUN mkdir -p /root/.rustup/downloads /root/.cargo/registry && \
-    chmod -R 777 /root/.rustup /root/.cargo
+# # Ensure Rust directories are writable
+# RUN mkdir -p /root/.rustup/downloads /root/.cargo/registry && \
+#     chmod -R 777 /root/.rustup /root/.cargo
 
-# Add rust and cargo to PATH
-# ENV PATH="/root/.cargo/bin:${PATH}"
+# # Add rust and cargo to PATH
+# # ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Install the specific version of Rust
-# RUN set -x \
-#     && rustup install 1.78.0
-# RUN set -x \
-#     && rustup default 1.78.0
+# # Install the specific version of Rust
+# # RUN set -x \
+# #     && rustup install 1.78.0
+# # RUN set -x \
+# #     && rustup default 1.78.0
 
 
-# Add rust and cargo to PATH
-ENV PATH="/usr/bin/:/root/.cargo/bin:/usr/local/bin:${PATH}"
+# # Add rust and cargo to PATH
+# ENV PATH="/usr/bin/:/root/.cargo/bin:/usr/local/bin:${PATH}"
 
 FROM python:3.11-slim-bullseye
 
