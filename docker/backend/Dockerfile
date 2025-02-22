@@ -1,4 +1,14 @@
 # SPDX-License-Identifier: MIT
+
+
+FROM golang:1.23 AS golang
+
+
+# RUN ./scripts/docker/install-go.sh
+ENV PATH="${PATH}:/usr/local/go/bin"
+RUN ./scripts/docker/install-golang-deps.sh
+
+
 FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
@@ -101,9 +111,10 @@ RUN set -x \
     && /opt/venv/bin/pip install wheel \
     && /opt/venv/bin/pip install .
 
-RUN ./scripts/docker/install-go.sh
-ENV PATH="${PATH}:/usr/local/go/bin"
 RUN ./scripts/docker/install-workers-deps.sh
+
+COPY --from=golang "$HOME/scc" "$HOME/scc"
+COPY --from=golang "$HOME/scorecard" "$HOME/scorecard"
 
 # RUN ./scripts/install/workers.sh 
 
