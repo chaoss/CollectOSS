@@ -6,6 +6,7 @@ FROM golang:1.23 AS golang
 
 # RUN ./scripts/docker/install-go.sh
 ENV PATH="${PATH}:/usr/local/go/bin"
+COPY ./scripts/ scripts/
 RUN ./scripts/docker/install-golang-deps.sh
 
 
