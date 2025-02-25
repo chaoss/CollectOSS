@@ -3,7 +3,7 @@ from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.github_task_session import *
 from augur.application.db.models import *
 from augur.tasks.util.AugurUUID import GithubUUID
-from augur.application.db.lib import bulk_insert_dicts
+from augur.application.db.lib import bulk_insert_dicts, batch_insert_contributors
 from augur.tasks.github.util.github_data_access import GithubDataAccess
 
 
@@ -116,10 +116,9 @@ def query_github_contributors(logger, key_auth, github_url):
                 #"data_source": session.data_source
             }
 
-            cntrb_natural_keys = ['cntrb_id']
             #insert cntrb to table.
             #session.logger.info(f"Contributor:  {cntrb}  \n")
-            bulk_insert_dicts(logger, cntrb,Contributor,cntrb_natural_keys)
+            batch_insert_contributors(logger, [cntrb])
             
         except Exception as e:
             logger.error("Caught exception: {}".format(e))
