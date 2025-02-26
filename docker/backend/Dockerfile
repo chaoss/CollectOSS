@@ -2,7 +2,7 @@
 FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.76.6"
+LABEL version="0.85.0"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/usr/bin/:/usr/local/bin:/usr/lib:${PATH}"
