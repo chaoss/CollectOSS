@@ -9,7 +9,7 @@ from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
 from augur.application.db.lib import get_group_by_name, get_repo_by_repo_git, get_github_repo_by_src_id, get_gitlab_repo_by_src_id
 from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.models.augur_operations import retrieve_owner_repos, FRONTEND_REPO_GROUP_NAME, RepoGroup
+from augur.application.db.models.augur_operations import retrieve_owner_repos, FRONTEND_REPO_GROUP_NAME, RepoGroup, CollectionStatus
 from augur.tasks.github.util.github_paginator import hit_api
 
 from augur.application.db.models import UserRepo, Repo
@@ -235,6 +235,8 @@ def add_github_repo(logger, session, url, repo_group_id, group_id, repo_type, re
         logger.error(f"Error while adding repo: Failed to insert user repo record. A record with a repo_id of {repo_id} and a group id of {group_id} needs to be added to the user repo table so that this repo shows up in the users group")
         return
     
+    CollectionStatus.insert(session, logger, repo_id)
+    
 
 def get_gitlab_repo_data(gl_session, url: str, logger) -> bool:
 
@@ -281,6 +283,8 @@ def add_gitlab_repo(logger, session, url, repo_group_id, group_id, repo_src_id):
     if not result:
         logger.error(f"Error while adding repo: Failed to insert user repo record. A record with a repo_id of {repo_id} and a group id of {group_id} needs to be added to the user repo table so that this repo shows up in the users group")
         return
+    
+    CollectionStatus.insert(session, logger, repo_id)
 
 # @celery.task
 # def add_org_repo_list(user_id, group_name, urls):

@@ -378,5 +378,5 @@ def create_collection_status_records(self):
             CollectionStatus.insert(session, logger, repo[0])
             repo = execute_sql(query).first()
 
-    #Check for new repos every seven minutes to be out of step with the clone_repos task
-    create_collection_status_records.si().apply_async(countdown=60*7)
+    # no longer recursively run this task because collection status records are added when repos are inserted
+    #create_collection_status_records.si().apply_async(countdown=60*7)

@@ -201,8 +201,8 @@ def setup_periodic_tasks(sender, **kwargs):
         The tasks so that they are grouped by the module they are defined in
     """
     from celery.schedules import crontab
-    from augur.tasks.start_tasks import augur_collection_monitor, augur_collection_update_weights
-    from augur.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos
+    from augur.tasks.start_tasks import augur_collection_monitor
+    from augur.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos, create_collection_status_records
     from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
     from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
@@ -231,6 +231,9 @@ def setup_periodic_tasks(sender, **kwargs):
 
         logger.info(f"Setting 404 repos to be marked for retry on midnight each day")
         sender.add_periodic_task(crontab(hour=0, minute=0),retry_errored_repos.s())
+
+        one_day_in_seconds = 24*60*60
+        sender.add_periodic_task(one_day_in_seconds, create_collection_status_records.s())
 
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):
