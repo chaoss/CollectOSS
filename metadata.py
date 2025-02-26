@@ -6,7 +6,7 @@ __url__ = "https://github.com/chaoss/augur"
 __short_description__ = "Python 3 package for free/libre and open-source software community metrics, models & data collection"
 
 __version__ = "0.85.0"
-__release__ = "v0.85.0 (Basketball Jones)"
+__release__ = "v0.85.0 (Eurovision)"
 
 __license__ = "MIT"
 __copyright__ = "University of Missouri, University of Nebraska-Omaha, CHAOSS, Sean Goggins, Brian Warner & Augurlabs 2025"
