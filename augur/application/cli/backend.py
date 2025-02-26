@@ -87,7 +87,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     worker_vmem_cap = get_value("Celery", 'worker_process_vmem_cap')
 
     # create rabbit messages so if it failed on shutdown the queues are clean
-    clear_rabbitmq_messages()
+    cleanup_collection_status_and_rabbit(logger, ctx.obj.engine)
 
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file gunicorn.log"
     server = subprocess.Popen(gunicorn_command.split(" "))
@@ -183,7 +183,7 @@ def start(ctx, disable_collection, development, pidfile, port):
 
             try:
                 keypub.shutdown()
-                cleanup_after_collection_halt(logger, ctx.obj.engine)
+                cleanup_collection_status_and_rabbit(logger, ctx.obj.engine)
             except RedisConnectionError:
                 pass
             
@@ -305,7 +305,7 @@ def stop_collection(ctx):
         logger.info(f"Waiting on [{', '.join(str(p.pid for p in alive))}]")
         time.sleep(0.5)
     
-    cleanup_after_collection_halt(logger, ctx.obj.engine)
+    cleanup_collection_status_and_rabbit(logger, ctx.obj.engine)
 
 @cli.command('kill')
 @test_connection
@@ -333,10 +333,10 @@ def augur_stop(signal, logger, engine):
     _broadcast_signal_to_processes(augur_processes, broadcast_signal=signal, given_logger=logger)
 
     if "celery" in process_names:
-        cleanup_after_collection_halt(logger, engine)
+        cleanup_collection_status_and_rabbit(logger, engine)
 
 
-def cleanup_after_collection_halt(logger, engine):
+def cleanup_collection_status_and_rabbit(logger, engine):
     clear_redis_caches()
 
     connection_string = get_value("RabbitMQ", "connection_string")
