@@ -86,6 +86,9 @@ def start(ctx, disable_collection, development, pidfile, port):
     
     worker_vmem_cap = get_value("Celery", 'worker_process_vmem_cap')
 
+    # create rabbit messages so if it failed on shutdown the queues are clean
+    clear_rabbitmq_messages()
+
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file gunicorn.log"
     server = subprocess.Popen(gunicorn_command.split(" "))
 
