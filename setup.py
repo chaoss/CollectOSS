@@ -78,7 +78,7 @@ setup(
         "redis==4.3.3", # 4.3.4
         "XlsxWriter==1.3.7", # 3.0.3
         "celery==5.2.7", # 5.2.7
-        "httpx==0.23.0", # 0.23.0
+        "httpx==0.28.1",
         "eventlet==0.35.2", 
         "flower==2.0.1",
         "tornado==6.4.1", # added because it sometimes errors when tornado is not 6.1 even though nothing we install depends on it
@@ -87,7 +87,7 @@ setup(
         'Werkzeug~=2.0.0',
         "pylint==2.15.5",
 	    "mdpdf==0.0.18",
-        "typing-extensions==4.7.1",
+        "typing-extensions>=4.12.2",
         "tenacity==8.3.0",
     ],
     extras_require={
