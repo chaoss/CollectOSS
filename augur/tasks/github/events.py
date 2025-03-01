@@ -281,14 +281,23 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
         with engine.connect() as connection:
 
-            # TODO: Remove src id if it ends up not being needed
-            query = text(f"""
-                select issue_id as issue_id, gh_issue_number as issue_number, gh_issue_id as gh_src_id 
-                from issues 
-                where repo_id={repo_id} 
-                and updated_at > timestamptz(timestamp '{since}')
-                order by created_at desc;
-            """)
+            if since:
+                # TODO: Remove src id if it ends up not being needed
+                query = text(f"""
+                    select issue_id as issue_id, gh_issue_number as issue_number, gh_issue_id as gh_src_id 
+                    from issues 
+                    where repo_id={repo_id} 
+                    and updated_at > timestamptz(timestamp '{since}')
+                    order by created_at desc;
+                """)
+            else:
+                # TODO: Remove src id if it ends up not being needed
+                query = text(f"""
+                    select issue_id as issue_id, gh_issue_number as issue_number, gh_issue_id as gh_src_id 
+                    from issues 
+                    where repo_id={repo_id} 
+                    order by created_at desc;
+                """)
 
             issue_result = connection.execute(query).fetchall()
 
@@ -335,13 +344,21 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
         with engine.connect() as connection:
 
-            query = text(f"""
-                select pull_request_id, pr_src_number as gh_pr_number, pr_src_id 
-                from pull_requests 
-                where repo_id={repo_id}
-                and pr_updated_at > timestamptz(timestamp '{since}') 
-                order by pr_created_at desc;
-            """)
+            if since:
+                query = text(f"""
+                    select pull_request_id, pr_src_number as gh_pr_number, pr_src_id 
+                    from pull_requests 
+                    where repo_id={repo_id}
+                    and pr_updated_at > timestamptz(timestamp '{since}') 
+                    order by pr_created_at desc;
+                """)
+            else:
+                query = text(f"""
+                    select pull_request_id, pr_src_number as gh_pr_number, pr_src_id 
+                    from pull_requests 
+                    where repo_id={repo_id}
+                    order by pr_created_at desc;
+                """)
 
             pr_result = connection.execute(query).fetchall()
 
