@@ -354,18 +354,21 @@ class ThoroughGithubEventCollection(GithubEventCollection):
             pr_number = pr["gh_pr_number"]
 
             event_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{pr_number}/events"
-            
-            for event in github_data_access.paginate_resource(event_url):
 
-                event, contributor = self._process_github_event_contributors(event)
+            try:
+                for event in github_data_access.paginate_resource(event_url):
 
-                if contributor:
-                    contributors.append(contributor)
+                    event, contributor = self._process_github_event_contributors(event)
 
-                events.append(
-                    extract_pr_event_data(event, pr["pull_request_id"], pr["pr_src_id"] , platform_id, repo_id,
-                                        self._tool_source, self._tool_version, self._data_source)
-                )
+                    if contributor:
+                        contributors.append(contributor)
+
+                    events.append(
+                        extract_pr_event_data(event, pr["pull_request_id"], pr["pr_src_id"] , platform_id, repo_id,
+                                            self._tool_source, self._tool_version, self._data_source)
+                    )
+            except UrlNotFoundException:
+                continue
 
             if len(events) > 500:
                 self._insert_contributors(contributors)
