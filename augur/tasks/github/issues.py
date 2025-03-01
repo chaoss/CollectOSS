@@ -31,8 +31,12 @@ def collect_issues(repo_git : str, full_collection: bool) -> int:
     if full_collection:
         core_data_last_collected = None
     else:
-        # subtract 2 days to ensure all data is collected 
-        core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
+        core_data_last_collected = get_core_data_last_collected(repo_id)
+
+        if core_data_last_collected:
+            
+            # subtract 2 days to ensure all data is collected 
+            core_data_last_collected = ( - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
     key_auth = GithubRandomKeyAuth(logger)
 

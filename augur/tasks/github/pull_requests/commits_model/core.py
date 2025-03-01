@@ -8,7 +8,9 @@ from augur.application.db.lib import get_secondary_data_last_collected, get_upda
 
 def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collection=False):
     
-    if full_collection:
+    secondary_data_last_collected = get_secondary_data_last_collected(repo_id)
+
+    if full_collection or secondary_data_last_collected is None:
         # query existing PRs and the respective url we will append the commits url to
         pr_url_sql = s.sql.text("""
                 SELECT DISTINCT pr_url, pull_requests.pull_request_id
@@ -21,7 +23,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
         pr_urls = augur_db.fetchall_data_from_sql_text(pr_url_sql)#session.execute_sql(pr_number_sql).fetchall()
     
     else:
-        last_collected = get_secondary_data_last_collected(repo_id).date()
+        last_collected = secondary_data_last_collected.date()
         prs = get_updated_prs(repo_id, last_collected)
         pr_urls = [pr.pr_url for pr in prs]
 

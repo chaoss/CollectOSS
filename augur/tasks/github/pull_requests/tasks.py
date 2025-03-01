@@ -38,8 +38,11 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
         if full_collection:
             core_data_last_collected = None
         else:
-            # subtract 2 days to ensure all data is collected 
-            core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
+            core_data_last_collected = get_core_data_last_collected(repo_id)
+
+            if core_data_last_collected:
+                # subtract 2 days to ensure all data is collected 
+                core_data_last_collected = (core_data_last_collected - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
         total_count = 0
         all_data = []
@@ -231,9 +234,14 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
     if not full_collection:
-        # subtract 2 days to ensure all data is collected 
-        core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
-        review_msg_url += f"?since={core_data_last_collected.isoformat()}"        
+
+        core_data_last_collected = get_core_data_last_collected(repo_id)
+
+        if core_data_last_collected:
+
+            # subtract 2 days to ensure all data is collected 
+            core_data_last_collected = (core_data_last_collected - timedelta(days=2)).replace(tzinfo=timezone.utc)
+            review_msg_url += f"?since={core_data_last_collected.isoformat()}"        
 
     pr_reviews = get_pull_request_reviews_by_repo_id(repo_id)
 
@@ -341,12 +349,14 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
         query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id
 
-        if full_collection:
+        secondary_data_last_collected = get_secondary_data_last_collected(repo_id)
+
+        if full_collection or secondary_data_last_collected is None:
 
             query = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
             prs = execute_session_query(query, 'all')
         else:
-            last_collected = get_secondary_data_last_collected(repo_id).date()
+            last_collected = secondary_data_last_collected.date()
             prs = get_updated_prs(repo_id, last_collected)
 
         pr_count = len(prs)

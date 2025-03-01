@@ -28,13 +28,16 @@ def collect_events(repo_git: str, full_collection: bool):
 
     logger.debug(f"Collecting Github events for {owner}/{repo}")
 
-    if full_collection:
+    if full_collection or core_data_last_collected is None:
         core_data_last_collected = None
     else:
         repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-        # subtract 2 days to ensure all data is collected 
-        core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
+        core_data_last_collected = get_core_data_last_collected(repo_id)
+        
+        if core_data_last_collected:
+            # subtract 2 days to ensure all data is collected 
+            core_data_last_collected = (core_data_last_collected - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
     key_auth = GithubRandomKeyAuth(logger)
 
