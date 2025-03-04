@@ -146,7 +146,9 @@ The following is an example from the [openEuler](https://www.openeuler.org/en/) 
   - https://chaoss.github.io/grimoirelab-sigils/common/onion_analysis/  
   - https://mikemcquaid.com/2018/08/14/the-open-source-contributor-funnel-why-people-dont-contribute-to-your-open-source-project/  
 ### Contributors  
-  - Sean Goggins  
+  - Sean Goggins
+  - Andrew Brain
+  - John McGinness
 
 ## IDEA: Open Source Software Health Metrics Visualization Exploration
 
