@@ -115,7 +115,6 @@ Source: https://chaoss.github.io/grimoirelab-sigils/assets/images/screenshots/si
 Source: https://opensource.com/sites/default/files/uploads/2021-09-15-developer-level-02.png  
 
 #### Tools Providing the Metric  
-  - GrimoireLab  
   - Augur  
   - openEuler Infra 
 
