@@ -88,7 +88,7 @@ The aims of the project are as follows:
 * _Difficulty:_ Medium
 * _Requirements:_ Knowledge of Python is desired. Some knowledge of Javascript or twitter/bootstrap is also desired. Key requirement is a keenness to dig into this challenge!
 * _Recommended:_ Python experience. 
-* _Mentors:_ Sean Goggins, Daniel Izquerdo 
+* _Mentors:_ Sean Goggins 
 
 #### Filters (optional) 
   - Commits  
