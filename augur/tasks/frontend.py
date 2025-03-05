@@ -4,6 +4,7 @@ import sqlalchemy as s
 import urllib.parse
 from time import sleep
 
+
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
@@ -95,16 +96,23 @@ def add_gitlab_repos(user_id, group_name, repo_urls):
 
             repo_src_id = result["id"]
 
-            repo = get_gitlab_repo_by_src_id(repo_src_id)
-            if repo:
-                # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
-                add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
+            existing_repo = get_gitlab_repo_by_src_id(repo_src_id)
+            if existing_repo:
+
+                if existing_repo.repo_group_id != repo_group_id:
+                    update_existing_repos_repo_group_id(session, existing_repo.repo_id, repo_group_id)
+                
+                add_existing_repo_to_group(logger, session, group_id, existing_repo.repo_id)
                 continue   
 
-            repo = get_repo_by_repo_git(session, url)
-            if repo:
+            existing_repo = get_repo_by_repo_git(session, url)
+            if existing_repo:
+
+                if existing_repo.repo_group_id != repo_group_id:
+                    update_existing_repos_repo_group_id(session, existing_repo.repo_id, repo_group_id)
+
                 # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
-                add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
+                add_existing_repo_to_group(logger, session, group_id, existing_repo.repo_id)
                 continue
             
             add_gitlab_repo(logger, session, url, repo_group_id, group_id, repo_src_id)
@@ -158,16 +166,22 @@ def add_new_github_repos(repo_data, group_id, session, logger):
         repo_src_id = repo_data["databaseId"]
         repo_type = repo_data["owner"]["__typename"]
 
-        repo = get_github_repo_by_src_id(repo_src_id)
-        if repo:
-            # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
-            add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
+        existing_repo = get_github_repo_by_src_id(repo_src_id)
+        if existing_repo:
+
+            if existing_repo.repo_group_id != repo_group_id:
+                update_existing_repos_repo_group_id(session, existing_repo.repo_id, repo_group_id)
+
+            add_existing_repo_to_group(logger, session, group_id, existing_repo.repo_id)
             continue     
 
-        repo = get_repo_by_repo_git(session, url)
-        if repo:
-            # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
-            add_existing_repo_to_group(logger, session, group_id, repo.repo_id)
+        existing_repo = get_repo_by_repo_git(session, url)
+        if existing_repo:
+
+            if existing_repo.repo_group_id != repo_group_id:
+                update_existing_repos_repo_group_id(session, existing_repo.repo_id, repo_group_id)
+
+            add_existing_repo_to_group(logger, session, group_id, existing_repo.repo_id)
             continue
 
         add_github_repo(logger, session, url, repo_group_id, group_id, repo_type, repo_src_id)
@@ -281,6 +295,18 @@ def add_gitlab_repo(logger, session, url, repo_group_id, group_id, repo_src_id):
     if not result:
         logger.error(f"Error while adding repo: Failed to insert user repo record. A record with a repo_id of {repo_id} and a group id of {group_id} needs to be added to the user repo table so that this repo shows up in the users group")
         return
+    
+def update_existing_repos_repo_group_id(session, repo_id, new_repo_group_id):
+
+    # NOTE: It is safe to update the repos repo group id here because we know it will always be updating to an org repo group id. We don't want this behavior from the command line though, because a user adding a repo to a repo group could remove it from it's org repo group
+    update_stmt = (
+        s.update(Repo)
+        .where(Repo.repo_id == repo_id)
+        .values(repo_group_id=new_repo_group_id)
+    )
+    session.execute(update_stmt)
+    session.commit()
+
 
 # @celery.task
 # def add_org_repo_list(user_id, group_name, urls):
