@@ -8,7 +8,7 @@ from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.facade_github.tasks import *
 from augur.application.db.models import Contributor
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import bulk_insert_dicts, get_session
+from augur.application.db.lib import bulk_insert_dicts, get_session, batch_insert_contributors
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
@@ -63,7 +63,7 @@ def process_contributors():
         enriched_contributors.append(contributor_dict)
 
     logger.info(f"Enriching {len(enriched_contributors)} contributors")
-    bulk_insert_dicts(enriched_contributors, Contributor, ["cntrb_id"])
+    batch_insert_contributors(logger, enriched_contributors)
 
 
 
