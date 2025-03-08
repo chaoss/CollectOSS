@@ -291,7 +291,7 @@ def extract_pr_event_data(event: dict, pr_id: int, gh_src_id: int, platform_id: 
         'action': event['event'],
         'action_commit_hash': None,
         'created_at': event['created_at'],
-        'issue_event_src_id': gh_src_id,
+        'issue_event_src_id': event["id"],
         'node_id': event['node_id'],
         'node_url': event['url'],
         'tool_source': tool_source,
