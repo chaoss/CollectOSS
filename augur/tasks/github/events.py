@@ -78,7 +78,7 @@ class GithubEventCollection(ABC):
         bulk_insert_dicts(self._logger, events, IssueEvent, issue_event_natural_keys)
 
     def _insert_pr_events(self, events):
-        pr_event_natural_keys = ["node_id"]
+        pr_event_natural_keys = ["repo_id", "issue_event_src_id"]
         bulk_insert_dicts(self._logger, events, PullRequestEvent, pr_event_natural_keys)
 
     def _insert_contributors(self, contributors):
