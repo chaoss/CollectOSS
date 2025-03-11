@@ -1,10 +1,11 @@
 #SPDX-License-Identifier: MIT
 
 import logging
+import datetime
 from celery import group, chain
-import sqlalchemy as s
 
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id, facade_bulk_insert_commits
+from subprocess import check_output
+from augur.application.db.lib import get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id, facade_bulk_insert_commits, bulk_insert_dicts, get_missing_commit_message_hashes
 
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
@@ -23,7 +24,7 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 
 
-from augur.application.db.models import Repo, CollectionStatus
+from augur.application.db.models import Repo, CollectionStatus, CommitMessage
 
 from augur.tasks.git.dependency_tasks.tasks import process_dependency_metrics
 from augur.tasks.git.dependency_libyear_tasks.tasks import process_libyear_dependency_metrics
@@ -158,6 +159,59 @@ def facade_start_contrib_analysis_task():
     facade_helper.update_status('Updating Contributors')
     facade_helper.log_activity('Info', 'Updating Contributors with commits')
 
+@celery.task(base=AugurFacadeRepoCollectionTask)
+def facade_fetch_missing_commit_messages(repo_git):
+    logger = logging.getLogger(facade_fetch_missing_commit_messages.__name__)
+    facade_helper = FacadeHelper(logger)
+
+    repo = get_repo_by_repo_git(repo_git)
+    
+    logger.debug(f"Fetching missing commit message records for repo {repo_git}")
+
+    missing_message_hashes = get_missing_commit_message_hashes(repo.repo_id)
+
+    to_insert = []
+
+    for hash in missing_message_hashes:
+        #Get the huge list of commits to process.
+        logger.debug(f"The hash object is: {hash}. It has a type of: {type(hash)}")
+
+        try:
+            escaped_hash = hash['cmt_commit_hash']
+        except (TypeError, IndexError):
+            escaped_hash = hash
+            
+        absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
+        repo_loc = (f"{absolute_path}/.git")
+
+        try: 
+            commit_message = check_output(
+                f"git --git-dir {repo_loc} log --format=%B -n 1 {escaped_hash}".split()
+                #f"git --git-dir {repo_loc} log --format=%B -n 1 {hash}".split()
+            ).decode('utf-8').strip()
+
+            msg_record = {
+                'repo_id' : repo.repo_id,
+                'cmt_msg' : commit_message,
+                #'cmt_hash' : hash,
+                'cmt_hash': escaped_hash if isinstance(escaped_hash, str) else escaped_hash['cmt_commit_hash'],
+                'tool_source' : 'Facade',
+                'tool_version' : '0.78?',
+                'data_source' : 'git',
+                'data_collection_date' : datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+            if len(to_insert) >= 1000:
+                bulk_insert_dicts(logger,to_insert, CommitMessage, ["repo_id","cmt_hash"])
+                to_insert = []
+            
+            to_insert.append(msg_record)
+        except Exception as e: 
+            logger.info(f'The exception is : {e}.')
+
+    if to_insert:
+        bulk_insert_dicts(logger, to_insert, CommitMessage, ["repo_id","cmt_hash"])
+
 
 #enable celery multithreading
 @celery.task(base=AugurFacadeRepoCollectionTask)
@@ -205,6 +259,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     repo_loc = (f"{absolute_path}/.git")
 
     pendingCommitRecordsToInsert = []
+    pendingCommitMessageRecordsToInsert = []
 
     for count, commitTuple in enumerate(queue):
         quarterQueue = int(len(queue) / 4)
@@ -217,14 +272,21 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
             logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
 
         #logger.info(f"Got to analysis!")
-        commitRecords = analyze_commit(logger, repo_id, repo_loc, commitTuple)
+        commitRecords, commit_msg = analyze_commit(logger, repo_id, repo_loc, commitTuple)
         #logger.debug(commitRecord)
-        if len(commitRecords):
+        if commitRecords:
             pendingCommitRecordsToInsert.extend(commitRecords)
             if len(pendingCommitRecordsToInsert) >= 1000:
                 facade_bulk_insert_commits(logger,pendingCommitRecordsToInsert)
                 pendingCommitRecordsToInsert = []
+        
+        if commit_msg:
+            pendingCommitMessageRecordsToInsert.append(commit_msg)
+        
+        if len(pendingCommitMessageRecordsToInsert) >= 1000:
+            bulk_insert_dicts(logger,pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id","cmt_hash"])
     
+    bulk_insert_dicts(logger,pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id","cmt_hash"])
     facade_bulk_insert_commits(logger,pendingCommitRecordsToInsert)
 
     # Remove the working commit.
@@ -347,6 +409,7 @@ def generate_analysis_sequence(logger,repo_git, facade_helper):
 
     analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_git))
 
+    analysis_sequence.append(facade_fetch_missing_commit_messages.si(repo_git))
     
     analysis_sequence.append(facade_analysis_end_facade_task.si())
     

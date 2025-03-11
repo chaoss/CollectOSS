@@ -37,7 +37,8 @@ github_tasks = ['augur.tasks.github.contributors',
                 'augur.tasks.github.detect_move.tasks',
                 'augur.tasks.github.pull_requests.files_model.tasks',
                 'augur.tasks.github.pull_requests.commits_model.tasks',
-                'augur.tasks.github.traffic']
+                'augur.tasks.github.traffic', 
+                'augur.tasks.github.util.populate_repo_src_id']
 
 gitlab_tasks = ['augur.tasks.gitlab.merge_request_task',
                 'augur.tasks.gitlab.issues_task',
@@ -203,6 +204,7 @@ def setup_periodic_tasks(sender, **kwargs):
     from augur.tasks.start_tasks import augur_collection_monitor, augur_collection_update_weights
     from augur.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos
     from augur.tasks.git.facade_tasks import clone_repos
+    from augur.tasks.github.contributors import process_contributors
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
     from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
     from augur.application.db import temporary_database_engine
@@ -217,23 +219,24 @@ def setup_periodic_tasks(sender, **kwargs):
         sender.add_periodic_task(collection_interval, augur_collection_monitor.s())
 
         #Do longer tasks less often
-        non_domain_collection_interval = collection_interval * 300
-        logger.info(f"Scheduling non-repo-domain collection every {non_domain_collection_interval/60} minutes")
-        sender.add_periodic_task(non_domain_collection_interval, non_repo_domain_tasks.s())
+        logger.info(f"Scheduling data analysis every 30 days")
+        thirty_days_in_seconds = 30*24*60*60
+        sender.add_periodic_task(thirty_days_in_seconds, non_repo_domain_tasks.s())
 
         mat_views_interval = int(config.get_value('Celery', 'refresh_materialized_views_interval_in_days'))
         logger.info(f"Scheduling refresh materialized view every night at 1am CDT")
         sender.add_periodic_task(datetime.timedelta(days=mat_views_interval), refresh_materialized_views.s())
 
-        logger.info(f"Scheduling update of collection weights on midnight each day")
-        sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
+        # logger.info(f"Scheduling update of collection weights on midnight each day")
+        # sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
 
         logger.info(f"Setting 404 repos to be marked for retry on midnight each day")
         sender.add_periodic_task(crontab(hour=0, minute=0),retry_errored_repos.s())
 
-        logger.info(f"Scheduling contributor breadth every 30 days")
-        thirty_days_in_seconds = 30*24*60*60
-        sender.add_periodic_task(thirty_days_in_seconds, contributor_breadth_model.s())
+        one_hour_in_seconds = 60*60
+        sender.add_periodic_task(one_hour_in_seconds, process_contributors.s()
+)
+
 
 @after_setup_logger.connect
 def setup_loggers(*args,**kwargs):

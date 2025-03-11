@@ -1,5 +1,5 @@
 import sqlalchemy as s
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.util import execute_session_query
@@ -41,33 +41,31 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
     task_name = f"{owner}/{name} Pr commits"
 
     logger.info(f"Getting pull request commits for repo: {repo.repo_git}")
+
+    github_data_access = GithubDataAccess(key_auth, logger)
         
     all_data = []
     for index,pr_info in enumerate(pr_urls):
         logger.info(f'{task_name}: Querying commits for pull request #{index + 1} of {len(pr_urls)}')
 
         commits_url = pr_info['pr_url'] + '/commits?state=all'
-
-        #Paginate through the pr commits
-        pr_commits = GithubPaginator(commits_url, key_auth, logger)
         
-        for page_data in pr_commits:
+        for page_data in github_data_access.paginate_resource(commits_url):
 
-            if page_data:
-                logger.info(f"{task_name}: Processing pr commit with hash {page_data['sha']}")
-                pr_commit_row = {
-                    'pull_request_id': pr_info['pull_request_id'],
-                    'pr_cmt_sha': page_data['sha'],
-                    'pr_cmt_node_id': page_data['node_id'],
-                    'pr_cmt_message': page_data['commit']['message'],
-                    # 'pr_cmt_comments_url': pr_commit['comments_url'],
-                    'tool_source': 'pull_request_commits_model',
-                    'tool_version': '0.41',
-                    'data_source': 'GitHub API',
-                    'repo_id': repo.repo_id,
-                }
+            logger.info(f"{task_name}: Processing pr commit with hash {page_data['sha']}")
+            pr_commit_row = {
+                'pull_request_id': pr_info['pull_request_id'],
+                'pr_cmt_sha': page_data['sha'],
+                'pr_cmt_node_id': page_data['node_id'],
+                'pr_cmt_message': page_data['commit']['message'],
+                # 'pr_cmt_comments_url': pr_commit['comments_url'],
+                'tool_source': 'pull_request_commits_model',
+                'tool_version': '0.41',
+                'data_source': 'GitHub API',
+                'repo_id': repo.repo_id,
+            }
 
-                all_data.append(pr_commit_row)
+            all_data.append(pr_commit_row)
     
     if len(all_data) > 0:
         logger.info(f"{task_name}: Inserting {len(all_data)} rows")

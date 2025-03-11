@@ -7,6 +7,7 @@ from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculat
 from augur.tasks.util.worker_util import parse_json_from_subprocess_call
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from augur.tasks.util.metadata_exception import MetadataException
 
 
 def generate_deps_data(logger, repo_git):
@@ -75,7 +76,7 @@ def generate_scorecard(logger, repo_git):
     path = repo_git[8:]
     if path[-4:] == '.git':
         path = path.replace(".git", "")
-    command = '--repo=' + path
+    command = '--local=' + path
     
     #this is path where our scorecard project is located
     path_to_scorecard = os.environ['HOME'] + '/scorecard'
@@ -94,50 +95,47 @@ def generate_scorecard(logger, repo_git):
     
     try: 
         required_output = parse_json_from_subprocess_call(logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
-    except Exception as e: 
-        logger.error(f"Could not parse required output! Error: {e}")
-        raise e        
-
-    # end
     
-    logger.info('adding to database...')
-    logger.debug(f"output: {required_output}")
+        logger.info('adding to database...')
+        logger.debug(f"output: {required_output}")
 
-    if not required_output['checks']:
-        logger.info('No scorecard checks found!')
-        return
-    
-    #Store the overall score first
-    to_insert = []
-    overall_deps_scorecard = {
-        'repo_id': repo_id,
-        'name': 'OSSF_SCORECARD_AGGREGATE_SCORE',
-        'scorecard_check_details': required_output['repo'],
-        'score': required_output['score'],
-        'tool_source': 'scorecard_model',
-        'tool_version': '0.43.9',
-        'data_source': 'Git',
-        'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-    }
-    to_insert.append(overall_deps_scorecard)
-   # bulk_insert_dicts(overall_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
-
-    #Store misc data from scorecard in json field. 
-    for check in required_output['checks']:
-        repo_deps_scorecard = {
+        if not required_output.get('checks'):
+            logger.info('No scorecard checks found!')
+            return
+        
+        #Store the overall score first
+        to_insert = []
+        overall_deps_scorecard = {
             'repo_id': repo_id,
-            'name': check['name'],
-            'scorecard_check_details': check,
-            'score': check['score'],
+            'name': 'OSSF_SCORECARD_AGGREGATE_SCORE',
+            'scorecard_check_details': required_output['repo'],
+            'score': required_output['score'],
             'tool_source': 'scorecard_model',
             'tool_version': '0.43.9',
             'data_source': 'Git',
             'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         }
-        to_insert.append(repo_deps_scorecard)
-    
-    bulk_insert_dicts(logger, to_insert, RepoDepsScorecard, ["repo_id","name"])
-    
-    logger.info(f"Done generating scorecard for repo {repo_id} from path {path}")
+        to_insert.append(overall_deps_scorecard)
+    # bulk_insert_dicts(overall_deps_scorecard, RepoDepsScorecard, ["repo_id","name"])
 
+        #Store misc data from scorecard in json field. 
+        for check in required_output['checks']:
+            repo_deps_scorecard = {
+                'repo_id': repo_id,
+                'name': check['name'],
+                'scorecard_check_details': check,
+                'score': check['score'],
+                'tool_source': 'scorecard_model',
+                'tool_version': '0.43.9',
+                'data_source': 'Git',
+                'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+            }
+            to_insert.append(repo_deps_scorecard)
+        
+        bulk_insert_dicts(logger, to_insert, RepoDepsScorecard, ["repo_id","name"])
+        
+        logger.info(f"Done generating scorecard for repo {repo_id} from path {path}")
 
+    except Exception as e: 
+        
+        raise MetadataException(e, f"required_output: {required_output}")

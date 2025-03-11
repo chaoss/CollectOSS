@@ -3,6 +3,7 @@ import time
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, RetryError
 from urllib.parse import urlparse, parse_qs, urlencode
+from keyman.KeyClient import KeyClient
 
 
 class RatelimitException(Exception):
@@ -21,7 +22,8 @@ class GithubDataAccess:
     def __init__(self, key_manager, logger: logging.Logger):
     
         self.logger = logger
-        self.key_manager = key_manager
+        self.key_client = KeyClient("github_rest", logger)
+        self.key = None
 
     def get_resource_count(self, url):
 
@@ -65,17 +67,12 @@ class GithubDataAccess:
 
         return 
     
-    def is_pagination_limited_by_max_github_pages(self, url):
-        
-        page_count = self.get_resource_page_count(url)
-
-        return page_count <= 299
-    
     def get_resource_page_count(self, url):
 
         response = self.make_request_with_retries(url, method="HEAD")
 
         if 'last' not in response.links.keys():
+            self.logger.warning(f"Github response without links. Headers: {response.headers}.")
             return 1
         
         try:
@@ -98,7 +95,12 @@ class GithubDataAccess:
 
         with httpx.Client() as client:
 
-            response = client.request(method=method, url=url, auth=self.key_manager, timeout=timeout, follow_redirects=True)
+            if not self.key:
+                self.key = self.key_client.request()
+
+            headers = {"Authorization": f"token {self.key}"}
+
+            response = client.request(method=method, url=url, headers=headers, timeout=timeout, follow_redirects=True)
 
             if response.status_code in [403, 429]:
                 raise RatelimitException(response)
@@ -126,7 +128,7 @@ class GithubDataAccess:
             1. Retires 10 times
             2. Waits 5 seconds between retires
             3. Does not rety UrlNotFoundException
-            4. Catches RatelimitException and waits before raising exception
+            4. Catches RatelimitException and waits or expires key before raising exception
         """
 
         try:
@@ -155,8 +157,9 @@ class GithubDataAccess:
                 self.logger.error(f"Key reset time was less than 0 setting it to 0.\nThe current epoch is {current_epoch} and the epoch that the key resets at is {epoch_when_key_resets}")
                 key_reset_time = 0
                 
-            self.logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
-            time.sleep(key_reset_time)
+            self.logger.info(f"\n\n\nAPI rate limit exceeded. Key resets in {key_reset_time} seconds. Informing key manager that key is expired")
+            self.key = self.key_client.expire(self.key, epoch_when_key_resets)
+
         else:
             time.sleep(60)
 

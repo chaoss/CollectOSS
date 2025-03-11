@@ -14,7 +14,7 @@ from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import Issue, IssueLabel, IssueAssignee, Contributor
 from augur.application.config import get_development_flag
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected, batch_insert_contributors
 
 
 development = get_development_flag()
@@ -130,7 +130,7 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
 
     # insert contributors from these issues
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
+    batch_insert_contributors(logger, contributors)
                         
 
     # insert the issues into the issues table. 

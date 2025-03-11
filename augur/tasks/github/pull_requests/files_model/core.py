@@ -1,9 +1,7 @@
 import sqlalchemy as s
-import httpx
-from augur.tasks.github.util.gh_graphql_entities import GraphQlPageCollection
+from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess, NotFoundException, InvalidDataException
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.lib import bulk_insert_dicts, execute_sql
 from augur.application.db.util import execute_session_query
 from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs
 
@@ -38,6 +36,8 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
     repo = execute_session_query(query, 'one')
     owner, name = get_owner_repo(repo.repo_git)
 
+    github_graphql_data_access = GithubGraphQlDataAccess(key_auth, logger)
+
     pr_file_rows = []
     logger.info(f"Getting pull request files for repo: {repo.repo_git}")
     for index, pr_info in enumerate(pr_numbers):
@@ -67,29 +67,32 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
             }
         """
         
-        values = ("repository", "pullRequest", "files")
+        values = ["repository", "pullRequest", "files"]
         params = {
             'owner': owner,
             'repo': name,
             'pr_number': pr_info['pr_src_number'],
-            'values': values
         }
 
         try:
-            file_collection = GraphQlPageCollection(query, key_auth, logger, bind=params)
+            for pr_file in github_graphql_data_access.paginate_resource(query, params, values):
 
-            pr_file_rows += [{
-                'pull_request_id': pr_info['pull_request_id'],
-                'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
-                'pr_file_deletions': pr_file['deletions'] if 'deletions' in pr_file else None,
-                'pr_file_path': pr_file['path'],
-                'data_source': 'GitHub API',
-                'repo_id': repo.repo_id,
-            } for pr_file in file_collection if pr_file and 'path' in pr_file]
-        except httpx.RequestError as e:
-            logger.error(f"An error occurred while requesting data from the GitHub API: {e}")
-        except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP error occurred while requesting data from the GitHub API: {e}")
+                if not pr_file or 'path' not in pr_file:
+                    continue
+
+                data = {
+                    'pull_request_id': pr_info['pull_request_id'],
+                    'pr_file_additions': pr_file['additions'] if 'additions' in pr_file else None,
+                    'pr_file_deletions': pr_file['deletions'] if 'deletions' in pr_file else None,
+                    'pr_file_path': pr_file['path'],
+                    'data_source': 'GitHub API',
+                    'repo_id': repo.repo_id,
+                }
+
+                pr_file_rows.append(data)
+        except (NotFoundException, InvalidDataException) as e:
+            logger.warning(e)
+            continue
 
     if len(pr_file_rows) > 0:
         # Execute a bulk upsert with sqlalchemy 

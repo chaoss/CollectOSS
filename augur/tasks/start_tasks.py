@@ -14,6 +14,7 @@ from augur.tasks.github.releases.tasks import collect_releases
 from augur.tasks.github.repo_info.tasks import collect_repo_info, collect_linux_badge_info
 from augur.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
 from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
+from augur.tasks.github.util.populate_repo_src_id import populate_repo_src_id_task
 from augur.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
 from augur.tasks.github.traffic import collect_github_repo_clones_data
 from augur.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests, collect_merge_request_metadata, collect_merge_request_commits, collect_merge_request_files, collect_merge_request_comments
@@ -65,21 +66,22 @@ def primary_repo_collect_phase(repo_git, full_collection):
 
     #Define primary group of jobs for the primary collect phase: issues and pull requests.
     primary_repo_jobs = group(
+        populate_repo_src_id_task.si(repo_git),
         collect_issues.si(repo_git, full_collection),
         collect_pull_requests.si(repo_git, full_collection)
     )
 
     #Define secondary group that can't run until after primary jobs have finished.
     secondary_repo_jobs = group(
-        collect_events.si(repo_git),#*create_grouped_task_load(dataList=first_pass, task=collect_events).tasks,
-        collect_github_messages.si(repo_git), #*create_grouped_task_load(dataList=first_pass,task=collect_github_messages).tasks,
+        collect_events.si(repo_git, full_collection),#*create_grouped_task_load(dataList=first_pass, task=collect_events).tasks,
+        collect_github_messages.si(repo_git, full_collection), #*create_grouped_task_load(dataList=first_pass,task=collect_github_messages).tasks,
         collect_github_repo_clones_data.si(repo_git),
     )
 
     #Other tasks that don't need other tasks to run before they do just put in final group.
     repo_task_group = group(
         collect_repo_info.si(repo_git),
-        chain(primary_repo_jobs | issue_pr_task_update_weight_util.s(repo_git=repo_git),secondary_repo_jobs,process_contributors.si()),
+        chain(primary_repo_jobs | issue_pr_task_update_weight_util.s(repo_git=repo_git),secondary_repo_jobs),
         #facade_phase(logger,repo_git),
         collect_linux_badge_info.si(repo_git),
         collect_releases.si(repo_git),
@@ -118,7 +120,7 @@ def secondary_repo_collect_phase(repo_git, full_collection):
     repo_task_group = group(
         process_pull_request_files.si(repo_git, full_collection),
         process_pull_request_commits.si(repo_git, full_collection),
-        chain(collect_pull_request_reviews.si(repo_git, full_collection), collect_pull_request_review_comments.si(repo_git)),
+        chain(collect_pull_request_reviews.si(repo_git, full_collection), collect_pull_request_review_comments.si(repo_git, full_collection)),
         process_ossf_dependency_metrics.si(repo_git)
     )
 

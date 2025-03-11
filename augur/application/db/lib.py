@@ -9,7 +9,7 @@ from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
 
-from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,UnresolvedCommitEmail, Contributor, CollectionStatus
+from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,UnresolvedCommitEmail, Contributor, CollectionStatus, UserGroup, RepoGroup
 from augur.tasks.util.collection_state import CollectionState
 from augur.application.db import get_session, get_engine
 from augur.application.db.util import execute_session_query
@@ -144,6 +144,25 @@ def get_repo_by_repo_id(repo_id):
 
         return repo
     
+def get_github_repo_by_src_id(src_id):
+    
+    with get_session() as session:
+
+        query = session.query(Repo).filter(Repo.repo_src_id == src_id, Repo.repo_git.ilike(f'%https://github.com%'))
+        repo = execute_session_query(query, 'first')
+
+        return repo
+    
+def get_gitlab_repo_by_src_id(src_id):
+    
+    with get_session() as session:
+
+        query = session.query(Repo).filter(Repo.repo_src_id == src_id, Repo.repo_git.ilike(f'%https://gitlab.com%'))
+        repo = execute_session_query(query, 'first')
+
+        return repo
+        
+    
 def remove_working_commits_by_repo_id_and_hashes(repo_id, commit_hashes):
 
     remove_working_commits = s.sql.text("""DELETE FROM working_commits 
@@ -181,6 +200,22 @@ def get_working_commits_by_repo_id(repo_id):
         working_commits = []
 
     return working_commits
+
+def get_missing_commit_message_hashes(repo_id):
+
+    fetch_missing_hashes_sql = s.sql.text("""
+    SELECT DISTINCT cmt_commit_hash FROM commits
+    WHERE repo_id=:repo_id 
+    AND cmt_commit_hash NOT IN 
+    (SELECT DISTINCT cmt_hash FROM commit_messages WHERE repo_id=:repo_id);
+    """).bindparams(repo_id=repo_id)
+
+    try:
+        missing_commit_hashes = fetchall_data_from_sql_text(fetch_missing_hashes_sql)
+    except:
+        missing_commit_hashes = []
+    
+    return missing_commit_hashes
 
 def get_worker_oauth_keys(platform: str):
 
@@ -239,6 +274,17 @@ def facade_bulk_insert_commits(logger, records):
                 raise e
             
 
+def batch_insert_contributors(logger, data: Union[List[dict], dict]) -> Optional[List[dict]]:
+
+    batch_size = 1000
+
+    for i in range(0, len(data), batch_size):
+        batch = data[i:i + batch_size]
+
+        bulk_insert_dicts(logger, batch, Contributor, ['cntrb_id'])
+
+
+
 def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
 
     if isinstance(data, list) is False:
@@ -249,7 +295,7 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
             data = [data]
         
         else:
-            logger.info("Data must be a list or a dict")
+            logger.error("Data must be a list or a dict")
             return None
 
     if len(data) == 0:
@@ -257,7 +303,7 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
         return None
 
     if isinstance(data[0], dict) is False: 
-        logger.info("Must be list of dicts")
+        logger.error("Must be list of dicts")
         return None
 
     # remove any duplicate data 
@@ -348,7 +394,7 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
 
         else:
             logger.error("Unable to insert data in 10 attempts")
-            return None
+            raise Exception("Unable to insert and return data in 10 attempts")
 
         if deadlock_detected is True:
             logger.error("Made it through even though Deadlock was detected")
@@ -386,7 +432,7 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
 
     else:
         logger.error("Unable to insert and return data in 10 attempts")
-        return None
+        raise Exception("Unable to insert and return data in 10 attempts")
 
     if deadlock_detected is True:
         logger.error("Made it through even though Deadlock was detected")
@@ -537,3 +583,24 @@ def get_updated_issues(repo_id, since):
     with get_session() as session:
         return session.query(Issue).filter(Issue.repo_id == repo_id, Issue.updated_at >= since).order_by(Issue.gh_issue_number).all()
             
+
+
+def get_group_by_name(user_id, group_name):
+
+
+    with get_session() as session:
+        
+        try:
+            user_group = session.query(UserGroup).filter(UserGroup.user_id == user_id, UserGroup.name == group_name).one()
+        except s.orm.exc.NoResultFound:
+            return None
+
+        return user_group
+    
+def get_repo_group_by_name(name):
+
+
+    with get_session() as session:
+        
+        return  session.query(RepoGroup).filter(RepoGroup.rg_name == name).first()
+        

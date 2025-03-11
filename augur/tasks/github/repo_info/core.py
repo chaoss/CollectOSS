@@ -1,7 +1,8 @@
 #SPDX-License-Identifier: MIT
 import json
 import sqlalchemy as s
-from augur.tasks.github.util.github_paginator import GithubPaginator
+from augur.tasks.github.util.github_data_access import GithubDataAccess
+from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.gh_graphql_entities import request_graphql_dict
@@ -13,12 +14,28 @@ from urllib.parse import quote
 
 def query_committers_count(key_auth, logger, owner, repo):
 
+    data = {}
     logger.info('Querying committers count\n')
     url = f'https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100'
-
-    contributors = GithubPaginator(url, key_auth, logger)
+    ## If the repository is empty there are zero committers, and the API returns nothing at all. Response 
+    ## header of 200 along with an empty JSON. 
+    try: 
+        github_data_access = GithubDataAccess(key_auth, logger)
+        try: 
+            data = github_data_access.get_resource_count(url) 
+        except Exception as e: 
+            logger.warning(f"JSON Decode error: {e} indicating there are no committers or the repository is empty or archived.")
+            data = 0 
+            pass 
+        if not data: 
+            logger.warning("The API Returned an empty JSON object.")
+        else: 
+            logger.warning("Committer count data returned in JSON")
+    except ValueError: 
+        logger.warning("The API did not return valid JSON for committer count. This usually occurs on empty or archived repositories.")
+        data=0
     
-    return len(contributors)
+    return data 
 
 def get_repo_data(logger, url, response):
     data = {}
@@ -98,123 +115,74 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
 
     owner, repo = get_owner_repo(repo_orm_obj.repo_git)
 
-    url = 'https://api.github.com/graphql'
-
-    query = """
-        {
-            repository(owner:"%s", name:"%s"){
-                updatedAt
-                hasIssuesEnabled
-                issues(states:OPEN) {
+    query = """query($repo: String!, $owner: String!) {
+                repository(name: $repo, owner: $owner) {
+                    updatedAt
+                    hasIssuesEnabled
+                    issues(states: OPEN) {
                     totalCount
-                }
-                hasWikiEnabled
-                forkCount
-                defaultBranchRef {
+                    }
+                    hasWikiEnabled
+                    forkCount
+                    defaultBranchRef {
                     name
-                }
-                watchers {
+                    }
+                    watchers {
                     totalCount
-                }
-                id
-                licenseInfo {
+                    }
+                    id
+                    licenseInfo {
                     name
                     url
-                }
-                stargazers {
+                    }
+                    stargazers {
                     totalCount
-                }
-                codeOfConduct {
+                    }
+                    codeOfConduct {
                     name
                     url
-                }
-                issue_count: issues {
+                    }
+                    issue_count: issues {
                     totalCount
-                }
-                issues_closed: issues(states:CLOSED) {
+                    }
+                    issues_closed: issues(states: CLOSED) {
                     totalCount
-                }
-                pr_count: pullRequests {
+                    }
+                    pr_count: pullRequests {
                     totalCount
-                }
-                pr_open: pullRequests(states: OPEN) {
+                    }
+                    pr_open: pullRequests(states: OPEN) {
                     totalCount
-                }
-                pr_closed: pullRequests(states: CLOSED) {
+                    }
+                    pr_closed: pullRequests(states: CLOSED) {
                     totalCount
-                }
-                pr_merged: pullRequests(states: MERGED) {
+                    }
+                    pr_merged: pullRequests(states: MERGED) {
                     totalCount
-                }
-                defaultBranchRef {
+                    }
+                    defaultBranchRef {
                     target {
                         ... on Commit {
-                            history {
-                                totalCount
-                            }
+                        history {
+                            totalCount
+                        }
                         }
                     }
+                    }
                 }
-            }
-        }
+                }
+                """
+    
+    github_graphql_data_access = GithubGraphQlDataAccess(key_auth, logger)
 
-    """ % (owner, repo)
+    variables = {
+        "owner": owner,
+        "repo": repo
+    }
 
-    ##############################
-    # {
-    #   repository(owner: "chaoss", name: "augur") {
-    #     updatedAt
-    #     hasIssuesEnabled
-    #     issues(states: OPEN) {
-    #       totalCount
-    #     }
-    #     hasWikiEnabled
-    #     forkCount
-    #     defaultBranchRef {
-    #       name
-    #     }
-    #     watchers {
-    #       totalCount
-    #     }
-    #     id
-    #     licenseInfo {
-    #       name
-    #       url
-    #     }
-    #     stargazers {
-    #       totalCount
-    #     }
-    #     codeOfConduct {
-    #       name
-    #       url
-    #     }
-    #     issue_count: issues {
-    #       totalCount
-    #     }
-    #     issues_closed: issues(states: CLOSED) {
-    #       totalCount
-    #     }
-    #     pr_count: pullRequests {
-    #       totalCount
-    #     }
-    #     pr_open: pullRequests(states: OPEN) {
-    #       totalCount
-    #     }
-    #     pr_closed: pullRequests(states: CLOSED) {
-    #       totalCount
-    #     }
-    #     pr_merged: pullRequests(states: MERGED) {
-    #       totalCount
-    #     }
-    #     stargazerCount
-    #   }
-    # }
+    result_keys = ["repository"]
 
-    try:
-        data = grab_repo_info_from_graphql_endpoint(key_auth, logger, query)
-    except Exception as e:
-        logger.error(f"Could not grab info for repo {repo_orm_obj.repo_id}")
-        raise e
+    data = github_graphql_data_access.get_resource(query, variables, result_keys)
 
     # Get committers count info that requires seperate endpoint  
     committers_count = query_committers_count(key_auth, logger, owner, repo)

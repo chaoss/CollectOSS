@@ -91,4 +91,4 @@ reports = {
 # Initialize logging
 def init_logging():
     global logger
-    logger = AugurLogger("augur_view", reset_logfiles=True).get_logger()
+    logger = AugurLogger("augur_view", reset_logfiles=False).get_logger()

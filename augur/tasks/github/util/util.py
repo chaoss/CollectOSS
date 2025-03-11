@@ -1,11 +1,39 @@
 """Utility functions that are useful for several Github tasks"""
 from typing import Any, List, Tuple
 import logging
+import urllib.parse
 import json
 import httpx
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
 from augur.application.db.lib import get_repo_by_repo_git
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
+
+def get_repo_src_id(owner, repo, logger):
+    
+
+    query = """query($repo: String!, $owner: String!) {
+                    repository(name: $repo, owner: $owner) {
+                        databaseId
+                    }
+                }
+                """
+    
+    key_auth = GithubRandomKeyAuth(logger)
+    
+    github_graphql_data_access = GithubGraphQlDataAccess(key_auth, logger)
+
+    variables = {
+        "owner": owner,
+        "repo": repo
+    }
+
+    result_keys = ["repository", "databaseId"]
+
+    repo_src_id = github_graphql_data_access.get_resource(query, variables, result_keys)
+
+    return repo_src_id
+
 
 
 # This function adds a key value pair to a list of dicts and returns the modified list of dicts back
@@ -45,6 +73,10 @@ def get_owner_repo(git_url: str) -> Tuple[str, str]:
         repo = repo[:-4]
 
     return owner, repo
+
+def get_gitlab_repo_identifier(owner, repo):
+
+    return urllib.parse.quote(f"{owner}/{repo}", safe='')
 
 
 def parse_json_response(logger: logging.Logger, response: httpx.Response) -> dict:

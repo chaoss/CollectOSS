@@ -154,11 +154,14 @@ class CollectionRequest:
 def get_newly_added_repos(session, limit, hook):
 
     condition_string = ""
+    order_by_field = ""
     if hook in ["core", "secondary", "ml"]:
         condition_string += f"""{hook}_status='{str(CollectionState.PENDING.value)}'"""
+        order_by_field = "issue_pr_sum"
         
     elif hook == "facade":
         condition_string += f"""facade_status='{str(CollectionState.UPDATE.value)}'"""
+        order_by_field = "commit_sum"
 
     if hook == "secondary":
         condition_string += f""" and core_status='{str(CollectionState.SUCCESS.value)}'"""
@@ -168,7 +171,7 @@ def get_newly_added_repos(session, limit, hook):
         from augur_operations.collection_status x, augur_data.repo y 
         where x.repo_id=y.repo_id 
         and {condition_string}
-        order by repo_added
+        order by {order_by_field}
         limit :limit_num
     """).bindparams(limit_num=limit)
 

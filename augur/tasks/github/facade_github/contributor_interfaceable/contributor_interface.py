@@ -3,9 +3,9 @@ import json
 import time
 import sqlalchemy as s
 from augur.application.db.models import *
-from augur.tasks.github.util.github_paginator import hit_api, process_dict_response, retrieve_dict_from_endpoint
+from augur.tasks.github.util.github_paginator import hit_api, process_dict_response
+from augur.tasks.github.util.github_data_access import GithubDataAccess
 # Debugger
-import traceback
 from augur.tasks.github.util.github_paginator import GithubApiResult
 from augur.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts, execute_sql, get_contributors_by_github_user_id
 
@@ -23,10 +23,8 @@ A few interesting ideas: Maybe get the top committers from each repo first? curl
 
 # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
 # Returns None on failure.
-# NOTE: This function is being deprecated in favor of retrieve_dict_from_endpoint
+# NOTE: This function is being deprecated in favor of GithubDataAcess.get_resource()
 def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
-    #logger.info(f"Hitting endpoint: {url}")
-
     attempts = 0
     response_data = None
     success = False
@@ -35,7 +33,7 @@ def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
         try:
             response = hit_api(session.oauths, url, logger)
         except TimeoutError:
-            logger.info(
+            logger.warning(
                 f"User data request for enriching contributor data failed with {attempts} attempts! Trying again...")
             time.sleep(timeout_wait)
             continue
@@ -56,20 +54,19 @@ def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
             #If we get an error message that's not None
             if err and err != GithubApiResult.SUCCESS:
                 attempts += 1
-                logger.info(f"err: {err}")
+                logger.warning(f"err: {err}")
                 continue
 
-            #logger.info(f"Returned dict: {response_data}")
             success = True
             break
         elif type(response_data) == list:
             logger.warning("Wrong type returned, trying again...")
-            logger.info(f"Returned list: {response_data}")
+            logger.debug(f"Returned list: {response_data}")
         elif type(response_data) == str:
-            logger.info(
+            logger.warning(
                 f"Warning! page_data was string: {response_data}")
             if "<!DOCTYPE html>" in response_data:
-                logger.info("HTML was returned, trying again...\n")
+                logger.warning("HTML was returned, trying again...\n")
             elif len(response_data) == 0:
                 logger.warning("Empty string, trying again...\n")
             else:
@@ -95,7 +92,6 @@ def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
 
 
 def create_endpoint_from_email(email):
-    #self.logger.info(f"Trying to resolve contributor from email: {email}")
     # Note: I added "+type:user" to avoid having user owned organizations be returned
     # Also stopped splitting per note above.
     url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(
@@ -106,7 +102,7 @@ def create_endpoint_from_email(email):
 
 
 def create_endpoint_from_commit_sha(logger, commit_sha, repo_id):
-    logger.info(
+    logger.debug(
         f"Trying to create endpoint from commit hash: {commit_sha}")
 
     # https://api.github.com/repos/chaoss/augur/commits/53b0cc122ac9ecc1588d76759dc2e8e437f45b48
@@ -119,23 +115,19 @@ def create_endpoint_from_commit_sha(logger, commit_sha, repo_id):
         raise KeyError
 
     # Else put into a more readable local var
-    #logger.info(f"Result: {result}")
 
     split_git = result.repo_git.split('/')
     repo_name_and_org = split_git[-2] + "/" + result.repo_name
 
     url = "https://api.github.com/repos/" + repo_name_and_org + "/commits/" + commit_sha
 
-    logger.info(f"Url: {url}")
+    logger.debug(f"Commit Hash URL: {url}")
 
     return url
 
 
 # Try to construct the best url to ping GitHub's API for a username given a full name.
 def create_endpoint_from_name(contributor):
-    #self.logger.info(
-    #    f"Trying to resolve contributor from name: {contributor}")
-
     # Try to get the 'names' field if 'commit_name' field is not present in contributor data.
     name_field = 'cmt_author_name' if 'commit_name' in contributor else 'name'
 
@@ -159,20 +151,19 @@ def insert_alias(logger, contributor, email):
 
     
     contributor_table_data = get_contributors_by_github_user_id(contributor["gh_user_id"])
-    # self.logger.info(f"Contributor query: {contributor_table_data}")
 
     # Handle potential failures
     if len(contributor_table_data) == 1:
-        logger.info(
+        logger.debug(
             f"cntrb_id {contributor_table_data[0].cntrb_id} found in database and assigned to enriched data")
     elif len(contributor_table_data) == 0:
         logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
         raise LookupError
     else:
-        logger.info(
+        logger.warning(
             f"There are more than one contributors in the table with gh_user_id={contributor['gh_user_id']}")
 
-    #logger.info(f"Creating alias for email: {email}")
+    logger.debug(f"Creating alias for email: {email}")
 
     #logger.info(f"{contributor_table_data} has type {type(contributor_table_data)}")
     # Insert a new alias that corresponds to where the contributor was found
@@ -215,8 +206,6 @@ def resolve_if_login_existing(logger, contributor):
         return True
 
     # If not found, return false
-    logger.info(
-        f"Contributor not found in contributors table but can be added. Adding...")
     return False
 """
 No longer used after orm upsert implement
@@ -278,7 +267,6 @@ def fetch_username_from_email(logger, auth, commit):
     # email = commit['email_raw'] if 'email_raw' in commit else commit['email_raw']
 
     if len(commit['email_raw']) <= 2:
-        logger.info("Email less than two characters")
         return login_json  # Don't bother with emails that are blank or less than 2 characters
 
     try:
@@ -288,27 +276,27 @@ def fetch_username_from_email(logger, auth, commit):
             f"Couldn't resolve email url with given data. Reason: {e}")
         # If the method throws an error it means that we can't hit the endpoint so we can't really do much
         return login_json
-
-    login_json, _ = retrieve_dict_from_endpoint(logger, auth, url)
     
+    github_data_access = GithubDataAccess(auth, logger)
+
+    login_json = github_data_access.get_resource(url)
+
     # Check if the email result got anything, if it failed try a name search.
     if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
-        logger.info(
+        logger.warning(
             f"Could not resolve the username from {commit['email_raw']}")
-        logger.info(f"email api url {url}")
+        logger.debug(f"email api url {url}")
 
         return None
-    else:
-        # Return endpoint dictionary if email found it.
-        return login_json
 
-    # failure condition returns None
     return login_json
 
 # Method to return the login given commit data using the supplemental data in the commit
 #   -email
 #   -name
 def get_login_with_supplemental_data(logger, auth, commit_data):
+
+    github_data_access = GithubDataAccess(auth, logger)
 
     # Try to get login from all possible emails
     # Is None upon failure.
@@ -321,7 +309,7 @@ def get_login_with_supplemental_data(logger, auth, commit_data):
             "email": commit_data['email_raw'],
             "name": commit_data['name'],
         }
-        logger.info(f"Inserting data to unresolved: {unresolved}")
+        logger.debug(f"Inserting data to unresolved: {unresolved}")
 
         try:
             
@@ -331,24 +319,24 @@ def get_login_with_supplemental_data(logger, auth, commit_data):
             logger.error(
                 f"Could not create new unresolved email {unresolved['email']}. Error: {e}")
 
-        logger.info(
+        logger.warning(
             "Could not resolve the username from the email. Trying a name only search...")
         try:
             url = create_endpoint_from_name(commit_data)
         except Exception as e:
-            logger.info(
+            logger.warning(
                 f"Couldn't resolve name url with given data. Reason: {e}")
             return None
-
-        login_json, _ = retrieve_dict_from_endpoint(logger, auth, url)
+        
+        login_json = github_data_access.get_resource(url)
 
     # total_count is the count of username's found by the endpoint.
     if login_json is None or 'total_count' not in login_json:
-        logger.info(
+        logger.error(
             "Search query returned an empty response, moving on...\n")
         return None
     if login_json['total_count'] == 0:
-        logger.info(
+        logger.error(
             "Search query did not return any results, adding commit's table remains null...\n")
 
         return None
@@ -377,10 +365,12 @@ def get_login_with_commit_hash(logger, auth, commit_data, repo_id):
 
     #TODO: here.
     # Send api request
-    login_json, _ = retrieve_dict_from_endpoint(logger, auth, url)#request_dict_from_endpoint(session,url)
+    github_data_access = GithubDataAccess(auth, logger)
+    login_json = github_data_access.get_resource(url)
 
+    # TODO: Why are we returning None if 'sha' is not in response if we aren't even using it?
     if login_json is None or 'sha' not in login_json:
-        logger.info(f"Search query returned empty data. Moving on. Data: {login_json}")
+        logger.debug(f"Search query returned empty data. Moving on. Data: {login_json}")
         return None
 
     try:

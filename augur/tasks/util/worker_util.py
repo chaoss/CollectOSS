@@ -11,6 +11,9 @@ from datetime import datetime
 import json
 import subprocess
 
+from augur.tasks.util.metadata_exception import MetadataException
+
+
 def create_grouped_task_load(*args,processes=8,dataList=[],task=None):
     
     if not dataList or not task:
@@ -141,7 +144,7 @@ def parse_json_from_subprocess_call(logger, subprocess_arr, cwd=None):
             required_output = {}
     except json.decoder.JSONDecodeError as e:
         logger.error(f"Could not parse required output! \n output: {output} \n Error: {e}")
-        raise e
+        raise MetadataException(e, f"output : {output}")
     
     return required_output
 

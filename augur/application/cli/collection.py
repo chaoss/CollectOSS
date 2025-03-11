@@ -17,19 +17,24 @@ import sqlalchemy as s
 
 from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
+from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
+from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
 from augur.application.db.lib import get_value
-from augur.application.cli import test_connection, test_db_connection, with_database
+from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 from augur.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
 
-logger = AugurLogger("augur", reset_logfiles=True).get_logger()
+from keyman.KeyClient import KeyClient, KeyPublisher
+
+logger = AugurLogger("augur", reset_logfiles=False).get_logger()
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
-def cli():
-    pass
+@click.pass_context
+def cli(ctx):
+    ctx.obj = DatabaseContext()
 
 @cli.command("start")
 @click.option("--development", is_flag=True, default=False, help="Enable development mode, implies --disable-collection")
@@ -49,6 +54,26 @@ def start(ctx, development):
         
         logger.error("Failed to raise open file limit!")
         raise e
+    
+    keypub = KeyPublisher()
+
+    orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
+
+    # Wait for orchestrator startup
+    if not keypub.wait(republish=True):
+        logger.critical("Key orchestrator did not respond in time")
+        return
+    
+    # load keys
+    ghkeyman = GithubApiKeyHandler(logger)
+    glkeyman = GitlabApiKeyHandler(logger)
+
+    for key in ghkeyman.keys:
+        keypub.publish(key, "github_rest")
+        keypub.publish(key, "github_graphql")
+
+    for key in glkeyman.keys:
+        keypub.publish(key, "gitlab_rest")
     
     if development:
         os.environ["AUGUR_DEV"] = "1"
@@ -93,6 +118,8 @@ def start(ctx, development):
             if p:
                 p.terminate()
 
+        keypub.shutdown()
+
         if celery_beat_process:
             logger.info("Shutting down celery beat process")
             celery_beat_process.terminate()
@@ -125,7 +152,7 @@ def start_celery_collection_processes(vmem_cap_ratio):
     sleep_time += 6
 
     #60% of estimate, Maximum value of 45: Reduced because not needed
-    core_num_processes = determine_worker_processes(.40, 50)
+    core_num_processes = determine_worker_processes(.40, 90)
     logger.info(f"Starting core worker processes with concurrency={core_num_processes}")
     core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_num_processes} -n core:{uuid.uuid4().hex}@%h"
     process_list.append(subprocess.Popen(core_worker.split(" ")))

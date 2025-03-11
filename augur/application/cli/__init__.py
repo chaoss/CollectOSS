@@ -32,7 +32,7 @@ def test_connection(function_internet_connection):
                 You are not connected to the internet.\n \
                 Please connect to the internet to run Augur\n \
                 Consider setting http_proxy variables for limited access installations.")
-            sys.exit()        
+            sys.exit(-1)        
         
     return update_wrapper(new_func, function_internet_connection)
 
@@ -78,7 +78,7 @@ def test_db_connection(function_db_connection):
                 print(f"\n\n{usage} command setup failed\nERROR: connecting to database\nHINT: The {incorrect_values} may be incorrectly specified in {location}\n")
                 
             engine.dispose()
-            sys.exit()
+            sys.exit(-2)
         
     return update_wrapper(new_func, function_db_connection)
 
