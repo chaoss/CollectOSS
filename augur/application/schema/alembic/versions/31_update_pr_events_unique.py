@@ -66,7 +66,7 @@ def upgrade():
 
             print(f"{percentage_updated:.1f}% complete ({total_rows-total_updated} rows left)")
 
-
+    print("Creating (repo_id, issue_event_src_id) index")
     op.create_unique_constraint('pr_events_repo_id_event_src_id_unique', 'pull_request_events', ['repo_id', 'issue_event_src_id'], schema='augur_data')
 
 
