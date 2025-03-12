@@ -34,39 +34,40 @@ def upgrade():
 
         result = conn.execute(text("SELECT COUNT(*) FROM pull_request_events WHERE issue_event_src_id=pr_platform_event_id"))
         total_rows = result.scalar()
-        print(f"Rows needing updated: {total_rows}")
-        print(f"0.0% complete")
-        total_updated = 0
+        if total_rows != 0:
+            print(f"Rows needing updated: {total_rows}")
+            print(f"0.0% complete")
+            total_updated = 0
 
-        while True:
-            result = conn.execute(text("""
-                WITH cte AS (
-                    SELECT pr_event_id 
-                    FROM pull_request_events 
-                    WHERE issue_event_src_id=pr_platform_event_id 
-                    LIMIT 250000
-                )
-                UPDATE pull_request_events
-                SET issue_event_src_id = substring(node_url FROM '.*/([0-9]+)$')::BIGINT
-                FROM cte
-                WHERE pull_request_events.pr_event_id = cte.pr_event_id
-                RETURNING 1;
-            """))
+            while True:
+                result = conn.execute(text("""
+                    WITH cte AS (
+                        SELECT pr_event_id 
+                        FROM pull_request_events 
+                        WHERE issue_event_src_id=pr_platform_event_id 
+                        LIMIT 250000
+                    )
+                    UPDATE pull_request_events
+                    SET issue_event_src_id = substring(node_url FROM '.*/([0-9]+)$')::BIGINT
+                    FROM cte
+                    WHERE pull_request_events.pr_event_id = cte.pr_event_id
+                    RETURNING 1;
+                """))
 
-            conn.commit()
+                conn.commit()
 
-            rows_updated = result.rowcount
-            total_updated += rows_updated
+                rows_updated = result.rowcount
+                total_updated += rows_updated
 
-            if rows_updated == 0:
-                print(f"Update complete")
-                break
+                if rows_updated == 0:
+                    print(f"Update complete")
+                    break
 
-            percentage_updated = (total_updated / total_rows) * 100
+                percentage_updated = (total_updated / total_rows) * 100
 
-            print(f"{percentage_updated:.1f}% complete ({total_rows-total_updated} rows left)")
+                print(f"{percentage_updated:.1f}% complete ({total_rows-total_updated} rows left)")
 
-    print("Creating (repo_id, issue_event_src_id) index")
+            print("Creating (repo_id, issue_event_src_id) index")
     op.create_unique_constraint('pr_events_repo_id_event_src_id_unique', 'pull_request_events', ['repo_id', 'issue_event_src_id'], schema='augur_data')
 
 
