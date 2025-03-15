@@ -2,7 +2,7 @@ from augur.tasks.init.redis_connection import redis_connection as conn
 from augur.application.logs import AugurLogger
 import json, random, time
 
-from keyman.KeyOrchestrationAPI import spec, WaitKeyTimeout
+from keyman.KeyOrchestrationAPI import spec, WaitKeyTimeout, InvalidRequest
 
 class KeyOrchestrator:
     def __init__(self) -> None:
@@ -17,11 +17,13 @@ class KeyOrchestrator:
 
         self.fresh_keys: dict[str, list[str]] = {}
         self.expired_keys: dict[str, dict[str, int]] = {}
+        self.invalid_keys: dict[str, set[str]] = {}
 
     def publish_key(self, key, platform):
         if platform not in self.fresh_keys:
             self.fresh_keys[platform] = [key]
             self.expired_keys[platform] = {}
+            self.invalid_keys[platform] = set()
         else:
             self.fresh_keys[platform].append(key)
 
@@ -42,6 +44,17 @@ class KeyOrchestrator:
 
         self.expired_keys[platform][key] = timeout
 
+    def invalidate_key(self, key, platform):
+        if not platform in self.fresh_keys:
+            return
+        
+        if key in self.fresh_keys[platform]:
+            self.fresh_keys[platform].remove(key)
+        elif key in self.expired_keys[platform]:
+            self.expired_keys[platform].pop(key)
+
+        self.invalid_keys[platform].add(key)
+
     def refresh_keys(self):
         curr_time = time.time()
 
@@ -57,6 +70,9 @@ class KeyOrchestrator:
                 self.expired_keys[platform].pop(key)
 
     def new_key(self, platform):
+        if not platform in self.fresh_keys:
+            raise InvalidRequest(f"Invalid platform: {platform}")
+        
         if not len(self.fresh_keys[platform]):
             if not len(self.expired_keys[platform]):
                 self.logger.warning(f"Key was requested for {platform}, but none are published")
@@ -88,6 +104,9 @@ class KeyOrchestrator:
                 channel: str = channel.decode() if isinstance(channel, bytes) else channel
 
                 request = json.loads(msg.get("data"))
+            except KeyboardInterrupt:
+                # Do not continue on SIGINT
+                break
             except Exception as e:
                 self.logger.error("Error during request decoding")
                 self.logger.exception(e)
@@ -122,6 +141,8 @@ class KeyOrchestrator:
                         self.logger.info("Shutting down")
                         # Close
                         return
+                except KeyboardInterrupt:
+                    break
                 except Exception as e:
                     # This is a bare exception, because we don't really care why failure happened
                     self.logger.exception("Error during ANNOUNCE")
@@ -138,6 +159,11 @@ class KeyOrchestrator:
                         self.expire_key(request["key_str"], request["key_platform"], request["refresh_time"])
                         self.logger.debug(f"EXPIRE; from: {request['requester_id']}, platform: {request['key_platform']}")
                         continue
+                    elif request["type"] == "INVALIDATE":
+                        self.invalidate_key(request["key_str"], request["key_platform"])
+                        self.logger.debug(f"INVALIDATE; from: {request['requester_id']}, platform: {request['key_platform']}")
+                except KeyboardInterrupt:
+                    break
                 except WaitKeyTimeout as w:
                     timeout = w.tiemout_seconds
                     conn.publish(stdout, json.dumps({
