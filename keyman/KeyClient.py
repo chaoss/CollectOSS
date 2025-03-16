@@ -88,7 +88,7 @@ class KeyClient:
 
             Multiple expiration messages can be sent for the
             same key simultaneously. The final expiration
-            message to be recieved will take precedence.
+            message to be received will take precedence.
         
             Will block until a key is available. Will block
             *indefinitely* if no keys are available for the
@@ -121,7 +121,7 @@ class KeyClient:
 
             Multiple invalidation messages can be sent for the
             same key simultaneously. The initial invalidation
-            message to be recieved will take precedence.
+            message to be received will take precedence.
 
             Will block until a key is available. Will block
             *indefinitely* if less than two remaining valid keys
