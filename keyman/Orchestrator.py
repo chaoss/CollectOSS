@@ -50,8 +50,12 @@ class KeyOrchestrator:
         
         if key in self.fresh_keys[platform]:
             self.fresh_keys[platform].remove(key)
+            self.logger.debug("Invalidating fresh key")
         elif key in self.expired_keys[platform]:
+            self.logger.debug("Invalidating expired key")
             self.expired_keys[platform].pop(key)
+        else:
+            self.logger.debug(f"No such valid key {key} for platform: {platform}")
 
         self.invalid_keys[platform].add(key)
 
@@ -162,6 +166,7 @@ class KeyOrchestrator:
                     elif request["type"] == "INVALIDATE":
                         self.invalidate_key(request["key_str"], request["key_platform"])
                         self.logger.debug(f"INVALIDATE; from: {request['requester_id']}, platform: {request['key_platform']}")
+                        continue
                 except KeyboardInterrupt:
                     break
                 except WaitKeyTimeout as w:

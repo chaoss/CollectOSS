@@ -84,13 +84,26 @@ if __name__ == "__main__":
         
         for i in range(num_workers):
             workers.append(Process(target = mp_consumer, args = [platform]))
-        
+
     try:    
         for worker in workers:
             worker.start()
             
         for worker in workers:
             worker.join()
+
+        logger.info("Running invalidation tests")
+        client = KeyClient(next(k for k in keys), logger)
+    
+        for platform in keys:
+            inv_key = client.request(platform)
+            logger.info(f"Invalidating key {platform}: {inv_key}")
+            client.invalidate(inv_key, platform)
+
+        logger.info("Keys after invalidation:")
+        for platform in platforms:
+            key_list = publisher.list_keys(platform)
+            logger.info(f"Keys for {platform}: {key_list}")
     except KeyboardInterrupt:
         pass
     
