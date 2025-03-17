@@ -42,6 +42,16 @@ spec = {
                         { "optional": { "status": "error" } }
                     ]
                 },
+                "LIST_INVALID_KEYS": {
+                    "fields": {
+                        "requester_id": { "required": str },
+                        "key_platform": { "required": str }
+                    },
+                    "response": [
+                        { "optional": list[str] },
+                        { "optional": { "status": "error" }}
+                    ]
+                },
                 "SHUTDOWN": {}
             }
         }, {

@@ -288,6 +288,36 @@ class KeyPublisher:
         else:
             raise ValueError(f"Unexpected reply during list operation: {reply}")
         
+    def list_invalid_keys(self, platform):
+        """ Get a list of currently loaded keys for the given platform,
+            which have been marked as invalid during runtime
+        
+            Will raise a ValueError if the orchestration server
+            returns a malformed response, or if the platform does
+            not exist.
+        """
+        message = {
+            "type": "LIST_INVALID_KEYS",
+            "requester_id": self.id,
+            "key_platform": platform
+        }
+        
+        conn.publish(self.ANNOUNCE, json.dumps(message))
+        
+        reply = next(self.stdin.listen())
+        
+        try:
+            reply = json.loads(reply["data"])
+        except Exception as e:
+            raise ValueError("Exception during key list decoding")
+        
+        if isinstance(reply, list):
+            return reply
+        elif isinstance(reply, dict) and "status" in reply:
+            raise ValueError(f"Orchestration error: {reply['status']}")
+        else:
+            raise ValueError(f"Unexpected reply during list operation: {reply}")
+        
     def shutdown(self):
         """ Instruct the orchestration server to shutdown
 
