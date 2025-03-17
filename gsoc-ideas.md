@@ -9,7 +9,7 @@
 
 For becoming familiar with Augur, you can start by reading some documentation. You can find useful information at in the links, below. Grimoirelab also has a set of installation instructions and documentation here: https://chaoss.github.io/grimoirelab-tutorial/
 
-#### GSoC Students (Primarily, though contributions welcome from Outreachy): 
+#### GSoC Students :
 Once you're familiar with Augur, you can have a look at the following microtasks.
 
 Microtask 0:
