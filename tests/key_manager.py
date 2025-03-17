@@ -18,6 +18,12 @@ keys = {
         "key6",
         "key7",
         "key8"
+    ],
+    "no_invalid": [
+        "key9",
+        "key10",
+        "key11",
+        "key12"
     ]
 }
 
@@ -95,7 +101,7 @@ if __name__ == "__main__":
         logger.info("Running invalidation tests")
         client = KeyClient(next(k for k in keys), logger)
     
-        for platform in keys:
+        for platform in filter(lambda x: x != "no_invalid", keys):
             inv_key = client.request(platform)
             logger.info(f"Invalidating key {platform}: {inv_key}")
             client.invalidate(inv_key, platform)
@@ -103,7 +109,9 @@ if __name__ == "__main__":
         logger.info("Keys after invalidation:")
         for platform in platforms:
             key_list = publisher.list_keys(platform)
+            inv_list = publisher.list_invalid_keys(platform)
             logger.info(f"Keys for {platform}: {key_list}")
+            logger.info(f"Invalid keys for {platform}: {inv_list}")
     except KeyboardInterrupt:
         pass
     

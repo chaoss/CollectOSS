@@ -141,6 +141,9 @@ class KeyOrchestrator:
                         keys = list(self.fresh_keys[request["key_platform"]])
                         keys += list(self.expired_keys[request["key_platform"]].keys())
                         conn.publish(stdout, json.dumps(keys))
+                    elif request["type"] == "LIST_INVALID_KEYS":
+                        keys = list(self.invalid_keys[request["key_platform"]])
+                        conn.publish(stdout, json.dumps(keys))
                     elif request["type"] == "SHUTDOWN":
                         self.logger.info("Shutting down")
                         # Close
