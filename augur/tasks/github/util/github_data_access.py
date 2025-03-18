@@ -17,6 +17,9 @@ class RatelimitException(Exception):
 class UrlNotFoundException(Exception):
     pass
 
+class NotAuthorizedException(Exception):
+    pass
+
 class GithubDataAccess:
 
     def __init__(self, key_manager, logger: logging.Logger):
@@ -108,6 +111,9 @@ class GithubDataAccess:
             if response.status_code == 404:
                 raise UrlNotFoundException(f"Could not find {url}")
             
+            if response.status_code == 401:
+                raise NotAuthorizedException(f"Could not authorize with the github api")
+            
             response.raise_for_status()
 
             return response
@@ -136,6 +142,13 @@ class GithubDataAccess:
         except RatelimitException as e:
             self.__handle_github_ratelimit_response(e.response)
             raise e
+        except NotAuthorizedException as e:
+            self.__handle_github_not_authorized_reponse()
+
+    def __handle_github_not_authorized_reponse(self):
+
+        self.key = self.key_client.invalidate(self.key)
+
         
     def __handle_github_ratelimit_response(self, response):
 
