@@ -62,6 +62,26 @@ services:
       - redis
       - rabbitmq
   
+  # Flower is a UI that helps more easily monitor running tasks for celery workers.
+  # This wont show you every error from the entire augur system, but it should show most of them.
+  # uncomment the section below to use flower
+  # flower:
+  #   image: augur-new:latest
+  #   restart: unless-stopped
+  #   command:
+  #     [ "celery", "-A", "augur.tasks.init.celery_app.celery_app", "flower", "--max-tasks=1000000" ]
+  #   ports:
+  #     - 5555:5555
+  #   environment:
+  #     - "AUGUR_DB=postgresql+psycopg2://${AUGUR_DB_USER:-augur}:${AUGUR_DB_PASSWORD:-augur}@augur-db:5432/augur"
+  #     - REDIS_CONN_STRING=redis://redis:6379
+  #     - RABBITMQ_CONN_STRING=amqp://${AUGUR_RABBITMQ_USERNAME:-augur}:${AUGUR_RABBITMQ_PASSWORD:-password123}@rabbitmq:5672/${AUGUR_RABBITMQ_VHOST:-augur_vhost}
+  #   depends_on:
+  #     - augur
+  #     - augur-db
+  #     - redis
+  #     - rabbitmq
+  
 volumes:
   facade:
     driver: local
