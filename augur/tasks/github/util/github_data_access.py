@@ -115,6 +115,9 @@ class GithubDataAccess:
             if response.status_code == 404:
                 raise UrlNotFoundException(f"Could not find {url}")
             
+            if response.status_code == 401:
+                raise NotAuthorizedException(f"Could not authorize with the github api")
+            
             response.raise_for_status()
 
             try:
