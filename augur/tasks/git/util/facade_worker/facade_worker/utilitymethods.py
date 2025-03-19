@@ -26,7 +26,7 @@
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
 import subprocess
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError
 import os
 import sqlalchemy as s
 from augur.application.db.models import *
@@ -154,7 +154,15 @@ def get_repo_commit_count(logger, facade_helper, repo_git):
 	if count_branches(repo_loc) == 0:
 		return 0
 
-	check_commit_count_cmd = check_output(["git", "--git-dir", repo_loc, "rev-list", "--count", "HEAD"])
+	try:
+		check_commit_count_cmd = check_output(
+			["git", "--git-dir", repo_loc, "rev-list", "--count", "HEAD"],
+			stderr=subprocess.PIPE)
+	except CalledProcessError as e:
+		logger.error(f"Ran into {e}: {e.output} {e.stderr} \n With return code {e.returncode}")
+		raise e
+		
+
 	commit_count = int(check_commit_count_cmd)
 
 	return commit_count
