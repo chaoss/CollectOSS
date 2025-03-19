@@ -5,6 +5,8 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, 
 from urllib.parse import urlparse, parse_qs, urlencode
 from keyman.KeyClient import KeyClient
 
+GITHUB_RATELIMIT_REMAINING_CAP = 50
+
 
 class RatelimitException(Exception):
 
@@ -110,6 +112,13 @@ class GithubDataAccess:
             
             response.raise_for_status()
 
+            try:
+                if "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
+                    raise RatelimitException(response)
+            except ValueError:
+                self.logger.warning(f"X-RateLimit-Remaining was not an integer. Value: {response.headers["X-RateLimit-Remaining"]}")
+
+
             return response
         
     def make_request_with_retries(self, url, method="GET", timeout=100):
@@ -148,7 +157,7 @@ class GithubDataAccess:
                 f'\n\n\n\nSleeping for {retry_after} seconds due to secondary rate limit issue.\n\n\n\n')
             time.sleep(retry_after)
 
-        elif "X-RateLimit-Remaining" in headers and int(headers["X-RateLimit-Remaining"]) == 0:
+        elif "X-RateLimit-Remaining" in headers and int(headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
             current_epoch = int(time.time())
             epoch_when_key_resets = int(headers["X-RateLimit-Reset"])
             key_reset_time =  epoch_when_key_resets - current_epoch
