@@ -145,7 +145,7 @@ class GithubDataAccess:
 
             retry_after = int(headers["Retry-After"])
             self.logger.info('\n\n\n\nEncountered secondary rate limit issue.\n\n\n\n')
-            self.key = self.key_client.expire(self.key, time.now() + retry_after)
+            self.key = self.key_client.expire(self.key, time.time() + retry_after)
 
         elif "X-RateLimit-Remaining" in headers and int(headers["X-RateLimit-Remaining"]) == 0:
             current_epoch = int(time.time())
@@ -160,7 +160,7 @@ class GithubDataAccess:
             self.key = self.key_client.expire(self.key, epoch_when_key_resets)
 
         else:
-            self.key = self.key_client.expire(self.key, time.now() + 60)
+            self.key = self.key_client.expire(self.key, time.time() + 60)
 
     def __add_query_params(self, url: str, additional_params: dict) -> str:
         """Add query params to a url.
