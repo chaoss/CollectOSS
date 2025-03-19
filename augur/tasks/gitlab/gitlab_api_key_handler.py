@@ -110,6 +110,8 @@ class GitlabApiKeyHandler():
         if len(keys) == 0:
             return []
 
+        keys = [key.strip() for key in keys]
+
         valid_keys = []
         with httpx.Client() as client:
 
