@@ -143,9 +143,9 @@ class GithubDataAccess:
             self.__handle_github_ratelimit_response(e.response)
             raise e
         except NotAuthorizedException as e:
-            self.__handle_github_not_authorized_reponse()
+            self.__handle_github_not_authorized_response()
 
-    def __handle_github_not_authorized_reponse(self):
+    def __handle_github_not_authorized_response(self):
 
         self.key = self.key_client.invalidate(self.key)
 
