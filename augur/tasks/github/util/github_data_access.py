@@ -5,7 +5,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, 
 from urllib.parse import urlparse, parse_qs, urlencode
 from keyman.KeyClient import KeyClient
 
-GITHUB_RATELIMIT_REMAINING_CAP = 100
+GITHUB_RATELIMIT_REMAINING_CAP = 50
 
 
 class RatelimitException(Exception):
