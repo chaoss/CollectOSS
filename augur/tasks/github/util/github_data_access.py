@@ -116,7 +116,7 @@ class GithubDataAccess:
                 if "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
                     raise RatelimitException(response)
             except ValueError:
-                self.logger.warning(f"X-RateLimit-Remaining was not an integer. Value: {response.headers["X-RateLimit-Remaining"]}")
+                self.logger.warning(f"X-RateLimit-Remaining was not an integer. Value: {response.headers['X-RateLimit-Remaining']}")
 
 
             return response
