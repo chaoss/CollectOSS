@@ -5,7 +5,6 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <link rel="apple-touch-icon" sizes="180x180"
         href="{{ url_for('static', filename= 'favicon/apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32"
@@ -204,19 +203,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="worker-oauth-valid-body">
-                                    <tr>
-                                        <td>1</td>
-                                        <td>GitHub</td>
-                                        <td>
-                                            <code id="worker-key-1" data-key="gho_ABCDEF123456">**************</code>
-                                            <button class="btn btn-sm btn-outline-secondary"
-                                                onclick="toggleKey('worker-key-1')">Show</button>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-danger btn-sm" onclick="deleteKey(1)">Delete</button>
-                                        </td>
-                                    </tr>
-                                    {# Add more rows with dummy data as needed #}
+                                    <!-- Table rows will be populated dynamically from API data -->
                                 </tbody>
                             </table>
                         </div>
@@ -446,7 +433,6 @@
             });
         }
     </script>
-
     <!-- Worker Oauth Keys Scripts -->
     <script type="text/javascript">
         // Toggle token visibility for Worker Oauth Keys
@@ -463,34 +449,105 @@
             }
         }
 
-        // Delete a key using confirmation modal (dummy implementation)
-        function deleteKey(keyID) {
+        // Delete a key by fetching token and platform from the table row
+        function deleteKey(keyName) {
+            // Look up the token element using the unique key name
+            var codeElement = document.getElementById("worker-key-" + keyName);
+            if (!codeElement) {
+                flashToast("Key element not found.");
+                return;
+            }
+
+            // Retrieve the token from a data attribute
+            var token = codeElement.getAttribute("data-key");
+
+            // Locate the parent row to fetch additional details (the platform cell)
+            var row = codeElement.closest("tr");
+            if (!row) {
+                flashToast("Table row not found.");
+                return;
+            }
+
+            // Assume that the platform is in the second cell (index 1)
+            var platform = row.cells[1].textContent.trim();
+            if (!platform) {
+                flashToast("Platform information is missing.");
+                return;
+            }
+
+            // Update the confirmation modal text accordingly
             var modalText = document.getElementById("modal-text");
-            modalText.innerHTML = "Are you sure you want to delete the key with ID " + keyID + "?";
+            modalText.innerHTML = "Are you sure you want to delete the key for " + platform + "?";
+
             var confirmModal = new bootstrap.Modal(document.getElementById('confirmation-modal'));
             var confirmButton = document.getElementById("confirmation-button");
+
+            // Bind the confirmation button to delete the key when clicked
             confirmButton.onclick = function () {
-                // Dummy deletion action – replace with actual AJAX call if needed.
-                alert("Key " + keyID + " deleted.");
-                // Optionally, remove the key's row from the table here.
+                fetch("{{ url_for('delete_oauth_key') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        platform: platform,
+                        token: token
+                    })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            // Remove the table row upon successful deletion
+                            row.remove();
+                            flashToast("Key deleted successfully.");
+                        } else {
+                            flashToast("Failed to delete key.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error deleting key:", error);
+                        flashToast("Error deleting key.");
+                    });
             };
+
+            // Finally, show the confirmation modal
             confirmModal.show();
         }
 
-        // Save a new worker oauth key (dummy implementation)
         function saveWorkerKey() {
             var platform = document.getElementById("workerPlatformSelect").value;
-            var keyInput = document.getElementById("workerApiKeyInput").value;
+            var keyInput = document.getElementById("workerApiKeyInput").value.trim();
             if (!keyInput) {
                 alert("Please enter an API key");
                 return;
             }
-            // Dummy validation and saving logic
-            alert("Key saved: " + keyInput + " (" + platform + ")");
-            // Clear the input field after "saving"
-            document.getElementById("workerApiKeyInput").value = "";
-        }
-
+            // Send the new oauth key to the backend
+            fetch("{{ url_for('new_oauth_keys') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    platform: platform, 
+                    token: keyInput 
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || "Failed to add key");
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert("API key added successfully!");
+                    // Optionally, refresh the worker oauth keys list here
+                    document.getElementById("workerApiKeyInput").value = "";
+                })
+                .catch(error => {
+                    alert("Error: " + error.message);
+                });
+    }
         // Simple filtering for valid keys table
         document.getElementById("worker-oauth-filter").addEventListener("input", function () {
             var filterText = this.value.toLowerCase();
@@ -498,6 +555,82 @@
             rows.forEach(row => {
                 row.style.display = row.innerText.toLowerCase().includes(filterText) ? "" : "none";
             });
+        });
+
+        // Fetch and update valid keys table from API on page load
+        window.addEventListener("load", function () {
+            fetch("{{ url_for('get_oauth_keys') }}")
+                .then(response => response.json())
+                .then(data => {
+                    // Expected data format:
+                    // {
+                    //    "github_api_key": "ghp_jksfldjkla",
+                    //    "gitlab_api_key": "glpat_fjdkla",
+                    //    "customplatform_api_key": "custom_XXXXXXXXXXXX"
+                    // }
+                    const tbody = document.getElementById("worker-oauth-valid-body");
+                    tbody.innerHTML = ""; // clear existing rows
+                    let count = 1;
+                    // Iterate over each unique key (keyName) and its token
+                    for (const [keyName, token] of Object.entries(data)) {
+                        // Determine the displayed platform based on the key name
+                        let platform = "";
+                        if (keyName.toLowerCase().includes("github")) {
+                            platform = "GitHub";
+                        } else if (keyName.toLowerCase().includes("gitlab")) {
+                            platform = "GitLab";
+                        } else {
+                            platform = keyName.replace("_api_key", ""); // or set to "Unknown"
+                        }
+                        // Create a new table row
+                        const tr = document.createElement("tr");
+
+                        // Key ID cell (using count for display purposes)
+                        const idCell = document.createElement("td");
+                        idCell.textContent = count;
+                        tr.appendChild(idCell);
+
+                        // Platform cell
+                        const platformCell = document.createElement("td");
+                        platformCell.textContent = platform;
+                        tr.appendChild(platformCell);
+
+                        // Token cell with masked token and a toggle button
+                        const tokenCell = document.createElement("td");
+                        const code = document.createElement("code");
+                        // Use the keyName to uniquely identify the DOM element
+                        code.id = "worker-key-" + keyName;
+                        code.setAttribute("data-key", token);
+                        code.textContent = "**************";
+                        tokenCell.appendChild(code);
+                        const toggleButton = document.createElement("button");
+                        toggleButton.className = "btn btn-sm btn-outline-secondary";
+                        toggleButton.textContent = "Show";
+                        toggleButton.addEventListener("click", function () {
+                            toggleKey(code.id);
+                        });
+                        tokenCell.appendChild(toggleButton);
+                        tr.appendChild(tokenCell);
+
+                        // Action cell with delete button
+                        const actionCell = document.createElement("td");
+                        const deleteButton = document.createElement("button");
+                        deleteButton.className = "btn btn-danger btn-sm";
+                        deleteButton.textContent = "Delete";
+                        // Call deleteKey with the unique key name
+                        deleteButton.addEventListener("click", function () {
+                            deleteKey(keyName);
+                        });
+                        actionCell.appendChild(deleteButton);
+                        tr.appendChild(actionCell);
+
+                        tbody.appendChild(tr);
+                        count++;
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching worker oauth keys:", error);
+                });
         });
     </script>
 
