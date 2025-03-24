@@ -83,7 +83,6 @@
                             <div class="card-body">
                                 <div class="row justify-content-end">
                                     <h1>TODO</h1>
-                                    {# Buttons for restart/shutdown can be added here if needed #}
                                 </div>
                             </div>
                         </div>
@@ -248,7 +247,6 @@
                             </div>
                         </div>
                     </div>
-                    {# End Worker Oauth Keys Section #}
                 </div>
             </div>
         </div>
@@ -417,7 +415,6 @@
     </script>
     <!-- Worker Oauth Keys Scripts -->
     <script type="text/javascript">
-        // Toggle token visibility for Worker Oauth Keys
         function toggleKey(elementId) {
             var el = document.getElementById(elementId);
             var btn = el.nextElementSibling;
@@ -431,42 +428,37 @@
             }
         }
 
-        // Delete a key by fetching token and platform from the table row
         function deleteKey(keyName) {
-            // Look up the token element using the unique key name
             var codeElement = document.getElementById("worker-key-" + keyName);
+            if (!codeElement) {
+                codeElement = document.getElementById("worker-invalid-key-" + keyName);
+            }
             if (!codeElement) {
                 flashToast("Key element not found.");
                 return;
             }
 
-            // Retrieve the token from a data attribute
             var token = codeElement.getAttribute("data-key");
 
-            // Locate the parent row to fetch additional details (the platform cell)
             var row = codeElement.closest("tr");
             if (!row) {
                 flashToast("Table row not found.");
                 return;
             }
 
-            // Assume that the platform is in the second cell (index 1)
             var platform = row.cells[1].textContent.trim();
             if (!platform) {
                 flashToast("Platform information is missing.");
                 return;
             }
 
-            // Update the confirmation modal text accordingly
             var modalText = document.getElementById("modal-text");
             modalText.innerHTML = "Are you sure you want to delete the key for " + platform + "?";
 
             var confirmModal = new bootstrap.Modal(document.getElementById('confirmation-modal'));
             var confirmButton = document.getElementById("confirmation-button");
 
-            console.log(platform);
-
-            // Bind the confirmation button to delete the key when clicked
+            console.log(platform, token)
             confirmButton.onclick = function () {
                 fetch("{{ url_for('delete_oauth_key') }}", {
                     method: "POST",
@@ -480,7 +472,6 @@
                 })
                     .then(response => {
                         if (response.ok) {
-                            // Remove the table row upon successful deletion
                             row.remove();
                             flashToast("Key deleted successfully.");
                         } else {
@@ -493,7 +484,6 @@
                     });
             };
 
-            // Finally, show the confirmation modal
             confirmModal.show();
         }
 
@@ -525,7 +515,6 @@
                 })
                 .then(data => {
                     alert("API key added successfully!");
-                    // Optionally, refresh the worker oauth keys list here
                     document.getElementById("workerApiKeyInput").value = "";
                 })
                 .catch(error => {
@@ -549,32 +538,26 @@
                     let count = 1;
                     // Iterate over each unique key (keyName) and its token
                     for (const [keyName, token] of Object.entries(data)) {
-                        // Determine the displayed platform based on the key name
                         let platform = "";
                         if (keyName.toLowerCase().includes("github")) {
                             platform = "GitHub";
                         } else if (keyName.toLowerCase().includes("gitlab")) {
                             platform = "GitLab";
                         } else {
-                            platform = keyName.replace("_api_key", ""); // or set to "Unknown"
+                            platform = keyName.replace("_api_key", "");
                         }
-                        // Create a new table row
                         const tr = document.createElement("tr");
 
-                        // Key ID cell (using count for display purposes)
                         const idCell = document.createElement("td");
                         idCell.textContent = count;
                         tr.appendChild(idCell);
 
-                        // Platform cell
                         const platformCell = document.createElement("td");
                         platformCell.textContent = platform;
                         tr.appendChild(platformCell);
 
-                        // Token cell with masked token and a toggle button
                         const tokenCell = document.createElement("td");
                         const code = document.createElement("code");
-                        // Use the keyName to uniquely identify the DOM element
                         code.id = "worker-key-" + keyName;
                         code.setAttribute("data-key", token);
                         code.textContent = "**************";
@@ -588,12 +571,10 @@
                         tokenCell.appendChild(toggleButton);
                         tr.appendChild(tokenCell);
 
-                        // Action cell with delete button
                         const actionCell = document.createElement("td");
                         const deleteButton = document.createElement("button");
                         deleteButton.className = "btn btn-danger btn-sm";
                         deleteButton.textContent = "Delete";
-                        // Call deleteKey with the unique key name
                         deleteButton.addEventListener("click", function () {
                             deleteKey(keyName);
                         });
@@ -620,25 +601,21 @@
                     //    "otherplatform": [ ... ]
                     // }
                     const tbody = document.getElementById("worker-oauth-invalid-body");
-                    tbody.innerHTML = ""; // clear any existing rows
+                    tbody.innerHTML = "";
                     let count = 1;
                     // Iterate over each platform and its invalid keys array
                     Object.entries(data).forEach(([platform, keys]) => {
                         keys.forEach(key => {
-                            // Create a new table row
                             const tr = document.createElement("tr");
 
-                            // Key ID cell (using count for display purposes)
                             const idCell = document.createElement("td");
                             idCell.textContent = count;
                             tr.appendChild(idCell);
 
-                            // Platform cell (capitalize first letter)
                             const platformCell = document.createElement("td");
                             platformCell.textContent = platform.charAt(0).toUpperCase() + platform.slice(1);
                             tr.appendChild(platformCell);
 
-                            // Token cell with masked token and a toggle button
                             const tokenCell = document.createElement("td");
                             const code = document.createElement("code");
                             // Use the key's id to uniquely identify the DOM element
@@ -655,12 +632,10 @@
                             tokenCell.appendChild(toggleButton);
                             tr.appendChild(tokenCell);
 
-                            // Action cell with delete button
                             const actionCell = document.createElement("td");
                             const deleteButton = document.createElement("button");
                             deleteButton.className = "btn btn-danger btn-sm";
                             deleteButton.textContent = "Delete";
-                            // Bind delete action to delete the key; you may adapt deleteKey function to accept key.id
                             deleteButton.addEventListener("click", function () {
                                 deleteKey(key.id);
                             });

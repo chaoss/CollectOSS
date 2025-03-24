@@ -115,7 +115,6 @@ def get_oauth_keys():
     # Normalize the key names (append '_api_key' if needed)
     keys_dict = {}
     for platform, key_value in keys_section.items():
-        # Normalize platform names to lowercase.
         platform_lower = platform.lower()
         if "github" in platform_lower:
             platform_lower = "github"
@@ -131,68 +130,54 @@ def get_oauth_keys():
 @admin_required
 def get_invalid_keys():
     """
-    Retrieve all invalid worker oauth keys.
+    Retrieve all invalid worker OAuth keys by comparing the keys loaded 
+    in the KeyPublisher at startup with those stored in the database, 
+    and by checking the live keys with the is_bad_api_key function.
     
-    Invalid keys are determined by gathering the live keys from the KeyPublisher interface
-    and joining them with the keys stored in the worker_oauth table.
-    
-    For GitHub keys, a key is considered valid if it appears in either the 'github_rest' or 
-    'github_graphql' live keys. For GitLab keys, a key is valid if it appears in 'gitlab_rest'.
-    Any key from the worker_oauth table that is not present in the live keys is marked invalid.
-    
-    Returns:
-        JSON object with invalid keys per platform. For example:
-        {
-            "github": [{"id": 1, "token": "ghp_XXX", "name": "My GitHub Key"}, ...],
-            "gitlab": [{"id": 2, "token": "glp_YYY", "name": "My GitLab Key"}, ...]
-        }
+    A key is considered valid if it appears in the set of live keys and passes 
+    the is_bad_api_key test; any key that fails is considered invalid.
     """
     keypub = KeyPublisher()
-    live_keys = {}  # Maps published platform names (in lowercase) to sets of live tokens
-    
-    # Get the list of platforms that the orchestrator is aware of
-    platforms = keypub.list_platforms()
-    for plat in platforms:
-        plat_lower = plat.lower()
-        tokens = keypub.list_keys(plat)
-        logger.info(f"tokens are {tokens}")
-        live_keys[plat_lower] = set(tokens)
-
-    logger.info(f"Live keys: {live_keys}")
 
     invalid_keys = {}
+    live_keys = {}
+    for platform in keypub.list_platforms():
+        platform_lower = platform.lower()
+        tokens = keypub.list_keys(platform)
+        if tokens is not None:
+            live_keys[platform_lower] = set(tokens)
 
-    # Query all records from the worker_oauth table.
-    with DatabaseSession(logger, engine=current_app.engine) as session:
-        worker_oauth_keys = session.query(WorkerOauth).all()
-        for record in worker_oauth_keys:
-            # Normalize platform name from the DB record
-            record_platform = record.platform.lower()
-            # Use the access_token field as the key token to compare.
-            token = record.access_token
+    # Instantiate the API key handlers and HTTP client.
+    ghkeyman = GithubApiKeyHandler(logger)
+    glkeyman = GitlabApiKeyHandler(logger)
+    client = httpx.Client()
 
-            # Determine if the key is valid based on live keys
-            is_valid = False
-            if record_platform == "github":
-                # For GitHub, check both published channels
-                if token in live_keys.get("github_rest", set()) or token in live_keys.get("github_graphql", set()):
-                    is_valid = True
-            elif record_platform == "gitlab":
-                if token in live_keys.get("gitlab_rest", set()):
-                    is_valid = True
-            else:
-                # For other platforms, check using the platform name directly.
-                if token in live_keys.get(record_platform, set()):
-                    is_valid = True
+    github_db_keys = ghkeyman.get_api_keys_from_database()
+    # For GitHub, we check keys published under both channels.
+    github_live = live_keys.get("github_rest", set()) | live_keys.get("github_graphql", set())
+    for token in github_db_keys:
+        if token not in github_live or ghkeyman.is_bad_api_key(client, token):
+            invalid_keys.setdefault("github", []).append(token)
 
-            if not is_valid:
-                if record_platform not in invalid_keys:
-                    invalid_keys[record_platform] = []
-                invalid_keys[record_platform].append({
-                    "id": record.oauth_id,
-                    "token": token,
-                    "name": record.name
-                })
+    gitlab_db_keys = glkeyman.get_api_keys_from_database()
+    gitlab_live = live_keys.get("gitlab_rest", set())
+    for token in gitlab_db_keys:
+        if token not in gitlab_live or glkeyman.is_bad_api_key(client, token):
+            invalid_keys.setdefault("gitlab", []).append(token)
+
+    # This ensures that even if a key is live, we verify it using is_bad_api_key.
+    for token in live_keys.get("github_rest", set()):
+        if ghkeyman.is_bad_api_key(client, token) and token not in invalid_keys.get("github", []):
+            invalid_keys.setdefault("github", []).append(token)
+    for token in live_keys.get("github_graphql", set()):
+        if ghkeyman.is_bad_api_key(client, token) and token not in invalid_keys.get("github", []):
+            invalid_keys.setdefault("github", []).append(token)
+    for token in live_keys.get("gitlab_rest", set()):
+        if glkeyman.is_bad_api_key(client, token) and token not in invalid_keys.get("gitlab", []):
+            invalid_keys.setdefault("gitlab", []).append(token)
+
+    for platform, tokens in invalid_keys.items():
+        invalid_keys[platform] = [{"id": token, "token": token} for token in tokens]
 
     return jsonify(invalid_keys), 200
 
@@ -203,7 +188,7 @@ def get_invalid_keys():
 @admin_required
 def delete_oauth_key():
     """
-    Delete a worker oauth key from the KeyPublisher.
+    Delete a worker oauth key from the KeyPublisher, config table and worker oauth table
     Expects a JSON payload with the platform and token properties.
     """
     data = request.get_json()
