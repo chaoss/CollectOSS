@@ -16,6 +16,7 @@ from augur.application.db.lib import (
     remove_setting,
     remove_worker_oauth_key,
 )
+from augur.application.db.models.augur_operations import WorkerOauth
 from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
 from keyman.KeyClient import KeyPublisher
@@ -90,42 +91,6 @@ def update_config():
     return jsonify({"status": "success"}), 200
 
 
-# @app.route(f"/{AUGUR_API_VERSION}/workeroauth/get/keys", methods=['GET'])
-# @ssl_required
-# @admin_required
-# def get_oauth_keys():
-#     """
-#     Retrieve all worker oauth keys in a JSON structure where the keys are named
-#     following the pattern: <platform>_api_key. For example:
-#     {
-#        "github_api_key": "ghp_XXXXXXXXXXXXXXX",
-#        "gitlab_api_key": "glpat_XXXXXXXXXXXXXXX"
-#     }
-#     """
-#     keypub = KeyPublisher()
-#     keys_dict = {}
-#     for plat in keypub.list_platforms():
-#         keys = keypub.list_keys(plat)
-#         logger.info(f"Platform: {plat}")
-#         logger.info(f"Keys: {keys}")
-
-#         if not keys:
-#             continue
-
-#         # Normalize platform names for the frontend
-#         if "github" in plat.lower():
-#             if "github_api_key" not in keys_dict:  # use the first encountered GitHub key
-#                 keys_dict["github_api_key"] = keys[0]
-#         elif "gitlab" in plat.lower():
-#             if "gitlab_api_key" not in keys_dict:  # use the first encountered GitLab key
-#                 keys_dict["gitlab_api_key"] = keys[0]
-#         else:
-#             key_name = f"{plat.lower()}_api_key"
-#             if key_name not in keys_dict:
-#                 keys_dict[key_name] = keys[0]
-
-#     return jsonify(keys_dict), 200
-
 @app.route(f"/{AUGUR_API_VERSION}/workeroauth/get/keys", methods=['GET'])
 @ssl_required
 @admin_required
@@ -139,17 +104,6 @@ def get_oauth_keys():
       }
     """
     # Open a database session using the current application engine
-    keypub = KeyPublisher()
-
-    print("add block")
-    for plat in keypub.list_platforms():
-        keys = keypub.list_keys(plat)
-        if not keys:
-            continue
-        
-        print(f"Platform: {plat}")
-        print(f"Keys: {keys}")
-    
     with DatabaseSession(logger, engine=current_app.engine) as session:
         config = AugurConfig(logger, session)
         # Get the Keys section if it exists; otherwise, key list remains empty.
@@ -163,10 +117,11 @@ def get_oauth_keys():
     for platform, key_value in keys_section.items():
         # Normalize platform names to lowercase.
         platform_lower = platform.lower()
-        if platform_lower.endswith("_api_key"):
-            keys_dict[platform_lower] = key_value
-        else:
-            keys_dict[f"{platform_lower}_api_key"] = key_value
+        if "github" in platform_lower:
+            platform_lower = "github"
+        elif "gitlab" in platform_lower:
+            platform_lower = "gitlab"
+        keys_dict[f"{platform_lower}_api_key"] = key_value
 
     return jsonify(keys_dict), 200
 
@@ -176,50 +131,71 @@ def get_oauth_keys():
 @admin_required
 def get_invalid_keys():
     """
-    Retrieve all invalid worker oauth keys from the configuration table in the database.
-    The keys from the "Keys" section are normalized and returned such that they follow the format:
-      {
-         "github_api_key": "ghp_XXXXXXXXXXXXXXX",
-         "gitlab_api_key": "glpat_XXXXXXXXXXXXXXX"
-      }
+    Retrieve all invalid worker oauth keys.
+    
+    Invalid keys are determined by gathering the live keys from the KeyPublisher interface
+    and joining them with the keys stored in the worker_oauth table.
+    
+    For GitHub keys, a key is considered valid if it appears in either the 'github_rest' or 
+    'github_graphql' live keys. For GitLab keys, a key is valid if it appears in 'gitlab_rest'.
+    Any key from the worker_oauth table that is not present in the live keys is marked invalid.
+    
+    Returns:
+        JSON object with invalid keys per platform. For example:
+        {
+            "github": [{"id": 1, "token": "ghp_XXX", "name": "My GitHub Key"}, ...],
+            "gitlab": [{"id": 2, "token": "glp_YYY", "name": "My GitLab Key"}, ...]
+        }
     """
-
     keypub = KeyPublisher()
-    keys_dict = {}
-    for plat in keypub.list_platforms():
-        keys = keypub.list_keys(plat)
-        if not keys:
-            continue
+    live_keys = {}  # Maps published platform names (in lowercase) to sets of live tokens
+    
+    # Get the list of platforms that the orchestrator is aware of
+    platforms = keypub.list_platforms()
+    for plat in platforms:
+        plat_lower = plat.lower()
+        tokens = keypub.list_keys(plat)
+        logger.info(f"tokens are {tokens}")
+        live_keys[plat_lower] = set(tokens)
 
-        platform = plat.lower()
-        if "github" in platform:
-            platform = "Github"
-        elif "gitlab" in platform:
-            platform = "Gitlab"
-        
-        keys_dict[platform] = keys
-    
-    
-    # Open a database session using the current application engine
+    logger.info(f"Live keys: {live_keys}")
+
+    invalid_keys = {}
+
+    # Query all records from the worker_oauth table.
     with DatabaseSession(logger, engine=current_app.engine) as session:
-        config = AugurConfig(logger, session)
-        # Get the Keys section if it exists; otherwise, key list remains empty.
-        if config.is_section_in_config("Keys"):
-            keys_section = config.get_section("Keys")
-        else:
-            keys_section = {}
+        worker_oauth_keys = session.query(WorkerOauth).all()
+        for record in worker_oauth_keys:
+            # Normalize platform name from the DB record
+            record_platform = record.platform.lower()
+            # Use the access_token field as the key token to compare.
+            token = record.access_token
 
-    # Normalize the key names (append '_api_key' if needed)
-    keys_dict = {}
-    for platform, key_value in keys_section.items():
-        # Normalize platform names to lowercase.
-        platform_lower = platform.lower()
-        if platform_lower.endswith("_api_key"):
-            keys_dict[platform_lower] = key_value
-        else:
-            keys_dict[f"{platform_lower}_api_key"] = key_value
+            # Determine if the key is valid based on live keys
+            is_valid = False
+            if record_platform == "github":
+                # For GitHub, check both published channels
+                if token in live_keys.get("github_rest", set()) or token in live_keys.get("github_graphql", set()):
+                    is_valid = True
+            elif record_platform == "gitlab":
+                if token in live_keys.get("gitlab_rest", set()):
+                    is_valid = True
+            else:
+                # For other platforms, check using the platform name directly.
+                if token in live_keys.get(record_platform, set()):
+                    is_valid = True
 
-    return jsonify(keys_dict), 200
+            if not is_valid:
+                if record_platform not in invalid_keys:
+                    invalid_keys[record_platform] = []
+                invalid_keys[record_platform].append({
+                    "id": record.oauth_id,
+                    "token": token,
+                    "name": record.name
+                })
+
+    return jsonify(invalid_keys), 200
+
 
 
 @app.route(f"/{AUGUR_API_VERSION}/workeroauth/delete/key", methods=["POST"])
@@ -240,7 +216,6 @@ def delete_oauth_key():
     keypub = KeyPublisher()
 
     platform = data.get("platform").lower()
-    print(f"Platform asish kumar: {platform}")
     if platform == "github":
         keypub.unpublish(data["token"], "github_rest")
         keypub.unpublish(data["token"], "github_graphql")
@@ -248,8 +223,7 @@ def delete_oauth_key():
         keypub.unpublish(data["token"], "gitlab_rest")
 
     remove_worker_oauth_key(platform=data["platform"].lower())
-    remove_setting(section_name="Keys", setting_name=data["platform"].lower() + "_api_keys")
-
+    remove_setting(section_name="Keys", setting_name=data["platform"].lower() + "_api_key")
 
     return jsonify({"status": "success"}), 200
 

@@ -184,12 +184,6 @@
                     <div id="worker-oauth-div" hidden>
                         <h1>Worker Oauth Keys</h1>
 
-                        <!-- Filter input for the keys table -->
-                        <div class="mb-3">
-                            <input type="text" id="worker-oauth-filter" class="form-control"
-                                placeholder="Filter keys...">
-                        </div>
-
                         <!-- Valid Keys Table -->
                         <h2>Valid Keys</h2>
                         <div class="display-table table-responsive rounded w3-animate-opacity">
@@ -221,19 +215,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="worker-oauth-invalid-body">
-                                    <tr>
-                                        <td>2</td>
-                                        <td>GitLab</td>
-                                        <td>
-                                            <code id="worker-key-2" data-key="glp_ABCDEF654321">**************</code>
-                                            <button class="btn btn-sm btn-outline-secondary"
-                                                onclick="toggleKey('worker-key-2')">Show</button>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-danger btn-sm" onclick="deleteKey(2)">Delete</button>
-                                        </td>
-                                    </tr>
-                                    {# Add more rows with dummy data as needed #}
+                                    <!-- Invalid keys will be populated here dynamically -->
                                 </tbody>
                             </table>
                         </div>
@@ -482,6 +464,8 @@
             var confirmModal = new bootstrap.Modal(document.getElementById('confirmation-modal'));
             var confirmButton = document.getElementById("confirmation-button");
 
+            console.log(platform);
+
             // Bind the confirmation button to delete the key when clicked
             confirmButton.onclick = function () {
                 fetch("{{ url_for('delete_oauth_key') }}", {
@@ -527,8 +511,8 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    platform: platform, 
-                    token: keyInput 
+                    platform: platform,
+                    token: keyInput
                 })
             })
                 .then(response => {
@@ -547,15 +531,7 @@
                 .catch(error => {
                     alert("Error: " + error.message);
                 });
-    }
-        // Simple filtering for valid keys table
-        document.getElementById("worker-oauth-filter").addEventListener("input", function () {
-            var filterText = this.value.toLowerCase();
-            var rows = document.querySelectorAll("#worker-oauth-valid-body tr");
-            rows.forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(filterText) ? "" : "none";
-            });
-        });
+        }
 
         // Fetch and update valid keys table from API on page load
         window.addEventListener("load", function () {
@@ -630,6 +606,74 @@
                 })
                 .catch(error => {
                     console.error("Error fetching worker oauth keys:", error);
+                });
+        });
+
+        window.addEventListener("load", function () {
+            fetch("{{ url_for('get_invalid_keys') }}")
+                .then(response => response.json())
+                .then(data => {
+                    // Expected data format:
+                    // {
+                    //    "github": [{"id": 1, "token": "ghp_XXX", "name": "Key Name"}, ...],
+                    //    "gitlab": [{"id": 2, "token": "glp_YYY", "name": "Key Name"}, ...],
+                    //    "otherplatform": [ ... ]
+                    // }
+                    const tbody = document.getElementById("worker-oauth-invalid-body");
+                    tbody.innerHTML = ""; // clear any existing rows
+                    let count = 1;
+                    // Iterate over each platform and its invalid keys array
+                    Object.entries(data).forEach(([platform, keys]) => {
+                        keys.forEach(key => {
+                            // Create a new table row
+                            const tr = document.createElement("tr");
+
+                            // Key ID cell (using count for display purposes)
+                            const idCell = document.createElement("td");
+                            idCell.textContent = count;
+                            tr.appendChild(idCell);
+
+                            // Platform cell (capitalize first letter)
+                            const platformCell = document.createElement("td");
+                            platformCell.textContent = platform.charAt(0).toUpperCase() + platform.slice(1);
+                            tr.appendChild(platformCell);
+
+                            // Token cell with masked token and a toggle button
+                            const tokenCell = document.createElement("td");
+                            const code = document.createElement("code");
+                            // Use the key's id to uniquely identify the DOM element
+                            code.id = "worker-invalid-key-" + key.id;
+                            code.setAttribute("data-key", key.token);
+                            code.textContent = "**************";
+                            tokenCell.appendChild(code);
+                            const toggleButton = document.createElement("button");
+                            toggleButton.className = "btn btn-sm btn-outline-secondary";
+                            toggleButton.textContent = "Show";
+                            toggleButton.addEventListener("click", function () {
+                                toggleKey(code.id);
+                            });
+                            tokenCell.appendChild(toggleButton);
+                            tr.appendChild(tokenCell);
+
+                            // Action cell with delete button
+                            const actionCell = document.createElement("td");
+                            const deleteButton = document.createElement("button");
+                            deleteButton.className = "btn btn-danger btn-sm";
+                            deleteButton.textContent = "Delete";
+                            // Bind delete action to delete the key; you may adapt deleteKey function to accept key.id
+                            deleteButton.addEventListener("click", function () {
+                                deleteKey(key.id);
+                            });
+                            actionCell.appendChild(deleteButton);
+                            tr.appendChild(actionCell);
+
+                            tbody.appendChild(tr);
+                            count++;
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching invalid worker oauth keys:", error);
                 });
         });
     </script>
