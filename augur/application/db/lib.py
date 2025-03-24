@@ -161,6 +161,37 @@ def get_gitlab_repo_by_src_id(src_id):
         repo = execute_session_query(query, 'first')
 
         return repo
+    
+def remove_setting(section_name: str, setting_name: str) -> bool:
+    """Remove a setting from the config.
+
+    Args:
+        section_name: The name of the section that the setting belongs to
+        setting_name: The name of the setting to remove
+
+    Returns:
+        True if the setting was successfully removed, False if it wasn't found
+    """
+    with get_session() as session:
+        try:
+            query = session.query(Config).filter(
+                Config.section_name == section_name, 
+                Config.setting_name == setting_name
+            )
+            config_setting = execute_session_query(query, 'one')
+            
+            session.delete(config_setting)
+            session.commit()
+            logger.info(f"Removed setting '{setting_name}' from section '{section_name}'")
+            return True
+            
+        except s.orm.exc.NoResultFound:
+            logger.warning(f"Setting '{setting_name}' in section '{section_name}' not found")
+            return False
+        except Exception as e:
+            logger.error(f"Error removing setting '{setting_name}' from section '{section_name}': {e}")
+            session.rollback()
+            return False
         
     
 def remove_working_commits_by_repo_id_and_hashes(repo_id, commit_hashes):
@@ -223,6 +254,18 @@ def get_worker_oauth_keys(platform: str):
 
         results = session.query(WorkerOauth).filter(WorkerOauth.platform == platform).order_by(func.random()).all()
 
+        return [row.access_token for row in results]
+    
+def remove_worker_oauth_key(platform: str):
+    with get_session() as session:
+
+        results = session.query(WorkerOauth).filter(WorkerOauth.platform == platform).order_by(func.random()).all()
+
+        for row in results:
+            session.delete(row)
+
+        session.commit()
+        
         return [row.access_token for row in results]
     
 def get_active_repo_count(collection_type):
