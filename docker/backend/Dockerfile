@@ -121,7 +121,7 @@ RUN set -x \
 RUN ./scripts/docker/install-workers-deps.sh
 
 COPY --from=golang "/root/scc" "/root/scc"
-COPY --from=golang "/root/scorecard/scorecard" "./scorecard"
+COPY --from=golang "/root/scorecard/scorecard" "/root/scorecard"
 
 # RUN ./scripts/install/workers.sh 
 
