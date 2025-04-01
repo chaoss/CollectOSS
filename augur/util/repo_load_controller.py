@@ -5,7 +5,7 @@ import base64
 from typing import Any, Dict
 
 from augur.application.db.engine import DatabaseEngine
-from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User
+from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User, CollectionStatus
 from augur.application.db.models.augur_operations import retrieve_owner_repos
 from augur.application.db.util import execute_session_query
 
@@ -67,8 +67,10 @@ class RepoLoadController:
         # if the repo doesn't exist it adds it
         if "gitlab" in url:
             repo_id = Repo.insert_gitlab_repo(self.session, url, repo_group_id, "CLI")
+            CollectionStatus.insert(self.session, logger, repo_id)
         else:
             repo_id = Repo.insert_github_repo(self.session, url, repo_group_id, "CLI", repo_type)
+            CollectionStatus.insert(self.session, logger, repo_id)
 
         if not repo_id:
             logger.warning(f"Invalid repo group id specified for {url}, skipping.")
