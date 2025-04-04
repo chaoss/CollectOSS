@@ -2,12 +2,15 @@
 
 
 ########################################
-FROM golang:1.23 AS golang
+FROM golang:1.23 AS golang-builder
 
+# Write final binaries to / so it's easy to copy them out
+ENV GOBIN=/
 
-ENV PATH="${PATH}:/usr/local/go/bin"
-COPY ./scripts/ scripts/
-RUN ./scripts/docker/install-golang-deps.sh
+RUN go install github.com/boyter/scc/v3@v3.4.0 \
+    && /scc --version
+RUN go install github.com/ossf/scorecard/v5@v5.1.1 \
+    && /scorecard version
 
 
 ########################################
@@ -100,8 +103,8 @@ RUN set -x \
 
 RUN ./scripts/docker/install-workers-deps.sh
 
-COPY --from=golang "/root/scc" "/root/scc"
-COPY --from=golang "/root/scorecard/scorecard" "/root/scorecard"
+COPY --from=golang-builder "/scc" "/root/scc"
+COPY --from=golang-builder "/scorecard" "/root/scorecard"
 
 RUN mkdir -p repos/ logs/ /augur/facade/
 
