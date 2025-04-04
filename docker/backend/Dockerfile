@@ -1,34 +1,16 @@
 # SPDX-License-Identifier: MIT
 
 
+########################################
 FROM golang:1.23 AS golang
 
 
-# RUN ./scripts/docker/install-go.sh
 ENV PATH="${PATH}:/usr/local/go/bin"
 COPY ./scripts/ scripts/
 RUN ./scripts/docker/install-golang-deps.sh
 
 
-# FROM rust:1.78 as rust
-
-# # Ensure Rust directories are writable
-# RUN mkdir -p /root/.rustup/downloads /root/.cargo/registry && \
-#     chmod -R 777 /root/.rustup /root/.cargo
-
-# # Add rust and cargo to PATH
-# # ENV PATH="/root/.cargo/bin:${PATH}"
-
-# # Install the specific version of Rust
-# # RUN set -x \
-# #     && rustup install 1.78.0
-# # RUN set -x \
-# #     && rustup default 1.78.0
-
-
-# # Add rust and cargo to PATH
-# ENV PATH="/usr/bin/:/root/.cargo/bin:/usr/local/bin:${PATH}"
-
+########################################
 FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
@@ -103,11 +85,11 @@ COPY ./keyman/ keyman/
 RUN python3 -m venv /opt/venv
 
 RUN set -x \
-    && /opt/venv/bin/pip install --upgrade pip 
+    && /opt/venv/bin/pip install --upgrade pip
 
 RUN set -x \
     && /opt/venv/bin/pip install wheel
-    
+
 RUN set -x \
     && /opt/venv/bin/pip install .
 
@@ -121,13 +103,10 @@ RUN ./scripts/docker/install-workers-deps.sh
 COPY --from=golang "/root/scc" "/root/scc"
 COPY --from=golang "/root/scorecard/scorecard" "/root/scorecard"
 
-# RUN ./scripts/install/workers.sh 
-
 RUN mkdir -p repos/ logs/ /augur/facade/
 
 COPY ./docker/backend/entrypoint.sh /
 COPY ./docker/backend/init.sh /
 RUN chmod +x /entrypoint.sh /init.sh
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
-#ENTRYPOINT ["/entrypoint.sh"]
 CMD /init.sh
