@@ -21,4 +21,4 @@ fi
 
 echo $PATH
 
-exec augur backend start
+exec augur backend start --pidfile /tmp/main.pid
