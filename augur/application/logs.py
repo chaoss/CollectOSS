@@ -198,7 +198,12 @@ class AugurLogger():
         if reset_logfiles is True:
             try:
                 print("(augur) Reseting log files")
-                shutil.rmtree(base_log_dir)
+                base_log_dir_path = Path(base_log_dir)
+                for item in base_log_dir_path.iterdir():
+                    if item.is_dir():
+                        shutil.rmtree(item, ignore_errors=True)
+                    else:
+                        item.unlink(missing_ok=True)
             except FileNotFoundError as e:
                 pass
 
@@ -236,4 +241,3 @@ class AugurLogger():
 
     def get_logger(self):
         return self.lg
-
