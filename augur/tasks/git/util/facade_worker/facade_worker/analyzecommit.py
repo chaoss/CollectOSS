@@ -32,6 +32,7 @@ import os
 import sqlalchemy as s
 
 from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text
+from augur.tasks.init import get_rabbitmq_conn_string
 
 def analyze_commit(logger, repo_id, repo_loc, commit):
 

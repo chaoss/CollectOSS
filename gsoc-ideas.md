@@ -5,6 +5,34 @@
 
 [Micro-tasks and place for questions](https://github.com/chaoss/augur/issues/1640)
 
+## Microtasks
+
+For becoming familiar with Augur, you can start by reading some documentation. You can find useful information at in the links, below. Grimoirelab also has a set of installation instructions and documentation here: https://chaoss.github.io/grimoirelab-tutorial/
+
+#### GSoC Students :
+Once you're familiar with Augur, you can have a look at the following microtasks.
+
+Microtask 0:
+    Download and configure Augur, creating a dev environment using the general cautions noted here:
+Augur
+            https://oss-augur.readthedocs.io/en/dev/getting-started/installation.html and the full documentation here:
+            https://oss-augur.readthedocs.io/en/dev/development-guide/toc.html
+Grimoirelab
+            https://chaoss.github.io/grimoirelab-tutorial/
+
+Microstask 1:
+    Work on any Augur or Grimoirelab Issue that's Open
+
+Microtask 2:
+    Identify new issues you encounter during installation.
+
+Microstask 3:
+    Explore data presently captured, develop an experimental visualization using tools of your choice. If Jupyter Notebooks against an Augur database/API endpoint collection, use https://github.com/chaoss/augur-community-reports for development.
+
+Microtask 4:
+    Anything you want to show us. Even if you find bugs in our documentation and want to issue a PR for those!
+
+
 This project will add GenSIM logic, and other capabilities to the Clustering Worker inside of Augur Software, and be extended into a generalized Open Source Software Conversational Topic Modeling Instrument. 
 
 CHOASS/augur has several workers that store machine learning information derived from computational linguistic analysis of data in the `message` table. The message table includes messages from issue, pull request, pull request review, and email messages. They are related to their origin with bridge tables like `pull_request_message_ref`. The ML/CL workers are all run against all the messages, regardless of origin. 

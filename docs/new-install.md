@@ -5,7 +5,7 @@ We default to this version of Ubuntu for the moment because Augur does not yet s
 
 ## Git Platform Requirements (Things to have setup prior to initiating installation.)
 1. Obtain a GitHub Access Token: https://github.com/settings/tokens
-2. Obtain a GitLab Access Token: https://gitlab.com/-/profile/personal_access_tokens
+2. Obtain a GitLab Access Token: https://gitlab.com/-/user_settings/personal_access_tokens
 
 ### Fork and Clone Augur
 1. Fork https://github.com/chaoss/augur 
