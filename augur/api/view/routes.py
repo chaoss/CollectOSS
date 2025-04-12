@@ -8,6 +8,7 @@ from .utils import *
 from flask_login import login_user, logout_user, current_user, login_required
 
 from augur.application.db.models import User, Repo, ClientApplication
+from augur.application.db.lib import create_user
 from .server import LoginException
 from augur.application.util import *
 from augur.application.db.lib import get_value
@@ -144,7 +145,7 @@ def user_login():
                 last_name = request.form.get('last_name')
                 admin = request.form.get('admin') or False
 
-                result = User.create_user(username, password, email, first_name, last_name, admin)
+                result = create_user(username, password, email, first_name, last_name, admin)
                 if not result[0]:
                     raise LoginException("An error occurred registering your account")
                 else:

@@ -343,35 +343,6 @@ class User(Base):
         except NoResultFound:
             return None
 
-    @staticmethod
-    def create_user(username: str, password: str, email: str, first_name:str, last_name:str, admin=False):
-
-        if username is None or password is None or email is None or first_name is None or last_name is None:
-            return False, {"status": "Missing field"}
-
-        with DatabaseSession(logger) as session:
-
-            user = session.query(User).filter(User.login_name == username).first()
-            if user is not None:
-                return False, {"status": "A User already exists with that username"}
-
-            emailCheck = session.query(User).filter(User.email == email).first()
-            if emailCheck is not None:
-                return False, {"status": "A User already exists with that email"}
-
-            try:
-                user = User(login_name = username, login_hashword = User.compute_hashsed_password(password), email = email, first_name = first_name, last_name = last_name, tool_source="User API", tool_version=None, data_source="API", admin=admin)
-                session.add(user)
-                session.commit()
-
-                result = user.add_group("default")
-                if not result[0] and result[1]["status"] != "Group already exists":
-                    return False, {"status": "Failed to add default group for the user"}
-
-                return True, {"status": "Account successfully created"}
-            except AssertionError as exception_message:
-                return False, {"Error": f"{exception_message}."}
-
     def delete(self, session):
 
         for group in self.groups:

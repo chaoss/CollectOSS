@@ -12,6 +12,7 @@ from werkzeug.security import check_password_hash
 from sqlalchemy.orm import object_session
 
 from augur.application.db import get_session
+from augur.application.db.lib import create_user
 from augur.api.util import api_key_required
 from augur.api.util import ssl_required
 
@@ -168,7 +169,7 @@ def create_user():
     last_name = request.args.get("last_name")
     admin = request.args.get("create_admin") or False
 
-    result = User.create_user(username, password, email, first_name, last_name, admin)
+    result = create_user(username, password, email, first_name, last_name, admin)
 
     return jsonify(result[1])
 
