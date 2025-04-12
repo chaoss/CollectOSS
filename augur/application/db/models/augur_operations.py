@@ -411,9 +411,30 @@ class User(Base):
     def add_group(self, group_name):
 
         with DatabaseSession(logger) as session:
-            result = UserGroup.insert(session, self.user_id, group_name)
 
-        return result
+            if not isinstance(self.user_id, int) or not isinstance(group_name, str):
+                return False, {"status": "Invalid input"}
+
+            user_group_data = {
+                "name": group_name,
+                "user_id": self.user_id
+            }
+
+            user_group = session.query(UserGroup).filter(UserGroup.user_id == self.user_id, UserGroup.name == group_name).first()
+            if user_group:
+                return False, {"status": "Group already exists"}
+
+            try:
+                result = session.insert_data(user_group_data, UserGroup, ["name", "user_id"], return_columns=["group_id"])
+            except IntegrityError:
+                return False, {"status": "Error: User id does not exist"}
+
+
+            if result:
+                return True, {"status": "Group created"}
+
+            return False, {"status": "Error while creating group"}
+
 
     def remove_group(self, group_name):
 
@@ -616,46 +637,6 @@ class UserGroup(Base):
 
     user = relationship("User", back_populates="groups")
     repos = relationship("UserRepo", back_populates="group")
-
-    @staticmethod
-    def insert(session, user_id:int, group_name:str) -> dict:
-        """Add a group to the user.
-
-        Args
-            user_id: id of the user
-            group_name: name of the group being added
-
-        Returns:
-            Dict with status key that indicates the success of the operation
-
-        Note:
-            If group already exists the function will return that it has been added, but a duplicate group isn't added.
-            It simply detects that it already exists and doesn't add it.
-        """
-
-        if not isinstance(user_id, int) or not isinstance(group_name, str):
-            return False, {"status": "Invalid input"}
-
-        user_group_data = {
-            "name": group_name,
-            "user_id": user_id
-        }
-
-        user_group = session.query(UserGroup).filter(UserGroup.user_id == user_id, UserGroup.name == group_name).first()
-        if user_group:
-            return False, {"status": "Group already exists"}
-
-        try:
-            result = session.insert_data(user_group_data, UserGroup, ["name", "user_id"], return_columns=["group_id"])
-        except IntegrityError:
-            return False, {"status": "Error: User id does not exist"}
-
-
-        if result:
-            return True, {"status": "Group created"}
-
-
-        return False, {"status": "Error while creating group"}
 
     @staticmethod
     def delete(session, user_id: int, group_name: str) -> dict:
