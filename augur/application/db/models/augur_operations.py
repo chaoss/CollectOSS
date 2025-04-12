@@ -439,9 +439,20 @@ class User(Base):
     def remove_group(self, group_name):
 
         with DatabaseSession(logger) as session:
-            result = UserGroup.delete(session, self.user_id, group_name)
+            group = session.query(UserGroup).filter(UserGroup.name == group_name, UserGroup.user_id == user_id).first()
+            if not group:
+                    return False, {"status": "WARNING: Trying to delete group that does not exist"}
 
-        return result
+            # delete rows from user repos with group_id
+            for repo in group.repos:
+                session.delete(repo)
+
+            # delete group from user groups table
+            session.delete(group)
+
+            session.commit()
+
+            return True, {"status": "Group deleted"}
 
     def add_github_repo(self, group_name, repo_url):
 
@@ -637,34 +648,6 @@ class UserGroup(Base):
 
     user = relationship("User", back_populates="groups")
     repos = relationship("UserRepo", back_populates="group")
-
-    @staticmethod
-    def delete(session, user_id: int, group_name: str) -> dict:
-        """ Delete a users group of repos.
-
-        Args:
-            user_id: id of the user
-            group_name: name of the users group
-
-        Returns:
-            Dict with a status key that indicates the result of the operation
-
-        """
-
-        group = session.query(UserGroup).filter(UserGroup.name == group_name, UserGroup.user_id == user_id).first()
-        if not group:
-                return False, {"status": "WARNING: Trying to delete group that does not exist"}
-
-        # delete rows from user repos with group_id
-        for repo in group.repos:
-            session.delete(repo)
-
-        # delete group from user groups table
-        session.delete(group)
-
-        session.commit()
-
-        return True, {"status": "Group deleted"}
 
     @staticmethod
     def convert_group_name_to_id(session, user_id: int, group_name: str) -> int:
