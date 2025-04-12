@@ -1,11 +1,13 @@
 import time
 import random
 import logging
+from augur.application.db.models.augur_operations import UserRepo
 import sqlalchemy as s
 from sqlalchemy import func 
 from sqlalchemy.exc import DataError
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
 
@@ -631,4 +633,55 @@ def create_user(username: str, password: str, email: str, first_name:str, last_n
             return True, {"status": "Account successfully created"}
         except AssertionError as exception_message:
             return False, {"Error": f"{exception_message}."}
-        
+
+def convert_group_name_to_id(user_id: int, group_name: str) -> int:
+    """Convert a users group name to the database group id.
+
+    Args:
+        user_id: id of the user
+        group_name: name of the users group
+
+    Returns:
+        None on failure. The group id on success.
+
+    """
+
+    if not isinstance(user_id, int) or not isinstance(group_name, str):
+        return None
+    
+    with get_session() as session:
+
+        try:
+            user_group = session.query(UserGroup).filter(UserGroup.user_id == user_id, UserGroup.name == group_name).one()
+        except NoResultFound:
+            return None
+
+        return user_group.group_id
+    
+
+def insert_user_repo(repo_id: int, group_id:int = 1) -> bool:
+    """Add a repo to a user in the user_repos table.
+
+    Args:
+        repo_id: id of repo from repo table
+        user_id: id of user_id from users table
+    """
+
+    if not isinstance(repo_id, int) or not isinstance(group_id, int):
+        return False
+
+    repo_user_group_data = {
+        "group_id": group_id,
+        "repo_id": repo_id
+    }
+
+
+    repo_user_group_unique = ["group_id", "repo_id"]
+    return_columns = ["group_id", "repo_id"]
+
+    try:
+        data = bulk_insert_dicts(repo_user_group_data, UserRepo, repo_user_group_unique, return_columns)
+    except IntegrityError:
+        return False
+
+    return data[0]["group_id"] == group_id and data[0]["repo_id"] == repo_id

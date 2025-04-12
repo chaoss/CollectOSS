@@ -11,6 +11,7 @@ import logging
 import secrets
 import traceback
 
+from augur.application.db.lib import convert_group_name_to_id, insert_user_repo
 from augur.application.db.models import Repo, RepoGroup
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models.base import Base
@@ -649,30 +650,6 @@ class UserGroup(Base):
     user = relationship("User", back_populates="groups")
     repos = relationship("UserRepo", back_populates="group")
 
-    @staticmethod
-    def convert_group_name_to_id(session, user_id: int, group_name: str) -> int:
-        """Convert a users group name to the database group id.
-
-        Args:
-            user_id: id of the user
-            group_name: name of the users group
-
-        Returns:
-            None on failure. The group id on success.
-
-        """
-
-        if not isinstance(user_id, int) or not isinstance(group_name, str):
-            return None
-
-        try:
-            user_group = session.query(UserGroup).filter(UserGroup.user_id == user_id, UserGroup.name == group_name).one()
-        except NoResultFound:
-            return None
-
-        return user_group.group_id
-
-
 
 class UserRepo(Base):
     __tablename__ = "user_repos"
@@ -691,34 +668,6 @@ class UserRepo(Base):
 
     repo = relationship("Repo", back_populates="user_repo")
     group = relationship("UserGroup", back_populates="repos")
-
-    @staticmethod
-    def insert(session, repo_id: int, group_id:int = 1) -> bool:
-        """Add a repo to a user in the user_repos table.
-
-        Args:
-            repo_id: id of repo from repo table
-            user_id: id of user_id from users table
-        """
-
-        if not isinstance(repo_id, int) or not isinstance(group_id, int):
-            return False
-
-        repo_user_group_data = {
-            "group_id": group_id,
-            "repo_id": repo_id
-        }
-
-
-        repo_user_group_unique = ["group_id", "repo_id"]
-        return_columns = ["group_id", "repo_id"]
-
-        try:
-            data = session.insert_data(repo_user_group_data, UserRepo, repo_user_group_unique, return_columns)
-        except IntegrityError:
-            return False
-
-        return data[0]["group_id"] == group_id and data[0]["repo_id"] == repo_id
     
     @staticmethod
     def add_gitlab_repo(session, url: List[str], user_id: int, group_name=None, group_id=None, from_org_list=False, repo_group_id=None) -> dict:
@@ -746,7 +695,7 @@ class UserRepo(Base):
 
         if group_id is None:
 
-            group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
+            group_id = convert_group_name_to_id(user_id, group_name)
             if group_id is None:
                 return False, {"status": "Invalid group name"}
 
@@ -769,7 +718,7 @@ class UserRepo(Base):
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
-        result = UserRepo.insert(session, repo_id, group_id)
+        result = insert_user_repo(repo_id, group_id)
         if not result:
             return False, {"status": "repo_user insertion failed", "repo_url": url}
 
@@ -809,7 +758,7 @@ class UserRepo(Base):
 
         if group_id is None:
 
-            group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
+            group_id = convert_group_name_to_id(user_id, group_name)
             if group_id is None:
                 return False, {"status": "Invalid group name"}
 
@@ -834,7 +783,7 @@ class UserRepo(Base):
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
-        result = UserRepo.insert(session, repo_id, group_id)
+        result = insert_user_repo(repo_id, group_id)
         if not result:
             return False, {"status": "repo_user insertion failed", "repo_url": url}
 
@@ -861,7 +810,7 @@ class UserRepo(Base):
         if not isinstance(repo_id, int) or not isinstance(user_id, int) or not isinstance(group_name, str):
             return False, {"status": "Invalid types"}
 
-        group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
+        group_id = convert_group_name_to_id(user_id, group_name)
         if group_id is None:
             return False, {"status": "Invalid group name"}
 
@@ -880,7 +829,7 @@ class UserRepo(Base):
             user_id: id of user_id from users table
         """
 
-        group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
+        group_id = convert_group_name_to_id(user_id, group_name)
         if group_id is None:
             return False, {"status": "Invalid group name"}
 

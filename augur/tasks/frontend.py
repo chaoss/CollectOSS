@@ -8,7 +8,7 @@ from time import sleep
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.github.util.github_task_session import GithubTaskSession
 from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
-from augur.application.db.lib import get_group_by_name, get_repo_by_repo_git, get_github_repo_by_src_id, get_gitlab_repo_by_src_id
+from augur.application.db.lib import get_group_by_name, get_repo_by_repo_git, get_github_repo_by_src_id, get_gitlab_repo_by_src_id, insert_user_repo
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models.augur_operations import retrieve_owner_repos, FRONTEND_REPO_GROUP_NAME, RepoGroup, CollectionStatus
 from augur.tasks.github.util.github_paginator import hit_api
@@ -102,7 +102,7 @@ def add_gitlab_repos(user_id, group_name, repo_urls):
                 if existing_repo.repo_group_id != repo_group_id:
                     update_existing_repos_repo_group_id(session, existing_repo.repo_id, repo_group_id)
                 
-                add_existing_repo_to_group(logger, session, group_id, existing_repo.repo_id)
+                add_existing_repo_to_group(logger, group_id, existing_repo.repo_id)
                 continue   
 
             existing_repo = get_repo_by_repo_git(session, url)
@@ -112,7 +112,7 @@ def add_gitlab_repos(user_id, group_name, repo_urls):
                     update_existing_repos_repo_group_id(session, existing_repo.repo_id, repo_group_id)
 
                 # TODO: add logic to update the existing records repo_group_id if it isn't equal to the existing record
-                add_existing_repo_to_group(logger, session, group_id, existing_repo.repo_id)
+                add_existing_repo_to_group(logger, group_id, existing_repo.repo_id)
                 continue
             
             add_gitlab_repo(logger, session, url, repo_group_id, group_id, repo_src_id)
@@ -124,7 +124,7 @@ def add_gitlab_repo(session, url, repo_group_id, group_id):
     if not repo_id:
         return False, {"status": "Repo insertion failed", "repo_url": url}
 
-    result = UserRepo.insert(session, repo_id, group_id)
+    result = insert_user_repo(repo_id, group_id)
     if not result:
         return False, {"status": "repo_user insertion failed", "repo_url": url}
 
@@ -172,7 +172,7 @@ def add_new_github_repos(repo_data, group_id, session, logger):
             if existing_repo.repo_group_id != repo_group_id:
                 update_existing_repos_repo_group_id(session, existing_repo.repo_id, repo_group_id)
 
-            add_existing_repo_to_group(logger, session, group_id, existing_repo.repo_id)
+            add_existing_repo_to_group(logger, group_id, existing_repo.repo_id)
             continue     
 
         existing_repo = get_repo_by_repo_git(session, url)
@@ -181,15 +181,15 @@ def add_new_github_repos(repo_data, group_id, session, logger):
             if existing_repo.repo_group_id != repo_group_id:
                 update_existing_repos_repo_group_id(session, existing_repo.repo_id, repo_group_id)
 
-            add_existing_repo_to_group(logger, session, group_id, existing_repo.repo_id)
+            add_existing_repo_to_group(logger, group_id, existing_repo.repo_id)
             continue
 
         add_github_repo(logger, session, url, repo_group_id, group_id, repo_type, repo_src_id)
 
 
-def add_existing_repo_to_group(logger, session, group_id, repo_id):
+def add_existing_repo_to_group(logger, group_id, repo_id):
     
-    UserRepo.insert(session, repo_id, group_id)
+    insert_user_repo(repo_id, group_id)
 
 
 def divide_list_into_chunks(data, size):
@@ -244,7 +244,7 @@ def add_github_repo(logger, session, url, repo_group_id, group_id, repo_type, re
         logger.error("Error while adding repo: Failed to insert github repo")
         return
 
-    result = UserRepo.insert(session, repo_id, group_id)
+    result = insert_user_repo(repo_id, group_id)
     if not result:
         logger.error(f"Error while adding repo: Failed to insert user repo record. A record with a repo_id of {repo_id} and a group id of {group_id} needs to be added to the user repo table so that this repo shows up in the users group")
         return
@@ -293,7 +293,7 @@ def add_gitlab_repo(logger, session, url, repo_group_id, group_id, repo_src_id):
         logger.error("Error while adding repo: Failed to insert github repo")
         return
 
-    result = UserRepo.insert(session, repo_id, group_id)
+    result = insert_user_repo(repo_id, group_id)
     if not result:
         logger.error(f"Error while adding repo: Failed to insert user repo record. A record with a repo_id of {repo_id} and a group id of {group_id} needs to be added to the user repo table so that this repo shows up in the users group")
         return

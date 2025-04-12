@@ -23,10 +23,9 @@ from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.tasks.init.redis_connection import redis_connection 
-from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
-from augur.application.db.lib import get_value
+from augur.application.db.lib import get_value, insert_user_repo
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 import sqlalchemy as s
 
@@ -423,7 +422,7 @@ def assign_orphan_repos_to_default_user(session):
     repos = session.execute_sql(query).fetchall()
 
     for repo in repos:
-        UserRepo.insert(session, repo[0],1)
+        insert_user_repo(repo[0],1)
 
 
 @cli.command('export-env')

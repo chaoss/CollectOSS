@@ -1,11 +1,11 @@
 from flask import request, jsonify, redirect, url_for, flash, current_app
 import re
 from flask_login import current_user, login_required
-from augur.application.db.models import Repo, RepoGroup, UserGroup, UserRepo
+from augur.application.db.models import Repo
+from augur.application.db.lib import convert_group_name_to_id, insert_user_repo
 from augur.tasks.frontend import add_github_orgs_and_repos, parse_org_and_repo_name, parse_org_name, add_gitlab_repos
 from .utils import *
 from ..server import app
-from augur.application.db.session import DatabaseSession
 
 @app.route('/cache/file/')
 @app.route('/cache/file/<path:file>')
@@ -19,14 +19,14 @@ def add_existing_org_to_group(session, user_id, group_name, rg_id):
 
     logger.info("Adding existing org to group")
 
-    group_id = UserGroup.convert_group_name_to_id(session, user_id, group_name)
+    group_id = convert_group_name_to_id(user_id, group_name)
     if group_id is None:
         return False
     
     repos = session.query(Repo).filter(Repo.repo_group_id == rg_id).all()
     logger.info("Length of repos in org: " + str(len(repos)))
     for repo in repos:
-        result = UserRepo.insert(session, repo.repo_id, group_id)
+        result = insert_user_repo(session, repo.repo_id, group_id)
         if not result:
             logger.info("Failed to add repo to group")
     

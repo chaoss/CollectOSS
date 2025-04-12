@@ -7,6 +7,7 @@ from typing import Any, Dict
 from augur.application.db.engine import DatabaseEngine
 from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User, CollectionStatus
 from augur.application.db.models.augur_operations import retrieve_owner_repos
+from augur.application.db.lib import convert_group_name_to_id, insert_user_repo
 from augur.application.db.util import execute_session_query
 
 from sqlalchemy import Column, Table, MetaData, or_
@@ -76,7 +77,7 @@ class RepoLoadController:
             logger.warning(f"Invalid repo group id specified for {url}, skipping.")
             return False, {"status": f"Invalid repo group id specified for {url}, skipping."}
 
-        UserRepo.insert(self.session, repo_id)
+        insert_user_repo(self.session, repo_id)
 
         #collection_status records are now only added during collection -IM 5/1/23
         #CollectionStatus.insert(self.session, repo_id)
@@ -246,7 +247,7 @@ class RepoLoadController:
             if not group_name:
                 return None, {"status": "Group name not specified"}
             
-            group_id = UserGroup.convert_group_name_to_id(self.session, user.user_id, group_name)
+            group_id = convert_group_name_to_id(user.user_id, group_name)
             if group_id is None:
                 return None, {"status": "Group does not exists"}
             
