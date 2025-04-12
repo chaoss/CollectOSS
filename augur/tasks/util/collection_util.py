@@ -15,7 +15,7 @@ from augur.tasks.github.util.util import get_repo_weight_core, get_repo_weight_b
 from augur.application.db import get_engine
 from augur.application.db.lib import execute_sql, get_session, get_active_repo_count, get_repo_by_repo_git
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
-from augur.tasks.util.collection_state import CollectionState
+from augur.application.db.models.collection_state import CollectionState
 
 
 def get_list_of_all_users():

@@ -25,7 +25,7 @@ from augur.tasks.db.refresh_materialized_views import *
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import CollectionStatus, Repo
-from augur.tasks.util.collection_state import CollectionState
+from augur.application.db.models.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 from augur.application.db.lib import execute_sql, get_session

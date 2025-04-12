@@ -18,7 +18,7 @@ from augur.application.db.lib import get_session
 from augur.application.config import AugurConfig
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
 from augur.application.db.models import Repo
-from augur.tasks.util.collection_state import CollectionState
+from augur.application.db.models.collection_state import CollectionState
 
 logger = logging.getLogger(__name__)
 

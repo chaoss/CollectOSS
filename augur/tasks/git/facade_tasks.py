@@ -14,7 +14,7 @@ from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_
 
 from augur.tasks.github.facade_github.tasks import *
 from augur.tasks.git.util.facade_worker.facade_worker.config import FacadeHelper
-from augur.tasks.util.collection_state import CollectionState
+from augur.application.db.models.collection_state import CollectionState
 from augur.tasks.util.collection_util import get_collection_status_repo_git_from_filter
 from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneError, git_repo_initialize, git_repo_updates
 
