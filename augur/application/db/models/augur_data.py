@@ -1050,60 +1050,6 @@ class Repo(Base):
         return result.groups()[0]
 
 
-
-    @staticmethod
-    def insert_github_repo(session, url: str, repo_group_id: int, tool_source, repo_type, repo_src_id = None):
-        """Add a repo to the repo table.
-
-        Args:
-            url: repo url
-            repo_group_id: group to assign repo to
-            repo_type: github or gitlab
-
-        Note:
-            If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
-        """
-
-        from augur.application.db.lib import is_valid_repo_group_id
-
-        if not isinstance(url, str) or not isinstance(repo_group_id, int) or not isinstance(tool_source, str) or not isinstance(repo_type, str):
-            return None
-
-        if not is_valid_repo_group_id(session, repo_group_id):
-            return None
-        
-        if url.endswith("/"):
-            url = url[:-1]
-        
-        url = url.lower()
-        
-        owner, repo = Repo.parse_github_repo_url(url)
-        if not owner or not repo:
-            return None
-
-        repo_data = {
-            "repo_group_id": repo_group_id,
-            "repo_git": url,
-            "repo_path": f"github.com/{owner}/",
-            "repo_name": repo,
-            "repo_type": repo_type,
-            "tool_source": tool_source,
-            "tool_version": "1.0",
-            "data_source": "Git",
-            "repo_src_id": repo_src_id
-        }
-
-        repo_unique = ["repo_git"]
-        return_columns = ["repo_id"]
-        result = session.insert_data(repo_data, Repo, repo_unique, return_columns, on_conflict_update=False)
-
-        if not result:
-            return None
-
-        return result[0]["repo_id"]
-
-
-
         
 class RepoTestCoverage(Base):
     __tablename__ = "repo_test_coverage"

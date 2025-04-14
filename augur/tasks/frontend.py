@@ -240,8 +240,10 @@ def create_repo_group(session, owner):
 
 def add_github_repo(logger, session, url, repo_group_id, group_id, repo_type, repo_src_id):
 
+    from augur.application.db.lib import insert_github_repo
+
     # These two things really need to be done in one commit in the future to prevent one existing without the other
-    repo_id = Repo.insert_github_repo(session, url, repo_group_id, "Frontend", repo_type, repo_src_id)
+    repo_id = insert_github_repo(url, repo_group_id, "Frontend", repo_type, repo_src_id)
     if not repo_id:
         logger.error("Error while adding repo: Failed to insert github repo")
         return

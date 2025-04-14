@@ -750,6 +750,8 @@ class UserRepo(Base):
             Dict that contains the key "status" and additional useful data
         """
 
+        from augur.application.db.lib import insert_github_repo
+
         if group_name and group_id:
             return False, {"status": "Pass only the group name or group id not both"}
 
@@ -783,7 +785,7 @@ class UserRepo(Base):
             repo_group_id = frontend_repo_group.repo_group_id
 
 
-        repo_id = Repo.insert_github_repo(session, url, repo_group_id, "Frontend", repo_type)
+        repo_id = insert_github_repo(url, repo_group_id, "Frontend", repo_type)
         if not repo_id:
             return False, {"status": "Repo insertion failed", "repo_url": url}
 
