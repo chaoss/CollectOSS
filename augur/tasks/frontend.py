@@ -120,7 +120,9 @@ def add_gitlab_repos(user_id, group_name, repo_urls):
 
 def add_gitlab_repo(session, url, repo_group_id, group_id):
 
-    repo_id = Repo.insert_gitlab_repo(session, url, repo_group_id, "Frontend")
+    from augur.application.db.lib import insert_gitlab_repo
+
+    repo_id = insert_gitlab_repo(url, repo_group_id, "Frontend")
     if not repo_id:
         return False, {"status": "Repo insertion failed", "repo_url": url}
 
@@ -287,8 +289,10 @@ def get_gitlab_repo_data(gl_session, url: str, logger) -> bool:
 
 def add_gitlab_repo(logger, session, url, repo_group_id, group_id, repo_src_id):
 
+    from augur.application.db.lib import insert_gitlab_repo, insert_user_repo
+
     # These two things really need to be done in one commit in the future to prevent one existing without the other
-    repo_id = Repo.insert_gitlab_repo(session, url, repo_group_id, "Frontend", repo_src_id)
+    repo_id = insert_gitlab_repo(url, repo_group_id, "Frontend", repo_src_id)
     if not repo_id:
         logger.error("Error while adding repo: Failed to insert github repo")
         return

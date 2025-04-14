@@ -7,7 +7,7 @@ from typing import Any, Dict
 from augur.application.db.engine import DatabaseEngine
 from augur.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User, CollectionStatus
 from augur.application.db.models.augur_operations import retrieve_owner_repos
-from augur.application.db.lib import convert_group_name_to_id, insert_user_repo
+from augur.application.db.lib import convert_group_name_to_id, insert_user_repo, insert_gitlab_repo
 from augur.application.db.util import execute_session_query
 
 from sqlalchemy import Column, Table, MetaData, or_
@@ -67,7 +67,7 @@ class RepoLoadController:
 
         # if the repo doesn't exist it adds it
         if "gitlab" in url:
-            repo_id = Repo.insert_gitlab_repo(self.session, url, repo_group_id, "CLI")
+            repo_id = insert_gitlab_repo(url, repo_group_id, "CLI")
             CollectionStatus.insert(self.session, logger, repo_id)
         else:
             repo_id = Repo.insert_github_repo(self.session, url, repo_group_id, "CLI", repo_type)
