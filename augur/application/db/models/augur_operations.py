@@ -482,10 +482,10 @@ class User(Base):
 
     def remove_repo(self, group_name, repo_id):
 
-        with DatabaseSession(logger) as session:
-            result = UserRepo.delete(session, repo_id, self.user_id, group_name)
+        from augur.application.db.lib import delete_user_repo
 
-        return result
+        return delete_user_repo(repo_id, self.user_id, group_name)
+
 
     def add_github_org(self, group_name, org_url):
 
@@ -699,6 +699,7 @@ class UserRepo(Base):
             if group_id is None:
                 return False, {"status": "Invalid group name"}
 
+        # TODO: checking if the repo is valid should't happen in the data access
         if not from_org_list:
             result = Repo.is_valid_gitlab_repo(session, url)
             if not result[0]:
@@ -762,6 +763,7 @@ class UserRepo(Base):
             if group_id is None:
                 return False, {"status": "Invalid group name"}
 
+        # TODO: checking if the repo is valid should't happen in the data access
         if not from_org_list:
             result = Repo.is_valid_github_repo(session, url)
             if not result[0]:
@@ -793,32 +795,6 @@ class UserRepo(Base):
         #    return False, {"status": "Failed to create status for repo", "repo_url": url}
 
         return True, {"status": "Repo Added", "repo_url": url}
-
-    @staticmethod
-    def delete(session, repo_id:int, user_id:int, group_name:str) -> dict:
-        """ Remove repo from a users group.
-
-        Args:
-            repo_id: id of the repo to remove
-            user_id: id of the user
-            group_name: name of group the repo is being removed from
-
-        Returns:
-            Dict with a key of status that indicates the result of the operation
-        """
-
-        if not isinstance(repo_id, int) or not isinstance(user_id, int) or not isinstance(group_name, str):
-            return False, {"status": "Invalid types"}
-
-        group_id = convert_group_name_to_id(user_id, group_name)
-        if group_id is None:
-            return False, {"status": "Invalid group name"}
-
-                # delete rows from user repos with group_id
-        session.query(UserRepo).filter(UserRepo.group_id == group_id, UserRepo.repo_id == repo_id).delete()
-        session.commit()
-
-        return True, {"status": "Repo Removed"}
 
     @staticmethod
     def add_github_org_repos(session, url: List[str], user_id: int, group_name: int):

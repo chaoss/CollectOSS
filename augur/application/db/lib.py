@@ -685,3 +685,30 @@ def insert_user_repo(repo_id: int, group_id:int = 1) -> bool:
         return False
 
     return data[0]["group_id"] == group_id and data[0]["repo_id"] == repo_id
+
+
+def delete_user_repo(repo_id:int, user_id:int, group_name:str) -> dict:
+    """ Remove repo from a users group.
+
+    Args:
+        repo_id: id of the repo to remove
+        user_id: id of the user
+        group_name: name of group the repo is being removed from
+
+    Returns:
+        Dict with a key of status that indicates the result of the operation
+    """
+
+    if not isinstance(repo_id, int) or not isinstance(user_id, int) or not isinstance(group_name, str):
+        return False, {"status": "Invalid types"}
+
+    group_id = convert_group_name_to_id(user_id, group_name)
+    if group_id is None:
+        return False, {"status": "Invalid group name"}
+    
+    with get_session() as session:
+        # delete rows from user repos with group_id
+        session.query(UserRepo).filter(UserRepo.group_id == group_id, UserRepo.repo_id == repo_id).delete()
+        session.commit()
+
+    return True, {"status": "Repo Removed"}
