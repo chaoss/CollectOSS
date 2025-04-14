@@ -568,25 +568,7 @@ class RepoGroup(Base):
 
     repo = relationship("Repo", back_populates="repo_group")
 
-    @staticmethod
-    def is_valid_repo_group_id(session, repo_group_id: int) -> bool:
-        """Deterime is repo_group_id exists.
 
-        Args:
-            repo_group_id: id from the repo groups table
-
-        Returns:
-            True if it exists, False if it does not
-        """
-
-        query = session.query(RepoGroup).filter(RepoGroup.repo_group_id == repo_group_id)
-
-        try:
-            result = execute_session_query(query, 'one')
-        except (NoResultFound, MultipleResultsFound):
-            return False
-
-        return True
     
     @staticmethod
     def get_by_name(session, rg_name):
@@ -1082,10 +1064,12 @@ class Repo(Base):
             If repo row exists then it will update the repo_group_id if param repo_group_id is not a default. If it does not exist is will simply insert the repo.
         """
 
+        from augur.application.db.lib import is_valid_repo_group_id
+
         if not isinstance(url, str) or not isinstance(repo_group_id, int) or not isinstance(tool_source, str) or not isinstance(repo_type, str):
             return None
 
-        if not RepoGroup.is_valid_repo_group_id(session, repo_group_id):
+        if not is_valid_repo_group_id(session, repo_group_id):
             return None
         
         if url.endswith("/"):

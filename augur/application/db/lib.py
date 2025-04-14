@@ -7,7 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import DataError
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import OperationalError, IntegrityError
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
 
@@ -730,7 +730,7 @@ def insert_gitlab_repo(url: str, repo_group_id: int, tool_source, repo_src_id = 
     
     with get_session() as session:
 
-        if not RepoGroup.is_valid_repo_group_id(session, repo_group_id):
+        if not is_valid_repo_group_id(session, repo_group_id):
             return None
         
         if url.endswith("/"):
@@ -762,3 +762,25 @@ def insert_gitlab_repo(url: str, repo_group_id: int, tool_source, repo_src_id = 
             return None
 
         return result[0]["repo_id"]
+    
+
+def is_valid_repo_group_id(repo_group_id: int) -> bool:
+    """Deterime is repo_group_id exists.
+
+    Args:
+        repo_group_id: id from the repo groups table
+
+    Returns:
+        True if it exists, False if it does not
+    """
+
+    with get_session() as session:
+
+        query = session.query(RepoGroup).filter(RepoGroup.repo_group_id == repo_group_id)
+
+        try:
+            result = execute_session_query(query, 'one')
+        except (NoResultFound, MultipleResultsFound):
+            return False
+
+        return True
