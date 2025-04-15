@@ -1,13 +1,29 @@
-from augur.tasks.init.redis_connection import redis_connection as conn
-from augur.application.logs import AugurLogger
+import os
 import json, random, time
 
 from keyman.KeyOrchestrationAPI import spec, WaitKeyTimeout, InvalidRequest
 
+if os.environ.get("KEYMAN_DOCKER"):
+    import sys
+    import redis
+    import logging
+
+    sys.path.append("/augur")
+
+    conn = redis.Redis.from_url(os.environ.get("REDIS_CONN_STRING"))
+
+    # Just log to stdout if we're running in docker
+    logger = logging.Logger("KeyOrchestrator")
+else:
+    from augur.tasks.init.redis_connection import redis_connection as conn
+    from augur.application.logs import AugurLogger
+
+    logger = AugurLogger("KeyOrchestrator").get_logger()
+
 class KeyOrchestrator:
     def __init__(self) -> None:
         self.stdin = conn.pubsub(ignore_subscribe_messages = True)
-        self.logger = AugurLogger("KeyOrchestrator").get_logger()
+        self.logger = logger
         
         # Load channel names and IDs from the spec
         for channel in spec["channels"]:
