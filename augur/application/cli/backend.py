@@ -126,7 +126,8 @@ def start(ctx, disable_collection, development, pidfile, port):
     keypub = KeyPublisher()
     
     if not disable_collection:
-        orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
+        if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
+            orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
 
         # Wait for orchestrator startup
         if not keypub.wait(republish=True):
