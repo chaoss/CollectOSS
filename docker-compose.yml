@@ -20,7 +20,18 @@ services:
     image: "redis:alpine"
     networks:
       - augur
-
+  augur-keyman:
+    image: augur-keyman
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./docker/keyman/Dockerfile
+    environment:
+      - REDIS_CONN_STRING=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - augur
   rabbitmq:
     image: augur-rabbitmq
     build:
@@ -58,6 +69,7 @@ services:
     depends_on:
       - augur-db
       - redis
+      - augur-keyman
       - rabbitmq
     networks:
       - augur
