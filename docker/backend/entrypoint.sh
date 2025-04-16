@@ -13,7 +13,7 @@ elif [[ "$AUGUR_DB" == *"127.0.0.1"* ]]; then
     export AUGUR_DB="${AUGUR_DB/127.0.0.1/host.docker.internal}"
 fi
 
-export AUGUR_FACADE_REPO_DIRECTORY=/augur/facade/
+export AUGUR_FACADE_REPO_DIRECTORY=${AUGUR_FACADE_REPO_DIRECTORY:-/augur/facade/}
 export AUGUR_DOCKER_DEPLOY="1"
 
 #Deal with special case where 'localhost' is the machine that started the container

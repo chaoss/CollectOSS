@@ -77,13 +77,13 @@ RUN geckodriver --version
 EXPOSE 5000
 
 WORKDIR /augur
-COPY ./README.md .
-COPY ./alembic.ini .
-COPY ./augur/ augur/
-COPY ./metadata.py .
-COPY ./setup.py .
-COPY ./scripts/ scripts/
-COPY ./keyman/ keyman/
+COPY --chmod=u=rw,u+X,go=r,go+X ./README.md .
+COPY --chmod=u=rw,u+X,go=r,go+X ./alembic.ini .
+COPY --chmod=u=rw,u+X,go=r,go+X ./augur/ augur/
+COPY --chmod=u=rw,u+X,go=r,go+X ./metadata.py .
+COPY --chmod=u=rw,u+X,go=r,go+X ./setup.py .
+COPY --chmod=u=rw,u+X,go=r,go+X ./scripts/ scripts/
+COPY --chmod=u=rw,u+X,go=r,go+X ./keyman/ keyman/
 
 RUN python3 -m venv /opt/venv
 
@@ -103,13 +103,14 @@ RUN set -x \
 
 RUN ./scripts/docker/install-workers-deps.sh
 
-COPY --from=golang-builder "/scc" "/root/scc"
-COPY --from=golang-builder "/scorecard" "/root/scorecard"
+ENV SCC_DIR=/scc
+COPY --from=golang-builder --chmod=u=rw,u+X,go=r,go+X "/scc" "/scc/scc"
+ENV SCORECARD_DIR=/scorecard
+COPY --from=golang-builder --chmod=u=rw,u+X,go=r,go+X "/scorecard" "/scorecard/scorecard"
 
 RUN mkdir -p repos/ logs/ /augur/facade/
 
-COPY ./docker/backend/entrypoint.sh /
-COPY ./docker/backend/init.sh /
-RUN chmod +x /entrypoint.sh /init.sh
+COPY --chmod=u=rwx,go=rx ./docker/backend/entrypoint.sh /
+COPY --chmod=u=rwx,go=rx ./docker/backend/init.sh /
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
-CMD /init.sh
+CMD ["/init.sh"]
