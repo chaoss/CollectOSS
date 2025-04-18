@@ -147,7 +147,7 @@ function create_config() {
         get_github_api_key
     else
         echo
-        echo "Found AUGUR_GITHUB_API_KEY environment variable with value $AUGUR_GITHUB_API_KEY"
+        echo "Found AUGUR_GITHUB_API_KEY environment variable"
         echo "Using it in the config"
         echo "Please unset AUGUR_GITHUB_API_KEY if you would like to be prompted for a github api key"
         github_api_key=$AUGUR_GITHUB_API_KEY
@@ -158,7 +158,7 @@ function create_config() {
         get_github_username
     else
         echo
-        echo "Found AUGUR_GITHUB_USERNAME environment variable with value $AUGUR_GITHUB_USERNAME"
+        echo "Found AUGUR_GITHUB_USERNAME environment variable"
         echo "Using it in the config"
         echo "Please unset AUGUR_GITHUB_USERNAME if you would like to be prompted for a github username"
         github_username=$AUGUR_GITHUB_USERNAME
@@ -169,7 +169,7 @@ function create_config() {
         get_gitlab_api_key
     else
         echo
-        echo "Found AUGUR_GITLAB_API_KEY environment variable with value $AUGUR_GITLAB_API_KEY"
+        echo "Found AUGUR_GITLAB_API_KEY environment variable"
         echo "Using it in the config"
         echo "Please unset AUGUR_GITLAB_API_KEY if you would like to be prompted for a gitlab api key"
         gitlab_api_key=$AUGUR_GITLAB_API_KEY
@@ -180,7 +180,7 @@ function create_config() {
         get_gitlab_username
     else
         echo
-        echo "Found AUGUR_GITLAB_USERNAME environment variable with value $AUGUR_GITLAB_USERNAME"
+        echo "Found AUGUR_GITLAB_USERNAME environment variable"
         echo "Using it in the config"
         echo "Please unset AUGUR_GITLAB_USERNAME if you would like to be prompted for a gitlab username"
         gitlab_username=$AUGUR_GITLAB_USERNAME
