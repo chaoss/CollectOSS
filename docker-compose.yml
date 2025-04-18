@@ -19,6 +19,7 @@ services:
     image: "redis:alpine"
     networks:
       - augur
+
   augur-keyman:
     image: augur-keyman
     restart: unless-stopped
@@ -31,6 +32,8 @@ services:
       - redis
     networks:
       - augur
+    user: 3456:3456  # Run as an arbitrary non-root user
+
   rabbitmq:
     image: augur-rabbitmq
     build:
