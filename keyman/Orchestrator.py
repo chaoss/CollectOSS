@@ -14,6 +14,12 @@ if os.environ.get("KEYMAN_DOCKER"):
 
     # Just log to stdout if we're running in docker
     logger = logging.Logger("KeyOrchestrator")
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)  # Attach the handler to the logger
+    logger.setLevel(logging.DEBUG)
 else:
     from augur.tasks.init.redis_connection import redis_connection as conn
     from augur.application.logs import AugurLogger

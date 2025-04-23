@@ -79,7 +79,7 @@ def generate_scorecard(logger, repo_git):
     command = '--local=' + path
     
     #this is path where our scorecard project is located
-    path_to_scorecard = os.environ['HOME'] + '/scorecard'
+    path_to_scorecard = os.getenv('SCORECARD_DIR', os.environ['HOME'] + '/scorecard')
 
     #setting the environmental variable which is required by scorecard
 
