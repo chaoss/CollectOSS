@@ -1,3 +1,4 @@
+import re
 import time
 import random
 import logging
@@ -243,6 +244,7 @@ def facade_bulk_insert_commits(logger, records):
                 )
             session.commit()
         except Exception as e:
+            session.rollback()
             
             if len(records) > 1:
                 logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
@@ -257,7 +259,14 @@ def facade_bulk_insert_commits(logger, records):
                 commit_record = records[0]
                 #replace incomprehensible dates with epoch.
                 #2021-10-11 11:57:46 -0500
-                placeholder_date = "1970-01-01 00:00:15 -0500"
+                
+                # placeholder_date = "1970-01-01 00:00:15 -0500"
+                placeholder_date = commit_record['author_timestamp']
+                
+                # Reconstruct timezone portion of the date string to UTC
+                placeholder_date = re.split("[-+]", placeholder_date)
+                placeholder_date.pop()
+                placeholder_date = "-".join(placeholder_date) + "+0000"
 
                 #Check for improper utc timezone offset
                 #UTC timezone offset should be between -14:00 and +14:00
