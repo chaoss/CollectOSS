@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 
 
-FROM golang:1.23 AS golang
+FROM golang:1.23-bullseye AS golang
 
 
 # RUN ./scripts/docker/install-go.sh
