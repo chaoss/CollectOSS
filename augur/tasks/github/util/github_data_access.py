@@ -10,13 +10,16 @@ GITHUB_RATELIMIT_REMAINING_CAP = 50
 
 class RatelimitException(Exception):
 
-    def __init__(self, response, message="Github Rate limit exceeded") -> None:
+    def __init__(self, response, keys_used, message="Github Rate limit exceeded") -> None:
 
         self.response = response
 
-        super().__init__(message)
+        super().__init__(f"{message}. Keys used: {keys_used}")
 
 class UrlNotFoundException(Exception):
+    pass
+
+class NotAuthorizedException(Exception):
     pass
 
 class GithubDataAccess:
@@ -26,6 +29,7 @@ class GithubDataAccess:
         self.logger = logger
         self.key_client = KeyClient("github_rest", logger)
         self.key = None
+        self.expired_keys_for_request = []
 
     def get_resource_count(self, url):
 
@@ -105,7 +109,8 @@ class GithubDataAccess:
             response = client.request(method=method, url=url, headers=headers, timeout=timeout, follow_redirects=True)
 
             if response.status_code in [403, 429]:
-                raise RatelimitException(response)
+                self.expired_keys_for_request.append(self.key)
+                raise RatelimitException(response, self.expired_keys_for_request[-5:])
 
             if response.status_code == 404:
                 raise UrlNotFoundException(f"Could not find {url}")
@@ -114,7 +119,8 @@ class GithubDataAccess:
 
             try:
                 if "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
-                    raise RatelimitException(response)
+                    self.expired_keys_for_request.append(self.key)
+                    raise RatelimitException(response, self.expired_keys_for_request[-5:])
             except ValueError:
                 self.logger.warning(f"X-RateLimit-Remaining was not an integer. Value: {response.headers['X-RateLimit-Remaining']}")
 
@@ -141,14 +147,26 @@ class GithubDataAccess:
         """
 
         try:
-            return self.make_request(url, method, timeout)
+            result = self.make_request(url, method, timeout)
+            self.expired_keys_for_request = []
+            return result
         except RatelimitException as e:
             self.__handle_github_ratelimit_response(e.response)
             raise e
+        except NotAuthorizedException as e:
+            self.expired_keys_for_request = []
+            self.__handle_github_not_authorized_response()
+            raise e
+
+    def __handle_github_not_authorized_response(self):
+
+        self.key = self.key_client.invalidate(self.key)
+
         
     def __handle_github_ratelimit_response(self, response):
 
         headers = response.headers
+        previous_key = self.key
 
         if "Retry-After" in headers:
 
@@ -171,6 +189,9 @@ class GithubDataAccess:
 
         else:
             time.sleep(60)
+
+        if previous_key == self.key:
+            self.logger.error(f"The same key was returned after a request to expire it was sent (key: {self.key[-5:]})")
 
     def __add_query_params(self, url: str, additional_params: dict) -> str:
         """Add query params to a url.
