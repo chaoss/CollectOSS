@@ -8,7 +8,7 @@ from augur.tasks.github.util.util import get_gitlab_repo_identifier, add_key_val
 from augur.application.db.models import PullRequest, PullRequestLabel, PullRequestMeta, PullRequestCommit, PullRequestFile, PullRequestMessageRef, Repo, Message, Contributor, PullRequestAssignee
 from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session, batch_insert_contributors
 
 platform_id = 2
 
@@ -125,7 +125,7 @@ def process_merge_requests(data, task_name, repo_id, logger):
     contributors = remove_duplicate_dicts(contributors)
 
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
+    batch_insert_contributors(logger, contributors)
 
     logger.info(f"{task_name}: Inserting mrs of length: {len(merge_requests)}")
     pr_natural_keys = ["repo_id", "pr_src_id"]
@@ -250,7 +250,7 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, session):
     contributors = remove_duplicate_dicts(contributors)
 
     logger.info(f"{task_name}: Inserting {len(contributors)} mr message contributors")
-    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
+    batch_insert_contributors(logger, contributors)
 
     logger.info(f"{task_name}: Inserting {len(message_dicts)} mr messages")
     message_natural_keys = ["platform_msg_id", "pltfrm_id"]

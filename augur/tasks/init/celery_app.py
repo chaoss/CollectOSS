@@ -204,6 +204,7 @@ def setup_periodic_tasks(sender, **kwargs):
     from augur.tasks.start_tasks import augur_collection_monitor
     from augur.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos, create_collection_status_records
     from augur.tasks.git.facade_tasks import clone_repos
+    from augur.tasks.github.contributors import process_contributors
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
     from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
     from augur.application.db import temporary_database_engine
@@ -231,6 +232,9 @@ def setup_periodic_tasks(sender, **kwargs):
 
         logger.info(f"Setting 404 repos to be marked for retry on midnight each day")
         sender.add_periodic_task(crontab(hour=0, minute=0),retry_errored_repos.s())
+
+        one_hour_in_seconds = 60*60
+        sender.add_periodic_task(one_hour_in_seconds, process_contributors.s())
 
         one_day_in_seconds = 24*60*60
         sender.add_periodic_task(one_day_in_seconds, create_collection_status_records.s())

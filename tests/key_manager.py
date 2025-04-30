@@ -18,6 +18,12 @@ keys = {
         "key6",
         "key7",
         "key8"
+    ],
+    "no_invalid": [
+        "key9",
+        "key10",
+        "key11",
+        "key12"
     ]
 }
 
@@ -84,13 +90,28 @@ if __name__ == "__main__":
         
         for i in range(num_workers):
             workers.append(Process(target = mp_consumer, args = [platform]))
-        
+
     try:    
         for worker in workers:
             worker.start()
             
         for worker in workers:
             worker.join()
+
+        logger.info("Running invalidation tests")
+        client = KeyClient(next(k for k in keys), logger)
+    
+        for platform in filter(lambda x: x != "no_invalid", keys):
+            inv_key = client.request(platform)
+            logger.info(f"Invalidating key {platform}: {inv_key}")
+            client.invalidate(inv_key, platform)
+
+        logger.info("Keys after invalidation:")
+        for platform in platforms:
+            key_list = publisher.list_keys(platform)
+            inv_list = publisher.list_invalid_keys(platform)
+            logger.info(f"Keys for {platform}: {key_list}")
+            logger.info(f"Invalid keys for {platform}: {inv_list}")
     except KeyboardInterrupt:
         pass
     

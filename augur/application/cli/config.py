@@ -29,11 +29,12 @@ def cli(ctx):
 @click.option('--gitlab-api-key', help="GitLab API key for data collection from the GitLab API", envvar=ENVVAR_PREFIX + 'GITLAB_API_KEY')
 @click.option('--redis-conn-string', help="String to connect to redis cache", envvar=ENVVAR_PREFIX + 'REDIS_CONN_STRING')
 @click.option('--rabbitmq-conn-string', help="String to connect to rabbitmq broker", envvar=ENVVAR_PREFIX + 'RABBITMQ_CONN_STRING')
+@click.option('--logs-directory', help="Directory to store logs", envvar=ENVVAR_PREFIX + 'LOGS_DIRECTORY')
 @test_connection
 @test_db_connection
 @with_database
 @click.pass_context
-def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redis_conn_string, rabbitmq_conn_string):
+def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redis_conn_string, rabbitmq_conn_string, logs_directory):
 
     if not github_api_key:
 
@@ -99,7 +100,7 @@ def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redi
 
         default_config["Facade"]["repo_directory"] = facade_repo_directory
 
-        default_config["Logging"]["logs_directory"] = ROOT_AUGUR_DIRECTORY + "/logs/"
+        default_config["Logging"]["logs_directory"] = logs_directory or (ROOT_AUGUR_DIRECTORY + "/logs/")
 
         config.load_config_from_dict(default_config)
 
@@ -263,5 +264,3 @@ def clear_config(ctx):
         config.clear()
 
         print("Config cleared")
-
-

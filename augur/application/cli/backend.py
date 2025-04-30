@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 
 from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
+from augur.tasks.github.contributors import process_contributors
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
@@ -89,7 +90,11 @@ def start(ctx, disable_collection, development, pidfile, port):
     # create rabbit messages so if it failed on shutdown the queues are clean
     cleanup_collection_status_and_rabbit(logger, ctx.obj.engine)
 
-    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file gunicorn.log"
+    # Retrieve the log directory from the configuration or default to current directory
+    log_dir = get_value("Logging", "logs_directory") or "."
+    gunicorn_log_file = os.path.join(log_dir, "gunicorn.log")
+
+    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file {gunicorn_log_file}"
     server = subprocess.Popen(gunicorn_command.split(" "))
 
     logger.info("awaiting Gunicorn start")
@@ -114,18 +119,20 @@ def start(ctx, disable_collection, development, pidfile, port):
 
     processes = start_celery_worker_processes(float(worker_vmem_cap), disable_collection)
 
-    if os.path.exists("celerybeat-schedule.db"):
+    celery_beat_schedule_db = os.getenv("CELERYBEAT_SCHEDULE_DB", "celerybeat-schedule.db")
+    if os.path.exists(celery_beat_schedule_db):
             logger.info("Deleting old task schedule")
-            os.remove("celerybeat-schedule.db")
+            os.remove(celery_beat_schedule_db)
 
     log_level = get_value("Logging", "log_level")
     celery_beat_process = None
-    celery_command = f"celery -A augur.tasks.init.celery_app.celery_app beat -l {log_level.lower()}"
+    celery_command = f"celery -A augur.tasks.init.celery_app.celery_app beat -l {log_level.lower()} -s {celery_beat_schedule_db}"
     celery_beat_process = subprocess.Popen(celery_command.split(" "))    
     keypub = KeyPublisher()
     
     if not disable_collection:
-        orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
+        if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
+            orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
 
         # Wait for orchestrator startup
         if not keypub.wait(republish=True):
@@ -156,6 +163,8 @@ def start(ctx, disable_collection, development, pidfile, port):
 
         # start cloning repos when augur starts
         clone_repos.si().apply_async()
+
+        process_contributors.si().apply_async()
 
         augur_collection_monitor.si().apply_async()
         

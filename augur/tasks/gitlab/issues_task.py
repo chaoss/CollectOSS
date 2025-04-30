@@ -11,7 +11,7 @@ from augur.application.db.data_parse import extract_needed_issue_data_from_gitla
 from augur.tasks.github.util.util import get_gitlab_repo_identifier, add_key_value_pair_to_dicts
 from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Contributor, Repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session
+from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session, batch_insert_contributors
 from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 
 platform_id = 2
@@ -140,7 +140,7 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
 
     # insert contributors from these issues
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
+    batch_insert_contributors(logger, contributors)
            
     logger.info(f"{task_name}: Inserting {len(issue_dicts)} gitlab issues")
     issue_natural_keys = ["repo_id", "gh_issue_id"]
@@ -325,7 +325,7 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, session):
     contributors = remove_duplicate_dicts(contributors)
 
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
+    batch_insert_contributors(logger, contributors)
 
     logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
     message_natural_keys = ["platform_msg_id", "pltfrm_id"]

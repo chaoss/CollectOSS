@@ -283,6 +283,17 @@ def facade_bulk_insert_commits(logger, records):
                 raise e
             
 
+def batch_insert_contributors(logger, data: Union[List[dict], dict]) -> Optional[List[dict]]:
+
+    batch_size = 1000
+
+    for i in range(0, len(data), batch_size):
+        batch = data[i:i + batch_size]
+
+        bulk_insert_dicts(logger, batch, Contributor, ['cntrb_id'])
+
+
+
 def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
 
     if isinstance(data, list) is False:
@@ -392,7 +403,7 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
 
         else:
             logger.error("Unable to insert data in 10 attempts")
-            return None
+            raise Exception("Unable to insert and return data in 10 attempts")
 
         if deadlock_detected is True:
             logger.error("Made it through even though Deadlock was detected")
@@ -430,7 +441,7 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
 
     else:
         logger.error("Unable to insert and return data in 10 attempts")
-        return None
+        raise Exception("Unable to insert and return data in 10 attempts")
 
     if deadlock_detected is True:
         logger.error("Made it through even though Deadlock was detected")

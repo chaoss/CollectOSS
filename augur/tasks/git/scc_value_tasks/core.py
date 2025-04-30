@@ -20,7 +20,7 @@ def value_model(logger,repo_git):
     logger.info(f"Repo ID: {repo_id}, Path: {path}")
     logger.info('Running scc...')
 
-    path_to_scc = os.environ['HOME'] + '/scc'
+    path_to_scc = os.getenv('SCC_DIR', os.environ['HOME'] + '/scc')
 
     required_output = parse_json_from_subprocess_call(logger,['./scc', '-f','json','--by-file', path], cwd=path_to_scc)
     

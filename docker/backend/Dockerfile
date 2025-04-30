@@ -1,34 +1,19 @@
 # SPDX-License-Identifier: MIT
 
 
-FROM golang:1.23 AS golang
+########################################
+FROM golang:1.23 AS golang-builder
+
+# Write final binaries to / so it's easy to copy them out
+ENV GOBIN=/
+
+RUN go install github.com/boyter/scc/v3@v3.4.0 \
+    && /scc --version
+RUN go install github.com/ossf/scorecard/v5@v5.1.1 \
+    && /scorecard version
 
 
-# RUN ./scripts/docker/install-go.sh
-ENV PATH="${PATH}:/usr/local/go/bin"
-COPY ./scripts/ scripts/
-RUN ./scripts/docker/install-golang-deps.sh
-
-
-# FROM rust:1.78 as rust
-
-# # Ensure Rust directories are writable
-# RUN mkdir -p /root/.rustup/downloads /root/.cargo/registry && \
-#     chmod -R 777 /root/.rustup /root/.cargo
-
-# # Add rust and cargo to PATH
-# # ENV PATH="/root/.cargo/bin:${PATH}"
-
-# # Install the specific version of Rust
-# # RUN set -x \
-# #     && rustup install 1.78.0
-# # RUN set -x \
-# #     && rustup default 1.78.0
-
-
-# # Add rust and cargo to PATH
-# ENV PATH="/usr/bin/:/root/.cargo/bin:/usr/local/bin:${PATH}"
-
+########################################
 FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
@@ -92,24 +77,22 @@ RUN geckodriver --version
 EXPOSE 5000
 
 WORKDIR /augur
-COPY ./README.md .
-COPY ./alembic.ini .
-COPY ./augur/ augur/
-COPY ./metadata.py .
-COPY ./setup.py .
-COPY ./scripts/ scripts/
-COPY ./keyman/ keyman/
-
-
+COPY --chmod=u=rw,u+X,go=r,go+X ./README.md .
+COPY --chmod=u=rw,u+X,go=r,go+X ./alembic.ini .
+COPY --chmod=u=rw,u+X,go=r,go+X ./augur/ augur/
+COPY --chmod=u=rw,u+X,go=r,go+X ./metadata.py .
+COPY --chmod=u=rw,u+X,go=r,go+X ./setup.py .
+COPY --chmod=u=rw,u+X,go=r,go+X ./scripts/ scripts/
+COPY --chmod=u=rw,u+X,go=r,go+X ./keyman/ keyman/
 
 RUN python3 -m venv /opt/venv
 
 RUN set -x \
-    && /opt/venv/bin/pip install --upgrade pip 
+    && /opt/venv/bin/pip install --upgrade pip
 
 RUN set -x \
     && /opt/venv/bin/pip install wheel
-    
+
 RUN set -x \
     && /opt/venv/bin/pip install .
 
@@ -120,16 +103,14 @@ RUN set -x \
 
 RUN ./scripts/docker/install-workers-deps.sh
 
-COPY --from=golang "/root/scc" "/root/scc"
-COPY --from=golang "/root/scorecard/scorecard" "/root/scorecard"
-
-# RUN ./scripts/install/workers.sh 
+ENV SCC_DIR=/scc
+COPY --from=golang-builder --chmod=u=rw,u+X,go=r,go+X "/scc" "/scc/scc"
+ENV SCORECARD_DIR=/scorecard
+COPY --from=golang-builder --chmod=u=rw,u+X,go=r,go+X "/scorecard" "/scorecard/scorecard"
 
 RUN mkdir -p repos/ logs/ /augur/facade/
 
-COPY ./docker/backend/entrypoint.sh /
-COPY ./docker/backend/init.sh /
-RUN chmod +x /entrypoint.sh /init.sh
+COPY --chmod=u=rwx,go=rx ./docker/backend/entrypoint.sh /
+COPY --chmod=u=rwx,go=rx ./docker/backend/init.sh /
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
-#ENTRYPOINT ["/entrypoint.sh"]
-CMD /init.sh
+CMD ["/init.sh"]

@@ -81,7 +81,7 @@ def primary_repo_collect_phase(repo_git, full_collection):
     #Other tasks that don't need other tasks to run before they do just put in final group.
     repo_task_group = group(
         collect_repo_info.si(repo_git),
-        chain(primary_repo_jobs | issue_pr_task_update_weight_util.s(repo_git=repo_git),secondary_repo_jobs,process_contributors.si()),
+        chain(primary_repo_jobs | issue_pr_task_update_weight_util.s(repo_git=repo_git),secondary_repo_jobs),
         #facade_phase(logger,repo_git),
         collect_linux_badge_info.si(repo_git),
         collect_releases.si(repo_git),

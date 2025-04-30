@@ -42,6 +42,16 @@ spec = {
                         { "optional": { "status": "error" } }
                     ]
                 },
+                "LIST_INVALID_KEYS": {
+                    "fields": {
+                        "requester_id": { "required": str },
+                        "key_platform": { "required": str }
+                    },
+                    "response": [
+                        { "optional": list[str] },
+                        { "optional": { "status": "error" }}
+                    ]
+                },
                 "SHUTDOWN": {}
             }
         }, {
@@ -68,6 +78,13 @@ spec = {
                     "response": {
 
                     }
+                },
+                "INVALIDATE": {
+                    "fields": {
+                        "key_str": str,
+                        "key_platform": str,
+                        "requester_id": str
+                    }
                 }
             }
         }
@@ -77,3 +94,6 @@ spec = {
 class WaitKeyTimeout(Exception):
     def __init__(self, timeout_seconds) -> None:
         self.tiemout_seconds = timeout_seconds
+
+class InvalidRequest(Exception):
+    pass
