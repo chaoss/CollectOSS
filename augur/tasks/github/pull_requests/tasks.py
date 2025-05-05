@@ -11,7 +11,7 @@ from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor, Repo
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.application.db.lib import get_session, get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id
+from augur.application.db.lib import get_session, get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id, batch_insert_contributors
 from augur.application.db.util import execute_session_query
 from ..messages import process_github_comment_contributors
 from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs, get_core_data_last_collected
@@ -265,7 +265,7 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
             contributors.append(contributor)
 
     logger.info(f"{owner}/{repo} Pr review messages: Inserting {len(contributors)} contributors")
-    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
+    batch_insert_contributors(logger, contributors)
 
 
     pr_review_comment_dicts = []

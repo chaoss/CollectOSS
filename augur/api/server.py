@@ -298,10 +298,11 @@ def create_cache_manager() -> CacheManager:
     """
 
     cache_config = {
-    'cache.type': 'file',
-    'cache.data_dir': 'runtime/cache/',
-    'cache.lock_dir': 'runtime/cache/'
-}
+        'cache.type': 'file',
+        # Allow setting cache directories via environment variables
+        'cache.data_dir': Path(env.setdefault("CACHE_DATADIR", 'runtime/cache/')),
+        'cache.lock_dir': Path(env.setdefault("CACHE_LOCKDIR", 'runtime/cache/')),
+    }
 
     if not os.path.exists(cache_config['cache.data_dir']):
         os.makedirs(cache_config['cache.data_dir'])
@@ -733,6 +734,3 @@ from .view.api import *
 
 cache_manager = create_cache_manager()
 server_cache = get_server_cache(cache_manager)
-
-
-

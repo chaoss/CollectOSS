@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple, Optional
 
 from augur.application.db.data_parse import *
 from augur.application.db.session import DatabaseSession
-from augur.application.db.lib import bulk_insert_dicts
+from augur.application.db.lib import bulk_insert_dicts, batch_insert_contributors
 from augur.tasks.github.util.util import add_key_value_pair_to_dicts
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequest, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, Contributor
@@ -144,7 +144,7 @@ def insert_pr_contributors(contributors: List[dict], logger, task_name: str) -> 
 
     # insert contributors from these prs
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    bulk_insert_dicts(logger, contributors, Contributor, ["cntrb_id"])
+    batch_insert_contributors(logger, contributors)
 
 
 def insert_prs(pr_dicts: List[dict], logger, task_name: str) -> Optional[List[dict]]:
