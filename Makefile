@@ -125,11 +125,19 @@ test-api:
 
 
 #
+# UV installation
+#
+.PHONY: uv
+uv:
+	@ command -v uv >/dev/null 2>&1 || { echo "Installing uv..."; pip install --user uv; }
+
+#
 # Documentation
 #
 .PHONY: docs docs-view
-docs:
-	@ bash -c 'cd docs/ && rm -rf build/ && make html;'
+docs: uv
+	-rm -rf docs/build
+	uv run --only-group docs make -C docs html
 
 docs-view: docs
 	@ bash -c 'open docs/build/html/index.html'
