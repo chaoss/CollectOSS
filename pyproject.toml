@@ -129,4 +129,7 @@ version = { attr = "metadata.__version__" }
 # dynamic version lookup to work. `uv lock` will fail with:
 #   ModuleNotFoundError: metadata
 where = ["."]
-include = ["augur*"]
+include = [
+    "augur*",
+    "keyman*",
+]
