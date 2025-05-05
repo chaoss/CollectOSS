@@ -19,6 +19,8 @@ if [[ -f /repos.csv ]]; then
    augur db add-repos /repos.csv
 fi
 
-echo $PATH
+echo "PATH: $PATH"
+echo "Python executable: $(which python)"
+python --version
 
 exec augur backend start --pidfile /tmp/main.pid
