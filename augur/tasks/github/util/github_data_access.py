@@ -24,10 +24,11 @@ class NotAuthorizedException(Exception):
 
 class GithubDataAccess:
 
-    def __init__(self, key_manager, logger: logging.Logger):
+    def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
         self.logger = logger
-        self.key_client = KeyClient("github_rest", logger)
+        self.feature = feature
+        self.key_client = KeyClient(f"github_{feature}", logger)
         self.key = None
         self.expired_keys_for_request = []
 
@@ -121,7 +122,7 @@ class GithubDataAccess:
             response.raise_for_status()
 
             try:
-                if "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
+                if self.feature == "rest" and "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
                     self.expired_keys_for_request.append(self.key)
                     raise RatelimitException(response, self.expired_keys_for_request[-5:])
             except ValueError:
