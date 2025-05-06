@@ -146,6 +146,7 @@ def start(ctx, disable_collection, development, pidfile, port):
         for key in ghkeyman.keys:
             keypub.publish(key, "github_rest")
             keypub.publish(key, "github_graphql")
+            keypub.publish(key, "github_search")
 
         for key in glkeyman.keys:
             keypub.publish(key, "gitlab_rest")
