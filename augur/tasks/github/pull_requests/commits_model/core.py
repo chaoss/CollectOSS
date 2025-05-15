@@ -50,21 +50,25 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
 
         commits_url = pr_info['pr_url'] + '/commits?state=all'
         
-        for page_data in github_data_access.paginate_resource(commits_url):
+        if not pr_info.get('pr_url'):
+            logger.warning(f"{task_name}: No pr_url found for pull request info: {pr_info}. Skipping.")
+            continue
 
+        commits_url = pr_info['pr_url'] + '/commits?state=all'
+
+        for page_data in github_data_access.paginate_resource(commits_url):
             logger.info(f"{task_name}: Processing pr commit with hash {page_data['sha']}")
             pr_commit_row = {
-                'pull_request_id': pr_info['pull_request_id'],
-                'pr_cmt_sha': page_data['sha'],
-                'pr_cmt_node_id': page_data['node_id'],
-                'pr_cmt_message': page_data['commit']['message'],
-                # 'pr_cmt_comments_url': pr_commit['comments_url'],
-                'tool_source': 'pull_request_commits_model',
-                'tool_version': '0.41',
-                'data_source': 'GitHub API',
-                'repo_id': repo.repo_id,
+            'pull_request_id': pr_info['pull_request_id'],
+            'pr_cmt_sha': page_data['sha'],
+            'pr_cmt_node_id': page_data['node_id'],
+            'pr_cmt_message': page_data['commit']['message'],
+            # 'pr_cmt_comments_url': pr_commit['comments_url'],
+            'tool_source': 'pull_request_commits_model',
+            'tool_version': '0.41',
+            'data_source': 'GitHub API',
+            'repo_id': repo.repo_id,
             }
-
             all_data.append(pr_commit_row)
     
     if len(all_data) > 0:
