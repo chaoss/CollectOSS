@@ -262,15 +262,15 @@ def fetch_username_from_email(logger, auth, commit):
     # Default to failed state
     login_json = None
 
-    #logger.info(f"Here is the commit: {commit}")
+    logger.info(f"Here is the commit: {commit}")
 
-    # email = commit['email_raw'] if 'email_raw' in commit else commit['email_raw']
-
-    if len(commit['email_raw']) <= 2:
+    email_raw = commit.get('email_raw')
+    if not email_raw or not isinstance(email_raw, str) or len(email_raw.strip()) <= 2:
+        logger.warning("Commit does not contain a valid 'email_raw' value.")
         return login_json  # Don't bother with emails that are blank or less than 2 characters
 
     try:
-        url = create_endpoint_from_email(commit['email_raw'])
+        url = create_endpoint_from_email(email_raw)
     except Exception as e:
         logger.error(
             f"Couldn't resolve email url with given data. Reason: {e}")
@@ -284,7 +284,7 @@ def fetch_username_from_email(logger, auth, commit):
     # Check if the email result got anything, if it failed try a name search.
     if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
         logger.warning(
-            f"Could not resolve the username from {commit['email_raw']}")
+            f"Could not resolve the username from {email_raw}")
         logger.debug(f"email api url {url}")
 
         return None
