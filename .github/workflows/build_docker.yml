@@ -115,17 +115,34 @@ jobs:
         with:
           version: latest
 
+      - name: Set up list of log lines to match
+        run: |
+          cat <<EOF > /tmp/regex_matches.txt
+          Gunicorn webserver started
+          Starting core worker processes
+          Starting secondary worker processes
+          Starting facade worker processes
+          Retrieved \\d+ github api keys for use
+          Fetching new repos \\(complete\\)
+          Inserting \\d+ contributors
+          Inserting \\d+ issues
+          Inserting prs of length: \\d+
+          Querying committers count
+          Done generating scc data for repo
+          Sending due task
+          EOF
+
       - name: Start services & wait for output
         run: |
           docker compose -f docker-compose.yml up --no-build 2>&1 \
-            | tee >(grep -q "Sending due task"; \
-                    docker compose -f docker-compose.yml down)
+            | (./scripts/ci/await_all.py /tmp/regex_matches.txt \
+                && docker compose -f docker-compose.yml down)
         timeout-minutes: 3
         env:
-          AUGUR_GITLAB_USERNAME: dummy
-          AUGUR_GITLAB_API_KEY: dummy
-          AUGUR_GITHUB_USERNAME: dummy
           AUGUR_GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+          AUGUR_GITHUB_USERNAME: dummy
+          AUGUR_GITLAB_API_KEY: dummy
+          AUGUR_GITLAB_USERNAME: dummy
 
       - name: Dump logs
         if: always()  # Always run this step to get logs even if the previous step fails
