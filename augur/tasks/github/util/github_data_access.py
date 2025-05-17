@@ -111,6 +111,7 @@ class GithubDataAccess:
 
             if response.status_code in [403, 429]:
                 self.expired_keys_for_request.append(self.key)
+                self.logger.warning(f"Github rate limit exceeded. Key: {self.key[-5:]}. Response: {response.text}")
                 raise RatelimitException(response, self.expired_keys_for_request[-5:])
 
             if response.status_code == 404:
