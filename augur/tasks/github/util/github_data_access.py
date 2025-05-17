@@ -100,36 +100,62 @@ class GithubDataAccess:
     # TODO: Handle timeout exceptions better
     def make_request(self, url, method="GET", timeout=100):
 
-        with httpx.Client() as client:
+def make_request(self, url, method="GET", timeout=100):
+    with httpx.Client() as client:
+        if not self.key:
+            self.key = self.key_client.request()
 
-            if not self.key:
-                self.key = self.key_client.request()
+        headers = {"Authorization": f"token {self.key}"}
 
-            headers = {"Authorization": f"token {self.key}"}
+        response = client.request(method=method, url=url, headers=headers, timeout=timeout, follow_redirects=True)
 
-            response = client.request(method=method, url=url, headers=headers, timeout=timeout, follow_redirects=True)
+        # --- Enhanced Rate Limit Detection ---
+        is_rate_limit = False
+        # Catch usual rate limit status codes
+        if response.status_code in [403, 429]:
+            is_rate_limit = True
 
-            if response.status_code in [403, 429]:
+        # Sometimes status code is 400 (abuse detection)
+        if response.status_code == 400:
+            try:
+                msg = response.json().get("message", "")
+                if "abuse detection" in msg.lower() or "secondary rate limit" in msg.lower():
+                    is_rate_limit = True
+            except Exception as e:
+                self.logger.warning(f"Full Error: {e}")
+                pass
+
+        # Parse JSON message even if status is 403
+        if response.status_code == 403:
+            try:
+                msg = response.json().get("message", "")
+                # Catch API rate limit exceeded, abuse detection, secondary limits
+                if "rate limit" in msg.lower() or "abuse detection" in msg.lower() or "secondary rate limit" in msg.lower():
+                    is_rate_limit = True
+            except Exception as e:
+                self.logger.warning(f"Full Error: {e}")
+                pass
+
+        if is_rate_limit:
+            self.expired_keys_for_request.append(self.key)
+            raise RatelimitException(response, self.expired_keys_for_request[-5:])
+
+        if response.status_code == 404:
+            raise UrlNotFoundException(f"Could not find {url}")
+        
+        if response.status_code == 401:
+            raise NotAuthorizedException(f"Could not authorize with the github api")
+        
+        response.raise_for_status()
+
+        try:
+            if "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
                 self.expired_keys_for_request.append(self.key)
                 raise RatelimitException(response, self.expired_keys_for_request[-5:])
+        except ValueError:
+            self.logger.warning(f"X-RateLimit-Remaining was not an integer. Value: {response.headers.get('X-RateLimit-Remaining', None)}")
 
-            if response.status_code == 404:
-                raise UrlNotFoundException(f"Could not find {url}")
-            
-            if response.status_code == 401:
-                raise NotAuthorizedException(f"Could not authorize with the github api")
-            
-            response.raise_for_status()
-
-            try:
-                if self.feature == "rest" and "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
-                    self.expired_keys_for_request.append(self.key)
-                    raise RatelimitException(response, self.expired_keys_for_request[-5:])
-            except ValueError:
-                self.logger.warning(f"X-RateLimit-Remaining was not an integer. Value: {response.headers['X-RateLimit-Remaining']}")
-
-
-            return response
+        return response
         
     def make_request_with_retries(self, url, method="GET", timeout=100):
         """ What method does?
@@ -214,13 +240,3 @@ class GithubDataAccess:
         updated_query = urlencode(merged_params, doseq=True)
         # _replace() is how you can create a new NamedTuple with a changed field
         return url_components._replace(query=updated_query).geturl()
-
-        
-
-
-
-
-
-
-
-
