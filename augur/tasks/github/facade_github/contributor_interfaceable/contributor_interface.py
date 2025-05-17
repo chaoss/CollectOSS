@@ -278,8 +278,13 @@ def fetch_username_from_email(logger, auth, commit):
         return login_json
     
     github_data_access = GithubDataAccess(auth, logger)
-
-    login_json = github_data_access.get_resource(url)
+    try: 
+        login_json = github_data_access.get_resource(url)
+    except Exception as e:
+        logger.error(
+            f"Couldn't resolve email url with given data. Reason: {e}")
+        # If the method throws an error it means that we can't hit the endpoint so we can't really do much
+        return login_json   
 
     # Check if the email result got anything, if it failed try a name search.
     if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
