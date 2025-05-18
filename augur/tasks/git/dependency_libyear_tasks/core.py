@@ -44,7 +44,8 @@ def generate_deps_libyear_data(logger, repo_id, path):
                 'requirement' : dep['requirement'],
                 'type' : dep['type'],
                 'package_manager' : dep['package'],
-                'current_verion' : dep['current_version'],
+                'current_version' : dep['current_version'],  # 🔧 FIXED
+                #'current_verion' : dep['current_version'],
                 'latest_version' : dep['latest_version'],
                 'current_release_date' : dep['current_release_date'],
                 'latest_release_date' : dep['latest_release_date'],
