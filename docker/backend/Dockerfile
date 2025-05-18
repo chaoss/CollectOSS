@@ -2,7 +2,7 @@
 
 
 
-FROM golang:1.23-bullseye AS golang
+FROM golang:1.23-bullseye AS golang-builder
 
 # Write final binaries to / so it's easy to copy them out
 ENV GOBIN=/
