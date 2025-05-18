@@ -118,7 +118,6 @@ class GithubDataAccess:
             # It is collected, leading the the associated URL for those objects to return a 404. 
             # This is not an issue that is really an Exception. It is more of a nominal signal. 
             
-
             if response.status_code == 404:
                 parsed = urlparse(url)
                 path = parsed.path.lower()
