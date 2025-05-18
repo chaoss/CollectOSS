@@ -36,7 +36,7 @@ def query_committers_count(key_auth, logger, owner, repo):
         data=0
     
     return data 
-
+"""
 def get_repo_data(logger, url, response):
     data = {}
     try:
@@ -54,7 +54,32 @@ def get_repo_data(logger, url, response):
             raise Exception(f"Github repo was not found or does not exist for endpoint: {url}\n")
 
     return data
+""" 
+def get_repo_data(logger, url, response):
+    if response is None:
+        logger.error(f"Failed to retrieve data from {url}. Response is None.")
+        raise Exception(f"Failed API request to {url}. Got None response.")
+    data = {}
+    try:
+        data = response.json()
+    except Exception as e:
+        logger.warning(f"Failed to parse JSON from {url}: {e}")
+        try:
+            data = json.loads(json.dumps(response.text))  # This is effectively a no-op
+        except Exception as inner_e:
+            logger.error(f"Completely failed to parse response from {url}: {inner_e}")
+            raise Exception(f"Unparseable response from {url}")
 
+    if 'errors' in data:
+        logger.error(f"GitHub API returned errors: {data['errors']}")
+        raise Exception(f"GitHub returned error response! {data['errors']}")
+
+    if 'id' not in data and 'message' in data:
+        logger.warning(f"Unexpected response structure from {url}: {data}")
+        if data['message'] == 'Not Found':
+            raise Exception(f"GitHub repo was not found or does not exist for endpoint: {url}")
+
+    return data
 
 def is_forked(key_auth, logger, owner, repo): #/repos/:owner/:repo parent
     logger.info('Querying parent info to verify if the repo is forked\n')
