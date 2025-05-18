@@ -1,6 +1,6 @@
 import re, os
 import json
-import toml 
+import toml     
 import logging
 import yaml
 
@@ -122,15 +122,23 @@ def parse_setup_py(file_handle):
         deps.append(Dict)
     return deps
 
-
-def parse_poetry(file_handle):
-    manifest = toml.load(file_handle)
-    
-    # manifest = toml.load(file_handle)['tool']['poetry']
+def parse_poetry(file_handle, repo_id=None, path=None):
+    file_name = getattr(file_handle, 'name', 'unknown')
     try:
-        return map_dependencies_pipfile(manifest['dependencies'], 'runtime') + map_dependencies_pipfile(manifest['dev-dependencies'], 'develop')
+        manifest = toml.load(file_handle)
+    except toml.TomlDecodeError as e:
+        logging.warning(f"[Repo ID: {repo_id}] Skipping malformed TOML file: {file_name} at {path}, error: {e}")
+        return []
     except Exception as e:
-        logging.error(e)
+        logging.error(f"[Repo ID: {repo_id}] Unexpected error while loading TOML from {file_name} at {path}: {e}")
+        return []
+
+    try:
+        deps = manifest.get('tool', {}).get('poetry', {})
+        return map_dependencies_pipfile(deps.get('dependencies', {}), 'runtime') + \
+               map_dependencies_pipfile(deps.get('dev-dependencies', {}), 'develop')
+    except Exception as e:
+        logging.error(f"[Repo ID: {repo_id}] Error parsing dependencies from {file_name} at {path}: {e}")
         return []
 
 

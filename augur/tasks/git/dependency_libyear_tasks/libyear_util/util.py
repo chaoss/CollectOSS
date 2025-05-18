@@ -57,7 +57,13 @@ def get_parsed_deps(path,logger):
             dependency_list.extend(parse_pipfile_lock(file_handle))
 
         if short_file_name == 'pyproject.toml':
-            dependency_list.extend(parse_poetry(file_handle))
+            try:
+                dependency_list.extend(parse_poetry(file_handle))
+            except Exception as e:
+                logger.warning(f"Failed to parse poetry file {file_handle.name if hasattr(file_handle, 'name') else 'unknown'}: {e}")
+
+#        if short_file_name == 'pyproject.toml':
+#            dependency_list.extend(parse_poetry(file_handle))
 
         if short_file_name == 'poetry.lock':
             dependency_list.extend(parse_poetry_lock(file_handle))
