@@ -300,8 +300,6 @@ def fetch_username_from_email(logger, auth, commit):
 #   -name
 def get_login_with_supplemental_data(logger, auth, commit_data):
 
-    github_data_access = GithubDataAccess(auth, logger)
-
     # Try to get login from all possible emails
     # Is None upon failure.
     login_json = fetch_username_from_email(logger,auth,commit_data)
@@ -332,7 +330,7 @@ def get_login_with_supplemental_data(logger, auth, commit_data):
                 f"Couldn't resolve name url with given data. Reason: {e}")
             return None
         
-        login_json = github_data_access.get_resource(url)
+        login_json = GithubDataAccess(auth, logger, "search").get_resource(url)
 
     # total_count is the count of username's found by the endpoint.
     if login_json is None or 'total_count' not in login_json:
