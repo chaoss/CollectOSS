@@ -114,15 +114,17 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
     logger.info(f"{task_name}: Collecting github messages for {len(comment_urls)} prs/issues")
 
     all_data = []
-    for comment_url in comment_urls:
+    skipped_urls = 0
 
+    for comment_url in comment_urls:
         try:
             messages = list(github_data_access.paginate_resource(comment_url))
+            all_data += messages
         except UrlNotFoundException as e:
-            logger.warning(e)
-            continue
-
-        all_data += messages
+            logger.warning(f"{task_name}: 404 on comment URL {comment_url}. Skipping. Reason: {e}")
+            skipped_urls += 1
+        except Exception as e:
+            logger.error(f"{task_name}: Unexpected error on comment URL {comment_url}: {e}", exc_info=True)
 
         if len(all_data) >= 20:
             process_messages(all_data, task_name, repo_id, logger, augur_db)
@@ -130,6 +132,8 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
 
     if len(all_data) > 0:
         process_messages(all_data, task_name, repo_id, logger, augur_db)
+
+    logger.info(f"{task_name}: Finished. Skipped {skipped_urls} comment URLs due to 404.")
         
 
 def process_messages(messages, task_name, repo_id, logger, augur_db):
