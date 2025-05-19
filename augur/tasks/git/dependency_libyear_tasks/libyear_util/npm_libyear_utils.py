@@ -2,6 +2,31 @@ import requests
 import logging
 import traceback
 
+""" _summary_
+
+    This module provides utility functions to interact with the NPM registry.
+    It includes functions to fetch package data, clean and split version strings,
+    and determine the latest versions of packages based on semantic versioning.
+    The functions handle errors and log warnings or errors as appropriate.
+    Functions:
+        - get_NPM_data: Fetches package data from the NPM registry.     
+        - clean_version: Cleans a version string by removing non-numeric characters.
+        - split_version: Splits a version string into major, minor, and patch components.
+        - get_latest_patch: Gets the latest patch version for a given version.
+        - get_lastest_minor: Gets the latest minor version for a given version.
+        - get_npm_release_date: Gets the release date for a specific version.
+        - get_npm_latest_version: Gets the latest version from the package data.
+        - get_npm_current_version: Determines the current version based on a requirement.
+    Specific improvements in May, 2025 update: 
+    	•	Gracefully handles:
+            •	Missing versions key
+            •	Malformed or missing version strings
+            •	Network errors and malformed responses
+        •	Provides safe fallbacks like 'unspecified' instead of crashing
+        •	Adds thorough logging (warnings and errors) for debug tracing
+        •	Prevents crash loops caused by invalid/missing data from NPM
+    """
+
 logger = logging.getLogger(__name__)
 
 
