@@ -13,17 +13,8 @@ on:
 permissions: {}
 
 jobs:
-  build-image:
-    name: Build image
-    permissions:
-      contents: read
-    strategy:
-      matrix:
-        image:
-          - backend
-          - database
-          - keyman
-          - rabbitmq
+  test-e2e:
+    name: End-to-end test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -33,64 +24,49 @@ jobs:
         uses: docker/setup-buildx-action@v3
         id: setup-buildx
 
-      - name: Build container
-        id: build
+      - name: Build database container
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./docker/${{ matrix.image }}/Dockerfile
+          file: ./docker/database/Dockerfile
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_${{ matrix.image }}:test
-          cache-from: type=gha,scope=container-${{ matrix.image }}
-          cache-to: type=gha,scope=container-${{ matrix.image }},mode=min
-          outputs: type=docker,dest=/tmp/${{ matrix.image }}-image.tar
+          tags: ghcr.io/${{ github.repository_owner }}/augur_database:test
+          cache-from: type=gha,scope=container-database
+          cache-to: type=gha,scope=container-database,mode=min
+          load: true
 
-      - name: Save image as artifact
-        uses: actions/upload-artifact@v4
+      - name: Build keyman container
+        uses: docker/build-push-action@v6
         with:
-          name: ${{ matrix.image }}-image
-          path: /tmp/${{ matrix.image }}-image.tar
+          context: .
+          file: ./docker/keyman/Dockerfile
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository_owner }}/augur_keyman:test
+          cache-from: type=gha,scope=container-keyman
+          cache-to: type=gha,scope=container-keyman,mode=min
+          load: true
 
-
-
-  smoke-test:
-    name: Smoke test
-    needs: build-image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download image artifact (backend)
-        uses: actions/download-artifact@v4
+      - name: Build rabbitmq container
+        uses: docker/build-push-action@v6
         with:
-          name: backend-image
-          path: /tmp
+          context: .
+          file: ./docker/rabbitmq/Dockerfile
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test
+          cache-from: type=gha,scope=container-rabbitmq
+          cache-to: type=gha,scope=container-rabbitmq,mode=min
+          load: true
 
-      - name: Dowload image artifact (keyman)
-        uses: actions/download-artifact@v4
+      - name: Build backend container
+        uses: docker/build-push-action@v6
         with:
-          name: keyman-image
-          path: /tmp
-
-      - name: Dowload image artifact (database)
-        uses: actions/download-artifact@v4
-        with:
-          name: database-image
-          path: /tmp
-
-      - name: Dowload image artifact (rabbitmq)
-        uses: actions/download-artifact@v4
-        with:
-          name: rabbitmq-image
-          path: /tmp
-
-      - name: Load images
-        run: |
-          docker load -i /tmp/backend-image.tar
-          docker load -i /tmp/database-image.tar
-          docker load -i /tmp/keyman-image.tar
-          docker load -i /tmp/rabbitmq-image.tar
+          context: .
+          file: ./docker/backend/Dockerfile
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository_owner }}/augur_backend:test
+          cache-from: type=gha,scope=container-backend
+          cache-to: type=gha,scope=container-backend,mode=min
+          load: true
 
       - name: Prepare compose file
         run: |
@@ -133,6 +109,10 @@ jobs:
           EOF
 
       - name: Start services & wait for output
+        # This starts the system and sends the output to "await_all.py" which
+        # scans for the regex matches from above. Once all matches are seen at
+        # least once, the `compose down` will run to shut down the system. If
+        # this all doesn't happen before the timeout, the job will fail.
         run: |
           docker compose -f docker-compose.yml up --no-build 2>&1 \
             | (./scripts/ci/await_all.py /tmp/regex_matches.txt \
@@ -140,19 +120,21 @@ jobs:
         timeout-minutes: 3
         env:
           AUGUR_GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
-          AUGUR_GITHUB_USERNAME: dummy
+          AUGUR_GITHUB_USERNAME: ${{ github.repository_owner }}
           AUGUR_GITLAB_API_KEY: dummy
           AUGUR_GITLAB_USERNAME: dummy
 
       - name: Dump logs
-        if: always()  # Always run this step to get logs even if the previous step fails
+        # Always run this step to get logs, even if the previous step fails
+        if: always()
+        # We use tail so that we can see the name of each file as it's printed
         run: "docker run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs tail -n +0'"
 
 
 
   push-image:
     name: Push image
-    needs: smoke-test
+    needs: test-e2e
     # We don't push images on pull requests
     if: github.event_name != 'pull_request'
     permissions:
