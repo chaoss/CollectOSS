@@ -89,6 +89,13 @@ def generate_commit_record(
     removed: int,
     whitespace: int
 ) -> Dict[str, Any]:
+    if repos_id is None:
+        raise ValueError("repo_id is required but was None")
+    if commit is None:
+        raise ValueError("commit is required but was None")
+    if filename is None:
+        raise ValueError("filename is required but was None")
+
     author_name, author_email = check_swapped_emails(author_name or '', author_email or '')
     committer_name, committer_email = check_swapped_emails(committer_name or '', committer_email or '')
     author_email = strip_extra_amp(author_email or '')
@@ -123,6 +130,9 @@ def analyze_commit(
     repo_loc: str,
     commit: str
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    assert repo_id is not None, f"repo_id must not be None for commit {commit}"
+    logger.debug(f"Analyzing commit {commit} for repo_id={repo_id}")
+
     author_name = None
     author_email = None
     author_date = None
