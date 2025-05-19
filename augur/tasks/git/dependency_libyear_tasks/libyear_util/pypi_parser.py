@@ -36,21 +36,38 @@ require_regrex = re.compile(REQUIRE_REGEXP)
 requirement_regrex = re.compile(REQUIREMENTS_REGEXP)
 
 
+import logging
+import traceback
+
 def parse_requirement_txt(file_handle):
+    deps = []
+    file_name = getattr(file_handle, 'name', 'unknown')
 
-    try:
-        manifest= file_handle.read()
-    except UnicodeDecodeError:
-        #Try UTF-16 as a shot in the dark
-        manifest = file_handle.read().decode("utf-16")
+    raw_bytes = file_handle.read()
 
-    deps=list()
-    for line in manifest.split('\n'):
-        matches = require_regrex.search(line.replace("'",""))
+    for encoding in ['utf-8', 'utf-16', 'latin1']:
+        try:
+            manifest = raw_bytes.decode(encoding)
+            logging.debug(f"[{file_name}] Successfully decoded with encoding: {encoding}")
+            break
+        except UnicodeDecodeError:
+            continue
+    else:
+        logging.error(f"[{file_name}] Failed to decode with utf-8, utf-16, or latin1")
+        logging.error(traceback.format_exc())
+        return []
+
+    for line in manifest.splitlines():
+        matches = require_regrex.search(line.replace("'", ""))
         if not matches:
             continue
-        Dict = {'name': matches[1], 'requirement': matches[2], 'type': 'runtime', 'package': 'PYPI'}
-        deps.append(Dict)  
+        deps.append({
+            'name': matches[1],
+            'requirement': matches[2],
+            'type': 'runtime',
+            'package': 'PYPI'
+        })
+
     return deps
 
 

@@ -27,68 +27,58 @@ def find(name, path):
         if name in files:
             return os.path.join(root, name)
 
+def get_parsed_deps(path, logger):
+    import traceback
+    dependency_list = []
 
-def get_parsed_deps(path,logger):
-
-    deps_file = None
-    dependency_list = list()
     for f in file_list:
         deps_file = find(f, path)
-
-        if not deps_file or not f:
+        if not deps_file:
             continue
-        file_handle= open(deps_file)
 
         short_file_name = os.path.split(deps_file)[-1]
+        logger.info(f"Found dependency file: {deps_file}")
 
-        if short_file_name == 'Requirement.txt':
-            dependency_list.extend(parse_requirement_txt(file_handle))
-        
-        if short_file_name == 'requirements.txt':
-            dependency_list.extend(parse_requirement_txt(file_handle))
+        try:
+            if short_file_name == 'setup.py':
+                with open(deps_file, "r", encoding="utf-8", errors="ignore") as text_file:
+                    dependency_list.extend(parse_setup_py(text_file))
 
-        if short_file_name == 'setup.py':
-            dependency_list.extend(parse_setup_py(file_handle))
+            else:
+                with open(deps_file, "rb") as file_handle:
+                    if short_file_name in ['Requirement.txt', 'requirements.txt']:
+                        dependency_list.extend(parse_requirement_txt(file_handle))
 
-        if short_file_name == 'Pipfile':
-            dependency_list.extend(parse_pipfile(file_handle))
+                    elif short_file_name == 'Pipfile':
+                        dependency_list.extend(parse_pipfile(file_handle))
 
-        if short_file_name == 'Pipfile.lock':
-            dependency_list.extend(parse_pipfile_lock(file_handle))
+                    elif short_file_name == 'Pipfile.lock':
+                        dependency_list.extend(parse_pipfile_lock(file_handle))
 
-        if short_file_name == 'pyproject.toml':
-            try:
-                dependency_list.extend(parse_poetry(file_handle))
-            except Exception as e:
-                logger.warning(f"Failed to parse poetry file {file_handle.name if hasattr(file_handle, 'name') else 'unknown'}: {e}")
+                    elif short_file_name == 'pyproject.toml':
+                        try:
+                            dependency_list.extend(parse_poetry(file_handle, path=path))
+                        except Exception as e:
+                            logger.warning(f"Failed to parse poetry file {file_handle.name if hasattr(file_handle, 'name') else 'unknown'}: {e}")
 
-#        if short_file_name == 'pyproject.toml':
-#            dependency_list.extend(parse_poetry(file_handle))
+                    elif short_file_name == 'poetry.lock':
+                        dependency_list.extend(parse_poetry_lock(file_handle))
 
-        if short_file_name == 'poetry.lock':
-            dependency_list.extend(parse_poetry_lock(file_handle))
+                    elif short_file_name in ['environment.yml', 'environment.yaml', 'environment.yml.lock', 'environment.yaml.lock']:
+                        dependency_list.extend(parse_conda(file_handle))
 
-        if short_file_name == 'environment.yml':
-            dependency_list.extend(parse_conda(file_handle))
+                    elif short_file_name == 'package.json':
+                        try:
+                            dependency_list.extend(parse_package_json(file_handle))
+                        except KeyError as e:
+                            logger.error(f"package.json for repo at path {path} is missing required key: {e}\n Skipping file...")
 
-        if short_file_name == 'environment.yaml':
-            dependency_list.extend(parse_conda(file_handle))
+        except Exception as e:
+            logger.warning(f"Failed to parse {deps_file}: {e}")
+            logger.debug(traceback.format_exc())
+            continue
 
-        if f == 'environment.yml.lock':
-            dependency_list.extend(parse_conda(file_handle))
-
-        if short_file_name == 'environment.yaml.lock':
-            dependency_list.extend(parse_conda(file_handle)) 
-            
-        if short_file_name == 'package.json':
-            try:
-                dependency_list.extend(parse_package_json(file_handle))
-            except KeyError as e:
-                logger.error(f"package.json for repo at path {path} is missing required key: {e}\n Skipping file...")
-
-        
     return dependency_list
-
 
 def get_libyear(current_version, current_release_date, latest_version, latest_release_date):
 
