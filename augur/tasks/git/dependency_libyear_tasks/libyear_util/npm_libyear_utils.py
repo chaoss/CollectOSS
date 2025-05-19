@@ -4,86 +4,117 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
+
 def get_NPM_data(package):
-    url = "https://registry.npmjs.org/%s" % package
-    r = requests.get(url)
-    if r.status_code < 400:
-        return r.json()
-    logger.warning(f"Failed to fetch data for package {package}. HTTP Status: {r.status_code}")
-    return {}
+    url = f"https://registry.npmjs.org/{package}"
+    try:
+        r = requests.get(url)
+        if r.status_code < 400:
+            data = r.json()
+            if 'versions' not in data:
+                logger.warning(f"[NPM] Package '{package}' fetched but missing 'versions'. Possibly deprecated or unpublished.")
+            return data
+        else:
+            logger.warning(f"[NPM] Failed to fetch data for package '{package}'. HTTP Status: {r.status_code}")
+            return {}
+    except Exception as e:
+        logger.error(f"[NPM] Exception while fetching data for '{package}': {e}")
+        return {}
+
 
 def clean_version(version):
     version = [v for v in version if v.isdigit() or v == '.']
     return ''.join(version)
 
+
 def split_version(version):
-    version_list = list(version.split('.'))
-    patch = version_list.pop(-1)
-    minor = version_list.pop(-1)
-    major = version_list[0]
-    return major, minor, patch
+    try:
+        version_list = version.split('.')
+        patch = version_list.pop(-1)
+        minor = version_list.pop(-1)
+        major = version_list[0]
+        return major, minor, patch
+    except Exception as e:
+        logger.error(f"[NPM] Failed to split version '{version}': {e}")
+        return "0", "0", "0"
+
 
 def get_latest_patch(version, data):
     if 'versions' not in data:
-        logger.error(f"'versions' key not found in the NPM data for version {version}. Data: {data}")
+        logger.error(f"[NPM] 'versions' key not found in the data. Cannot get latest patch for version {version}")
         raise KeyError("'versions' key not found")
-    
+
     versions = data['versions']
-    try:
-        index = list(versions.keys()).index(version)
-    except ValueError as e:
-        logger.error(f"Version {version} not found in the 'versions' list. Error: {e}")
-        raise e
-    
+    if version not in versions:
+        logger.warning(f"[NPM] Base version '{version}' not found in versions list for latest patch resolution")
+        return version
+
     major, minor, patch = split_version(version)
     consider_version = version
-    for v in list(versions.keys())[index:]:
-        if v.split('.')[0] == major:
-            if v.split('.')[1] == minor:
-                if v.split('.')[2] > patch:
-                    consider_version = v
+    for v in versions.keys():
+        parts = v.split('.')
+        if len(parts) >= 3 and parts[0] == major and parts[1] == minor and parts[2] > patch:
+            consider_version = v
     return consider_version
+
 
 def get_lastest_minor(version, data):
     if 'versions' not in data:
-        logger.error(f"'versions' key not found in the NPM data. Data: {data}")
+        logger.error(f"[NPM] 'versions' key not found in the data. Cannot get latest minor version")
         raise KeyError("'versions' key not found")
-    
+
     versions = data['versions']
-    try:
-        index = list(versions.keys()).index(version)
-    except ValueError as e:
-        logger.info(f"Version {version} not found in the 'versions' list. Error: {e}")
-        raise e
+    if version not in versions:
+        logger.warning(f"[NPM] Base version '{version}' not found in versions list for latest minor resolution")
+        return version
 
     major, minor, patch = split_version(version)
     consider_version = get_latest_patch(version, data)
-    for v in list(versions.keys())[index:]:
-        if v.split('.')[0] == major:
-            if v.split('.')[1] > minor:
-                consider_version = v
+
+    for v in versions.keys():
+        parts = v.split('.')
+        if len(parts) >= 2 and parts[0] == major and parts[1] > minor:
+            consider_version = v
     return consider_version
 
+
 def get_npm_release_date(data, version):
-    release_time = data['time'].get(version)
-    if release_time:
-        return release_time
-    logger.warning(f"Release time not found for version {version}")
-    return None
+    try:
+        release_time = data.get('time', {}).get(version)
+        if release_time:
+            return release_time
+        else:
+            logger.warning(f"[NPM] Release time not found for version '{version}'")
+            return None
+    except Exception as e:
+        logger.error(f"[NPM] Error retrieving release date for version '{version}': {e}")
+        return None
+
 
 def get_npm_latest_version(data):
-    return data['dist-tags'].get('latest', 'unknown')
+    try:
+        return data.get('dist-tags', {}).get('latest', 'unspecified')
+    except Exception as e:
+        logger.warning(f"[NPM] Error getting latest version from dist-tags: {e}")
+        return 'unspecified'
+
 
 def get_npm_current_version(data, requirement):
-    if requirement[0] == '~':
-        try:
+    if not requirement:
+        logger.warning(f"[NPM] No version requirement provided; defaulting to 'unspecified'")
+        return 'unspecified'
+
+    if 'versions' not in data:
+        logger.error(f"[NPM] Cannot determine current version; 'versions' key missing. Requirement: {requirement}, Data keys: {list(data.keys())}")
+        return 'unspecified'
+
+    try:
+        if requirement.startswith('~'):
             return get_latest_patch(clean_version(requirement), data)
-        except ValueError:
-            return None
-    elif requirement[0] == '^':
-        try:
+        elif requirement.startswith('^'):
             return get_lastest_minor(clean_version(requirement), data)
-        except ValueError:
-            return None
-    else:
-        return requirement
+        else:
+            return requirement
+    except Exception as e:
+        logger.warning(f"[NPM] Failed to parse version requirement '{requirement}' in data. Error: {e}")
+        return 'unspecified'
