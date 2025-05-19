@@ -1,5 +1,30 @@
 #!/usr/bin/env python3
 
+# Copyright 2016-2018 Brian Warner
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier:	Apache-2.0
+
+# Git repo maintenance
+#
+# This script is responsible for cloning new repos and keeping existing repos up
+# to date. It can be run as often as you want (and will detect when it's
+# already running, so as not to spawn parallel processes), but once or twice per
+# day should be more than sufficient. Each time it runs, it updates the repo
+# and checks for any parents of HEAD that aren't already accounted for in the
+# repos. It also rebuilds analysis data, checks any changed affiliations and
+# aliases, and caches data for display.
 """
 This script analyzes Git commits and extracts commit metadata and file-level
 statistics such as additions, deletions, and whitespace changes. The resulting
@@ -24,19 +49,16 @@ from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text
 from augur.tasks.init import get_rabbitmq_conn_string
 
 def check_swapped_emails(name: str, email: str) -> Tuple[str, str]:
-    """If name and email are swapped in the commit metadata, correct them."""
     if name.find('@') >= 0 and email.find('@') == -1:
         return email, name
     return name, email
 
 def strip_extra_amp(email: str) -> str:
-    """Removes additional '@' characters from malformed email addresses."""
     if email.count('@') > 1:
         return email[:email.find('@', email.find('@') + 1)]
     return email
 
 def discover_alias(email: str) -> str:
-    """Looks up canonical email address for an alias from the database."""
     try:
         fetch_canonical = s.sql.text("""
             SELECT canonical_email
@@ -45,7 +67,7 @@ def discover_alias(email: str) -> str:
         """).bindparams(alias_email=email)
         canonical = fetchall_data_from_sql_text(fetch_canonical)
         return canonical[0]['canonical_email'] if canonical else email
-    except Exception as e:
+    except Exception:
         return email
 
 def safe_strip(value: Optional[str]) -> str:
@@ -67,15 +89,11 @@ def generate_commit_record(
     removed: int,
     whitespace: int
 ) -> Dict[str, Any]:
-    """Builds a normalized dictionary representing a commit record."""
     author_name, author_email = check_swapped_emails(author_name or '', author_email or '')
     committer_name, committer_email = check_swapped_emails(committer_name or '', committer_email or '')
-
     author_email = strip_extra_amp(author_email or '')
     committer_email = strip_extra_amp(committer_email or '')
-
     placeholder_date = "1970-01-01 00:00:15 -0500"
-
     return {
         'repo_id': repos_id,
         'cmt_commit_hash': str(commit),
@@ -105,19 +123,6 @@ def analyze_commit(
     repo_loc: str,
     commit: str
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
-    """
-    Analyze a commit and return a list of commit records and the associated
-    commit message metadata.
-
-    Parameters:
-    - logger: logging.Logger for debug and error reporting
-    - repo_id: ID of the repository
-    - repo_loc: Path to the git repository
-    - commit: Commit hash
-
-    Returns:
-    - Tuple of (list of commit record dictionaries, commit message dictionary)
-    """
     author_name = None
     author_email = None
     author_date = None
@@ -126,7 +131,6 @@ def analyze_commit(
     committer_email = None
     committer_date = None
     committer_timestamp = None
-
     header = True
     filename = ''
     added = 0
@@ -180,30 +184,94 @@ def analyze_commit(
         logger.error(f"Failed to read stdout from git process for commit {commit}: {e}")
         return [], msg_record
 
+    whitespaceCheck = []
+    resetRemovals = True
+
     for line in log_output.split(os.linesep):
+        if len(line) == 0:
+            continue
+
         if line.startswith('author_name:'):
             author_name = line[13:]
-        elif line.startswith('author_email:'):
+            continue
+        if line.startswith('author_email:'):
             author_email = line[14:]
-        elif line.startswith('author_date:'):
+            continue
+        if line.startswith('author_date:'):
             author_date = line[12:22]
             author_timestamp = line[12:]
-        elif line.startswith('committer_name:'):
+            continue
+        if line.startswith('committer_name:'):
             committer_name = line[16:]
-        elif line.startswith('committer_email:'):
+            continue
+        if line.startswith('committer_email:'):
             committer_email = line[17:]
-        elif line.startswith('committer_date:'):
+            continue
+        if line.startswith('committer_date:'):
             committer_date = line[16:26]
             committer_timestamp = line[16:]
+            continue
+        if line.startswith('parents:'):
+            if len(line[9:].split(' ')) == 2:
+                filename = '(Merge commit)'
+                added = removed = whitespace = 0
+            continue
+        if line.startswith('--- a/'):
+            if filename == '(Deleted) ':
+                filename += line[6:]
+            continue
+        if line.startswith('+++ b/'):
+            if not filename.startswith('(Deleted) '):
+                filename = line[6:]
+            continue
+        if line.startswith('rename to '):
+            filename = line[10:]
+            continue
+        if line.startswith('deleted file '):
+            filename = '(Deleted) '
+            continue
+        if line.startswith('diff --git'):
+            if not header:
+                try:
+                    record = generate_commit_record(
+                        repo_id, commit, filename,
+                        author_name, author_email, author_date, author_timestamp,
+                        committer_name, committer_email, committer_date, committer_timestamp,
+                        added, removed, whitespace
+                    )
+                    recordsToInsert.append(record)
+                except Exception as e:
+                    logger.error(f"Failed to generate commit record for {commit}: {e}")
+            header = False
+            whitespaceCheck = []
+            resetRemovals = True
+            filename = ''
+            added = removed = whitespace = 0
+            continue
 
-    missing_fields = []
-    if not author_name: missing_fields.append("author_name")
-    if not author_email: missing_fields.append("author_email")
-    if not committer_name: missing_fields.append("committer_name")
-    if not committer_email: missing_fields.append("committer_email")
-
-    if missing_fields:
-        logger.warning(f"Missing fields for commit {commit}: {', '.join(missing_fields)}")
+        if not header:
+            if line[0] == '+':
+                if len(line.strip()) == 1:
+                    whitespace += 1
+                else:
+                    whitespaceChange = False
+                    for check in whitespaceCheck:
+                        if line[1:].strip() == check and len(line[1:].strip()) > 8:
+                            whitespaceChange = True
+                            break
+                    if whitespaceChange:
+                        removed -= 1
+                        whitespace += 1
+                        whitespaceCheck.remove(line[1:].strip())
+                    else:
+                        added += 1
+                resetRemovals = True
+            elif line[0] == '-':
+                removed += 1
+                if resetRemovals:
+                    whitespaceCheck = []
+                    resetRemovals = False
+                whitespaceCheck.append(line[1:].strip())
 
     try:
         record = generate_commit_record(
@@ -214,6 +282,6 @@ def analyze_commit(
         )
         recordsToInsert.append(record)
     except Exception as e:
-        logger.error(f"Failed to generate commit record for {commit}: {e}")
+        logger.error(f"Final record creation failed for commit {commit}: {e}")
 
     return recordsToInsert, msg_record
