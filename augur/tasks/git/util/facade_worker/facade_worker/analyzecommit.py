@@ -113,7 +113,7 @@ def generate_commit_record(
         'cmt_whitespace': whitespace,
         'cmt_date_attempted': committer_date or placeholder_date,
         'tool_source': "Facade",
-        'tool_version': "0.42",
+        'tool_version': "0.80",
         'data_source': "git"
     }
 
@@ -173,7 +173,7 @@ def analyze_commit(
         'cmt_msg': commit_message,
         'cmt_hash': commit,
         'tool_source': 'Facade',
-        'tool_version': '0.78?',
+        'tool_version': '0.80',
         'data_source': 'git',
         'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
