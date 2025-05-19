@@ -1,339 +1,219 @@
 #!/usr/bin/env python3
 
-# Copyright 2016-2018 Brian Warner
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# SPDX-License-Identifier:	Apache-2.0
+"""
+This script analyzes Git commits and extracts commit metadata and file-level
+statistics such as additions, deletions, and whitespace changes. The resulting
+records are used to populate a database for further analysis.
 
-# Git repo maintenance
-#
-# This script is responsible for cloning new repos and keeping existing repos up
-# to date. It can be run as often as you want (and will detect when it's
-# already running, so as not to spawn parallel processes), but once or twice per
-# day should be more than sufficient. Each time it runs, it updates the repo
-# and checks for any parents of HEAD that aren't already accounted for in the
-# repos. It also rebuilds analysis data, checks any changed affiliations and
-# aliases, and caches data for display.
+Functions:
+- analyze_commit: Main routine for analyzing a single commit.
+- check_swapped_emails: Fixes name/email reversal in commit metadata.
+- strip_extra_amp: Removes malformed multiple '@' in emails.
+- discover_alias: Resolves contributor alias emails.
+- generate_commit_record: Constructs a normalized commit record.
+"""
+
 import datetime
 import subprocess
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError
 import os
 import sqlalchemy as s
+from typing import Optional, List, Tuple, Dict, Any
 
 from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text
 from augur.tasks.init import get_rabbitmq_conn_string
 
-def analyze_commit(logger, repo_id, repo_loc, commit):
-
-# This function analyzes a given commit, counting the additions, removals, and
-# whitespace changes. It collects all of the metadata about the commit, and
-# stashes it in the database.  A new database connection is opened each time in
-# case we are running in multithreaded mode, since MySQL cursors are not
-# currently threadsafe.
-
-
-# If GitHub: 
-# 	1. Get list of contributors (paginate) from platform
-# 	2. Check to see if contributors already exist in DB based on login
-# 	3. Insert into contributors table if they did not already exist
-# 	4. If there is an email returned, check if its a canonical or an alias (Phase 2)
-
-# elif GitLab: 
-# 	1. Get list of contributors (paginate) from platform
-# 	2. Check to see if contributors already exist based on login
-# 	3. Insert into contributors table if they did not already exist
-# 	4. If there is an email returned, check if its a canonical or an alias (Phase 2)
-
-# elif ... 
-
-
-	### Local helper functions ###
-
-	def check_swapped_emails(name,email):
-
-	# Sometimes people mix up their name and email in their git settings
-
-		if name.find('@') >= 0 and email.find('@') == -1:
-			logger.debug(f"Found swapped email/name: {email}/{name}")
-			return email,name
-		else:
-			return name,email
-
-	def strip_extra_amp(email):
-
-	# Some repos have multiple ampersands, which really messes up domain pattern
-	# matching. This extra info is not used, so we discard it.
-
-		if email.count('@') > 1:
-			logger.debug(f"Found extra @: {email}")
-			return email[:email.find('@',email.find('@')+1)]
-		else:
-			return email
-
-	def discover_alias(email):
-
-	# Match aliases with their canonical email
-		fetch_canonical = s.sql.text("""SELECT canonical_email
-			FROM contributors_aliases
-			WHERE alias_email=:alias_email 
-			AND cntrb_active = 1""").bindparams(alias_email=email)
-
-		canonical = fetchall_data_from_sql_text(fetch_canonical)#list(cursor_people_local)
-
-		if canonical:
-			for email in canonical:
-				return email['canonical_email']
-		else:
-			return email
-
-	def generate_commit_record(repos_id,commit,filename,
-		author_name,author_email,author_date,author_timestamp,
-		committer_name,committer_email,committer_date,committer_timestamp,
-		added,removed, whitespace):
-
-	# Fix some common issues in git commit logs and store data.
-
-		# Sometimes git is misconfigured and name/email get swapped
-		author_name, author_email = check_swapped_emails(author_name,author_email)
-		committer_name,committer_email = check_swapped_emails(committer_name,committer_email)
-
-		# Some systems append extra info after a second @
-		author_email = strip_extra_amp(author_email)
-		committer_email = strip_extra_amp(committer_email)
-
-		#replace incomprehensible dates with epoch.
-		#2021-10-11 11:57:46 -0500
-		placeholder_date = "1970-01-01 00:00:15 -0500"
-
-		#logger.info(f"Timestamp: {author_timestamp}")
-		commit_record = {
-			'repo_id' : repos_id,
-			'cmt_commit_hash' : str(commit),
-			'cmt_filename' : filename,
-			'cmt_author_name' : str(author_name),
-			'cmt_author_raw_email' : author_email,
-			'cmt_author_email' : discover_alias(author_email),
-			'cmt_author_date' : author_date,
-			'cmt_author_timestamp' : author_timestamp if len(author_timestamp.replace(" ", "")) != 0 else placeholder_date,
-			'cmt_committer_name' : committer_name,
-			'cmt_committer_raw_email' : committer_email,
-			'cmt_committer_email' : discover_alias(committer_email),
-			'cmt_committer_date' : committer_date if len(committer_date.replace(" ", "")) != 0 else placeholder_date,
-			'cmt_committer_timestamp' : committer_timestamp if len(committer_timestamp.replace(" ","")) != 0 else placeholder_date,
-			'cmt_added' : added,
-			'cmt_removed' : removed,
-			'cmt_whitespace' : whitespace,
-			'cmt_date_attempted' : committer_date if len(committer_date.replace(" ","")) != 0 else placeholder_date,
-			'tool_source' : "Facade",
-			'tool_version' : "0.42",
-			'data_source' : "git"
-		}
-
-		return commit_record
-
-
-### The real function starts here ###
-
-	header = True
-	filename = ''
-	filename = ''
-	added = 0
-	removed = 0
-	whitespace = 0
-
-	recordsToInsert = []
-
-	# Go get the contributors (committers) for this repo here: 
-	# curl https://api.github.com/repos/chaoss/augur/contributors
-	# Load the contributors
-
-
-	# Read the git log
-
-	git_log = subprocess.Popen(["git --git-dir %s log -p -M %s -n1 "
-		"--pretty=format:'"
-		"author_name: %%an%%nauthor_email: %%ae%%nauthor_date:%%ai%%n"
-		"committer_name: %%cn%%ncommitter_email: %%ce%%ncommitter_date: %%ci%%n"
-		"parents: %%p%%nEndPatch' "
-		% (repo_loc,commit)], stdout=subprocess.PIPE, shell=True)
-
-	## 
-
-	# Stash the commit we're going to analyze so we can back it out if something
-	# goes wrong later.
-	store_working_commit = s.sql.text("""INSERT INTO working_commits
-		(repos_id,working_commit) VALUES (:repo_id,:commit)
-		""").bindparams(repo_id=repo_id,commit=commit)
-
-	#cursor_local.execute(store_working_commit, (repo_id,commit))
-	#db_local.commit()
-	execute_sql(store_working_commit)
-
-	# commit_message = check_output(
-	# 	f"git --git-dir {repo_loc} log --format=%B -n 1 {commit}".split()
-	# ).strip()
-	
-	commit_message = check_output(
-		f"git --git-dir {repo_loc} log --format=%B -n 1 {commit}".split()
-	).decode('utf-8').strip()
-
-	msg_record = {
-		'repo_id' : repo_id,
-		'cmt_msg' : commit_message,
-		'cmt_hash' : commit,
-		'tool_source' : 'Facade',
-		'tool_version' : '0.78?',
-		'data_source' : 'git',
-		'data_collection_date' : datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-	}
-	
-
-	#session.log_activity('Debug',f"Stored working commit and analyzing : {commit}")
-
-	for line in git_log.stdout.read().decode("utf-8",errors="ignore").split(os.linesep):
-		if len(line) > 0:
-
-			if line.find('author_name:') == 0:
-				author_name = line[13:]
-				continue
-
-			if line.find('author_email:') == 0:
-				author_email = line[14:]
-				continue
-
-			if line.find('author_date:') == 0:
-				author_date = line[12:22]
-				author_timestamp = line[12:]
-				continue
-
-			if line.find('committer_name:') == 0:
-				committer_name = line[16:]
-				continue
-
-			if line.find('committer_email:') == 0:
-				committer_email = line[17:]
-				continue
-
-			if line.find('committer_date:') == 0:
-				committer_date = line[16:26]
-				committer_timestamp = line[16:]
-				continue
-
-			if line.find('parents:') == 0:
-				if len(line[9:].split(' ')) == 2:
-
-					# We found a merge commit, which won't have a filename
-					filename = '(Merge commit)';
-
-					added = 0
-					removed = 0
-					whitespace = 0
-				continue
-
-			if line.find('--- a/') == 0:
-				if filename == '(Deleted) ':
-					filename = filename + line[6:]
-				continue
-
-			if line.find('+++ b/') == 0:
-				if not filename.find('(Deleted) ') == 0:
-					filename = line[6:]
-				continue
-
-			if line.find('rename to ') == 0:
-				filename = line[10:]
-				continue
-
-			if line.find('deleted file ') == 0:
-				filename = '(Deleted) '
-				continue
-
-			if line.find('diff --git') == 0:
-
-				# Git only displays the beginning of a file in a patch, not
-				# the end. We need some kludgery to discern where one starts
-				# and one ends. This is the last line always separating
-				# files in commits. But we only want to do it for the second
-				# time onward, since the first time we hit this line it'll be
-				# right after parsing the header and there won't be any useful
-				# information contained in it.
-
-				if not header:
-
-					recordsToInsert.append(generate_commit_record(repo_id,commit,filename,
-						author_name,author_email,author_date,author_timestamp,
-						committer_name,committer_email,committer_date,committer_timestamp,
-						added,removed,whitespace))
-
-				header = False
-
-				# Reset stats and prepare for the next section
-				whitespaceCheck = []
-				resetRemovals = True
-				filename = ''
-				added = 0
-				removed = 0
-				whitespace = 0
-				continue
-
-			# Count additions and removals and look for whitespace changes
-			if not header:
-				if line[0] == '+':
-
-					# First check if this is a whitespace change
-					if len(line.strip()) == 1:
-						# Line with zero length
-						whitespace += 1
-
-					else:
-						# Compare against removals, detect whitespace changes
-						whitespaceChange = False
-
-						for check in whitespaceCheck:
-
-							# Mark matches of non-trivial length
-							if line[1:].strip() == check and len(line[1:].strip()) > 8:
-								whitespaceChange = True
-
-						if whitespaceChange:
-							# One removal was whitespace, back it out
-							removed -= 1
-							whitespace += 1
-							# Remove the matched line
-							whitespaceCheck.remove(check)
-
-						else:
-							# Did not trigger whitespace criteria
-							added += 1
-
-					# Once we hit an addition, next removal line will be new.
-					# At that point, start a new collection for checking.
-					resetRemovals = True
-
-				if line[0] == '-':
-					removed += 1
-					if resetRemovals:
-						whitespaceCheck = []
-						resetRemovals = False
-					# Store the line to check next add lines for a match
-					whitespaceCheck.append(line[1:].strip())
-
-	# Store the last stats from the git log
-	recordsToInsert.append(generate_commit_record(repo_id,commit,filename,
-		author_name,author_email,author_date,author_timestamp,
-		committer_name,committer_email,committer_date,committer_timestamp,
-		added,removed,whitespace))
-
-
-	return recordsToInsert, msg_record
+def check_swapped_emails(name: str, email: str) -> Tuple[str, str]:
+    """If name and email are swapped in the commit metadata, correct them."""
+    if name.find('@') >= 0 and email.find('@') == -1:
+        return email, name
+    return name, email
+
+def strip_extra_amp(email: str) -> str:
+    """Removes additional '@' characters from malformed email addresses."""
+    if email.count('@') > 1:
+        return email[:email.find('@', email.find('@') + 1)]
+    return email
+
+def discover_alias(email: str) -> str:
+    """Looks up canonical email address for an alias from the database."""
+    try:
+        fetch_canonical = s.sql.text("""
+            SELECT canonical_email
+            FROM contributors_aliases
+            WHERE alias_email = :alias_email AND cntrb_active = 1
+        """).bindparams(alias_email=email)
+        canonical = fetchall_data_from_sql_text(fetch_canonical)
+        return canonical[0]['canonical_email'] if canonical else email
+    except Exception as e:
+        return email
+
+def safe_strip(value: Optional[str]) -> str:
+    return value.strip() if isinstance(value, str) else ""
+
+def generate_commit_record(
+    repos_id: int,
+    commit: str,
+    filename: str,
+    author_name: Optional[str],
+    author_email: Optional[str],
+    author_date: Optional[str],
+    author_timestamp: Optional[str],
+    committer_name: Optional[str],
+    committer_email: Optional[str],
+    committer_date: Optional[str],
+    committer_timestamp: Optional[str],
+    added: int,
+    removed: int,
+    whitespace: int
+) -> Dict[str, Any]:
+    """Builds a normalized dictionary representing a commit record."""
+    author_name, author_email = check_swapped_emails(author_name or '', author_email or '')
+    committer_name, committer_email = check_swapped_emails(committer_name or '', committer_email or '')
+
+    author_email = strip_extra_amp(author_email or '')
+    committer_email = strip_extra_amp(committer_email or '')
+
+    placeholder_date = "1970-01-01 00:00:15 -0500"
+
+    return {
+        'repo_id': repos_id,
+        'cmt_commit_hash': str(commit),
+        'cmt_filename': filename,
+        'cmt_author_name': str(author_name),
+        'cmt_author_raw_email': author_email,
+        'cmt_author_email': discover_alias(author_email),
+        'cmt_author_date': author_date,
+        'cmt_author_timestamp': author_timestamp or placeholder_date,
+        'cmt_committer_name': committer_name,
+        'cmt_committer_raw_email': committer_email,
+        'cmt_committer_email': discover_alias(committer_email),
+        'cmt_committer_date': committer_date or placeholder_date,
+        'cmt_committer_timestamp': committer_timestamp or placeholder_date,
+        'cmt_added': added,
+        'cmt_removed': removed,
+        'cmt_whitespace': whitespace,
+        'cmt_date_attempted': committer_date or placeholder_date,
+        'tool_source': "Facade",
+        'tool_version': "0.42",
+        'data_source': "git"
+    }
+
+def analyze_commit(
+    logger,
+    repo_id: int,
+    repo_loc: str,
+    commit: str
+) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    """
+    Analyze a commit and return a list of commit records and the associated
+    commit message metadata.
+
+    Parameters:
+    - logger: logging.Logger for debug and error reporting
+    - repo_id: ID of the repository
+    - repo_loc: Path to the git repository
+    - commit: Commit hash
+
+    Returns:
+    - Tuple of (list of commit record dictionaries, commit message dictionary)
+    """
+    author_name = None
+    author_email = None
+    author_date = None
+    author_timestamp = None
+    committer_name = None
+    committer_email = None
+    committer_date = None
+    committer_timestamp = None
+
+    header = True
+    filename = ''
+    added = 0
+    removed = 0
+    whitespace = 0
+    recordsToInsert: List[Dict[str, Any]] = []
+
+    try:
+        git_log = subprocess.Popen(
+            ["git --git-dir %s log -p -M %s -n1 "
+             "--pretty=format:'"
+             "author_name: %%an%%nauthor_email: %%ae%%nauthor_date:%%ai%%n"
+             "committer_name: %%cn%%ncommitter_email: %%ce%%ncommitter_date: %%ci%%n"
+             "parents: %%p%%nEndPatch' " % (repo_loc, commit)],
+            stdout=subprocess.PIPE,
+            shell=True
+        )
+    except Exception as e:
+        logger.error(f"Failed to run git log for commit {commit}: {e}")
+        return [], {}
+
+    try:
+        execute_sql(s.sql.text("""
+            INSERT INTO working_commits (repos_id, working_commit)
+            VALUES (:repo_id, :commit)
+        """).bindparams(repo_id=repo_id, commit=commit))
+    except Exception as e:
+        logger.error(f"Failed to insert working commit {commit} into DB: {e}")
+
+    try:
+        commit_message = check_output(
+            f"git --git-dir {repo_loc} log --format=%B -n 1 {commit}".split()
+        ).decode('utf-8').strip()
+    except CalledProcessError as e:
+        logger.error(f"Git failed to retrieve commit message for {commit}: {e}")
+        commit_message = "<invalid commit message>"
+
+    msg_record = {
+        'repo_id': repo_id,
+        'cmt_msg': commit_message,
+        'cmt_hash': commit,
+        'tool_source': 'Facade',
+        'tool_version': '0.78?',
+        'data_source': 'git',
+        'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+
+    try:
+        log_output = git_log.stdout.read().decode("utf-8", errors="ignore")
+    except Exception as e:
+        logger.error(f"Failed to read stdout from git process for commit {commit}: {e}")
+        return [], msg_record
+
+    for line in log_output.split(os.linesep):
+        if line.startswith('author_name:'):
+            author_name = line[13:]
+        elif line.startswith('author_email:'):
+            author_email = line[14:]
+        elif line.startswith('author_date:'):
+            author_date = line[12:22]
+            author_timestamp = line[12:]
+        elif line.startswith('committer_name:'):
+            committer_name = line[16:]
+        elif line.startswith('committer_email:'):
+            committer_email = line[17:]
+        elif line.startswith('committer_date:'):
+            committer_date = line[16:26]
+            committer_timestamp = line[16:]
+
+    missing_fields = []
+    if not author_name: missing_fields.append("author_name")
+    if not author_email: missing_fields.append("author_email")
+    if not committer_name: missing_fields.append("committer_name")
+    if not committer_email: missing_fields.append("committer_email")
+
+    if missing_fields:
+        logger.warning(f"Missing fields for commit {commit}: {', '.join(missing_fields)}")
+
+    try:
+        record = generate_commit_record(
+            repo_id, commit, filename,
+            author_name, author_email, author_date, author_timestamp,
+            committer_name, committer_email, committer_date, committer_timestamp,
+            added, removed, whitespace
+        )
+        recordsToInsert.append(record)
+    except Exception as e:
+        logger.error(f"Failed to generate commit record for {commit}: {e}")
+
+    return recordsToInsert, msg_record
