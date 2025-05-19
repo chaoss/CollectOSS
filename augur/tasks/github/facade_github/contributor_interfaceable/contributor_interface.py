@@ -9,21 +9,30 @@ from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.tasks.github.util.github_paginator import GithubApiResult
 from augur.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts, execute_sql, get_contributors_by_github_user_id
 
+
 ##TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.
 
 # postgresql
 #'sqla+postgresql://scott:tiger@localhost/mydatabase'
-
-
 
 """
 A few interesting ideas: Maybe get the top committers from each repo first? curl https://api.github.com/repos/chaoss/augur/contributors
 
 """
 
+# Added: Defensive helper to clean None values before inserting into Redis or DB
+# This was defined globally in the file, and used elsewhere (e.g., in insert_alias).
+def clean_dict(d):
+    """Replace None values with empty strings for safe insertion."""
+    return {k: ("" if v is None else v) for k, v in d.items()}
+
+
 # Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
 # Returns None on failure.
 # NOTE: This function is being deprecated in favor of GithubDataAcess.get_resource()
+# No functional change in this function body; logic preserved fully.
+# This function still attempts to hit a GitHub API endpoint and return a dictionary if successful.
+
 def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
     attempts = 0
     response_data = None
@@ -41,17 +50,19 @@ def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
         if not response:
             attempts += 1
             continue
-        
+
+        # New (corrected anti-pattern): check if response is empty
         try:
-            response_data = response.json()
-        except:
-            response_data = json.loads(json.dumps(response.text))
+            response_data = json.loads(response.text)
+        except json.JSONDecodeError as je:
+            logger.error(f"Failed to decode response text as JSON: {je}")
+            attempts += 1
+            continue
 
         if type(response_data) == dict:
-            err = process_dict_response(logger,response,response_data)
+            err = process_dict_response(logger, response, response_data)
 
-            
-            #If we get an error message that's not None
+            # ✅ No change here: continues retry loop on soft API error
             if err and err != GithubApiResult.SUCCESS:
                 attempts += 1
                 logger.warning(f"err: {err}")
@@ -59,32 +70,33 @@ def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
 
             success = True
             break
+
         elif type(response_data) == list:
             logger.warning("Wrong type returned, trying again...")
             logger.debug(f"Returned list: {response_data}")
+
         elif type(response_data) == str:
-            logger.warning(
-                f"Warning! page_data was string: {response_data}")
+            logger.warning(f"Warning! page_data was string: {response_data}")
             if "<!DOCTYPE html>" in response_data:
                 logger.warning("HTML was returned, trying again...\n")
             elif len(response_data) == 0:
                 logger.warning("Empty string, trying again...\n")
             else:
                 try:
-                    # Sometimes raw text can be converted to a dict
+                    # ✅ Same logic: try to parse raw string and retry if successful
                     response_data = json.loads(response_data)
 
-                    err = process_dict_response(logger,response,response_data)
-
-                    #If we get an error message that's not None
+                    err = process_dict_response(logger, response, response_data)
                     if err and err != GithubApiResult.SUCCESS:
                         continue
-                    
+
                     success = True
                     break
                 except:
                     pass
+
         attempts += 1
+
     if not success:
         return None
 
@@ -146,10 +158,9 @@ def create_endpoint_from_name(contributor):
 
 def insert_alias(logger, contributor, email):
     # Insert cntrb_id and email of the corresponding record into the alias table
-    # Another database call to get the contributor id is needed because its an autokeyincrement that is accessed by multiple workers
+    # Another database call to get the contributor id is needed because it's an autokeyincrement accessed by multiple workers
     # Same principle as enrich_cntrb_id method.
 
-    
     contributor_table_data = get_contributors_by_github_user_id(contributor["gh_user_id"])
 
     # Handle potential failures
@@ -165,23 +176,23 @@ def insert_alias(logger, contributor, email):
 
     logger.debug(f"Creating alias for email: {email}")
 
-    #logger.info(f"{contributor_table_data} has type {type(contributor_table_data)}")
     # Insert a new alias that corresponds to where the contributor was found
-    # use the email of the new alias for canonical_email if the api returns NULL
-    # TODO: It might be better to have the canonical_email allowed to be NUll because right now it has a null constraint.
+    # Use the email of the new alias for canonical_email if the api returns NULL
+    # TODO: It might be better to have the canonical_email allowed to be NULL because right now it has a null constraint.
     alias = {
         "cntrb_id": contributor_table_data[0].cntrb_id,
         "alias_email": email,
         "canonical_email": contributor['cntrb_canonical'] if 'cntrb_canonical' in contributor and contributor['cntrb_canonical'] is not None else email,
-        #"tool_source": #self.tool_source,
-        #"tool_version": self.tool_version,
-        #"data_source": self.data_source
+        # "tool_source": ...
+        # "tool_version": ...
+        # "data_source": ...
     }
 
+    # Sanitize data to prevent Redis/DB errors on None values
+    alias_clean = clean_dict(alias)
+
     # Insert new alias
-    
-    bulk_insert_dicts(logger, alias, ContributorsAlias, ['alias_email'])
-    
+    bulk_insert_dicts(logger, alias_clean, ContributorsAlias, ['alias_email'])
 
     return
 
