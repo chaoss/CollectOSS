@@ -272,7 +272,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     pendingCommitRecordsToInsert = []
     pendingCommitMessageRecordsToInsert = []
 
-"""
+    """
     for count, commitTuple in enumerate(queue):
         quarterQueue = int(len(queue) / 4)
 
@@ -300,7 +300,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     
     bulk_insert_dicts(logger,pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id","cmt_hash"])
     facade_bulk_insert_commits(logger,pendingCommitRecordsToInsert)
-"""
+    """
     for count, commitTuple in enumerate(queue):
         quarterQueue = int(len(queue) / 4) or 1
 
