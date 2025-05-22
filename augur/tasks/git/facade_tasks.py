@@ -32,6 +32,17 @@ from augur.tasks.git.scc_value_tasks.tasks import process_scc_value_metrics
 
 from augur.tasks.github.util.github_task_session import *
 
+def filter_null_repo_id(records, logger, context=""):
+    """Remove and log records with null/None repo_id."""
+    filtered = []
+    for rec in records:
+        if rec.get("repo_id") is None:
+            logger.error(
+                f"[{context}] Null repo_id in commit record: {json.dumps(rec, default=str)}"
+            )
+        else:
+            filtered.append(rec)
+    return filtered
 
 #define an error callback for chains in facade collection so facade doesn't make the program crash
 #if it does.
@@ -261,6 +272,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     pendingCommitRecordsToInsert = []
     pendingCommitMessageRecordsToInsert = []
 
+"""
     for count, commitTuple in enumerate(queue):
         quarterQueue = int(len(queue) / 4)
 
@@ -288,7 +300,41 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     
     bulk_insert_dicts(logger,pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id","cmt_hash"])
     facade_bulk_insert_commits(logger,pendingCommitRecordsToInsert)
+"""
+    for count, commitTuple in enumerate(queue):
+        quarterQueue = int(len(queue) / 4) or 1
 
+        if (count + 1) % quarterQueue == 0:
+            logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
+
+        commitRecords, commit_msg = analyze_commit(logger, repo_id, repo_loc, commitTuple)
+        if commitRecords:
+            pendingCommitRecordsToInsert.extend(commitRecords)
+            if len(pendingCommitRecordsToInsert) >= 1000:
+                # FILTER AND LOG NULL REPO_IDs HERE
+                pendingCommitRecordsToInsert = filter_null_repo_id(
+                    pendingCommitRecordsToInsert, logger, context="batch insert"
+                )
+                if pendingCommitRecordsToInsert:
+                    facade_bulk_insert_commits(logger, pendingCommitRecordsToInsert)
+                pendingCommitRecordsToInsert = []
+
+        if commit_msg:
+            pendingCommitMessageRecordsToInsert.append(commit_msg)
+
+        if len(pendingCommitMessageRecordsToInsert) >= 1000:
+            bulk_insert_dicts(logger, pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id", "cmt_hash"])
+
+    # FINAL MESSAGE INSERT
+    bulk_insert_dicts(logger, pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id", "cmt_hash"])
+
+    # FINAL COMMIT INSERT, FILTER & LOG NULLS
+    pendingCommitRecordsToInsert = filter_null_repo_id(
+        pendingCommitRecordsToInsert, logger, context="final insert"
+    )
+    if pendingCommitRecordsToInsert:
+        facade_bulk_insert_commits(logger, pendingCommitRecordsToInsert)
+        
     # Remove the working commit.
     remove_working_commits_by_repo_id_and_hashes(repo_id, queue)
 
