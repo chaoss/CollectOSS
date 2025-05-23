@@ -4,9 +4,9 @@ FROM postgres:16
 LABEL maintainer="outdoors@acm.org"
 LABEL version="0.86.1"
 
-ENV POSTGRES_DB "test"
-ENV POSTGRES_USER "augur"
-ENV POSTGRES_PASSWORD "augur"
+ENV POSTGRES_DB="test"
+ENV POSTGRES_USER="augur"
+ENV POSTGRES_PASSWORD="augur"
 
 EXPOSE 5432
 
