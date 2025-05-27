@@ -73,7 +73,7 @@ The Client Application must make the following request in order to facilitate th
 
 The authorization server will respond with the following on success:
 
-.. code:: json
+.. code:: text
 
     {
         "status": "Validated",
@@ -107,7 +107,7 @@ The application may also attempt automatic reauthorization using the previously 
 
 The authorization server will respond with the following on success:
 
-.. code:: json
+.. code:: text
 
     {
         "status": "Validated",

@@ -30,7 +30,7 @@ Required:
 -  `Python 3.6 - 3.8 <https://www.python.org/downloads/>`__
 
 
-  
+
 **Python 3.9 is not yet supported because TensorFlow, which we use in our machine learning workers, does not yet support Python 3.9.**
 
 Our REST API & data collection workers write in Python 3.6. We query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository, so GitLab and GitHub access tokens are **required** for data collection.
@@ -42,18 +42,18 @@ Optional:
 The ``value_worker`` uses a Go package called `scc <https://github.com/boyter/scc>`_ to run COCOMO calculations.
 Once you've installed Go, follow the appropriate steps for your system to install the ``scc`` package.
 
--  Install gcc OpenMP Support: ``sudo apt-get install libgomp1`` -- Ubuntu 
+-  Install gcc OpenMP Support: ``sudo apt-get install libgomp1`` -- Ubuntu
 
 The ``message_insights_worker`` uses a system-level package called OpenMP. You will need this installed at the system level for that worker to work.
 
 Caching System (Redis)
-----------------
+----------------------
 * `Linux Installation <https://redis.io/docs/getting-started/installation/install-redis-on-linux/>`__
 * `Mac Installation <https://redis.io/docs/getting-started/installation/install-redis-on-mac-os/>`__
 * `Windows Installation <https://redis.io/docs/getting-started/installation/install-redis-on-windows/>`__
 
 Message Broker (RabbitMQ)
-----------------
+-------------------------
 * `Linux Installation <https://www.rabbitmq.com/download.html>`__
 * `Mac Installation <https://www.rabbitmq.com/install-homebrew.html>`__
 * `Windows Installation <https://www.rabbitmq.com/install-windows.html>`__
@@ -74,7 +74,7 @@ After installation, you must also set up your rabbitmq instance by running the b
 	it is important to have a static hostname when using rabbitmq as it uses hostname
 	to communicate with nodes.
 
-Then, start rabbitmq server with 
+Then, start rabbitmq server with
 
 .. code-block:: bash
 
@@ -93,7 +93,7 @@ If you're interested in using our visualizations, you can optionally install the
 
 -  `Node <https://nodejs.org/en/>`__
 -  `npm <https://www.npmjs.com/>`__
--  `Vue.js <https://vuejs.org/>`__  
+-  `Vue.js <https://vuejs.org/>`__
 -  `Vue-CLI <https://cli.vuejs.org/>`__
 
 We use Vue.js as our frontend web framework and ``npm`` as our package manager.
@@ -104,12 +104,12 @@ Visualization API calls
 
 On Ubuntu and other Linux flavors: if you want to use the new Augur API Calls that generate downloadable graphics developed in the `https://github.com/chaoss/augur-community-reports` repository, you need to install the `firefox-geckodriver` (on Ubuntu or Red Hat Fedora) or `geckodriver` on Mac OSX, at the system level. This dependency exists because the Bokeh libraries we use for these APIs require a web browser engine.
 
-For Ubuntu you can use: 
+For Ubuntu you can use:
 
 .. code-block:: bash
 
     - which firefox-geckodriver
-    - if nothing returned, then: 
+    - if nothing returned, then:
     - sudo apt install firefox-geckodriver
 
 For Fedora you can use
@@ -117,10 +117,10 @@ For Fedora you can use
 .. code-block:: bash
 
     - which firefox-geckodriver
-    - if nothing returned, then: 
+    - if nothing returned, then:
     - sudo dnf install firefox-geckodriver
 
-For Mac OSX you can use: 
+For Mac OSX you can use:
 
 .. code-block:: bash
 
@@ -129,13 +129,13 @@ For Mac OSX you can use:
     -  brew install geckodriver
 
 .. note::
-  If you have BOTH Firefox-geckodriver AND ChromeDriver installed the visualization API will not work. 
-  
-  We have fully tested with Firefox-gecko driver on Linux platforms, and geckodriver on OSX. If you have ONLY ChromeDriver installed, it will probably work. Open an issue if you have a functioning ChromeDriver implementation.  
+  If you have BOTH Firefox-geckodriver AND ChromeDriver installed the visualization API will not work.
+
+  We have fully tested with Firefox-gecko driver on Linux platforms, and geckodriver on OSX. If you have ONLY ChromeDriver installed, it will probably work. Open an issue if you have a functioning ChromeDriver implementation.
 
 
 ===================
-Installation 
+Installation
 ===================
 
 Now you're ready to build! The steps below outline how to create a virtual environment (**required**) and start the installation process, after which you'll move on to the next section to configure the workers. The instructions are written in a way that you can follow for your respective Operating System.
@@ -155,7 +155,7 @@ If you’re running Augur on macOS, we strongly suggest updating your shell’s 
 In a terminal, open the script:
 
   nano .bash_profile
- 
+
 Add the following line to the end of the file:
 
   export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
@@ -178,7 +178,7 @@ macOS takes "helpful" measures to prevent Python subprocesses (which Augur uses)
 
 
 General Augur Installation Steps (Irrespective of Operating System)
---------------------------------------------------------------
+-------------------------------------------------------------------
 
 1. Clone the repository and change to the newly-created directory.
 
@@ -194,7 +194,7 @@ General Augur Installation Steps (Irrespective of Operating System)
    pip install --user uv
 
 
-3. Set AUGUR_DB environment variable with a postgres database connection string (if you have not setup a database yet, refer to :ref:`database setup<Creating a Database>`) Note: Three terminals will be needed to collect data for augur, and AUGUR_DB needs to be set for 2 out of the 3. If you don't want to add it to both terminals you can add it permanently in your .bashrc file if running bash, or .zshrc file if in running zsh. 
+3. Set AUGUR_DB environment variable with a postgres database connection string (if you have not setup a database yet, refer to :ref:`database setup<Creating a Database>`) Note: Three terminals will be needed to collect data for augur, and AUGUR_DB needs to be set for 2 out of the 3. If you don't want to add it to both terminals you can add it permanently in your .bashrc file if running bash, or .zshrc file if in running zsh.
 
 .. code-block:: bash
 

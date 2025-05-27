@@ -92,8 +92,6 @@ Specifically, you may find this error in your augur logs:
 
    GRUB_DISABLE_OS_PROBER=true
 
-.. _postgresql-configuration-1:
-
 Postgresql Configuration
 ------------------------
 
@@ -154,5 +152,3 @@ You can stop augur with ``augur backend stop``, followed by
 so Augur can shutdown more gently. There is no issue with data integrity
 if you issue them seconds apart, its just that stopping is nicer than
 killing.
-
-
