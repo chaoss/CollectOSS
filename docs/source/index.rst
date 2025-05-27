@@ -1,13 +1,13 @@
 Augur Documentation
 ==================================
 
-Welcome!
-~~~~~~~~
-~~~~~~~~
+:doc:`Welcome! <getting-started/Welcome>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. toctree::
    :maxdepth: 2
 
+   getting-started/Welcome
    quick-start
    deployment/toc
    getting-started/toc
@@ -19,14 +19,14 @@ Welcome!
    procedures/toc
 .. 
   library-documentation/toc
-.. 
+..
   deployment/toc
-.. 
+..
   schema/toc
 
 .. image:: development-guide/images/augur-architecture-2.png
   :width: 700
-  :alt: Development guide image overview of augur 
+  :alt: Development guide image overview of augur
 
 
 What is Augur?
@@ -34,14 +34,14 @@ What is Augur?
 
 Augur is a software suite for collecting and measuring structured data about free and open-source software (FOSS) communities.
 
-Augur’s main focus is to measure the overall health and sustainability of open source projects, as these types of projects are system critical for nearly every software organization or company. We do this by gathering data about project repositories and normalizing that into our data model to provide useful metrics about your project’s health. For example, one of our metrics is Burstiness. Burstiness – how are short timeframes of intense activity, followed by a corresponding return to a typical pattern of activity, observed in a project? This can paint a picture of a project’s focus and gain insight into the potential stability of a project and how its typical cycle of updates occurs. There are many more useful metrics, and you can find a full list of them `here <https://chaoss.community/metrics/>`_.
+Augur's main focus is to measure the overall health and sustainability of open source projects, as these types of projects are system critical for nearly every software organization or company. We do this by gathering data about project repositories and normalizing that into our data model to provide useful metrics about your project's health. For example, one of our metrics is Burstiness. Burstiness - how are short timeframes of intense activity, followed by a corresponding return to a typical pattern of activity, observed in a project? This can paint a picture of a project's focus and gain insight into the potential stability of a project and how its typical cycle of updates occurs. There are many more useful metrics, and you can find a full list of them `here <https://chaoss.community/metrics/>`__.
 
 
 Augur gathers trace data for a group of repositories, normalize it into our data model, and provide a variety of metrics about that data.
 
-This software is developed as part of the CHAOSS (Community Health Analytics Open Source Software) project. Many of our metrics are implementations of the metrics defined by our community. You can find more information about how to get involved on the `CHAOSS website <https://chaoss.community>`_. 
+This software is developed as part of the CHAOSS (Community Health Analytics Open Source Software) project. Many of our metrics are implementations of the metrics defined by our community. You can find more information about how to get involved on the `CHAOSS website <https://chaoss.community>`_.
 
-If you want to see augur in action, you can view CHAOSS’s augur instance `here <http://augur.chaoss.io>`_. 
+If you want to see augur in action, you can view CHAOSS's augur instance `here <http://augur.chaoss.io>`_.
 
 
 Current maintainers
@@ -49,8 +49,8 @@ Current maintainers
 - `Derek Howard <https://github.com/howderek>`_
 - `Andrew Brain <https://github.com/ABrain7710>`_
 - `Isaac Milarsky <https://github.com/IsaacMilarky>`_
-- `John McGinnes <https://github.com/Ulincys>`_ 
-- `Sean P. Goggins <https://github.com/sgoggins>`_ 
+- `John McGinnes <https://github.com/Ulincys>`_
+- `Sean P. Goggins <https://github.com/sgoggins>`_
 
 
 
@@ -78,13 +78,13 @@ GSoC 2022 participants
 - `Mabel F <https://github.com/mabelbot>`_
 - `Priya Srivastava <https://github.com/Priya730>`_
 - `Ramya Kappagantu <https://github.com/RamyaKappagantu>`_
-- `Yash Prakash <https://gist.github.com/yash-yp>`_
+- `Yash Prakash <https://gist.github.com/yash-yp>`__
 
 GSoC 2021 participants
 -----------------------
 - `Dhruv Sachdev <https://github.com/Dhruv-Sachdev1313>`_
 - `Rashmi K A <https://github.com/Rashmi-K-A>`_
-- `Yash Prakash <https://github.com/yash2002109/>`_
+- `Yash Prakash <https://github.com/yash2002109/>`__
 - `Anuj Lamoria <https://github.com/anujlamoria/>`_
 - `Yeming Gu <https://github.com/gymgym1212/>`_
 - `Ritik Malik <https://gist.github.com/ritik-malik>`_

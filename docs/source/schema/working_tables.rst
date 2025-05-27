@@ -1,13 +1,13 @@
 List of Working Data Tables In Augur
-===================================
+====================================
 
 **This Is A List of Working Tables In Augur and The Tasks Attached to Them.**
 
     They are in lowercase to represent exactly how they look like on the actual table.
 
     * analysis_log - this table is a record of the analysis steps the facade tasks have taken on an augur instance. A listing of all the analysis steps taken for every repository is recorded as they are completed.
-        
-        * Tasks Associated With It? 
+
+        * Tasks Associated With It?
 
             * Facade Tasks
 
@@ -19,14 +19,14 @@ List of Working Data Tables In Augur
                 .. image:: images/commit_parents.png
                     :width: 200
 
-    Other working tables are: 
+    Other working tables are:
 
-    * exclude                
+    * exclude
                 .. image:: images/exclude.png
                     :width: 200
 
     * repos_fetch_log
-                
+
                 .. image:: images/repos_fetch_log.png
                     :width: 200
 

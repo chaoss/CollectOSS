@@ -436,8 +436,6 @@ Specifically, you may find this error in your augur logs:
 
    GRUB_DISABLE_OS_PROBER=true
 
-.. _postgresql-configuration-1:
-
 Postgresql Configuration
 ------------------------
 
