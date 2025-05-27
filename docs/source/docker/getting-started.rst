@@ -24,11 +24,11 @@ Docker Compose
 ------------
 
 For quickest start up, set up Docker or Podman desktop with a machine with roughly
-the following resources (or more).
+the following resources (or more):
 
-8 CPUs 
-100 GB disk
-10 GB RAM
+- 8 CPUs 
+- 100 GB disk
+- 10 GB RAM
 
 Clone the Augur repository and create a .env file in the top level directory 
 with the following fields: 

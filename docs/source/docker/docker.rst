@@ -1,4 +1,4 @@
-Docker
+Docker Image Breakdown
 =================
 
 Augur provides a separate Docker image for each layer of our application (database, backend, and frontend). This section details how to build and run these images locally for testing, and also describes how to set up our test environment using Docker.
