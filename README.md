@@ -118,6 +118,9 @@ Contributors
 - `Georg J.P. Link <https://github.com/GeorgLink/>`_
 - `Gary P White <https://github.com/garypwhite/>`_
 
+GSoC 2025 Participants
+-----------------------
+
 GSoC 2022 participants
 -----------------------
 - `Kaxada <https://github.com/kaxada>`_
