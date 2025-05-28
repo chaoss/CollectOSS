@@ -35,17 +35,13 @@ Example usage\:
 .. code-block:: bash
 
   # to generate an augur.config.json file with all the defaults
-  $ augur config init
+  $ uv run augur config init
 
   # to generate an augur.config.json given all credentials as literals
-  $ augur config init --db_name "db_name" --db_host "host" --db_port "port" --db_user "db_user" --db_password "password" --github_api_key "github_api_key" --facade_repo_directory "facade_repo_directory"
+  $ uv run augur config init --db_name "db_name" --db_host "host" --db_port "port" --db_user "db_user" --db_password "password" --github_api_key "github_api_key" --facade_repo_directory "facade_repo_directory"
 
   # to generate an augur.config.json given all credentials and environment variables
-  $ augur config init --db_name $AUGUR_DB_NAME --db_host $AUGUR_DB_HOST --db_port $AUGUR_DB_PORT --db_user $AUGUR_DB_DB_USER --db_password $AUGUR_DB_PASSWORD --github_api_key $AUGUR_GITHUB_API_KEY --facade_repo_directory $AUGUR_FACADE_REPO_DIRECTORY
+  $ uv run augur config init --db_name $AUGUR_DB_NAME --db_host $AUGUR_DB_HOST --db_port $AUGUR_DB_PORT --db_user $AUGUR_DB_DB_USER --db_password $AUGUR_DB_PASSWORD --github_api_key $AUGUR_GITHUB_API_KEY --facade_repo_directory $AUGUR_FACADE_REPO_DIRECTORY
 
   # successful output looks like:
   > CLI: [config.init] [INFO] Config written to /Users/carter/.augur/augur.config.json
-
-
-
-
