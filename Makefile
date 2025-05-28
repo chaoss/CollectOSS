@@ -32,8 +32,8 @@ default:
 .PHONY: install
 .PHONY: install-spdx install-spdx-sudo install-augur-sbom
 .PHONY: clean rebuild
-install:
-	@ ./scripts/install/install.sh dev
+install: uv
+	@ uv run ./scripts/install/install.sh dev
 
 wizard:
 	@ ./scripts/install/install.sh graphical
@@ -50,8 +50,8 @@ install-augur-sbom:
 clean:
 	@ scripts/control/clean.sh
 
-rebuild:
-	@ scripts/control/rebuild.sh dev
+rebuild: uv
+	@ uv run scripts/control/rebuild.sh dev
 
 #
 #  Development
