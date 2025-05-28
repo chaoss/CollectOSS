@@ -308,11 +308,17 @@ look like this:
 Installing and Configuring Augur!
 ---------------------------------
 
-Create a Python Virtual Environment
-``python3 -m venv ~/virtual-env-directory``
+We use `uv <https://docs.astral.sh/uv/>`_ to manage Augur’s virtual
+environment and dependencies. Any time you run an Augur command, you should
+prefix it with ``uv run`` to ensure you are using the correct virtual
+environment.
 
-Activate your Python Virtual Environment
-``source ~/virtual-env-directory/bin/activate``
+``uv`` can be installed with pip:
+
+.. code:: shell
+
+   pip install --user uv
+
 
 From the root of the Augur Directory, type ``make install``. You will be
 prompted to provide:
@@ -451,16 +457,16 @@ utility may change these characteristics.
 Augur Commands
 --------------
 
-To access command line options, use ``augur --help``. To load repos from
+To access command line options, use ``uv run augur --help``. To load repos from
 GitHub organizations prior to collection, or in other ways, the direct
-route is ``augur db --help``.
+route is ``uv run augur db --help``.
 
 Start a Flower Dashboard, which you can use to monitor progress, and
 report any failed processes as issues on the Augur GitHub site. The
 error rate for tasks is currently 0.04%, and most errors involve
 unhandled platform API timeouts. We continue to identify and add fixes
 to handle these errors through additional retries. Starting Flower:
-``(nohup celery -A augur.tasks.init.celery_app.celery_app flower --port=8400 --max-tasks=1000000 &)``
+``(nohup uv run celery -A augur.tasks.init.celery_app.celery_app flower --port=8400 --max-tasks=1000000 &)``
 NOTE: You can use any open port on your server, and access the dashboard
 in a browser with http://servername-or-ip:8400 in the example above
 (assuming you have access to that port, and its open on your network.)
@@ -474,7 +480,7 @@ disable Hyper-V, and afterward AVX should pass to the VM.
 Starting your Augur Instance
 ----------------------------
 
-Start Augur: ``(nohup augur backend start &)``
+Start Augur: ``(nohup uv run augur backend start &)``
 
 When data collection is complete you will see only a single task running
 in your flower Dashboard.
@@ -493,8 +499,8 @@ change that in augur_operations.config for OSX)
 Stopping your Augur Instance
 ----------------------------
 
-You can stop augur with ``augur backend stop``, followed by
-``augur backend kill``. We recommend waiting 5 minutes between commands
+You can stop augur with ``uv run augur backend stop``, followed by
+``uv run augur backend kill``. We recommend waiting 5 minutes between commands
 so Augur can shutdown more gently. There is no issue with data integrity
 if you issue them seconds apart, its just that stopping is nicer than
 killing.

@@ -25,7 +25,7 @@ Example usage\:
 .. code-block:: bash
 
   # to add new repos to the database
-  $ augur db add-repo-groups repo_groups.csv
+  $ uv run augur db add-repo-groups repo_groups.csv
 
   # contents of repo_groups.csv
   10,Repo Group 1
@@ -45,7 +45,7 @@ Example usage\:
 .. code-block:: bash
 
   # to retrieve the repo groups
-  $ augur db get-repo-groups
+  $ uv run augur db get-repo-groups
 
   # successful output looks like:
   >    repo_group_id             rg_name                                     rg_description
@@ -110,7 +110,7 @@ Example usage\:
 .. code-block:: bash
 
   # to generate a key
-  $ augur db generate-api-key
+  $ uv run augur db generate-api-key
 
   # successful output looks like (this will be an actual key):
   > CLI: [db.update_api_key] [INFO] Updated Augur API key to: new_key_abc_123
@@ -126,7 +126,7 @@ Example usage\:
 .. code-block:: bash
 
   # to retrieve the key
-  $ augur db get-api-key
+  $ uv run augur db get-api-key
 
   # successful output looks like (this will be an actual key):
   > existing_key_def_456
@@ -141,7 +141,7 @@ Example usage\:
 .. code-block:: bash
 
   # to return the current database version
-  $ augur db print-db-version
+  $ uv run augur db print-db-version
 
   # successful output looks like:
   > 1
@@ -156,7 +156,7 @@ Example usage\:
 .. code-block:: bash
 
   # to upgrade the user's database to the current version
-  $ augur db upgrade-db-version
+  $ uv run augur db upgrade-db-version
 
   # successful output if your DB is already up to date
   > CLI: [db.check_pgpass_credentials] [INFO] Credentials found in $HOME/.pgpass
@@ -190,7 +190,7 @@ Example usage\:
 .. code-block:: bash
 
   # to create the schema
-  $ augur db create-schema
+  $ uv run augur db create-schema
 
 .. note::
   If this runs successfully, you should see a bunch of schema creation commands fly by pretty fast. If everything worked you should see: ``update "augur_operations"."augur_settings" set value = xx where setting = 'augur_data_version';`` at the end.

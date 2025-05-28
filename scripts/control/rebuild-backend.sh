@@ -10,7 +10,6 @@ fi
 
 target=${1-prod}
 
-scripts/install/backend.sh $target
 scripts/install/workers.sh $target
 
 echo
