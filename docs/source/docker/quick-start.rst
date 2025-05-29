@@ -9,13 +9,36 @@ Before you get off to such a quick start, go ahead and
   
      git checkout dev 
   
-  4. Usually, we'll have you checkout the `dev` branch.
-  5. Make sure to install all the pre-requisites here: https://oss-augur.readthedocs.io/en/main/getting-started/installation.html#dependencies
+  4. Create a .env file in the top level directory with the following fields: 
 
+.. code:: python
+
+    AUGUR_DB=augur
+    AUGUR_DB_USER=augur
+    AUGUR_DB_PASSWORD=password_here
+
+    AUGUR_GITHUB_API_KEY=ghp_value_here
+    AUGUR_GITHUB_USERNAME=gh_username
+    AUGUR_GITLAB_API_KEY=placeholder
+    AUGUR_GITLAB_USERNAME=placeholder
+
+5. Build the container using one of the following commands:
+
+.. code:: shell 
+
+    docker compose up --build 
+
+or 
+
+.. code:: shell 
+
+    podman compose up --build 
+
+And augur should be up and running! 
 
 .. note::
 
-  **Quick Start**: 
+  **Running against an external database**: 
 
   If you want to start running docker against an external database right away: 
 
@@ -34,11 +57,14 @@ Before you get off to such a quick start, go ahead and
 
   .. code-block:: 
 
-    AUGUR_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx 
-    AUGUR_GITHUB_USERNAME=usernameGithub
-    AUGUR_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
-    AUGUR_GITLAB_USERNAME=usernameGitlab
-    AUGUR_DB=yourDBString
+    AUGUR_DB=augur
+    AUGUR_DB_USER=augur
+    AUGUR_DB_PASSWORD=password_here
+
+    AUGUR_GITHUB_API_KEY=ghp_value_here
+    AUGUR_GITHUB_USERNAME=gh_username
+    AUGUR_GITLAB_API_KEY=placeholder
+    AUGUR_GITLAB_USERNAME=placeholder
 
   4. Execute the code from the base directory of the Augur repository:
 

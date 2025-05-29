@@ -160,7 +160,7 @@ class DatabaseSession(Session):
         # print(str(stmnt.compile(dialect=postgresql.dialect())))
         attempts = 0
         # creates list from 1 to 10
-        sleep_time_list = list(range(1,11))
+        sleep_time_list = list(range(10,66))
         deadlock_detected = False
 
 

@@ -24,10 +24,11 @@ class NotAuthorizedException(Exception):
 
 class GithubDataAccess:
 
-    def __init__(self, key_manager, logger: logging.Logger):
+    def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
         self.logger = logger
-        self.key_client = KeyClient("github_rest", logger)
+        self.feature = feature
+        self.key_client = KeyClient(f"github_{feature}", logger)
         self.key = None
         self.expired_keys_for_request = []
 
@@ -110,10 +111,26 @@ class GithubDataAccess:
 
             if response.status_code in [403, 429]:
                 self.expired_keys_for_request.append(self.key)
+                self.logger.warning(f"Github rate limit exceeded. Key: {self.key[-5:]}. Response: {response.text}")
                 raise RatelimitException(response, self.expired_keys_for_request[-5:])
 
+            # There are cases with PR files, PR commits, and messages where the parent object is removed after 
+            # It is collected, leading the the associated URL for those objects to return a 404. 
+            # This is not an issue that is really an Exception. It is more of a nominal signal. 
+            
             if response.status_code == 404:
-                raise UrlNotFoundException(f"Could not find {url}")
+                parsed = urlparse(url)
+                path = parsed.path.lower()
+                query = parsed.query.lower()
+
+                if any(k in path for k in ["commits", "files", "comments"]) or \
+                any(k in query for k in ["commits", "files", "comments"]):
+                    self.logger.warning(
+                        f"Github response with 404 for PR files, PR commits or messages. "
+                        f"This is a data anomaly in the platform API, not an error. URL: {url}. Response: {response.text}"
+                    )
+                else:
+                    raise UrlNotFoundException(f"Could not find {url}")
             
             if response.status_code == 401:
                 raise NotAuthorizedException(f"Could not authorize with the github api")
@@ -121,7 +138,7 @@ class GithubDataAccess:
             response.raise_for_status()
 
             try:
-                if "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
+                if self.feature == "rest" and "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
                     self.expired_keys_for_request.append(self.key)
                     raise RatelimitException(response, self.expired_keys_for_request[-5:])
             except ValueError:
