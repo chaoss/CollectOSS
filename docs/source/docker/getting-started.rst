@@ -20,9 +20,47 @@ The rest of this section of the documentation assumes you have a working install
 
 If you are less familiar with Docker, or experience issues you cannot resolve attempting our "quick start", please follow the instructions in this section, and the next few pages, to set up your environment.
 
+Docker Compose
+------------
+
+For quickest start up, set up Docker or Podman desktop with a machine with roughly
+the following resources (or more):
+
+- 8 CPUs 
+- 100 GB disk
+- 10 GB RAM
+
+Clone the Augur repository and create a .env file in the top level directory 
+with the following fields: 
+
+.. code:: python
+
+    AUGUR_DB=augur
+    AUGUR_DB_USER=augur
+    AUGUR_DB_PASSWORD=password_here
+
+    AUGUR_GITHUB_API_KEY=ghp_value_here
+    AUGUR_GITHUB_USERNAME=gh_username
+    AUGUR_GITLAB_API_KEY=placeholder
+    AUGUR_GITLAB_USERNAME=placeholder
+
+Then run:
+
+.. code:: shell 
+
+    docker compose up --build 
+
+or 
+
+.. code:: shell 
+    
+    podman compose up --build 
+
+And augur should be up and running! 
+
 Credentials
 ------------
-Before you get started with Docker, you'll need to set up a PostgreSQL instance either locally or using a remote host. Alternatively, you can also set up the database within a docker container either manually or through docker compose.
+If you want to create a DB outside of using Docker/Podman Compose, you'll need to set up a PostgreSQL instance either locally or using a remote host. 
 
 .. note::
 
@@ -39,7 +77,7 @@ If you don't care if your data doesn't get persisted or are doing local developm
 
 .. warning::
 
-    Using a Docker container as a production database is `not recommended <https://vsupalov.com/database-in-docker/>`_. You have been warned!
+    There are conflicting opinions on using Docker for a production database. 
 
 If you're more interested in doing local development, we recommend using our Docker testing environment image - more on that later.
 
