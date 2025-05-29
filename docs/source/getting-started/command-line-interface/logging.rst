@@ -13,8 +13,8 @@ Prints the location of the directory to which Augur is configured to write its l
 
 Example usage::
 
-  # to stop the server and workers
-  $ augur logging directory
+  # to print the logs directory
+  $ uv run augur logging directory
 
   # successful output looks like:
   > /Users/carter/projects/work/augur/logs/
@@ -26,8 +26,8 @@ Prints the last ``n`` lines of each ``.log`` and ``.err`` file in the logs direc
 
 Example usage::
 
-  # to stop the server and workers
-  $ augur logging tail
+  # to print the last 20 lines of each log file
+  $ uv run augur logging tail
 
   # successful output looks like:
   > ********** Logfile: augur.log
@@ -35,5 +35,3 @@ Example usage::
 
   > ********** Logfile: augur.err
     <contents of augur.err>
-
-

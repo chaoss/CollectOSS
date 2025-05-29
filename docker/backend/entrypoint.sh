@@ -2,9 +2,6 @@
 #SPDX-License-Identifier: MIT
 set -e
 
-source /opt/venv/bin/activate
-
-
 if [[ "$AUGUR_DB" == *"localhost"* ]]; then
     echo "localhost db connection"
     export AUGUR_DB="${AUGUR_DB/localhost/host.docker.internal}"
@@ -24,4 +21,4 @@ else
     export redis_conn_string=$REDIS_CONN_STRING
 fi
 
-exec $*
+exec "$@"
