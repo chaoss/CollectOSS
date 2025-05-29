@@ -2,7 +2,7 @@
 
 
 
-FROM golang:1.23-bullseye AS golang
+FROM golang:1.23-bullseye AS golang-builder
 
 # Write final binaries to / so it's easy to copy them out
 ENV GOBIN=/
@@ -109,6 +109,7 @@ ENV SCORECARD_DIR=/scorecard
 COPY --from=golang-builder --chmod=u=rw,u+X,go=r,go+X "/scorecard" "/scorecard/scorecard"
 
 RUN mkdir -p repos/ logs/ /augur/facade/
+RUN ln -s /cache /augur/augur/static/cache
 
 COPY --chmod=u=rwx,go=rx ./docker/backend/entrypoint.sh /
 COPY --chmod=u=rwx,go=rx ./docker/backend/init.sh /

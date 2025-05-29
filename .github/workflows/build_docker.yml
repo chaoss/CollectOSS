@@ -5,9 +5,6 @@ on:
       - main
       - dev
   pull_request:
-    branches:
-      - main
-      - dev
   release:
     types:
       - published
@@ -16,8 +13,130 @@ on:
 permissions: {}
 
 jobs:
-  build:
-    name: Build image
+  test-e2e:
+    name: End-to-end test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        id: setup-buildx
+
+      - name: Build database container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/database/Dockerfile
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository_owner }}/augur_database:test
+          cache-from: type=gha,scope=container-database
+          cache-to: type=gha,scope=container-database,mode=min
+          load: true
+
+      - name: Build keyman container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/keyman/Dockerfile
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository_owner }}/augur_keyman:test
+          cache-from: type=gha,scope=container-keyman
+          cache-to: type=gha,scope=container-keyman,mode=min
+          load: true
+
+      - name: Build rabbitmq container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/rabbitmq/Dockerfile
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test
+          cache-from: type=gha,scope=container-rabbitmq
+          cache-to: type=gha,scope=container-rabbitmq,mode=min
+          load: true
+
+      - name: Build backend container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/backend/Dockerfile
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository_owner }}/augur_backend:test
+          cache-from: type=gha,scope=container-backend
+          cache-to: type=gha,scope=container-backend,mode=min
+          load: true
+
+      - name: Prepare compose file
+        run: |
+          yq eval -i '.services.augur.image = "ghcr.io/${{ github.repository_owner }}/augur_backend:test"' docker-compose.yml
+          yq eval -i '.services.augur.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.augur.restart = "no"' docker-compose.yml
+
+          yq eval -i '.services.augur-db.image = "ghcr.io/${{ github.repository_owner }}/augur_database:test"' docker-compose.yml
+          yq eval -i '.services.augur-db.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.augur-db.restart = "no"' docker-compose.yml
+
+          yq eval -i '.services.augur-keyman.image = "ghcr.io/${{ github.repository_owner }}/augur_keyman:test"' docker-compose.yml
+          yq eval -i '.services.augur-keyman.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.augur-keyman.restart = "no"' docker-compose.yml
+
+          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test"' docker-compose.yml
+          yq eval -i '.services.rabbitmq.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.rabbitmq.restart = "no"' docker-compose.yml
+
+      - name: Setup Docker Compose
+        uses: docker/setup-compose-action@v1
+        with:
+          version: latest
+
+      - name: Set up list of log lines to match
+        run: |
+          cat <<EOF > /tmp/regex_matches.txt
+          Gunicorn webserver started
+          Starting core worker processes
+          Starting secondary worker processes
+          Starting facade worker processes
+          Retrieved \\d+ github api keys for use
+          Fetching new repos \\(complete\\)
+          Inserting \\d+ contributors
+          Inserting \\d+ issues
+          Inserting prs of length: \\d+
+          Querying committers count
+          Done generating scc data for repo
+          Sending due task
+          EOF
+
+      - name: Start services & wait for output
+        # This starts the system and sends the output to "await_all.py" which
+        # scans for the regex matches from above. Once all matches are seen at
+        # least once, the `compose down` will run to shut down the system. If
+        # this all doesn't happen before the timeout, the job will fail.
+        run: |
+          docker compose -f docker-compose.yml up --no-build 2>&1 \
+            | (./scripts/ci/await_all.py /tmp/regex_matches.txt \
+                && docker compose -f docker-compose.yml down)
+        timeout-minutes: 3
+        env:
+          AUGUR_GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+          AUGUR_GITHUB_USERNAME: ${{ github.repository_owner }}
+          AUGUR_GITLAB_API_KEY: dummy
+          AUGUR_GITLAB_USERNAME: dummy
+
+      - name: Dump logs
+        # Always run this step to get logs, even if the previous step fails
+        if: always()
+        # We use tail so that we can see the name of each file as it's printed
+        run: "docker run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs tail -n +0'"
+
+
+
+  push-image:
+    name: Push image
+    needs: test-e2e
+    # We don't push images on pull requests
+    if: github.event_name != 'pull_request'
     permissions:
       contents: read #  to fetch code (actions/checkout)
       packages: write #  to push docker image
@@ -57,8 +176,9 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/augur_${{ matrix.image }}
           # Pushes to the dev branch update the *:devel-latest tag
           # Releases update the *:latest tag and the *:<version> tag
+          # Main does not update any tags
           tags: |
-            type=raw,value=devel-latest,enable=${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/dev' }}
+            type=raw,value=devel-latest,enable=${{ github.ref == 'refs/heads/dev' }}
             type=raw,value=latest,enable=${{ github.event_name == 'release' }}
             type=raw,value=${{ github.event.release.tag_name }},enable=${{ github.event_name == 'release' }}
 
@@ -72,7 +192,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
           # Only push if we've tagged the image in the metadata step
-          push: ${{ github.event_name != 'pull_request' && steps.meta.outputs.tags != '' }}
+          push: ${{ steps.meta.outputs.tags != '' }}
           tags: ${{ steps.meta.outputs.tags }}
+          # Use the same cache as the build step
           cache-from: type=gha,scope=container-${{ matrix.image }}
-          cache-to: type=gha,scope=container-${{ matrix.image }},mode=max
+          cache-to: type=gha,scope=container-${{ matrix.image }},mode=min
