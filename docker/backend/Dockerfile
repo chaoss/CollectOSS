@@ -113,5 +113,6 @@ RUN ln -s /cache /augur/augur/static/cache
 
 COPY --chmod=u=rwx,go=rx ./docker/backend/entrypoint.sh /
 COPY --chmod=u=rwx,go=rx ./docker/backend/init.sh /
+RUN chmod +x /entrypoint.sh /init.sh
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
 CMD ["/init.sh"]
