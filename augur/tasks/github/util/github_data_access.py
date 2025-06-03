@@ -119,18 +119,7 @@ class GithubDataAccess:
             # This is not an issue that is really an Exception. It is more of a nominal signal. 
             
             if response.status_code == 404:
-                parsed = urlparse(url)
-                path = parsed.path.lower()
-                query = parsed.query.lower()
-
-                if any(k in path for k in ["commits", "files", "comments"]) or \
-                any(k in query for k in ["commits", "files", "comments"]):
-                    self.logger.warning(
-                        f"Github response with 404 for PR files, PR commits or messages. "
-                        f"This is a data anomaly in the platform API, not an error. URL: {url}. Response: {response.text}"
-                    )
-                else:
-                    raise UrlNotFoundException(f"Could not find {url}")
+                raise UrlNotFoundException(f"Could not find {url}")
             
             if response.status_code == 401:
                 raise NotAuthorizedException(f"Could not authorize with the github api")
