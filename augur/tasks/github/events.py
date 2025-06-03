@@ -325,7 +325,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
                                             self._tool_source, self._tool_version, self._data_source)
                     )
             except UrlNotFoundException as e:
-                self._logger.warning(f"{self.repo_identifier}: Url not found for {event_url}")
+                self._logger.info(f"{self.repo_identifier}: Issue with number of {issue_number} returned 404 on event data. Skipping.")
 
             if len(events) > 500:
                 self._insert_contributors(contributors)
@@ -386,7 +386,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
                                             self._tool_source, self._tool_version, self._data_source)
                     )
             except UrlNotFoundException:
-                self._logger.warning(f"{self.repo_identifier}: Url not found for {event_url}")
+                self._logger.info(f"{self.repo_identifier}: PR with number of {pr_number} returned 404 on event data. Skipping.")
                 continue
 
             if len(events) > 500:
