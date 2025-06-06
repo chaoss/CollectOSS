@@ -76,7 +76,7 @@ def generate_scorecard(logger, repo_git):
     path = repo_git[8:]
     if path[-4:] == '.git':
         path = path.replace(".git", "")
-    command = '--local=' + path
+    command = '--repo=' + path
     
     #this is path where our scorecard project is located
     path_to_scorecard = os.getenv('SCORECARD_DIR', os.environ['HOME'] + '/scorecard')
