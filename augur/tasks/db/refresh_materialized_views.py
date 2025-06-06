@@ -88,6 +88,12 @@ def refresh_materialized_views(self):
                 COMMIT; 
     """)
 
+    mv14_refresh = s.sql.text("""    
+
+                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_repo_languages with data;
+                COMMIT; 
+    """)
+
     try: 
         execute_sql(mv1_refresh)
     except Exception as e: 
@@ -162,6 +168,12 @@ def refresh_materialized_views(self):
 
     try: 
         execute_sql(mv13_refresh)
+    except Exception as e: 
+        logger.info(f"error is {e}")
+        pass 
+
+    try: 
+        execute_sql(mv14_refresh)
     except Exception as e: 
         logger.info(f"error is {e}")
         pass 
