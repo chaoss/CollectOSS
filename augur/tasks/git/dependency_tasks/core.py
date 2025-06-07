@@ -111,7 +111,7 @@ def generate_scorecard(logger, repo_git):
             'scorecard_check_details': required_output['repo'],
             'score': required_output['score'],
             'tool_source': 'scorecard_model',
-            'tool_version': '0.43.9',
+            'tool_version': '0.89.1',
             'data_source': 'Git',
             'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         }
@@ -126,7 +126,7 @@ def generate_scorecard(logger, repo_git):
                 'scorecard_check_details': check,
                 'score': check['score'],
                 'tool_source': 'scorecard_model',
-                'tool_version': '0.43.9',
+                'tool_version': '0.89.1',
                 'data_source': 'Git',
                 'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
