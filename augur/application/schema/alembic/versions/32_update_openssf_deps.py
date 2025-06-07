@@ -1,4 +1,4 @@
-"""Update pr events unique
+"""Remove unecessary OpenSSF Scorecard Unique Constraint
 
 Revision ID: 32
 Revises: 31
