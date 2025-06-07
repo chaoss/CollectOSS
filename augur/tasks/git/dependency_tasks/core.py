@@ -132,7 +132,8 @@ def generate_scorecard(logger, repo_git):
             }
             to_insert.append(repo_deps_scorecard)
         
-        bulk_insert_dicts(logger, to_insert, RepoDepsScorecard)
+        bulk_insert_dicts(logger, to_insert, RepoDepsScorecard, ["rep_deps_scorecard_id"])
+        logger.info(f"Inserted {len(to_insert)} scorecard entries for repo {repo_id}")
         
         logger.info(f"Done generating scorecard for repo {repo_id} from path {path}")
 
