@@ -1,4 +1,4 @@
-"""Remove unecessary OpenSSF Scorecard Unique Constraint
+"""Remove old OpenSSF Scorecard Unique Constraint; Add new one.
 
 Revision ID: 32
 Revises: 31
