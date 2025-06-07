@@ -140,6 +140,6 @@ def generate_scorecard(logger, repo_git):
 
     except Exception as e: 
         
-        logger.info(f"\n\nThe ERROR: {e} \n\n")
+        logger.exception("Error generating scorecard", exc_info=e)
         
         raise MetadataException(e, f"required_output: {required_output}; error {e}")
