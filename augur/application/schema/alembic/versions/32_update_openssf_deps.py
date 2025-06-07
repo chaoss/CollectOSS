@@ -26,7 +26,7 @@ def upgrade():
     op.create_unique_constraint(
         'deps_scorecard_new_unique',
         'repo_deps_scorecard',
-        ['repo_id', 'scorecard_id'],
+        ['repo_id', 'repo_deps_scorecard_id'],
         schema='augur_data'
     )
 
@@ -40,6 +40,6 @@ def downgrade():
     op.create_unique_constraint(
         'deps-scorecard-insert-unique',
         'repo_deps_scorecard',
-        ['repo_id', 'scorecard_id'],
+        ['repo_id', 'name'],
         schema='augur_data'
     )
