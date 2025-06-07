@@ -23,10 +23,20 @@ def upgrade():
         schema='augur_data',
         type_='unique'
     )
+    op.create_unique_constraint(
+        'deps_scorecard_new_unique',
+        'repo_deps_scorecard',
+        ['repo_id', 'scorecard_id'],
+        schema='augur_data'
+    )
 
 def downgrade():
-    # You would need to know the columns involved in the original unique constraint to recreate it.
-    # Example below assumes the columns were ('repo_id', 'scorecard_id')
+    op.drop_constraint(
+        'deps_scorecard_new_unique',
+        'repo_deps_scorecard',
+        schema='augur_data',
+        type_='unique'
+    )
     op.create_unique_constraint(
         'deps-scorecard-insert-unique',
         'repo_deps_scorecard',
