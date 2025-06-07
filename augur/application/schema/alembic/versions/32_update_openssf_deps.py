@@ -1,8 +1,8 @@
 """Update pr events unique
 
-Revision ID: 31
-Revises: 30
-Create Date: 2025-03-08
+Revision ID: 32
+Revises: 31
+Create Date: 2025-06-06
 
 """
 from alembic import op
