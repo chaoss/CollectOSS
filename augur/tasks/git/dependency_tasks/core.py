@@ -39,7 +39,7 @@ def generate_deps_data(logger, repo_git):
                 'dep_count' : dep.count,
                 'dep_language' : dep.language,
                 'tool_source': 'deps_model',
-                'tool_version': '0.43.9',
+                'tool_version': '0.89.1',
                 'data_source': 'Git',
                 'data_collection_date': scan_date
             }
