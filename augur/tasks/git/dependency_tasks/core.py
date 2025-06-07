@@ -46,7 +46,7 @@ def generate_deps_data(logger, repo_git):
 
             to_insert.append(repo_deps)
         
-        bulk_insert_dicts(logger, to_insert,RepoDependency,["repo_id","dep_name","data_collection_date"])
+        bulk_insert_dicts(logger, to_insert,RepoDependency,["repo_id","repo_deps_scorecard_id"])
         
         logger.info(f"Inserted {len(deps)} dependencies for repo {repo_id}")
 
