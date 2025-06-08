@@ -93,10 +93,10 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
 
                 pr_file_rows.append(data)
         except NotFoundException as e:
-            logger.info(f"{task_name}: PR with url of {pr_info['pr_url']} returned 404 on file data. Skipping.")
+            logger.info(f"{task_name}: PR with number of {pr_info['pr_src_number']} returned 404 on file data. Skipping.")
             continue
         except InvalidDataException as e:
-            logger.warning(f"{task_name}: PR with url of {pr_info['pr_url']} returned null for file data. Skipping.")
+            logger.warning(f"{task_name}: PR with number of {pr_info['pr_src_number']} returned null for file data. Skipping.")
             continue
 
 
