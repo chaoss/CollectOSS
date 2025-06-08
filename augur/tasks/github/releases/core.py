@@ -54,6 +54,7 @@ def get_release_inf(repo_id, release, tag_only):
             'release_id': release['id'],
             'repo_id': repo_id,
             'release_name': release['name'],
+            'release_description': 'tag_only',
             'release_author': author,
             'release_tag_name': release['name'],
             'tag_only': tag_only
