@@ -71,10 +71,8 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
                 }
                 all_data.append(pr_commit_row)
         except UrlNotFoundException:
-            logger.warning(f"{task_name}: PR #{index + 1} returned 404 on commit data. Skipping.")
-        except Exception as e:
-            logger.error(f"{task_name}: Unexpected error while processing PR #{index + 1}: {e}", exc_info=True)
-            
+            logger.info(f"{task_name}: PR with url of {pr_info['pr_url']} returned 404 on commit data. Skipping.")
+            continue
             
     if len(all_data) > 0:
         logger.info(f"{task_name}: Inserting {len(all_data)} rows")

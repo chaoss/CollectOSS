@@ -36,6 +36,8 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
     repo = execute_session_query(query, 'one')
     owner, name = get_owner_repo(repo.repo_git)
 
+    task_name = f"{owner}/{name} Pr files"
+
     github_graphql_data_access = GithubGraphQlDataAccess(key_auth, logger)
 
     pr_file_rows = []
@@ -90,9 +92,13 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
                 }
 
                 pr_file_rows.append(data)
-        except (NotFoundException, InvalidDataException) as e:
-            logger.warning(e)
+        except NotFoundException as e:
+            logger.info(f"{task_name}: PR with number of {pr_info['pr_src_number']} returned 404 on file data. Skipping.")
             continue
+        except InvalidDataException as e:
+            logger.warning(f"{task_name}: PR with number of {pr_info['pr_src_number']} returned null for file data. Skipping.")
+            continue
+
 
     if len(pr_file_rows) > 0:
         # Execute a bulk upsert with sqlalchemy 
