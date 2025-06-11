@@ -46,7 +46,7 @@ For this task's configuration, in workers configuration block, we need to define
             "num_clusters" : 4
     }
 
-Additional Worker Parameters: 
+Additional Worker Parameters:
 ------------------------------------------------------
 
 In addition to standard worker parameters, clustering worker requires some worker-specific parameters which are described below:
