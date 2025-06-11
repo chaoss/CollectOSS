@@ -1,7 +1,7 @@
 Quickstart
 ===============
 
-Select installation instructions from those most closely related to the operating system that you use below. Note that Augur's dependencies do not consistently support python 3.11 at this time. Python 3.8 - Python 3.10 have been tested on each platform. 
+Select installation instructions from those most closely related to the operating system that you use below. Note that Augur's dependencies do not consistently support python 3.11 at this time. Python 3.8 - Python 3.10 have been tested on each platform.
 
 .. toctree::
    :maxdepth: 2
