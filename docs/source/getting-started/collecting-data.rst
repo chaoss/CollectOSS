@@ -7,7 +7,7 @@ Now that you’ve installed Augur’s application server, it’s time to configu
 
     # Terminal Window 1
 
-   # Starts the redis server 
+   # Starts the redis server
     redis-server
 
 
@@ -15,10 +15,10 @@ Now that you’ve installed Augur’s application server, it’s time to configu
 
     # Terminal Window 3
 
-   # To Start Augur: 
+   # To Start Augur:
    (uv run nohup augur backend start)
 
-   # To Stop Augur: 
+   # To Stop Augur:
    uv run augur backend stop
    uv run augur backend kill
 

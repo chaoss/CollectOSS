@@ -146,7 +146,7 @@ This file will be located in the ``/etc/nginx/sites-enabled`` directory on most 
 		        access_log /var/log/nginx/augur.censusscienceosshealth.access.log;
 
 		}
-    
+
 --------------------
 Enabling HTTPS
 --------------------
