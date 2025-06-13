@@ -12,8 +12,8 @@ from augur.application.db import create_database_engine, get_database_string
 
 
 # revision identifiers, used by Alembic.
-revision = '33'
-down_revision = '32'
+revision = '34'
+down_revision = '33'
 branch_labels = None
 depends_on = None
 def upgrade():
