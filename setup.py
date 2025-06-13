@@ -30,7 +30,7 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Version Control",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.11",
     ],
     install_requires=[
         "graphene",
@@ -44,7 +44,7 @@ setup(
         "Beaker==1.11.0", # 1.11.0
         "SQLAlchemy==2.0.22", # 1.4.40
         "itsdangerous==2.0.1", # 2.1.2
-        'Jinja2~=3.0.3',
+        'Jinja2~=3.1',
         "Flask==2.0.2", # 2.2.2
         "Flask-Cors==4.0.1",
         "Flask-Login==0.5.0",
