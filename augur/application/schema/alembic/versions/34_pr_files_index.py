@@ -17,12 +17,6 @@ down_revision = '33'
 branch_labels = None
 depends_on = None
 def upgrade():
-    op.drop_constraint(
-        'pr_files_repo_unq',
-        'pull_request_files',
-        schema='augur_data',
-        type_='unique'
-    )
     op.create_unique_constraint(
         'pr_files_repo_unq',
         'pull_request_files',
