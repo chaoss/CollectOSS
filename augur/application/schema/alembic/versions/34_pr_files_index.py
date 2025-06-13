@@ -1,4 +1,4 @@
-"""Fix OpenSSF Scorecard Unique Constraint
+"""Fix OpenSSF Scorecard Unique Constraint (12 minutes on VLI)
 
 Revision ID: 34
 Revises: 33
