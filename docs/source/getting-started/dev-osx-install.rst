@@ -88,19 +88,19 @@ Executable
 
 .. code:: shell
 
-   brew update ; 
-   brew upgrade ; 
-   brew install rabbitmq ; 
+   brew update ;
+   brew upgrade ;
+   brew install rabbitmq ;
    brew install redis ;
    brew install postgresql@14 ;
-   brew install python3-yq ; 
+   brew install python3-yq ;
    brew install python@3.11 ;
-   brew install postgresql@14 ; 
+   brew install postgresql@14 ;
    brew install go ; #required: Go Needs to be version 1.19.x or higher.
    brew install nginx ; # required for hosting
-   brew install geckodriver; 
+   brew install geckodriver;
 
-   # You will almost certainly need to reboot after this. 
+   # You will almost certainly need to reboot after this.
 
 RabbitMQ Configuration
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -232,7 +232,7 @@ time to log off the root user.
 .. code:: shell
 
    exit
-   exit 
+   exit
 
 RabbitMQ Developer Note:
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -320,11 +320,11 @@ template:
 
 .. code:: sql
 
-   UPDATE augur_operations.config 
+   UPDATE augur_operations.config
    SET value = 2
    WHERE
-   section_name='Redis' 
-   AND 
+   section_name='Redis'
+   AND
    setting_name='cache_group';
 
 What does Redis Do?
@@ -436,7 +436,7 @@ Silicon, as it is looking for information in MacOS Intel directories**
    brew update;
    brew upgrade;
    brew install certbot;
-   brew install openssl; 
+   brew install openssl;
    brew install brew install python-typing-extensions
 
 Generate a certificate for the specific domain for which you have a file
@@ -534,8 +534,6 @@ Specifically, you may find this error in your augur logs:
 .. code:: shell
 
    GRUB_DISABLE_OS_PROBER=true
-
-.. _postgresql-configuration-1:
 
 Postgresql Configuration
 ------------------------

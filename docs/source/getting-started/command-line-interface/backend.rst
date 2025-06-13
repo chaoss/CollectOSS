@@ -18,7 +18,7 @@ This command is for starting Augur's API server & (optionally) data collection w
 
 **To start the backend normally:**
 
-.. code-block:: 
+.. code-block::
 
   uv run augur backend start
 
@@ -52,12 +52,12 @@ This command is for starting Augur's API server & (optionally) data collection w
   > ...
   > From this point on, the housekeeper and broker logs detailing the worker's progress will take over
 
-To start the backend as a background process: 
+To start the backend as a background process:
 
 .. code-block:: bash
 
   nohup uv run augur backend start >logs/base.log 2>logs/base.err &
-  
+
 Successful output looks like the generation of standard Augur logfiles in the logs/ directory.
 
 To start the backend server without the housekeeper:
