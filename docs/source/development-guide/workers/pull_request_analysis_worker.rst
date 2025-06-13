@@ -51,6 +51,6 @@ After feature engineering, the following features were considered:
     ├── setup.py
     └── trained_pr_model.pkl
 
-The ``trained_pr_model.pkl`` is the saved pre-trained model, used for the analysis. 
+The ``trained_pr_model.pkl`` is the saved pre-trained model, used for the analysis.
 
 After prediction, the ``pull_request_analysis`` table is populated with the predicted probabilities for every open PR.

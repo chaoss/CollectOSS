@@ -1,11 +1,11 @@
 Docker Image Breakdown
-=================
+======================
 
 Augur provides a separate Docker image for each layer of our application (database, backend, and frontend). This section details how to build and run these images locally for testing, and also describes how to set up our test environment using Docker.
 
 .. note::
 
-    This page is primarily targeted at developers. 
+    This page is primarily targeted at developers.
 
 Building the images
 --------------------
@@ -42,4 +42,3 @@ To start a container, use the command below. ``<container_name>`` can be whateve
 
     # in the root augur/ directory
     $ docker run -p <host_port>:<docker_port> --name <container_name> <tag_name>
-

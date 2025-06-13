@@ -1,16 +1,16 @@
 Docker Compose
-===========
+==============
 For quickest start up, set up Docker or Podman desktop with a machine with roughly
 the following resources (or more).
 
-- 8 CPUs 
+- 8 CPUs
 - 100 GB disk
 - 10 GB RAM
 
 1. Clone the Augur repository https://github.com/chaoss/augur
 
 
-2. Create a .env file in the top level directory with the following fields: 
+2. Create a .env file in the top level directory with the following fields:
 
 .. code:: python
 
@@ -25,14 +25,14 @@ the following resources (or more).
 
 3. Build the container using one of the following commands:
 
-.. code:: shell 
+.. code:: shell
 
-    docker compose up --build 
+    docker compose up --build
 
 or
 
-.. code:: shell 
+.. code:: shell
 
-    podman compose up --build 
+    podman compose up --build
 
-And augur should be up and running! 
+And augur should be up and running!

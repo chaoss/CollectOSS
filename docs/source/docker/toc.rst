@@ -7,7 +7,5 @@ Docker
    quick-start
    getting-started
    docker
-   docker compose
+   docker-compose
    usage
-
-

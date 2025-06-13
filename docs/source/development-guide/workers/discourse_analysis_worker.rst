@@ -30,7 +30,7 @@ Worker Configuration
 -----------------------
 Like standard worker configuration, we need to define delay, given, model and repo_group_id in housekeeper configuration block.
 
-.. code-block:: json 
+.. code-block:: json
 
 	{
 	    "delay": 10000,
@@ -41,7 +41,7 @@ Like standard worker configuration, we need to define delay, given, model and re
 
 Further, in workers configuration block, we need to define port, switch and number of workers.
 
-.. code-block:: json 
+.. code-block:: json
 
 	"discourse_analysis_worker":{
 		    "port" : 51400,
