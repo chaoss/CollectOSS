@@ -28,6 +28,8 @@ python:
         path: .
         extra_requirements:
             - dev
+      - method: setuptools
+        path: .
 
 #   build: 
 #     os: ubuntu-22.04
