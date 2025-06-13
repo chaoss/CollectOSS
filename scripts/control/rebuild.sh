@@ -9,7 +9,6 @@ if [[ $? -ne 0 ]]; then
 fi
 
 
-scripts/install/backend.sh
 scripts/install/workers.sh
 
 echo
