@@ -11,6 +11,8 @@ import logging
 import secrets
 import traceback
 
+from augur.application.db.models.augur_data import Repo
+from augur.application.db.models.augur_data import RepoGroup
 from augur.application.db.models import Repo, RepoGroup
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models.base import Base
@@ -149,7 +151,7 @@ class WorkerJob(Base):
     __tablename__ = "worker_job"
     __table_args__ = {
         "schema": "augur_operations",
-        "comment": "This table stores the jobs workers collect data for. A job is found in the code, and in the augur.config.json under the construct of a “model”. ",
+        "comment": "This table stores the jobs workers collect data for. A job is found in the code, and in the augur.config.json under the construct of a 'model'. ",
     }
 
     job_model = Column(String(255), primary_key=True)
@@ -171,7 +173,7 @@ class WorkerOauth(Base):
     __tablename__ = "worker_oauth"
     __table_args__ = {
         "schema": "augur_operations",
-        "comment": "This table stores credentials for retrieving data from platform API’s. Entries in this table must comply with the terms of service for each platform. ",
+        "comment": "This table stores credentials for retrieving data from platform API's. Entries in this table must comply with the terms of service for each platform. ",
     }
 
     oauth_id = Column(
