@@ -65,8 +65,6 @@ from augur.application.db.models.augur_data import (
     PullRequestReviewMessageRef,
     CommitMessage,
     RepoClone,
-    D0ContributorEngagement,
-    Repo
 )
 
 from augur.application.db.models.spdx import (
@@ -115,5 +113,3 @@ from augur.application.db.models.augur_operations import (
 )
 
 DEFAULT_REPO_GROUP_IDS = [1, 10]
-
-__all__ = ['D0ContributorEngagement', 'Repo']
