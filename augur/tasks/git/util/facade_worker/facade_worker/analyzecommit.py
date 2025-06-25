@@ -173,7 +173,7 @@ def analyze_commit(
     try:
         commit_message = check_output(
             f"git --git-dir {repo_loc} log --format=%B -n 1 {commit}".split()
-        ).decode('utf-8').strip()
+        ).decode('utf-8', errors="backslashreplace").strip()
     except CalledProcessError as e:
         logger.error(f"Git failed to retrieve commit message for {commit}: {e}")
         commit_message = "<invalid commit message>"
