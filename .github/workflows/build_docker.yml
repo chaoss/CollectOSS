@@ -178,7 +178,7 @@ jobs:
           # Releases update the *:latest tag and the *:<version> tag
           # Main does not update any tags
           tags: |
-            type=raw,value=devel-latest,enable=${{ github.ref == 'refs/heads/dev' }}
+            type=raw,value=devel-latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=latest,enable=${{ github.event_name == 'release' }}
             type=raw,value=${{ github.event.release.tag_name }},enable=${{ github.event_name == 'release' }}
 
