@@ -16,6 +16,7 @@ Welcome!
    docker/toc
    schema/toc
    login
+   procedures/toc
 .. 
   library-documentation/toc
 .. 
