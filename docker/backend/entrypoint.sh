@@ -2,6 +2,16 @@
 #SPDX-License-Identifier: MIT
 set -e
 
+if [[ -z "$AUGUR_DB" ]]; then
+    # Require AUGUR_DB_HOST, AUGUR_DB_USER, AUGUR_DB_PASSWORD, and AUGUR_DB_NAME to be set
+    if [[ -z "$AUGUR_DB_HOST" ]] || [[ -z "$AUGUR_DB_USER" ]] || [[ -z "$AUGUR_DB_PASSWORD" ]] || [[ -z "$AUGUR_DB_NAME" ]]; then
+        echo -e "When AUGUR_DB is not set, you must set AUGUR_DB_HOST, AUGUR_DB_USER,\nAUGUR_DB_PASSWORD, and AUGUR_DB_NAME"
+        exit 1
+    fi
+    # Construct AUGUR_DB from the individual components
+    export AUGUR_DB="postgresql+psycopg2://${AUGUR_DB_USER}:${AUGUR_DB_PASSWORD}@${AUGUR_DB_HOST}/${AUGUR_DB_NAME}"
+fi
+
 if [[ "$AUGUR_DB" == *"localhost"* ]]; then
     echo "localhost db connection"
     export AUGUR_DB="${AUGUR_DB/localhost/host.docker.internal}"
