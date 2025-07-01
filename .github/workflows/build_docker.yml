@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - dev
+      - release
   pull_request:
   release:
     types:
@@ -174,11 +174,10 @@ jobs:
           labels: |
             org.opencontainers.image.title=augur_${{ matrix.image}}
           images: ghcr.io/${{ github.repository_owner }}/augur_${{ matrix.image }}
-          # Pushes to the dev branch update the *:devel-latest tag
+          # Pushes to the main branch update the *:devel-latest tag
           # Releases update the *:latest tag and the *:<version> tag
-          # Main does not update any tags
           tags: |
-            type=raw,value=devel-latest,enable=${{ github.ref == 'refs/heads/dev' }}
+            type=raw,value=devel-latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=latest,enable=${{ github.event_name == 'release' }}
             type=raw,value=${{ github.event.release.tag_name }},enable=${{ github.event_name == 'release' }}
 
