@@ -138,3 +138,14 @@ include = [
     "augur*",
     "keyman*",
 ]
+
+[tool.uv]
+# Constraint dependencies are used to limit the versions of dependencies
+# that get installed, without adding them to the main dependencies list. This is
+# particularly useful controlling the resolution of indirect dependencies.
+constraint-dependencies = [
+    # graphql-server-core v1.1.1 is incompatible with Python 3.10 due to
+    # importing MutableMapping from collections instead of collections.abc
+    # https://docs.python.org/3.10/whatsnew/3.10.html#removed
+    "graphql-server-core>1.1.1",
+]
