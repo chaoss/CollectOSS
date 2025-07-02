@@ -102,7 +102,9 @@ COPY metadata.py .
 COPY scripts/ scripts/
 COPY keyman/ keyman/
 
-RUN find . -type d -exec chmod u=rwx,go=rx {} + && find . -type f -exec chmod u=rw,go=r {} +
+RUN find augur -type d -exec chmod u=rwx,go=rx {} + && find augur -type f -exec chmod u=rw,go=r {} +
+RUN find keyman -type d -exec chmod u=rwx,go=rx {} + && find keyman -type f -exec chmod u=rw,go=r {} +
+RUN find scripts -exec chmod u=rwx,go=rx {} +
 
 
 # Install the main project
