@@ -80,11 +80,12 @@ ENV UV_LOCKED=1
 
 WORKDIR /augur
 
-# Install augur's dependencies
+COPY pyproject.toml .
+COPY uv.lock .
+COPY .python-version .
+
+# Install augur's dependencies early to take advantage of build cache
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    --mount=type=bind,source=.python-version,target=.python-version \
     uv sync --no-install-project --no-dev
 
 # Copy in the actual code
@@ -93,9 +94,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # This can be removed once https://github.com/containers/buildah/issues/6066 or relevant equivalent is fixed
 # - u=rw,u+X: user can read and write all files/dirs and execute directories
 # - go=r,go+X: group and others can read all files/dirs and execute directories
-COPY pyproject.toml .
-COPY uv.lock .
-COPY .python-version .
 COPY README.md .
 COPY LICENSE .
 COPY alembic.ini .
