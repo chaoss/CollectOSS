@@ -18,7 +18,7 @@ Detailed Steps
 1. Login to your server.
 2. If you have not already done so, clone Augur.
 3. Change into that directory.
-4. ``git checkout dev``, if you want to deploy the latest features, otherwise remain in the main branch. 
+4. ``git checkout main``, if you want to deploy the latest features, otherwise remain in the main branch. 
 5. You need a database owned by an Augur user. 
 6. ``make install`` ... now is a good time to go get some tea.
 7. When you return with your tea, follow the prompts: 
@@ -56,6 +56,6 @@ For example, we set ours to ``test.augurlabs.io``.
         } 
     }
 
-11. Then do a ``make rebuild-dev``.
+11. Then do a ``make rebuild``.
 
 Next up: configure ``nginx``!
