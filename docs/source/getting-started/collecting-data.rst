@@ -16,7 +16,7 @@ Now that you’ve installed Augur’s application server, it’s time to configu
     # Terminal Window 3
 
    # To Start Augur: 
-   (nohup uv run augur backend start)
+   (uv run nohup augur backend start)
 
    # To Stop Augur: 
    uv run augur backend stop
