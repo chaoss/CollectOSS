@@ -10,9 +10,9 @@ The ``augur backend`` CLI group is for controlling Augur's API server & data col
 
 ``start``
 ============
-This command is for starting Augur's API server & (optionally) data collection workers. Example usages are shown below the parameters. After starting up, it will run indefinitely (but might not show any output, unless it's being queried or the housekeeper is working).
+This command is for starting Augur's API server & (optionally) data collection workers. Example usages are shown below the parameters. After starting up, it will run indefinitely (but might not show any output, unless it's being queried or the data collection is working).
 
---disable-housekeeper      Flag that turns off the housekeeper. Useful for testing the REST API or if you want to pause data collection without editing your config.
+--disable-collection      Flag that turns off the data collection. Useful for testing the REST API or if you want to pause data collection without editing your config.
 
 --skip-cleanup      Flag that disables the old process cleanup that runs before Augur starts. Useful for Python scripts where Augur needs to be run in the background: see the `test/api/runner.py` file for an example.
 
