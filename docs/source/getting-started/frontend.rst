@@ -2,7 +2,7 @@ Augur's Frontend
 =================
 
 To compile Augur's frontend for deployment in a production environment (i.e., behind an nginx server), you must go through the folowing steps
-    1. Run ``augur config init-frontend`` from within your python virtual environment. 
+    1. Run ``uv run augur config init-frontend``. 
     2. Enter Augur's home directory 
     3. Run ``npm install``, and then ``npm run build`` in the frontend directory. 
     4. After that, follow the instructions for configuring Augur behind Nginx. 
