@@ -22,6 +22,17 @@ class UrlNotFoundException(Exception):
 class NotAuthorizedException(Exception):
     pass
 
+class ResourceGoneException(Exception):
+    """Exception class indicating the requested resource (or necessary parent resource)
+    is intentionally unavailable (such as requesting issues for a repo when they are disabled)
+
+    example: https://api.github.com/repos/openshift/release/issues/4352/comments
+
+    See also: https://httpstatuses.com/410
+    """
+    def __init__(self, message="Resource returned HTTP 410 Gone. It is likely intentionally removed"):
+        super().__init__(message)
+
 class GithubDataAccess:
 
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
@@ -124,6 +135,13 @@ class GithubDataAccess:
             if response.status_code == 401:
                 raise NotAuthorizedException(f"Could not authorize with the github api")
             
+            if response.status_code == 410:
+                response_msg = response.json().get("message")
+                if response_msg is not None:
+                    raise ResourceGoneException(response_msg)
+                else:
+                    raise ResourceGoneException()
+                
             response.raise_for_status()
 
             try:
