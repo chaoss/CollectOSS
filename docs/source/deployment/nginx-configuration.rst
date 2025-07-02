@@ -31,7 +31,7 @@ Server Compilation
     }
 
 2.   Compile Augur (this wires the host and port into the frontend so people pulling the web pages of Augur, in the `frontend/` subdirectory are referring to the right endpoints for this instance.): ``make rebuild``
-3.   Run Augur: ``nohup uv run augur backend start >augur.log 2>augur.err &``
+3.   Run Augur: ``uv run nohup augur backend start >augur.log 2>augur.err &``
 
 
 ------------------
