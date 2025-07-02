@@ -56,7 +56,7 @@ To start the backend as a background process:
 
 .. code-block:: bash
 
-  nohup uv run augur backend start >logs/base.log 2>logs/base.err &
+  uv run nohup augur backend start >logs/base.log 2>logs/base.err &
   
 Successful output looks like the generation of standard Augur logfiles in the logs/ directory.
 
