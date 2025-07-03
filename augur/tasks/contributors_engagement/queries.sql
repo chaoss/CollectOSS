@@ -1,4 +1,4 @@
--- D0: Contributor Engagement Query
+-- name: d0_engagement_query
 SELECT DISTINCT ON (c.cntrb_login, cr.cntrb_category)
   c.cntrb_id,
   c.cntrb_login AS username,
@@ -19,10 +19,11 @@ JOIN
 WHERE 
   cr.cntrb_category IN ('ForkEvent', 'WatchEvent')
   AND cr.repo_git = (SELECT repo_git FROM augur_data.repo WHERE repo_id = :repo_id)
+  {time_filter}
 ORDER BY
   c.cntrb_login, cr.cntrb_category, cr.created_at;
 
--- D0: Materialized View
+-- name: create_d0_materialized_view
 CREATE MATERIALIZED VIEW IF NOT EXISTS augur_data.d0_contributor_engagement AS
 SELECT DISTINCT ON (c.cntrb_login, cr.cntrb_category)
   c.cntrb_login AS username,
@@ -45,11 +46,11 @@ WHERE
 ORDER BY
   c.cntrb_login, cr.cntrb_category, cr.created_at;
 
--- Refresh D0 Materialized View
+-- name: refresh_d0_materialized_view
 REFRESH MATERIALIZED VIEW augur_data.d0_contributor_engagement;
 
 
--- D1: Issue/Review Engagement Query
+-- name: d1_engagement_query
 SELECT
   c.cntrb_id,
   c.cntrb_login AS username,
@@ -74,9 +75,9 @@ LEFT JOIN augur_data.message pm
   ON pm.msg_id = pmr.msg_id AND pm.cntrb_id = c.cntrb_id AND pm.repo_id = :repo_id
 
 WHERE
-  (i.created_at >= NOW() - INTERVAL '1 year'
-   OR pr.pr_created_at >= NOW() - INTERVAL '1 year'
-   OR pm.msg_timestamp >= NOW() - INTERVAL '1 year')
+  (i.created_at >= NOW() - INTERVAL '{time_filter}'
+   OR pr.pr_created_at >= NOW() - INTERVAL '{time_filter}'
+   OR pm.msg_timestamp >= NOW() - INTERVAL '{time_filter}')
 
 GROUP BY
   c.cntrb_id, c.cntrb_login, c.cntrb_full_name, c.cntrb_country_code
@@ -85,7 +86,7 @@ HAVING
   OR MIN(pr.pr_created_at) IS NOT NULL 
   OR MIN(pm.msg_timestamp) IS NOT NULL;
 
--- D1: Materialized View
+-- name: create_d1_materialized_view
 CREATE MATERIALIZED VIEW IF NOT EXISTS augur_data.d1_contributor_engagement AS
 SELECT
   c.cntrb_login AS username,
@@ -109,11 +110,11 @@ WHERE
 GROUP BY
   c.cntrb_login;
 
--- Refresh D1 Materialized View
+-- name: refresh_d1_materialized_view
 REFRESH MATERIALIZED VIEW augur_data.d1_contributor_engagement;
 
 
--- D2: Merged PRs & Significant Contributions Query
+-- name: d2_engagement_query
 WITH pr_merged AS (
   SELECT DISTINCT pr.pr_augur_contributor_id
   FROM augur_data.pull_requests pr
@@ -182,7 +183,7 @@ WHERE (pm.pr_augur_contributor_id IS NOT NULL
        OR pco3.cntrb_id IS NOT NULL 
        OR cmp.cntrb_id IS NOT NULL);
 
--- D2: Materialized View
+-- name: create_d2_materialized_view
 CREATE MATERIALIZED VIEW IF NOT EXISTS augur_data.d2_contributor_engagement AS
 WITH pr_merged AS (
   SELECT DISTINCT pr.pr_augur_contributor_id
@@ -235,10 +236,10 @@ LEFT JOIN comment_counts cc ON cc.cntrb_id = c.cntrb_id
 LEFT JOIN pr_commits_over_3 pco3 ON pco3.cntrb_id = c.cntrb_id
 LEFT JOIN commented_on_multiple_prs cmp ON cmp.cntrb_id = c.cntrb_id;
 
--- Refresh D2 Materialized View
+-- name: refresh_d2_materialized_view
 REFRESH MATERIALIZED VIEW augur_data.d2_contributor_engagement;
 
-
+-- name: create_contributor_engagement_table
 CREATE TABLE IF NOT EXISTS augur_data.contributor_engagement (
     engagement_id BIGSERIAL PRIMARY KEY,
     repo_id BIGINT NOT NULL REFERENCES augur_data.repo(repo_id),
@@ -247,38 +248,31 @@ CREATE TABLE IF NOT EXISTS augur_data.contributor_engagement (
     full_name VARCHAR,
     country VARCHAR,
     platform VARCHAR,
-    
-    -- D0 Level - Basic Engagement
     d0_forked BOOLEAN DEFAULT FALSE,
     d0_starred_or_watched BOOLEAN DEFAULT FALSE,
     d0_engagement_timestamp TIMESTAMP(6),
-    
-    -- D1 Level - Issue/Review Engagement
     d1_first_issue_created_at TIMESTAMP(6),
     d1_first_pr_opened_at TIMESTAMP(6),
     d1_first_pr_commented_at TIMESTAMP(6),
-    
-    -- D2 Level - Significant Contributions
     d2_has_merged_pr BOOLEAN DEFAULT FALSE,
     d2_created_many_issues BOOLEAN DEFAULT FALSE,
     d2_total_comments BIGINT DEFAULT 0,
     d2_has_pr_with_many_commits BOOLEAN DEFAULT FALSE,
     d2_commented_on_multiple_prs BOOLEAN DEFAULT FALSE,
-    
-    -- Metadata
     tool_source VARCHAR,
     tool_version VARCHAR,
     data_source VARCHAR,
     data_collection_date TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Constraints
     UNIQUE(repo_id, cntrb_id)
 );
 
+-- name: create_contributor_engagement_indexes
 CREATE INDEX IF NOT EXISTS idx_contributor_engagement_repo_id ON augur_data.contributor_engagement(repo_id);
 CREATE INDEX IF NOT EXISTS idx_contributor_engagement_cntrb_id ON augur_data.contributor_engagement(cntrb_id);
 CREATE INDEX IF NOT EXISTS idx_contributor_engagement_username ON augur_data.contributor_engagement(username);
 CREATE INDEX IF NOT EXISTS idx_contributor_engagement_platform ON augur_data.contributor_engagement(platform);
 
+
+-- name: create_contributor_engagement_sequence
 CREATE SEQUENCE IF NOT EXISTS augur_data.contributor_engagement_engagement_id_seq
     OWNED BY augur_data.contributor_engagement.engagement_id;

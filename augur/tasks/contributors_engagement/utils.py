@@ -1,11 +1,86 @@
 import logging
+import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
-
 from sqlalchemy import text
 from augur.application.db.lib import get_session, bulk_insert_dicts
 from augur.application.db.models import ContributorEngagement, Contributor
 
+
+class QueryLoader:
+    """Utility class to load and manage SQL queries from external files"""
+    
+    def __init__(self, queries_file_path: str = "queries.sql"):
+        self.queries_file_path = queries_file_path
+        self._queries = {}
+        self._load_queries()
+    
+    def _load_queries(self):
+        """Load all queries from the SQL file"""
+        if not os.path.exists(self.queries_file_path):
+            raise FileNotFoundError(f"Queries file not found: {self.queries_file_path}")
+        
+        with open(self.queries_file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        
+        # Split content by query name comments
+        sections = content.split('-- name: ')
+        
+        for section in sections[1:]:  # Skip first empty section
+            lines = section.strip().split('\n')
+            if not lines:
+                continue
+                
+            query_name = lines[0].strip()
+            
+            # Find description if it exists
+            description = ""
+            query_start_idx = 1
+            if len(lines) > 1 and lines[1].startswith('-- description: '):
+                description = lines[1].replace('-- description: ', '').strip()
+                query_start_idx = 2
+            
+            # Extract query content (everything after the name and description)
+            query_lines = []
+            for line in lines[query_start_idx:]:
+                # Stop if we hit another query definition
+                if line.startswith('-- name: '):
+                    break
+                query_lines.append(line)
+            
+            query_content = '\n'.join(query_lines).strip()
+            
+            # Remove trailing semicolon and clean up
+            if query_content.endswith(';'):
+                query_content = query_content[:-1].strip()
+            
+            self._queries[query_name] = {
+                'description': description,
+                'query': query_content
+            }
+    
+    def get_query(self, query_name: str) -> str:
+        """Get a query by name"""
+        if query_name not in self._queries:
+            raise ValueError(f"Query '{query_name}' not found in {self.queries_file_path}")
+        return self._queries[query_name]['query']
+    
+    def get_query_description(self, query_name: str) -> str:
+        """Get a query description by name"""
+        if query_name not in self._queries:
+            raise ValueError(f"Query '{query_name}' not found in {self.queries_file_path}")
+        return self._queries[query_name]['description']
+    
+    def list_queries(self) -> List[str]:
+        """List all available query names"""
+        return list(self._queries.keys())
+
+
+# Initialize global query loader
+import pathlib
+
+queries_file_path = str(pathlib.Path(__file__).parent / "queries.sql")
+query_loader = QueryLoader(queries_file_path=queries_file_path)
 
 def get_d0_engagement_data(repo_id: int, logger: logging.Logger, full_collection: bool = True) -> List[Dict[str, Any]]:
     """
@@ -22,35 +97,16 @@ def get_d0_engagement_data(repo_id: int, logger: logging.Logger, full_collection
     
     logger.info(f"Executing D0 engagement query for repo_id: {repo_id} (full_collection: {full_collection})")
     
+    # Get the base query
+    base_query = query_loader.get_query('d0_engagement_query')
+    
+    # Apply time filter
     time_filter = ""
     if not full_collection:
         time_filter = "AND cr.created_at >= NOW() - INTERVAL '30 days'"
     
-    d0_query = text(f"""
-        SELECT DISTINCT ON (c.cntrb_login, cr.cntrb_category)
-          c.cntrb_id,
-          c.cntrb_login AS username,
-          c.cntrb_full_name AS full_name,
-          c.cntrb_country_code AS country,
-          CASE 
-            WHEN cr.repo_git ILIKE '%gitlab%' THEN 'GitLab'
-            WHEN cr.repo_git ILIKE '%github%' THEN 'GitHub'
-            ELSE 'Unknown'
-          END AS platform,
-          (cr.cntrb_category = 'ForkEvent') AS forked,
-          (cr.cntrb_category = 'WatchEvent') AS starred_or_watched,
-          cr.created_at AS engagement_timestamp
-        FROM 
-          augur_data.contributors c
-        JOIN 
-          augur_data.contributor_repo cr ON cr.cntrb_id = c.cntrb_id
-        WHERE 
-          cr.cntrb_category IN ('ForkEvent', 'WatchEvent')
-          AND cr.repo_git = (SELECT repo_git FROM augur_data.repo WHERE repo_id = :repo_id)
-          {time_filter}
-        ORDER BY
-          c.cntrb_login, cr.cntrb_category, cr.created_at
-    """)
+    # Format the query with time filter
+    d0_query = text(base_query.format(time_filter=time_filter))
     
     try:
         with get_session() as session:
@@ -78,46 +134,16 @@ def get_d1_engagement_data(repo_id: int, logger: logging.Logger, full_collection
     
     logger.info(f"Executing D1 engagement query for repo_id: {repo_id} (full_collection: {full_collection})")
     
+    # Get the base query
+    base_query = query_loader.get_query('d1_engagement_query')
+    
+    # Apply time filter
     time_filter = "1 year"
     if not full_collection:
         time_filter = "30 days"
     
-    d1_query = text(f"""
-        SELECT
-          c.cntrb_id,
-          c.cntrb_login AS username,
-          c.cntrb_full_name AS full_name,
-          c.cntrb_country_code AS country,
-          'GitHub' AS platform,
-          MIN(i.created_at) AS first_issue_created_at,
-          MIN(pr.pr_created_at) AS first_pr_opened_at,
-          MIN(pm.msg_timestamp) AS first_pr_commented_at
-        FROM
-          augur_data.contributors c
-
-        LEFT JOIN augur_data.issues i
-          ON i.reporter_id = c.cntrb_id AND i.repo_id = :repo_id
-
-        LEFT JOIN augur_data.pull_requests pr
-          ON pr.pr_augur_contributor_id = c.cntrb_id AND pr.repo_id = :repo_id
-
-        LEFT JOIN augur_data.pull_request_message_ref pmr
-          ON pmr.pull_request_id = pr.pull_request_id
-        LEFT JOIN augur_data.message pm
-          ON pm.msg_id = pmr.msg_id AND pm.cntrb_id = c.cntrb_id AND pm.repo_id = :repo_id
-
-        WHERE
-          (i.created_at >= NOW() - INTERVAL '{time_filter}'
-           OR pr.pr_created_at >= NOW() - INTERVAL '{time_filter}'
-           OR pm.msg_timestamp >= NOW() - INTERVAL '{time_filter}')
-
-        GROUP BY
-          c.cntrb_id, c.cntrb_login, c.cntrb_full_name, c.cntrb_country_code
-        HAVING
-          MIN(i.created_at) IS NOT NULL 
-          OR MIN(pr.pr_created_at) IS NOT NULL 
-          OR MIN(pm.msg_timestamp) IS NOT NULL
-    """)
+    # Format the query with time filter
+    d1_query = text(base_query.format(time_filter=time_filter))
     
     try:
         with get_session() as session:
@@ -145,6 +171,10 @@ def get_d2_engagement_data(repo_id: int, logger: logging.Logger, full_collection
     
     logger.info(f"Executing D2 engagement query for repo_id: {repo_id} (full_collection: {full_collection})")
     
+    # Get the base query
+    base_query = query_loader.get_query('d2_engagement_query')
+    
+    # Apply time filters based on collection type
     if not full_collection:
         pr_merged_time_filter = "AND pr.pr_merged_at >= NOW() - INTERVAL '90 days'"
         issue_time_filter = "AND i.created_at >= NOW() - INTERVAL '90 days'"
@@ -158,80 +188,14 @@ def get_d2_engagement_data(repo_id: int, logger: logging.Logger, full_collection
         pr_commits_time_filter = ""
         comment_pr_time_filter = ""
     
-    d2_query = text(f"""
-        WITH pr_merged AS (
-          SELECT DISTINCT pr.pr_augur_contributor_id
-          FROM augur_data.pull_requests pr
-          WHERE pr.pr_merged_at IS NOT NULL AND pr.repo_id = :repo_id
-          {pr_merged_time_filter}
-        ),
-
-        issue_counts AS (
-          SELECT reporter_id AS cntrb_id, COUNT(*) AS issue_count
-          FROM augur_data.issues i
-          WHERE repo_id = :repo_id
-          {issue_time_filter}
-          GROUP BY reporter_id
-        ),
-
-        comment_counts AS (
-          SELECT m.cntrb_id, COUNT(*) AS total_comments
-          FROM augur_data.message m
-          LEFT JOIN augur_data.issue_message_ref imr ON imr.msg_id = m.msg_id
-          LEFT JOIN augur_data.pull_request_message_ref pmr ON pmr.msg_id = m.msg_id
-          LEFT JOIN augur_data.issues i ON i.issue_id = imr.issue_id
-          LEFT JOIN augur_data.pull_requests pr ON pr.pull_request_id = pmr.pull_request_id
-          WHERE m.repo_id = :repo_id 
-            AND (i.repo_id = :repo_id OR pr.repo_id = :repo_id)
-            AND (imr.issue_id IS NOT NULL OR pmr.pull_request_id IS NOT NULL)
-            {comment_time_filter}
-          GROUP BY m.cntrb_id
-        ),
-
-        pr_commits_over_3 AS (
-          SELECT pr.pr_augur_contributor_id AS cntrb_id
-          FROM augur_data.pull_requests pr
-          JOIN augur_data.pull_request_commits prc ON prc.pull_request_id = pr.pull_request_id
-          WHERE pr.repo_id = :repo_id
-          {pr_commits_time_filter}
-          GROUP BY pr.pr_augur_contributor_id, pr.pull_request_id
-          HAVING COUNT(prc.pr_cmt_sha) > 3
-        ),
-
-        commented_on_multiple_prs AS (
-          SELECT m.cntrb_id
-          FROM augur_data.message m
-          JOIN augur_data.pull_request_message_ref pmr ON pmr.msg_id = m.msg_id
-          JOIN augur_data.pull_requests pr ON pr.pull_request_id = pmr.pull_request_id
-          WHERE m.repo_id = :repo_id AND pr.repo_id = :repo_id
-          {comment_pr_time_filter}
-          GROUP BY m.cntrb_id
-          HAVING COUNT(DISTINCT pmr.pull_request_id) > 2
-        )
-
-        SELECT 
-          c.cntrb_id,
-          c.cntrb_login AS username,
-          c.cntrb_full_name AS full_name,
-          c.cntrb_country_code AS country,
-          'GitHub' AS platform,
-          CASE WHEN pm.pr_augur_contributor_id IS NOT NULL THEN true ELSE false END AS has_merged_pr,
-          CASE WHEN ic.issue_count > 5 THEN true ELSE false END AS created_many_issues,
-          COALESCE(cc.total_comments, 0) AS total_comments,
-          CASE WHEN pco3.cntrb_id IS NOT NULL THEN true ELSE false END AS has_pr_with_many_commits,
-          CASE WHEN cmp.cntrb_id IS NOT NULL THEN true ELSE false END AS commented_on_multiple_prs
-        FROM augur_data.contributors c
-        LEFT JOIN pr_merged pm ON pm.pr_augur_contributor_id = c.cntrb_id
-        LEFT JOIN issue_counts ic ON ic.cntrb_id = c.cntrb_id
-        LEFT JOIN comment_counts cc ON cc.cntrb_id = c.cntrb_id
-        LEFT JOIN pr_commits_over_3 pco3 ON pco3.cntrb_id = c.cntrb_id
-        LEFT JOIN commented_on_multiple_prs cmp ON cmp.cntrb_id = c.cntrb_id
-        WHERE (pm.pr_augur_contributor_id IS NOT NULL 
-               OR ic.cntrb_id IS NOT NULL 
-               OR cc.cntrb_id IS NOT NULL 
-               OR pco3.cntrb_id IS NOT NULL 
-               OR cmp.cntrb_id IS NOT NULL)
-    """)
+    # Format the query with time filters
+    d2_query = text(base_query.format(
+        pr_merged_time_filter=pr_merged_time_filter,
+        issue_time_filter=issue_time_filter,
+        comment_time_filter=comment_time_filter,
+        pr_commits_time_filter=pr_commits_time_filter,
+        comment_pr_time_filter=comment_pr_time_filter
+    ))
     
     try:
         with get_session() as session:
@@ -334,6 +298,7 @@ def process_engagement_data(
         logger.error(f"{task_name}: Error inserting {engagement_level} engagement data: {e}")
         return 0
 
+
 def create_materialized_views(logger: logging.Logger) -> bool:
     """
     Create materialized views for D0, D1, D2 engagement levels
@@ -347,106 +312,10 @@ def create_materialized_views(logger: logging.Logger) -> bool:
     
     logger.info("Creating contributor engagement materialized views")
     
-    # D0 Materialized View
-    d0_view_sql = text("""
-        CREATE MATERIALIZED VIEW IF NOT EXISTS augur_data.d0_contributor_engagement AS
-        SELECT DISTINCT ON (c.cntrb_login, cr.cntrb_category)
-          c.cntrb_login AS username,
-          c.cntrb_full_name AS full_name,
-          c.cntrb_country_code AS country,
-          CASE 
-            WHEN cr.repo_git ILIKE '%gitlab%' THEN 'GitLab'
-            WHEN cr.repo_git ILIKE '%github%' THEN 'GitHub'
-            ELSE 'Unknown'
-          END AS platform,
-          cr.cntrb_category = 'ForkEvent' AS forked,
-          cr.cntrb_category = 'WatchEvent' AS starred_or_watched,
-          cr.created_at AS engagement_timestamp
-        FROM 
-          augur_data.contributors c
-        JOIN 
-          augur_data.contributor_repo cr ON cr.cntrb_id = c.cntrb_id
-        WHERE 
-          cr.cntrb_category IN ('ForkEvent', 'WatchEvent')
-        ORDER BY
-          c.cntrb_login, cr.cntrb_category, cr.created_at;
-    """)
-    
-    # D1 Materialized View
-    d1_view_sql = text("""
-        CREATE MATERIALIZED VIEW IF NOT EXISTS augur_data.d1_contributor_engagement AS
-        SELECT
-          c.cntrb_login AS username,
-          MIN(i.created_at) AS first_issue_created_at,
-          MIN(pr.pr_created_at) AS first_pr_opened_at,
-          MIN(pm.msg_timestamp) AS first_pr_commented_at
-        FROM
-          augur_data.contributors c
-        LEFT JOIN augur_data.issues i
-          ON i.reporter_id = c.cntrb_id
-        LEFT JOIN augur_data.pull_requests pr
-          ON pr.pr_augur_contributor_id = c.cntrb_id
-        LEFT JOIN augur_data.pull_request_message_ref pmr
-          ON pmr.pull_request_id = pr.pull_request_id
-        LEFT JOIN augur_data.message pm
-          ON pm.msg_id = pmr.msg_id AND pm.cntrb_id = c.cntrb_id
-        WHERE
-          (i.created_at >= NOW() - INTERVAL '1 year'
-           OR pr.pr_created_at >= NOW() - INTERVAL '1 year'
-           OR pm.msg_timestamp >= NOW() - INTERVAL '1 year')
-        GROUP BY
-          c.cntrb_login;
-    """)
-    
-    # D2 Materialized View
-    d2_view_sql = text("""
-        CREATE MATERIALIZED VIEW IF NOT EXISTS augur_data.d2_contributor_engagement AS
-        WITH pr_merged AS (
-          SELECT DISTINCT pr.pr_augur_contributor_id
-          FROM augur_data.pull_requests pr
-          WHERE pr.pr_merged_at IS NOT NULL
-        ),
-        issue_counts AS (
-          SELECT reporter_id AS cntrb_id, COUNT(*) AS issue_count
-          FROM augur_data.issues
-          GROUP BY reporter_id
-        ),
-        comment_counts AS (
-          SELECT m.cntrb_id, COUNT(*) AS total_comments
-          FROM augur_data.message m
-          LEFT JOIN augur_data.issue_message_ref imr ON imr.msg_id = m.msg_id
-          LEFT JOIN augur_data.pull_request_message_ref pmr ON pmr.msg_id = m.msg_id
-          WHERE imr.issue_id IS NOT NULL OR pmr.pull_request_id IS NOT NULL
-          GROUP BY m.cntrb_id
-        ),
-        pr_commits_over_3 AS (
-          SELECT pr.pr_augur_contributor_id AS cntrb_id
-          FROM augur_data.pull_requests pr
-          JOIN augur_data.pull_request_commits prc ON prc.pull_request_id = pr.pull_request_id
-          GROUP BY pr.pr_augur_contributor_id, pr.pull_request_id
-          HAVING COUNT(prc.pr_cmt_sha) > 3
-        ),
-        commented_on_multiple_prs AS (
-          SELECT m.cntrb_id
-          FROM augur_data.message m
-          JOIN augur_data.pull_request_message_ref pmr ON pmr.msg_id = m.msg_id
-          GROUP BY m.cntrb_id
-          HAVING COUNT(DISTINCT pmr.pull_request_id) > 2
-        )
-        SELECT 
-          c.cntrb_login AS username,
-          CASE WHEN pm.pr_augur_contributor_id IS NOT NULL THEN true ELSE false END AS has_merged_pr,
-          CASE WHEN ic.issue_count > 5 THEN true ELSE false END AS created_many_issues,
-          COALESCE(cc.total_comments, 0) AS total_comments,
-          CASE WHEN pco3.cntrb_id IS NOT NULL THEN true ELSE false END AS has_pr_with_many_commits,
-          CASE WHEN cmp.cntrb_id IS NOT NULL THEN true ELSE false END AS commented_on_multiple_prs
-        FROM augur_data.contributors c
-        LEFT JOIN pr_merged pm ON pm.pr_augur_contributor_id = c.cntrb_id
-        LEFT JOIN issue_counts ic ON ic.cntrb_id = c.cntrb_id
-        LEFT JOIN comment_counts cc ON cc.cntrb_id = c.cntrb_id
-        LEFT JOIN pr_commits_over_3 pco3 ON pco3.cntrb_id = c.cntrb_id
-        LEFT JOIN commented_on_multiple_prs cmp ON cmp.cntrb_id = c.cntrb_id;
-    """)
+    # Get materialized view creation queries
+    d0_view_sql = text(query_loader.get_query('create_d0_materialized_view'))
+    d1_view_sql = text(query_loader.get_query('create_d1_materialized_view'))
+    d2_view_sql = text(query_loader.get_query('create_d2_materialized_view'))
     
     try:
         with get_session() as session:
@@ -476,10 +345,11 @@ def refresh_materialized_views(logger: logging.Logger) -> bool:
     
     logger.info("Refreshing contributor engagement materialized views")
     
+    # Get refresh queries
     refresh_queries = [
-        text("REFRESH MATERIALIZED VIEW augur_data.d0_contributor_engagement;"),
-        text("REFRESH MATERIALIZED VIEW augur_data.d1_contributor_engagement;"),
-        text("REFRESH MATERIALIZED VIEW augur_data.d2_contributor_engagement;")
+        text(query_loader.get_query('refresh_d0_materialized_view')),
+        text(query_loader.get_query('refresh_d1_materialized_view')),
+        text(query_loader.get_query('refresh_d2_materialized_view'))
     ]
     
     try:
@@ -494,4 +364,3 @@ def refresh_materialized_views(logger: logging.Logger) -> bool:
     except Exception as e:
         logger.error(f"Error refreshing materialized views: {e}")
         return False
-
