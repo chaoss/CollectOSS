@@ -28,13 +28,13 @@ Currently, Augur only officially supports the last-released version represented 
 
 The Release Process
 
-When the next release is set to be cut, there are some preparation steps need to take place first, these include:
+When the next release is set to be cut, some preparation steps need to take place first, these include:
 - Ensuring all features planned for that release are merged and any unrelated changes are delayed (as appropriate) until after the release.
 - Creating a Pull Request to update any applicable metadata (such as version information and Changelogs) on the `main` branch.
 
-Once all release preparation has been completed, a new Pull Request can be created to merge the  the main branch into the `release`` branch. This creates a final review opportunity and allows for another run of (potentially more stringent) CI jobs compared to those ran on `main` catching issues that may have come up throughout the various merges or in the process of preparing for release.
+Once all release preparation has been completed, a new Pull Request can be created to merge the main branch into the `release 'branch. This creates a final review opportunity and allows for another run of (potentially more stringent) CI jobs compared to those run on `main`, catching issues that may have come up throughout the various merges or in the process of preparing for release.
 
-After this PR is merged, a tag is created pointing to that commit on the `release` branch, effectively labeling it so that it can be returned to later if needed. This labeling process can also be the basis for additional CI jobs that build and upload the released code to distribution platforms such as Docker Hub or the GitHub Container Registry
+After this PR is merged, a tag is created that points to the commit on the `release` branch, effectively labeling it so that it can be returned to later if needed. This labeling process can also be the basis for additional CI jobs that build and upload the released code to distribution platforms such as Docker Hub or the GitHub Container Registry
 
 
 Why?
