@@ -12,5 +12,3 @@ Schema
    pull-requests
    contributors
    dependencies
-   
-

@@ -4,6 +4,17 @@ on:
     branches: [main, release]
 
 jobs:
+  check-docs:
+    name: runner / check docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Ensure docs build cleanly
+        # Setting `O` to pass extra options to the sphinx-build command.
+        run: O="-a -E -n -W --keep-going" make docs
+
   run-pylint:
     name: runner / pylint
     permissions: write-all

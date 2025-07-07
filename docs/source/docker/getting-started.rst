@@ -1,7 +1,7 @@
 Getting Started
 ================
 
-For the Docker Savvy Who Want to Understand How the Sausage is Made: 
+For the Docker Savvy Who Want to Understand How the Sausage is Made:
 --------------------------------------------------------------------
 
 Augur provides several Docker images designed to get you started with our software as quickly as possible. They are:
@@ -21,17 +21,17 @@ The rest of this section of the documentation assumes you have a working install
 If you are less familiar with Docker, or experience issues you cannot resolve attempting our "quick start", please follow the instructions in this section, and the next few pages, to set up your environment.
 
 Docker Compose
-------------
+--------------
 
 For quickest start up, set up Docker or Podman desktop with a machine with roughly
 the following resources (or more):
 
-- 8 CPUs 
+- 8 CPUs
 - 100 GB disk
 - 10 GB RAM
 
-Clone the Augur repository and create a .env file in the top level directory 
-with the following fields: 
+Clone the Augur repository and create a .env file in the top level directory
+with the following fields:
 
 .. code:: python
 
@@ -46,38 +46,38 @@ with the following fields:
 
 Then run:
 
-.. code:: shell 
+.. code:: shell
 
-    docker compose up --build 
+    docker compose up --build
 
-or 
+or
 
-.. code:: shell 
-    
-    podman compose up --build 
+.. code:: shell
 
-And augur should be up and running! 
+    podman compose up --build
+
+And augur should be up and running!
 
 Credentials
 ------------
-If you want to create a DB outside of using Docker/Podman Compose, you'll need to set up a PostgreSQL instance either locally or using a remote host. 
+If you want to create a DB outside of using Docker/Podman Compose, you'll need to set up a PostgreSQL instance either locally or using a remote host.
 
 .. note::
 
   Make sure your database is configured to listen to all addresses to work with the containers while running locally. These settings can be edited in your ``postgresql.conf``. Additionally, edit the bottom section of your ``pg_hba.conf`` file with:
-  
-.. code-block:: 
+
+.. code-block::
 
       # TYPE  DATABASE        USER            ADDRESS                 METHOD
       host	all  		all 		0.0.0.0/0 		md5
 
-If you're interested solely in data collection, we recommend using our test data with the Docker Compose script. This will start up the backend and frontend containers simultaneously, well as an optional database container; however, if you are looking to collect data long term, we **strongly suggest setting up a persistent database instance**; you can find instructions for doing so `here <../getting-started/database.html>`_. Remember to save off the credentials for your newly minted database; you'll need them shortly. 
+If you're interested solely in data collection, we recommend using our test data with the Docker Compose script. This will start up the backend and frontend containers simultaneously, well as an optional database container; however, if you are looking to collect data long term, we **strongly suggest setting up a persistent database instance**; you can find instructions for doing so `here <../getting-started/database.html>`_. Remember to save off the credentials for your newly minted database; you'll need them shortly.
 
-If you don't care if your data doesn't get persisted or are doing local development, you can use the database containers we provide. 
+If you don't care if your data doesn't get persisted or are doing local development, you can use the database containers we provide.
 
 .. warning::
 
-    There are conflicting opinions on using Docker for a production database. 
+    There are conflicting opinions on using Docker for a production database.
 
 If you're more interested in doing local development, we recommend using our Docker testing environment image - more on that later.
 
@@ -100,9 +100,9 @@ Your database credentials and other environment variables used at runtime are st
 
 You can provide your own ``.env`` file to pull from. The file should have the below format and set all the variables to some value.
 
-  .. code:: 
+  .. code::
 
-    AUGUR_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx 
+    AUGUR_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
     AUGUR_GITHUB_USERNAME=usernameGithub
     AUGUR_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
     AUGUR_GITLAB_USERNAME=usernameGitlab
@@ -110,4 +110,3 @@ You can provide your own ``.env`` file to pull from. The file should have the be
 
 
 Now that you've created your config file or are ready to generate it yourself, you're ready to `get going <quick-start.html>`_ .
-
