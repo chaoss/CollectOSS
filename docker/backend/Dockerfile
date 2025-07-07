@@ -80,27 +80,32 @@ ENV UV_LOCKED=1
 
 WORKDIR /augur
 
-# Install augur's dependencies
+COPY pyproject.toml .
+COPY uv.lock .
+COPY .python-version .
+
+# Install augur's dependencies early to take advantage of build cache
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    --mount=type=bind,source=.python-version,target=.python-version \
     uv sync --no-install-project --no-dev
 
 # Copy in the actual code
-# The --chmod flags ensure that permissions are set correctly:
+# The RUN line below ensure that permissions are set correctly.
+# This is the equivalent of the following docker --chmod flags, but done in a way thats compatible with podman.
+# This can be removed once https://github.com/containers/buildah/issues/6066 or relevant equivalent is fixed
 # - u=rw,u+X: user can read and write all files/dirs and execute directories
 # - go=r,go+X: group and others can read all files/dirs and execute directories
-COPY --chmod=u=rw,u+X,go=r,go+X pyproject.toml .
-COPY --chmod=u=rw,u+X,go=r,go+X uv.lock .
-COPY --chmod=u=rw,u+X,go=r,go+X .python-version .
-COPY --chmod=u=rw,u+X,go=r,go+X README.md .
-COPY --chmod=u=rw,u+X,go=r,go+X LICENSE .
-COPY --chmod=u=rw,u+X,go=r,go+X alembic.ini .
-COPY --chmod=u=rw,u+X,go=r,go+X augur/ augur/
-COPY --chmod=u=rw,u+X,go=r,go+X metadata.py .
-COPY --chmod=u=rw,u+X,go=r,go+X scripts/ scripts/
-COPY --chmod=u=rw,u+X,go=r,go+X keyman/ keyman/
+COPY README.md .
+COPY LICENSE .
+COPY alembic.ini .
+COPY augur/ augur/
+COPY metadata.py .
+COPY scripts/ scripts/
+COPY keyman/ keyman/
+
+RUN find augur -type d -exec chmod u=rwx,go=rx {} + && find augur -type f -exec chmod u=rw,go=r {} +
+RUN find keyman -type d -exec chmod u=rwx,go=rx {} + && find keyman -type f -exec chmod u=rw,go=r {} +
+RUN find scripts -exec chmod u=rwx,go=rx {} +
+
 
 # Install the main project
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -111,9 +116,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV PATH="/augur/.venv/bin:${PATH}"
 
 ENV SCC_DIR=/scc
-COPY --from=golang-builder --chmod=u=rw,u+X,go=r,go+X "/scc" "/scc/scc"
+COPY --from=golang-builder --chmod=755 "/scc" "/scc/scc"
 ENV SCORECARD_DIR=/scorecard
-COPY --from=golang-builder --chmod=u=rw,u+X,go=r,go+X "/scorecard" "/scorecard/scorecard"
+COPY --from=golang-builder --chmod=755 "/scorecard" "/scorecard/scorecard"
 # Verify installations
 RUN ${SCC_DIR}/scc --version
 RUN ${SCORECARD_DIR}/scorecard version
@@ -122,8 +127,8 @@ RUN mkdir -p repos/ logs/ /augur/facade/
 RUN ln -s /cache /augur/augur/static/cache
 
 # Copy in the entrypoint and init scripts, ensuring they are executable
-COPY --chmod=u=rwx,go=rx ./docker/backend/entrypoint.sh /
-COPY --chmod=u=rwx,go=rx ./docker/backend/init.sh /
+COPY --chmod=755 ./docker/backend/entrypoint.sh /
+COPY --chmod=755 ./docker/backend/init.sh /
 RUN chmod +x /entrypoint.sh /init.sh
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
 CMD ["/init.sh"]
