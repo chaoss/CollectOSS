@@ -30,14 +30,14 @@ Executable
 
 .. code:: shell
 
-   sudo apt update && 
-   sudo apt upgrade && 
-   sudo apt install software-properties-common && 
-   sudo apt install python3-dev && 
+   sudo apt update &&
+   sudo apt upgrade &&
+   sudo apt install software-properties-common &&
+   sudo apt install python3-dev &&
    sudo apt install python3.10-venv &&
-   sudo apt install postgresql postgresql-contrib postgresql-client && 
-   sudo apt install build-essential && 
-   sudo apt install redis-server &&  # required 
+   sudo apt install postgresql postgresql-contrib postgresql-client &&
+   sudo apt install build-essential &&
+   sudo apt install redis-server &&  # required
    sudo apt install erlang && # required
    sudo apt install rabbitmq-server && #required
    sudo snap install go --classic && #required: Go Needs to be version 1.19.x or higher. Snap is the package manager that gets you to the right version. Classic enables it to actually be installed at the correct version.
@@ -46,7 +46,7 @@ Executable
    sudo apt install firefox=121.0~b7+build1-0ubuntu0.22.04.1 &&
    sudo apt install firefox-geckodriver
 
-   # You will almost certainly need to reboot after this. 
+   # You will almost certainly need to reboot after this.
 
 RabbitMQ Configuration
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -123,7 +123,7 @@ time to log off the root user.
 .. code:: shell
 
    exit
-   exit 
+   exit
 
 Rabbitmq Broker Configuration
 -----------------------------
@@ -351,11 +351,11 @@ template:
 
 .. code:: sql
 
-   UPDATE augur_operations.config 
+   UPDATE augur_operations.config
    SET value = 2
    WHERE
-   section_name='Redis' 
-   AND 
+   section_name='Redis'
+   AND
    setting_name='cache_group';
 
 What does Redis Do?
@@ -435,8 +435,6 @@ Specifically, you may find this error in your augur logs:
 .. code:: shell
 
    GRUB_DISABLE_OS_PROBER=true
-
-.. _postgresql-configuration-1:
 
 Postgresql Configuration
 ------------------------

@@ -2,9 +2,9 @@
 Message Insights Worker
 =======================
 
-.. note:: 
-    - If you have an NVidia GPU available, you can install the `cuda` drivers to make this worker run faster. 
-    - On Ubuntu 20.04, use the following commands: 
+.. note::
+    - If you have an NVidia GPU available, you can install the `cuda` drivers to make this worker run faster.
+    - On Ubuntu 20.04, use the following commands:
       - On the Ubuntu machine, open a Terminal. Type in the following commands to add the Nvidia ppa repository:
       - `wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin`
       - `sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 && sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub`
@@ -61,7 +61,7 @@ When a repo is being analyzed for the first time, the ML models are trained and 
 
 The ``custom_dataset.xlsx`` is a dataset containing technical code review and commit messages from Oracle & Jira database, and general sentiment, emoji-filled messages from StackOverflow. ``EmoticonLookupTable`` is used in sentiment analysis to parse emojis/emoticons and capture their sentiment. ``doc2vecmodel`` is the trained Doc2Vec model on the custom_dataset, utilized for forming word embeddings in novelty detection.
 
-Novelty Detection 
+Novelty Detection
 ^^^^^^^^^^^^^^^^^^
 Novelty detection is an unsupervised classification problem to identify abnormal/outlier messages. Since a message that is novel in the context of 1 repo may be normal to another, it is essential to maintain the semantics of the past messages of every repo, to flag an incoming message as novel/normal accurately. Every message is transformed to a 250-dimensional Doc2Vec embedding. Deep Autoencoders are used to compress input data and calculate error thresholds. The architecture of the autoencoder model consists of two symmetrical deep neural networks — an encoder and a decoder that applies backpropagation, setting the target values to be equal to the inputs. It attempts to copy its input to its output and anomalies are harder to reconstruct compared with normal samples. 2 AEs are used, the first one identifies normal data based on the threshold calculated and then the second is trained using only the normal data. The Otsu thresholding technique is used in these steps to get the error threshold. Messages which are at least 10 characters long and have reconstruction error > threshold, get flagged as novel.
 
@@ -72,7 +72,7 @@ The sentiment analysis was modeled as a supervised problem. This uses the SentiC
 Insights
 ---------
 
-After these tasks are done, the ``message_analysis`` table is populated with all details are about a message: the id and the sentiment and novelty scores. In order to get a view of these metrics at a repo level, the ``message_analysis_summary`` table is updated with the total ratio of positive/negative sentiment messages and count of novel messages every ``insight_days`` frequency. 
+After these tasks are done, the ``message_analysis`` table is populated with all details are about a message: the id and the sentiment and novelty scores. In order to get a view of these metrics at a repo level, the ``message_analysis_summary`` table is updated with the total ratio of positive/negative sentiment messages and count of novel messages every ``insight_days`` frequency.
 
 The 3 types of insights provided are:
 

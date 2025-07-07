@@ -37,7 +37,7 @@ The backend output should like something like this (note that your process IDs a
      [2020-03-22 12:39:53 -0500] [19092] [INFO] Booting worker with pid: 19092
 
 The frontend output should like something like this::
-    
+
        # a whole bunch of stuff about compiling
        ...
        ...
@@ -51,11 +51,11 @@ The frontend output should like something like this::
      - Local:   http://localhost:8080/
      - Network: http://192.168.1.141:8080/
 
-.. note:: 
+.. note::
 
   You'll likely see some linting warnings in the frontend section
   (indicated here by the …). Don’t worry about them: it’s the last 3 lines
-  that indicate success. Once you see this you’re good to go! Head to the specified URL 
+  that indicate success. Once you see this you’re good to go! Head to the specified URL
   (in this example it’s ``http://localhost:8080/``) to check it out!
 
 --------------

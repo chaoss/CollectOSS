@@ -63,10 +63,10 @@ The ``.csv`` file must have the following format:
 
 .. code::
 
-  <git_repo_url>,<repo_group_id>, 
+  <git_repo_url>,<repo_group_id>,
   ...
 
-where ``<repo_group_id>`` is an **existing** repository group ID, and ``<git_repo_url>`` is the url to the repository's Git repository, e.g. ``https://github.com/chaoss/augur.git``. 
+where ``<repo_group_id>`` is an **existing** repository group ID, and ``<git_repo_url>`` is the url to the repository's Git repository, e.g. ``https://github.com/chaoss/augur.git``.
 Each pair of values should be on its own line (indicated by the ...), without quotes, and there should be no column headers.
 
 .. note::
@@ -134,7 +134,7 @@ Example usage\:
 
 ``print-db-version``
 -------------------------
-The ``print-db-version`` command will give user the current version of the configured database on their system. 
+The ``print-db-version`` command will give user the current version of the configured database on their system.
 
 Example usage\:
 
@@ -183,7 +183,7 @@ Example usage\:
 
 ``create-schema``
 ------------------
-The ``create-schema`` command will attempt to create the Augur schema in the database defined in your config file. 
+The ``create-schema`` command will attempt to create the Augur schema in the database defined in your config file.
 
 Example usage\:
 

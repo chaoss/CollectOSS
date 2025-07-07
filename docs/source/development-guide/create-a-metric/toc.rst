@@ -10,6 +10,6 @@ If you have questions or would like to help please open an issue on GitHub_.
 
 .. toctree::
    :maxdepth: 1
-   
+
    metrics-steps
    api-development
