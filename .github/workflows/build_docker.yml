@@ -183,6 +183,7 @@ jobs:
             ./docker/database/Dockerfile
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_database:test
+          layers: true
 
       - name: Build keyman container
         uses: redhat-actions/buildah-build@v2
@@ -192,6 +193,7 @@ jobs:
             ./docker/keyman/Dockerfile
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_keyman:test
+          layers: true
 
       - name: Build rabbitmq container
         uses: redhat-actions/buildah-build@v2
@@ -201,6 +203,7 @@ jobs:
             ./docker/rabbitmq/Dockerfile
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test
+          layers: true
 
       - name: Build backend container
         uses: redhat-actions/buildah-build@v2
@@ -210,6 +213,7 @@ jobs:
             ./docker/backend/Dockerfile
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_backend:test
+          layers: true
 
       - name: Prepare compose file
         run: |
