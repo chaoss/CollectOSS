@@ -16,8 +16,9 @@ Augur Documentation
    docker/toc
    schema/toc
    login
-..
-  library-documentation/toc
+   procedures/toc
+.. 
+
 ..
   deployment/toc
 ..
