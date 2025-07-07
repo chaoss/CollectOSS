@@ -19,7 +19,7 @@ The `main` branch is the primary development branch that is the target for all n
 `release`
 The `release` branch is where all augur versions (after 0.89.3) are tagged. Each commit on this branch represents either a hotfix to the prior release or a new major or minor version.
 
-Currently, Augur only officially supports the last-released version represented by the latest commit on the `release` branch. 
+Currently, Augur only officially supports the last-released version represented by the latest **release** tag. In most cases, the latest commit on the `release` branch is made immediately prior to a release, but always rely on the latest tagged release, not the release branch in production. 
 
 .. note::
 
