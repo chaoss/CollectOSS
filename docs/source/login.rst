@@ -73,7 +73,7 @@ The Client Application must make the following request in order to facilitate th
 
 The authorization server will respond with the following on success:
 
-.. code:: text
+.. code:: json5
 
     {
         "status": "Validated",
@@ -81,7 +81,7 @@ The authorization server will respond with the following on success:
         "access_token": "the new Bearer token",
         "refresh_token": "the new refresh token",
         "token_type": "Bearer",
-        "expires": [integer: seconds until this access_token expires]
+        "expires": 99  // integer: seconds until this access_token expires
     }
 
 Success!
@@ -107,14 +107,14 @@ The application may also attempt automatic reauthorization using the previously 
 
 The authorization server will respond with the following on success:
 
-.. code:: text
+.. code:: json5
 
     {
         "status": "Validated",
         "access_token": "the new Bearer token",
         "refresh_token": "the new refresh token",
         "token_type": "Bearer",
-        "expires": [integer: seconds until this access_token expires]
+        "expires": 99  // integer: seconds until this access_token expires
     }
 
 The new User Session and refresh tokens should replace the existing tokens, as they may not be the same.
