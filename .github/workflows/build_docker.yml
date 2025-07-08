@@ -52,7 +52,7 @@ jobs:
 
 
   test-e2e:
-    name: End-to-end test
+    name: End-to-end test (Docker)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -167,6 +167,121 @@ jobs:
         if: always()
         # We use tail so that we can see the name of each file as it's printed
         run: "docker run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs tail -n +0'"
+
+  test-e2e-podman:
+    name: End-to-end test (Podman)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove unnecessary files from the base image
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Start Podman socket
+        run: systemctl --user start podman.socket
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build database container
+        uses: redhat-actions/buildah-build@v2
+        with:
+          context: .
+          containerfiles: |
+            ./docker/database/Dockerfile
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository_owner }}/augur_database:test
+          layers: true
+
+      - name: Build keyman container
+        uses: redhat-actions/buildah-build@v2
+        with:
+          context: .
+          containerfiles: |
+            ./docker/keyman/Dockerfile
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository_owner }}/augur_keyman:test
+          layers: true
+
+      - name: Build rabbitmq container
+        uses: redhat-actions/buildah-build@v2
+        with:
+          context: .
+          containerfiles: |
+            ./docker/rabbitmq/Dockerfile
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test
+          layers: true
+
+      - name: Build backend container
+        uses: redhat-actions/buildah-build@v2
+        with:
+          context: .
+          containerfiles: |
+            ./docker/backend/Dockerfile
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository_owner }}/augur_backend:test
+          layers: true
+
+      - name: Prepare compose file
+        run: |
+          yq eval -i '.services.augur.image = "ghcr.io/${{ github.repository_owner }}/augur_backend:test"' docker-compose.yml
+          yq eval -i '.services.augur.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.augur.restart = "no"' docker-compose.yml
+
+          yq eval -i '.services.augur-db.image = "ghcr.io/${{ github.repository_owner }}/augur_database:test"' docker-compose.yml
+          yq eval -i '.services.augur-db.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.augur-db.restart = "no"' docker-compose.yml
+
+          yq eval -i '.services.augur-keyman.image = "ghcr.io/${{ github.repository_owner }}/augur_keyman:test"' docker-compose.yml
+          yq eval -i '.services.augur-keyman.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.augur-keyman.restart = "no"' docker-compose.yml
+
+          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test"' docker-compose.yml
+          yq eval -i '.services.rabbitmq.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.rabbitmq.restart = "no"' docker-compose.yml
+
+      - name: Setup Podman Compose
+        uses: webgtx/setup-podman-compose@v1
+
+      - name: Set up list of log lines to match
+        run: |
+          cat <<EOF > /tmp/regex_matches.txt
+          Gunicorn webserver started
+          Starting core worker processes
+          Starting secondary worker processes
+          Starting facade worker processes
+          Retrieved \\d+ github api keys for use
+          Fetching new repos \\(complete\\)
+          Inserting \\d+ contributors
+          Inserting \\d+ issues
+          Inserting prs of length: \\d+
+          Querying committers count
+          Done generating scc data for repo
+          Sending due task
+          EOF
+
+      - name: Start services & wait for output
+        # This starts the system and sends the output to "await_all.py" which
+        # scans for the regex matches from above. Once all matches are seen at
+        # least once, the `compose down` will run to shut down the system. If
+        # this all doesn't happen before the timeout, the job will fail.
+        run: |
+          podman compose -f docker-compose.yml up --no-build 2>&1 \
+            | (./scripts/ci/await_all.py /tmp/regex_matches.txt \
+                && docker compose -f docker-compose.yml down)
+        timeout-minutes: 3
+        env:
+          AUGUR_GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+          AUGUR_GITHUB_USERNAME: ${{ github.repository_owner }}
+          AUGUR_GITLAB_API_KEY: dummy
+          AUGUR_GITLAB_USERNAME: dummy
+
+      - name: Dump logs
+        # Always run this step to get logs, even if the previous step fails
+        if: always()
+        # We use tail so that we can see the name of each file as it's printed
+        run: "podman run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs tail -n +0'"
 
 
 
