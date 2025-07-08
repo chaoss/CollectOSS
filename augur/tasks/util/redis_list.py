@@ -4,7 +4,7 @@ It imports the redis_connection as redis which is a connection to a redis cahce
 from typing import Iterable, Any, Union
 
 from collections.abc import MutableSequence
-from augur.tasks.init.redis_connection import redis_connection as redis
+from augur.tasks.init.redis_connection import get_redis_connection
 from augur import instance_id
 
 
@@ -25,6 +25,7 @@ class RedisList(MutableSequence):
         """
 
         self.redis_list_key = f"{instance_id}_{list_name}"
+        self.redis = get_redis_connection()
 
 
     def __len__(self) -> int:
@@ -34,7 +35,7 @@ class RedisList(MutableSequence):
             length of redis list
         """
 
-        return redis.llen(self.redis_list_key) 
+        return self.redis.llen(self.redis_list_key) 
 
 
     def __iter__(self) -> Any:
@@ -63,7 +64,7 @@ class RedisList(MutableSequence):
             Item at requested index
         """
 
-        item = redis.lindex(self.redis_list_key, index)
+        item = self.redis.lindex(self.redis_list_key, index)
         if item is None:
             return None
 
@@ -94,10 +95,10 @@ class RedisList(MutableSequence):
         """
 
 
-        if redis.exists(self.redis_list_key):
-            redis.lset(self.redis_list_key, index, data)
+        if self.redis.exists(self.redis_list_key):
+            self.redis.lset(self.redis_list_key, index, data)
         else:
-            redis.rpush(self.redis_list_key, data)
+            self.redis.rpush(self.redis_list_key, data)
 
     
     def __delitem__(self, index: int) -> None:
@@ -110,10 +111,10 @@ class RedisList(MutableSequence):
             index: index of desired item in list
         """
 
-        items_before = redis.lpop(self.redis_list_key, index+1)
+        items_before = self.redis.lpop(self.redis_list_key, index+1)
         items_before.pop() 
         if items_before:
-            redis.lpush(self.redis_list_key, *items_before)
+            self.redis.lpush(self.redis_list_key, *items_before)
 
     # def contains(self, value: Any):
     #     """Determiens whether the paramater value is in the list
@@ -143,8 +144,8 @@ class RedisList(MutableSequence):
             data: value that will be added
         """
 
-        value_before = redis.lindex(self.redis_list_key, index-1)
-        redis.linsert(self.redis_list_key, "after", value_before, value)
+        value_before = self.redis.lindex(self.redis_list_key, index-1)
+        self.redis.linsert(self.redis_list_key, "after", value_before, value)
 
     def append(self, value):
         """Adds the paramater value to the end of the list
@@ -153,7 +154,7 @@ class RedisList(MutableSequence):
             value: value that is added to end of list
         """
 
-        redis.rpush(self.redis_list_key, value)
+        self.redis.rpush(self.redis_list_key, value)
 
 
     def pop(self, index: int = None):
@@ -170,7 +171,7 @@ class RedisList(MutableSequence):
             # This will get a random index from the list and remove it, 
             # decreasing the likelihood of everyone using the same key all the time
             #redis.rpop(self.redis_list_key)
-            redis.spop(self.redis_list_key)
+            self.redis.spop(self.redis_list_key)
 
         else:
             # calls __delitem__
@@ -184,7 +185,7 @@ class RedisList(MutableSequence):
             value: item being removed
         """
 
-        redis.lrem(self.redis_list_key, 0, value)
+        self.redis.lrem(self.redis_list_key, 0, value)
 
 
     def extend(self, values: Iterable[Any]):
@@ -195,27 +196,27 @@ class RedisList(MutableSequence):
         """
 
         if values:
-            redis.rpush(self.redis_list_key, *values)
+            self.redis.rpush(self.redis_list_key, *values)
 
 
     def clear(self):
         """Removes all items from the redis list"""
 
-        redis.delete(self.redis_list_key)
+        self.redis.delete(self.redis_list_key)
 
     
     def print_values(self):
         """Prints all the values in the redis list"""
 
-        key_list_length = redis.llen(self.redis_list_key) 
+        key_list_length = self.redis.llen(self.redis_list_key) 
 
         for i in range(key_list_length):
-            print(redis.lindex(self.redis_list_key, i))
+            print(self.redis.lindex(self.redis_list_key, i))
 
 if __name__ == "__main__":
 
-    redis.flushdb()
     redis_list = RedisList("list")
+    redis_list.redis.flushdb()
     
     # redis_list.append(5)
     # redis_list.append(15)
@@ -225,5 +226,5 @@ if __name__ == "__main__":
     print("List values")
     redis_list.print_values()
 
-    redis.delete("list")
+    redis_list.redis.delete("list")
     

@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.application.db.session import DatabaseSession
-from augur.tasks.init.redis_connection import redis_connection as redis
+from augur.tasks.init.redis_connection import get_redis_connection
 
 @pytest.fixture
 def httpx_client():
@@ -20,6 +20,8 @@ def httpx_client():
 
 @pytest.fixture
 def key_handler(test_db_session):
+
+    redis = get_redis_connection()
     
     redis.flushdb()
 
