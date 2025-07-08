@@ -14,7 +14,8 @@ echo "Cleaning output files..."
 find . -name \*.out -delete
 find . -name \*.log -delete
 find . -name \*.err -delete
-find . -type f -name "*.lock" -delete
+find . -type f -name "*.lock" ! -name "uv.lock" -delete
+
 rm -rf logs/
 
 echo "Removing build files..."
