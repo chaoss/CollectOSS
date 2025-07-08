@@ -177,6 +177,9 @@ jobs:
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
+      - name: Start Podman socket
+        run: systemctl --user start podman.socket
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
