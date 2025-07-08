@@ -21,14 +21,16 @@ if os.environ.get("KEYMAN_DOCKER"):
     logger.addHandler(handler)  # Attach the handler to the logger
     logger.setLevel(logging.DEBUG)
 else:
-    from augur.tasks.init.redis_connection import redis_connection as conn
+    from augur.tasks.init.redis_connection import get_redis_connection
     from augur.application.logs import AugurLogger
 
     logger = AugurLogger("KeyOrchestrator").get_logger()
 
 class KeyOrchestrator:
     def __init__(self) -> None:
-        self.stdin = conn.pubsub(ignore_subscribe_messages = True)
+
+        self.conn = get_redis_connection()
+        self.stdin = self.conn.pubsub(ignore_subscribe_messages = True)
         self.logger = logger
         
         # Load channel names and IDs from the spec
@@ -154,18 +156,18 @@ class KeyOrchestrator:
                     elif request["type"] == "UNPUBLISH":
                         self.unpublish_key(request["key_str"], request["key_platform"])
                     elif request["type"] == "ACK":
-                        conn.publish(stdout, "")
+                        self.conn.publish(stdout, "")
                         self.logger.info(f"ACK; for: {request['requester_id']}")
                     elif request["type"] == "LIST_PLATFORMS":
                         platforms = [ p for p in self.fresh_keys.keys() ]
-                        conn.publish(stdout, json.dumps(platforms))
+                        self.conn.publish(stdout, json.dumps(platforms))
                     elif request["type"] == "LIST_KEYS":
                         keys = list(self.fresh_keys[request["key_platform"]])
                         keys += list(self.expired_keys[request["key_platform"]].keys())
-                        conn.publish(stdout, json.dumps(keys))
+                        self.conn.publish(stdout, json.dumps(keys))
                     elif request["type"] == "LIST_INVALID_KEYS":
                         keys = list(self.invalid_keys[request["key_platform"]])
-                        conn.publish(stdout, json.dumps(keys))
+                        self.conn.publish(stdout, json.dumps(keys))
                     elif request["type"] == "SHUTDOWN":
                         self.logger.info("Shutting down")
                         # Close
@@ -196,7 +198,7 @@ class KeyOrchestrator:
                     break
                 except WaitKeyTimeout as w:
                     timeout = w.tiemout_seconds
-                    conn.publish(stdout, json.dumps({
+                    self.conn.publish(stdout, json.dumps({
                         "wait": timeout
                     }))
                     continue
@@ -206,7 +208,7 @@ class KeyOrchestrator:
                     continue
 
                 self.logger.debug(f"REPLY; for: {request['requester_id']}, platform: {request['key_platform']}")
-                conn.publish(stdout, json.dumps({
+                self.conn.publish(stdout, json.dumps({
                     "key": new_key
                 }))
                     

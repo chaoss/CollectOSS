@@ -22,7 +22,7 @@ from augur.tasks.github.contributors import process_contributors
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
-from augur.tasks.init.redis_connection import redis_connection 
+from augur.tasks.init.redis_connection import get_redis_connection 
 from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
@@ -363,6 +363,8 @@ def clear_redis_caches():
     logger.info("Flushing all redis databases this instance was using")
     celery_purge_command = "celery -A augur.tasks.init.celery_app.celery_app purge -f"
     subprocess.call(celery_purge_command.split(" "))
+
+    redis_connection = get_redis_connection()
     redis_connection.flushdb()
 
 def clear_all_message_queues(connection_string):

@@ -1,4 +1,4 @@
-from augur.tasks.init.redis_connection import redis_connection as conn
+from augur.tasks.init.redis_connection import get_redis_connection
 from redis.client import PubSub
 from logging import Logger
 from os import getpid
@@ -29,8 +29,10 @@ class KeyClient:
         if not platform:
             raise ValueError("Platform must not be empty")
         
-        self.stdout = conn
-        self.stdin: PubSub = conn.pubsub(ignore_subscribe_messages = True)
+        self.conn = get_redis_connection()
+        
+        self.stdout = self.conn
+        self.stdin: PubSub = self.conn.pubsub(ignore_subscribe_messages = True)
         self.stdin.subscribe(f"{self.REQUEST}-{self.id}")
         self.platform = platform
         self.logger = logger
@@ -157,7 +159,7 @@ class KeyPublisher:
             setattr(self, channel["name"], channel["id"])
             
         self.id = getpid()
-        self.stdin: PubSub = conn.pubsub(ignore_subscribe_messages = True)
+        self.stdin: PubSub = self.conn.pubsub(ignore_subscribe_messages = True)
         self.stdin.subscribe(f"{self.ANNOUNCE}-{self.id}")
 
     def publish(self, key: str, platform: str):
@@ -172,7 +174,7 @@ class KeyPublisher:
             "key_platform": platform
         }
 
-        conn.publish(self.ANNOUNCE, json.dumps(message))
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
     
     def unpublish(self, key: str, platform: str):
         """ Unpublish a key, and remove it from orchestration
@@ -189,7 +191,7 @@ class KeyPublisher:
             "key_platform": platform
         }
 
-        conn.publish(self.ANNOUNCE, json.dumps(message))
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
     
     def wait(self, timeout_seconds = 30, republish = False):
         """ Wait for ACK from the orchestrator
@@ -215,7 +217,7 @@ class KeyPublisher:
         }
         
         listen_delta = 0.1
-        conn.publish(self.ANNOUNCE, json.dumps(message))
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
         
         # Just wait for and consume the next incoming message
         while timeout_seconds >= 0:
@@ -227,7 +229,7 @@ class KeyPublisher:
             elif timeout_seconds < listen_delta:
                 break
             elif republish:
-                conn.publish(self.ANNOUNCE, json.dumps(message))
+                self.conn.publish(self.ANNOUNCE, json.dumps(message))
             
             time.sleep(listen_delta)
             timeout_seconds -= listen_delta
@@ -245,7 +247,7 @@ class KeyPublisher:
             "requester_id": self.id
         }
         
-        conn.publish(self.ANNOUNCE, json.dumps(message))
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
         
         reply = next(self.stdin.listen())
         
@@ -272,7 +274,7 @@ class KeyPublisher:
             "key_platform": platform
         }
         
-        conn.publish(self.ANNOUNCE, json.dumps(message))
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
         
         reply = next(self.stdin.listen())
         
@@ -302,7 +304,7 @@ class KeyPublisher:
             "key_platform": platform
         }
         
-        conn.publish(self.ANNOUNCE, json.dumps(message))
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
         
         reply = next(self.stdin.listen())
         
@@ -325,4 +327,4 @@ class KeyPublisher:
             were sent prior to this message, and will then shut down
             immediately upon processing of the shutdown command
         """
-        conn.publish(self.ANNOUNCE, json.dumps({"type": "SHUTDOWN"}))
+        self.conn.publish(self.ANNOUNCE, json.dumps({"type": "SHUTDOWN"}))

@@ -4,7 +4,7 @@ Augur library commands redis
 """
 import click
 
-from augur.tasks.init.redis_connection import redis_connection as redis_conn
+from augur.tasks.init.redis_connection import get_redis_connection
 from augur.application.logs import AugurLogger
 from augur.application.cli import test_connection, test_db_connection 
 
@@ -30,6 +30,7 @@ def clear_all():
         
         if user_input in ("y", "Y", "Yes", "yes"):
             logger.info("Clearing call redis databases")
+            redis_conn = get_redis_connection()
             redis_conn.flushall()
             return
 
@@ -46,4 +47,6 @@ def clear():
     """Clears the redis cache specified in the config"""
 
     print("Clearing redis cache that is specified in the config")
+
+    redis_conn = get_redis_connection()
     redis_conn.flushdb()

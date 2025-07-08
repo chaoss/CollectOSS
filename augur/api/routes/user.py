@@ -16,7 +16,8 @@ from augur.api.util import api_key_required
 from augur.api.util import ssl_required
 
 from augur.application.db.models import User, UserSessionToken, RefreshToken
-from augur.tasks.init.redis_connection import redis_connection as redis
+from augur.tasks.init.redis_connection import get_redis_connection
+
 from ..server import app
 
 logger = logging.getLogger(__name__)
@@ -64,6 +65,8 @@ def user_authorize():
     code = secrets.token_hex()
     username = current_user.login_name
 
+    redis = get_redis_connection()
+
     redis.set(code, username, ex=300)
 
     return jsonify({"status": "Validated", "code": code})
@@ -81,6 +84,8 @@ def generate_session(application):
 
     if "code" not in grant_type:
         return jsonify({"status": "Invalid grant type"})
+    
+    redis = get_redis_connection()
 
     username = redis.get(code)
     redis.delete(code)

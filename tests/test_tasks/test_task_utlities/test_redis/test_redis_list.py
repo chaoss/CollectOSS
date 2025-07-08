@@ -1,5 +1,5 @@
 import pytest
-from augur.tasks.init.redis_connection import redis_connection as redis
+from augur.tasks.init.redis_connection import get_redis_connection
 from augur.tasks.util.redis_list import RedisList
 
 list_name = "list"
@@ -11,9 +11,13 @@ def redis_list():
 
     yield redis_list
 
+    redis = get_redis_connection()
+
     redis.flushdb()
 
 def test_redis_list_append(redis_list):
+
+    redis = get_redis_connection()
 
     string = "Hello world, how are you?"
 
@@ -32,6 +36,7 @@ length_data_2 = []
 def test_redis_list_length(redis_list, data):
 
     # print(f"Data: {data}. Data length: {len(data)}")
+    redis = get_redis_connection()
 
     if data:
         redis.rpush(redis_list.redis_list_key, *data)
@@ -57,6 +62,8 @@ extend_data_1 = [i for i in range(2, 10, 2)]
 extend_data_2 = []
 @pytest.mark.parametrize("data", [extend_data_1, extend_data_2])
 def test_redis_list_extend(redis_list, data):
+
+    redis = get_redis_connection()
 
     redis_list.extend(data)
 
