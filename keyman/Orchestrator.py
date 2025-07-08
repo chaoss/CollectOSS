@@ -25,12 +25,12 @@ else:
     from augur.application.logs import AugurLogger
 
     logger = AugurLogger("KeyOrchestrator").get_logger()
+    conn = get_redis_connection()
 
 class KeyOrchestrator:
     def __init__(self) -> None:
 
-        self.conn = get_redis_connection()
-        self.stdin = self.conn.pubsub(ignore_subscribe_messages = True)
+        self.stdin = conn.pubsub(ignore_subscribe_messages = True)
         self.logger = logger
         
         # Load channel names and IDs from the spec
@@ -156,18 +156,18 @@ class KeyOrchestrator:
                     elif request["type"] == "UNPUBLISH":
                         self.unpublish_key(request["key_str"], request["key_platform"])
                     elif request["type"] == "ACK":
-                        self.conn.publish(stdout, "")
+                        conn.publish(stdout, "")
                         self.logger.info(f"ACK; for: {request['requester_id']}")
                     elif request["type"] == "LIST_PLATFORMS":
                         platforms = [ p for p in self.fresh_keys.keys() ]
-                        self.conn.publish(stdout, json.dumps(platforms))
+                        conn.publish(stdout, json.dumps(platforms))
                     elif request["type"] == "LIST_KEYS":
                         keys = list(self.fresh_keys[request["key_platform"]])
                         keys += list(self.expired_keys[request["key_platform"]].keys())
-                        self.conn.publish(stdout, json.dumps(keys))
+                        conn.publish(stdout, json.dumps(keys))
                     elif request["type"] == "LIST_INVALID_KEYS":
                         keys = list(self.invalid_keys[request["key_platform"]])
-                        self.conn.publish(stdout, json.dumps(keys))
+                        conn.publish(stdout, json.dumps(keys))
                     elif request["type"] == "SHUTDOWN":
                         self.logger.info("Shutting down")
                         # Close
@@ -198,7 +198,7 @@ class KeyOrchestrator:
                     break
                 except WaitKeyTimeout as w:
                     timeout = w.tiemout_seconds
-                    self.conn.publish(stdout, json.dumps({
+                    conn.publish(stdout, json.dumps({
                         "wait": timeout
                     }))
                     continue
@@ -208,7 +208,7 @@ class KeyOrchestrator:
                     continue
 
                 self.logger.debug(f"REPLY; for: {request['requester_id']}, platform: {request['key_platform']}")
-                self.conn.publish(stdout, json.dumps({
+                conn.publish(stdout, json.dumps({
                     "key": new_key
                 }))
                     
