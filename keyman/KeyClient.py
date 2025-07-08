@@ -152,12 +152,13 @@ class KeyPublisher:
         as the process ID is used for async communication between
         the publisher and the orchestrator.
     """
+    
     def __init__(self) -> None:
         # Load channel names and IDs from the spec
         for channel in spec["channels"]:
             # IE: self.ANNOUNCE = "augur-oauth-announce"
             setattr(self, channel["name"], channel["id"])
-            
+        self.conn = get_redis_connection()
         self.id = getpid()
         self.stdin: PubSub = self.conn.pubsub(ignore_subscribe_messages = True)
         self.stdin.subscribe(f"{self.ANNOUNCE}-{self.id}")
