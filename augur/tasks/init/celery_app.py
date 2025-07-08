@@ -5,6 +5,7 @@ from typing import List, Dict
 import os
 import datetime
 import traceback
+import inspect
 import celery
 from celery import Celery
 from celery import current_app 
@@ -101,25 +102,41 @@ class AugurCoreRepoCollectionTask(celery.Task):
                 session.commit()
 
     def on_failure(self,exc,task_id,args, kwargs, einfo):
-        repo_git = args[0]
+        repo_git = extract_repo_git(args, kwargs)
         # log traceback to error file
         self.augur_handle_task_failure(exc, task_id, repo_git, "core_task_failure")
 
 class AugurSecondaryRepoCollectionTask(AugurCoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         
-        repo_git = args[0]
+        repo_git = extract_repo_git(args, kwargs)
         self.augur_handle_task_failure(exc, task_id, repo_git, "secondary_task_failure",collection_hook='secondary')
 
 class AugurFacadeRepoCollectionTask(AugurCoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
-        repo_git = args[0]
+        repo_git = extract_repo_git(args, kwargs)
         self.augur_handle_task_failure(exc, task_id, repo_git, "facade_task_failure",collection_hook='facade')
 
 class AugurMlRepoCollectionTask(AugurCoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args,kwargs,einfo):
-        repo_git = args[0]
+        repo_git = extract_repo_git(args, kwargs)
         self.augur_handle_task_failure(exc,task_id,repo_git, "ml_task_failure", collection_hook='ml')
+
+
+def extract_repo_git(self, args, kwargs):
+    if 'repo_git' in kwargs:
+        return kwargs['repo_git']
+    
+    sig = inspect.signature(self.run)
+    param_names = list(sig.parameters.keys())
+
+    try:
+        index = param_names.index('repo_git')
+        return args[index]
+    except (ValueError, IndexError):
+        pass
+
+    return None  # If not found
 
 
 #task_cls='augur.tasks.init.celery_app:AugurCoreRepoCollectionTask'
