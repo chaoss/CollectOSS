@@ -13,7 +13,6 @@ import time
 
 from augur import instance_id
 from augur.application.logs import AugurLogger
-from augur.tasks.init.redis_connection import redis_connection
 from augur.application.cli import test_connection, test_db_connection 
 from augur.application.cli.backend import clear_rabbitmq_messages, raise_open_file_limit
 
