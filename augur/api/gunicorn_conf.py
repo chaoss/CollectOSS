@@ -19,7 +19,17 @@ logger = logging.getLogger(__name__)
 workers = multiprocessing.cpu_count() * 2 + 1
 umask = 0o007
 reload = True
-reload_extra_files = glob(str(Path.cwd() / '**/*.j2'), recursive=True)
+
+augur_templates_dir = Path.cwd() / "augur/templates"
+
+if not augur_templates_dir.is_dir():
+    logger.critical("Could not locate templates in Gunicorn startup")
+    exit(-1)
+
+reload_extra_files = glob(str(augur_templates_dir.resolve() / '**/*.j2'), recursive=True)
+
+# Don't  want to leave extraneous variables in config scope
+del augur_templates_dir
 
 # set the log location for gunicorn    
 logs_directory = get_value('Logging', 'logs_directory')
