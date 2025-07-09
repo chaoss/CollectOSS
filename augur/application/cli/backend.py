@@ -32,7 +32,9 @@ import sqlalchemy as s
 
 from keyman.KeyClient import KeyClient, KeyPublisher
 
-logger = AugurLogger("augur", reset_logfiles=True).get_logger()
+reset_logs = os.getenv("AUGUR_RESET_LOGS", 'True').lower() in ('true', '1', 't', 'y', 'yes')
+
+logger = AugurLogger("augur", reset_logfiles=reset_logs).get_logger()
 
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
