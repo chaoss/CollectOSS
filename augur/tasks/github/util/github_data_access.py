@@ -164,7 +164,12 @@ class GithubDataAccess:
         except RetryError as e:
             raise e.last_attempt.exception()
 
-    def _decide_retry_policy(exception):
+    def _decide_retry_policy(exception: Exception) -> bool:
+        """Defines whether or not to retry a failed request based on the exception thrown
+
+        Returns:
+            bool: Boolean describing whether or not the request should be retried
+        """
         return not isinstance(num, (UrlNotFoundException, ResourceGoneException))
         
     @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(_decide_retry_policy))
