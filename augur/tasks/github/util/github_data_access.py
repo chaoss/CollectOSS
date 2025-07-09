@@ -163,13 +163,16 @@ class GithubDataAccess:
             return self.__make_request_with_retries(url, method, timeout)
         except RetryError as e:
             raise e.last_attempt.exception()
+
+    def _decide_retry_policy(exception):
+        return not isinstance(num, (UrlNotFoundException, ResourceGoneException))
         
-    @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(lambda exc: not isinstance(exc, UrlNotFoundException)))
+    @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(_decide_retry_policy))
     def __make_request_with_retries(self, url, method="GET", timeout=100):
         """ What method does?
             1. Retires 10 times
             2. Waits 5 seconds between retires
-            3. Does not rety UrlNotFoundException
+            3. Does not retry any exceptions excluded by _decide_retry_policy
             4. Catches RatelimitException and waits or expires key before raising exception
         """
 
