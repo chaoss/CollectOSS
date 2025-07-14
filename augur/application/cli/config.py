@@ -237,7 +237,7 @@ def config_get_all_json():
 
             for row in session.query(Config).all():
                 data[row.section_name][row.setting_name] = row.value
-    except:
+    except Exception:
         pass
     
     print(json.dumps(data, indent=4))
