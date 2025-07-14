@@ -14,39 +14,10 @@ from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue
 from augur.tasks.util.collection_state import CollectionState
 from augur.application.db import get_session, get_engine
 from augur.application.db.util import execute_session_query
+from augur.application.util import convert_type_of_value
 from augur.application.db.session import remove_duplicates_by_uniques, remove_null_characters_from_list_of_dicts
 
 logger = logging.getLogger("db_lib")
-
-def convert_type_of_value(config_dict, logger=None):
-        
-        
-    data_type = config_dict["type"]
-
-    if data_type == "str" or data_type is None:
-        return config_dict
-
-    if data_type == "int":
-        config_dict["value"] = int(config_dict["value"])
-
-    elif data_type == "bool":
-        value = config_dict["value"]
-        
-        if value.lower() == "false":
-            config_dict["value"] = False
-        else:
-            config_dict["value"] = True
-
-    elif data_type == "float":
-        config_dict["value"] = float(config_dict["value"])
-
-    else:
-        if logger:
-            logger.error(f"Need to add support for {data_type} types to config") 
-        else:
-            print(f"Need to add support for {data_type} types to config")
-
-    return config_dict
 
 
 def get_section(section_name) -> dict:
