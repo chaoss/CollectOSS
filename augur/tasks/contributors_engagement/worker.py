@@ -1,12 +1,9 @@
 import logging
 import traceback
-from datetime import datetime, timedelta
-from typing import List, Dict, Any
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_session
-from augur.application.db.models import ContributorEngagement, Contributor, Repo
+from augur.application.db.lib import get_repo_by_repo_git
 from augur.tasks.contributors_engagement.utils import (
     get_d0_engagement_data,
     get_d1_engagement_data, 
