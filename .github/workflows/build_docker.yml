@@ -269,7 +269,7 @@ jobs:
         run: |
           podman compose -f docker-compose.yml up --no-build 2>&1 \
             | (./scripts/ci/await_all.py /tmp/regex_matches.txt \
-                && docker compose -f docker-compose.yml down)
+                && podman compose -f docker-compose.yml down)
         timeout-minutes: 3
         env:
           AUGUR_GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
