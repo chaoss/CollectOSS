@@ -75,6 +75,23 @@ class QueryLoader:
         """List all available query names"""
         return list(self._queries.keys())
 
+import time
+
+def wait_for_db_ready(retries=10, delay=3, logger=None):
+    for attempt in range(retries):
+        try:
+            with get_session() as session:
+                session.execute(text("SELECT 1"))
+            if logger:
+                logger.info("Database is ready.")
+            return True
+        except Exception as e:
+            if logger:
+                logger.warning(f"Database not ready (attempt {attempt+1}/{retries}): {e}")
+            time.sleep(delay)
+    if logger:
+        logger.error("Database not ready after retries.")
+    return False
 
 # Initialize global query loader
 import pathlib
@@ -97,6 +114,11 @@ def get_d0_engagement_data(repo_id: int, logger: logging.Logger, full_collection
     
     logger.info(f"Executing D0 engagement query for repo_id: {repo_id} (full_collection: {full_collection})")
     
+    # Wait for DB to be ready before running the query
+    if not wait_for_db_ready(logger=logger):
+        logger.error("Database not ready, aborting D0 engagement query.")
+        return []
+
     # Get the base query
     base_query = query_loader.get_query('d0_engagement_query')
     
@@ -134,6 +156,11 @@ def get_d1_engagement_data(repo_id: int, logger: logging.Logger, full_collection
     
     logger.info(f"Executing D1 engagement query for repo_id: {repo_id} (full_collection: {full_collection})")
     
+    # Wait for DB to be ready before running the query
+    if not wait_for_db_ready(logger=logger):
+        logger.error("Database not ready, aborting D0 engagement query.")
+        return []
+
     # Get the base query
     base_query = query_loader.get_query('d1_engagement_query')
     
@@ -171,6 +198,11 @@ def get_d2_engagement_data(repo_id: int, logger: logging.Logger, full_collection
     
     logger.info(f"Executing D2 engagement query for repo_id: {repo_id} (full_collection: {full_collection})")
     
+    # Wait for DB to be ready before running the query
+    if not wait_for_db_ready(logger=logger):
+        logger.error("Database not ready, aborting D0 engagement query.")
+        return []
+
     # Get the base query
     base_query = query_loader.get_query('d2_engagement_query')
     
