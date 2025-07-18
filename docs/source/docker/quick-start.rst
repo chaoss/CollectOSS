@@ -7,7 +7,7 @@ Before you get off to such a quick start, go ahead and
 
   .. code-block:: python
 
-     git checkout dev
+     git checkout main
 
   4. Create a .env file in the top level directory with the following fields:
 
