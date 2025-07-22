@@ -225,18 +225,37 @@ def facade_bulk_insert_commits(logger, records):
 
                 facade_bulk_insert_commits(logger, firsthalfRecords)
                 facade_bulk_insert_commits(logger, secondhalfRecords)
-            elif len(records) == 1 and isinstance(e,DataError) and "time zone displacement" in f"{e}":
+            elif len(records) == 1:
                 commit_record = records[0]
                 #replace incomprehensible dates with epoch.
                 #2021-10-11 11:57:46 -0500
                 
                 # placeholder_date = "1970-01-01 00:00:15 -0500"
                 placeholder_date = commit_record['author_timestamp']
+
+                postgres_valid_timezones = {
+                    -1200, -1100, -1000, -930, -900, -800, -700,
+                    -600, -500, -400, -300, -230, -200, -100, 000,
+                    100, 200, 300, 330, 400, 430, 500, 530, 545, 600,
+                    630, 700, 800, 845, 900, 930, 1000, 1030, 1100, 1200,
+                    1245, 1300, 1400
+                }
                 
                 # Reconstruct timezone portion of the date string to UTC
-                placeholder_date = re.split("[-+]", placeholder_date)
-                placeholder_date.pop()
-                placeholder_date = "-".join(placeholder_date) + "+0000"
+                placeholder_date_segments = re.split(" ", placeholder_date)
+                tzdata = placeholder_date_segments.pop()
+
+                if ":" in tzdata:
+                    tzdata = tzdata.replace(":", "")
+
+                if int(tzdata) not in postgres_valid_timezones:
+                    tzdata = "+0000"
+                else:
+                    raise e
+
+                placeholder_date_segments.append(tzdata)
+
+                placeholder_date = " ".join(placeholder_date_segments)
 
                 #Check for improper utc timezone offset
                 #UTC timezone offset should be between -14:00 and +14:00
