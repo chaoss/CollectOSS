@@ -13,8 +13,7 @@ from typing import List, Any, Optional, Union
 from augur.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,UnresolvedCommitEmail, Contributor, CollectionStatus, UserGroup, RepoGroup
 from augur.tasks.util.collection_state import CollectionState
 from augur.application.db import get_session, get_engine
-from augur.application.db.util import execute_session_query
-from augur.application.util import convert_type_of_value
+from augur.application.db.util import execute_session_query, convert_type_of_value
 from augur.application.db.session import remove_duplicates_by_uniques, remove_null_characters_from_list_of_dicts
 
 logger = logging.getLogger("db_lib")
