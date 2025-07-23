@@ -4,8 +4,7 @@ import json
 from typing import List, Any, Optional
 import os
 from augur.application.db.models import Config 
-from augur.application.db.util import execute_session_query
-from augur.application.util import convert_type_of_value
+from augur.application.db.util import execute_session_query, convert_type_of_value
 
 def get_development_flag_from_config():
     
