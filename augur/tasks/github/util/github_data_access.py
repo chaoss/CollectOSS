@@ -170,7 +170,7 @@ class GithubDataAccess:
         Returns:
             bool: Boolean describing whether or not the request should be retried
         """
-        return not isinstance(num, (UrlNotFoundException, ResourceGoneException))
+        return not isinstance(exception, (UrlNotFoundException, ResourceGoneException))
         
     @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(_decide_retry_policy))
     def __make_request_with_retries(self, url, method="GET", timeout=100):
