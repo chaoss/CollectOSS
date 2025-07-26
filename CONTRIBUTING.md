@@ -90,8 +90,8 @@ git push origin master
 ## Community Resources
 
 ### Augur
-- [Stable documentation (`main` branch)](https://oss-augur.readthedocs.io/en/main/)
-- [Nightly/developer build documentation (`dev` branch)](https://oss-augur.readthedocs.io/en/dev/) (warning: this is should be considered an unstable branch and should not be used for production)
+- [Stable documentation (`release` branch)](https://oss-augur.readthedocs.io/en/release/)
+- [Nightly/developer build documentation (`main` branch)](https://oss-augur.readthedocs.io/en/main/) (warning: this is should be considered an unstable branch and should not be used for production)
 - [Live Augur demo](https://ai.chaoss.io)
 
 ### CHAOSS

@@ -1,7 +1,7 @@
 CLI (Command Line Interface)
 ===============================
 
-To learn what's available in Augur's command line interface (CLI), simply use this set of commands: 
+To learn what's available in Augur's command line interface (CLI), simply use this set of commands:
 
 .. code-block:: bash
 
@@ -9,7 +9,7 @@ To learn what's available in Augur's command line interface (CLI), simply use th
 	augur db --help
 	augur backend --help
 	augur config --help
-	augur logging --help 
+	augur logging --help
 
 If you have questions or would like to help please open an issue on GitHub_.
 

@@ -2,7 +2,6 @@
 """
 Augur library commands for controlling the backend components
 """
-import resource
 import os
 import time
 import subprocess
@@ -27,7 +26,7 @@ from augur.application.db.lib import get_value
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 from augur.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
 
-from keyman.KeyClient import KeyClient, KeyPublisher
+from keyman.KeyClient import KeyPublisher
 
 logger = AugurLogger("augur", reset_logfiles=False).get_logger()
 
@@ -81,7 +80,7 @@ def start(ctx, development):
 
     worker_vmem_cap = get_value("Celery", 'worker_process_vmem_cap')
 
-    processes = start_celery_collection_processes(float(worker_vmem_cap))
+    process_list = start_celery_collection_processes(float(worker_vmem_cap))
 
     if os.path.exists("celerybeat-schedule.db"):
             logger.info("Deleting old task schedule")
@@ -110,11 +109,11 @@ def start(ctx, development):
 
     
     try:
-        processes[0].wait()
+        process_list[0].wait()
     except KeyboardInterrupt:
 
         logger.info("Shutting down all celery worker processes")
-        for p in processes:
+        for p in process_list:
             if p:
                 p.terminate()
 
@@ -185,9 +184,9 @@ def stop(ctx):
     """
     Sends SIGTERM to all Augur server & worker processes
     """
-    logger = logging.getLogger("augur.cli")
+    cli_logger = logging.getLogger("augur.cli")
 
-    augur_stop(signal.SIGTERM, logger, ctx.obj.engine)
+    augur_stop(signal.SIGTERM, cli_logger, ctx.obj.engine)
 
 @cli.command('kill')
 @with_database
@@ -196,8 +195,8 @@ def kill(ctx):
     """
     Sends SIGKILL to all Augur server & worker processes
     """
-    logger = logging.getLogger("augur.cli")
-    augur_stop(signal.SIGKILL, logger, ctx.obj.engine)
+    cli_logger = logging.getLogger("augur.cli")
+    augur_stop(signal.SIGKILL, cli_logger, ctx.obj.engine)
 
 @cli.command('repo-reset')
 @test_connection
@@ -263,7 +262,7 @@ def is_collection_process(process):
     return False
 
 
-def augur_stop(signal, logger, engine):
+def augur_stop(stop_signal, logger_instance, engine):
     """
     Stops augur with the given signal, 
     and cleans up collection if it was running
@@ -271,21 +270,21 @@ def augur_stop(signal, logger, engine):
 
     augur_collection_processes = get_augur_collection_processes()
 
-    _broadcast_signal_to_processes(augur_collection_processes, logger=logger, broadcast_signal=signal)
+    _broadcast_signal_to_processes(augur_collection_processes, logger=logger_instance, broadcast_signal=stop_signal)
 
     cleanup_after_collection_halt(logger, engine)
 
-def cleanup_after_collection_halt(logger, engine):
+def cleanup_after_collection_halt(logger_instance, engine):
     
     queues = ['celery', 'core', 'secondary','scheduling','facade']
 
     connection_string = get_value("RabbitMQ", "connection_string")
 
-    with DatabaseSession(logger, engine) as session:
+    with DatabaseSession(logger_instance, engine) as session:
         clean_collection_status(session)
 
-    clear_rabbitmq_messages(connection_string, queues, logger)
-    clear_redis_caches(logger)
+    clear_rabbitmq_messages(connection_string, queues, logger_instance)
+    clear_redis_caches(logger_instance)
 
 #Make sure that database reflects collection status when processes are killed/stopped.
 def clean_collection_status(session):

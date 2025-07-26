@@ -31,7 +31,7 @@ Server Compilation
     }
 
 2.   Compile Augur (this wires the host and port into the frontend so people pulling the web pages of Augur, in the `frontend/` subdirectory are referring to the right endpoints for this instance.): ``make rebuild``
-3.   Run Augur: ``nohup augur backend start >augur.log 2>augur.err &``
+3.   Run Augur: ``uv run nohup augur backend start >augur.log 2>augur.err &``
 
 
 ------------------
@@ -146,7 +146,7 @@ This file will be located in the ``/etc/nginx/sites-enabled`` directory on most 
 		        access_log /var/log/nginx/augur.censusscienceosshealth.access.log;
 
 		}
-    
+
 --------------------
 Enabling HTTPS
 --------------------
@@ -155,13 +155,13 @@ HTTPS is an extension of HTTP. It is used for secure communications over a compu
 
 This guide will start on a fully configured EC2 Ubuntu 20.04 instance, meaning it is assumed to already have Augur installed and running with all of its dependencies(PostgreSQL, Nginx, etc).
 
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 Let's Encrypt/Certbot
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 The easiest way to get an HTTPS server up is to make use of `Let's Encrypt <https://letsencrypt.org/>`_'s `Certbot <https://certbot.eff.org/>`_ tool. It is an open source tool that is so good and it will even alter the nginx configuration for you automatically to enable HTTPS. Following their guide for ``Ubuntu 20.04``, run ``sudo snap install --classic certbot``, ``sudo ln -s /snap/bin/certbot /usr/bin/certbot``, and then ``sudo certbot --nginx``.
 
-.. code-block:: bash
+.. code-block:: text
 
 	# Example Certificate Response Using Certbot
 
@@ -210,5 +210,3 @@ First, we will start with lines 29, 33, & 207 of ``augur/frontend/src/AugurAPI.t
             'certfile': '/home/ubuntu/augur/fullchain.pem',
             'keyfile': '/home/ubuntu/augur/privkey.pem'
         }
-
-

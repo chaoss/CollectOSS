@@ -22,6 +22,17 @@ class UrlNotFoundException(Exception):
 class NotAuthorizedException(Exception):
     pass
 
+class ResourceGoneException(Exception):
+    """Exception class indicating the requested resource (or necessary parent resource)
+    is intentionally unavailable (such as requesting issues for a repo when they are disabled)
+
+    example: https://api.github.com/repos/openshift/release/issues/4352/comments
+
+    See also: https://httpstatuses.com/410
+    """
+    def __init__(self, message="Resource returned HTTP 410 Gone. It is likely intentionally removed"):
+        super().__init__(message)
+
 class GithubDataAccess:
 
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
@@ -124,6 +135,13 @@ class GithubDataAccess:
             if response.status_code == 401:
                 raise NotAuthorizedException(f"Could not authorize with the github api")
             
+            if response.status_code == 410:
+                response_msg = response.json().get("message")
+                if response_msg is not None:
+                    raise ResourceGoneException(response_msg)
+                else:
+                    raise ResourceGoneException()
+                
             response.raise_for_status()
 
             try:
@@ -145,13 +163,21 @@ class GithubDataAccess:
             return self.__make_request_with_retries(url, method, timeout)
         except RetryError as e:
             raise e.last_attempt.exception()
+
+    def _decide_retry_policy(exception: Exception) -> bool:
+        """Defines whether or not to retry a failed request based on the exception thrown
+
+        Returns:
+            bool: Boolean describing whether or not the request should be retried
+        """
+        return not isinstance(exception, (UrlNotFoundException, ResourceGoneException))
         
-    @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(lambda exc: not isinstance(exc, UrlNotFoundException)))
+    @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(_decide_retry_policy))
     def __make_request_with_retries(self, url, method="GET", timeout=100):
         """ What method does?
             1. Retires 10 times
             2. Waits 5 seconds between retires
-            3. Does not rety UrlNotFoundException
+            3. Does not retry any exceptions excluded by _decide_retry_policy
             4. Catches RatelimitException and waits or expires key before raising exception
         """
 

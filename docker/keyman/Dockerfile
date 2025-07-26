@@ -10,6 +10,8 @@ ENV PYTHONPATH="${PYTHONPATH}:/augur"
 ENV PYTHONUMBUFFERED=1
 
 WORKDIR /augur
-COPY --chmod=u=rw,u+X,go=r,go+X ./keyman keyman/
+COPY ./keyman keyman/
+RUN find . -type d -exec chmod u=rwx,go=rx {} + && find . -type f -exec chmod u=rw,go=r {} +
+
 
 ENTRYPOINT [ "python", "/augur/keyman/Orchestrator.py" ]

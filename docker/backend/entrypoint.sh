@@ -2,7 +2,12 @@
 #SPDX-License-Identifier: MIT
 set -e
 
-source /opt/venv/bin/activate
+if [[ -z "$AUGUR_DB" ]]; then
+    # If AUGUR_DB is not set, check for individual environment variables and construct AUGUR_DB connection string
+    if [[ -n "$AUGUR_DB_HOST" ]] && [[ -n "$AUGUR_DB_USER" ]] && [[ -n "$AUGUR_DB_PASSWORD" ]] && [[ -n "$AUGUR_DB_NAME" ]]; then
+        export AUGUR_DB="postgresql+psycopg2://${AUGUR_DB_USER}:${AUGUR_DB_PASSWORD}@${AUGUR_DB_HOST}/${AUGUR_DB_NAME}"
+    fi
+fi
 
 
 if [[ "$AUGUR_DB" == *"localhost"* ]]; then
@@ -24,4 +29,4 @@ else
     export redis_conn_string=$REDIS_CONN_STRING
 fi
 
-exec $*
+exec "$@"

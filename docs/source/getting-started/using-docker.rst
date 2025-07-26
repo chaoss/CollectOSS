@@ -1,16 +1,16 @@
 Docker Compose
-===========
+==============
 For quickest start up, set up Docker or Podman desktop with a machine with roughly
 the following resources (or more).
 
-- 8 CPUs 
+- 8 CPUs
 - 100 GB disk
 - 10 GB RAM
 
 1. Clone the Augur repository https://github.com/chaoss/augur
 
 
-2. Create a .env file in the top level directory with the following fields: 
+2. Create a .env file in the top level directory with the following fields:
 
 .. code:: python
 
@@ -25,32 +25,32 @@ the following resources (or more).
 
 3. Build the container using one of the following commands:
 
-.. code:: shell 
+.. code:: shell
 
-    docker compose up --build 
+    docker compose up --build
 
 or
 
-.. code:: shell 
+.. code:: shell
 
-    podman compose up --build 
+    podman compose up --build
 
-And augur should be up and running! Over time, you may decide that you want to download and run newer releases of Augur. It is critical that your `.env` file remains configured to use the same database name and password; though you can change the password if you understand how to connect to a database running inside a Docker container on your computer. 
+And augur should be up and running! Over time, you may decide that you want to download and run newer releases of Augur. It is critical that your `.env` file remains configured to use the same database name and password; though you can change the password if you understand how to connect to a database running inside a Docker container on your computer.
 
 Rebuilding Augur in Docker
 ----------------------------
-We do not recommend running the augur database in a Docker container in production, though for light installations (~ < 2,000 repos) it is OK as long as you understand that your data exists inside of a Docker container, and you will **need to back that up** if you want to avoid data loss. 
+We do not recommend running the augur database in a Docker container in production, though for light installations (~ < 2,000 repos) it is OK as long as you understand that your data exists inside of a Docker container, and you will **need to back that up** if you want to avoid data loss.
 
-You can identify the physical location of your Docker database file system using these commands: 
+You can identify the physical location of your Docker database file system using these commands:
 
 .. code:: shell
 
     docker volume ls
     docker volume inspect <volume_name>
 
-For example: 
+For example:
 
-.. code:: shell 
+.. code:: shell
 
     ➜  augur-demo git:(docker-docs-patch-12) ✗ docker volume inspect augur-demo_augurpostgres
     [
@@ -82,8 +82,8 @@ To rebuild a fresh Augur database in Docker, follow these steps:
 
     .. code:: shell
 
-        docker system prune -af 
-        docker volume prune -af 
+        docker system prune -af
+        docker volume prune -af
 
 3. **Rebuild and start the containers**:
 

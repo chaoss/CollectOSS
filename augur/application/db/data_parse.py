@@ -1088,14 +1088,17 @@ def extract_needed_mr_metadata(mr_dict, repo_id, pull_request_id, tool_source, t
     Returns:
         List of dicts of parsed mr metadata
     """
-    head = {'sha': mr_dict['diff_refs']['head_sha'],
+
+    diff_refs = mr_dict.get('diff_refs', {})
+
+    head = {'sha': diff_refs.get('head_sha', None),
             'ref': mr_dict['target_branch'],
             'label': str(mr_dict['target_project_id']) + ':' + mr_dict['target_branch'],
             'author': mr_dict['author']['username'],
             'repo': str(mr_dict['target_project_id'])
             }
 
-    base = {'sha': mr_dict['diff_refs']['base_sha'],
+    base = {'sha': diff_refs.get('base_sha', None),
             'ref': mr_dict['source_branch'],
             'label': str(mr_dict['source_project_id']) + ':' + mr_dict['source_branch'],
             'author': mr_dict['author']['username'],

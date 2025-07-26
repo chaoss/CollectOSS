@@ -21,13 +21,15 @@ if os.environ.get("KEYMAN_DOCKER"):
     logger.addHandler(handler)  # Attach the handler to the logger
     logger.setLevel(logging.DEBUG)
 else:
-    from augur.tasks.init.redis_connection import redis_connection as conn
+    from augur.tasks.init.redis_connection import get_redis_connection
     from augur.application.logs import AugurLogger
 
     logger = AugurLogger("KeyOrchestrator").get_logger()
+    conn = get_redis_connection()
 
 class KeyOrchestrator:
     def __init__(self) -> None:
+
         self.stdin = conn.pubsub(ignore_subscribe_messages = True)
         self.logger = logger
         

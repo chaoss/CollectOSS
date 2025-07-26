@@ -20,7 +20,7 @@ Keeping workers at 1 should be fine for small collection sets, but if you have a
 
 Configuration for ML models are:
 
-We recommend leaving the defaults in place for the insight worker unless you interested in other metrics, or anomalies for a different time period. 
+We recommend leaving the defaults in place for the insight worker unless you interested in other metrics, or anomalies for a different time period.
 
 - ``training_days``, which specifies the date range that the ``insight_worker`` should use as its baseline for the statistical comparison. Defaults to ``365``, meaning that the worker will identify metrics that have had anomalies compared to their values over the course of the past year, starting at the current date.
 
@@ -35,15 +35,15 @@ We recommend leaving the defaults in place for the insight worker unless you int
         'endpoint_name_1',
         'endpoint_name_2',
         ...
-    ] 
+    ]
 
     # defaults to the following
 
     [
-        "issues-new", 
-        "code-changes", 
-        "code-changes-lines", 
-        "reviews", 
+        "issues-new",
+        "code-changes",
+        "code-changes-lines",
+        "reviews",
         "contributors-new"
     ]
 
@@ -54,7 +54,7 @@ Methods inside the Insight_model
 
  .. code-block:: bash
 
-  
+
   df>>
   index   date          endpoints1 _ field     endpoints2 _ field
   0.      2020-03-20    5                      8
@@ -66,8 +66,8 @@ Methods inside the Insight_model
 
  .. code-block:: bash
 
-  
-  features_set = [ 
+
+  features_set = [
       [[1],
        [2]],
       [[2],
@@ -82,20 +82,20 @@ Methods inside the Insight_model
   #n_features : number of features of columns in dataframe for training
   #n_predays : next number of days to predict for each entry in features_set
 
-  
+
   #tr_days = training_days - anomaly_days   (in configuration)
-  
-  #here 
+
+  #here
   tr_days = 4,
   black_days = 2,
   n_features = 1,
-  n_predays = 1   
+  n_predays = 1
 
 - ``lstm_model``\:It is the configuration of the multiple ``BiLSTM`` layers along with single ``dense`` layer and optimisers.This method called inside the ``lstm_keras`` method with ``features_set``, ``n_predays``, ``n_features`` as parameters.Configuation of the model is as follows\:
 
  .. code-block:: bash
 
-  
+
   model = Sequential()
   model.add(Bidirectional(LSTM(90, activation='linear',return_sequences=True,input_shape=(features_set.shape[1], n_features))))
   model.add(Dropout(0.2))
@@ -109,8 +109,8 @@ Methods inside the Insight_model
  This configuration is designed to acheive the best possible results for all kind of metrics.
 
 - ``lstm_keras``\:This is the most important method in the ``insights_model`` called by the ``lstm_selection`` method with ``entry_info`` , ``repo_id``, and ``dataframe`` as parameters.Here dataframe consists of two columns, one is ``date`` and another one is ``endpoint1 _ field`` .In this method model is trained on ``tr_days`` data and values were predicted for ``anomaly_days`` data.Baesd on the difference on actual and predicted values outliers were discovered.
-  
- If any outliers discovered between the ``anomaly_days`` then those points will be inserted into to the ``repo_insights`` and ``repo_insights_records`` table by calling ``insert_data`` method. 
+
+ If any outliers discovered between the ``anomaly_days`` then those points will be inserted into to the ``repo_insights`` and ``repo_insights_records`` table by calling ``insert_data`` method.
 
  Before calling the ``insert_data`` method, performance of model on the training as well as test data will be evaluated and its summary will be inserted into the ``lstm_anomaly_results`` table along with the unique model configuration into the ``lstm_anomaly_models`` table.
 
