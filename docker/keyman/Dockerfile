@@ -1,5 +1,8 @@
 FROM python:3.11.12-alpine
 
+LABEL maintainer="outdoors@acm.org"
+LABEL version="0.90.0"
+
 RUN pip install --no-cache-dir --upgrade pip
 
 RUN pip install --no-cache-dir redis==4.3.3
