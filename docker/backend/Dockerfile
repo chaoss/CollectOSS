@@ -20,7 +20,7 @@ RUN go install github.com/ossf/scorecard/v5@v5.1.1 \
 FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.86.1"
+LABEL version="0.90.0"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/usr/bin/:/usr/local/bin:/usr/lib:${PATH}"
