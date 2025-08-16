@@ -231,7 +231,7 @@ def facade_bulk_insert_commits(logger, records):
                 #2021-10-11 11:57:46 -0500
                 
                 # placeholder_date = "1970-01-01 00:00:15 -0500"
-                placeholder_date = commit_record['author_timestamp']
+                placeholder_date = commit_record['cmt_author_timestamp']
 
                 postgres_valid_timezones = {
                     -1200, -1100, -1000, -930, -900, -800, -700,
@@ -260,8 +260,11 @@ def facade_bulk_insert_commits(logger, records):
                 #Check for improper utc timezone offset
                 #UTC timezone offset should be between -14:00 and +14:00
 
-                commit_record['author_timestamp'] = placeholder_date
-                commit_record['committer_timestamp'] = placeholder_date
+                # analyzecommit.generate_commit_record() defines the keys on the commit_record dictionary
+                commit_record['cmt_author_timestamp'] = placeholder_date
+                commit_record['cmt_committer_timestamp'] = placeholder_date
+                
+                logger.warning(f"commit with invalid timezone set to UTC: {commit_record['cmt_commit_hash']}")
 
                 session.execute(
                     s.insert(Commit),
