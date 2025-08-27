@@ -105,10 +105,10 @@ def get_absolute_repo_path(repo_base_dir, repo_id, repo_path,repo_name):
 	
 	return f"{repo_base_dir}{repo_id}-{repo_path}/{repo_name}"
 
-def get_parent_commits_set(absolute_repo_path, start_date):
+def get_parent_commits_set(absolute_repo_path):
 	
 	parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
-								"--pretty=format:'%%H' --since=%s" % (absolute_repo_path,start_date)],
+								"--pretty=format:'%%H'" % (absolute_repo_path)],
 	stdout=subprocess.PIPE, shell=True)
 
 	parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))

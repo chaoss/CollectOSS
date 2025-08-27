@@ -198,6 +198,10 @@ def insert_facade_contributors(self, repo_git):
     logger = logging.getLogger(insert_facade_contributors.__name__)
     repo = get_repo_by_repo_git(repo_git)
     repo_id = repo.repo_id
+    facade_helper = FacadeHelper(logger)
+
+    collection_status = repo.collection_status[0]
+    last_collected_date = collection_status.facade_data_last_collected
 
     # Get all of the commit data's emails and names from the commit table that do not appear
     # in the contributors table or the contributors_aliases table.
@@ -214,6 +218,7 @@ def insert_facade_contributors(self, repo_git):
                 commits
             WHERE
                 commits.repo_id = :repo_id
+                AND (:since_date is NULL OR commits.data_collection_date > :since_date)
                 AND (NOT EXISTS ( SELECT contributors.cntrb_canonical FROM contributors WHERE contributors.cntrb_canonical = commits.cmt_author_raw_email )
                 or NOT EXISTS ( SELECT contributors_aliases.alias_email from contributors_aliases where contributors_aliases.alias_email = commits.cmt_author_raw_email)
                 AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name ))
@@ -231,6 +236,7 @@ def insert_facade_contributors(self, repo_git):
                 commits
             WHERE
                 commits.repo_id = :repo_id
+                AND (:since_date is NULL OR commits.data_collection_date > :since_date)
                 AND EXISTS ( SELECT unresolved_commit_emails.email FROM unresolved_commit_emails WHERE unresolved_commit_emails.email = commits.cmt_author_raw_email )
                 AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name )
             GROUP BY
@@ -239,7 +245,7 @@ def insert_facade_contributors(self, repo_git):
                 commits.cmt_author_raw_email
             ORDER BY
             hash
-    """).bindparams(repo_id=repo_id)
+    """).bindparams(repo_id=repo_id,since_date=last_collected_date)
 
     #Execute statement with session.
     result = execute_sql(new_contrib_sql)
@@ -257,7 +263,6 @@ def insert_facade_contributors(self, repo_git):
 
     logger.debug("DEBUG: Got through the new_contribs")
     
-    facade_helper = FacadeHelper(logger)
     # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
     # i.e., if a contributor already exists, we use it!
     resolve_email_to_cntrb_id_sql = s.sql.text("""
@@ -271,6 +276,7 @@ def insert_facade_contributors(self, repo_git):
             commits
         WHERE
             contributors.cntrb_canonical = commits.cmt_author_raw_email
+            AND (:since_date is NULL OR commits.data_collection_date > :since_date)
             AND commits.repo_id = :repo_id
         UNION
         SELECT DISTINCT
@@ -286,7 +292,8 @@ def insert_facade_contributors(self, repo_git):
             contributors_aliases.alias_email = commits.cmt_author_raw_email
                             AND contributors.cntrb_id = contributors_aliases.cntrb_id
             AND commits.repo_id = :repo_id
-    """).bindparams(repo_id=repo_id)
+            AND (:since_date is NULL OR commits.data_collection_date > :since_date)
+    """).bindparams(repo_id=repo_id,since_date=last_collected_date)
 
 
     result = execute_sql(resolve_email_to_cntrb_id_sql)
