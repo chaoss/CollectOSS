@@ -244,6 +244,17 @@ class FacadeHelper():
             return
     def inc_repos_processed(self):
         self.repos_processed += 1
+    
+    def get_last_collected_commit_date(self,repo_id):
+        commit_date_query = s.sql.text("""
+        SELECT cmt_committer_timestamp FROM commits 
+        WHERE repo_id=:repo_id 
+        ORDER BY data_collection_date DESC
+        LIMIT 1;
+        """).bindparams(repo_id=repo_id)
+
+        result = execute_sql(commit_date_query).fetchone()
+        return result[0]
 
 """
 class FacadeConfig:
