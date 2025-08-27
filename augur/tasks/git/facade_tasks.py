@@ -235,8 +235,6 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     repo = get_repo_by_repo_git(repo_git)
     repo_id = repo.repo_id
 
-    start_date = facade_helper.get_last_collected_commit_date(repo_id)#.get_setting('start_date')
-
     logger.info(f"Generating sequence for repo {repo_id}")
     
     repo = get_repo_by_repo_id(repo_id)
@@ -246,7 +244,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     repo_loc = (f"{absolute_path}/.git")
     # Grab the parents of HEAD
 
-    parent_commits = get_parent_commits_set(repo_loc, start_date)
+    parent_commits = get_parent_commits_set(repo_loc)
 
     # Grab the existing commits from the database
     existing_commits = get_existing_commits_set(repo_id)
