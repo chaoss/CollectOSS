@@ -300,6 +300,7 @@ jobs:
           - database
           - keyman
           - rabbitmq
+          - empty_database
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
