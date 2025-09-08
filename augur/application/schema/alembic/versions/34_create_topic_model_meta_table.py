@@ -17,9 +17,6 @@ depends_on = None
 
 
 def upgrade():
-    # Drop existing table if it exists
-    op.execute('DROP TABLE IF EXISTS augur_data.topic_model_meta CASCADE;')
-    
     # Create topic_model_meta table based on ER diagram with NOT NULL constraints
     op.create_table('topic_model_meta',
         # Primary key

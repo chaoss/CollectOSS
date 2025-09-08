@@ -62,9 +62,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="modelsTableBody">
                                     {% for model in models %}
-                                    <tr>
+                                    <tr class="model-row">
                                     <td>
                                         <code>{{ model.model_id|string|truncate(8, true, "") }}...</code>
                                     </td>
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <td>
                                         {% if model.coherence_score is not none %}
                                                 {% if model.coherence_score > 0.7 %}
-                                                    <span class="badge bg-success">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                                <span class="badge bg-success">{{ "%.3f"|format(model.coherence_score) }}</span>
                                                     <small class="text-muted d-block">Excellent</small>
                                                 {% elif model.coherence_score > 0.5 %}
                                                     <span class="badge bg-info">{{ "%.3f"|format(model.coherence_score) }}</span>
@@ -106,6 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                     {% endfor %}
                                 </tbody>
                             </table>
+                            <div class="text-center">
+                                <button id="loadMoreModels" class="btn btn-outline-secondary btn-sm">Load More</button>
+                            </div>
                         </div>
                     {% else %}
                     <div class="alert alert-info" role="alert">
@@ -138,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="col-md-4">
                             <button class="btn btn-info btn-lg w-100" onclick="checkTrainingStatus()">
                                 <i class="fas fa-search"></i> Check Status
-                            </button>
+                    </button>
                         </div>
                     </div>
                     
@@ -172,6 +175,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                     {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Timeline -->
+        <div class="col-12 mt-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-stream"></i> Model Evolution Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div id="modelTimeline" style="width:100%;height:260px;"></div>
                 </div>
             </div>
         </div>
@@ -309,7 +324,7 @@ function submitTrain() {
     
     console.log('Starting training with parameters:', params);
     
-    fetch(`/topic-models/{{ repo.repo_id }}/train`, {
+    fetch("{{ url_for('train_topic_model_api', repo_id=repo.repo_id) }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -323,17 +338,17 @@ function submitTrain() {
         }
         return response.json();
     })
-        .then(data => {
+    .then(data => {
         console.log('Training response data:', data);
         
         // Show detailed result
         let message = '';
-        if (data.status === 'completed') {
+        if (data.status === 'completed' || data.status === 'success') {
             message = 'Training completed successfully!\n';
-            message += `Repository: ${data.repo_id}\n`;
+            message += `Repository: ${data.repo_id || {{ repo.repo_id }} }\n`;
             message += `Topics: ${params.num_topics}\n`;
             message += `Status: ${data.status}\n`;
-            message += `${data.note}\n`;
+            message += `${data.note || data.message || ''}\n`;
             message += 'Refreshing page to show new model...';
         } else {
             message = `Training finished with status: ${data.status}\n`;
@@ -357,8 +372,8 @@ function submitTrain() {
             console.log('Refreshing page to check for new models...');
             location.reload();
         }, 1000);
-        })
-        .catch(error => {
+    })
+    .catch(error => {
         console.error('Training error:', error);
         
         let errorMessage = 'Training failed!\n\n';
@@ -374,7 +389,7 @@ function submitTrain() {
         // Reset button
         startButton.innerHTML = originalText;
         startButton.disabled = false;
-        });
+    });
 }
 
 function optimizeParameters() {
@@ -394,7 +409,7 @@ function optimizeParameters() {
     
     console.log('Optimization parameters:', optimizationParams);
     
-    fetch(`/topic-models/{{ repo.repo_id }}/optimize`, {
+    fetch("{{ url_for('optimize_topic_model_api', repo_id=repo.repo_id) }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -511,11 +526,8 @@ function compareSelectedModels() {
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Comparing...';
     button.disabled = true;
     
-    // Determine endpoint based on environment
-    const isHttps = window.AUGUR_ENV === 'prod' || window.location.protocol === 'https:';
-    const endpoint = isHttps
-        ? `/api/unstable/repos/{{ repo.repo_id }}/topic-models/compare?model_a=${encodeURIComponent(model1)}&model_b=${encodeURIComponent(model2)}`
-        : `/topic-models/{{ repo.repo_id }}/compare?model_a=${encodeURIComponent(model1)}&model_b=${encodeURIComponent(model2)}`;
+    const endpoint = "{{ url_for('topic_model_compare_api', repo_id=repo.repo_id) }}" +
+                 `?model_a=${encodeURIComponent(model1)}&model_b=${encodeURIComponent(model2)}`;
     
     fetch(endpoint)
         .then(response => {
@@ -563,7 +575,7 @@ function compareSelectedModels() {
 function checkTrainingStatus() {
     console.log('Checking training status...');
     
-    fetch(`/topic-models/{{ repo.repo_id }}/status`)
+    fetch("{{ url_for('topic_model_status_api', repo_id=repo.repo_id) }}")
     .then(response => {
         console.log('Status API response status:', response.status);
         if (!response.ok) {
@@ -577,9 +589,9 @@ function checkTrainingStatus() {
         let statusMessage = 'Training Status Check Results:\n\n';
         
         if (data.status === 'success') {
-            statusMessage += `Repository ID: ${data.repo_id}\n`;
-            statusMessage += `Total Models: ${data.total_models}\n`;
-            statusMessage += `RepoTopic Entries: ${data.repo_topic_entries}\n`;
+            statusMessage += `Repository ID: ${data.repo_id || {{ repo.repo_id }} }\n`;
+            statusMessage += `Total Models: ${data.total_models || (data.models ? data.models.length : 0)}\n`;
+            statusMessage += `RepoTopic Entries: ${data.repo_topic_entries || 'N/A'}\n`;
             statusMessage += `Latest Training: ${data.latest_model_time || 'N/A'}\n\n`;
             
             if (data.models && data.models.length > 0) {
@@ -619,4 +631,54 @@ function checkTrainingStatus() {
         alert(errorMessage);
     });
 }
+</script>
+
+<script>
+// Lazy reveal for models table rows
+(function(){
+    const BATCH = 10;
+    const tbody = document.getElementById('modelsTableBody');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('.model-row'));
+    let shown = 0;
+    function update() {
+        const next = Math.min(shown + BATCH, rows.length);
+        for (let i = shown; i < next; i++) rows[i].style.display = '';
+        shown = next;
+        const btn = document.getElementById('loadMoreModels');
+        if (btn) btn.style.display = shown >= rows.length ? 'none' : '';
+    }
+    // hide all and show first batch
+    rows.forEach(r => r.style.display = 'none');
+    update();
+    const btn = document.getElementById('loadMoreModels');
+    if (btn) btn.addEventListener('click', update);
+})();
+</script>
+
+<script>
+// Render timeline after DOM ready
+$(function(){
+    try {
+        const chartEl = document.getElementById('modelTimeline');
+        if (!chartEl) return;
+        const chart = echarts.init(chartEl);
+        fetch("{{ url_for('topic_model_timeline_api', repo_id=repo.repo_id) }}")
+            .then(r => r.json())
+            .then(data => {
+                if (!data || data.status !== 'success') return;
+                const pts = (data.points || []).filter(p => p.training_end_time);
+                const x = pts.map(p => p.training_end_time);
+                const y = pts.map(p => p.coherence_score ?? 0);
+                chart.setOption({
+                    tooltip: { trigger: 'axis' },
+                    xAxis: { type: 'time' },
+                    yAxis: { type: 'value', name: 'Coherence' },
+                    series: [{ type: 'line', data: x.map((t,i)=>[t, y[i]]), smooth: true }],
+                    grid: { left: 40, right: 20, top: 20, bottom: 40 }
+                });
+            })
+            .catch(()=>{});
+    } catch (e) {}
+});
 </script>

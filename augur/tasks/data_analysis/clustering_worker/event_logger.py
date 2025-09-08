@@ -6,6 +6,28 @@ environment variable, events are also persisted into augur_data.topic_model_even
 
 This module is intentionally lightweight and safe: DB failures never break the
 main flow and always fall back to file logging only.
+
+Sources and usage:
+- Clustering worker tasks (e.g., train_model, clustering_model) emit lifecycle events
+  such as TRAIN_STARTED, TRAIN_COMPLETED, TRAIN_FAILED with model and repo context.
+- Model management components (e.g., ModelManager.should_retrain / reuse checks)
+  emit decision events like RETRAIN_CHECK, REUSE_CANDIDATE_FOUND, CACHE_HIT.
+- API endpoints can emit comparison and optimization events (COMPARE_REQUESTED,
+  OPTIMIZATION_COMPLETED) for observability.
+
+How to use:
+    from .event_logger import emit_event
+    emit_event(logger, "TRAIN_STARTED", repo_id=repo_id, model_id=model_id,
+               params={...}, reason="scheduled")
+
+Event persistence:
+- Set env AUGUR_ENABLE_DB_EVENT_LOGGING=1 to enable DB persistence.
+- Mode can be 'sync' or 'async' via AUGUR_DB_EVENT_LOGGING_MODE (default 'sync').
+- Async mode requires Celery; if unavailable, it transparently falls back to sync.
+
+Payload guidelines:
+- Avoid sensitive keys (password/token/secret/authorization). The logger sanitizes
+  these keys when persisting to DB, and truncates very long string values.
 """
 import os
 import json

@@ -57,7 +57,7 @@ window.addEventListener('error', function(e){
                                     <td>
                                         {% if model.coherence_score is not none %}
                                             {% if model.coherence_score > 0.7 %}
-                                                <span class="badge bg-success">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                            <span class="badge bg-success">{{ "%.3f"|format(model.coherence_score) }}</span>
                                                 <small class="text-muted ms-2">Excellent reconstruction</small>
                                             {% elif model.coherence_score > 0.5 %}
                                                 <span class="badge bg-info">{{ "%.3f"|format(model.coherence_score) }}</span>
@@ -96,7 +96,7 @@ window.addEventListener('error', function(e){
                                             {% endif %}
                                         {% else %}
                                             <span class="badge bg-secondary">N/A</span>
-                                        {% endif %}
+                                {% endif %}
                                     </td>
                                 </tr>
                                 <tr>
@@ -186,9 +186,9 @@ window.addEventListener('error', function(e){
                     <h3 class="mb-0"><i class="fas fa-tags"></i> Topic Words</h3>
                 </div>
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row" id="topicWordsContainer">
                         {% for topic_id in range(1, model.num_topics + 1) %}
-                        <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="col-md-6 col-lg-4 mb-3 topic-card" data-topic="{{ topic_id }}">
                             <div class="card">
                                 <div class="card-header">
                                     <h5>Topic {{ topic_id }}</h5>
@@ -199,6 +199,9 @@ window.addEventListener('error', function(e){
                             </div>
                         </div>
                         {% endfor %}
+                    </div>
+                    <div class="text-center">
+                        <button id="loadMoreTopics" class="btn btn-outline-secondary btn-sm">Load More Topics</button>
                     </div>
                 </div>
             </div>
@@ -265,29 +268,60 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     } catch (e) {}
 
-    // Word clouds for each topic
-    {% for topic_id in range(1, model.num_topics + 1) %}
-    try {
-        const el = document.getElementById('wc_detail_{{ topic_id }}');
-        const wc = echarts.init(el);
-        const words = [
+    // Precompute topic words per topic for lazy rendering
+    const topicWordsData = {
+        {% for topic_id in range(1, model.num_topics + 1) %}
+        {{ topic_id }}: [
             {% set tw = topic_words.get(topic_id, []) %}
             {% for word in tw %}
-            {name: '{{ word.word }}', value: {{ '%.6f'|format(word.word_prob or 0) }}},
+            {name: '{{ word.word }}', value: {{ '%.6f'|format(word.word_prob or 0) }} }{% if not loop.last %},{% endif %}
             {% endfor %}
-        ];
-        wc.setOption({
-            series: [{
-                type: 'wordCloud',
-                gridSize: 8,
-                sizeRange: [12, 36],
-                rotationRange: [-30, 30],
-                textStyle: {color: () => `hsl(${Math.floor(Math.random()*360)},70%,50%)`},
-                data: words.length ? words : [{name: 'No Data', value: 1}]
-            }]
+        ]{% if not loop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    // Word clouds for each topic (lazy)
+    (function(){
+        const BATCH = 10;
+        const total = {{ model.num_topics }};
+        let rendered = 0;
+        function renderBatch() {
+            const end = Math.min(rendered + BATCH, total);
+            for (let t = rendered + 1; t <= end; t++) {
+                try {
+                    const el = document.getElementById('wc_detail_'+t);
+                    if (!el) continue;
+                    const wc = echarts.init(el);
+                    const words = Array.isArray(topicWordsData[t]) ? topicWordsData[t] : [];
+                    wc.setOption({
+                        series: [{
+                            type: 'wordCloud',
+                            gridSize: 8,
+                            sizeRange: [12, 36],
+                            rotationRange: [-30, 30],
+                            textStyle: {color: () => `hsl(${Math.floor(Math.random()*360)},70%,50%)`},
+                            data: words.length ? words : [{name: 'No Data', value: 1}]
+                        }]
+                    });
+                } catch (e) {}
+            }
+            rendered = end;
+            const btn = document.getElementById('loadMoreTopics');
+            if (btn) btn.style.display = rendered >= total ? 'none' : '';
+        }
+        // hide all topic cards first
+        document.querySelectorAll('.topic-card').forEach((card, idx) => {
+            card.style.display = idx < BATCH ? '' : 'none';
         });
-    } catch (e) {}
-    {% endfor %}
+        rendered = 0; renderBatch();
+        const btn = document.getElementById('loadMoreTopics');
+        if (btn) btn.addEventListener('click', () => {
+            const container = document.getElementById('topicWordsContainer');
+            const nextCards = Array.from(container.querySelectorAll('.topic-card')).slice(rendered, rendered + BATCH);
+            nextCards.forEach(c => c.style.display = '');
+            renderBatch();
+        });
+    })();
 });
 
 function showVisualization() {
@@ -323,7 +357,7 @@ function loadVisualization() {
     `;
     
     // Fetch visualization data from API
-    fetch(`/topic-models/{{ repo.repo_id }}/visualization/{{ model.model_id }}`)
+    fetch("{{ url_for('topic_model_visualization_api', repo_id=repo.repo_id, model_id=model.model_id) }}")
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -468,7 +502,7 @@ function renderWordClouds(data) {
 
 function retrainModel() {
     if (confirm('Retrain this topic model? This will create a new version.')) {
-        fetch(`/api/unstable/repos/{{ repo.repo_id }}/topic-models/train`, {
+        fetch("{{ url_for('train_topic_model_api', repo_id=repo.repo_id) }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -493,95 +527,26 @@ function retrainModel() {
 }
 
 function exportModel() {
-    // Export comprehensive model data for research, backup, or transfer purposes
-    const modelData = {
-        // Basic model information
-        model_metadata: {
-            model_id: "{{ model.model_id }}",
-            model_method: "{{ model.model_method }}",
-            num_topics: {{ model.num_topics or 'null' }},
-            num_words_per_topic: {{ model.num_words_per_topic or 'null' }},
-            coherence_score: {{ model.coherence_score or 'null' }},
-            training_date: "{{ model.training_end_time.strftime('%Y-%m-%d %H:%M:%S') if model.training_end_time else 'Unknown' }}",
-            tool_source: "{{ model.tool_source or 'Unknown' }}",
-            tool_version: "{{ model.tool_version or 'Unknown' }}"
-        },
-        
-        // Training parameters for reproducibility
-        training_parameters: {{ model.training_parameters|tojson if model.training_parameters else '{}' }},
-        
-        // Topic-word distributions (core model output)
-        topics: {},
-        
-        // Repository topic probabilities (if available)
-        repository_topics: [
-            {% if repo_topics %}
-            {% for rt in repo_topics %}
-            {
-                "topic_id": {{ rt.topic_id or 'null' }},
-                "probability": {{ rt.topic_prob or 'null' }},
-                "data_collection_date": "{{ rt.data_collection_date.strftime('%Y-%m-%d') if rt.data_collection_date else 'Unknown' }}"
-            }{% if not loop.last %},{% endif %}
-            {% endfor %}
-            {% endif %}
-        ],
-        
-        // Export metadata
-        export_info: {
-            "exported_at": new Date().toISOString(),
-            "exported_by": "Augur Topic Modeling Interface",
-            "format_version": "1.0",
-            "description": "Complete topic model export including metadata, parameters, topics, and repository associations. This file can be used for research analysis, model comparison, or data backup."
-        }
-    };
-    
-    // Add detailed topic-word information
-    {% for topic_id in range(1, model.num_topics + 1) %}
-    {% if topic_words[topic_id] %}
-    modelData.topics["topic_{{ topic_id }}"] = {
-        "topic_id": {{ topic_id }},
-        "words": [
-            {% for word in topic_words[topic_id] %}
-            {
-                "word": "{{ word.word }}",
-                "probability": {{ word.word_prob or 'null' }},
-                "rank": {{ loop.index }}
-            }{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ]
-    };
-    {% endif %}
-    {% endfor %}
-    
-    // Create and download the file
-    const blob = new Blob([JSON.stringify(modelData, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `augur_topic_model_{{ model.model_id|string|truncate(8, true, "") }}_{{ model.training_end_time.strftime('%Y%m%d') if model.training_end_time else 'unknown' }}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    // Show helpful information about the export
-    const exportInfo = `Model exported successfully!
-
-📄 File contains:
-• Model metadata and training parameters
-• Complete topic-word distributions
-• Repository topic associations
-• Export timestamp and format info
-
-🔬 Uses:
-• Research analysis and comparison
-• Model backup and archival
-• Data transfer between systems
-• Reproducibility documentation
-
-📁 File: augur_topic_model_{{ model.model_id|string|truncate(8, true, "") }}_{{ model.training_end_time.strftime('%Y%m%d') if model.training_end_time else 'unknown' }}.json`;
-    
-    alert(exportInfo);
+    // Download JSON from backend export API for parity with server-side export structure
+    const url = "{{ url_for('topic_model_export_api', repo_id=repo.repo_id, model_id=model.model_id) }}";
+    fetch(url)
+        .then(resp => {
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            return resp.json();
+        })
+        .then(data => {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const dl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = dl;
+            a.download = `augur_topic_model_{{ model.model_id|string|truncate(8, true, "") }}_{{ model.training_end_time.strftime('%Y%m%d') if model.training_end_time else 'unknown' }}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(dl);
+            alert('Model JSON exported from server and downloaded.');
+        })
+        .catch(err => alert('Export failed: ' + err.message));
 }
 
 

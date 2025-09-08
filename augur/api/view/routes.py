@@ -9,10 +9,11 @@ from flask_login import login_user, logout_user, current_user, login_required
 
 from augur.application.db.models import User, Repo, ClientApplication
 from .server import LoginException
-from augur.application.util import get_all_repos, get_all_repos_count
+from augur.application.util import *
 from augur.application.db.lib import get_value
 from ..server import app, db_session
 from .init import reports
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -158,9 +159,9 @@ def user_login():
                 if "login_next" in session:
                     return redirect(session.pop("login_next"))
                 return redirect(url_for('root'))
-            
-            print("Invalid login")
-            raise LoginException("Invalid login credentials")
+            else:
+                print("Invalid login")
+                raise LoginException("Invalid login credentials")
         except LoginException as e:
             flash(str(e))
     return render_module('login', title="Login")
@@ -353,69 +354,67 @@ def topic_models_view(repo_id):
     """
     Topic models overview page for a specific repository with full Augur styling
     """
-    with db_session as db_sess:
-        repo = db_sess.query(Repo).filter(Repo.repo_id == repo_id).first()
-        if not repo:
-            return "Repository not found", 404
-        
-        from augur.application.db.models.augur_data import TopicModelMeta
-        models = db_sess.query(TopicModelMeta).filter(
-            TopicModelMeta.repo_id == repo_id
-        ).all()
-        
-        print(f"DEBUG: Found {len(models)} models for repo {repo_id}")
-        return render_module('topic-models', title="Topic Models", repo=repo, models=models)
+    repo = db_session.query(Repo).filter(Repo.repo_id == repo_id).first()
+    if not repo:
+        return "Repository not found", 404
+    
+    from augur.application.db.models.augur_data import TopicModelMeta
+    models = db_session.query(TopicModelMeta).filter(
+        TopicModelMeta.repo_id == repo_id
+    ).all()
+    
+    print(f"DEBUG: Found {len(models)} models for repo {repo_id}")
+    return render_module('topic-models', title="Topic Models", repo=repo, models=models)
 
 @app.route('/repos/<repo_id>/topic-models/<model_id>')
 def topic_model_detail_view(repo_id, model_id):
     """
     Topic model detail page for a specific model with full Augur styling
     """
-    with db_session as db_sess:
-        repo = db_sess.query(Repo).filter(Repo.repo_id == repo_id).first()
-        if not repo:
-            return "Repository not found", 404
-            
-        from augur.application.db.models.augur_data import TopicModelMeta, TopicWord
-        model = db_sess.query(TopicModelMeta).filter(
-            TopicModelMeta.model_id == model_id
-        ).first()
+    repo = db_session.query(Repo).filter(Repo.repo_id == repo_id).first()
+    if not repo:
+        return "Repository not found", 404
         
-        if not model:
-            return "Topic model not found", 404
-        
-        # Query topic words for this model from database
-        # Note: TopicWord table doesn't have model_id, so we get all words for topic range
-        topic_words_query = session.query(TopicWord).filter(
-            TopicWord.topic_id.between(1, model.num_topics)
-        ).order_by(TopicWord.topic_id, TopicWord.word_prob.desc()).all()
-        
-        # Organize topic words by topic_id for template
-        topic_words = {}
-        for topic_word in topic_words_query:
-            topic_id = topic_word.topic_id
-            if topic_id not in topic_words:
-                topic_words[topic_id] = []
-            topic_words[topic_id].append(topic_word)
-        
-        # Get repo topics data from visualization_data
-        repo_topics = []
-        if model.visualization_data and 'topics' in model.visualization_data:
-            # Create repo topics from visualization data
-            topics_data = model.visualization_data['topics']
-            topic_count = len(topics_data)
-            if topic_count > 0:
-                # Even distribution as placeholder 
-                prob_per_topic = 100.0 / topic_count
-                for i, (topic_key, topic_info) in enumerate(topics_data.items()):
-                    topic_id = topic_info.get('id', i + 1)
-                    repo_topics.append({
-                        'topic_id': topic_id,
-                        'topic_prob': prob_per_topic / 100.0  # Convert back to 0-1 range
-                    })
-        
-        return render_module('topic-model-detail', title="Topic Model Details", 
-                           repo=repo, model=model, topic_words=topic_words, repo_topics=repo_topics)
+    from augur.application.db.models.augur_data import TopicModelMeta, TopicWord
+    model = db_session.query(TopicModelMeta).filter(
+        TopicModelMeta.model_id == model_id
+    ).first()
+    
+    if not model:
+        return "Topic model not found", 404
+    
+    # Query topic words for this model from database
+    # Note: TopicWord table doesn't have model_id, so we get all words for topic range
+    topic_words_query = db_session.query(TopicWord).filter(
+        TopicWord.topic_id.between(1, model.num_topics)
+    ).order_by(TopicWord.topic_id, TopicWord.word_prob.desc()).all()
+    
+    # Organize topic words by topic_id for template
+    topic_words = {}
+    for topic_word in topic_words_query:
+        topic_id = topic_word.topic_id
+        if topic_id not in topic_words:
+            topic_words[topic_id] = []
+        topic_words[topic_id].append(topic_word)
+    
+    # Get repo topics data from visualization_data
+    repo_topics = []
+    if model.visualization_data and 'topics' in model.visualization_data:
+        # Create repo topics from visualization data
+        topics_data = model.visualization_data['topics']
+        topic_count = len(topics_data)
+        if topic_count > 0:
+            # Even distribution as placeholder 
+            prob_per_topic = 100.0 / topic_count
+            for i, (topic_key, topic_info) in enumerate(topics_data.items()):
+                topic_id = topic_info.get('id', i + 1)
+                repo_topics.append({
+                    'topic_id': topic_id,
+                    'topic_prob': prob_per_topic / 100.0  # Convert back to 0-1 range
+                })
+    
+    return render_module('topic-model-detail', title="Topic Model Details", 
+                       repo=repo, model=model, topic_words=topic_words, repo_topics=repo_topics)
 
 # API routes for Topic Modeling frontend support
 @app.route('/topic-models/<repo_id>/train', methods=['POST'])
@@ -515,32 +514,31 @@ def topic_model_status_api(repo_id):
     API endpoint to get topic model training status
     """
     try:
-        with db_session as db_sess:
-            from augur.application.db.models.augur_data import TopicModelMeta
-            models = db_sess.query(TopicModelMeta).filter(
-                TopicModelMeta.repo_id == repo_id
-            ).all()
-            
-            return jsonify({
-                'status': 'success',
-                'models': [{
-                    'model_id': str(model.model_id),
-                    'repo_id': model.repo_id,
-                    'model_method': model.model_method,
-                    'num_topics': model.num_topics,
-                    'num_words_per_topic': model.num_words_per_topic,
-                    'training_parameters': model.training_parameters,
-                    'coherence_score': model.coherence_score,
-                    'perplexity_score': model.perplexity_score,
-                    'topic_diversity': model.topic_diversity,
-                    'training_message_count': model.training_message_count,
-                    'visualization_data': model.visualization_data,
-                    'training_start_time': model.training_start_time.isoformat() if model.training_start_time else None,
-                    'training_end_time': model.training_end_time.isoformat() if model.training_end_time else None,
-                    'data_collection_date': model.data_collection_date.isoformat() if model.data_collection_date else None
-                } for model in models]
-            })
-            
+        from augur.application.db.models.augur_data import TopicModelMeta
+        models = db_session.query(TopicModelMeta).filter(
+            TopicModelMeta.repo_id == repo_id
+        ).all()
+        
+        return jsonify({
+            'status': 'success',
+            'models': [{
+                'model_id': str(model.model_id),
+                'repo_id': model.repo_id,
+                'model_method': model.model_method,
+                'num_topics': model.num_topics,
+                'num_words_per_topic': model.num_words_per_topic,
+                'training_parameters': model.training_parameters,
+                'coherence_score': model.coherence_score,
+                'perplexity_score': model.perplexity_score,
+                'topic_diversity': model.topic_diversity,
+                'training_message_count': model.training_message_count,
+                'visualization_data': model.visualization_data,
+                'training_start_time': model.training_start_time.isoformat() if model.training_start_time else None,
+                'training_end_time': model.training_end_time.isoformat() if model.training_end_time else None,
+                'data_collection_date': model.data_collection_date.isoformat() if model.data_collection_date else None
+            } for model in models]
+        })
+        
     except Exception as e:
         return jsonify({
             'status': 'error',
@@ -553,62 +551,61 @@ def topic_model_visualization_api(repo_id, model_id):
     API endpoint to get topic model visualization data
     """
     try:
-        with db_session as db_sess:
-            from augur.application.db.models.augur_data import TopicModelMeta
-            model = db_sess.query(TopicModelMeta).filter(
-                TopicModelMeta.model_id == model_id
-            ).first()
+        from augur.application.db.models.augur_data import TopicModelMeta
+        model = db_session.query(TopicModelMeta).filter(
+            TopicModelMeta.model_id == model_id
+        ).first()
+        
+        if not model:
+            return jsonify({
+                'status': 'error',
+                'message': 'Topic model not found'
+            }), 404
             
-            if not model:
-                return jsonify({
-                    'status': 'error',
-                    'message': 'Topic model not found'
-                }), 404
+        # Extract and format visualization data for frontend
+        viz_data = model.visualization_data or {}
+        
+        # Format for frontend expectations
+        formatted_data = {
+            'status': 'success',
+            'model_id': str(model.model_id),
+            'num_topics': model.num_topics,
+            'model_method': model.model_method,
+            'coherence_score': model.coherence_score,
+            'training_date': model.data_collection_date.isoformat() if model.data_collection_date else None,
+            
+            # Repository topic distribution (for bar chart)
+            'repo_topics': [],
+            
+            # Topic positions (for PCA scatter plot) 
+            'topic_positions': [],
+            
+            # Topics and words (for word clouds)
+            'topics': viz_data.get('topics', {})
+        }
+        
+        # Generate mock repository topic distribution if not available
+        if model.num_topics and model.num_topics > 0:
+            # Create even distribution as placeholder
+            prob_per_topic = 1.0 / model.num_topics
+            for i in range(model.num_topics):
+                formatted_data['repo_topics'].append({
+                    'topic_id': i + 1,
+                    'topic_prob': prob_per_topic * 100  # Convert to percentage
+                })
                 
-            # Extract and format visualization data for frontend
-            viz_data = model.visualization_data or {}
-            
-            # Format for frontend expectations
-            formatted_data = {
-                'status': 'success',
-                'model_id': str(model.model_id),
-                'num_topics': model.num_topics,
-                'model_method': model.model_method,
-                'coherence_score': model.coherence_score,
-                'training_date': model.data_collection_date.isoformat() if model.data_collection_date else None,
-                
-                # Repository topic distribution (for bar chart)
-                'repo_topics': [],
-                
-                # Topic positions (for PCA scatter plot) 
-                'topic_positions': [],
-                
-                # Topics and words (for word clouds)
-                'topics': viz_data.get('topics', {})
-            }
-            
-            # Generate mock repository topic distribution if not available
-            if model.num_topics and model.num_topics > 0:
-                # Create even distribution as placeholder
-                prob_per_topic = 1.0 / model.num_topics
-                for i in range(model.num_topics):
-                    formatted_data['repo_topics'].append({
-                        'topic_id': i + 1,
-                        'topic_prob': prob_per_topic * 100  # Convert to percentage
-                    })
-                    
-                # Generate mock PCA positions in a circle
-                import math as math_module
-                for i in range(model.num_topics):
-                    angle = (2 * math_module.pi * i) / model.num_topics
-                    formatted_data['topic_positions'].append({
-                        'topic_id': i + 1,
-                        'x': math_module.cos(angle),
-                        'y': math_module.sin(angle)
-                    })
-            
-            return jsonify(formatted_data)
-            
+            # Generate mock PCA positions in a circle
+            import math as math_module
+            for i in range(model.num_topics):
+                angle = (2 * math_module.pi * i) / model.num_topics
+                formatted_data['topic_positions'].append({
+                    'topic_id': i + 1,
+                    'x': math_module.cos(angle),
+                    'y': math_module.sin(angle)
+                })
+        
+        return jsonify(formatted_data)
+        
     except Exception as e:
         return jsonify({
             'status': 'error',
@@ -634,76 +631,183 @@ def topic_model_compare_api(repo_id):
         
         logger.info(f"Comparing models {model_a_id} vs {model_b_id} for repo {repo_id}")
         
-        # Query both models from database
-        from augur.application.db import get_session
-        with get_session() as db_sess:
-            from augur.application.db.models.augur_data import TopicModelMeta
-            model_a = db_sess.query(TopicModelMeta).filter_by(model_id=model_a_id).first()
-            model_b = db_sess.query(TopicModelMeta).filter_by(model_id=model_b_id).first()
-            
-            if not model_a or not model_b:
-                logger.error(f"Model not found: A={bool(model_a)}, B={bool(model_b)}")
-                return jsonify({
-                    'status': 'error',
-                    'message': 'One or both models not found'
-                }), 404
-            
-            # Calculate comparison metrics
-            coherence_improvement = (model_b.coherence_score or 0.0) - (model_a.coherence_score or 0.0)
-            
-            # Determine overall improvement
-            if coherence_improvement > 0.1:
-                overall_improvement = "significant_improvement"
-            elif coherence_improvement > 0.01:
-                overall_improvement = "improvement" 
-            elif coherence_improvement > -0.01:
-                overall_improvement = "no_change"
-            elif coherence_improvement > -0.1:
-                overall_improvement = "decline"
-            else:
-                overall_improvement = "significant_decline"
-            
-            # Get model parameters
-            params_a = model_a.training_parameters or {}
-            params_b = model_b.training_parameters or {}
-            
-            # Format response
-            response_data = {
-                'status': 'success',
-                'repo_id': int(repo_id),
-                'model_a_id': model_a_id,
-                'model_a_coherence': round(model_a.coherence_score or 0.0, 4),
-                'model_a_topics': model_a.num_topics or 'N/A',
-                'model_a_created': model_a.training_start_time.isoformat() if model_a.training_start_time else 'N/A',
-                'model_b_id': model_b_id, 
-                'model_b_coherence': round(model_b.coherence_score or 0.0, 4),
-                'model_b_topics': model_b.num_topics or 'N/A',
-                'model_b_created': model_b.training_start_time.isoformat() if model_b.training_start_time else 'N/A',
-                'coherence_improvement': round(coherence_improvement, 4),
-                'overall_improvement': overall_improvement,
-                'comparison_notes': []
-            }
-            
-            # Add comparison notes
-            if coherence_improvement > 0:
-                response_data['comparison_notes'].append(f"Coherence improved by {coherence_improvement:.4f}")
-            elif coherence_improvement < 0:
-                response_data['comparison_notes'].append(f"Coherence decreased by {abs(coherence_improvement):.4f}")
-            else:
-                response_data['comparison_notes'].append("No change in coherence score")
-            
-            # Compare parameters
-            if params_a.get('num_topics') != params_b.get('num_topics'):
-                response_data['comparison_notes'].append(
-                    f"Topics changed: {params_a.get('num_topics', 'N/A')} → {params_b.get('num_topics', 'N/A')}"
-                )
-            
-            logger.info(f"Model comparison completed: {overall_improvement}")
-            return jsonify(response_data)
-            
+        from augur.application.db.models.augur_data import TopicModelMeta
+        model_a = db_session.query(TopicModelMeta).filter_by(model_id=model_a_id).first()
+        model_b = db_session.query(TopicModelMeta).filter_by(model_id=model_b_id).first()
+        
+        if not model_a or not model_b:
+            logger.error(f"Model not found: A={bool(model_a)}, B={bool(model_b)}")
+            return jsonify({
+                'status': 'error',
+                'message': 'One or both models not found'
+            }), 404
+        
+        # Calculate comparison metrics
+        coherence_improvement = (model_b.coherence_score or 0.0) - (model_a.coherence_score or 0.0)
+        
+        # Determine overall improvement
+        if coherence_improvement > 0.1:
+            overall_improvement = "significant_improvement"
+        elif coherence_improvement > 0.01:
+            overall_improvement = "improvement" 
+        elif coherence_improvement > -0.01:
+            overall_improvement = "no_change"
+        elif coherence_improvement > -0.1:
+            overall_improvement = "decline"
+        else:
+            overall_improvement = "significant_decline"
+        
+        # Get model parameters
+        params_a = model_a.training_parameters or {}
+        params_b = model_b.training_parameters or {}
+        
+        # Format response
+        response_data = {
+            'status': 'success',
+            'repo_id': int(repo_id),
+            'model_a_id': model_a_id,
+            'model_a_coherence': round(model_a.coherence_score or 0.0, 4),
+            'model_a_topics': model_a.num_topics or 'N/A',
+            'model_a_created': model_a.training_start_time.isoformat() if model_a.training_start_time else 'N/A',
+            'model_b_id': model_b_id, 
+            'model_b_coherence': round(model_b.coherence_score or 0.0, 4),
+            'model_b_topics': model_b.num_topics or 'N/A',
+            'model_b_created': model_b.training_start_time.isoformat() if model_b.training_start_time else 'N/A',
+            'coherence_improvement': round(coherence_improvement, 4),
+            'overall_improvement': overall_improvement,
+            'comparison_notes': []
+        }
+        
+        # Add comparison notes
+        if coherence_improvement > 0:
+            response_data['comparison_notes'].append(f"Coherence improved by {coherence_improvement:.4f}")
+        elif coherence_improvement < 0:
+            response_data['comparison_notes'].append(f"Coherence decreased by {abs(coherence_improvement):.4f}")
+        else:
+            response_data['comparison_notes'].append("No change in coherence score")
+        
+        # Compare parameters
+        if params_a.get('num_topics') != params_b.get('num_topics'):
+            response_data['comparison_notes'].append(
+                f"Topics changed: {params_a.get('num_topics', 'N/A')} → {params_b.get('num_topics', 'N/A')}"
+            )
+        
+        logger.info(f"Model comparison completed: {overall_improvement}")
+        return jsonify(response_data)
+        
     except Exception as e:
         logger.error(f"Model comparison failed: {e}")
         return jsonify({
             'status': 'error',
             'message': f'Comparison failed: {str(e)}'
         }), 500
+
+@app.route('/topic-models/<repo_id>/timeline', methods=['GET'])
+def topic_model_timeline_api(repo_id):
+    """
+    API endpoint to get model evolution timeline data for a repository.
+    Returns models ordered by training_end_time with key metrics for charting.
+    """
+    try:
+        from augur.application.db.models.augur_data import TopicModelMeta
+        query = db_session.query(TopicModelMeta).filter(
+            TopicModelMeta.repo_id == repo_id
+        ).order_by(TopicModelMeta.training_end_time.asc())
+        models = query.all()
+
+        points = []
+        for m in models:
+            points.append({
+                'model_id': str(m.model_id),
+                'training_start_time': m.training_start_time.isoformat() if m.training_start_time else None,
+                'training_end_time': m.training_end_time.isoformat() if m.training_end_time else None,
+                'coherence_score': float(m.coherence_score) if m.coherence_score is not None else None,
+                'num_topics': int(m.num_topics) if m.num_topics is not None else None,
+                'model_method': m.model_method,
+            })
+
+        return jsonify({
+            'status': 'success',
+            'repo_id': int(repo_id),
+            'points': points
+        })
+    except Exception as e:
+        logger.error(f"Timeline generation failed: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/topic-models/<repo_id>/export/<model_id>.json', methods=['GET'])
+def topic_model_export_api(repo_id, model_id):
+    """
+    Export a model as JSON with metadata, parameters, topic-word distributions, and repository topics.
+    Structure mirrors the frontend exportModel() payload for interoperability.
+    """
+    try:
+        from augur.application.db.models.augur_data import TopicModelMeta, TopicWord
+        model = db_session.query(TopicModelMeta).filter(TopicModelMeta.model_id == model_id).first()
+        if not model:
+            return jsonify({'status': 'error', 'message': 'Model not found'}), 404
+
+        # Build export payload
+        export = {
+            'model_metadata': {
+                'model_id': str(model.model_id),
+                'model_method': model.model_method,
+                'num_topics': model.num_topics,
+                'num_words_per_topic': model.num_words_per_topic,
+                'coherence_score': float(model.coherence_score) if model.coherence_score is not None else None,
+                'training_date': model.training_end_time.strftime('%Y-%m-%d %H:%M:%S') if model.training_end_time else 'Unknown',
+                'tool_source': model.tool_source or 'Unknown',
+                'tool_version': model.tool_version or 'Unknown',
+            },
+            'training_parameters': model.training_parameters or {},
+            'topics': {},
+            'repository_topics': [],
+            'export_info': {
+                'exported_at': datetime.utcnow().isoformat() + 'Z',
+                'exported_by': 'Augur Topic Modeling API',
+                'format_version': '1.0',
+                'description': 'Complete topic model export including metadata, parameters, topics, and repository associations.'
+            }
+        }
+
+        # Topic-word distributions
+        topic_words = db_session.query(TopicWord).filter(
+            TopicWord.topic_id.between(1, model.num_topics)
+        ).order_by(TopicWord.topic_id, TopicWord.word_prob.desc()).all()
+
+        by_topic = {}
+        for tw in topic_words:
+            by_topic.setdefault(tw.topic_id, []).append({
+                'word': tw.word,
+                'probability': float(tw.word_prob) if tw.word_prob is not None else None
+            })
+        for topic_id, words in by_topic.items():
+            export['topics'][f'topic_{topic_id}'] = {
+                'topic_id': topic_id,
+                'words': [
+                    { 'word': w['word'], 'probability': w['probability'], 'rank': idx + 1 }
+                    for idx, w in enumerate(words)
+                ]
+            }
+
+        # Repository topic probabilities if available via visualization_data
+        viz = model.visualization_data or {}
+        topics_data = viz.get('topics', {})
+        if topics_data:
+            # Even distribution fallback already handled in visualization API; here we pass-through if present
+            for key, info in topics_data.items():
+                topic_id = info.get('id')
+                prob = info.get('probability') or info.get('topic_prob')
+                export['repository_topics'].append({
+                    'topic_id': topic_id,
+                    'probability': prob,
+                    'data_collection_date': model.data_collection_date.strftime('%Y-%m-%d') if model.data_collection_date else 'Unknown'
+                })
+
+        return jsonify(export)
+    except Exception as e:
+        logger.error(f"Export failed: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
