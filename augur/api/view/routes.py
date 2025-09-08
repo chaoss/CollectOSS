@@ -159,9 +159,8 @@ def user_login():
                 if "login_next" in session:
                     return redirect(session.pop("login_next"))
                 return redirect(url_for('root'))
-            else:
-                print("Invalid login")
-                raise LoginException("Invalid login credentials")
+            print("Invalid login")
+            raise LoginException("Invalid login credentials")
         except LoginException as e:
             flash(str(e))
     return render_module('login', title="Login")
