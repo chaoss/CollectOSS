@@ -88,9 +88,12 @@ def update_api_key():
     engine.dispose()
 
 
+    
+
 def epoch_to_local_time_with_am_pm(epoch):
-    local_time = datetime.fromtimestamp(epoch)
-    formatted_time = local_time.strftime('%I:%M %p')  # This format includes the date as well
+    # Convert epoch to local time with timezone awareness
+    local_time = datetime.fromtimestamp(epoch).astimezone()
+    formatted_time = local_time.strftime('%Y-%m-%d %I:%M %p %Z (UTC%z)')
     return formatted_time
 
 
