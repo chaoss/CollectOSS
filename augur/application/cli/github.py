@@ -93,7 +93,7 @@ def update_api_key():
 def epoch_to_local_time_with_am_pm(epoch):
     # Convert epoch to local time with timezone awareness
     local_time = datetime.fromtimestamp(epoch).astimezone()
-    formatted_time = local_time.strftime('%Y-%m-%d %I:%M %p %Z (UTC%z)')
+    formatted_time = local_time.strftime('%I:%M %p %Z (UTC%z)')
     return formatted_time
 
 
