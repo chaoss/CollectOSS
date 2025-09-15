@@ -597,37 +597,33 @@ class AugurTaskRoutine:
             for repo_git, full_collection in col_hook.repo_list:
 
                 repo = get_repo_by_repo_git(repo_git)
+                platform_name = "github"
+                # this needs to be here and not up a level since it should be set/reset for each repo.
+                # otherwise a gitlab repo would reset it and cause subsequent github repos to use gitlab phases.
+                phases = None
                 if "github" in repo.repo_git:
-                    augur_collection_sequence = []
-                    for job in col_hook.phases:
-                        #Add the phase to the sequence in order as a celery task.
-                        #The preliminary task creates the larger task chain 
-                        augur_collection_sequence.append(job(repo_git, full_collection))
+                    phases = col_hook.phases
+                    # use default platform name
 
-                    #augur_collection_sequence.append(core_task_success_util.si(repo_git))
-                    #Link all phases in a chain and send to celery
-                    augur_collection_chain = chain(*augur_collection_sequence)
-                    task_id = augur_collection_chain.apply_async().task_id
+                elif "gitlab" in repo.repo_git:
+                    platform_name = "gitlab"
+                    if col_hook.gitlab_phases is None:
+                        continue
+                    phases = col_hook.gitlab_phases
+           
+                augur_collection_sequence = []
+                for job in phases:
+                    #Add the phase to the sequence in order as a celery task.
+                    #The preliminary task creates the larger task chain 
+                    augur_collection_sequence.append(job(repo_git, full_collection))
 
-                    self.logger.info(f"Setting github repo {col_hook.name} status to collecting for repo: {repo_git}")
+                #augur_collection_sequence.append(core_task_success_util.si(repo_git))
+                #Link all phases in a chain and send to celery
+                augur_collection_chain = chain(*augur_collection_sequence)
+                task_id = augur_collection_chain.apply_async().task_id
 
-                    #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
-                    yield repo_git, task_id, col_hook.name
-                else:
-                    if col_hook.gitlab_phases is not None:
-                        
-                        augur_collection_sequence = []
-                        for job in col_hook.gitlab_phases:
-                            #Add the phase to the sequence in order as a celery task.
-                            #The preliminary task creates the larger task chain 
-                            augur_collection_sequence.append(job(repo_git, full_collection))
+                self.logger.info(f"Setting {platform_name} repo {col_hook.name} status to collecting for repo: {repo_git}")
 
-                        #augur_collection_sequence.append(core_task_success_util.si(repo_git))
-                        #Link all phases in a chain and send to celery
-                        augur_collection_chain = chain(*augur_collection_sequence)
-                        task_id = augur_collection_chain.apply_async().task_id
-
-                        self.logger.info(f"Setting gitlab repo {col_hook.name} status to collecting for repo: {repo_git}")
-
-                        #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
-                        yield repo_git, task_id, col_hook.name
+                #yield the value of the task_id to the calling method so that the proper collectionStatus field can be updated
+                yield repo_git, task_id, col_hook.name
+                
