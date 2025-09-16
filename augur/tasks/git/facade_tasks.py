@@ -491,7 +491,6 @@ def facade_phase(repo_git, full_collection):
     #force_analysis = session.force_analysis
     run_facade_contributors = facade_helper.run_facade_contributors
 
-    facade_sequence = []
     facade_core_collection = []
 
     if not limited_run or (limited_run and pull_repos):
@@ -509,14 +508,12 @@ def facade_phase(repo_git, full_collection):
 
 
     #These tasks need repos to be cloned by facade before they can work.
-    facade_sequence.append(
-        group(
-            chain(*facade_core_collection),
-            process_dependency_metrics.si(repo_git),
-            process_libyear_dependency_metrics.si(repo_git),
-            process_scc_value_metrics.si(repo_git)
-        )
+    facade_sequence = group(
+        chain(*facade_core_collection),
+        process_dependency_metrics.si(repo_git),
+        process_libyear_dependency_metrics.si(repo_git),
+        process_scc_value_metrics.si(repo_git)
     )
 
     logger.info(f"Facade sequence: {facade_sequence}")
-    return chain(*facade_sequence)
+    return facade_sequence
