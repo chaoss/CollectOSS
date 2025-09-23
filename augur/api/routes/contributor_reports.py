@@ -305,8 +305,8 @@ def new_contributor_data_collection(repo_id, required_contributions):
     #     select count(*) from augur_data.repo; 
     #     """)
 
-    with current_app.engine.connect() as conn:
-        df = pd.read_sql(contributor_query2,  conn)
+    #with current_app.engine.connect() as conn:
+    #    df = pd.read_sql(contributor_query2,  conn)
 
     #df = df.loc[~df['full_name'].str.contains('bot', na=False)]
     #df = df.loc[~df['login'].str.contains('bot', na=False)]
