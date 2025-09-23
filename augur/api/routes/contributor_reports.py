@@ -39,283 +39,295 @@ def new_contributor_data_collection(repo_id, required_contributions):
         rank_list.append(num)
     rank_tuple = tuple(rank_list)
 
-    contributor_query = salc.sql.text(f"""        
-    
-        SELECT * FROM (
-            SELECT ID AS
-                cntrb_id,
-                A.created_at AS created_at,
-                date_part('month', A.created_at::DATE) AS month,
-                date_part('year', A.created_at::DATE) AS year,
-                A.repo_id,
-                repo_name,
-                full_name,
-                login,
-            ACTION,
-            rank() OVER (
-                    PARTITION BY id
-                    ORDER BY A.created_at ASC
-                )
-            FROM
-                (
-                    (
-                    SELECT
-                        canonical_id AS ID,
-                        created_at AS created_at,
-                        repo_id,
-                        'issue_opened' AS ACTION,
-                        contributors.cntrb_full_name AS full_name,
-                        contributors.cntrb_login AS login 
-                    FROM
-                        augur_data.issues
-                        LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = issues.reporter_id
-                        LEFT OUTER JOIN ( 
-                            SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
-                            cntrb_canonical AS canonical_email, 
-                            data_collection_date, 
-                            cntrb_id AS canonical_id 
-                            FROM augur_data.contributors 
-                            WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                        ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
-                    WHERE
-                        repo_id = {repo_id}
-                        AND pull_request IS NULL 
-                    GROUP BY
-                        canonical_id,
-                        repo_id,
-                        issues.created_at,
-                        contributors.cntrb_full_name,
-                        contributors.cntrb_login 
-                    ) UNION ALL
-                    (
-                    SELECT
-                        canonical_id AS ID,
-                        TO_TIMESTAMP( cmt_author_date, 'YYYY-MM-DD' ) AS created_at,
-                        repo_id,
-                        'commit' AS ACTION,
-                        contributors.cntrb_full_name AS full_name,
-                        contributors.cntrb_login AS login 
-                    FROM
-                        augur_data.commits
-                        LEFT OUTER JOIN augur_data.contributors ON cntrb_email = cmt_author_email
-                        LEFT OUTER JOIN ( 
-                            SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
-                            cntrb_canonical AS canonical_email, 
-                            data_collection_date, cntrb_id AS canonical_id 
-                            FROM augur_data.contributors 
-                            WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                        ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
-                    WHERE
-                        repo_id = {repo_id} 
-                    GROUP BY
-                        repo_id,
-                        canonical_email,
-                        canonical_id,
-                        commits.cmt_author_date,
-                        contributors.cntrb_full_name,
-                        contributors.cntrb_login 
-                    ) UNION ALL
-                    (
-                    SELECT
-                        message.cntrb_id AS ID,
-                        created_at AS created_at,
-                        commits.repo_id,
-                        'commit_comment' AS ACTION,
-                        contributors.cntrb_full_name AS full_name,
-                        contributors.cntrb_login AS login
-            
-                    FROM
-                        augur_data.commit_comment_ref,
-                        augur_data.commits,
-                        augur_data.message
-                        LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
-                        LEFT OUTER JOIN ( 
-                            SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
-                            cntrb_canonical AS canonical_email, 
-                            data_collection_date, cntrb_id AS canonical_id 
-                            FROM augur_data.contributors 
-                            WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                        ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
-                    WHERE
-                        commits.cmt_id = commit_comment_ref.cmt_id 
-                        AND commits.repo_id = {repo_id} 
-                        AND commit_comment_ref.msg_id = message.msg_id
-        
-                    GROUP BY
-                        ID,
-                        commits.repo_id,
-                        commit_comment_ref.created_at,
-                        contributors.cntrb_full_name,
-                        contributors.cntrb_login
-                    ) UNION ALL
-                    (
-                    SELECT
-                        issue_events.cntrb_id AS ID,
-                        issue_events.created_at AS created_at,
-                        issues.repo_id,
-                        'issue_closed' AS ACTION,
-                        contributors.cntrb_full_name AS full_name,
-                        contributors.cntrb_login AS login 
-                    FROM
-                        augur_data.issues,
-                        augur_data.issue_events
-                        LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = issue_events.cntrb_id
-                        LEFT OUTER JOIN ( 
-                        SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
-                        cntrb_canonical AS canonical_email, 
-                        data_collection_date, 
-                        cntrb_id AS canonical_id 
-                        FROM augur_data.contributors 
-                        WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                        ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
-                    WHERE
-                        issues.repo_id = {repo_id} 
-                        AND issues.issue_id = issue_events.issue_id 
-                        AND issues.pull_request IS NULL 
-                        AND issue_events.cntrb_id IS NOT NULL 
-                        AND ACTION = 'closed' 
-                    GROUP BY
-                        issue_events.cntrb_id,
-                        issues.repo_id,
-                        issue_events.created_at,
-                        contributors.cntrb_full_name,
-                        contributors.cntrb_login 
-                    ) UNION ALL
-                    (
-                    SELECT
-                        pr_augur_contributor_id AS ID,
-                        pr_created_at AS created_at,
-                        pull_requests.repo_id,
-                        'open_pull_request' AS ACTION,
-                        contributors.cntrb_full_name AS full_name,
-                        contributors.cntrb_login AS login 
-                    FROM
-                        augur_data.pull_requests
-                        LEFT OUTER JOIN augur_data.contributors ON pull_requests.pr_augur_contributor_id = contributors.cntrb_id
-                        LEFT OUTER JOIN ( 
-                            SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
-                            cntrb_canonical AS canonical_email, 
-                            data_collection_date, 
-                            cntrb_id AS canonical_id 
-                            FROM augur_data.contributors 
-                            WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                        ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
-                    WHERE
-                        pull_requests.repo_id = {repo_id} 
-                    GROUP BY
-                        pull_requests.pr_augur_contributor_id,
-                        pull_requests.repo_id,
-                        pull_requests.pr_created_at,
-                        contributors.cntrb_full_name,
-                        contributors.cntrb_login 
-                    ) UNION ALL
-                    (
-                    SELECT
-                        message.cntrb_id AS ID,
-                        msg_timestamp AS created_at,
-                        pull_requests.repo_id as repo_id,
-                        'pull_request_comment' AS ACTION,
-                        contributors.cntrb_full_name AS full_name,
-                        contributors.cntrb_login AS login 
-                    FROM
-                        augur_data.pull_requests,
-                        augur_data.pull_request_message_ref,
-                        augur_data.message
-                        LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
-                        LEFT OUTER JOIN ( 
-                            SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
-                            cntrb_canonical AS canonical_email, 
-                            data_collection_date, 
-                            cntrb_id AS canonical_id 
-                            FROM augur_data.contributors 
-                            WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                        ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
-                    WHERE
-                        pull_requests.repo_id = {repo_id}
-                        AND pull_request_message_ref.pull_request_id = pull_requests.pull_request_id 
-                        AND pull_request_message_ref.msg_id = message.msg_id 
-                    GROUP BY
-                        message.cntrb_id,
-                        pull_requests.repo_id,
-                        message.msg_timestamp,
-                        contributors.cntrb_full_name,
-                        contributors.cntrb_login 
-                    ) UNION ALL
-                    (
-                    SELECT
-                        issues.reporter_id AS ID,
-                        msg_timestamp AS created_at,
-                        issues.repo_id as repo_id,
-                        'issue_comment' AS ACTION,
-                        contributors.cntrb_full_name AS full_name,
-                        contributors.cntrb_login AS login 
-                    FROM
-                        issues,
-                        issue_message_ref,
-                        message
-                        LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
-                        LEFT OUTER JOIN ( 
-                            SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
-                            cntrb_canonical AS canonical_email, 
-                            data_collection_date, 
-                            cntrb_id AS canonical_id 
-                            FROM augur_data.contributors 
-                            WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
-                        ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
-                    WHERE
-                        issues.repo_id = {repo_id}
-                        AND issue_message_ref.msg_id = message.msg_id 
-                        AND issues.issue_id = issue_message_ref.issue_id
-                        AND issues.pull_request_id = NULL
-                    GROUP BY
-                        issues.reporter_id,
-                        issues.repo_id,
-                        message.msg_timestamp,
-                        contributors.cntrb_full_name,
-                        contributors.cntrb_login 
-                    ) 
-                ) A,
-                repo 
-            WHERE
-            ID IS NOT NULL 
-                AND A.repo_id = repo.repo_id 
-            GROUP BY
-                A.ID,
-                A.repo_id,
-                A.ACTION,
-                A.created_at,
-                repo.repo_name,
-                A.full_name,
-                A.login
-            ORDER BY 
-                cntrb_id
-            ) b
-            WHERE RANK IN {rank_tuple}
+#####
 
-        """)
+## Commented out due to abuse.
+
+#####
+
+
+    # contributor_query = salc.sql.text(f"""        
+    
+    #     SELECT * FROM (
+    #         SELECT ID AS
+    #             cntrb_id,
+    #             A.created_at AS created_at,
+    #             date_part('month', A.created_at::DATE) AS month,
+    #             date_part('year', A.created_at::DATE) AS year,
+    #             A.repo_id,
+    #             repo_name,
+    #             full_name,
+    #             login,
+    #         ACTION,
+    #         rank() OVER (
+    #                 PARTITION BY id
+    #                 ORDER BY A.created_at ASC
+    #             )
+    #         FROM
+    #             (
+    #                 (
+    #                 SELECT
+    #                     canonical_id AS ID,
+    #                     created_at AS created_at,
+    #                     repo_id,
+    #                     'issue_opened' AS ACTION,
+    #                     contributors.cntrb_full_name AS full_name,
+    #                     contributors.cntrb_login AS login 
+    #                 FROM
+    #                     augur_data.issues
+    #                     LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = issues.reporter_id
+    #                     LEFT OUTER JOIN ( 
+    #                         SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+    #                         cntrb_canonical AS canonical_email, 
+    #                         data_collection_date, 
+    #                         cntrb_id AS canonical_id 
+    #                         FROM augur_data.contributors 
+    #                         WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+    #                     ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
+    #                 WHERE
+    #                     repo_id = {repo_id}
+    #                     AND pull_request IS NULL 
+    #                 GROUP BY
+    #                     canonical_id,
+    #                     repo_id,
+    #                     issues.created_at,
+    #                     contributors.cntrb_full_name,
+    #                     contributors.cntrb_login 
+    #                 ) UNION ALL
+    #                 (
+    #                 SELECT
+    #                     canonical_id AS ID,
+    #                     TO_TIMESTAMP( cmt_author_date, 'YYYY-MM-DD' ) AS created_at,
+    #                     repo_id,
+    #                     'commit' AS ACTION,
+    #                     contributors.cntrb_full_name AS full_name,
+    #                     contributors.cntrb_login AS login 
+    #                 FROM
+    #                     augur_data.commits
+    #                     LEFT OUTER JOIN augur_data.contributors ON cntrb_email = cmt_author_email
+    #                     LEFT OUTER JOIN ( 
+    #                         SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+    #                         cntrb_canonical AS canonical_email, 
+    #                         data_collection_date, cntrb_id AS canonical_id 
+    #                         FROM augur_data.contributors 
+    #                         WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+    #                     ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
+    #                 WHERE
+    #                     repo_id = {repo_id} 
+    #                 GROUP BY
+    #                     repo_id,
+    #                     canonical_email,
+    #                     canonical_id,
+    #                     commits.cmt_author_date,
+    #                     contributors.cntrb_full_name,
+    #                     contributors.cntrb_login 
+    #                 ) UNION ALL
+    #                 (
+    #                 SELECT
+    #                     message.cntrb_id AS ID,
+    #                     created_at AS created_at,
+    #                     commits.repo_id,
+    #                     'commit_comment' AS ACTION,
+    #                     contributors.cntrb_full_name AS full_name,
+    #                     contributors.cntrb_login AS login
+            
+    #                 FROM
+    #                     augur_data.commit_comment_ref,
+    #                     augur_data.commits,
+    #                     augur_data.message
+    #                     LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
+    #                     LEFT OUTER JOIN ( 
+    #                         SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+    #                         cntrb_canonical AS canonical_email, 
+    #                         data_collection_date, cntrb_id AS canonical_id 
+    #                         FROM augur_data.contributors 
+    #                         WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+    #                     ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
+    #                 WHERE
+    #                     commits.cmt_id = commit_comment_ref.cmt_id 
+    #                     AND commits.repo_id = {repo_id} 
+    #                     AND commit_comment_ref.msg_id = message.msg_id
+        
+    #                 GROUP BY
+    #                     ID,
+    #                     commits.repo_id,
+    #                     commit_comment_ref.created_at,
+    #                     contributors.cntrb_full_name,
+    #                     contributors.cntrb_login
+    #                 ) UNION ALL
+    #                 (
+    #                 SELECT
+    #                     issue_events.cntrb_id AS ID,
+    #                     issue_events.created_at AS created_at,
+    #                     issues.repo_id,
+    #                     'issue_closed' AS ACTION,
+    #                     contributors.cntrb_full_name AS full_name,
+    #                     contributors.cntrb_login AS login 
+    #                 FROM
+    #                     augur_data.issues,
+    #                     augur_data.issue_events
+    #                     LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = issue_events.cntrb_id
+    #                     LEFT OUTER JOIN ( 
+    #                     SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+    #                     cntrb_canonical AS canonical_email, 
+    #                     data_collection_date, 
+    #                     cntrb_id AS canonical_id 
+    #                     FROM augur_data.contributors 
+    #                     WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+    #                     ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
+    #                 WHERE
+    #                     issues.repo_id = {repo_id} 
+    #                     AND issues.issue_id = issue_events.issue_id 
+    #                     AND issues.pull_request IS NULL 
+    #                     AND issue_events.cntrb_id IS NOT NULL 
+    #                     AND ACTION = 'closed' 
+    #                 GROUP BY
+    #                     issue_events.cntrb_id,
+    #                     issues.repo_id,
+    #                     issue_events.created_at,
+    #                     contributors.cntrb_full_name,
+    #                     contributors.cntrb_login 
+    #                 ) UNION ALL
+    #                 (
+    #                 SELECT
+    #                     pr_augur_contributor_id AS ID,
+    #                     pr_created_at AS created_at,
+    #                     pull_requests.repo_id,
+    #                     'open_pull_request' AS ACTION,
+    #                     contributors.cntrb_full_name AS full_name,
+    #                     contributors.cntrb_login AS login 
+    #                 FROM
+    #                     augur_data.pull_requests
+    #                     LEFT OUTER JOIN augur_data.contributors ON pull_requests.pr_augur_contributor_id = contributors.cntrb_id
+    #                     LEFT OUTER JOIN ( 
+    #                         SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+    #                         cntrb_canonical AS canonical_email, 
+    #                         data_collection_date, 
+    #                         cntrb_id AS canonical_id 
+    #                         FROM augur_data.contributors 
+    #                         WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+    #                     ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
+    #                 WHERE
+    #                     pull_requests.repo_id = {repo_id} 
+    #                 GROUP BY
+    #                     pull_requests.pr_augur_contributor_id,
+    #                     pull_requests.repo_id,
+    #                     pull_requests.pr_created_at,
+    #                     contributors.cntrb_full_name,
+    #                     contributors.cntrb_login 
+    #                 ) UNION ALL
+    #                 (
+    #                 SELECT
+    #                     message.cntrb_id AS ID,
+    #                     msg_timestamp AS created_at,
+    #                     pull_requests.repo_id as repo_id,
+    #                     'pull_request_comment' AS ACTION,
+    #                     contributors.cntrb_full_name AS full_name,
+    #                     contributors.cntrb_login AS login 
+    #                 FROM
+    #                     augur_data.pull_requests,
+    #                     augur_data.pull_request_message_ref,
+    #                     augur_data.message
+    #                     LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
+    #                     LEFT OUTER JOIN ( 
+    #                         SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+    #                         cntrb_canonical AS canonical_email, 
+    #                         data_collection_date, 
+    #                         cntrb_id AS canonical_id 
+    #                         FROM augur_data.contributors 
+    #                         WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+    #                     ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
+    #                 WHERE
+    #                     pull_requests.repo_id = {repo_id}
+    #                     AND pull_request_message_ref.pull_request_id = pull_requests.pull_request_id 
+    #                     AND pull_request_message_ref.msg_id = message.msg_id 
+    #                 GROUP BY
+    #                     message.cntrb_id,
+    #                     pull_requests.repo_id,
+    #                     message.msg_timestamp,
+    #                     contributors.cntrb_full_name,
+    #                     contributors.cntrb_login 
+    #                 ) UNION ALL
+    #                 (
+    #                 SELECT
+    #                     issues.reporter_id AS ID,
+    #                     msg_timestamp AS created_at,
+    #                     issues.repo_id as repo_id,
+    #                     'issue_comment' AS ACTION,
+    #                     contributors.cntrb_full_name AS full_name,
+    #                     contributors.cntrb_login AS login 
+    #                 FROM
+    #                     issues,
+    #                     issue_message_ref,
+    #                     message
+    #                     LEFT OUTER JOIN augur_data.contributors ON contributors.cntrb_id = message.cntrb_id
+    #                     LEFT OUTER JOIN ( 
+    #                         SELECT DISTINCT ON ( cntrb_canonical ) cntrb_full_name, 
+    #                         cntrb_canonical AS canonical_email, 
+    #                         data_collection_date, 
+    #                         cntrb_id AS canonical_id 
+    #                         FROM augur_data.contributors 
+    #                         WHERE cntrb_canonical = cntrb_email ORDER BY cntrb_canonical 
+    #                     ) canonical_full_names ON canonical_full_names.canonical_email =contributors.cntrb_canonical 
+    #                 WHERE
+    #                     issues.repo_id = {repo_id}
+    #                     AND issue_message_ref.msg_id = message.msg_id 
+    #                     AND issues.issue_id = issue_message_ref.issue_id
+    #                     AND issues.pull_request_id = NULL
+    #                 GROUP BY
+    #                     issues.reporter_id,
+    #                     issues.repo_id,
+    #                     message.msg_timestamp,
+    #                     contributors.cntrb_full_name,
+    #                     contributors.cntrb_login 
+    #                 ) 
+    #             ) A,
+    #             repo 
+    #         WHERE
+    #         ID IS NOT NULL 
+    #             AND A.repo_id = repo.repo_id 
+    #         GROUP BY
+    #             A.ID,
+    #             A.repo_id,
+    #             A.ACTION,
+    #             A.created_at,
+    #             repo.repo_name,
+    #             A.full_name,
+    #             A.login
+    #         ORDER BY 
+    #             cntrb_id
+    #         ) b
+    #         WHERE RANK IN {rank_tuple}
+
+    #     """)
+    # contributor_query2 = ("""
+
+    #     select count(*) from augur_data.repo; 
+    #     """)
 
     with current_app.engine.connect() as conn:
-        df = pd.read_sql(contributor_query,  conn)
+        df = pd.read_sql(contributor_query2,  conn)
 
-    df = df.loc[~df['full_name'].str.contains('bot', na=False)]
-    df = df.loc[~df['login'].str.contains('bot', na=False)]
+    #df = df.loc[~df['full_name'].str.contains('bot', na=False)]
+    #df = df.loc[~df['login'].str.contains('bot', na=False)]
 
-    df = df.loc[~df['cntrb_id'].isin(df[df.duplicated(['cntrb_id', 'created_at', 'repo_id', 'rank'])]['cntrb_id'])]
+    #df = df.loc[~df['cntrb_id'].isin(df[df.duplicated(['cntrb_id', 'created_at', 'repo_id', 'rank'])]['cntrb_id'])]
 
     # add yearmonths to contributor
-    df[['month', 'year']] = df[['month', 'year']].astype(int).astype(str)
-    df['yearmonth'] = df['month'] + '/' + df['year']
-    df['yearmonth'] = pd.to_datetime(df['yearmonth'])
+    #df[['month', 'year']] = df[['month', 'year']].astype(int).astype(str)
+    #df['yearmonth'] = df['month'] + '/' + df['year']
+    #df['yearmonth'] = pd.to_datetime(df['yearmonth'])
 
     # add column with every value being one, so when the contributor df is concatenated
     # with the months df, the filler months won't be counted in the sums
-    df['new_contributors'] = 1
+    #df['new_contributors'] = 1
 
     # add quarters to contributor dataframe
-    df['month'] = df['month'].astype(int)
-    df['quarter'] = df.apply(lambda x: quarters(x['month'], x['year']), axis=1, result_type='reduce')
-    df['quarter'] = pd.to_datetime(df['quarter'])
+    #df['month'] = df['month'].astype(int)
+    #df['quarter'] = df.apply(lambda x: quarters(x['month'], x['year']), axis=1, result_type='reduce')
+    #df['quarter'] = pd.to_datetime(df['quarter'])
 
+    df = [1]
     return df
 
 def months_data_collection(start_date, end_date):
