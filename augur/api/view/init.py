@@ -19,9 +19,6 @@ def init_settings():
     settings["cache_expiry"] = 604800
     settings["serving"] = "http://augur.chaoss.io/api/unstable"
     settings["pagination_offset"] = 25
-    # Put reports.yml in the same directory as the config file
-    config_dir = configFile.parent
-    settings["reports"] = os.path.join(config_dir, "reports.yml")
     settings["session_key"] = secrets.token_hex()
 
 def write_settings(current_settings):
