@@ -129,7 +129,7 @@ test-api:
 #
 .PHONY: uv
 uv:
-	@ command -v uv >/dev/null 2>&1 || { echo "Installing uv..."; pip3 install uv; }
+	@ command -v uv >/dev/null 2>&1 || { echo "Installing uv..."; pip install --user uv; }
 
 #
 # Documentation
