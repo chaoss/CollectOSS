@@ -8,6 +8,7 @@ from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.application.db.models import Contributor
 from augur.tasks.github.facade_github.core import *
 from augur.application.db.lib import execute_sql, get_contributor_aliases_by_email, get_unresolved_commit_emails_by_name, get_contributors_by_full_name, get_repo_by_repo_git, batch_insert_contributors
+from augur.application.db.lib import get_session, execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 
 
@@ -200,8 +201,10 @@ def insert_facade_contributors(self, repo_git):
     repo_id = repo.repo_id
     facade_helper = FacadeHelper(logger)
 
-    collection_status = repo.collection_status[0]
-    last_collected_date = collection_status.facade_data_last_collected if not facade_helper.facade_contributor_full_recollect else None
+    with get_session() as session:
+        query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
+        collection_status = execute_session_query(query,'one')
+        last_collected_date = collection_status.facade_data_last_collected if not facade_helper.facade_contributor_full_recollect else None
 
     # Get all of the commit data's emails and names from the commit table that do not appear
     # in the contributors table or the contributors_aliases table.
