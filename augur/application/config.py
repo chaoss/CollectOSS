@@ -5,6 +5,7 @@ from typing import List, Any, Optional
 import os
 from augur.application.db.models import Config 
 from augur.application.db.util import execute_session_query, convert_type_of_value
+from pathlib import Path
 
 def get_development_flag_from_config():
     
@@ -122,7 +123,11 @@ class AugurConfig():
         self.logger = logger
 
         self.accepted_types = ["str", "bool", "int", "float", "NoneType"]
-        self.default_config = default_config
+        config_path = Path("./augur.json")
+        if config_path.exists():
+            self.default_config = json.loads(config_path.read_text(encoding="UTF-8"))
+        else:
+            self.default_config = default_config
 
     def get_section(self, section_name) -> dict:
         """Get a section of data from the config.
