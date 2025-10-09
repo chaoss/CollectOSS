@@ -1,4 +1,4 @@
-"""Add extra celery options to the config if they do not exist
+"""Add Facade contributor full recollect to config, default to off (0) 
 
 Revision ID: 34
 Revises: 33
