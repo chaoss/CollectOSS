@@ -50,7 +50,8 @@ default_config = {
                 "pull_repos": 1,
                 "rebuild_caches": 1,
                 "run_analysis": 1,
-                "run_facade_contributors": 1
+                "run_facade_contributors": 1,
+                "facade_contributor_full_recollect": 0
             },
             "Server": {
                 "cache_expire": "3600",

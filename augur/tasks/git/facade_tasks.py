@@ -112,8 +112,6 @@ def trim_commits_post_analysis_facade_task(repo_git):
     repo = repo = get_repo_by_repo_git(repo_git)
     repo_id = repo.repo_id
 
-    start_date = facade_helper.get_setting('start_date')
-    
     logger.info(f"Generating sequence for repo {repo_id}")
 
     repo = get_repo_by_repo_git(repo_git)
@@ -123,7 +121,7 @@ def trim_commits_post_analysis_facade_task(repo_git):
     repo_loc = (f"{absolute_path}/.git")
     # Grab the parents of HEAD
 
-    parent_commits = get_parent_commits_set(repo_loc, start_date)
+    parent_commits = get_parent_commits_set(repo_loc)
 
     # Grab the existing commits from the database
     existing_commits = get_existing_commits_set(repo_id)
@@ -237,8 +235,6 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     repo = get_repo_by_repo_git(repo_git)
     repo_id = repo.repo_id
 
-    start_date = facade_helper.get_setting('start_date')
-
     logger.info(f"Generating sequence for repo {repo_id}")
     
     repo = get_repo_by_repo_id(repo_id)
@@ -248,7 +244,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     repo_loc = (f"{absolute_path}/.git")
     # Grab the parents of HEAD
 
-    parent_commits = get_parent_commits_set(repo_loc, start_date)
+    parent_commits = get_parent_commits_set(repo_loc)
 
     # Grab the existing commits from the database
     existing_commits = get_existing_commits_set(repo_id)
@@ -438,11 +434,6 @@ def generate_analysis_sequence(logger,repo_git, facade_helper):
 
     analysis_sequence = []
 
-    #repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_git=:value""").bindparams(value=repo_git)
-    #repos = fetchall_data_from_sql_text(repo_list)
-
-    start_date = facade_helper.get_setting('start_date')
-
     #repo_ids = [repo['repo_id'] for repo in repos]
 
     #repo_id = repo_ids.pop(0)
@@ -472,8 +463,6 @@ def facade_phase(repo_git, full_collection):
     #Get the repo_id
     #repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_git=:value""").bindparams(value=repo_git)
     #repos = fetchall_data_from_sql_text(repo_list)
-
-    start_date = facade_helper.get_setting('start_date')
 
     #repo_ids = [repo['repo_id'] for repo in repos]
 
