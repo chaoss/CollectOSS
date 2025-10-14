@@ -167,7 +167,13 @@ class FacadeHelper():
         # Log an activity based upon urgency and user's preference.  If the log level is
         # "Debug", then just print it and don't save it in the database.
         log_options = ('Error','Quiet','Info','Verbose','Debug')
-        self.logger.info(f"* {status}\n")
+        logmsg = f"* {status}\n"
+        if level == "Error":
+            self.logger.error(logmsg)
+        elif level == "Debug" or level == "Verbose":
+            self.logger.debug(logmsg)
+        else:
+            self.logger.info(logmsg)
 
         #Return if only debug 
         if level == 'Debug':
