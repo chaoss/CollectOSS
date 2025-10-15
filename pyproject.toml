@@ -156,7 +156,7 @@ constraint-dependencies = [
 ]
 
 [tool.mypy]
-files = ['augur/application/db/util.py']
+files = ['augur/application/db/*.py']
 ignore_missing_imports = true
 follow_imports = "skip"
 disallow_untyped_defs = false
