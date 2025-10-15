@@ -61,7 +61,7 @@ jobs:
       - name: Extract project version
         id: version
         run: |
-          VERSION=$(python -c "import re; exec(open('metadata.py').read()); print(__version__)")
+          VERSION=$(python -c "exec(open('metadata.py').read()); print(__version__)")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
 
