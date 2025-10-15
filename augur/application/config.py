@@ -123,7 +123,8 @@ class AugurConfig():
         self.logger = logger
 
         self.accepted_types = ["str", "bool", "int", "float", "NoneType"]
-        config_path = Path("./augur.json")
+        config_dir = Path(os.getenv("CONFIG_DATADIR", "./"))
+        config_path = config_dir.joinpath("augur.json")
         if config_path.exists():
             self.default_config = json.loads(config_path.read_text(encoding="UTF-8"))
         else:
