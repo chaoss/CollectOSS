@@ -15,3 +15,4 @@ Augur does provides an environment variable to control whether logs are reset on
 - Usage Example:
   ```bash
   export AUGUR_RESET_LOGS=False
+  ```
