@@ -2,9 +2,9 @@
 
 ## Resetting Logs with AUGUR_RESET_LOGS
 
-Augur provides an environment variable to control whether logs are reset on server startup. This gives system administrators more control over log management.
+Augur does provides an environment variable to control whether logs are reset on server startup. This gives system administrators more control over log management.
 
-`AUGUR_RESET_LOGS` : Controls the automatic reset of logs when Augur starts.
+`AUGUR_RESET_LOGS` : This controls the automatic reset of logs when Augur starts.
 
 - Default Behavior:  
   If the variable is not set, it defaults to True, meaning Augur will reset logs on startup to avoid infinite log growth.
