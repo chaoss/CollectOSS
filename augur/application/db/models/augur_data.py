@@ -39,24 +39,6 @@ metadata = Base.metadata
 
 logger = logging.getLogger(__name__)
 
-
-t_analysis_log = Table(
-    "analysis_log",
-    metadata,
-    Column("repos_id", Integer, nullable=False),
-    Column("status", String, nullable=False),
-    Column(
-        "date_attempted",
-        TIMESTAMP(precision=0),
-        nullable=False,
-        server_default=text("CURRENT_TIMESTAMP"),
-    ),
-    schema="augur_data",
-)
-Index('repos_id', t_analysis_log.c.repos_id)
-
-
-
 class ChaossMetricStatus(Base):
     __tablename__ = "chaoss_metric_status"
     __table_args__ = {
@@ -602,23 +584,6 @@ class RepoGroup(Base):
         return result
 
 
-t_repos_fetch_log = Table(
-    "repos_fetch_log",
-    metadata,
-    Column("repos_id", Integer, nullable=False),
-    Column("status", String(128), nullable=False),
-    Column(
-        "date",
-        TIMESTAMP(precision=0),
-        nullable=False,
-        server_default=text("CURRENT_TIMESTAMP"),
-    ),
-    Index("repos_id,status", "repos_id", "status"),
-    Index("repos_id,statusops", "repos_id", "status"),
-    schema="augur_data",
-)
-
-
 class Settings(Base):
     __tablename__ = "settings"
     __table_args__ = {"schema": "augur_data"}
@@ -693,23 +658,6 @@ class UnresolvedCommitEmail(Base):
     data_collection_date = Column(
         TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP")
     )
-
-
-class UtilityLog(Base):
-    __tablename__ = "utility_log"
-    __table_args__ = {"schema": "augur_data"}
-
-    id = Column(
-        BigInteger,
-        primary_key=True,
-        server_default=text("nextval('augur_data.utility_log_id_seq1'::regclass)"),
-    )
-    level = Column(String(8), nullable=False)
-    status = Column(String, nullable=False)
-    attempted = Column(
-        TIMESTAMP(precision=0), nullable=False, server_default=text("CURRENT_TIMESTAMP")
-    )
-
 
 t_working_commits = Table(
     "working_commits",

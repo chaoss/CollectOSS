@@ -10,7 +10,6 @@ from augur.application.db.models.augur_data import (
     Settings,
     TopicWord,
     UnresolvedCommitEmail,
-    UtilityLog,
     ContributorRepo,
     ContributorsAlias,
     Repo,
