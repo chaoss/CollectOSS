@@ -99,6 +99,7 @@ dev = [
     "pytest==6.2.5",
     "toml>=0.10.2",
     "ipdb==0.13.9",
+    "mypy>=1.18.2",
     {include-group = "docs"},
 ]
 docs = [
