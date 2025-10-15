@@ -183,6 +183,7 @@ class FacadeHelper():
         self.logger.info(f"{status} {repos_id}")
 
     def update_analysis_log(self, repos_id,status):
+        self.logger.info(f"{status} for repo id {repos_id}")
 
     def insert_or_update_data(self, query, **bind_args)-> None:
         """Provide deadlock detection for postgres updates, inserts, and deletions for facade.

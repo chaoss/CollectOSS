@@ -87,7 +87,7 @@ def trim_commits_facade_task(repo_git):
     repo_id = repo.repo_id
 
     facade_helper.inc_repos_processed()
-    facade_helper.update_analysis_log(repo_id,"Beginning analysis.")
+    facade_helper.update_analysis_log(repo_id,"Beginning analysis")
     # First we check to see if the previous analysis didn't complete
 
     working_commits = get_working_commits_by_repo_id(repo_id)
