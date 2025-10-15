@@ -178,38 +178,11 @@ class FacadeHelper():
         else:
             self.logger.info(logmsg)
 
-        #Return if only debug 
-        if level == 'Debug':
-            return
-        
-        #Else write to database
-        query = s.sql.text("""INSERT INTO utility_log (level,status) VALUES (:levelParam,:statusParam)
-            """).bindparams(levelParam=level,statusParam=status)
 
-        try:
-            execute_sql(query)
-        except Exception as e:
-            self.logger.error(f"Error encountered: {e}")
-            raise e
     def update_repo_log(self,repos_id,status):
         self.logger.info(f"{status} {repos_id}")
 
-        log_message = s.sql.text("""INSERT INTO repos_fetch_log (repos_id,status) 
-            VALUES (:repo_id,:repo_status)""").bindparams(repo_id=repos_id,repo_status=status)
-        
-        try:
-            execute_sql(log_message)
-        except:
-            pass
-
     def update_analysis_log(self, repos_id,status):
-
-        # Log a repo's analysis status
-
-        log_message = s.sql.text("""INSERT INTO analysis_log (repos_id,status)
-            VALUES (:repo_id,:status)""").bindparams(repo_id=repos_id,status=status)
-
-        execute_sql(log_message)
 
     def insert_or_update_data(self, query, **bind_args)-> None:
         """Provide deadlock detection for postgres updates, inserts, and deletions for facade.
