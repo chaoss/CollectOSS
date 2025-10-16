@@ -150,3 +150,10 @@ constraint-dependencies = [
     # https://docs.python.org/3.10/whatsnew/3.10.html#removed
     "graphql-server-core>1.1.1",
 ]
+
+[tool.mypy]
+files = ['augur/application/db/util.py']
+ignore_missing_imports = true
+follow_imports = "skip"
+disallow_untyped_defs = false
+exclude_gitignore = true
