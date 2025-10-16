@@ -23,7 +23,7 @@ def get_release_inf(repo_id, release, tag_only):
 
 
         release_inf = {
-            'release_id': release['id'],
+            'release_id': str(release['id']).strip(),
             'repo_id': repo_id,
             'release_name': release['name'],
             'release_description': release['description'] if release['description'] is not None else '',
@@ -51,7 +51,7 @@ def get_release_inf(repo_id, release, tag_only):
             author = "nobody"
             date = ""
         release_inf = {
-            'release_id': release['id'],
+            'release_id': str(release['id']).strip(),
             'repo_id': repo_id,
             'release_name': release['name'],
             'release_description': 'tag_only',
@@ -67,17 +67,23 @@ def get_release_inf(repo_id, release, tag_only):
 
 def insert_release(session, logger, repo_id, owner, release, tag_only = False):
 
-    # Get current table values
+    # Get current table values with proper trimming
     logger.info('Getting release table values\n')
     query = session.query(Release.release_id).filter(Release.repo_id == repo_id)
-    release_id_data = execute_session_query(query, 'all')#pd.read_sql(release_id_data_sql, self.db, params={'repo_id': repo_id})
-    release_id_data = [str(r_id).strip() for r_id in release_id_data]#release_id_data.apply(lambda x: x.str.strip())
+    release_id_data = execute_session_query(query, 'all')
+    existing_release_ids = {str(r_id).strip() for r_id in release_id_data}
 
     # Put all data together in format of the table
     logger.info(f'Inserting release for repo with id:{repo_id}, owner:{owner}, release name:{release["name"]}\n')
     release_inf = get_release_inf(repo_id, release, tag_only)
+    
+    # Check if release already exists (with proper trimming)
+    new_release_id = str(release_inf['release_id']).strip()
+    if new_release_id in existing_release_ids:
+        logger.info(f"Release {new_release_id} already exists for repo {repo_id}, skipping insertion\n")
+        return
 
-    #Do an upsert
+    #Do an upsert with string field cleaning
     string_fields = ["release_name", "release_description", "release_author", "release_tag_name"]
     bulk_insert_dicts(logger, release_inf,Release,['release_id'], string_fields=string_fields)
 
