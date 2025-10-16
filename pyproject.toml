@@ -100,7 +100,11 @@ dev = [
     "toml>=0.10.2",
     "ipdb==0.13.9",
     "mypy>=1.18.2",
-    {include-group = "docs"},
+    "types-requests>=2.31.0.6",
+    "types-pyyaml>=6.0.12.20250915",
+    "types-python-dateutil>=2.9.0.20251008",
+    "types-toml>=0.10.8.20240310",
+    { include-group = "docs" },
 ]
 docs = [
     "docutils==0.20.1",
