@@ -1,7 +1,9 @@
 FROM python:3.11.12-alpine
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.90.3"
+
+ARG VERSION
+LABEL version=${VERSION}
 
 RUN pip install --no-cache-dir --upgrade pip
 
