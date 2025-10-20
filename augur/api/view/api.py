@@ -1,11 +1,10 @@
 from flask import request, jsonify, redirect, url_for, flash, current_app
 import re
 from flask_login import current_user, login_required
-from augur.application.db.models import Repo, RepoGroup, UserGroup, UserRepo
+from augur.application.db.models import Repo, UserGroup, UserRepo
 from augur.tasks.frontend import add_github_orgs_and_repos, parse_org_and_repo_name, parse_org_name, add_gitlab_repos
 from .utils import *
 from ..server import app
-from augur.application.db.session import DatabaseSession
 
 @app.route('/cache/file/')
 @app.route('/cache/file/<path:file>')
