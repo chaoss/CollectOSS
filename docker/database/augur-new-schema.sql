@@ -256,7 +256,7 @@ CREATE MATERIALIZED VIEW augur_data.api_get_all_repo_prs AS
 SELECT
     repo_id,
     count(*) AS pull_requests_all_time
-FROM augur_data.pull_requests
+   FROM augur_data.pull_requests
 GROUP BY
     repo_id
 WITH
@@ -330,7 +330,7 @@ Each row represents changes to one FILE within a single commit. So you will enco
 
 CREATE MATERIALIZED VIEW augur_data.api_get_all_repos_commits AS
 SELECT repo_id, count(DISTINCT cmt_commit_hash) AS commits_all_time
-FROM augur_data.commits
+   FROM augur_data.commits
 GROUP BY
     repo_id
 WITH
@@ -405,8 +405,8 @@ COMMENT ON COLUMN augur_data.issues.cntrb_id IS 'The ID of the person who closed
 
 CREATE MATERIALIZED VIEW augur_data.api_get_all_repos_issues AS
 SELECT repo_id, count(*) AS issues_all_time
-FROM augur_data.issues
-WHERE (pull_request IS NULL)
+   FROM augur_data.issues
+  WHERE (pull_request IS NULL)
 GROUP BY
     repo_id
 WITH
@@ -975,7 +975,7 @@ FROM (
                     )
                 )
             )
-        WHERE (issues.pull_request IS NULL)
+          WHERE (issues.pull_request IS NULL)
         UNION ALL
         SELECT pull_request_events.cntrb_id AS id, pull_request_events.created_at, pull_requests.repo_id, 'pull_request_closed'::text AS action, contributors.cntrb_login AS login
         FROM augur_data.pull_requests, (
@@ -1105,8 +1105,8 @@ FROM (
                 )
             )
     ) a, augur_data.repo
-WHERE (a.repo_id = repo.repo_id)
-ORDER BY a.created_at DESC
+  WHERE (a.repo_id = repo.repo_id)
+  ORDER BY a.created_at DESC
 WITH
     NO DATA;
 
@@ -1694,7 +1694,7 @@ GROUP BY
     repo.repo_id,
     repo.repo_name,
     commits.cmt_committer_date
-ORDER BY repo.repo_id, commits.cmt_committer_date
+  ORDER BY repo.repo_id, commits.cmt_committer_date
 WITH
     NO DATA;
 
@@ -1733,7 +1733,7 @@ FROM (
                     )
                 )
             )
-        WHERE (issues.pull_request IS NULL)
+          WHERE (issues.pull_request IS NULL)
         UNION ALL
         SELECT pull_request_events.cntrb_id AS id, pull_request_events.created_at, pull_requests.repo_id, 'pull_request_closed'::text AS action, contributors.cntrb_login AS login
         FROM augur_data.pull_requests, (
@@ -1863,8 +1863,8 @@ FROM (
                 )
             )
     ) a, augur_data.repo
-WHERE (a.repo_id = repo.repo_id)
-ORDER BY a.created_at DESC
+  WHERE (a.repo_id = repo.repo_id)
+  ORDER BY a.created_at DESC
 WITH
     NO DATA;
 
@@ -1926,7 +1926,7 @@ FROM (
             )
         )
     )
-ORDER BY rg.rg_name
+  ORDER BY rg.rg_name
 WITH
     NO DATA;
 
@@ -2013,7 +2013,7 @@ FROM (
                                         ON (
                                             contributors_1.cntrb_canonical
                                         ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
-                                    FROM augur_data.contributors contributors_1
+                                   FROM augur_data.contributors contributors_1
                                     WHERE (
                                             (
                                                 contributors_1.cntrb_canonical
@@ -2028,7 +2028,7 @@ FROM (
                                     )
                                 )
                             )
-                        WHERE (issues.pull_request IS NULL)
+                          WHERE (issues.pull_request IS NULL)
                         GROUP BY
                             canonical_full_names.canonical_id, issues.repo_id, issues.created_at, contributors.cntrb_full_name, contributors.cntrb_login
                         UNION ALL
@@ -2050,7 +2050,7 @@ FROM (
                                         ON (
                                             contributors_1.cntrb_canonical
                                         ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
-                                    FROM augur_data.contributors contributors_1
+                                   FROM augur_data.contributors contributors_1
                                     WHERE (
                                             (
                                                 contributors_1.cntrb_canonical
@@ -2084,7 +2084,7 @@ FROM (
                                         ON (
                                             contributors_1.cntrb_canonical
                                         ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
-                                    FROM augur_data.contributors contributors_1
+                                   FROM augur_data.contributors contributors_1
                                     WHERE (
                                             (
                                                 contributors_1.cntrb_canonical
@@ -2126,7 +2126,7 @@ FROM (
                                         ON (
                                             contributors_1.cntrb_canonical
                                         ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
-                                    FROM augur_data.contributors contributors_1
+                                   FROM augur_data.contributors contributors_1
                                     WHERE (
                                             (
                                                 contributors_1.cntrb_canonical
@@ -2172,7 +2172,7 @@ FROM (
                                         ON (
                                             contributors_1.cntrb_canonical
                                         ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
-                                    FROM augur_data.contributors contributors_1
+                                   FROM augur_data.contributors contributors_1
                                     WHERE (
                                             (
                                                 contributors_1.cntrb_canonical
@@ -2206,7 +2206,7 @@ FROM (
                                         ON (
                                             contributors_1.cntrb_canonical
                                         ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
-                                    FROM augur_data.contributors contributors_1
+                                   FROM augur_data.contributors contributors_1
                                     WHERE (
                                             (
                                                 contributors_1.cntrb_canonical
@@ -2248,7 +2248,7 @@ FROM (
                                         ON (
                                             contributors_1.cntrb_canonical
                                         ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
-                                    FROM augur_data.contributors contributors_1
+                                   FROM augur_data.contributors contributors_1
                                     WHERE (
                                             (
                                                 contributors_1.cntrb_canonical
@@ -2405,7 +2405,7 @@ FROM (
                         prr.pull_request_id = pr_1.pull_request_id
                     )
                 )
-            UNION
+        UNION
             SELECT prmr.pull_request_id, m_1.msg_timestamp, m_1.cntrb_id AS msg_cntrb_id
             FROM augur_data.pull_request_message_ref prmr, augur_data.pull_requests pr_1, augur_data.message m_1
             WHERE (
@@ -3012,7 +3012,7 @@ WHERE (
             repo.repo_id = pull_requests.repo_id
         )
     )
-ORDER BY response_times.merged_count DESC
+  ORDER BY response_times.merged_count DESC
 WITH
     NO DATA;
 
@@ -3082,7 +3082,7 @@ FROM augur_data.repo, (
                         SELECT repo_labor_1.repo_id, max(
                                 repo_labor_1.data_collection_date
                             ) AS last_collected
-                        FROM augur_data.repo_labor repo_labor_1
+                           FROM augur_data.repo_labor repo_labor_1
                         GROUP BY
                             repo_labor_1.repo_id
                     ) recent
@@ -3102,8 +3102,8 @@ FROM augur_data.repo, (
         GROUP BY
             d.repo_id, d.programming_language
     ) e
-WHERE (repo.repo_id = e.repo_id)
-ORDER BY e.repo_id
+  WHERE (repo.repo_id = e.repo_id)
+  ORDER BY e.repo_id
 WITH
     NO DATA;
 
@@ -3166,7 +3166,7 @@ WHERE (
         (a.user_id = b.user_id)
         AND (b.group_id = c.group_id)
     )
-ORDER BY a.user_id
+  ORDER BY a.user_id
 WITH
     NO DATA;
 
@@ -7373,7 +7373,8 @@ COPY augur_operations.repos_fetch_log (repos_id, status, date) FROM stdin;
 -- Data for Name: subscription_types; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
-COPY augur_operations.subscription_types (id, name) FROM stdin; \.
+COPY augur_operations.subscription_types (id, name) FROM stdin;
+\.
 
 --
 -- Data for Name: subscriptions; Type: TABLE DATA; Schema: augur_operations; Owner: augur
