@@ -6,14 +6,23 @@
 -- Dumped by pg_dump version 16.3 (Homebrew)
 
 SET statement_timeout = 0;
+
 SET lock_timeout = 0;
+
 SET idle_in_transaction_session_timeout = 0;
+
 SET client_encoding = 'UTF8';
+
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
+
+SELECT pg_catalog.set_config ('search_path', '', false);
+
 SET check_function_bodies = false;
+
 SET xmloption = content;
+
 SET client_min_messages = warning;
+
 SET row_security = off;
 
 --
@@ -21,7 +30,6 @@ SET row_security = off;
 --
 
 CREATE SCHEMA augur_data;
-
 
 ALTER SCHEMA augur_data OWNER TO augur;
 
@@ -31,7 +39,6 @@ ALTER SCHEMA augur_data OWNER TO augur;
 
 CREATE SCHEMA augur_operations;
 
-
 ALTER SCHEMA augur_operations OWNER TO augur;
 
 --
@@ -40,7 +47,6 @@ ALTER SCHEMA augur_operations OWNER TO augur;
 
 CREATE SCHEMA spdx;
 
-
 ALTER SCHEMA spdx OWNER TO augur;
 
 --
@@ -48,7 +54,6 @@ ALTER SCHEMA spdx OWNER TO augur;
 --
 
 CREATE SCHEMA toss_specific;
-
 
 ALTER SCHEMA toss_specific OWNER TO augur;
 
@@ -65,7 +70,6 @@ CREATE PROCEDURE augur_data.refresh_aggregates()
         perform pg_advisory_unlock(124);
     end;
 $$;
-
 
 ALTER PROCEDURE augur_data.refresh_aggregates() OWNER TO augur;
 
@@ -86,7 +90,6 @@ CREATE FUNCTION public.create_constraint_if_not_exists(t_name text, c_name text,
   END;
 $$;
 
-
 ALTER FUNCTION public.create_constraint_if_not_exists(t_name text, c_name text, constraint_sql text) OWNER TO augur;
 
 --
@@ -101,7 +104,6 @@ SELECT CASE WHEN trim($1) SIMILAR TO '[0-9]+'
     ELSE NULL END;
 
 $_$;
-
 
 ALTER FUNCTION public.pc_chartoint(chartoconvert character varying) OWNER TO augur;
 
@@ -119,7 +121,6 @@ CREATE PROCEDURE public.refresh_aggregates()
     end;
 $$;
 
-
 ALTER PROCEDURE public.refresh_aggregates() OWNER TO augur;
 
 SET default_tablespace = '';
@@ -136,20 +137,15 @@ CREATE TABLE augur_data.analysis_log (
     date_attempted timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-
 ALTER TABLE augur_data.analysis_log OWNER TO augur;
 
 --
 -- Name: pull_requests_pull_request_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_requests_pull_request_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_requests_pull_request_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_requests_pull_request_id_seq OWNER TO augur;
 
@@ -158,7 +154,9 @@ ALTER SEQUENCE augur_data.pull_requests_pull_request_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.pull_requests (
-    pull_request_id bigint DEFAULT nextval('augur_data.pull_requests_pull_request_id_seq'::regclass) NOT NULL,
+    pull_request_id bigint DEFAULT nextval(
+        'augur_data.pull_requests_pull_request_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint DEFAULT 0,
     pr_url character varying,
     pr_src_id bigint,
@@ -200,7 +198,6 @@ CREATE TABLE augur_data.pull_requests (
     pr_augur_contributor_id uuid
 );
 
-
 ALTER TABLE augur_data.pull_requests OWNER TO augur;
 
 --
@@ -209,13 +206,11 @@ ALTER TABLE augur_data.pull_requests OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.pull_requests.pr_src_id IS 'The pr_src_id is unique across all of github.';
 
-
 --
 -- Name: COLUMN pull_requests.pr_augur_issue_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.pull_requests.pr_augur_issue_id IS 'This is to link to the augur stored related issue';
-
 
 --
 -- Name: COLUMN pull_requests.pr_src_number; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -223,13 +218,11 @@ COMMENT ON COLUMN augur_data.pull_requests.pr_augur_issue_id IS 'This is to link
 
 COMMENT ON COLUMN augur_data.pull_requests.pr_src_number IS 'The pr_src_number is unique within a repository.';
 
-
 --
 -- Name: COLUMN pull_requests.pr_teams; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.pull_requests.pr_teams IS 'One to many with pull request teams. ';
-
 
 --
 -- Name: COLUMN pull_requests.pr_review_comment_url; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -237,13 +230,11 @@ COMMENT ON COLUMN augur_data.pull_requests.pr_teams IS 'One to many with pull re
 
 COMMENT ON COLUMN augur_data.pull_requests.pr_review_comment_url IS 'This is a field with limited utility. It does expose how to access a specific comment if needed with parameters. If the source changes URL structure, it may be useful';
 
-
 --
 -- Name: COLUMN pull_requests.pr_meta_head_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.pull_requests.pr_meta_head_id IS 'The metadata for the head repo that links to the pull_request_meta table. ';
-
 
 --
 -- Name: COLUMN pull_requests.pr_meta_base_id; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -251,25 +242,25 @@ COMMENT ON COLUMN augur_data.pull_requests.pr_meta_head_id IS 'The metadata for 
 
 COMMENT ON COLUMN augur_data.pull_requests.pr_meta_base_id IS 'The metadata for the base repo that links to the pull_request_meta table. ';
 
-
 --
 -- Name: COLUMN pull_requests.pr_augur_contributor_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.pull_requests.pr_augur_contributor_id IS 'This is to link to the augur contributor record. ';
 
-
 --
 -- Name: api_get_all_repo_prs; Type: MATERIALIZED VIEW; Schema: augur_data; Owner: augur
 --
 
 CREATE MATERIALIZED VIEW augur_data.api_get_all_repo_prs AS
- SELECT repo_id,
+SELECT
+    repo_id,
     count(*) AS pull_requests_all_time
-   FROM augur_data.pull_requests
-  GROUP BY repo_id
-  WITH NO DATA;
-
+FROM augur_data.pull_requests
+GROUP BY
+    repo_id
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.api_get_all_repo_prs OWNER TO augur;
 
@@ -277,13 +268,9 @@ ALTER MATERIALIZED VIEW augur_data.api_get_all_repo_prs OWNER TO augur;
 -- Name: commits_cmt_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.commits_cmt_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.commits_cmt_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.commits_cmt_id_seq OWNER TO augur;
 
@@ -292,7 +279,9 @@ ALTER SEQUENCE augur_data.commits_cmt_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.commits (
-    cmt_id bigint DEFAULT nextval('augur_data.commits_cmt_id_seq'::regclass) NOT NULL,
+    cmt_id bigint DEFAULT nextval(
+        'augur_data.commits_cmt_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint NOT NULL,
     cmt_commit_hash character varying(80) NOT NULL,
     cmt_author_name character varying NOT NULL,
@@ -321,8 +310,10 @@ CREATE TABLE augur_data.commits (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP,
     cmt_ght_author_id uuid
 )
-WITH (autovacuum_vacuum_scale_factor='0', autovacuum_vacuum_threshold='1000');
-
+WITH (
+        autovacuum_vacuum_scale_factor = '0',
+        autovacuum_vacuum_threshold = '1000'
+    );
 
 ALTER TABLE augur_data.commits OWNER TO augur;
 
@@ -333,18 +324,17 @@ ALTER TABLE augur_data.commits OWNER TO augur;
 COMMENT ON TABLE augur_data.commits IS 'Commits.
 Each row represents changes to one FILE within a single commit. So you will encounter multiple rows per commit hash in many cases. ';
 
-
 --
 -- Name: api_get_all_repos_commits; Type: MATERIALIZED VIEW; Schema: augur_data; Owner: augur
 --
 
 CREATE MATERIALIZED VIEW augur_data.api_get_all_repos_commits AS
- SELECT repo_id,
-    count(DISTINCT cmt_commit_hash) AS commits_all_time
-   FROM augur_data.commits
-  GROUP BY repo_id
-  WITH NO DATA;
-
+SELECT repo_id, count(DISTINCT cmt_commit_hash) AS commits_all_time
+FROM augur_data.commits
+GROUP BY
+    repo_id
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.api_get_all_repos_commits OWNER TO augur;
 
@@ -352,13 +342,9 @@ ALTER MATERIALIZED VIEW augur_data.api_get_all_repos_commits OWNER TO augur;
 -- Name: issue_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.issue_seq
-    START WITH 31000
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.issue_seq START
+WITH
+    31000 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.issue_seq OWNER TO augur;
 
@@ -367,7 +353,9 @@ ALTER SEQUENCE augur_data.issue_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.issues (
-    issue_id bigint DEFAULT nextval('augur_data.issue_seq'::regclass) NOT NULL,
+    issue_id bigint DEFAULT nextval(
+        'augur_data.issue_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     pull_request bigint,
     pull_request_id bigint,
@@ -397,7 +385,6 @@ CREATE TABLE augur_data.issues (
     cntrb_id uuid
 );
 
-
 ALTER TABLE augur_data.issues OWNER TO augur;
 
 --
@@ -406,26 +393,24 @@ ALTER TABLE augur_data.issues OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.issues.reporter_id IS 'The ID of the person who opened the issue. ';
 
-
 --
 -- Name: COLUMN issues.cntrb_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.issues.cntrb_id IS 'The ID of the person who closed the issue. ';
 
-
 --
 -- Name: api_get_all_repos_issues; Type: MATERIALIZED VIEW; Schema: augur_data; Owner: augur
 --
 
 CREATE MATERIALIZED VIEW augur_data.api_get_all_repos_issues AS
- SELECT repo_id,
-    count(*) AS issues_all_time
-   FROM augur_data.issues
-  WHERE (pull_request IS NULL)
-  GROUP BY repo_id
-  WITH NO DATA;
-
+SELECT repo_id, count(*) AS issues_all_time
+FROM augur_data.issues
+WHERE (pull_request IS NULL)
+GROUP BY
+    repo_id
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.api_get_all_repos_issues OWNER TO augur;
 
@@ -433,13 +418,9 @@ ALTER MATERIALIZED VIEW augur_data.api_get_all_repos_issues OWNER TO augur;
 -- Name: augur_data.repo_insights_ri_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data."augur_data.repo_insights_ri_id_seq"
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data."augur_data.repo_insights_ri_id_seq" START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data."augur_data.repo_insights_ri_id_seq" OWNER TO augur;
 
@@ -456,8 +437,8 @@ CREATE TABLE augur_data.contributors (
     cntrb_type character varying,
     cntrb_fake smallint DEFAULT 0,
     cntrb_deleted smallint DEFAULT 0,
-    cntrb_long numeric(11,8) DEFAULT NULL::numeric,
-    cntrb_lat numeric(10,8) DEFAULT NULL::numeric,
+    cntrb_long numeric(11, 8) DEFAULT NULL::numeric,
+    cntrb_lat numeric(10, 8) DEFAULT NULL::numeric,
     cntrb_country_code character(3) DEFAULT NULL::bpchar,
     cntrb_state character varying,
     cntrb_city character varying,
@@ -495,7 +476,6 @@ CREATE TABLE augur_data.contributors (
     cntrb_id uuid NOT NULL
 );
 
-
 ALTER TABLE augur_data.contributors OWNER TO augur;
 
 --
@@ -505,13 +485,11 @@ ALTER TABLE augur_data.contributors OWNER TO augur;
 COMMENT ON TABLE augur_data.contributors IS 'For GitHub, this should be repeated from gh_login. for other systems, it should be that systems login. 
 Github now allows a user to change their login name, but their user id remains the same in this case. So, the natural key is the combination of id and login, but there should never be repeated logins. ';
 
-
 --
 -- Name: COLUMN contributors.cntrb_login; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.contributors.cntrb_login IS 'Will be a double population with the same value as gh_login for github, but the local value for other systems. ';
-
 
 --
 -- Name: COLUMN contributors.cntrb_email; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -519,20 +497,17 @@ COMMENT ON COLUMN augur_data.contributors.cntrb_login IS 'Will be a double popul
 
 COMMENT ON COLUMN augur_data.contributors.cntrb_email IS 'This needs to be here for matching contributor ids, which are augur, to the commit information. ';
 
-
 --
 -- Name: COLUMN contributors.cntrb_type; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.contributors.cntrb_type IS 'Present in another models. It is not currently used in Augur. ';
 
-
 --
 -- Name: COLUMN contributors.gh_login; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.contributors.gh_login IS 'populated with the github user name for github originated data. ';
-
 
 --
 -- Name: COLUMN contributors.gl_web_url; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -555,7 +530,6 @@ https://gitlab.com/api/v4/users?search=outdoors@acm.org
   }
 ]';
 
-
 --
 -- Name: COLUMN contributors.gl_avatar_url; Type: COMMENT; Schema: augur_data; Owner: augur
 --
@@ -576,7 +550,6 @@ https://gitlab.com/api/v4/users?search=outdoors@acm.org
     "web_url": "https://gitlab.com/computationalmystic"
   }
 ]';
-
 
 --
 -- Name: COLUMN contributors.gl_state; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -599,7 +572,6 @@ https://gitlab.com/api/v4/users?search=outdoors@acm.org
   }
 ]';
 
-
 --
 -- Name: COLUMN contributors.gl_username; Type: COMMENT; Schema: augur_data; Owner: augur
 --
@@ -620,7 +592,6 @@ https://gitlab.com/api/v4/users?search=outdoors@acm.org
     "web_url": "https://gitlab.com/computationalmystic"
   }
 ]';
-
 
 --
 -- Name: COLUMN contributors.gl_full_name; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -643,7 +614,6 @@ https://gitlab.com/api/v4/users?search=outdoors@acm.org
   }
 ]';
 
-
 --
 -- Name: COLUMN contributors.gl_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
@@ -665,18 +635,13 @@ https://gitlab.com/api/v4/users?search=outdoors@acm.org
   }
 ]';
 
-
 --
 -- Name: issue_events_event_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.issue_events_event_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.issue_events_event_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.issue_events_event_id_seq OWNER TO augur;
 
@@ -685,7 +650,9 @@ ALTER SEQUENCE augur_data.issue_events_event_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.issue_events (
-    event_id bigint DEFAULT nextval('augur_data.issue_events_event_id_seq'::regclass) NOT NULL,
+    event_id bigint DEFAULT nextval(
+        'augur_data.issue_events_event_id_seq'::regclass
+    ) NOT NULL,
     issue_id bigint NOT NULL,
     repo_id bigint,
     action character varying NOT NULL,
@@ -702,7 +669,6 @@ CREATE TABLE augur_data.issue_events (
     cntrb_id uuid
 );
 
-
 ALTER TABLE augur_data.issue_events OWNER TO augur;
 
 --
@@ -711,25 +677,19 @@ ALTER TABLE augur_data.issue_events OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.issue_events.node_id IS 'This should be renamed to issue_event_src_node_id, as its the varchar identifier in GitHub and likely common in other sources as well. However, since it was created before we came to this naming standard and workers are built around it, we have it simply named as node_id. Anywhere you see node_id in the schema, it comes from GitHubs terminology.';
 
-
 --
 -- Name: COLUMN issue_events.issue_event_src_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.issue_events.issue_event_src_id IS 'This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API';
 
-
 --
 -- Name: issue_message_ref_issue_msg_ref_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.issue_message_ref_issue_msg_ref_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.issue_message_ref_issue_msg_ref_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.issue_message_ref_issue_msg_ref_id_seq OWNER TO augur;
 
@@ -738,7 +698,9 @@ ALTER SEQUENCE augur_data.issue_message_ref_issue_msg_ref_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.issue_message_ref (
-    issue_msg_ref_id bigint DEFAULT nextval('augur_data.issue_message_ref_issue_msg_ref_id_seq'::regclass) NOT NULL,
+    issue_msg_ref_id bigint DEFAULT nextval(
+        'augur_data.issue_message_ref_issue_msg_ref_id_seq'::regclass
+    ) NOT NULL,
     issue_id bigint,
     repo_id bigint,
     msg_id bigint,
@@ -750,7 +712,6 @@ CREATE TABLE augur_data.issue_message_ref (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.issue_message_ref OWNER TO augur;
 
 --
@@ -759,25 +720,19 @@ ALTER TABLE augur_data.issue_message_ref OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.issue_message_ref.issue_msg_ref_src_node_id IS 'This character based identifier comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue comments API';
 
-
 --
 -- Name: COLUMN issue_message_ref.issue_msg_ref_src_comment_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.issue_message_ref.issue_msg_ref_src_comment_id IS 'This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue comments API';
 
-
 --
 -- Name: message_msg_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.message_msg_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.message_msg_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.message_msg_id_seq OWNER TO augur;
 
@@ -786,7 +741,9 @@ ALTER SEQUENCE augur_data.message_msg_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.message (
-    msg_id bigint DEFAULT nextval('augur_data.message_msg_id_seq'::regclass) NOT NULL,
+    msg_id bigint DEFAULT nextval(
+        'augur_data.message_msg_id_seq'::regclass
+    ) NOT NULL,
     rgls_id bigint,
     platform_msg_id bigint,
     platform_node_id character varying,
@@ -803,7 +760,6 @@ CREATE TABLE augur_data.message (
     cntrb_id uuid
 );
 
-
 ALTER TABLE augur_data.message OWNER TO augur;
 
 --
@@ -812,18 +768,13 @@ ALTER TABLE augur_data.message OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.message.cntrb_id IS 'Not populated for mailing lists. Populated for GitHub issues. ';
 
-
 --
 -- Name: pull_request_events_pr_event_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_events_pr_event_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_events_pr_event_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_events_pr_event_id_seq OWNER TO augur;
 
@@ -832,7 +783,9 @@ ALTER SEQUENCE augur_data.pull_request_events_pr_event_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.pull_request_events (
-    pr_event_id bigint DEFAULT nextval('augur_data.pull_request_events_pr_event_id_seq'::regclass) NOT NULL,
+    pr_event_id bigint DEFAULT nextval(
+        'augur_data.pull_request_events_pr_event_id_seq'::regclass
+    ) NOT NULL,
     pull_request_id bigint NOT NULL,
     repo_id bigint,
     action character varying NOT NULL,
@@ -850,7 +803,6 @@ CREATE TABLE augur_data.pull_request_events (
     cntrb_id uuid
 );
 
-
 ALTER TABLE augur_data.pull_request_events OWNER TO augur;
 
 --
@@ -859,25 +811,19 @@ ALTER TABLE augur_data.pull_request_events OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.pull_request_events.issue_event_src_id IS 'This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API';
 
-
 --
 -- Name: COLUMN pull_request_events.node_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.pull_request_events.node_id IS 'This should be renamed to issue_event_src_node_id, as its the varchar identifier in GitHub and likely common in other sources as well. However, since it was created before we came to this naming standard and workers are built around it, we have it simply named as node_id. Anywhere you see node_id in the schema, it comes from GitHubs terminology.';
 
-
 --
 -- Name: pull_request_message_ref_pr_msg_ref_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_message_ref_pr_msg_ref_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_message_ref_pr_msg_ref_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_message_ref_pr_msg_ref_id_seq OWNER TO augur;
 
@@ -886,7 +832,9 @@ ALTER SEQUENCE augur_data.pull_request_message_ref_pr_msg_ref_id_seq OWNER TO au
 --
 
 CREATE TABLE augur_data.pull_request_message_ref (
-    pr_msg_ref_id bigint DEFAULT nextval('augur_data.pull_request_message_ref_pr_msg_ref_id_seq'::regclass) NOT NULL,
+    pr_msg_ref_id bigint DEFAULT nextval(
+        'augur_data.pull_request_message_ref_pr_msg_ref_id_seq'::regclass
+    ) NOT NULL,
     pull_request_id bigint,
     repo_id bigint,
     msg_id bigint,
@@ -899,20 +847,15 @@ CREATE TABLE augur_data.pull_request_message_ref (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.pull_request_message_ref OWNER TO augur;
 
 --
 -- Name: pull_request_reviews_pr_review_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_reviews_pr_review_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_reviews_pr_review_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_reviews_pr_review_id_seq OWNER TO augur;
 
@@ -921,7 +864,9 @@ ALTER SEQUENCE augur_data.pull_request_reviews_pr_review_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.pull_request_reviews (
-    pr_review_id bigint DEFAULT nextval('augur_data.pull_request_reviews_pr_review_id_seq'::regclass) NOT NULL,
+    pr_review_id bigint DEFAULT nextval(
+        'augur_data.pull_request_reviews_pr_review_id_seq'::regclass
+    ) NOT NULL,
     pull_request_id bigint NOT NULL,
     repo_id bigint,
     pr_review_author_association character varying,
@@ -941,20 +886,15 @@ CREATE TABLE augur_data.pull_request_reviews (
     cntrb_id uuid NOT NULL
 );
 
-
 ALTER TABLE augur_data.pull_request_reviews OWNER TO augur;
 
 --
 -- Name: repo_repo_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_repo_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_repo_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_repo_id_seq OWNER TO augur;
 
@@ -963,7 +903,9 @@ ALTER SEQUENCE augur_data.repo_repo_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo (
-    repo_id bigint DEFAULT nextval('augur_data.repo_repo_id_seq'::regclass) NOT NULL,
+    repo_id bigint DEFAULT nextval(
+        'augur_data.repo_repo_id_seq'::regclass
+    ) NOT NULL,
     repo_group_id bigint NOT NULL,
     repo_git character varying NOT NULL,
     repo_path character varying DEFAULT 'NULL'::character varying,
@@ -979,12 +921,12 @@ CREATE TABLE augur_data.repo (
     updated_at timestamp(0) without time zone,
     repo_archived_date_collected timestamp(0) with time zone,
     repo_archived integer,
+    repo_src_id bigint,
     tool_source character varying,
     tool_version character varying,
     data_source character varying,
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
 
 ALTER TABLE augur_data.repo OWNER TO augur;
 
@@ -994,118 +936,179 @@ ALTER TABLE augur_data.repo OWNER TO augur;
 
 COMMENT ON TABLE augur_data.repo IS 'This table is a combination of the columns in Facade’s repo table and GHTorrent’s projects table. ';
 
-
 --
 -- Name: COLUMN repo.repo_type; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo.repo_type IS 'This field is intended to indicate if the repository is the "main instance" of a repository in cases where implementations choose to add the same repository to more than one repository group. In cases where the repository group is of rg_type Github Organization then this repo_type should be "primary". In other cases the repo_type should probably be "user created". We made this a varchar in order to hold open the possibility that there are additional repo_types we have not thought about. ';
 
-
 --
 -- Name: augur_new_contributors; Type: MATERIALIZED VIEW; Schema: augur_data; Owner: augur
 --
 
 CREATE MATERIALIZED VIEW augur_data.augur_new_contributors AS
- SELECT a.id AS cntrb_id,
-    a.created_at,
-    a.repo_id,
-    a.action,
-    repo.repo_name,
-    a.login,
-    row_number() OVER (PARTITION BY a.id, a.repo_id ORDER BY a.created_at DESC) AS rank
-   FROM ( SELECT commits.cmt_ght_author_id AS id,
-            commits.cmt_author_timestamp AS created_at,
-            commits.repo_id,
-            'commit'::text AS action,
-            contributors.cntrb_login AS login
-           FROM (augur_data.commits
-             LEFT JOIN augur_data.contributors ON (((contributors.cntrb_id)::text = (commits.cmt_ght_author_id)::text)))
-          GROUP BY commits.cmt_commit_hash, commits.cmt_ght_author_id, commits.repo_id, commits.cmt_author_timestamp, 'commit'::text, contributors.cntrb_login
+SELECT a.id AS cntrb_id, a.created_at, a.repo_id, a.action, repo.repo_name, a.login, row_number() OVER (
+        PARTITION BY
+            a.id, a.repo_id
+        ORDER BY a.created_at DESC
+    ) AS rank
+FROM (
+        SELECT
+            commits.cmt_ght_author_id AS id, commits.cmt_author_timestamp AS created_at, commits.repo_id, 'commit'::text AS action, contributors.cntrb_login AS login
+        FROM (
+                augur_data.commits
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        (contributors.cntrb_id)::text = (commits.cmt_ght_author_id)::text
+                    )
+                )
+            )
+        GROUP BY
+            commits.cmt_commit_hash, commits.cmt_ght_author_id, commits.repo_id, commits.cmt_author_timestamp, 'commit'::text, contributors.cntrb_login
         UNION ALL
-         SELECT issues.reporter_id AS id,
-            issues.created_at,
-            issues.repo_id,
-            'issue_opened'::text AS action,
-            contributors.cntrb_login AS login
-           FROM (augur_data.issues
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = issues.reporter_id)))
-          WHERE (issues.pull_request IS NULL)
+        SELECT issues.reporter_id AS id, issues.created_at, issues.repo_id, 'issue_opened'::text AS action, contributors.cntrb_login AS login
+        FROM (
+                augur_data.issues
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = issues.reporter_id
+                    )
+                )
+            )
+        WHERE (issues.pull_request IS NULL)
         UNION ALL
-         SELECT pull_request_events.cntrb_id AS id,
-            pull_request_events.created_at,
-            pull_requests.repo_id,
-            'pull_request_closed'::text AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.pull_requests,
-            (augur_data.pull_request_events
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = pull_request_events.cntrb_id)))
-          WHERE ((pull_requests.pull_request_id = pull_request_events.pull_request_id) AND (pull_requests.pr_merged_at IS NULL) AND ((pull_request_events.action)::text = 'closed'::text))
+        SELECT pull_request_events.cntrb_id AS id, pull_request_events.created_at, pull_requests.repo_id, 'pull_request_closed'::text AS action, contributors.cntrb_login AS login
+        FROM augur_data.pull_requests, (
+                augur_data.pull_request_events
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = pull_request_events.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                (
+                    pull_requests.pull_request_id = pull_request_events.pull_request_id
+                )
+                AND (
+                    pull_requests.pr_merged_at IS NULL
+                )
+                AND (
+                    (pull_request_events.action)::text = 'closed'::text
+                )
+            )
         UNION ALL
-         SELECT pull_request_events.cntrb_id AS id,
-            pull_request_events.created_at,
-            pull_requests.repo_id,
-            'pull_request_merged'::text AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.pull_requests,
-            (augur_data.pull_request_events
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = pull_request_events.cntrb_id)))
-          WHERE ((pull_requests.pull_request_id = pull_request_events.pull_request_id) AND ((pull_request_events.action)::text = 'merged'::text))
+        SELECT pull_request_events.cntrb_id AS id, pull_request_events.created_at, pull_requests.repo_id, 'pull_request_merged'::text AS action, contributors.cntrb_login AS login
+        FROM augur_data.pull_requests, (
+                augur_data.pull_request_events
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = pull_request_events.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                (
+                    pull_requests.pull_request_id = pull_request_events.pull_request_id
+                )
+                AND (
+                    (pull_request_events.action)::text = 'merged'::text
+                )
+            )
         UNION ALL
-         SELECT issue_events.cntrb_id AS id,
-            issue_events.created_at,
-            issues.repo_id,
-            'issue_closed'::text AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.issues,
-            (augur_data.issue_events
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = issue_events.cntrb_id)))
-          WHERE ((issues.issue_id = issue_events.issue_id) AND (issues.pull_request IS NULL) AND ((issue_events.action)::text = 'closed'::text))
+        SELECT issue_events.cntrb_id AS id, issue_events.created_at, issues.repo_id, 'issue_closed'::text AS action, contributors.cntrb_login AS login
+        FROM augur_data.issues, (
+                augur_data.issue_events
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = issue_events.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                (
+                    issues.issue_id = issue_events.issue_id
+                )
+                AND (issues.pull_request IS NULL)
+                AND (
+                    (issue_events.action)::text = 'closed'::text
+                )
+            )
         UNION ALL
-         SELECT pull_request_reviews.cntrb_id AS id,
-            pull_request_reviews.pr_review_submitted_at AS created_at,
-            pull_requests.repo_id,
-            ('pull_request_review_'::text || (pull_request_reviews.pr_review_state)::text) AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.pull_requests,
-            (augur_data.pull_request_reviews
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = pull_request_reviews.cntrb_id)))
-          WHERE (pull_requests.pull_request_id = pull_request_reviews.pull_request_id)
+        SELECT
+            pull_request_reviews.cntrb_id AS id, pull_request_reviews.pr_review_submitted_at AS created_at, pull_requests.repo_id, (
+                'pull_request_review_'::text || (
+                    pull_request_reviews.pr_review_state
+                )::text
+            ) AS action, contributors.cntrb_login AS login
+        FROM augur_data.pull_requests, (
+                augur_data.pull_request_reviews
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = pull_request_reviews.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                pull_requests.pull_request_id = pull_request_reviews.pull_request_id
+            )
         UNION ALL
-         SELECT pull_requests.pr_augur_contributor_id AS id,
-            pull_requests.pr_created_at AS created_at,
-            pull_requests.repo_id,
-            'pull_request_open'::text AS action,
-            contributors.cntrb_login AS login
-           FROM (augur_data.pull_requests
-             LEFT JOIN augur_data.contributors ON ((pull_requests.pr_augur_contributor_id = contributors.cntrb_id)))
+        SELECT
+            pull_requests.pr_augur_contributor_id AS id, pull_requests.pr_created_at AS created_at, pull_requests.repo_id, 'pull_request_open'::text AS action, contributors.cntrb_login AS login
+        FROM (
+                augur_data.pull_requests
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        pull_requests.pr_augur_contributor_id = contributors.cntrb_id
+                    )
+                )
+            )
         UNION ALL
-         SELECT message.cntrb_id AS id,
-            message.msg_timestamp AS created_at,
-            pull_requests.repo_id,
-            'pull_request_comment'::text AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.pull_requests,
-            augur_data.pull_request_message_ref,
-            (augur_data.message
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = message.cntrb_id)))
-          WHERE ((pull_request_message_ref.pull_request_id = pull_requests.pull_request_id) AND (pull_request_message_ref.msg_id = message.msg_id))
+        SELECT
+            message.cntrb_id AS id, message.msg_timestamp AS created_at, pull_requests.repo_id, 'pull_request_comment'::text AS action, contributors.cntrb_login AS login
+        FROM augur_data.pull_requests, augur_data.pull_request_message_ref, (
+                augur_data.message
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = message.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                (
+                    pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
+                )
+                AND (
+                    pull_request_message_ref.msg_id = message.msg_id
+                )
+            )
         UNION ALL
-         SELECT issues.reporter_id AS id,
-            message.msg_timestamp AS created_at,
-            issues.repo_id,
-            'issue_comment'::text AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.issues,
-            augur_data.issue_message_ref,
-            (augur_data.message
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = message.cntrb_id)))
-          WHERE ((issue_message_ref.msg_id = message.msg_id) AND (issues.issue_id = issue_message_ref.issue_id) AND (issues.closed_at <> message.msg_timestamp))) a,
-    augur_data.repo
-  WHERE (a.repo_id = repo.repo_id)
-  ORDER BY a.created_at DESC
-  WITH NO DATA;
-
+        SELECT
+            issues.reporter_id AS id, message.msg_timestamp AS created_at, issues.repo_id, 'issue_comment'::text AS action, contributors.cntrb_login AS login
+        FROM augur_data.issues, augur_data.issue_message_ref, (
+                augur_data.message
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = message.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                (
+                    issue_message_ref.msg_id = message.msg_id
+                )
+                AND (
+                    issues.issue_id = issue_message_ref.issue_id
+                )
+                AND (
+                    issues.closed_at <> message.msg_timestamp
+                )
+            )
+    ) a, augur_data.repo
+WHERE (a.repo_id = repo.repo_id)
+ORDER BY a.created_at DESC
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.augur_new_contributors OWNER TO augur;
 
@@ -1113,13 +1116,9 @@ ALTER MATERIALIZED VIEW augur_data.augur_new_contributors OWNER TO augur;
 -- Name: chaoss_metric_status_cms_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.chaoss_metric_status_cms_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.chaoss_metric_status_cms_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.chaoss_metric_status_cms_id_seq OWNER TO augur;
 
@@ -1128,7 +1127,9 @@ ALTER SEQUENCE augur_data.chaoss_metric_status_cms_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.chaoss_metric_status (
-    cms_id bigint DEFAULT nextval('augur_data.chaoss_metric_status_cms_id_seq'::regclass) NOT NULL,
+    cms_id bigint DEFAULT nextval(
+        'augur_data.chaoss_metric_status_cms_id_seq'::regclass
+    ) NOT NULL,
     cm_group character varying,
     cm_source character varying,
     cm_type character varying,
@@ -1147,7 +1148,6 @@ CREATE TABLE augur_data.chaoss_metric_status (
     cm_working_group_focus_area character varying
 );
 
-
 ALTER TABLE augur_data.chaoss_metric_status OWNER TO augur;
 
 --
@@ -1155,7 +1155,6 @@ ALTER TABLE augur_data.chaoss_metric_status OWNER TO augur;
 --
 
 COMMENT ON TABLE augur_data.chaoss_metric_status IS 'This table used to track CHAOSS Metric implementations in Augur, but due to the constantly changing location of that information, it is for the moment not actively populated. ';
-
 
 --
 -- Name: chaoss_user; Type: TABLE; Schema: augur_data; Owner: augur
@@ -1175,20 +1174,15 @@ CREATE TABLE augur_data.chaoss_user (
     data_collection_date timestamp(6) with time zone DEFAULT now()
 );
 
-
 ALTER TABLE augur_data.chaoss_user OWNER TO augur;
 
 --
 -- Name: chaoss_user_chaoss_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.chaoss_user_chaoss_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.chaoss_user_chaoss_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.chaoss_user_chaoss_id_seq OWNER TO augur;
 
@@ -1198,18 +1192,13 @@ ALTER SEQUENCE augur_data.chaoss_user_chaoss_id_seq OWNER TO augur;
 
 ALTER SEQUENCE augur_data.chaoss_user_chaoss_id_seq OWNED BY augur_data.chaoss_user.chaoss_id;
 
-
 --
 -- Name: commit_comment_ref_cmt_comment_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.commit_comment_ref_cmt_comment_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.commit_comment_ref_cmt_comment_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.commit_comment_ref_cmt_comment_id_seq OWNER TO augur;
 
@@ -1218,7 +1207,9 @@ ALTER SEQUENCE augur_data.commit_comment_ref_cmt_comment_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.commit_comment_ref (
-    cmt_comment_id bigint DEFAULT nextval('augur_data.commit_comment_ref_cmt_comment_id_seq'::regclass) NOT NULL,
+    cmt_comment_id bigint DEFAULT nextval(
+        'augur_data.commit_comment_ref_cmt_comment_id_seq'::regclass
+    ) NOT NULL,
     cmt_id bigint NOT NULL,
     repo_id bigint,
     msg_id bigint NOT NULL,
@@ -1235,7 +1226,6 @@ CREATE TABLE augur_data.commit_comment_ref (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.commit_comment_ref OWNER TO augur;
 
 --
@@ -1244,25 +1234,19 @@ ALTER TABLE augur_data.commit_comment_ref OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.commit_comment_ref.commit_comment_src_node_id IS 'For data provenance, we store the source node ID if it exists. ';
 
-
 --
 -- Name: COLUMN commit_comment_ref.cmt_comment_src_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.commit_comment_ref.cmt_comment_src_id IS 'For data provenance, we store the source ID if it exists. ';
 
-
 --
 -- Name: commit_parents_parent_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.commit_parents_parent_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.commit_parents_parent_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.commit_parents_parent_id_seq OWNER TO augur;
 
@@ -1272,13 +1256,14 @@ ALTER SEQUENCE augur_data.commit_parents_parent_id_seq OWNER TO augur;
 
 CREATE TABLE augur_data.commit_parents (
     cmt_id bigint NOT NULL,
-    parent_id bigint DEFAULT nextval('augur_data.commit_parents_parent_id_seq'::regclass) NOT NULL,
+    parent_id bigint DEFAULT nextval(
+        'augur_data.commit_parents_parent_id_seq'::regclass
+    ) NOT NULL,
     tool_source character varying,
     tool_version character varying,
     data_source character varying,
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
 
 ALTER TABLE augur_data.commit_parents OWNER TO augur;
 
@@ -1286,13 +1271,9 @@ ALTER TABLE augur_data.commit_parents OWNER TO augur;
 -- Name: contributor_affiliations_ca_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.contributor_affiliations_ca_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.contributor_affiliations_ca_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.contributor_affiliations_ca_id_seq OWNER TO augur;
 
@@ -1301,7 +1282,9 @@ ALTER SEQUENCE augur_data.contributor_affiliations_ca_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.contributor_affiliations (
-    ca_id bigint DEFAULT nextval('augur_data.contributor_affiliations_ca_id_seq'::regclass) NOT NULL,
+    ca_id bigint DEFAULT nextval(
+        'augur_data.contributor_affiliations_ca_id_seq'::regclass
+    ) NOT NULL,
     ca_domain character varying(64) NOT NULL,
     ca_start_date date DEFAULT '1970-01-01'::date,
     ca_last_used timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -1313,7 +1296,6 @@ CREATE TABLE augur_data.contributor_affiliations (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.contributor_affiliations OWNER TO augur;
 
 --
@@ -1322,18 +1304,13 @@ ALTER TABLE augur_data.contributor_affiliations OWNER TO augur;
 
 COMMENT ON TABLE augur_data.contributor_affiliations IS 'This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when Augur is finished counting commits using the Facade Worker. ';
 
-
 --
 -- Name: contributor_repo_cntrb_repo_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.contributor_repo_cntrb_repo_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.contributor_repo_cntrb_repo_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.contributor_repo_cntrb_repo_id_seq OWNER TO augur;
 
@@ -1342,7 +1319,9 @@ ALTER SEQUENCE augur_data.contributor_repo_cntrb_repo_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.contributor_repo (
-    cntrb_repo_id bigint DEFAULT nextval('augur_data.contributor_repo_cntrb_repo_id_seq'::regclass) NOT NULL,
+    cntrb_repo_id bigint DEFAULT nextval(
+        'augur_data.contributor_repo_cntrb_repo_id_seq'::regclass
+    ) NOT NULL,
     repo_git character varying NOT NULL,
     repo_name character varying NOT NULL,
     gh_repo_id bigint NOT NULL,
@@ -1355,7 +1334,6 @@ CREATE TABLE augur_data.contributor_repo (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP,
     cntrb_id uuid NOT NULL
 );
-
 
 ALTER TABLE augur_data.contributor_repo OWNER TO augur;
 
@@ -1388,13 +1366,11 @@ From: [
 ]
 ';
 
-
 --
 -- Name: COLUMN contributor_repo.repo_git; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.contributor_repo.repo_git IS 'Similar to cntrb_id, we need this data for the table to have meaningful data. ';
-
 
 --
 -- Name: COLUMN contributor_repo.cntrb_id; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -1402,18 +1378,13 @@ COMMENT ON COLUMN augur_data.contributor_repo.repo_git IS 'Similar to cntrb_id, 
 
 COMMENT ON COLUMN augur_data.contributor_repo.cntrb_id IS 'This is not null because what is the point without the contributor in this table? ';
 
-
 --
 -- Name: contributors_aliases_cntrb_alias_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.contributors_aliases_cntrb_alias_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.contributors_aliases_cntrb_alias_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.contributors_aliases_cntrb_alias_id_seq OWNER TO augur;
 
@@ -1422,7 +1393,9 @@ ALTER SEQUENCE augur_data.contributors_aliases_cntrb_alias_id_seq OWNER TO augur
 --
 
 CREATE TABLE augur_data.contributors_aliases (
-    cntrb_alias_id bigint DEFAULT nextval('augur_data.contributors_aliases_cntrb_alias_id_seq'::regclass) NOT NULL,
+    cntrb_alias_id bigint DEFAULT nextval(
+        'augur_data.contributors_aliases_cntrb_alias_id_seq'::regclass
+    ) NOT NULL,
     canonical_email character varying NOT NULL,
     alias_email character varying NOT NULL,
     cntrb_active smallint DEFAULT 1 NOT NULL,
@@ -1434,7 +1407,6 @@ CREATE TABLE augur_data.contributors_aliases (
     cntrb_id uuid NOT NULL
 );
 
-
 ALTER TABLE augur_data.contributors_aliases OWNER TO augur;
 
 --
@@ -1445,18 +1417,13 @@ COMMENT ON TABLE augur_data.contributors_aliases IS 'Every open source user may 
 
 The canonical_email is also added to the contributors_aliases table, with the canonical_email and alias_email being identical.  Using this strategy, an email search will only need to join the alias table for basic email information, and can then more easily map the canonical email from each alias row to the same, more detailed information in the contributors table for a user. ';
 
-
 --
 -- Name: contributors_aliases_cntrb_a_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.contributors_aliases_cntrb_a_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.contributors_aliases_cntrb_a_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.contributors_aliases_cntrb_a_id_seq OWNER TO augur;
 
@@ -1464,13 +1431,9 @@ ALTER SEQUENCE augur_data.contributors_aliases_cntrb_a_id_seq OWNER TO augur;
 -- Name: contributors_cntrb_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.contributors_cntrb_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.contributors_cntrb_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.contributors_cntrb_id_seq OWNER TO augur;
 
@@ -1478,13 +1441,9 @@ ALTER SEQUENCE augur_data.contributors_cntrb_id_seq OWNER TO augur;
 -- Name: contributors_history_cntrb_history_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.contributors_history_cntrb_history_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.contributors_history_cntrb_history_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.contributors_history_cntrb_history_id_seq OWNER TO augur;
 
@@ -1499,21 +1458,15 @@ CREATE TABLE augur_data.dei_badging (
     repo_id bigint NOT NULL
 );
 
-
 ALTER TABLE augur_data.dei_badging OWNER TO augur;
 
 --
 -- Name: dei_badging_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.dei_badging_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.dei_badging_id_seq AS integer START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.dei_badging_id_seq OWNER TO augur;
 
@@ -1523,18 +1476,13 @@ ALTER SEQUENCE augur_data.dei_badging_id_seq OWNER TO augur;
 
 ALTER SEQUENCE augur_data.dei_badging_id_seq OWNED BY augur_data.dei_badging.id;
 
-
 --
 -- Name: discourse_insights_msg_discourse_id_seq1; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.discourse_insights_msg_discourse_id_seq1
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.discourse_insights_msg_discourse_id_seq1 START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.discourse_insights_msg_discourse_id_seq1 OWNER TO augur;
 
@@ -1543,7 +1491,9 @@ ALTER SEQUENCE augur_data.discourse_insights_msg_discourse_id_seq1 OWNER TO augu
 --
 
 CREATE TABLE augur_data.discourse_insights (
-    msg_discourse_id bigint DEFAULT nextval('augur_data.discourse_insights_msg_discourse_id_seq1'::regclass) NOT NULL,
+    msg_discourse_id bigint DEFAULT nextval(
+        'augur_data.discourse_insights_msg_discourse_id_seq1'::regclass
+    ) NOT NULL,
     msg_id bigint,
     discourse_act character varying,
     tool_source character varying,
@@ -1551,7 +1501,6 @@ CREATE TABLE augur_data.discourse_insights (
     data_source character varying,
     data_collection_date timestamp(6) with time zone DEFAULT CURRENT_TIMESTAMP
 );
-
 
 ALTER TABLE augur_data.discourse_insights OWNER TO augur;
 
@@ -1561,18 +1510,13 @@ ALTER TABLE augur_data.discourse_insights OWNER TO augur;
 
 COMMENT ON TABLE augur_data.discourse_insights IS 'This table is populated by the “Discourse_Analysis_Worker”. It examines sequential discourse, using computational linguistic methods, to draw statistical inferences regarding the discourse in a particular comment thread. ';
 
-
 --
 -- Name: discourse_insights_msg_discourse_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.discourse_insights_msg_discourse_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.discourse_insights_msg_discourse_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.discourse_insights_msg_discourse_id_seq OWNER TO augur;
 
@@ -1596,7 +1540,6 @@ CREATE TABLE augur_data.dm_repo_annual (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.dm_repo_annual OWNER TO augur;
 
 --
@@ -1618,7 +1561,6 @@ CREATE TABLE augur_data.dm_repo_group_annual (
     data_source character varying,
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
 
 ALTER TABLE augur_data.dm_repo_group_annual OWNER TO augur;
 
@@ -1643,7 +1585,6 @@ CREATE TABLE augur_data.dm_repo_group_monthly (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.dm_repo_group_monthly OWNER TO augur;
 
 --
@@ -1666,7 +1607,6 @@ CREATE TABLE augur_data.dm_repo_group_weekly (
     data_source character varying,
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
 
 ALTER TABLE augur_data.dm_repo_group_weekly OWNER TO augur;
 
@@ -1691,7 +1631,6 @@ CREATE TABLE augur_data.dm_repo_monthly (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.dm_repo_monthly OWNER TO augur;
 
 --
@@ -1715,7 +1654,6 @@ CREATE TABLE augur_data.dm_repo_weekly (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.dm_repo_weekly OWNER TO augur;
 
 --
@@ -1729,7 +1667,6 @@ CREATE TABLE augur_data.exclude (
     domain character varying DEFAULT 'NULL'::character varying
 );
 
-
 ALTER TABLE augur_data.exclude OWNER TO augur;
 
 --
@@ -1737,17 +1674,29 @@ ALTER TABLE augur_data.exclude OWNER TO augur;
 --
 
 CREATE MATERIALIZED VIEW augur_data.explorer_commits_and_committers_daily_count AS
- SELECT repo.repo_id,
+SELECT
+    repo.repo_id,
     repo.repo_name,
     commits.cmt_committer_date,
     count(commits.cmt_id) AS num_of_commits,
-    count(DISTINCT commits.cmt_committer_raw_email) AS num_of_unique_committers
-   FROM (augur_data.commits
-     LEFT JOIN augur_data.repo ON ((repo.repo_id = commits.repo_id)))
-  GROUP BY repo.repo_id, repo.repo_name, commits.cmt_committer_date
-  ORDER BY repo.repo_id, commits.cmt_committer_date
-  WITH NO DATA;
-
+    count(
+        DISTINCT commits.cmt_committer_raw_email
+    ) AS num_of_unique_committers
+FROM (
+        augur_data.commits
+        LEFT JOIN augur_data.repo ON (
+            (
+                repo.repo_id = commits.repo_id
+            )
+        )
+    )
+GROUP BY
+    repo.repo_id,
+    repo.repo_name,
+    commits.cmt_committer_date
+ORDER BY repo.repo_id, commits.cmt_committer_date
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.explorer_commits_and_committers_daily_count OWNER TO augur;
 
@@ -1756,105 +1705,168 @@ ALTER MATERIALIZED VIEW augur_data.explorer_commits_and_committers_daily_count O
 --
 
 CREATE MATERIALIZED VIEW augur_data.explorer_contributor_actions AS
- SELECT a.id AS cntrb_id,
-    a.created_at,
-    a.repo_id,
-    a.action,
-    repo.repo_name,
-    a.login,
-    row_number() OVER (PARTITION BY a.id, a.repo_id ORDER BY a.created_at DESC) AS rank
-   FROM ( SELECT commits.cmt_ght_author_id AS id,
-            commits.cmt_author_timestamp AS created_at,
-            commits.repo_id,
-            'commit'::text AS action,
-            contributors.cntrb_login AS login
-           FROM (augur_data.commits
-             LEFT JOIN augur_data.contributors ON (((contributors.cntrb_id)::text = (commits.cmt_ght_author_id)::text)))
-          GROUP BY commits.cmt_commit_hash, commits.cmt_ght_author_id, commits.repo_id, commits.cmt_author_timestamp, 'commit'::text, contributors.cntrb_login
+SELECT a.id AS cntrb_id, a.created_at, a.repo_id, a.action, repo.repo_name, a.login, row_number() OVER (
+        PARTITION BY
+            a.id, a.repo_id
+        ORDER BY a.created_at DESC
+    ) AS rank
+FROM (
+        SELECT
+            commits.cmt_ght_author_id AS id, commits.cmt_author_timestamp AS created_at, commits.repo_id, 'commit'::text AS action, contributors.cntrb_login AS login
+        FROM (
+                augur_data.commits
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        (contributors.cntrb_id)::text = (commits.cmt_ght_author_id)::text
+                    )
+                )
+            )
+        GROUP BY
+            commits.cmt_commit_hash, commits.cmt_ght_author_id, commits.repo_id, commits.cmt_author_timestamp, 'commit'::text, contributors.cntrb_login
         UNION ALL
-         SELECT issues.reporter_id AS id,
-            issues.created_at,
-            issues.repo_id,
-            'issue_opened'::text AS action,
-            contributors.cntrb_login AS login
-           FROM (augur_data.issues
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = issues.reporter_id)))
-          WHERE (issues.pull_request IS NULL)
+        SELECT issues.reporter_id AS id, issues.created_at, issues.repo_id, 'issue_opened'::text AS action, contributors.cntrb_login AS login
+        FROM (
+                augur_data.issues
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = issues.reporter_id
+                    )
+                )
+            )
+        WHERE (issues.pull_request IS NULL)
         UNION ALL
-         SELECT pull_request_events.cntrb_id AS id,
-            pull_request_events.created_at,
-            pull_requests.repo_id,
-            'pull_request_closed'::text AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.pull_requests,
-            (augur_data.pull_request_events
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = pull_request_events.cntrb_id)))
-          WHERE ((pull_requests.pull_request_id = pull_request_events.pull_request_id) AND (pull_requests.pr_merged_at IS NULL) AND ((pull_request_events.action)::text = 'closed'::text))
+        SELECT pull_request_events.cntrb_id AS id, pull_request_events.created_at, pull_requests.repo_id, 'pull_request_closed'::text AS action, contributors.cntrb_login AS login
+        FROM augur_data.pull_requests, (
+                augur_data.pull_request_events
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = pull_request_events.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                (
+                    pull_requests.pull_request_id = pull_request_events.pull_request_id
+                )
+                AND (
+                    pull_requests.pr_merged_at IS NULL
+                )
+                AND (
+                    (pull_request_events.action)::text = 'closed'::text
+                )
+            )
         UNION ALL
-         SELECT pull_request_events.cntrb_id AS id,
-            pull_request_events.created_at,
-            pull_requests.repo_id,
-            'pull_request_merged'::text AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.pull_requests,
-            (augur_data.pull_request_events
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = pull_request_events.cntrb_id)))
-          WHERE ((pull_requests.pull_request_id = pull_request_events.pull_request_id) AND ((pull_request_events.action)::text = 'merged'::text))
+        SELECT pull_request_events.cntrb_id AS id, pull_request_events.created_at, pull_requests.repo_id, 'pull_request_merged'::text AS action, contributors.cntrb_login AS login
+        FROM augur_data.pull_requests, (
+                augur_data.pull_request_events
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = pull_request_events.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                (
+                    pull_requests.pull_request_id = pull_request_events.pull_request_id
+                )
+                AND (
+                    (pull_request_events.action)::text = 'merged'::text
+                )
+            )
         UNION ALL
-         SELECT issue_events.cntrb_id AS id,
-            issue_events.created_at,
-            issues.repo_id,
-            'issue_closed'::text AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.issues,
-            (augur_data.issue_events
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = issue_events.cntrb_id)))
-          WHERE ((issues.issue_id = issue_events.issue_id) AND (issues.pull_request IS NULL) AND ((issue_events.action)::text = 'closed'::text))
+        SELECT issue_events.cntrb_id AS id, issue_events.created_at, issues.repo_id, 'issue_closed'::text AS action, contributors.cntrb_login AS login
+        FROM augur_data.issues, (
+                augur_data.issue_events
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = issue_events.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                (
+                    issues.issue_id = issue_events.issue_id
+                )
+                AND (issues.pull_request IS NULL)
+                AND (
+                    (issue_events.action)::text = 'closed'::text
+                )
+            )
         UNION ALL
-         SELECT pull_request_reviews.cntrb_id AS id,
-            pull_request_reviews.pr_review_submitted_at AS created_at,
-            pull_requests.repo_id,
-            ('pull_request_review_'::text || (pull_request_reviews.pr_review_state)::text) AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.pull_requests,
-            (augur_data.pull_request_reviews
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = pull_request_reviews.cntrb_id)))
-          WHERE (pull_requests.pull_request_id = pull_request_reviews.pull_request_id)
+        SELECT
+            pull_request_reviews.cntrb_id AS id, pull_request_reviews.pr_review_submitted_at AS created_at, pull_requests.repo_id, (
+                'pull_request_review_'::text || (
+                    pull_request_reviews.pr_review_state
+                )::text
+            ) AS action, contributors.cntrb_login AS login
+        FROM augur_data.pull_requests, (
+                augur_data.pull_request_reviews
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = pull_request_reviews.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                pull_requests.pull_request_id = pull_request_reviews.pull_request_id
+            )
         UNION ALL
-         SELECT pull_requests.pr_augur_contributor_id AS id,
-            pull_requests.pr_created_at AS created_at,
-            pull_requests.repo_id,
-            'pull_request_open'::text AS action,
-            contributors.cntrb_login AS login
-           FROM (augur_data.pull_requests
-             LEFT JOIN augur_data.contributors ON ((pull_requests.pr_augur_contributor_id = contributors.cntrb_id)))
+        SELECT
+            pull_requests.pr_augur_contributor_id AS id, pull_requests.pr_created_at AS created_at, pull_requests.repo_id, 'pull_request_open'::text AS action, contributors.cntrb_login AS login
+        FROM (
+                augur_data.pull_requests
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        pull_requests.pr_augur_contributor_id = contributors.cntrb_id
+                    )
+                )
+            )
         UNION ALL
-         SELECT message.cntrb_id AS id,
-            message.msg_timestamp AS created_at,
-            pull_requests.repo_id,
-            'pull_request_comment'::text AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.pull_requests,
-            augur_data.pull_request_message_ref,
-            (augur_data.message
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = message.cntrb_id)))
-          WHERE ((pull_request_message_ref.pull_request_id = pull_requests.pull_request_id) AND (pull_request_message_ref.msg_id = message.msg_id))
+        SELECT
+            message.cntrb_id AS id, message.msg_timestamp AS created_at, pull_requests.repo_id, 'pull_request_comment'::text AS action, contributors.cntrb_login AS login
+        FROM augur_data.pull_requests, augur_data.pull_request_message_ref, (
+                augur_data.message
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = message.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                (
+                    pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
+                )
+                AND (
+                    pull_request_message_ref.msg_id = message.msg_id
+                )
+            )
         UNION ALL
-         SELECT issues.reporter_id AS id,
-            message.msg_timestamp AS created_at,
-            issues.repo_id,
-            'issue_comment'::text AS action,
-            contributors.cntrb_login AS login
-           FROM augur_data.issues,
-            augur_data.issue_message_ref,
-            (augur_data.message
-             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = message.cntrb_id)))
-          WHERE ((issue_message_ref.msg_id = message.msg_id) AND (issues.issue_id = issue_message_ref.issue_id) AND (issues.closed_at <> message.msg_timestamp))) a,
-    augur_data.repo
-  WHERE (a.repo_id = repo.repo_id)
-  ORDER BY a.created_at DESC
-  WITH NO DATA;
-
+        SELECT
+            issues.reporter_id AS id, message.msg_timestamp AS created_at, issues.repo_id, 'issue_comment'::text AS action, contributors.cntrb_login AS login
+        FROM augur_data.issues, augur_data.issue_message_ref, (
+                augur_data.message
+                LEFT JOIN augur_data.contributors ON (
+                    (
+                        contributors.cntrb_id = message.cntrb_id
+                    )
+                )
+            )
+        WHERE (
+                (
+                    issue_message_ref.msg_id = message.msg_id
+                )
+                AND (
+                    issues.issue_id = issue_message_ref.issue_id
+                )
+                AND (
+                    issues.closed_at <> message.msg_timestamp
+                )
+            )
+    ) a, augur_data.repo
+WHERE (a.repo_id = repo.repo_id)
+ORDER BY a.created_at DESC
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.explorer_contributor_actions OWNER TO augur;
 
@@ -1862,13 +1874,9 @@ ALTER MATERIALIZED VIEW augur_data.explorer_contributor_actions OWNER TO augur;
 -- Name: repo_groups_repo_group_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_groups_repo_group_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_groups_repo_group_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_groups_repo_group_id_seq OWNER TO augur;
 
@@ -1877,7 +1885,9 @@ ALTER SEQUENCE augur_data.repo_groups_repo_group_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_groups (
-    repo_group_id bigint DEFAULT nextval('augur_data.repo_groups_repo_group_id_seq'::regclass) NOT NULL,
+    repo_group_id bigint DEFAULT nextval(
+        'augur_data.repo_groups_repo_group_id_seq'::regclass
+    ) NOT NULL,
     rg_name character varying NOT NULL,
     rg_description character varying DEFAULT 'NULL'::character varying,
     rg_website character varying(128) DEFAULT 'NULL'::character varying,
@@ -1890,7 +1900,6 @@ CREATE TABLE augur_data.repo_groups (
     data_collection_date timestamp(0) without time zone
 );
 
-
 ALTER TABLE augur_data.repo_groups OWNER TO augur;
 
 --
@@ -1899,21 +1908,27 @@ ALTER TABLE augur_data.repo_groups OWNER TO augur;
 
 COMMENT ON TABLE augur_data.repo_groups IS 'rg_type is intended to be either a GitHub Organization or a User Created Repo Group. ';
 
-
 --
 -- Name: explorer_entry_list; Type: MATERIALIZED VIEW; Schema: augur_data; Owner: augur
 --
 
 CREATE MATERIALIZED VIEW augur_data.explorer_entry_list AS
- SELECT DISTINCT r.repo_git,
+SELECT DISTINCT
+    r.repo_git,
     r.repo_id,
     r.repo_name,
     rg.rg_name
-   FROM (augur_data.repo r
-     JOIN augur_data.repo_groups rg ON ((rg.repo_group_id = r.repo_group_id)))
-  ORDER BY rg.rg_name
-  WITH NO DATA;
-
+FROM (
+        augur_data.repo r
+        JOIN augur_data.repo_groups rg ON (
+            (
+                rg.repo_group_id = r.repo_group_id
+            )
+        )
+    )
+ORDER BY rg.rg_name
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.explorer_entry_list OWNER TO augur;
 
@@ -1922,7 +1937,8 @@ ALTER MATERIALIZED VIEW augur_data.explorer_entry_list OWNER TO augur;
 --
 
 CREATE MATERIALIZED VIEW augur_data.explorer_issue_assignments AS
- SELECT i.issue_id,
+SELECT
+    i.issue_id,
     i.repo_id AS id,
     i.created_at AS created,
     i.closed_at AS closed,
@@ -1930,10 +1946,25 @@ CREATE MATERIALIZED VIEW augur_data.explorer_issue_assignments AS
     ie.action AS assignment_action,
     ie.cntrb_id AS assignee,
     ie.node_id
-   FROM (augur_data.issues i
-     LEFT JOIN augur_data.issue_events ie ON (((i.issue_id = ie.issue_id) AND ((ie.action)::text = ANY (ARRAY[('unassigned'::character varying)::text, ('assigned'::character varying)::text])))))
-  WITH NO DATA;
-
+FROM (
+        augur_data.issues i
+        LEFT JOIN augur_data.issue_events ie ON (
+            (
+                (i.issue_id = ie.issue_id)
+                AND (
+                    (ie.action)::text = ANY (
+                        ARRAY[
+                            (
+                                'unassigned'::character varying
+                            )::text, ('assigned'::character varying)::text
+                        ]
+                    )
+                )
+            )
+        )
+    )
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.explorer_issue_assignments OWNER TO augur;
 
@@ -1942,7 +1973,8 @@ ALTER MATERIALIZED VIEW augur_data.explorer_issue_assignments OWNER TO augur;
 --
 
 CREATE MATERIALIZED VIEW augur_data.explorer_new_contributors AS
- SELECT cntrb_id,
+SELECT
+    cntrb_id,
     created_at,
     month,
     year,
@@ -1951,163 +1983,318 @@ CREATE MATERIALIZED VIEW augur_data.explorer_new_contributors AS
     full_name,
     login,
     rank
-   FROM ( SELECT b.cntrb_id,
-            b.created_at,
-            b.month,
-            b.year,
-            b.repo_id,
-            b.repo_name,
-            b.full_name,
-            b.login,
-            b.action,
-            b.rank
-           FROM ( SELECT a.id AS cntrb_id,
-                    a.created_at,
-                    date_part('month'::text, (a.created_at)::date) AS month,
-                    date_part('year'::text, (a.created_at)::date) AS year,
-                    a.repo_id,
-                    repo.repo_name,
-                    a.full_name,
-                    a.login,
-                    a.action,
-                    row_number() OVER (PARTITION BY a.id, a.repo_id ORDER BY a.created_at DESC) AS rank
-                   FROM ( SELECT canonical_full_names.canonical_id AS id,
-                            issues.created_at,
-                            issues.repo_id,
-                            'issue_opened'::text AS action,
-                            contributors.cntrb_full_name AS full_name,
-                            contributors.cntrb_login AS login
-                           FROM ((augur_data.issues
-                             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = issues.reporter_id)))
-                             LEFT JOIN ( SELECT DISTINCT ON (contributors_1.cntrb_canonical) contributors_1.cntrb_full_name,
-                                    contributors_1.cntrb_canonical AS canonical_email,
-                                    contributors_1.data_collection_date,
-                                    contributors_1.cntrb_id AS canonical_id
-                                   FROM augur_data.contributors contributors_1
-                                  WHERE ((contributors_1.cntrb_canonical)::text = (contributors_1.cntrb_email)::text)
-                                  ORDER BY contributors_1.cntrb_canonical) canonical_full_names ON (((canonical_full_names.canonical_email)::text = (contributors.cntrb_canonical)::text)))
-                          WHERE (issues.pull_request IS NULL)
-                          GROUP BY canonical_full_names.canonical_id, issues.repo_id, issues.created_at, contributors.cntrb_full_name, contributors.cntrb_login
+FROM (
+        SELECT b.cntrb_id, b.created_at, b.month, b.year, b.repo_id, b.repo_name, b.full_name, b.login, b.action, b.rank
+        FROM (
+                SELECT
+                    a.id AS cntrb_id, a.created_at, date_part(
+                        'month'::text, (a.created_at)::date
+                    ) AS month, date_part(
+                        'year'::text, (a.created_at)::date
+                    ) AS year, a.repo_id, repo.repo_name, a.full_name, a.login, a.action, row_number() OVER (
+                        PARTITION BY
+                            a.id, a.repo_id
+                        ORDER BY a.created_at DESC
+                    ) AS rank
+                FROM (
+                        SELECT
+                            canonical_full_names.canonical_id AS id, issues.created_at, issues.repo_id, 'issue_opened'::text AS action, contributors.cntrb_full_name AS full_name, contributors.cntrb_login AS login
+                        FROM (
+                                (
+                                    augur_data.issues
+                                    LEFT JOIN augur_data.contributors ON (
+                                        (
+                                            contributors.cntrb_id = issues.reporter_id
+                                        )
+                                    )
+                                )
+                                LEFT JOIN (
+                                    SELECT DISTINCT
+                                        ON (
+                                            contributors_1.cntrb_canonical
+                                        ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
+                                    FROM augur_data.contributors contributors_1
+                                    WHERE (
+                                            (
+                                                contributors_1.cntrb_canonical
+                                            )::text = (contributors_1.cntrb_email)::text
+                                        )
+                                    ORDER BY contributors_1.cntrb_canonical
+                                ) canonical_full_names ON (
+                                    (
+                                        (
+                                            canonical_full_names.canonical_email
+                                        )::text = (contributors.cntrb_canonical)::text
+                                    )
+                                )
+                            )
+                        WHERE (issues.pull_request IS NULL)
+                        GROUP BY
+                            canonical_full_names.canonical_id, issues.repo_id, issues.created_at, contributors.cntrb_full_name, contributors.cntrb_login
                         UNION ALL
-                         SELECT canonical_full_names.canonical_id AS id,
-                            to_timestamp((commits.cmt_author_date)::text, 'YYYY-MM-DD'::text) AS created_at,
-                            commits.repo_id,
-                            'commit'::text AS action,
-                            contributors.cntrb_full_name AS full_name,
-                            contributors.cntrb_login AS login
-                           FROM ((augur_data.commits
-                             LEFT JOIN augur_data.contributors ON (((contributors.cntrb_canonical)::text = (commits.cmt_author_email)::text)))
-                             LEFT JOIN ( SELECT DISTINCT ON (contributors_1.cntrb_canonical) contributors_1.cntrb_full_name,
-                                    contributors_1.cntrb_canonical AS canonical_email,
-                                    contributors_1.data_collection_date,
-                                    contributors_1.cntrb_id AS canonical_id
-                                   FROM augur_data.contributors contributors_1
-                                  WHERE ((contributors_1.cntrb_canonical)::text = (contributors_1.cntrb_email)::text)
-                                  ORDER BY contributors_1.cntrb_canonical) canonical_full_names ON (((canonical_full_names.canonical_email)::text = (contributors.cntrb_canonical)::text)))
-                          GROUP BY commits.repo_id, canonical_full_names.canonical_email, canonical_full_names.canonical_id, commits.cmt_author_date, contributors.cntrb_full_name, contributors.cntrb_login
+                        SELECT
+                            canonical_full_names.canonical_id AS id, to_timestamp(
+                                (commits.cmt_author_date)::text, 'YYYY-MM-DD'::text
+                            ) AS created_at, commits.repo_id, 'commit'::text AS action, contributors.cntrb_full_name AS full_name, contributors.cntrb_login AS login
+                        FROM (
+                                (
+                                    augur_data.commits
+                                    LEFT JOIN augur_data.contributors ON (
+                                        (
+                                            (contributors.cntrb_canonical)::text = (commits.cmt_author_email)::text
+                                        )
+                                    )
+                                )
+                                LEFT JOIN (
+                                    SELECT DISTINCT
+                                        ON (
+                                            contributors_1.cntrb_canonical
+                                        ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
+                                    FROM augur_data.contributors contributors_1
+                                    WHERE (
+                                            (
+                                                contributors_1.cntrb_canonical
+                                            )::text = (contributors_1.cntrb_email)::text
+                                        )
+                                    ORDER BY contributors_1.cntrb_canonical
+                                ) canonical_full_names ON (
+                                    (
+                                        (
+                                            canonical_full_names.canonical_email
+                                        )::text = (contributors.cntrb_canonical)::text
+                                    )
+                                )
+                            )
+                        GROUP BY
+                            commits.repo_id, canonical_full_names.canonical_email, canonical_full_names.canonical_id, commits.cmt_author_date, contributors.cntrb_full_name, contributors.cntrb_login
                         UNION ALL
-                         SELECT message.cntrb_id AS id,
-                            commit_comment_ref.created_at,
-                            commits.repo_id,
-                            'commit_comment'::text AS action,
-                            contributors.cntrb_full_name AS full_name,
-                            contributors.cntrb_login AS login
-                           FROM augur_data.commit_comment_ref,
-                            augur_data.commits,
-                            ((augur_data.message
-                             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = message.cntrb_id)))
-                             LEFT JOIN ( SELECT DISTINCT ON (contributors_1.cntrb_canonical) contributors_1.cntrb_full_name,
-                                    contributors_1.cntrb_canonical AS canonical_email,
-                                    contributors_1.data_collection_date,
-                                    contributors_1.cntrb_id AS canonical_id
-                                   FROM augur_data.contributors contributors_1
-                                  WHERE ((contributors_1.cntrb_canonical)::text = (contributors_1.cntrb_email)::text)
-                                  ORDER BY contributors_1.cntrb_canonical) canonical_full_names ON (((canonical_full_names.canonical_email)::text = (contributors.cntrb_canonical)::text)))
-                          WHERE ((commits.cmt_id = commit_comment_ref.cmt_id) AND (commit_comment_ref.msg_id = message.msg_id))
-                          GROUP BY message.cntrb_id, commits.repo_id, commit_comment_ref.created_at, contributors.cntrb_full_name, contributors.cntrb_login
+                        SELECT
+                            message.cntrb_id AS id, commit_comment_ref.created_at, commits.repo_id, 'commit_comment'::text AS action, contributors.cntrb_full_name AS full_name, contributors.cntrb_login AS login
+                        FROM augur_data.commit_comment_ref, augur_data.commits, (
+                                (
+                                    augur_data.message
+                                    LEFT JOIN augur_data.contributors ON (
+                                        (
+                                            contributors.cntrb_id = message.cntrb_id
+                                        )
+                                    )
+                                )
+                                LEFT JOIN (
+                                    SELECT DISTINCT
+                                        ON (
+                                            contributors_1.cntrb_canonical
+                                        ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
+                                    FROM augur_data.contributors contributors_1
+                                    WHERE (
+                                            (
+                                                contributors_1.cntrb_canonical
+                                            )::text = (contributors_1.cntrb_email)::text
+                                        )
+                                    ORDER BY contributors_1.cntrb_canonical
+                                ) canonical_full_names ON (
+                                    (
+                                        (
+                                            canonical_full_names.canonical_email
+                                        )::text = (contributors.cntrb_canonical)::text
+                                    )
+                                )
+                            )
+                        WHERE (
+                                (
+                                    commits.cmt_id = commit_comment_ref.cmt_id
+                                )
+                                AND (
+                                    commit_comment_ref.msg_id = message.msg_id
+                                )
+                            )
+                        GROUP BY
+                            message.cntrb_id, commits.repo_id, commit_comment_ref.created_at, contributors.cntrb_full_name, contributors.cntrb_login
                         UNION ALL
-                         SELECT issue_events.cntrb_id AS id,
-                            issue_events.created_at,
-                            issues.repo_id,
-                            'issue_closed'::text AS action,
-                            contributors.cntrb_full_name AS full_name,
-                            contributors.cntrb_login AS login
-                           FROM augur_data.issues,
-                            ((augur_data.issue_events
-                             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = issue_events.cntrb_id)))
-                             LEFT JOIN ( SELECT DISTINCT ON (contributors_1.cntrb_canonical) contributors_1.cntrb_full_name,
-                                    contributors_1.cntrb_canonical AS canonical_email,
-                                    contributors_1.data_collection_date,
-                                    contributors_1.cntrb_id AS canonical_id
-                                   FROM augur_data.contributors contributors_1
-                                  WHERE ((contributors_1.cntrb_canonical)::text = (contributors_1.cntrb_email)::text)
-                                  ORDER BY contributors_1.cntrb_canonical) canonical_full_names ON (((canonical_full_names.canonical_email)::text = (contributors.cntrb_canonical)::text)))
-                          WHERE ((issues.issue_id = issue_events.issue_id) AND (issues.pull_request IS NULL) AND (issue_events.cntrb_id IS NOT NULL) AND ((issue_events.action)::text = 'closed'::text))
-                          GROUP BY issue_events.cntrb_id, issues.repo_id, issue_events.created_at, contributors.cntrb_full_name, contributors.cntrb_login
+                        SELECT
+                            issue_events.cntrb_id AS id, issue_events.created_at, issues.repo_id, 'issue_closed'::text AS action, contributors.cntrb_full_name AS full_name, contributors.cntrb_login AS login
+                        FROM augur_data.issues, (
+                                (
+                                    augur_data.issue_events
+                                    LEFT JOIN augur_data.contributors ON (
+                                        (
+                                            contributors.cntrb_id = issue_events.cntrb_id
+                                        )
+                                    )
+                                )
+                                LEFT JOIN (
+                                    SELECT DISTINCT
+                                        ON (
+                                            contributors_1.cntrb_canonical
+                                        ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
+                                    FROM augur_data.contributors contributors_1
+                                    WHERE (
+                                            (
+                                                contributors_1.cntrb_canonical
+                                            )::text = (contributors_1.cntrb_email)::text
+                                        )
+                                    ORDER BY contributors_1.cntrb_canonical
+                                ) canonical_full_names ON (
+                                    (
+                                        (
+                                            canonical_full_names.canonical_email
+                                        )::text = (contributors.cntrb_canonical)::text
+                                    )
+                                )
+                            )
+                        WHERE (
+                                (
+                                    issues.issue_id = issue_events.issue_id
+                                )
+                                AND (issues.pull_request IS NULL)
+                                AND (
+                                    issue_events.cntrb_id IS NOT NULL
+                                )
+                                AND (
+                                    (issue_events.action)::text = 'closed'::text
+                                )
+                            )
+                        GROUP BY
+                            issue_events.cntrb_id, issues.repo_id, issue_events.created_at, contributors.cntrb_full_name, contributors.cntrb_login
                         UNION ALL
-                         SELECT pull_requests.pr_augur_contributor_id AS id,
-                            pull_requests.pr_created_at AS created_at,
-                            pull_requests.repo_id,
-                            'open_pull_request'::text AS action,
-                            contributors.cntrb_full_name AS full_name,
-                            contributors.cntrb_login AS login
-                           FROM ((augur_data.pull_requests
-                             LEFT JOIN augur_data.contributors ON ((pull_requests.pr_augur_contributor_id = contributors.cntrb_id)))
-                             LEFT JOIN ( SELECT DISTINCT ON (contributors_1.cntrb_canonical) contributors_1.cntrb_full_name,
-                                    contributors_1.cntrb_canonical AS canonical_email,
-                                    contributors_1.data_collection_date,
-                                    contributors_1.cntrb_id AS canonical_id
-                                   FROM augur_data.contributors contributors_1
-                                  WHERE ((contributors_1.cntrb_canonical)::text = (contributors_1.cntrb_email)::text)
-                                  ORDER BY contributors_1.cntrb_canonical) canonical_full_names ON (((canonical_full_names.canonical_email)::text = (contributors.cntrb_canonical)::text)))
-                          GROUP BY pull_requests.pr_augur_contributor_id, pull_requests.repo_id, pull_requests.pr_created_at, contributors.cntrb_full_name, contributors.cntrb_login
+                        SELECT
+                            pull_requests.pr_augur_contributor_id AS id, pull_requests.pr_created_at AS created_at, pull_requests.repo_id, 'open_pull_request'::text AS action, contributors.cntrb_full_name AS full_name, contributors.cntrb_login AS login
+                        FROM (
+                                (
+                                    augur_data.pull_requests
+                                    LEFT JOIN augur_data.contributors ON (
+                                        (
+                                            pull_requests.pr_augur_contributor_id = contributors.cntrb_id
+                                        )
+                                    )
+                                )
+                                LEFT JOIN (
+                                    SELECT DISTINCT
+                                        ON (
+                                            contributors_1.cntrb_canonical
+                                        ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
+                                    FROM augur_data.contributors contributors_1
+                                    WHERE (
+                                            (
+                                                contributors_1.cntrb_canonical
+                                            )::text = (contributors_1.cntrb_email)::text
+                                        )
+                                    ORDER BY contributors_1.cntrb_canonical
+                                ) canonical_full_names ON (
+                                    (
+                                        (
+                                            canonical_full_names.canonical_email
+                                        )::text = (contributors.cntrb_canonical)::text
+                                    )
+                                )
+                            )
+                        GROUP BY
+                            pull_requests.pr_augur_contributor_id, pull_requests.repo_id, pull_requests.pr_created_at, contributors.cntrb_full_name, contributors.cntrb_login
                         UNION ALL
-                         SELECT message.cntrb_id AS id,
-                            message.msg_timestamp AS created_at,
-                            pull_requests.repo_id,
-                            'pull_request_comment'::text AS action,
-                            contributors.cntrb_full_name AS full_name,
-                            contributors.cntrb_login AS login
-                           FROM augur_data.pull_requests,
-                            augur_data.pull_request_message_ref,
-                            ((augur_data.message
-                             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = message.cntrb_id)))
-                             LEFT JOIN ( SELECT DISTINCT ON (contributors_1.cntrb_canonical) contributors_1.cntrb_full_name,
-                                    contributors_1.cntrb_canonical AS canonical_email,
-                                    contributors_1.data_collection_date,
-                                    contributors_1.cntrb_id AS canonical_id
-                                   FROM augur_data.contributors contributors_1
-                                  WHERE ((contributors_1.cntrb_canonical)::text = (contributors_1.cntrb_email)::text)
-                                  ORDER BY contributors_1.cntrb_canonical) canonical_full_names ON (((canonical_full_names.canonical_email)::text = (contributors.cntrb_canonical)::text)))
-                          WHERE ((pull_request_message_ref.pull_request_id = pull_requests.pull_request_id) AND (pull_request_message_ref.msg_id = message.msg_id))
-                          GROUP BY message.cntrb_id, pull_requests.repo_id, message.msg_timestamp, contributors.cntrb_full_name, contributors.cntrb_login
+                        SELECT
+                            message.cntrb_id AS id, message.msg_timestamp AS created_at, pull_requests.repo_id, 'pull_request_comment'::text AS action, contributors.cntrb_full_name AS full_name, contributors.cntrb_login AS login
+                        FROM augur_data.pull_requests, augur_data.pull_request_message_ref, (
+                                (
+                                    augur_data.message
+                                    LEFT JOIN augur_data.contributors ON (
+                                        (
+                                            contributors.cntrb_id = message.cntrb_id
+                                        )
+                                    )
+                                )
+                                LEFT JOIN (
+                                    SELECT DISTINCT
+                                        ON (
+                                            contributors_1.cntrb_canonical
+                                        ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
+                                    FROM augur_data.contributors contributors_1
+                                    WHERE (
+                                            (
+                                                contributors_1.cntrb_canonical
+                                            )::text = (contributors_1.cntrb_email)::text
+                                        )
+                                    ORDER BY contributors_1.cntrb_canonical
+                                ) canonical_full_names ON (
+                                    (
+                                        (
+                                            canonical_full_names.canonical_email
+                                        )::text = (contributors.cntrb_canonical)::text
+                                    )
+                                )
+                            )
+                        WHERE (
+                                (
+                                    pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
+                                )
+                                AND (
+                                    pull_request_message_ref.msg_id = message.msg_id
+                                )
+                            )
+                        GROUP BY
+                            message.cntrb_id, pull_requests.repo_id, message.msg_timestamp, contributors.cntrb_full_name, contributors.cntrb_login
                         UNION ALL
-                         SELECT issues.reporter_id AS id,
-                            message.msg_timestamp AS created_at,
-                            issues.repo_id,
-                            'issue_comment'::text AS action,
-                            contributors.cntrb_full_name AS full_name,
-                            contributors.cntrb_login AS login
-                           FROM augur_data.issues,
-                            augur_data.issue_message_ref,
-                            ((augur_data.message
-                             LEFT JOIN augur_data.contributors ON ((contributors.cntrb_id = message.cntrb_id)))
-                             LEFT JOIN ( SELECT DISTINCT ON (contributors_1.cntrb_canonical) contributors_1.cntrb_full_name,
-                                    contributors_1.cntrb_canonical AS canonical_email,
-                                    contributors_1.data_collection_date,
-                                    contributors_1.cntrb_id AS canonical_id
-                                   FROM augur_data.contributors contributors_1
-                                  WHERE ((contributors_1.cntrb_canonical)::text = (contributors_1.cntrb_email)::text)
-                                  ORDER BY contributors_1.cntrb_canonical) canonical_full_names ON (((canonical_full_names.canonical_email)::text = (contributors.cntrb_canonical)::text)))
-                          WHERE ((issue_message_ref.msg_id = message.msg_id) AND (issues.issue_id = issue_message_ref.issue_id) AND (issues.pull_request_id = NULL::bigint))
-                          GROUP BY issues.reporter_id, issues.repo_id, message.msg_timestamp, contributors.cntrb_full_name, contributors.cntrb_login) a,
-                    augur_data.repo
-                  WHERE ((a.id IS NOT NULL) AND (a.repo_id = repo.repo_id))
-                  GROUP BY a.id, a.repo_id, a.action, a.created_at, repo.repo_name, a.full_name, a.login
-                  ORDER BY a.id) b
-          WHERE (b.rank = ANY (ARRAY[(1)::bigint, (2)::bigint, (3)::bigint, (4)::bigint, (5)::bigint, (6)::bigint, (7)::bigint]))) x
-  WITH NO DATA;
-
+                        SELECT
+                            issues.reporter_id AS id, message.msg_timestamp AS created_at, issues.repo_id, 'issue_comment'::text AS action, contributors.cntrb_full_name AS full_name, contributors.cntrb_login AS login
+                        FROM augur_data.issues, augur_data.issue_message_ref, (
+                                (
+                                    augur_data.message
+                                    LEFT JOIN augur_data.contributors ON (
+                                        (
+                                            contributors.cntrb_id = message.cntrb_id
+                                        )
+                                    )
+                                )
+                                LEFT JOIN (
+                                    SELECT DISTINCT
+                                        ON (
+                                            contributors_1.cntrb_canonical
+                                        ) contributors_1.cntrb_full_name, contributors_1.cntrb_canonical AS canonical_email, contributors_1.data_collection_date, contributors_1.cntrb_id AS canonical_id
+                                    FROM augur_data.contributors contributors_1
+                                    WHERE (
+                                            (
+                                                contributors_1.cntrb_canonical
+                                            )::text = (contributors_1.cntrb_email)::text
+                                        )
+                                    ORDER BY contributors_1.cntrb_canonical
+                                ) canonical_full_names ON (
+                                    (
+                                        (
+                                            canonical_full_names.canonical_email
+                                        )::text = (contributors.cntrb_canonical)::text
+                                    )
+                                )
+                            )
+                        WHERE (
+                                (
+                                    issue_message_ref.msg_id = message.msg_id
+                                )
+                                AND (
+                                    issues.issue_id = issue_message_ref.issue_id
+                                )
+                                AND (
+                                    issues.pull_request_id = NULL::bigint
+                                )
+                            )
+                        GROUP BY
+                            issues.reporter_id, issues.repo_id, message.msg_timestamp, contributors.cntrb_full_name, contributors.cntrb_login
+                    ) a, augur_data.repo
+                WHERE (
+                        (a.id IS NOT NULL)
+                        AND (a.repo_id = repo.repo_id)
+                    )
+                GROUP BY
+                    a.id, a.repo_id, a.action, a.created_at, repo.repo_name, a.full_name, a.login
+                ORDER BY a.id
+            ) b
+        WHERE (
+                b.rank = ANY (
+                    ARRAY[
+                        (1)::bigint, (2)::bigint, (3)::bigint, (4)::bigint, (5)::bigint, (6)::bigint, (7)::bigint
+                    ]
+                )
+            )
+    ) x
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.explorer_new_contributors OWNER TO augur;
 
@@ -2116,7 +2303,8 @@ ALTER MATERIALIZED VIEW augur_data.explorer_new_contributors OWNER TO augur;
 --
 
 CREATE MATERIALIZED VIEW augur_data.explorer_pr_assignments AS
- SELECT pr.pull_request_id,
+SELECT
+    pr.pull_request_id,
     pr.repo_id AS id,
     pr.pr_created_at AS created,
     pr.pr_closed_at AS closed,
@@ -2124,10 +2312,27 @@ CREATE MATERIALIZED VIEW augur_data.explorer_pr_assignments AS
     pre.action AS assignment_action,
     pre.cntrb_id AS assignee,
     pre.node_id
-   FROM (augur_data.pull_requests pr
-     LEFT JOIN augur_data.pull_request_events pre ON (((pr.pull_request_id = pre.pull_request_id) AND ((pre.action)::text = ANY (ARRAY[('unassigned'::character varying)::text, ('assigned'::character varying)::text])))))
-  WITH NO DATA;
-
+FROM (
+        augur_data.pull_requests pr
+        LEFT JOIN augur_data.pull_request_events pre ON (
+            (
+                (
+                    pr.pull_request_id = pre.pull_request_id
+                )
+                AND (
+                    (pre.action)::text = ANY (
+                        ARRAY[
+                            (
+                                'unassigned'::character varying
+                            )::text, ('assigned'::character varying)::text
+                        ]
+                    )
+                )
+            )
+        )
+    )
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.explorer_pr_assignments OWNER TO augur;
 
@@ -2135,13 +2340,9 @@ ALTER MATERIALIZED VIEW augur_data.explorer_pr_assignments OWNER TO augur;
 -- Name: pull_request_review_message_ref_pr_review_msg_ref_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_review_message_ref_pr_review_msg_ref_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_review_message_ref_pr_review_msg_ref_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_review_message_ref_pr_review_msg_ref_id_seq OWNER TO augur;
 
@@ -2150,7 +2351,9 @@ ALTER SEQUENCE augur_data.pull_request_review_message_ref_pr_review_msg_ref_id_s
 --
 
 CREATE TABLE augur_data.pull_request_review_message_ref (
-    pr_review_msg_ref_id bigint DEFAULT nextval('augur_data.pull_request_review_message_ref_pr_review_msg_ref_id_seq'::regclass) NOT NULL,
+    pr_review_msg_ref_id bigint DEFAULT nextval(
+        'augur_data.pull_request_review_message_ref_pr_review_msg_ref_id_seq'::regclass
+    ) NOT NULL,
     pr_review_id bigint NOT NULL,
     repo_id bigint,
     msg_id bigint NOT NULL,
@@ -2180,7 +2383,6 @@ CREATE TABLE augur_data.pull_request_review_message_ref (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.pull_request_review_message_ref OWNER TO augur;
 
 --
@@ -2188,32 +2390,38 @@ ALTER TABLE augur_data.pull_request_review_message_ref OWNER TO augur;
 --
 
 CREATE MATERIALIZED VIEW augur_data.explorer_pr_response AS
- SELECT pr.pull_request_id,
-    pr.repo_id AS id,
-    pr.pr_augur_contributor_id AS cntrb_id,
-    m.msg_timestamp,
-    m.msg_cntrb_id,
-    pr.pr_created_at,
-    pr.pr_closed_at
-   FROM (augur_data.pull_requests pr
-     LEFT JOIN ( SELECT prr.pull_request_id,
-            m_1.msg_timestamp,
-            m_1.cntrb_id AS msg_cntrb_id
-           FROM augur_data.pull_request_review_message_ref prrmr,
-            augur_data.pull_requests pr_1,
-            augur_data.message m_1,
-            augur_data.pull_request_reviews prr
-          WHERE ((prrmr.pr_review_id = prr.pr_review_id) AND (prrmr.msg_id = m_1.msg_id) AND (prr.pull_request_id = pr_1.pull_request_id))
-        UNION
-         SELECT prmr.pull_request_id,
-            m_1.msg_timestamp,
-            m_1.cntrb_id AS msg_cntrb_id
-           FROM augur_data.pull_request_message_ref prmr,
-            augur_data.pull_requests pr_1,
-            augur_data.message m_1
-          WHERE ((prmr.pull_request_id = pr_1.pull_request_id) AND (prmr.msg_id = m_1.msg_id))) m ON ((m.pull_request_id = pr.pull_request_id)))
-  WITH NO DATA;
-
+SELECT pr.pull_request_id, pr.repo_id AS id, pr.pr_augur_contributor_id AS cntrb_id, m.msg_timestamp, m.msg_cntrb_id, pr.pr_created_at, pr.pr_closed_at
+FROM (
+        augur_data.pull_requests pr
+        LEFT JOIN (
+            SELECT prr.pull_request_id, m_1.msg_timestamp, m_1.cntrb_id AS msg_cntrb_id
+            FROM augur_data.pull_request_review_message_ref prrmr, augur_data.pull_requests pr_1, augur_data.message m_1, augur_data.pull_request_reviews prr
+            WHERE (
+                    (
+                        prrmr.pr_review_id = prr.pr_review_id
+                    )
+                    AND (prrmr.msg_id = m_1.msg_id)
+                    AND (
+                        prr.pull_request_id = pr_1.pull_request_id
+                    )
+                )
+            UNION
+            SELECT prmr.pull_request_id, m_1.msg_timestamp, m_1.cntrb_id AS msg_cntrb_id
+            FROM augur_data.pull_request_message_ref prmr, augur_data.pull_requests pr_1, augur_data.message m_1
+            WHERE (
+                    (
+                        prmr.pull_request_id = pr_1.pull_request_id
+                    )
+                    AND (prmr.msg_id = m_1.msg_id)
+                )
+        ) m ON (
+            (
+                m.pull_request_id = pr.pull_request_id
+            )
+        )
+    )
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.explorer_pr_response OWNER TO augur;
 
@@ -2221,13 +2429,9 @@ ALTER MATERIALIZED VIEW augur_data.explorer_pr_response OWNER TO augur;
 -- Name: pull_request_commits_pr_cmt_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_commits_pr_cmt_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_commits_pr_cmt_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_commits_pr_cmt_id_seq OWNER TO augur;
 
@@ -2236,7 +2440,9 @@ ALTER SEQUENCE augur_data.pull_request_commits_pr_cmt_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.pull_request_commits (
-    pr_cmt_id bigint DEFAULT nextval('augur_data.pull_request_commits_pr_cmt_id_seq'::regclass) NOT NULL,
+    pr_cmt_id bigint DEFAULT nextval(
+        'augur_data.pull_request_commits_pr_cmt_id_seq'::regclass
+    ) NOT NULL,
     pull_request_id bigint,
     repo_id bigint,
     pr_cmt_sha character varying,
@@ -2252,7 +2458,6 @@ CREATE TABLE augur_data.pull_request_commits (
     pr_cmt_author_cntrb_id uuid
 );
 
-
 ALTER TABLE augur_data.pull_request_commits OWNER TO augur;
 
 --
@@ -2265,25 +2470,19 @@ The commits table intends to count only commits that end up in the master branch
 Therefore, there will be commit “SHA”’s in this table that are no associated with a commit SHA in the commits table. 
 In cases where the PR is to the master branch of a project, you will find a match. In cases where the PR does not involve the master branch, you will not find a corresponding commit SHA in the commits table. This is expected. ';
 
-
 --
 -- Name: COLUMN pull_request_commits.pr_cmt_sha; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.pull_request_commits.pr_cmt_sha IS 'This is the commit SHA for a pull request commit. If the PR is not to the master branch of the main repository (or, in rare cases, from it), then you will NOT find a corresponding commit SHA in the commit table. (see table comment for further explanation). ';
 
-
 --
 -- Name: pull_request_meta_pr_repo_meta_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_meta_pr_repo_meta_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_meta_pr_repo_meta_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_meta_pr_repo_meta_id_seq OWNER TO augur;
 
@@ -2292,7 +2491,9 @@ ALTER SEQUENCE augur_data.pull_request_meta_pr_repo_meta_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.pull_request_meta (
-    pr_repo_meta_id bigint DEFAULT nextval('augur_data.pull_request_meta_pr_repo_meta_id_seq'::regclass) NOT NULL,
+    pr_repo_meta_id bigint DEFAULT nextval(
+        'augur_data.pull_request_meta_pr_repo_meta_id_seq'::regclass
+    ) NOT NULL,
     pull_request_id bigint,
     repo_id bigint,
     pr_head_or_base character varying,
@@ -2306,7 +2507,6 @@ CREATE TABLE augur_data.pull_request_meta (
     cntrb_id uuid
 );
 
-
 ALTER TABLE augur_data.pull_request_meta OWNER TO augur;
 
 --
@@ -2315,13 +2515,11 @@ ALTER TABLE augur_data.pull_request_meta OWNER TO augur;
 
 COMMENT ON TABLE augur_data.pull_request_meta IS 'Pull requests contain referencing metadata.  There are a few columns that are discrete. There are also head and base designations for the repo on each side of the pull request. Similar functions exist in GitLab, though the language here is based on GitHub. The JSON Being adapted to as of the development of this schema is here:      "base": {       "label": "chaoss:dev",       "ref": "dev",       "sha": "dc6c6f3947f7dc84ecba3d8bda641ef786e7027d",       "user": {         "login": "chaoss",         "id": 29740296,         "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",         "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",         "gravatar_id": "",         "url": "https://api.github.com/users/chaoss",         "html_url": "https://github.com/chaoss",         "followers_url": "https://api.github.com/users/chaoss/followers",         "following_url": "https://api.github.com/users/chaoss/following{/other_user}",         "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",         "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",         "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",         "organizations_url": "https://api.github.com/users/chaoss/orgs",         "repos_url": "https://api.github.com/users/chaoss/repos",         "events_url": "https://api.github.com/users/chaoss/events{/privacy}",         "received_events_url": "https://api.github.com/users/chaoss/received_events",         "type": "Organization",         "site_admin": false       },       "repo": {         "id": 78134122,         "node_id": "MDEwOlJlcG9zaXRvcnk3ODEzNDEyMg==",         "name": "augur",         "full_name": "chaoss/augur",         "private": false,         "owner": {           "login": "chaoss",           "id": 29740296,           "node_id": "MDEyOk9yZ2FuaXphdGlvbjI5NzQwMjk2",           "avatar_url": "https://avatars2.githubusercontent.com/u/29740296?v=4",           "gravatar_id": "",           "url": "https://api.github.com/users/chaoss",           "html_url": "https://github.com/chaoss",           "followers_url": "https://api.github.com/users/chaoss/followers",           "following_url": "https://api.github.com/users/chaoss/following{/other_user}",           "gists_url": "https://api.github.com/users/chaoss/gists{/gist_id}",           "starred_url": "https://api.github.com/users/chaoss/starred{/owner}{/repo}",           "subscriptions_url": "https://api.github.com/users/chaoss/subscriptions",           "organizations_url": "https://api.github.com/users/chaoss/orgs",           "repos_url": "https://api.github.com/users/chaoss/repos",           "events_url": "https://api.github.com/users/chaoss/events{/privacy}",           "received_events_url": "https://api.github.com/users/chaoss/received_events",           "type": "Organization",           "site_admin": false         }, ';
 
-
 --
 -- Name: COLUMN pull_request_meta.pr_head_or_base; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.pull_request_meta.pr_head_or_base IS 'Each pull request should have one and only one head record; and one and only one base record. ';
-
 
 --
 -- Name: COLUMN pull_request_meta.pr_src_meta_label; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -2506,13 +2704,13 @@ COMMENT ON COLUMN augur_data.pull_request_meta.pr_src_meta_label IS 'This is a r
         },
 ';
 
-
 --
 -- Name: explorer_pr_response_times; Type: MATERIALIZED VIEW; Schema: augur_data; Owner: augur
 --
 
 CREATE MATERIALIZED VIEW augur_data.explorer_pr_response_times AS
- SELECT repo.repo_id,
+SELECT
+    repo.repo_id,
     pull_requests.pr_src_id,
     repo.repo_name,
     pull_requests.pr_src_author_association,
@@ -2521,18 +2719,90 @@ CREATE MATERIALIZED VIEW augur_data.explorer_pr_response_times AS
     pull_requests.pr_merged_at,
     pull_requests.pr_created_at,
     pull_requests.pr_closed_at,
-    date_part('year'::text, (pull_requests.pr_created_at)::date) AS created_year,
-    date_part('month'::text, (pull_requests.pr_created_at)::date) AS created_month,
-    date_part('year'::text, (pull_requests.pr_closed_at)::date) AS closed_year,
-    date_part('month'::text, (pull_requests.pr_closed_at)::date) AS closed_month,
+    date_part(
+        'year'::text,
+        (pull_requests.pr_created_at)::date
+    ) AS created_year,
+    date_part(
+        'month'::text,
+        (pull_requests.pr_created_at)::date
+    ) AS created_month,
+    date_part(
+        'year'::text,
+        (pull_requests.pr_closed_at)::date
+    ) AS closed_year,
+    date_part(
+        'month'::text,
+        (pull_requests.pr_closed_at)::date
+    ) AS closed_month,
     base_labels.pr_src_meta_label,
     base_labels.pr_head_or_base,
-    ((EXTRACT(epoch FROM pull_requests.pr_closed_at) - EXTRACT(epoch FROM pull_requests.pr_created_at)) / (3600)::numeric) AS hours_to_close,
-    ((EXTRACT(epoch FROM pull_requests.pr_closed_at) - EXTRACT(epoch FROM pull_requests.pr_created_at)) / (86400)::numeric) AS days_to_close,
-    ((EXTRACT(epoch FROM response_times.first_response_time) - EXTRACT(epoch FROM pull_requests.pr_created_at)) / (3600)::numeric) AS hours_to_first_response,
-    ((EXTRACT(epoch FROM response_times.first_response_time) - EXTRACT(epoch FROM pull_requests.pr_created_at)) / (86400)::numeric) AS days_to_first_response,
-    ((EXTRACT(epoch FROM response_times.last_response_time) - EXTRACT(epoch FROM pull_requests.pr_created_at)) / (3600)::numeric) AS hours_to_last_response,
-    ((EXTRACT(epoch FROM response_times.last_response_time) - EXTRACT(epoch FROM pull_requests.pr_created_at)) / (86400)::numeric) AS days_to_last_response,
+    (
+        (
+            EXTRACT(
+                epoch
+                FROM pull_requests.pr_closed_at
+            ) - EXTRACT(
+                epoch
+                FROM pull_requests.pr_created_at
+            )
+        ) / (3600)::numeric
+    ) AS hours_to_close,
+    (
+        (
+            EXTRACT(
+                epoch
+                FROM pull_requests.pr_closed_at
+            ) - EXTRACT(
+                epoch
+                FROM pull_requests.pr_created_at
+            )
+        ) / (86400)::numeric
+    ) AS days_to_close,
+    (
+        (
+            EXTRACT(
+                epoch
+                FROM response_times.first_response_time
+            ) - EXTRACT(
+                epoch
+                FROM pull_requests.pr_created_at
+            )
+        ) / (3600)::numeric
+    ) AS hours_to_first_response,
+    (
+        (
+            EXTRACT(
+                epoch
+                FROM response_times.first_response_time
+            ) - EXTRACT(
+                epoch
+                FROM pull_requests.pr_created_at
+            )
+        ) / (86400)::numeric
+    ) AS days_to_first_response,
+    (
+        (
+            EXTRACT(
+                epoch
+                FROM response_times.last_response_time
+            ) - EXTRACT(
+                epoch
+                FROM pull_requests.pr_created_at
+            )
+        ) / (3600)::numeric
+    ) AS hours_to_last_response,
+    (
+        (
+            EXTRACT(
+                epoch
+                FROM response_times.last_response_time
+            ) - EXTRACT(
+                epoch
+                FROM pull_requests.pr_created_at
+            )
+        ) / (86400)::numeric
+    ) AS days_to_last_response,
     response_times.first_response_time,
     response_times.last_response_time,
     response_times.average_time_between_responses,
@@ -2553,62 +2823,198 @@ CREATE MATERIALIZED VIEW augur_data.explorer_pr_response_times AS
     master_merged_counts.lines_removed,
     all_commit_counts.commit_count,
     master_merged_counts.file_count
-   FROM augur_data.repo,
-    augur_data.repo_groups,
-    ((((augur_data.pull_requests
-     LEFT JOIN ( SELECT pull_requests_1.pull_request_id,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'assigned'::text)) AS assigned_count,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'review_requested'::text)) AS review_requested_count,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'labeled'::text)) AS labeled_count,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'unlabeled'::text)) AS unlabeled_count,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'subscribed'::text)) AS subscribed_count,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'mentioned'::text)) AS mentioned_count,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'referenced'::text)) AS referenced_count,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'closed'::text)) AS closed_count,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'head_ref_force_pushed'::text)) AS head_ref_force_pushed_count,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'head_ref_deleted'::text)) AS head_ref_deleted_count,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'milestoned'::text)) AS milestoned_count,
-            count(*) FILTER (WHERE ((pull_request_events.action)::text = 'merged'::text)) AS merged_count,
-            min(message.msg_timestamp) AS first_response_time,
-            count(DISTINCT message.msg_timestamp) AS comment_count,
-            max(message.msg_timestamp) AS last_response_time,
-            ((max(message.msg_timestamp) - min(message.msg_timestamp)) / (count(DISTINCT message.msg_timestamp))::double precision) AS average_time_between_responses
-           FROM augur_data.pull_request_events,
-            augur_data.pull_requests pull_requests_1,
-            augur_data.repo repo_1,
-            augur_data.pull_request_message_ref,
-            augur_data.message
-          WHERE ((repo_1.repo_id = pull_requests_1.repo_id) AND (pull_requests_1.pull_request_id = pull_request_events.pull_request_id) AND (pull_requests_1.pull_request_id = pull_request_message_ref.pull_request_id) AND (pull_request_message_ref.msg_id = message.msg_id))
-          GROUP BY pull_requests_1.pull_request_id) response_times ON ((pull_requests.pull_request_id = response_times.pull_request_id)))
-     LEFT JOIN ( SELECT pull_request_commits.pull_request_id,
-            count(DISTINCT pull_request_commits.pr_cmt_sha) AS commit_count
-           FROM augur_data.pull_request_commits,
-            augur_data.pull_requests pull_requests_1,
-            augur_data.pull_request_meta
-          WHERE ((pull_requests_1.pull_request_id = pull_request_commits.pull_request_id) AND (pull_requests_1.pull_request_id = pull_request_meta.pull_request_id) AND ((pull_request_commits.pr_cmt_sha)::text <> (pull_requests_1.pr_merge_commit_sha)::text) AND ((pull_request_commits.pr_cmt_sha)::text <> (pull_request_meta.pr_sha)::text))
-          GROUP BY pull_request_commits.pull_request_id) all_commit_counts ON ((pull_requests.pull_request_id = all_commit_counts.pull_request_id)))
-     LEFT JOIN ( SELECT max(pull_request_meta.pr_repo_meta_id) AS max,
-            pull_request_meta.pull_request_id,
-            pull_request_meta.pr_head_or_base,
-            pull_request_meta.pr_src_meta_label
-           FROM augur_data.pull_requests pull_requests_1,
-            augur_data.pull_request_meta
-          WHERE ((pull_requests_1.pull_request_id = pull_request_meta.pull_request_id) AND ((pull_request_meta.pr_head_or_base)::text = 'base'::text))
-          GROUP BY pull_request_meta.pull_request_id, pull_request_meta.pr_head_or_base, pull_request_meta.pr_src_meta_label) base_labels ON ((base_labels.pull_request_id = all_commit_counts.pull_request_id)))
-     LEFT JOIN ( SELECT sum(commits.cmt_added) AS lines_added,
-            sum(commits.cmt_removed) AS lines_removed,
-            pull_request_commits.pull_request_id,
-            count(DISTINCT commits.cmt_filename) AS file_count
-           FROM augur_data.pull_request_commits,
-            augur_data.commits,
-            augur_data.pull_requests pull_requests_1,
-            augur_data.pull_request_meta
-          WHERE (((commits.cmt_commit_hash)::text = (pull_request_commits.pr_cmt_sha)::text) AND (pull_requests_1.pull_request_id = pull_request_commits.pull_request_id) AND (pull_requests_1.pull_request_id = pull_request_meta.pull_request_id) AND (commits.repo_id = pull_requests_1.repo_id) AND ((commits.cmt_commit_hash)::text <> (pull_requests_1.pr_merge_commit_sha)::text) AND ((commits.cmt_commit_hash)::text <> (pull_request_meta.pr_sha)::text))
-          GROUP BY pull_request_commits.pull_request_id) master_merged_counts ON ((base_labels.pull_request_id = master_merged_counts.pull_request_id)))
-  WHERE ((repo.repo_group_id = repo_groups.repo_group_id) AND (repo.repo_id = pull_requests.repo_id))
-  ORDER BY response_times.merged_count DESC
-  WITH NO DATA;
-
+FROM augur_data.repo, augur_data.repo_groups, (
+        (
+            (
+                (
+                    augur_data.pull_requests
+                    LEFT JOIN (
+                        SELECT
+                            pull_requests_1.pull_request_id, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'assigned'::text
+                                    )
+                            ) AS assigned_count, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'review_requested'::text
+                                    )
+                            ) AS review_requested_count, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'labeled'::text
+                                    )
+                            ) AS labeled_count, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'unlabeled'::text
+                                    )
+                            ) AS unlabeled_count, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'subscribed'::text
+                                    )
+                            ) AS subscribed_count, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'mentioned'::text
+                                    )
+                            ) AS mentioned_count, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'referenced'::text
+                                    )
+                            ) AS referenced_count, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'closed'::text
+                                    )
+                            ) AS closed_count, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'head_ref_force_pushed'::text
+                                    )
+                            ) AS head_ref_force_pushed_count, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'head_ref_deleted'::text
+                                    )
+                            ) AS head_ref_deleted_count, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'milestoned'::text
+                                    )
+                            ) AS milestoned_count, count(*) FILTER (
+                                WHERE (
+                                        (pull_request_events.action)::text = 'merged'::text
+                                    )
+                            ) AS merged_count, min(message.msg_timestamp) AS first_response_time, count(
+                                DISTINCT message.msg_timestamp
+                            ) AS comment_count, max(message.msg_timestamp) AS last_response_time, (
+                                (
+                                    max(message.msg_timestamp) - min(message.msg_timestamp)
+                                ) / (
+                                    count(
+                                        DISTINCT message.msg_timestamp
+                                    )
+                                )::double precision
+                            ) AS average_time_between_responses
+                        FROM augur_data.pull_request_events, augur_data.pull_requests pull_requests_1, augur_data.repo repo_1, augur_data.pull_request_message_ref, augur_data.message
+                        WHERE (
+                                (
+                                    repo_1.repo_id = pull_requests_1.repo_id
+                                )
+                                AND (
+                                    pull_requests_1.pull_request_id = pull_request_events.pull_request_id
+                                )
+                                AND (
+                                    pull_requests_1.pull_request_id = pull_request_message_ref.pull_request_id
+                                )
+                                AND (
+                                    pull_request_message_ref.msg_id = message.msg_id
+                                )
+                            )
+                        GROUP BY
+                            pull_requests_1.pull_request_id
+                    ) response_times ON (
+                        (
+                            pull_requests.pull_request_id = response_times.pull_request_id
+                        )
+                    )
+                )
+                LEFT JOIN (
+                    SELECT pull_request_commits.pull_request_id, count(
+                            DISTINCT pull_request_commits.pr_cmt_sha
+                        ) AS commit_count
+                    FROM augur_data.pull_request_commits, augur_data.pull_requests pull_requests_1, augur_data.pull_request_meta
+                    WHERE (
+                            (
+                                pull_requests_1.pull_request_id = pull_request_commits.pull_request_id
+                            )
+                            AND (
+                                pull_requests_1.pull_request_id = pull_request_meta.pull_request_id
+                            )
+                            AND (
+                                (
+                                    pull_request_commits.pr_cmt_sha
+                                )::text <> (
+                                    pull_requests_1.pr_merge_commit_sha
+                                )::text
+                            )
+                            AND (
+                                (
+                                    pull_request_commits.pr_cmt_sha
+                                )::text <> (pull_request_meta.pr_sha)::text
+                            )
+                        )
+                    GROUP BY
+                        pull_request_commits.pull_request_id
+                ) all_commit_counts ON (
+                    (
+                        pull_requests.pull_request_id = all_commit_counts.pull_request_id
+                    )
+                )
+            )
+            LEFT JOIN (
+                SELECT max(
+                        pull_request_meta.pr_repo_meta_id
+                    ) AS max, pull_request_meta.pull_request_id, pull_request_meta.pr_head_or_base, pull_request_meta.pr_src_meta_label
+                FROM augur_data.pull_requests pull_requests_1, augur_data.pull_request_meta
+                WHERE (
+                        (
+                            pull_requests_1.pull_request_id = pull_request_meta.pull_request_id
+                        )
+                        AND (
+                            (
+                                pull_request_meta.pr_head_or_base
+                            )::text = 'base'::text
+                        )
+                    )
+                GROUP BY
+                    pull_request_meta.pull_request_id, pull_request_meta.pr_head_or_base, pull_request_meta.pr_src_meta_label
+            ) base_labels ON (
+                (
+                    base_labels.pull_request_id = all_commit_counts.pull_request_id
+                )
+            )
+        )
+        LEFT JOIN (
+            SELECT
+                sum(commits.cmt_added) AS lines_added, sum(commits.cmt_removed) AS lines_removed, pull_request_commits.pull_request_id, count(DISTINCT commits.cmt_filename) AS file_count
+            FROM augur_data.pull_request_commits, augur_data.commits, augur_data.pull_requests pull_requests_1, augur_data.pull_request_meta
+            WHERE (
+                    (
+                        (commits.cmt_commit_hash)::text = (
+                            pull_request_commits.pr_cmt_sha
+                        )::text
+                    )
+                    AND (
+                        pull_requests_1.pull_request_id = pull_request_commits.pull_request_id
+                    )
+                    AND (
+                        pull_requests_1.pull_request_id = pull_request_meta.pull_request_id
+                    )
+                    AND (
+                        commits.repo_id = pull_requests_1.repo_id
+                    )
+                    AND (
+                        (commits.cmt_commit_hash)::text <> (
+                            pull_requests_1.pr_merge_commit_sha
+                        )::text
+                    )
+                    AND (
+                        (commits.cmt_commit_hash)::text <> (pull_request_meta.pr_sha)::text
+                    )
+                )
+            GROUP BY
+                pull_request_commits.pull_request_id
+        ) master_merged_counts ON (
+            (
+                base_labels.pull_request_id = master_merged_counts.pull_request_id
+            )
+        )
+    )
+WHERE (
+        (
+            repo.repo_group_id = repo_groups.repo_group_id
+        )
+        AND (
+            repo.repo_id = pull_requests.repo_id
+        )
+    )
+ORDER BY response_times.merged_count DESC
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.explorer_pr_response_times OWNER TO augur;
 
@@ -2616,13 +3022,9 @@ ALTER MATERIALIZED VIEW augur_data.explorer_pr_response_times OWNER TO augur;
 -- Name: repo_labor_repo_labor_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_labor_repo_labor_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_labor_repo_labor_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_labor_repo_labor_id_seq OWNER TO augur;
 
@@ -2631,7 +3033,9 @@ ALTER SEQUENCE augur_data.repo_labor_repo_labor_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_labor (
-    repo_labor_id bigint DEFAULT nextval('augur_data.repo_labor_repo_labor_id_seq'::regclass) NOT NULL,
+    repo_labor_id bigint DEFAULT nextval(
+        'augur_data.repo_labor_repo_labor_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     repo_clone_date timestamp(0) without time zone,
     rl_analysis_date timestamp(0) without time zone,
@@ -2650,7 +3054,6 @@ CREATE TABLE augur_data.repo_labor (
     data_collection_date timestamp(0) without time zone
 );
 
-
 ALTER TABLE augur_data.repo_labor OWNER TO augur;
 
 --
@@ -2659,44 +3062,50 @@ ALTER TABLE augur_data.repo_labor OWNER TO augur;
 
 COMMENT ON TABLE augur_data.repo_labor IS 'repo_labor is a derivative of tables used to store scc code and complexity counting statistics that are inputs to labor analysis, which are components of CHAOSS value metric calculations. ';
 
-
 --
 -- Name: COLUMN repo_labor.repo_url; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo_labor.repo_url IS 'This is a convenience column to simplify analysis against external datasets';
 
-
 --
 -- Name: explorer_repo_languages; Type: MATERIALIZED VIEW; Schema: augur_data; Owner: augur
 --
 
 CREATE MATERIALIZED VIEW augur_data.explorer_repo_languages AS
- SELECT e.repo_id,
-    repo.repo_git,
-    repo.repo_name,
-    e.programming_language,
-    e.code_lines,
-    e.files
-   FROM augur_data.repo,
-    ( SELECT d.repo_id,
-            d.programming_language,
-            sum(d.code_lines) AS code_lines,
-            (count(*))::integer AS files
-           FROM ( SELECT repo_labor.repo_id,
-                    repo_labor.programming_language,
-                    repo_labor.code_lines
-                   FROM augur_data.repo_labor,
-                    ( SELECT repo_labor_1.repo_id,
-                            max(repo_labor_1.data_collection_date) AS last_collected
-                           FROM augur_data.repo_labor repo_labor_1
-                          GROUP BY repo_labor_1.repo_id) recent
-                  WHERE ((repo_labor.repo_id = recent.repo_id) AND (repo_labor.data_collection_date > (recent.last_collected - ((5)::double precision * '00:01:00'::interval))))) d
-          GROUP BY d.repo_id, d.programming_language) e
-  WHERE (repo.repo_id = e.repo_id)
-  ORDER BY e.repo_id
-  WITH NO DATA;
-
+SELECT e.repo_id, repo.repo_git, repo.repo_name, e.programming_language, e.code_lines, e.files
+FROM augur_data.repo, (
+        SELECT d.repo_id, d.programming_language, sum(d.code_lines) AS code_lines, (count(*))::integer AS files
+        FROM (
+                SELECT repo_labor.repo_id, repo_labor.programming_language, repo_labor.code_lines
+                FROM augur_data.repo_labor, (
+                        SELECT repo_labor_1.repo_id, max(
+                                repo_labor_1.data_collection_date
+                            ) AS last_collected
+                        FROM augur_data.repo_labor repo_labor_1
+                        GROUP BY
+                            repo_labor_1.repo_id
+                    ) recent
+                WHERE (
+                        (
+                            repo_labor.repo_id = recent.repo_id
+                        )
+                        AND (
+                            repo_labor.data_collection_date > (
+                                recent.last_collected - (
+                                    (5)::double precision * '00:01:00'::interval
+                                )
+                            )
+                        )
+                    )
+            ) d
+        GROUP BY
+            d.repo_id, d.programming_language
+    ) e
+WHERE (repo.repo_id = e.repo_id)
+ORDER BY e.repo_id
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.explorer_repo_languages OWNER TO augur;
 
@@ -2711,7 +3120,6 @@ CREATE TABLE augur_operations.user_groups (
     favorited boolean DEFAULT false NOT NULL
 );
 
-
 ALTER TABLE augur_operations.user_groups OWNER TO augur;
 
 --
@@ -2722,7 +3130,6 @@ CREATE TABLE augur_operations.user_repos (
     repo_id bigint NOT NULL,
     group_id bigint NOT NULL
 );
-
 
 ALTER TABLE augur_operations.user_repos OWNER TO augur;
 
@@ -2746,7 +3153,6 @@ CREATE TABLE augur_operations.users (
     email_verified boolean DEFAULT false NOT NULL
 );
 
-
 ALTER TABLE augur_operations.users OWNER TO augur;
 
 --
@@ -2754,17 +3160,15 @@ ALTER TABLE augur_operations.users OWNER TO augur;
 --
 
 CREATE MATERIALIZED VIEW augur_data.explorer_user_repos AS
- SELECT a.login_name,
-    a.user_id,
-    b.group_id,
-    c.repo_id
-   FROM augur_operations.users a,
-    augur_operations.user_groups b,
-    augur_operations.user_repos c
-  WHERE ((a.user_id = b.user_id) AND (b.group_id = c.group_id))
-  ORDER BY a.user_id
-  WITH NO DATA;
-
+SELECT a.login_name, a.user_id, b.group_id, c.repo_id
+FROM augur_operations.users a, augur_operations.user_groups b, augur_operations.user_repos c
+WHERE (
+        (a.user_id = b.user_id)
+        AND (b.group_id = c.group_id)
+    )
+ORDER BY a.user_id
+WITH
+    NO DATA;
 
 ALTER MATERIALIZED VIEW augur_data.explorer_user_repos OWNER TO augur;
 
@@ -2772,13 +3176,9 @@ ALTER MATERIALIZED VIEW augur_data.explorer_user_repos OWNER TO augur;
 -- Name: issue_assignees_issue_assignee_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.issue_assignees_issue_assignee_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.issue_assignees_issue_assignee_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.issue_assignees_issue_assignee_id_seq OWNER TO augur;
 
@@ -2787,7 +3187,9 @@ ALTER SEQUENCE augur_data.issue_assignees_issue_assignee_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.issue_assignees (
-    issue_assignee_id bigint DEFAULT nextval('augur_data.issue_assignees_issue_assignee_id_seq'::regclass) NOT NULL,
+    issue_assignee_id bigint DEFAULT nextval(
+        'augur_data.issue_assignees_issue_assignee_id_seq'::regclass
+    ) NOT NULL,
     issue_id bigint,
     repo_id bigint,
     issue_assignee_src_id bigint,
@@ -2799,7 +3201,6 @@ CREATE TABLE augur_data.issue_assignees (
     cntrb_id uuid
 );
 
-
 ALTER TABLE augur_data.issue_assignees OWNER TO augur;
 
 --
@@ -2808,25 +3209,19 @@ ALTER TABLE augur_data.issue_assignees OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.issue_assignees.issue_assignee_src_id IS 'This ID comes from the source. In the case of GitHub, it is the id that is the first field returned from the issue events API in the issue_assignees embedded JSON object. We may discover it is an ID for the person themselves; but my hypothesis is that its not.';
 
-
 --
 -- Name: COLUMN issue_assignees.issue_assignee_src_node; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.issue_assignees.issue_assignee_src_node IS 'This character based identifier comes from the source. In the case of GitHub, it is the id that is the second field returned from the issue events API in the issue_assignees embedded JSON object. We may discover it is an ID for the person themselves; but my hypothesis is that its not.';
 
-
 --
 -- Name: issue_labels_issue_label_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.issue_labels_issue_label_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.issue_labels_issue_label_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.issue_labels_issue_label_id_seq OWNER TO augur;
 
@@ -2835,7 +3230,9 @@ ALTER SEQUENCE augur_data.issue_labels_issue_label_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.issue_labels (
-    issue_label_id bigint DEFAULT nextval('augur_data.issue_labels_issue_label_id_seq'::regclass) NOT NULL,
+    issue_label_id bigint DEFAULT nextval(
+        'augur_data.issue_labels_issue_label_id_seq'::regclass
+    ) NOT NULL,
     issue_id bigint,
     repo_id bigint,
     label_text character varying,
@@ -2849,7 +3246,6 @@ CREATE TABLE augur_data.issue_labels (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.issue_labels OWNER TO augur;
 
 --
@@ -2858,18 +3254,13 @@ ALTER TABLE augur_data.issue_labels OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.issue_labels.label_src_id IS 'This character based identifier (node) comes from the source. In the case of GitHub, it is the id that is the second field returned from the issue events API JSON subsection for issues.';
 
-
 --
 -- Name: libraries_library_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.libraries_library_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.libraries_library_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.libraries_library_id_seq OWNER TO augur;
 
@@ -2878,7 +3269,9 @@ ALTER SEQUENCE augur_data.libraries_library_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.libraries (
-    library_id bigint DEFAULT nextval('augur_data.libraries_library_id_seq'::regclass) NOT NULL,
+    library_id bigint DEFAULT nextval(
+        'augur_data.libraries_library_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     platform character varying,
     name character varying,
@@ -2901,20 +3294,15 @@ CREATE TABLE augur_data.libraries (
     data_collection_date timestamp(0) without time zone
 );
 
-
 ALTER TABLE augur_data.libraries OWNER TO augur;
 
 --
 -- Name: library_dependencies_lib_dependency_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.library_dependencies_lib_dependency_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.library_dependencies_lib_dependency_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.library_dependencies_lib_dependency_id_seq OWNER TO augur;
 
@@ -2923,7 +3311,9 @@ ALTER SEQUENCE augur_data.library_dependencies_lib_dependency_id_seq OWNER TO au
 --
 
 CREATE TABLE augur_data.library_dependencies (
-    lib_dependency_id bigint DEFAULT nextval('augur_data.library_dependencies_lib_dependency_id_seq'::regclass) NOT NULL,
+    lib_dependency_id bigint DEFAULT nextval(
+        'augur_data.library_dependencies_lib_dependency_id_seq'::regclass
+    ) NOT NULL,
     library_id bigint,
     manifest_platform character varying,
     manifest_filepath character varying(1000) DEFAULT NULL::character varying,
@@ -2935,20 +3325,15 @@ CREATE TABLE augur_data.library_dependencies (
     data_collection_date timestamp(0) without time zone
 );
 
-
 ALTER TABLE augur_data.library_dependencies OWNER TO augur;
 
 --
 -- Name: library_version_library_version_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.library_version_library_version_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.library_version_library_version_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.library_version_library_version_id_seq OWNER TO augur;
 
@@ -2957,7 +3342,9 @@ ALTER SEQUENCE augur_data.library_version_library_version_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.library_version (
-    library_version_id bigint DEFAULT nextval('augur_data.library_version_library_version_id_seq'::regclass) NOT NULL,
+    library_version_id bigint DEFAULT nextval(
+        'augur_data.library_version_library_version_id_seq'::regclass
+    ) NOT NULL,
     library_id bigint,
     library_platform character varying,
     version_number character varying,
@@ -2968,20 +3355,15 @@ CREATE TABLE augur_data.library_version (
     data_collection_date timestamp(0) without time zone
 );
 
-
 ALTER TABLE augur_data.library_version OWNER TO augur;
 
 --
 -- Name: lstm_anomaly_models_model_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.lstm_anomaly_models_model_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.lstm_anomaly_models_model_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.lstm_anomaly_models_model_id_seq OWNER TO augur;
 
@@ -2990,7 +3372,9 @@ ALTER SEQUENCE augur_data.lstm_anomaly_models_model_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.lstm_anomaly_models (
-    model_id bigint DEFAULT nextval('augur_data.lstm_anomaly_models_model_id_seq'::regclass) NOT NULL,
+    model_id bigint DEFAULT nextval(
+        'augur_data.lstm_anomaly_models_model_id_seq'::regclass
+    ) NOT NULL,
     model_name character varying,
     model_description character varying,
     look_back_days bigint,
@@ -3003,20 +3387,15 @@ CREATE TABLE augur_data.lstm_anomaly_models (
     data_collection_date timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.lstm_anomaly_models OWNER TO augur;
 
 --
 -- Name: lstm_anomaly_results_result_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.lstm_anomaly_results_result_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.lstm_anomaly_results_result_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.lstm_anomaly_results_result_id_seq OWNER TO augur;
 
@@ -3025,7 +3404,9 @@ ALTER SEQUENCE augur_data.lstm_anomaly_results_result_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.lstm_anomaly_results (
-    result_id bigint DEFAULT nextval('augur_data.lstm_anomaly_results_result_id_seq'::regclass) NOT NULL,
+    result_id bigint DEFAULT nextval(
+        'augur_data.lstm_anomaly_results_result_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     repo_category character varying,
     model_id bigint,
@@ -3042,7 +3423,6 @@ CREATE TABLE augur_data.lstm_anomaly_results (
     data_collection_date timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.lstm_anomaly_results OWNER TO augur;
 
 --
@@ -3051,18 +3431,13 @@ ALTER TABLE augur_data.lstm_anomaly_results OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.lstm_anomaly_results.metric_field IS 'This is a listing of all of the endpoint fields included in the generation of the metric. Sometimes there is one, sometimes there is more than one. This will list them all. ';
 
-
 --
 -- Name: message_analysis_msg_analysis_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.message_analysis_msg_analysis_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.message_analysis_msg_analysis_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.message_analysis_msg_analysis_id_seq OWNER TO augur;
 
@@ -3071,7 +3446,9 @@ ALTER SEQUENCE augur_data.message_analysis_msg_analysis_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.message_analysis (
-    msg_analysis_id bigint DEFAULT nextval('augur_data.message_analysis_msg_analysis_id_seq'::regclass) NOT NULL,
+    msg_analysis_id bigint DEFAULT nextval(
+        'augur_data.message_analysis_msg_analysis_id_seq'::regclass
+    ) NOT NULL,
     msg_id bigint,
     worker_run_id bigint,
     sentiment_score double precision,
@@ -3083,7 +3460,6 @@ CREATE TABLE augur_data.message_analysis (
     data_source character varying,
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
 
 ALTER TABLE augur_data.message_analysis OWNER TO augur;
 
@@ -3093,13 +3469,11 @@ ALTER TABLE augur_data.message_analysis OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.message_analysis.worker_run_id IS 'This column is used to indicate analyses run by a worker during the same execution period, and is useful for grouping, and time series analysis.  ';
 
-
 --
 -- Name: COLUMN message_analysis.sentiment_score; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.message_analysis.sentiment_score IS 'A sentiment analysis score. Zero is neutral, negative numbers are negative sentiment, and positive numbers are positive sentiment. ';
-
 
 --
 -- Name: COLUMN message_analysis.reconstruction_error; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -3107,13 +3481,11 @@ COMMENT ON COLUMN augur_data.message_analysis.sentiment_score IS 'A sentiment an
 
 COMMENT ON COLUMN augur_data.message_analysis.reconstruction_error IS 'Each message is converted to a 250 dimensin doc2vec vector, so the reconstruction error is the difference between what the predicted vector and the actual vector.';
 
-
 --
 -- Name: COLUMN message_analysis.novelty_flag; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.message_analysis.novelty_flag IS 'This is an analysis of the degree to which the message is novel when compared to other messages in a repository.  For example when bots are producing numerous identical messages, the novelty score is low. It would also be a low novelty score when several people are making the same coment. ';
-
 
 --
 -- Name: COLUMN message_analysis.feedback_flag; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -3121,18 +3493,13 @@ COMMENT ON COLUMN augur_data.message_analysis.novelty_flag IS 'This is an analys
 
 COMMENT ON COLUMN augur_data.message_analysis.feedback_flag IS 'This exists to provide the user with an opportunity provide feedback on the resulting the sentiment scores. ';
 
-
 --
 -- Name: message_analysis_summary_msg_summary_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.message_analysis_summary_msg_summary_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.message_analysis_summary_msg_summary_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.message_analysis_summary_msg_summary_id_seq OWNER TO augur;
 
@@ -3141,7 +3508,9 @@ ALTER SEQUENCE augur_data.message_analysis_summary_msg_summary_id_seq OWNER TO a
 --
 
 CREATE TABLE augur_data.message_analysis_summary (
-    msg_summary_id bigint DEFAULT nextval('augur_data.message_analysis_summary_msg_summary_id_seq'::regclass) NOT NULL,
+    msg_summary_id bigint DEFAULT nextval(
+        'augur_data.message_analysis_summary_msg_summary_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     worker_run_id bigint,
     positive_ratio double precision,
@@ -3154,7 +3523,6 @@ CREATE TABLE augur_data.message_analysis_summary (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.message_analysis_summary OWNER TO augur;
 
 --
@@ -3163,13 +3531,11 @@ ALTER TABLE augur_data.message_analysis_summary OWNER TO augur;
 
 COMMENT ON TABLE augur_data.message_analysis_summary IS 'In a relationally perfect world, we would have a table called “message_analysis_run” the incremented the “worker_run_id” for both message_analysis and message_analysis_summary. For now, we decided this was overkill. ';
 
-
 --
 -- Name: COLUMN message_analysis_summary.worker_run_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.message_analysis_summary.worker_run_id IS 'This value should reflect the worker_run_id for the messages summarized in the table. There is not a relation between these two tables for that purpose because its not *really*, relationaly a concept unless we create a third table for "worker_run_id", which we determined was unnecessarily complex. ';
-
 
 --
 -- Name: COLUMN message_analysis_summary.novel_count; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -3177,25 +3543,19 @@ COMMENT ON COLUMN augur_data.message_analysis_summary.worker_run_id IS 'This val
 
 COMMENT ON COLUMN augur_data.message_analysis_summary.novel_count IS 'The number of messages identified as novel during the analyzed period';
 
-
 --
 -- Name: COLUMN message_analysis_summary.period; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.message_analysis_summary.period IS 'The whole timeline is divided into periods based on the definition of time period for analysis, which is user specified. Timestamp of the first period to look at, until the end of messages at the data of execution. ';
 
-
 --
 -- Name: message_sentiment_msg_analysis_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.message_sentiment_msg_analysis_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.message_sentiment_msg_analysis_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.message_sentiment_msg_analysis_id_seq OWNER TO augur;
 
@@ -3204,7 +3564,9 @@ ALTER SEQUENCE augur_data.message_sentiment_msg_analysis_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.message_sentiment (
-    msg_analysis_id bigint DEFAULT nextval('augur_data.message_sentiment_msg_analysis_id_seq'::regclass) NOT NULL,
+    msg_analysis_id bigint DEFAULT nextval(
+        'augur_data.message_sentiment_msg_analysis_id_seq'::regclass
+    ) NOT NULL,
     msg_id bigint,
     worker_run_id bigint,
     sentiment_score double precision,
@@ -3217,7 +3579,6 @@ CREATE TABLE augur_data.message_sentiment (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.message_sentiment OWNER TO augur;
 
 --
@@ -3226,13 +3587,11 @@ ALTER TABLE augur_data.message_sentiment OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.message_sentiment.worker_run_id IS 'This column is used to indicate analyses run by a worker during the same execution period, and is useful for grouping, and time series analysis.  ';
 
-
 --
 -- Name: COLUMN message_sentiment.sentiment_score; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.message_sentiment.sentiment_score IS 'A sentiment analysis score. Zero is neutral, negative numbers are negative sentiment, and positive numbers are positive sentiment. ';
-
 
 --
 -- Name: COLUMN message_sentiment.reconstruction_error; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -3240,13 +3599,11 @@ COMMENT ON COLUMN augur_data.message_sentiment.sentiment_score IS 'A sentiment a
 
 COMMENT ON COLUMN augur_data.message_sentiment.reconstruction_error IS 'Each message is converted to a 250 dimensin doc2vec vector, so the reconstruction error is the difference between what the predicted vector and the actual vector.';
 
-
 --
 -- Name: COLUMN message_sentiment.novelty_flag; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.message_sentiment.novelty_flag IS 'This is an analysis of the degree to which the message is novel when compared to other messages in a repository.  For example when bots are producing numerous identical messages, the novelty score is low. It would also be a low novelty score when several people are making the same coment. ';
-
 
 --
 -- Name: COLUMN message_sentiment.feedback_flag; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -3254,18 +3611,13 @@ COMMENT ON COLUMN augur_data.message_sentiment.novelty_flag IS 'This is an analy
 
 COMMENT ON COLUMN augur_data.message_sentiment.feedback_flag IS 'This exists to provide the user with an opportunity provide feedback on the resulting the sentiment scores. ';
 
-
 --
 -- Name: message_sentiment_summary_msg_summary_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.message_sentiment_summary_msg_summary_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.message_sentiment_summary_msg_summary_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.message_sentiment_summary_msg_summary_id_seq OWNER TO augur;
 
@@ -3274,7 +3626,9 @@ ALTER SEQUENCE augur_data.message_sentiment_summary_msg_summary_id_seq OWNER TO 
 --
 
 CREATE TABLE augur_data.message_sentiment_summary (
-    msg_summary_id bigint DEFAULT nextval('augur_data.message_sentiment_summary_msg_summary_id_seq'::regclass) NOT NULL,
+    msg_summary_id bigint DEFAULT nextval(
+        'augur_data.message_sentiment_summary_msg_summary_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     worker_run_id bigint,
     positive_ratio double precision,
@@ -3287,7 +3641,6 @@ CREATE TABLE augur_data.message_sentiment_summary (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.message_sentiment_summary OWNER TO augur;
 
 --
@@ -3296,13 +3649,11 @@ ALTER TABLE augur_data.message_sentiment_summary OWNER TO augur;
 
 COMMENT ON TABLE augur_data.message_sentiment_summary IS 'In a relationally perfect world, we would have a table called “message_sentiment_run” the incremented the “worker_run_id” for both message_sentiment and message_sentiment_summary. For now, we decided this was overkill. ';
 
-
 --
 -- Name: COLUMN message_sentiment_summary.worker_run_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.message_sentiment_summary.worker_run_id IS 'This value should reflect the worker_run_id for the messages summarized in the table. There is not a relation between these two tables for that purpose because its not *really*, relationaly a concept unless we create a third table for "worker_run_id", which we determined was unnecessarily complex. ';
-
 
 --
 -- Name: COLUMN message_sentiment_summary.novel_count; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -3310,25 +3661,19 @@ COMMENT ON COLUMN augur_data.message_sentiment_summary.worker_run_id IS 'This va
 
 COMMENT ON COLUMN augur_data.message_sentiment_summary.novel_count IS 'The number of messages identified as novel during the analyzed period';
 
-
 --
 -- Name: COLUMN message_sentiment_summary.period; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.message_sentiment_summary.period IS 'The whole timeline is divided into periods based on the definition of time period for analysis, which is user specified. Timestamp of the first period to look at, until the end of messages at the data of execution. ';
 
-
 --
 -- Name: platform_pltfrm_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.platform_pltfrm_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.platform_pltfrm_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.platform_pltfrm_id_seq OWNER TO augur;
 
@@ -3337,7 +3682,9 @@ ALTER SEQUENCE augur_data.platform_pltfrm_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.platform (
-    pltfrm_id bigint DEFAULT nextval('augur_data.platform_pltfrm_id_seq'::regclass) NOT NULL,
+    pltfrm_id bigint DEFAULT nextval(
+        'augur_data.platform_pltfrm_id_seq'::regclass
+    ) NOT NULL,
     pltfrm_name character varying,
     pltfrm_version character varying,
     pltfrm_release_date date,
@@ -3347,20 +3694,15 @@ CREATE TABLE augur_data.platform (
     data_collection_date timestamp(0) without time zone
 );
 
-
 ALTER TABLE augur_data.platform OWNER TO augur;
 
 --
 -- Name: pull_request_analysis_pull_request_analysis_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_analysis_pull_request_analysis_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_analysis_pull_request_analysis_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_analysis_pull_request_analysis_id_seq OWNER TO augur;
 
@@ -3369,16 +3711,17 @@ ALTER SEQUENCE augur_data.pull_request_analysis_pull_request_analysis_id_seq OWN
 --
 
 CREATE TABLE augur_data.pull_request_analysis (
-    pull_request_analysis_id bigint DEFAULT nextval('augur_data.pull_request_analysis_pull_request_analysis_id_seq'::regclass) NOT NULL,
+    pull_request_analysis_id bigint DEFAULT nextval(
+        'augur_data.pull_request_analysis_pull_request_analysis_id_seq'::regclass
+    ) NOT NULL,
     pull_request_id bigint,
-    merge_probability numeric(256,250),
+    merge_probability numeric(256, 250),
     mechanism character varying,
     tool_source character varying,
     tool_version character varying,
     data_source character varying,
     data_collection_date timestamp(6) with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
-
 
 ALTER TABLE augur_data.pull_request_analysis OWNER TO augur;
 
@@ -3388,13 +3731,11 @@ ALTER TABLE augur_data.pull_request_analysis OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.pull_request_analysis.pull_request_id IS 'It would be better if the pull request worker is run first to fetch the latest PRs before analyzing';
 
-
 --
 -- Name: COLUMN pull_request_analysis.merge_probability; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.pull_request_analysis.merge_probability IS 'Indicates the probability of the PR being merged';
-
 
 --
 -- Name: COLUMN pull_request_analysis.mechanism; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -3402,18 +3743,13 @@ COMMENT ON COLUMN augur_data.pull_request_analysis.merge_probability IS 'Indicat
 
 COMMENT ON COLUMN augur_data.pull_request_analysis.mechanism IS 'the ML model used for prediction (It is XGBoost Classifier at present)';
 
-
 --
 -- Name: pull_request_assignees_pr_assignee_map_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_assignees_pr_assignee_map_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_assignees_pr_assignee_map_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_assignees_pr_assignee_map_id_seq OWNER TO augur;
 
@@ -3422,7 +3758,9 @@ ALTER SEQUENCE augur_data.pull_request_assignees_pr_assignee_map_id_seq OWNER TO
 --
 
 CREATE TABLE augur_data.pull_request_assignees (
-    pr_assignee_map_id bigint DEFAULT nextval('augur_data.pull_request_assignees_pr_assignee_map_id_seq'::regclass) NOT NULL,
+    pr_assignee_map_id bigint DEFAULT nextval(
+        'augur_data.pull_request_assignees_pr_assignee_map_id_seq'::regclass
+    ) NOT NULL,
     pull_request_id bigint,
     repo_id bigint,
     pr_assignee_src_id bigint,
@@ -3433,20 +3771,15 @@ CREATE TABLE augur_data.pull_request_assignees (
     contrib_id uuid
 );
 
-
 ALTER TABLE augur_data.pull_request_assignees OWNER TO augur;
 
 --
 -- Name: pull_request_files_pr_file_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_files_pr_file_id_seq
-    START WITH 25150
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_files_pr_file_id_seq START
+WITH
+    25150 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_files_pr_file_id_seq OWNER TO augur;
 
@@ -3455,7 +3788,9 @@ ALTER SEQUENCE augur_data.pull_request_files_pr_file_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.pull_request_files (
-    pr_file_id bigint DEFAULT nextval('augur_data.pull_request_files_pr_file_id_seq'::regclass) NOT NULL,
+    pr_file_id bigint DEFAULT nextval(
+        'augur_data.pull_request_files_pr_file_id_seq'::regclass
+    ) NOT NULL,
     pull_request_id bigint,
     repo_id bigint,
     pr_file_additions bigint,
@@ -3466,7 +3801,6 @@ CREATE TABLE augur_data.pull_request_files (
     data_source character varying,
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
 
 ALTER TABLE augur_data.pull_request_files OWNER TO augur;
 
@@ -3480,18 +3814,13 @@ The commits table intends to count only commits that end up in the master branch
 Therefore, there will be commit “SHA”’s in this table that are no associated with a commit SHA in the commits table. 
 In cases where the PR is to the master branch of a project, you will find a match. In cases where the PR does not involve the master branch, you will not find a corresponding commit SHA in the commits table. This is expected. ';
 
-
 --
 -- Name: pull_request_labels_pr_label_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_labels_pr_label_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_labels_pr_label_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_labels_pr_label_id_seq OWNER TO augur;
 
@@ -3500,7 +3829,9 @@ ALTER SEQUENCE augur_data.pull_request_labels_pr_label_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.pull_request_labels (
-    pr_label_id bigint DEFAULT nextval('augur_data.pull_request_labels_pr_label_id_seq'::regclass) NOT NULL,
+    pr_label_id bigint DEFAULT nextval(
+        'augur_data.pull_request_labels_pr_label_id_seq'::regclass
+    ) NOT NULL,
     pull_request_id bigint,
     repo_id bigint,
     pr_src_id bigint,
@@ -3515,20 +3846,15 @@ CREATE TABLE augur_data.pull_request_labels (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.pull_request_labels OWNER TO augur;
 
 --
 -- Name: pull_request_repo_pr_repo_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_repo_pr_repo_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_repo_pr_repo_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_repo_pr_repo_id_seq OWNER TO augur;
 
@@ -3537,7 +3863,9 @@ ALTER SEQUENCE augur_data.pull_request_repo_pr_repo_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.pull_request_repo (
-    pr_repo_id bigint DEFAULT nextval('augur_data.pull_request_repo_pr_repo_id_seq'::regclass) NOT NULL,
+    pr_repo_id bigint DEFAULT nextval(
+        'augur_data.pull_request_repo_pr_repo_id_seq'::regclass
+    ) NOT NULL,
     pr_repo_meta_id bigint,
     pr_repo_head_or_base character varying,
     pr_src_repo_id bigint,
@@ -3552,7 +3880,6 @@ CREATE TABLE augur_data.pull_request_repo (
     pr_cntrb_id uuid
 );
 
-
 ALTER TABLE augur_data.pull_request_repo OWNER TO augur;
 
 --
@@ -3561,25 +3888,19 @@ ALTER TABLE augur_data.pull_request_repo OWNER TO augur;
 
 COMMENT ON TABLE augur_data.pull_request_repo IS 'This table is for storing information about forks that exist as part of a pull request. Generally we do not want to track these like ordinary repositories. ';
 
-
 --
 -- Name: COLUMN pull_request_repo.pr_repo_head_or_base; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.pull_request_repo.pr_repo_head_or_base IS 'For ease of validation checking, we should determine if the repository referenced is the head or base of the pull request. Each pull request should have one and only one of these, which is not enforcable easily in the database.';
 
-
 --
 -- Name: pull_request_reviewers_pr_reviewer_map_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_reviewers_pr_reviewer_map_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_reviewers_pr_reviewer_map_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_reviewers_pr_reviewer_map_id_seq OWNER TO augur;
 
@@ -3588,7 +3909,9 @@ ALTER SEQUENCE augur_data.pull_request_reviewers_pr_reviewer_map_id_seq OWNER TO
 --
 
 CREATE TABLE augur_data.pull_request_reviewers (
-    pr_reviewer_map_id bigint DEFAULT nextval('augur_data.pull_request_reviewers_pr_reviewer_map_id_seq'::regclass) NOT NULL,
+    pr_reviewer_map_id bigint DEFAULT nextval(
+        'augur_data.pull_request_reviewers_pr_reviewer_map_id_seq'::regclass
+    ) NOT NULL,
     pull_request_id bigint,
     pr_source_id bigint,
     repo_id bigint,
@@ -3600,7 +3923,6 @@ CREATE TABLE augur_data.pull_request_reviewers (
     cntrb_id uuid
 );
 
-
 ALTER TABLE augur_data.pull_request_reviewers OWNER TO augur;
 
 --
@@ -3609,25 +3931,19 @@ ALTER TABLE augur_data.pull_request_reviewers OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.pull_request_reviewers.pr_source_id IS 'The platform ID for the pull/merge request. Used as part of the natural key, along with pr_reviewer_src_id in this table. ';
 
-
 --
 -- Name: COLUMN pull_request_reviewers.pr_reviewer_src_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.pull_request_reviewers.pr_reviewer_src_id IS 'The platform ID for the pull/merge request reviewer. Used as part of the natural key, along with pr_source_id in this table. ';
 
-
 --
 -- Name: pull_request_teams_pr_team_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.pull_request_teams_pr_team_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.pull_request_teams_pr_team_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.pull_request_teams_pr_team_id_seq OWNER TO augur;
 
@@ -3636,7 +3952,9 @@ ALTER SEQUENCE augur_data.pull_request_teams_pr_team_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.pull_request_teams (
-    pr_team_id bigint DEFAULT nextval('augur_data.pull_request_teams_pr_team_id_seq'::regclass) NOT NULL,
+    pr_team_id bigint DEFAULT nextval(
+        'augur_data.pull_request_teams_pr_team_id_seq'::regclass
+    ) NOT NULL,
     pull_request_id bigint,
     pr_src_team_id bigint,
     pr_src_team_node character varying,
@@ -3655,20 +3973,15 @@ CREATE TABLE augur_data.pull_request_teams (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.pull_request_teams OWNER TO augur;
 
 --
 -- Name: releases_release_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.releases_release_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.releases_release_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.releases_release_id_seq OWNER TO augur;
 
@@ -3677,7 +3990,9 @@ ALTER SEQUENCE augur_data.releases_release_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.releases (
-    release_id character(256) DEFAULT nextval('augur_data.releases_release_id_seq'::regclass) NOT NULL,
+    release_id character(256) DEFAULT nextval(
+        'augur_data.releases_release_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint NOT NULL,
     release_name character varying,
     release_description character varying,
@@ -3696,20 +4011,15 @@ CREATE TABLE augur_data.releases (
     data_collection_date timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.releases OWNER TO augur;
 
 --
 -- Name: repo_badging_badge_collection_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_badging_badge_collection_id_seq
-    START WITH 25012
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_badging_badge_collection_id_seq START
+WITH
+    25012 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_badging_badge_collection_id_seq OWNER TO augur;
 
@@ -3718,7 +4028,9 @@ ALTER SEQUENCE augur_data.repo_badging_badge_collection_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_badging (
-    badge_collection_id bigint DEFAULT nextval('augur_data.repo_badging_badge_collection_id_seq'::regclass) NOT NULL,
+    badge_collection_id bigint DEFAULT nextval(
+        'augur_data.repo_badging_badge_collection_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     created_at timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP,
     tool_source character varying,
@@ -3727,7 +4039,6 @@ CREATE TABLE augur_data.repo_badging (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP,
     data jsonb
 );
-
 
 ALTER TABLE augur_data.repo_badging OWNER TO augur;
 
@@ -3739,18 +4050,13 @@ COMMENT ON TABLE augur_data.repo_badging IS 'This will be collected from the LF�
 https://bestpractices.coreinfrastructure.org/projects.json?pq=https%3A%2F%2Fgithub.com%2Fchaoss%2Faugur
 ';
 
-
 --
 -- Name: repo_clones_data_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_clones_data_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_clones_data_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_clones_data_id_seq OWNER TO augur;
 
@@ -3759,13 +4065,14 @@ ALTER SEQUENCE augur_data.repo_clones_data_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_clones_data (
-    repo_clone_data_id bigint DEFAULT nextval('augur_data.repo_clones_data_id_seq'::regclass) NOT NULL,
+    repo_clone_data_id bigint DEFAULT nextval(
+        'augur_data.repo_clones_data_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint NOT NULL,
     unique_clones bigint,
     count_clones bigint,
     clone_data_timestamp timestamp(6) without time zone
 );
-
 
 ALTER TABLE augur_data.repo_clones_data OWNER TO augur;
 
@@ -3773,13 +4080,9 @@ ALTER TABLE augur_data.repo_clones_data OWNER TO augur;
 -- Name: repo_cluster_messages_msg_cluster_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_cluster_messages_msg_cluster_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_cluster_messages_msg_cluster_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_cluster_messages_msg_cluster_id_seq OWNER TO augur;
 
@@ -3788,7 +4091,9 @@ ALTER SEQUENCE augur_data.repo_cluster_messages_msg_cluster_id_seq OWNER TO augu
 --
 
 CREATE TABLE augur_data.repo_cluster_messages (
-    msg_cluster_id bigint DEFAULT nextval('augur_data.repo_cluster_messages_msg_cluster_id_seq'::regclass) NOT NULL,
+    msg_cluster_id bigint DEFAULT nextval(
+        'augur_data.repo_cluster_messages_msg_cluster_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     cluster_content integer,
     cluster_mechanism integer,
@@ -3798,20 +4103,15 @@ CREATE TABLE augur_data.repo_cluster_messages (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.repo_cluster_messages OWNER TO augur;
 
 --
 -- Name: repo_dependencies_repo_dependencies_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_dependencies_repo_dependencies_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_dependencies_repo_dependencies_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_dependencies_repo_dependencies_id_seq OWNER TO augur;
 
@@ -3820,7 +4120,9 @@ ALTER SEQUENCE augur_data.repo_dependencies_repo_dependencies_id_seq OWNER TO au
 --
 
 CREATE TABLE augur_data.repo_dependencies (
-    repo_dependencies_id bigint DEFAULT nextval('augur_data.repo_dependencies_repo_dependencies_id_seq'::regclass) NOT NULL,
+    repo_dependencies_id bigint DEFAULT nextval(
+        'augur_data.repo_dependencies_repo_dependencies_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     dep_name character varying,
     dep_count integer,
@@ -3831,7 +4133,6 @@ CREATE TABLE augur_data.repo_dependencies (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.repo_dependencies OWNER TO augur;
 
 --
@@ -3840,13 +4141,11 @@ ALTER TABLE augur_data.repo_dependencies OWNER TO augur;
 
 COMMENT ON TABLE augur_data.repo_dependencies IS 'Contains the dependencies for a repo.';
 
-
 --
 -- Name: COLUMN repo_dependencies.repo_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo_dependencies.repo_id IS 'Forign key for repo id. ';
-
 
 --
 -- Name: COLUMN repo_dependencies.dep_name; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -3854,13 +4153,11 @@ COMMENT ON COLUMN augur_data.repo_dependencies.repo_id IS 'Forign key for repo i
 
 COMMENT ON COLUMN augur_data.repo_dependencies.dep_name IS 'Name of the dependancy found in project. ';
 
-
 --
 -- Name: COLUMN repo_dependencies.dep_count; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo_dependencies.dep_count IS 'Number of times the dependancy was found. ';
-
 
 --
 -- Name: COLUMN repo_dependencies.dep_language; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -3868,18 +4165,13 @@ COMMENT ON COLUMN augur_data.repo_dependencies.dep_count IS 'Number of times the
 
 COMMENT ON COLUMN augur_data.repo_dependencies.dep_language IS 'Language of the dependancy. ';
 
-
 --
 -- Name: repo_deps_libyear_repo_deps_libyear_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_deps_libyear_repo_deps_libyear_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_deps_libyear_repo_deps_libyear_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_deps_libyear_repo_deps_libyear_id_seq OWNER TO augur;
 
@@ -3888,7 +4180,9 @@ ALTER SEQUENCE augur_data.repo_deps_libyear_repo_deps_libyear_id_seq OWNER TO au
 --
 
 CREATE TABLE augur_data.repo_deps_libyear (
-    repo_deps_libyear_id bigint DEFAULT nextval('augur_data.repo_deps_libyear_repo_deps_libyear_id_seq'::regclass) NOT NULL,
+    repo_deps_libyear_id bigint DEFAULT nextval(
+        'augur_data.repo_deps_libyear_repo_deps_libyear_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     name character varying,
     requirement character varying,
@@ -3905,20 +4199,15 @@ CREATE TABLE augur_data.repo_deps_libyear (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.repo_deps_libyear OWNER TO augur;
 
 --
 -- Name: repo_deps_scorecard_repo_deps_scorecard_id_seq1; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_deps_scorecard_repo_deps_scorecard_id_seq1
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_deps_scorecard_repo_deps_scorecard_id_seq1 START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_deps_scorecard_repo_deps_scorecard_id_seq1 OWNER TO augur;
 
@@ -3927,7 +4216,9 @@ ALTER SEQUENCE augur_data.repo_deps_scorecard_repo_deps_scorecard_id_seq1 OWNER 
 --
 
 CREATE TABLE augur_data.repo_deps_scorecard (
-    repo_deps_scorecard_id bigint DEFAULT nextval('augur_data.repo_deps_scorecard_repo_deps_scorecard_id_seq1'::regclass) NOT NULL,
+    repo_deps_scorecard_id bigint DEFAULT nextval(
+        'augur_data.repo_deps_scorecard_repo_deps_scorecard_id_seq1'::regclass
+    ) NOT NULL,
     repo_id bigint,
     name character varying,
     score character varying,
@@ -3938,20 +4229,15 @@ CREATE TABLE augur_data.repo_deps_scorecard (
     scorecard_check_details jsonb
 );
 
-
 ALTER TABLE augur_data.repo_deps_scorecard OWNER TO augur;
 
 --
 -- Name: repo_group_insights_rgi_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_group_insights_rgi_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_group_insights_rgi_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_group_insights_rgi_id_seq OWNER TO augur;
 
@@ -3960,7 +4246,9 @@ ALTER SEQUENCE augur_data.repo_group_insights_rgi_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_group_insights (
-    rgi_id bigint DEFAULT nextval('augur_data.repo_group_insights_rgi_id_seq'::regclass) NOT NULL,
+    rgi_id bigint DEFAULT nextval(
+        'augur_data.repo_group_insights_rgi_id_seq'::regclass
+    ) NOT NULL,
     repo_group_id bigint,
     rgi_metric character varying,
     rgi_value character varying,
@@ -3972,7 +4260,6 @@ CREATE TABLE augur_data.repo_group_insights (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.repo_group_insights OWNER TO augur;
 
 --
@@ -3983,25 +4270,19 @@ COMMENT ON TABLE augur_data.repo_group_insights IS 'This table is output from an
 
 Worker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. ';
 
-
 --
 -- Name: COLUMN repo_group_insights.rgi_fresh; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo_group_insights.rgi_fresh IS 'false if the date is before the statistic that triggered the insight, true if after. This allows us to automatically display only "fresh insights" and avoid displaying "stale insights". The insight worker will populate this table. ';
 
-
 --
 -- Name: repo_groups_list_serve_rgls_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_groups_list_serve_rgls_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_groups_list_serve_rgls_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_groups_list_serve_rgls_id_seq OWNER TO augur;
 
@@ -4010,7 +4291,9 @@ ALTER SEQUENCE augur_data.repo_groups_list_serve_rgls_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_groups_list_serve (
-    rgls_id bigint DEFAULT nextval('augur_data.repo_groups_list_serve_rgls_id_seq'::regclass) NOT NULL,
+    rgls_id bigint DEFAULT nextval(
+        'augur_data.repo_groups_list_serve_rgls_id_seq'::regclass
+    ) NOT NULL,
     repo_group_id bigint NOT NULL,
     rgls_name character varying,
     rgls_description character varying(3000),
@@ -4022,20 +4305,15 @@ CREATE TABLE augur_data.repo_groups_list_serve (
     data_collection_date timestamp(0) without time zone
 );
 
-
 ALTER TABLE augur_data.repo_groups_list_serve OWNER TO augur;
 
 --
 -- Name: repo_info_repo_info_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_info_repo_info_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_info_repo_info_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_info_repo_info_id_seq OWNER TO augur;
 
@@ -4044,7 +4322,9 @@ ALTER SEQUENCE augur_data.repo_info_repo_info_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_info (
-    repo_info_id bigint DEFAULT nextval('augur_data.repo_info_repo_info_id_seq'::regclass) NOT NULL,
+    repo_info_id bigint DEFAULT nextval(
+        'augur_data.repo_info_repo_info_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint NOT NULL,
     last_updated timestamp(0) without time zone DEFAULT NULL::timestamp without time zone,
     issues_enabled character varying,
@@ -4081,20 +4361,15 @@ CREATE TABLE augur_data.repo_info (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.repo_info OWNER TO augur;
 
 --
 -- Name: repo_insights_ri_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_insights_ri_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_insights_ri_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_insights_ri_id_seq OWNER TO augur;
 
@@ -4103,7 +4378,9 @@ ALTER SEQUENCE augur_data.repo_insights_ri_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_insights (
-    ri_id bigint DEFAULT nextval('augur_data.repo_insights_ri_id_seq'::regclass) NOT NULL,
+    ri_id bigint DEFAULT nextval(
+        'augur_data.repo_insights_ri_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     ri_metric character varying,
     ri_value character varying,
@@ -4118,7 +4395,6 @@ CREATE TABLE augur_data.repo_insights (
     ri_detection_method character varying
 );
 
-
 ALTER TABLE augur_data.repo_insights OWNER TO augur;
 
 --
@@ -4129,25 +4405,19 @@ COMMENT ON TABLE augur_data.repo_insights IS 'This table is output from an analy
 
 Worker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. ';
 
-
 --
 -- Name: COLUMN repo_insights.ri_fresh; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo_insights.ri_fresh IS 'false if the date is before the statistic that triggered the insight, true if after. This allows us to automatically display only "fresh insights" and avoid displaying "stale insights". The insight worker will populate this table. ';
 
-
 --
 -- Name: repo_insights_records_ri_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_insights_records_ri_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_insights_records_ri_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_insights_records_ri_id_seq OWNER TO augur;
 
@@ -4156,7 +4426,9 @@ ALTER SEQUENCE augur_data.repo_insights_records_ri_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_insights_records (
-    ri_id bigint DEFAULT nextval('augur_data.repo_insights_records_ri_id_seq'::regclass) NOT NULL,
+    ri_id bigint DEFAULT nextval(
+        'augur_data.repo_insights_records_ri_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     ri_metric character varying,
     ri_field character varying,
@@ -4170,7 +4442,6 @@ CREATE TABLE augur_data.repo_insights_records (
     data_collection_date timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.repo_insights_records OWNER TO augur;
 
 --
@@ -4179,13 +4450,11 @@ ALTER TABLE augur_data.repo_insights_records OWNER TO augur;
 
 COMMENT ON COLUMN augur_data.repo_insights_records.ri_id IS 'Primary key. ';
 
-
 --
 -- Name: COLUMN repo_insights_records.repo_id; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo_insights_records.repo_id IS 'Refers to repo table primary key. Will have a foreign key';
-
 
 --
 -- Name: COLUMN repo_insights_records.ri_metric; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -4193,13 +4462,11 @@ COMMENT ON COLUMN augur_data.repo_insights_records.repo_id IS 'Refers to repo ta
 
 COMMENT ON COLUMN augur_data.repo_insights_records.ri_metric IS 'The metric endpoint';
 
-
 --
 -- Name: COLUMN repo_insights_records.ri_field; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo_insights_records.ri_field IS 'The field in the metric endpoint';
-
 
 --
 -- Name: COLUMN repo_insights_records.ri_value; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -4207,13 +4474,11 @@ COMMENT ON COLUMN augur_data.repo_insights_records.ri_field IS 'The field in the
 
 COMMENT ON COLUMN augur_data.repo_insights_records.ri_value IS 'The value of the endpoint in ri_field';
 
-
 --
 -- Name: COLUMN repo_insights_records.ri_date; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo_insights_records.ri_date IS 'The date the insight is for; in other words, some anomaly occurred on this date. ';
-
 
 --
 -- Name: COLUMN repo_insights_records.ri_score; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -4221,13 +4486,11 @@ COMMENT ON COLUMN augur_data.repo_insights_records.ri_date IS 'The date the insi
 
 COMMENT ON COLUMN augur_data.repo_insights_records.ri_score IS 'A Score, derived from the algorithm used. ';
 
-
 --
 -- Name: COLUMN repo_insights_records.ri_detection_method; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo_insights_records.ri_detection_method IS 'A confidence interval or other expression of the type of threshold and the value of a threshold met in order for it to be "an insight". Example. "95% confidence interval". ';
-
 
 --
 -- Name: COLUMN repo_insights_records.tool_source; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -4235,13 +4498,11 @@ COMMENT ON COLUMN augur_data.repo_insights_records.ri_detection_method IS 'A con
 
 COMMENT ON COLUMN augur_data.repo_insights_records.tool_source IS 'Standard Augur Metadata';
 
-
 --
 -- Name: COLUMN repo_insights_records.tool_version; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo_insights_records.tool_version IS 'Standard Augur Metadata';
-
 
 --
 -- Name: COLUMN repo_insights_records.data_source; Type: COMMENT; Schema: augur_data; Owner: augur
@@ -4249,25 +4510,19 @@ COMMENT ON COLUMN augur_data.repo_insights_records.tool_version IS 'Standard Aug
 
 COMMENT ON COLUMN augur_data.repo_insights_records.data_source IS 'Standard Augur Metadata';
 
-
 --
 -- Name: COLUMN repo_insights_records.data_collection_date; Type: COMMENT; Schema: augur_data; Owner: augur
 --
 
 COMMENT ON COLUMN augur_data.repo_insights_records.data_collection_date IS 'Standard Augur Metadata';
 
-
 --
 -- Name: repo_meta_rmeta_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_meta_rmeta_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_meta_rmeta_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_meta_rmeta_id_seq OWNER TO augur;
 
@@ -4277,7 +4532,9 @@ ALTER SEQUENCE augur_data.repo_meta_rmeta_id_seq OWNER TO augur;
 
 CREATE TABLE augur_data.repo_meta (
     repo_id bigint NOT NULL,
-    rmeta_id bigint DEFAULT nextval('augur_data.repo_meta_rmeta_id_seq'::regclass) NOT NULL,
+    rmeta_id bigint DEFAULT nextval(
+        'augur_data.repo_meta_rmeta_id_seq'::regclass
+    ) NOT NULL,
     rmeta_name character varying,
     rmeta_value character varying DEFAULT 0,
     tool_source character varying,
@@ -4285,7 +4542,6 @@ CREATE TABLE augur_data.repo_meta (
     data_source character varying,
     data_collection_date timestamp(0) without time zone
 );
-
 
 ALTER TABLE augur_data.repo_meta OWNER TO augur;
 
@@ -4295,18 +4551,13 @@ ALTER TABLE augur_data.repo_meta OWNER TO augur;
 
 COMMENT ON TABLE augur_data.repo_meta IS 'Project Languages';
 
-
 --
 -- Name: repo_sbom_scans_rsb_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_sbom_scans_rsb_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_sbom_scans_rsb_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_sbom_scans_rsb_id_seq OWNER TO augur;
 
@@ -4315,11 +4566,12 @@ ALTER SEQUENCE augur_data.repo_sbom_scans_rsb_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_sbom_scans (
-    rsb_id bigint DEFAULT nextval('augur_data.repo_sbom_scans_rsb_id_seq'::regclass) NOT NULL,
+    rsb_id bigint DEFAULT nextval(
+        'augur_data.repo_sbom_scans_rsb_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     sbom_scan json
 );
-
 
 ALTER TABLE augur_data.repo_sbom_scans OWNER TO augur;
 
@@ -4327,13 +4579,9 @@ ALTER TABLE augur_data.repo_sbom_scans OWNER TO augur;
 -- Name: repo_stats_rstat_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_stats_rstat_id_seq
-    START WITH 25430
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_stats_rstat_id_seq START
+WITH
+    25430 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_stats_rstat_id_seq OWNER TO augur;
 
@@ -4343,7 +4591,9 @@ ALTER SEQUENCE augur_data.repo_stats_rstat_id_seq OWNER TO augur;
 
 CREATE TABLE augur_data.repo_stats (
     repo_id bigint NOT NULL,
-    rstat_id bigint DEFAULT nextval('augur_data.repo_stats_rstat_id_seq'::regclass) NOT NULL,
+    rstat_id bigint DEFAULT nextval(
+        'augur_data.repo_stats_rstat_id_seq'::regclass
+    ) NOT NULL,
     rstat_name character varying(400),
     rstat_value bigint,
     tool_source character varying,
@@ -4351,7 +4601,6 @@ CREATE TABLE augur_data.repo_stats (
     data_source character varying,
     data_collection_date timestamp(0) without time zone
 );
-
 
 ALTER TABLE augur_data.repo_stats OWNER TO augur;
 
@@ -4361,18 +4610,13 @@ ALTER TABLE augur_data.repo_stats OWNER TO augur;
 
 COMMENT ON TABLE augur_data.repo_stats IS 'Project Watchers';
 
-
 --
 -- Name: repo_test_coverage_repo_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_test_coverage_repo_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_test_coverage_repo_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_test_coverage_repo_id_seq OWNER TO augur;
 
@@ -4381,7 +4625,9 @@ ALTER SEQUENCE augur_data.repo_test_coverage_repo_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_test_coverage (
-    repo_id bigint DEFAULT nextval('augur_data.repo_test_coverage_repo_id_seq'::regclass) NOT NULL,
+    repo_id bigint DEFAULT nextval(
+        'augur_data.repo_test_coverage_repo_id_seq'::regclass
+    ) NOT NULL,
     repo_clone_date timestamp(0) without time zone,
     rtc_analysis_date timestamp(0) without time zone,
     programming_language character varying,
@@ -4398,20 +4644,15 @@ CREATE TABLE augur_data.repo_test_coverage (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.repo_test_coverage OWNER TO augur;
 
 --
 -- Name: repo_topic_repo_topic_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.repo_topic_repo_topic_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.repo_topic_repo_topic_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.repo_topic_repo_topic_id_seq OWNER TO augur;
 
@@ -4420,7 +4661,9 @@ ALTER SEQUENCE augur_data.repo_topic_repo_topic_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.repo_topic (
-    repo_topic_id bigint DEFAULT nextval('augur_data.repo_topic_repo_topic_id_seq'::regclass) NOT NULL,
+    repo_topic_id bigint DEFAULT nextval(
+        'augur_data.repo_topic_repo_topic_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     topic_id integer,
     topic_prob double precision,
@@ -4429,7 +4672,6 @@ CREATE TABLE augur_data.repo_topic (
     data_source character varying,
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
 
 ALTER TABLE augur_data.repo_topic OWNER TO augur;
 
@@ -4442,7 +4684,6 @@ CREATE TABLE augur_data.repos_fetch_log (
     status character varying(128) NOT NULL,
     date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
-
 
 ALTER TABLE augur_data.repos_fetch_log OWNER TO augur;
 
@@ -4457,20 +4698,15 @@ CREATE TABLE augur_data.settings (
     last_modified timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-
 ALTER TABLE augur_data.settings OWNER TO augur;
 
 --
 -- Name: topic_words_topic_words_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.topic_words_topic_words_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.topic_words_topic_words_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.topic_words_topic_words_id_seq OWNER TO augur;
 
@@ -4479,7 +4715,9 @@ ALTER SEQUENCE augur_data.topic_words_topic_words_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_data.topic_words (
-    topic_words_id bigint DEFAULT nextval('augur_data.topic_words_topic_words_id_seq'::regclass) NOT NULL,
+    topic_words_id bigint DEFAULT nextval(
+        'augur_data.topic_words_topic_words_id_seq'::regclass
+    ) NOT NULL,
     topic_id bigint,
     word character varying,
     word_prob double precision,
@@ -4488,7 +4726,6 @@ CREATE TABLE augur_data.topic_words (
     data_source character varying,
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
 
 ALTER TABLE augur_data.topic_words OWNER TO augur;
 
@@ -4508,20 +4745,15 @@ CREATE TABLE augur_data.unknown_cache (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.unknown_cache OWNER TO augur;
 
 --
 -- Name: unresolved_commit_emails_email_unresolved_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.unresolved_commit_emails_email_unresolved_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.unresolved_commit_emails_email_unresolved_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.unresolved_commit_emails_email_unresolved_id_seq OWNER TO augur;
 
@@ -4530,7 +4762,9 @@ ALTER SEQUENCE augur_data.unresolved_commit_emails_email_unresolved_id_seq OWNER
 --
 
 CREATE TABLE augur_data.unresolved_commit_emails (
-    email_unresolved_id bigint DEFAULT nextval('augur_data.unresolved_commit_emails_email_unresolved_id_seq'::regclass) NOT NULL,
+    email_unresolved_id bigint DEFAULT nextval(
+        'augur_data.unresolved_commit_emails_email_unresolved_id_seq'::regclass
+    ) NOT NULL,
     email character varying NOT NULL,
     name character varying,
     tool_source character varying,
@@ -4539,20 +4773,15 @@ CREATE TABLE augur_data.unresolved_commit_emails (
     data_collection_date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-
 ALTER TABLE augur_data.unresolved_commit_emails OWNER TO augur;
 
 --
 -- Name: utility_log_id_seq1; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.utility_log_id_seq1
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.utility_log_id_seq1 START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.utility_log_id_seq1 OWNER TO augur;
 
@@ -4561,12 +4790,13 @@ ALTER SEQUENCE augur_data.utility_log_id_seq1 OWNER TO augur;
 --
 
 CREATE TABLE augur_data.utility_log (
-    id bigint DEFAULT nextval('augur_data.utility_log_id_seq1'::regclass) NOT NULL,
+    id bigint DEFAULT nextval(
+        'augur_data.utility_log_id_seq1'::regclass
+    ) NOT NULL,
     level character varying(8) NOT NULL,
     status character varying NOT NULL,
     attempted timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
-
 
 ALTER TABLE augur_data.utility_log OWNER TO augur;
 
@@ -4574,13 +4804,9 @@ ALTER TABLE augur_data.utility_log OWNER TO augur;
 -- Name: utility_log_id_seq; Type: SEQUENCE; Schema: augur_data; Owner: augur
 --
 
-CREATE SEQUENCE augur_data.utility_log_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_data.utility_log_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_data.utility_log_id_seq OWNER TO augur;
 
@@ -4593,20 +4819,15 @@ CREATE TABLE augur_data.working_commits (
     working_commit character varying(40) DEFAULT 'NULL'::character varying
 );
 
-
 ALTER TABLE augur_data.working_commits OWNER TO augur;
 
 --
 -- Name: affiliations_corp_id_seq; Type: SEQUENCE; Schema: augur_operations; Owner: augur
 --
 
-CREATE SEQUENCE augur_operations.affiliations_corp_id_seq
-    START WITH 620000
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_operations.affiliations_corp_id_seq START
+WITH
+    620000 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_operations.affiliations_corp_id_seq OWNER TO augur;
 
@@ -4627,20 +4848,15 @@ CREATE TABLE augur_operations."all" (
     "Files" character varying
 );
 
-
 ALTER TABLE augur_operations."all" OWNER TO augur;
 
 --
 -- Name: augur_settings_id_seq; Type: SEQUENCE; Schema: augur_operations; Owner: augur
 --
 
-CREATE SEQUENCE augur_operations.augur_settings_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_operations.augur_settings_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_operations.augur_settings_id_seq OWNER TO augur;
 
@@ -4649,12 +4865,13 @@ ALTER SEQUENCE augur_operations.augur_settings_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_operations.augur_settings (
-    id bigint DEFAULT nextval('augur_operations.augur_settings_id_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval(
+        'augur_operations.augur_settings_id_seq'::regclass
+    ) NOT NULL,
     setting character varying,
     value character varying,
     last_modified timestamp(0) without time zone DEFAULT CURRENT_DATE
 );
-
 
 ALTER TABLE augur_operations.augur_settings OWNER TO augur;
 
@@ -4663,7 +4880,6 @@ ALTER TABLE augur_operations.augur_settings OWNER TO augur;
 --
 
 COMMENT ON TABLE augur_operations.augur_settings IS 'Augur settings include the schema version, and the Augur API Key as of 10/25/2020. Future augur settings may be stored in this table, which has the basic structure of a name-value pair. ';
-
 
 --
 -- Name: client_applications; Type: TABLE; Schema: augur_operations; Owner: augur
@@ -4676,7 +4892,6 @@ CREATE TABLE augur_operations.client_applications (
     name character varying NOT NULL,
     redirect_url character varying NOT NULL
 );
-
 
 ALTER TABLE augur_operations.client_applications OWNER TO augur;
 
@@ -4705,15 +4920,185 @@ CREATE TABLE augur_operations.collection_status (
     ml_data_last_collected timestamp without time zone,
     ml_task_id character varying,
     ml_weight bigint,
-    CONSTRAINT core_data_last_collected_check CHECK (((NOT ((core_data_last_collected IS NULL) AND ((core_status)::text = 'Success'::text))) AND (NOT ((core_data_last_collected IS NOT NULL) AND ((core_status)::text = 'Pending'::text))))),
-    CONSTRAINT core_secondary_dependency_check CHECK ((NOT (((core_status)::text = 'Pending'::text) AND ((secondary_status)::text = 'Collecting'::text)))),
-    CONSTRAINT core_task_id_check CHECK (((NOT ((core_task_id IS NOT NULL) AND ((core_status)::text = ANY ((ARRAY['Pending'::character varying, 'Success'::character varying, 'Error'::character varying])::text[])))) AND (NOT ((core_task_id IS NULL) AND ((core_status)::text = 'Collecting'::text))))),
-    CONSTRAINT facade_data_last_collected_check CHECK (((NOT ((facade_data_last_collected IS NULL) AND ((facade_status)::text = 'Success'::text))) AND (NOT ((facade_data_last_collected IS NOT NULL) AND ((facade_status)::text = ANY ((ARRAY['Pending'::character varying, 'Initializing'::character varying, 'Update'::character varying])::text[])))))),
-    CONSTRAINT facade_task_id_check CHECK (((NOT ((facade_task_id IS NOT NULL) AND ((facade_status)::text = ANY ((ARRAY['Pending'::character varying, 'Success'::character varying, 'Error'::character varying, 'Failed Clone'::character varying, 'Initializing'::character varying])::text[])))) AND (NOT ((facade_task_id IS NULL) AND ((facade_status)::text = 'Collecting'::text))))),
-    CONSTRAINT secondary_data_last_collected_check CHECK (((NOT ((secondary_data_last_collected IS NULL) AND ((secondary_status)::text = 'Success'::text))) AND (NOT ((secondary_data_last_collected IS NOT NULL) AND ((secondary_status)::text = 'Pending'::text))))),
-    CONSTRAINT secondary_task_id_check CHECK (((NOT ((secondary_task_id IS NOT NULL) AND ((secondary_status)::text = ANY ((ARRAY['Pending'::character varying, 'Success'::character varying, 'Error'::character varying])::text[])))) AND (NOT ((secondary_task_id IS NULL) AND ((secondary_status)::text = 'Collecting'::text)))))
+    CONSTRAINT core_data_last_collected_check CHECK (
+        (
+            (
+                NOT (
+                    (
+                        core_data_last_collected IS NULL
+                    )
+                    AND (
+                        (core_status)::text = 'Success'::text
+                    )
+                )
+            )
+            AND (
+                NOT (
+                    (
+                        core_data_last_collected IS NOT NULL
+                    )
+                    AND (
+                        (core_status)::text = 'Pending'::text
+                    )
+                )
+            )
+        )
+    ),
+    CONSTRAINT core_secondary_dependency_check CHECK (
+        (
+            NOT (
+                (
+                    (core_status)::text = 'Pending'::text
+                )
+                AND (
+                    (secondary_status)::text = 'Collecting'::text
+                )
+            )
+        )
+    ),
+    CONSTRAINT core_task_id_check CHECK (
+        (
+            (
+                NOT (
+                    (core_task_id IS NOT NULL)
+                    AND (
+                        (core_status)::text = ANY (
+                            (
+                                ARRAY[
+                                    'Pending'::character varying,
+                                    'Success'::character varying,
+                                    'Error'::character varying
+                                ]
+                            )::text []
+                        )
+                    )
+                )
+            )
+            AND (
+                NOT (
+                    (core_task_id IS NULL)
+                    AND (
+                        (core_status)::text = 'Collecting'::text
+                    )
+                )
+            )
+        )
+    ),
+    CONSTRAINT facade_data_last_collected_check CHECK (
+        (
+            (
+                NOT (
+                    (
+                        facade_data_last_collected IS NULL
+                    )
+                    AND (
+                        (facade_status)::text = 'Success'::text
+                    )
+                )
+            )
+            AND (
+                NOT (
+                    (
+                        facade_data_last_collected IS NOT NULL
+                    )
+                    AND (
+                        (facade_status)::text = ANY (
+                            (
+                                ARRAY[
+                                    'Pending'::character varying,
+                                    'Initializing'::character varying,
+                                    'Update'::character varying
+                                ]
+                            )::text []
+                        )
+                    )
+                )
+            )
+        )
+    ),
+    CONSTRAINT facade_task_id_check CHECK (
+        (
+            (
+                NOT (
+                    (facade_task_id IS NOT NULL)
+                    AND (
+                        (facade_status)::text = ANY (
+                            (
+                                ARRAY[
+                                    'Pending'::character varying,
+                                    'Success'::character varying,
+                                    'Error'::character varying,
+                                    'Failed Clone'::character varying,
+                                    'Initializing'::character varying
+                                ]
+                            )::text []
+                        )
+                    )
+                )
+            )
+            AND (
+                NOT (
+                    (facade_task_id IS NULL)
+                    AND (
+                        (facade_status)::text = 'Collecting'::text
+                    )
+                )
+            )
+        )
+    ),
+    CONSTRAINT secondary_data_last_collected_check CHECK (
+        (
+            (
+                NOT (
+                    (
+                        secondary_data_last_collected IS NULL
+                    )
+                    AND (
+                        (secondary_status)::text = 'Success'::text
+                    )
+                )
+            )
+            AND (
+                NOT (
+                    (
+                        secondary_data_last_collected IS NOT NULL
+                    )
+                    AND (
+                        (secondary_status)::text = 'Pending'::text
+                    )
+                )
+            )
+        )
+    ),
+    CONSTRAINT secondary_task_id_check CHECK (
+        (
+            (
+                NOT (
+                    (secondary_task_id IS NOT NULL)
+                    AND (
+                        (secondary_status)::text = ANY (
+                            (
+                                ARRAY[
+                                    'Pending'::character varying,
+                                    'Success'::character varying,
+                                    'Error'::character varying
+                                ]
+                            )::text []
+                        )
+                    )
+                )
+            )
+            AND (
+                NOT (
+                    (secondary_task_id IS NULL)
+                    AND (
+                        (secondary_status)::text = 'Collecting'::text
+                    )
+                )
+            )
+        )
+    )
 );
-
 
 ALTER TABLE augur_operations.collection_status OWNER TO augur;
 
@@ -4729,21 +5114,15 @@ CREATE TABLE augur_operations.config (
     type character varying
 );
 
-
 ALTER TABLE augur_operations.config OWNER TO augur;
 
 --
 -- Name: config_id_seq; Type: SEQUENCE; Schema: augur_operations; Owner: augur
 --
 
-CREATE SEQUENCE augur_operations.config_id_seq
-    AS smallint
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_operations.config_id_seq AS smallint START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_operations.config_id_seq OWNER TO augur;
 
@@ -4753,18 +5132,13 @@ ALTER SEQUENCE augur_operations.config_id_seq OWNER TO augur;
 
 ALTER SEQUENCE augur_operations.config_id_seq OWNED BY augur_operations.config.id;
 
-
 --
 -- Name: gh_worker_history_history_id_seq; Type: SEQUENCE; Schema: augur_operations; Owner: augur
 --
 
-CREATE SEQUENCE augur_operations.gh_worker_history_history_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_operations.gh_worker_history_history_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_operations.gh_worker_history_history_id_seq OWNER TO augur;
 
@@ -4776,7 +5150,6 @@ CREATE TABLE augur_operations.refresh_tokens (
     id character varying NOT NULL,
     user_session_token character varying NOT NULL
 );
-
 
 ALTER TABLE augur_operations.refresh_tokens OWNER TO augur;
 
@@ -4790,7 +5163,6 @@ CREATE TABLE augur_operations.repos_fetch_log (
     date timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-
 ALTER TABLE augur_operations.repos_fetch_log OWNER TO augur;
 
 --
@@ -4798,7 +5170,6 @@ ALTER TABLE augur_operations.repos_fetch_log OWNER TO augur;
 --
 
 COMMENT ON TABLE augur_operations.repos_fetch_log IS 'For future use when we move all working tables to the augur_operations schema. ';
-
 
 --
 -- Name: subscription_types; Type: TABLE; Schema: augur_operations; Owner: augur
@@ -4809,20 +5180,15 @@ CREATE TABLE augur_operations.subscription_types (
     name character varying NOT NULL
 );
 
-
 ALTER TABLE augur_operations.subscription_types OWNER TO augur;
 
 --
 -- Name: subscription_types_id_seq; Type: SEQUENCE; Schema: augur_operations; Owner: augur
 --
 
-CREATE SEQUENCE augur_operations.subscription_types_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_operations.subscription_types_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_operations.subscription_types_id_seq OWNER TO augur;
 
@@ -4831,7 +5197,6 @@ ALTER SEQUENCE augur_operations.subscription_types_id_seq OWNER TO augur;
 --
 
 ALTER SEQUENCE augur_operations.subscription_types_id_seq OWNED BY augur_operations.subscription_types.id;
-
 
 --
 -- Name: subscriptions; Type: TABLE; Schema: augur_operations; Owner: augur
@@ -4842,20 +5207,15 @@ CREATE TABLE augur_operations.subscriptions (
     type_id bigint NOT NULL
 );
 
-
 ALTER TABLE augur_operations.subscriptions OWNER TO augur;
 
 --
 -- Name: user_groups_group_id_seq; Type: SEQUENCE; Schema: augur_operations; Owner: augur
 --
 
-CREATE SEQUENCE augur_operations.user_groups_group_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_operations.user_groups_group_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_operations.user_groups_group_id_seq OWNER TO augur;
 
@@ -4864,7 +5224,6 @@ ALTER SEQUENCE augur_operations.user_groups_group_id_seq OWNER TO augur;
 --
 
 ALTER SEQUENCE augur_operations.user_groups_group_id_seq OWNED BY augur_operations.user_groups.group_id;
-
 
 --
 -- Name: user_session_tokens; Type: TABLE; Schema: augur_operations; Owner: augur
@@ -4878,21 +5237,15 @@ CREATE TABLE augur_operations.user_session_tokens (
     application_id character varying
 );
 
-
 ALTER TABLE augur_operations.user_session_tokens OWNER TO augur;
 
 --
 -- Name: users_user_id_seq; Type: SEQUENCE; Schema: augur_operations; Owner: augur
 --
 
-CREATE SEQUENCE augur_operations.users_user_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_operations.users_user_id_seq AS integer START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_operations.users_user_id_seq OWNER TO augur;
 
@@ -4902,13 +5255,14 @@ ALTER SEQUENCE augur_operations.users_user_id_seq OWNER TO augur;
 
 ALTER SEQUENCE augur_operations.users_user_id_seq OWNED BY augur_operations.users.user_id;
 
-
 --
 -- Name: worker_history; Type: TABLE; Schema: augur_operations; Owner: augur
 --
 
 CREATE TABLE augur_operations.worker_history (
-    history_id bigint DEFAULT nextval('augur_operations.gh_worker_history_history_id_seq'::regclass) NOT NULL,
+    history_id bigint DEFAULT nextval(
+        'augur_operations.gh_worker_history_history_id_seq'::regclass
+    ) NOT NULL,
     repo_id bigint,
     worker character varying(255) NOT NULL,
     job_model character varying(255) NOT NULL,
@@ -4918,7 +5272,6 @@ CREATE TABLE augur_operations.worker_history (
     total_results integer
 );
 
-
 ALTER TABLE augur_operations.worker_history OWNER TO augur;
 
 --
@@ -4926,7 +5279,6 @@ ALTER TABLE augur_operations.worker_history OWNER TO augur;
 --
 
 COMMENT ON TABLE augur_operations.worker_history IS 'This table stores the complete history of job execution, including success and failure. It is useful for troubleshooting. ';
-
 
 --
 -- Name: worker_job; Type: TABLE; Schema: augur_operations; Owner: augur
@@ -4944,7 +5296,6 @@ CREATE TABLE augur_operations.worker_job (
     oauth_id integer NOT NULL
 );
 
-
 ALTER TABLE augur_operations.worker_job OWNER TO augur;
 
 --
@@ -4953,18 +5304,13 @@ ALTER TABLE augur_operations.worker_job OWNER TO augur;
 
 COMMENT ON TABLE augur_operations.worker_job IS 'This table stores the jobs workers collect data for. A job is found in the code, and in the augur.config.json under the construct of a “model”. ';
 
-
 --
 -- Name: worker_oauth_oauth_id_seq; Type: SEQUENCE; Schema: augur_operations; Owner: augur
 --
 
-CREATE SEQUENCE augur_operations.worker_oauth_oauth_id_seq
-    START WITH 1000
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
+CREATE SEQUENCE augur_operations.worker_oauth_oauth_id_seq START
+WITH
+    1000 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 ALTER SEQUENCE augur_operations.worker_oauth_oauth_id_seq OWNER TO augur;
 
@@ -4973,7 +5319,9 @@ ALTER SEQUENCE augur_operations.worker_oauth_oauth_id_seq OWNER TO augur;
 --
 
 CREATE TABLE augur_operations.worker_oauth (
-    oauth_id bigint DEFAULT nextval('augur_operations.worker_oauth_oauth_id_seq'::regclass) NOT NULL,
+    oauth_id bigint DEFAULT nextval(
+        'augur_operations.worker_oauth_oauth_id_seq'::regclass
+    ) NOT NULL,
     name character varying(255) NOT NULL,
     consumer_key character varying(255) NOT NULL,
     consumer_secret character varying(255) NOT NULL,
@@ -4983,7 +5331,6 @@ CREATE TABLE augur_operations.worker_oauth (
     platform character varying DEFAULT 'github'::character varying
 );
 
-
 ALTER TABLE augur_operations.worker_oauth OWNER TO augur;
 
 --
@@ -4991,7 +5338,6 @@ ALTER TABLE augur_operations.worker_oauth OWNER TO augur;
 --
 
 COMMENT ON TABLE augur_operations.worker_oauth IS 'This table stores credentials for retrieving data from platform API’s. Entries in this table must comply with the terms of service for each platform. ';
-
 
 --
 -- Name: worker_settings_facade; Type: TABLE; Schema: augur_operations; Owner: augur
@@ -5004,7 +5350,6 @@ CREATE TABLE augur_operations.worker_settings_facade (
     last_modified timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-
 ALTER TABLE augur_operations.worker_settings_facade OWNER TO augur;
 
 --
@@ -5012,7 +5357,6 @@ ALTER TABLE augur_operations.worker_settings_facade OWNER TO augur;
 --
 
 COMMENT ON TABLE augur_operations.worker_settings_facade IS 'For future use when we move all working tables to the augur_operations schema. ';
-
 
 --
 -- Name: working_commits; Type: TABLE; Schema: augur_operations; Owner: augur
@@ -5023,7 +5367,6 @@ CREATE TABLE augur_operations.working_commits (
     working_commit character varying(40) DEFAULT 'NULL'::character varying
 );
 
-
 ALTER TABLE augur_operations.working_commits OWNER TO augur;
 
 --
@@ -5031,7 +5374,6 @@ ALTER TABLE augur_operations.working_commits OWNER TO augur;
 --
 
 COMMENT ON TABLE augur_operations.working_commits IS 'For future use when we move all working tables to the augur_operations schema. ';
-
 
 --
 -- Name: alembic_version; Type: TABLE; Schema: public; Owner: augur
@@ -5041,17 +5383,13 @@ CREATE TABLE public.alembic_version (
     version_num character varying(32) NOT NULL
 );
 
-
 ALTER TABLE public.alembic_version OWNER TO augur;
 
 --
 -- Name: test; Type: TABLE; Schema: public; Owner: augur
 --
 
-CREATE TABLE public.test (
-    test character varying(255)
-);
-
+CREATE TABLE public.test (test character varying(255));
 
 ALTER TABLE public.test OWNER TO augur;
 
@@ -5059,13 +5397,9 @@ ALTER TABLE public.test OWNER TO augur;
 -- Name: annotation_types_annotation_type_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.annotation_types_annotation_type_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.annotation_types_annotation_type_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.annotation_types_annotation_type_id_seq OWNER TO augur;
 
@@ -5074,10 +5408,11 @@ ALTER SEQUENCE spdx.annotation_types_annotation_type_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.annotation_types (
-    annotation_type_id integer DEFAULT nextval('spdx.annotation_types_annotation_type_id_seq'::regclass) NOT NULL,
+    annotation_type_id integer DEFAULT nextval(
+        'spdx.annotation_types_annotation_type_id_seq'::regclass
+    ) NOT NULL,
     name character varying(255) NOT NULL
 );
-
 
 ALTER TABLE spdx.annotation_types OWNER TO augur;
 
@@ -5085,13 +5420,9 @@ ALTER TABLE spdx.annotation_types OWNER TO augur;
 -- Name: annotations_annotation_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.annotations_annotation_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.annotations_annotation_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.annotations_annotation_id_seq OWNER TO augur;
 
@@ -5100,7 +5431,9 @@ ALTER SEQUENCE spdx.annotations_annotation_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.annotations (
-    annotation_id integer DEFAULT nextval('spdx.annotations_annotation_id_seq'::regclass) NOT NULL,
+    annotation_id integer DEFAULT nextval(
+        'spdx.annotations_annotation_id_seq'::regclass
+    ) NOT NULL,
     document_id integer NOT NULL,
     annotation_type_id integer NOT NULL,
     identifier_id integer NOT NULL,
@@ -5109,20 +5442,15 @@ CREATE TABLE spdx.annotations (
     comment text NOT NULL
 );
 
-
 ALTER TABLE spdx.annotations OWNER TO augur;
 
 --
 -- Name: augur_repo_map_map_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.augur_repo_map_map_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.augur_repo_map_map_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.augur_repo_map_map_id_seq OWNER TO augur;
 
@@ -5131,13 +5459,14 @@ ALTER SEQUENCE spdx.augur_repo_map_map_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.augur_repo_map (
-    map_id integer DEFAULT nextval('spdx.augur_repo_map_map_id_seq'::regclass) NOT NULL,
+    map_id integer DEFAULT nextval(
+        'spdx.augur_repo_map_map_id_seq'::regclass
+    ) NOT NULL,
     dosocs_pkg_id integer,
     dosocs_pkg_name text,
     repo_id integer,
     repo_path text
 );
-
 
 ALTER TABLE spdx.augur_repo_map OWNER TO augur;
 
@@ -5145,13 +5474,9 @@ ALTER TABLE spdx.augur_repo_map OWNER TO augur;
 -- Name: creator_types_creator_type_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.creator_types_creator_type_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.creator_types_creator_type_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.creator_types_creator_type_id_seq OWNER TO augur;
 
@@ -5160,10 +5485,11 @@ ALTER SEQUENCE spdx.creator_types_creator_type_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.creator_types (
-    creator_type_id integer DEFAULT nextval('spdx.creator_types_creator_type_id_seq'::regclass) NOT NULL,
+    creator_type_id integer DEFAULT nextval(
+        'spdx.creator_types_creator_type_id_seq'::regclass
+    ) NOT NULL,
     name character varying(255) NOT NULL
 );
-
 
 ALTER TABLE spdx.creator_types OWNER TO augur;
 
@@ -5171,13 +5497,9 @@ ALTER TABLE spdx.creator_types OWNER TO augur;
 -- Name: creators_creator_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.creators_creator_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.creators_creator_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.creators_creator_id_seq OWNER TO augur;
 
@@ -5186,12 +5508,13 @@ ALTER SEQUENCE spdx.creators_creator_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.creators (
-    creator_id integer DEFAULT nextval('spdx.creators_creator_id_seq'::regclass) NOT NULL,
+    creator_id integer DEFAULT nextval(
+        'spdx.creators_creator_id_seq'::regclass
+    ) NOT NULL,
     creator_type_id integer NOT NULL,
     name character varying(255) NOT NULL,
     email character varying(255) NOT NULL
 );
-
 
 ALTER TABLE spdx.creators OWNER TO augur;
 
@@ -5199,13 +5522,9 @@ ALTER TABLE spdx.creators OWNER TO augur;
 -- Name: document_namespaces_document_namespace_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.document_namespaces_document_namespace_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.document_namespaces_document_namespace_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.document_namespaces_document_namespace_id_seq OWNER TO augur;
 
@@ -5214,10 +5533,11 @@ ALTER SEQUENCE spdx.document_namespaces_document_namespace_id_seq OWNER TO augur
 --
 
 CREATE TABLE spdx.document_namespaces (
-    document_namespace_id integer DEFAULT nextval('spdx.document_namespaces_document_namespace_id_seq'::regclass) NOT NULL,
+    document_namespace_id integer DEFAULT nextval(
+        'spdx.document_namespaces_document_namespace_id_seq'::regclass
+    ) NOT NULL,
     uri character varying(500) NOT NULL
 );
-
 
 ALTER TABLE spdx.document_namespaces OWNER TO augur;
 
@@ -5225,13 +5545,9 @@ ALTER TABLE spdx.document_namespaces OWNER TO augur;
 -- Name: documents_document_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.documents_document_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.documents_document_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.documents_document_id_seq OWNER TO augur;
 
@@ -5240,7 +5556,9 @@ ALTER SEQUENCE spdx.documents_document_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.documents (
-    document_id integer DEFAULT nextval('spdx.documents_document_id_seq'::regclass) NOT NULL,
+    document_id integer DEFAULT nextval(
+        'spdx.documents_document_id_seq'::regclass
+    ) NOT NULL,
     document_namespace_id integer NOT NULL,
     data_license_id integer NOT NULL,
     spdx_version character varying(255) NOT NULL,
@@ -5252,20 +5570,15 @@ CREATE TABLE spdx.documents (
     package_id integer NOT NULL
 );
 
-
 ALTER TABLE spdx.documents OWNER TO augur;
 
 --
 -- Name: documents_creators_document_creator_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.documents_creators_document_creator_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.documents_creators_document_creator_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.documents_creators_document_creator_id_seq OWNER TO augur;
 
@@ -5274,11 +5587,12 @@ ALTER SEQUENCE spdx.documents_creators_document_creator_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.documents_creators (
-    document_creator_id integer DEFAULT nextval('spdx.documents_creators_document_creator_id_seq'::regclass) NOT NULL,
+    document_creator_id integer DEFAULT nextval(
+        'spdx.documents_creators_document_creator_id_seq'::regclass
+    ) NOT NULL,
     document_id integer NOT NULL,
     creator_id integer NOT NULL
 );
-
 
 ALTER TABLE spdx.documents_creators OWNER TO augur;
 
@@ -5286,13 +5600,9 @@ ALTER TABLE spdx.documents_creators OWNER TO augur;
 -- Name: external_refs_external_ref_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.external_refs_external_ref_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.external_refs_external_ref_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.external_refs_external_ref_id_seq OWNER TO augur;
 
@@ -5301,13 +5611,14 @@ ALTER SEQUENCE spdx.external_refs_external_ref_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.external_refs (
-    external_ref_id integer DEFAULT nextval('spdx.external_refs_external_ref_id_seq'::regclass) NOT NULL,
+    external_ref_id integer DEFAULT nextval(
+        'spdx.external_refs_external_ref_id_seq'::regclass
+    ) NOT NULL,
     document_id integer NOT NULL,
     document_namespace_id integer NOT NULL,
     id_string character varying(255) NOT NULL,
     sha256 character varying(64) NOT NULL
 );
-
 
 ALTER TABLE spdx.external_refs OWNER TO augur;
 
@@ -5315,13 +5626,9 @@ ALTER TABLE spdx.external_refs OWNER TO augur;
 -- Name: file_contributors_file_contributor_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.file_contributors_file_contributor_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.file_contributors_file_contributor_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.file_contributors_file_contributor_id_seq OWNER TO augur;
 
@@ -5330,11 +5637,12 @@ ALTER SEQUENCE spdx.file_contributors_file_contributor_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.file_contributors (
-    file_contributor_id integer DEFAULT nextval('spdx.file_contributors_file_contributor_id_seq'::regclass) NOT NULL,
+    file_contributor_id integer DEFAULT nextval(
+        'spdx.file_contributors_file_contributor_id_seq'::regclass
+    ) NOT NULL,
     file_id integer NOT NULL,
     contributor text NOT NULL
 );
-
 
 ALTER TABLE spdx.file_contributors OWNER TO augur;
 
@@ -5347,20 +5655,15 @@ CREATE TABLE spdx.file_types (
     name character varying(255) NOT NULL
 );
 
-
 ALTER TABLE spdx.file_types OWNER TO augur;
 
 --
 -- Name: file_types_file_type_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.file_types_file_type_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.file_types_file_type_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.file_types_file_type_id_seq OWNER TO augur;
 
@@ -5368,13 +5671,9 @@ ALTER SEQUENCE spdx.file_types_file_type_id_seq OWNER TO augur;
 -- Name: files_file_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.files_file_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.files_file_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.files_file_id_seq OWNER TO augur;
 
@@ -5383,7 +5682,9 @@ ALTER SEQUENCE spdx.files_file_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.files (
-    file_id integer DEFAULT nextval('spdx.files_file_id_seq'::regclass) NOT NULL,
+    file_id integer DEFAULT nextval(
+        'spdx.files_file_id_seq'::regclass
+    ) NOT NULL,
     file_type_id integer,
     sha256 character varying(64) NOT NULL,
     copyright_text text,
@@ -5392,20 +5693,15 @@ CREATE TABLE spdx.files (
     notice text NOT NULL
 );
 
-
 ALTER TABLE spdx.files OWNER TO augur;
 
 --
 -- Name: files_licenses_file_license_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.files_licenses_file_license_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.files_licenses_file_license_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.files_licenses_file_license_id_seq OWNER TO augur;
 
@@ -5414,12 +5710,13 @@ ALTER SEQUENCE spdx.files_licenses_file_license_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.files_licenses (
-    file_license_id integer DEFAULT nextval('spdx.files_licenses_file_license_id_seq'::regclass) NOT NULL,
+    file_license_id integer DEFAULT nextval(
+        'spdx.files_licenses_file_license_id_seq'::regclass
+    ) NOT NULL,
     file_id integer NOT NULL,
     license_id integer NOT NULL,
     extracted_text text NOT NULL
 );
-
 
 ALTER TABLE spdx.files_licenses OWNER TO augur;
 
@@ -5427,13 +5724,9 @@ ALTER TABLE spdx.files_licenses OWNER TO augur;
 -- Name: files_scans_file_scan_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.files_scans_file_scan_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.files_scans_file_scan_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.files_scans_file_scan_id_seq OWNER TO augur;
 
@@ -5442,11 +5735,12 @@ ALTER SEQUENCE spdx.files_scans_file_scan_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.files_scans (
-    file_scan_id integer DEFAULT nextval('spdx.files_scans_file_scan_id_seq'::regclass) NOT NULL,
+    file_scan_id integer DEFAULT nextval(
+        'spdx.files_scans_file_scan_id_seq'::regclass
+    ) NOT NULL,
     file_id integer NOT NULL,
     scanner_id integer NOT NULL
 );
-
 
 ALTER TABLE spdx.files_scans OWNER TO augur;
 
@@ -5454,13 +5748,9 @@ ALTER TABLE spdx.files_scans OWNER TO augur;
 -- Name: identifiers_identifier_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.identifiers_identifier_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.identifiers_identifier_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.identifiers_identifier_id_seq OWNER TO augur;
 
@@ -5469,15 +5759,24 @@ ALTER SEQUENCE spdx.identifiers_identifier_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.identifiers (
-    identifier_id integer DEFAULT nextval('spdx.identifiers_identifier_id_seq'::regclass) NOT NULL,
+    identifier_id integer DEFAULT nextval(
+        'spdx.identifiers_identifier_id_seq'::regclass
+    ) NOT NULL,
     document_namespace_id integer NOT NULL,
     id_string character varying(255) NOT NULL,
     document_id integer,
     package_id integer,
     package_file_id integer,
-    CONSTRAINT ck_identifier_exactly_one CHECK ((((((document_id IS NOT NULL))::integer + ((package_id IS NOT NULL))::integer) + ((package_file_id IS NOT NULL))::integer) = 1))
+    CONSTRAINT ck_identifier_exactly_one CHECK (
+        (
+            (
+                (
+                    ((document_id IS NOT NULL))::integer + ((package_id IS NOT NULL))::integer
+                ) + ((package_file_id IS NOT NULL))::integer
+            ) = 1
+        )
+    )
 );
-
 
 ALTER TABLE spdx.identifiers OWNER TO augur;
 
@@ -5485,13 +5784,9 @@ ALTER TABLE spdx.identifiers OWNER TO augur;
 -- Name: licenses_license_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.licenses_license_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.licenses_license_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.licenses_license_id_seq OWNER TO augur;
 
@@ -5500,7 +5795,9 @@ ALTER SEQUENCE spdx.licenses_license_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.licenses (
-    license_id integer DEFAULT nextval('spdx.licenses_license_id_seq'::regclass) NOT NULL,
+    license_id integer DEFAULT nextval(
+        'spdx.licenses_license_id_seq'::regclass
+    ) NOT NULL,
     name character varying(255),
     short_name character varying(255) NOT NULL,
     cross_reference text NOT NULL,
@@ -5508,20 +5805,15 @@ CREATE TABLE spdx.licenses (
     is_spdx_official boolean NOT NULL
 );
 
-
 ALTER TABLE spdx.licenses OWNER TO augur;
 
 --
 -- Name: packages_package_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.packages_package_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.packages_package_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.packages_package_id_seq OWNER TO augur;
 
@@ -5530,7 +5822,9 @@ ALTER SEQUENCE spdx.packages_package_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.packages (
-    package_id integer DEFAULT nextval('spdx.packages_package_id_seq'::regclass) NOT NULL,
+    package_id integer DEFAULT nextval(
+        'spdx.packages_package_id_seq'::regclass
+    ) NOT NULL,
     name character varying(255) NOT NULL,
     version character varying(255) NOT NULL,
     file_name text NOT NULL,
@@ -5550,9 +5844,16 @@ CREATE TABLE spdx.packages (
     description text NOT NULL,
     comment text NOT NULL,
     dosocs2_dir_code character varying(64),
-    CONSTRAINT uc_sha256_ds2_dir_code_exactly_one CHECK (((((sha256 IS NOT NULL))::integer + ((dosocs2_dir_code IS NOT NULL))::integer) = 1))
+    CONSTRAINT uc_sha256_ds2_dir_code_exactly_one CHECK (
+        (
+            (
+                ((sha256 IS NOT NULL))::integer + (
+                    (dosocs2_dir_code IS NOT NULL)
+                )::integer
+            ) = 1
+        )
+    )
 );
-
 
 ALTER TABLE spdx.packages OWNER TO augur;
 
@@ -5560,13 +5861,9 @@ ALTER TABLE spdx.packages OWNER TO augur;
 -- Name: packages_files_package_file_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.packages_files_package_file_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.packages_files_package_file_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.packages_files_package_file_id_seq OWNER TO augur;
 
@@ -5575,7 +5872,9 @@ ALTER SEQUENCE spdx.packages_files_package_file_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.packages_files (
-    package_file_id integer DEFAULT nextval('spdx.packages_files_package_file_id_seq'::regclass) NOT NULL,
+    package_file_id integer DEFAULT nextval(
+        'spdx.packages_files_package_file_id_seq'::regclass
+    ) NOT NULL,
     package_id integer NOT NULL,
     file_id integer NOT NULL,
     concluded_license_id integer,
@@ -5583,20 +5882,15 @@ CREATE TABLE spdx.packages_files (
     file_name text NOT NULL
 );
 
-
 ALTER TABLE spdx.packages_files OWNER TO augur;
 
 --
 -- Name: packages_scans_package_scan_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.packages_scans_package_scan_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.packages_scans_package_scan_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.packages_scans_package_scan_id_seq OWNER TO augur;
 
@@ -5605,11 +5899,12 @@ ALTER SEQUENCE spdx.packages_scans_package_scan_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.packages_scans (
-    package_scan_id integer DEFAULT nextval('spdx.packages_scans_package_scan_id_seq'::regclass) NOT NULL,
+    package_scan_id integer DEFAULT nextval(
+        'spdx.packages_scans_package_scan_id_seq'::regclass
+    ) NOT NULL,
     package_id integer NOT NULL,
     scanner_id integer NOT NULL
 );
-
 
 ALTER TABLE spdx.packages_scans OWNER TO augur;
 
@@ -5617,13 +5912,9 @@ ALTER TABLE spdx.packages_scans OWNER TO augur;
 -- Name: projects_package_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.projects_package_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.projects_package_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.projects_package_id_seq OWNER TO augur;
 
@@ -5632,12 +5923,13 @@ ALTER SEQUENCE spdx.projects_package_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.projects (
-    package_id integer DEFAULT nextval('spdx.projects_package_id_seq'::regclass) NOT NULL,
+    package_id integer DEFAULT nextval(
+        'spdx.projects_package_id_seq'::regclass
+    ) NOT NULL,
     name text NOT NULL,
     homepage text NOT NULL,
     uri text NOT NULL
 );
-
 
 ALTER TABLE spdx.projects OWNER TO augur;
 
@@ -5645,13 +5937,9 @@ ALTER TABLE spdx.projects OWNER TO augur;
 -- Name: relationship_types_relationship_type_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.relationship_types_relationship_type_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.relationship_types_relationship_type_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.relationship_types_relationship_type_id_seq OWNER TO augur;
 
@@ -5660,10 +5948,11 @@ ALTER SEQUENCE spdx.relationship_types_relationship_type_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.relationship_types (
-    relationship_type_id integer DEFAULT nextval('spdx.relationship_types_relationship_type_id_seq'::regclass) NOT NULL,
+    relationship_type_id integer DEFAULT nextval(
+        'spdx.relationship_types_relationship_type_id_seq'::regclass
+    ) NOT NULL,
     name character varying(255) NOT NULL
 );
-
 
 ALTER TABLE spdx.relationship_types OWNER TO augur;
 
@@ -5671,13 +5960,9 @@ ALTER TABLE spdx.relationship_types OWNER TO augur;
 -- Name: relationships_relationship_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.relationships_relationship_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.relationships_relationship_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.relationships_relationship_id_seq OWNER TO augur;
 
@@ -5686,13 +5971,14 @@ ALTER SEQUENCE spdx.relationships_relationship_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.relationships (
-    relationship_id integer DEFAULT nextval('spdx.relationships_relationship_id_seq'::regclass) NOT NULL,
+    relationship_id integer DEFAULT nextval(
+        'spdx.relationships_relationship_id_seq'::regclass
+    ) NOT NULL,
     left_identifier_id integer NOT NULL,
     right_identifier_id integer NOT NULL,
     relationship_type_id integer NOT NULL,
     relationship_comment text NOT NULL
 );
-
 
 ALTER TABLE spdx.relationships OWNER TO augur;
 
@@ -5705,20 +5991,15 @@ CREATE TABLE spdx.sbom_scans (
     sbom_scan json
 );
 
-
 ALTER TABLE spdx.sbom_scans OWNER TO augur;
 
 --
 -- Name: scanners_scanner_id_seq; Type: SEQUENCE; Schema: spdx; Owner: augur
 --
 
-CREATE SEQUENCE spdx.scanners_scanner_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    MAXVALUE 2147483647
-    CACHE 1;
-
+CREATE SEQUENCE spdx.scanners_scanner_id_seq START
+WITH
+    1 INCREMENT BY 1 NO MINVALUE MAXVALUE 2147483647 CACHE 1;
 
 ALTER SEQUENCE spdx.scanners_scanner_id_seq OWNER TO augur;
 
@@ -5727,10 +6008,11 @@ ALTER SEQUENCE spdx.scanners_scanner_id_seq OWNER TO augur;
 --
 
 CREATE TABLE spdx.scanners (
-    scanner_id integer DEFAULT nextval('spdx.scanners_scanner_id_seq'::regclass) NOT NULL,
+    scanner_id integer DEFAULT nextval(
+        'spdx.scanners_scanner_id_seq'::regclass
+    ) NOT NULL,
     name character varying(255) NOT NULL
 );
-
 
 ALTER TABLE spdx.scanners OWNER TO augur;
 
@@ -5738,55 +6020,74 @@ ALTER TABLE spdx.scanners OWNER TO augur;
 -- Name: chaoss_user chaoss_id; Type: DEFAULT; Schema: augur_data; Owner: augur
 --
 
-ALTER TABLE ONLY augur_data.chaoss_user ALTER COLUMN chaoss_id SET DEFAULT nextval('augur_data.chaoss_user_chaoss_id_seq'::regclass);
-
+ALTER TABLE ONLY augur_data.chaoss_user
+ALTER COLUMN chaoss_id
+SET DEFAULT nextval(
+    'augur_data.chaoss_user_chaoss_id_seq'::regclass
+);
 
 --
 -- Name: dei_badging id; Type: DEFAULT; Schema: augur_data; Owner: augur
 --
 
-ALTER TABLE ONLY augur_data.dei_badging ALTER COLUMN id SET DEFAULT nextval('augur_data.dei_badging_id_seq'::regclass);
-
+ALTER TABLE ONLY augur_data.dei_badging
+ALTER COLUMN id
+SET DEFAULT nextval(
+    'augur_data.dei_badging_id_seq'::regclass
+);
 
 --
 -- Name: config id; Type: DEFAULT; Schema: augur_operations; Owner: augur
 --
 
-ALTER TABLE ONLY augur_operations.config ALTER COLUMN id SET DEFAULT nextval('augur_operations.config_id_seq'::regclass);
-
+ALTER TABLE ONLY augur_operations.config
+ALTER COLUMN id
+SET DEFAULT nextval(
+    'augur_operations.config_id_seq'::regclass
+);
 
 --
 -- Name: subscription_types id; Type: DEFAULT; Schema: augur_operations; Owner: augur
 --
 
-ALTER TABLE ONLY augur_operations.subscription_types ALTER COLUMN id SET DEFAULT nextval('augur_operations.subscription_types_id_seq'::regclass);
-
+ALTER TABLE ONLY augur_operations.subscription_types
+ALTER COLUMN id
+SET DEFAULT nextval(
+    'augur_operations.subscription_types_id_seq'::regclass
+);
 
 --
 -- Name: user_groups group_id; Type: DEFAULT; Schema: augur_operations; Owner: augur
 --
 
-ALTER TABLE ONLY augur_operations.user_groups ALTER COLUMN group_id SET DEFAULT nextval('augur_operations.user_groups_group_id_seq'::regclass);
-
+ALTER TABLE ONLY augur_operations.user_groups
+ALTER COLUMN group_id
+SET DEFAULT nextval(
+    'augur_operations.user_groups_group_id_seq'::regclass
+);
 
 --
 -- Name: users user_id; Type: DEFAULT; Schema: augur_operations; Owner: augur
 --
 
-ALTER TABLE ONLY augur_operations.users ALTER COLUMN user_id SET DEFAULT nextval('augur_operations.users_user_id_seq'::regclass);
-
+ALTER TABLE ONLY augur_operations.users
+ALTER COLUMN user_id
+SET DEFAULT nextval(
+    'augur_operations.users_user_id_seq'::regclass
+);
 
 --
 -- Data for Name: analysis_log; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.analysis_log (repos_id, status, date_attempted) FROM stdin;
 \.
-
 
 --
 -- Data for Name: chaoss_metric_status; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
+
 
 COPY augur_data.chaoss_metric_status (cms_id, cm_group, cm_source, cm_type, cm_backend_status, cm_frontend_status, cm_defined, cm_api_endpoint_repo, cm_api_endpoint_rg, cm_name, cm_working_group, cm_info, tool_source, tool_version, data_source, data_collection_date, cm_working_group_focus_area) FROM stdin;
 2	growth-maturity-decline	githubapi	timeseries	implemented	unimplemented	t	/api/unstable/<owner>/<repo>/timeseries/githubapi/issues	\N	Open Issues	growth-maturity-decline	"open-issues"	Insight Worker	0.0.1	githubapi	2019-06-20 22:41:41	\N
@@ -5871,42 +6172,42 @@ COPY augur_data.chaoss_metric_status (cms_id, cm_group, cm_source, cm_type, cm_b
 81	experimental	librariesio	metric	implemented	implemented	f	/api/unstable/<owner>/<repo>/dependents	\N	Dependents	experimental	"dependents"	Insight Worker	0.0.1	librariesio	2019-06-20 22:51:25	\N
 \.
 
-
 --
 -- Data for Name: chaoss_user; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.chaoss_user (chaoss_id, chaoss_login_name, chaoss_login_hashword, chaoss_email, chaoss_text_phone, chaoss_first_name, chaoss_last_name, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: commit_comment_ref; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.commit_comment_ref (cmt_comment_id, cmt_id, repo_id, msg_id, user_id, body, line, "position", commit_comment_src_node_id, cmt_comment_src_id, created_at, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: commit_parents; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.commit_parents (cmt_id, parent_id, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: commits; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.commits (cmt_id, repo_id, cmt_commit_hash, cmt_author_name, cmt_author_raw_email, cmt_author_email, cmt_author_date, cmt_author_affiliation, cmt_committer_name, cmt_committer_raw_email, cmt_committer_email, cmt_committer_date, cmt_committer_affiliation, cmt_added, cmt_removed, cmt_whitespace, cmt_filename, cmt_date_attempted, cmt_ght_committer_id, cmt_ght_committed_at, cmt_committer_timestamp, cmt_author_timestamp, cmt_author_platform_username, tool_source, tool_version, data_source, data_collection_date, cmt_ght_author_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: contributor_affiliations; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
+
 
 COPY augur_data.contributor_affiliations (ca_id, ca_domain, ca_start_date, ca_last_used, ca_affiliation, ca_active, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 1	samsung.com	1970-01-01	2018-08-01 18:37:54	Samsung	1	load	1.0	load	1970-01-01 00:00:00
@@ -6431,228 +6732,228 @@ COPY augur_data.contributor_affiliations (ca_id, ca_domain, ca_start_date, ca_la
 521	freebsd.org	1970-01-01	2018-09-13 21:15:22	Free BSD	1	load	1.0	load	1970-01-01 00:00:00
 \.
 
-
 --
 -- Data for Name: contributor_repo; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.contributor_repo (cntrb_repo_id, repo_git, repo_name, gh_repo_id, cntrb_category, event_id, created_at, tool_source, tool_version, data_source, data_collection_date, cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: contributors; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
+
 
 COPY augur_data.contributors (cntrb_login, cntrb_email, cntrb_full_name, cntrb_company, cntrb_created_at, cntrb_type, cntrb_fake, cntrb_deleted, cntrb_long, cntrb_lat, cntrb_country_code, cntrb_state, cntrb_city, cntrb_location, cntrb_canonical, cntrb_last_used, gh_user_id, gh_login, gh_url, gh_html_url, gh_node_id, gh_avatar_url, gh_gravatar_id, gh_followers_url, gh_following_url, gh_gists_url, gh_starred_url, gh_subscriptions_url, gh_organizations_url, gh_repos_url, gh_events_url, gh_received_events_url, gh_type, gh_site_admin, gl_web_url, gl_avatar_url, gl_state, gl_username, gl_full_name, gl_id, tool_source, tool_version, data_source, data_collection_date, cntrb_id) FROM stdin;
 not-provided	\N	\N	\N	2019-06-13 11:33:39	\N	0	0	\N	\N	\N	\N	\N	\N	\N	\N	1	nobody	http://fake.me	http://fake.me	x	http://fake.me	\N	http://fake.me	http://fake.me	http://fake.me	http://fake.me	http://fake.me	http://fake.me	http://fake.me	http://fake.me	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	2019-06-13 16:35:25	00000000-0000-0000-0000-000000000000
 nan	kannayoshihiro@gmail.com	KANNA Yoshihiro	UTMC	2009-04-17 12:43:58	\N	0	0	\N	\N	\N	\N	\N	\N	kannayoshihiro@gmail.com	2021-01-28 21:56:10-06	74832	nan	https://api.github.com/users/nan	https://github.com/nan	MDQ6VXNlcjc0ODMy	https://avatars.githubusercontent.com/u/74832?v=4		https://api.github.com/users/nan/followers	https://api.github.com/users/nan/following{/other_user}	https://api.github.com/users/nan/gists{/gist_id}	https://api.github.com/users/nan/starred{/owner}{/repo}	https://api.github.com/users/nan/subscriptions	https://api.github.com/users/nan/orgs	https://api.github.com/users/nan/repos	https://api.github.com/users/nan/events{/privacy}	https://api.github.com/users/nan/received_events	User	false	\N	\N	\N	\N	\N	\N	GitHub API Worker	1.0.0	GitHub API	2021-10-28 15:23:46	01000000-0000-0000-0000-000000000000
 \.
 
-
 --
 -- Data for Name: contributors_aliases; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.contributors_aliases (cntrb_alias_id, canonical_email, alias_email, cntrb_active, cntrb_last_modified, tool_source, tool_version, data_source, data_collection_date, cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: dei_badging; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.dei_badging (id, badging_id, level, repo_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: discourse_insights; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.discourse_insights (msg_discourse_id, msg_id, discourse_act, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: dm_repo_annual; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.dm_repo_annual (repo_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: dm_repo_group_annual; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.dm_repo_group_annual (repo_group_id, email, affiliation, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: dm_repo_group_monthly; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.dm_repo_group_monthly (repo_group_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: dm_repo_group_weekly; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.dm_repo_group_weekly (repo_group_id, email, affiliation, week, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: dm_repo_monthly; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.dm_repo_monthly (repo_id, email, affiliation, month, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: dm_repo_weekly; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.dm_repo_weekly (repo_id, email, affiliation, week, year, added, removed, whitespace, files, patches, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: exclude; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.exclude (id, projects_id, email, domain) FROM stdin;
 \.
-
 
 --
 -- Data for Name: issue_assignees; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.issue_assignees (issue_assignee_id, issue_id, repo_id, issue_assignee_src_id, issue_assignee_src_node, tool_source, tool_version, data_source, data_collection_date, cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: issue_events; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.issue_events (event_id, issue_id, repo_id, action, action_commit_hash, created_at, node_id, node_url, platform_id, issue_event_src_id, tool_source, tool_version, data_source, data_collection_date, cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: issue_labels; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.issue_labels (issue_label_id, issue_id, repo_id, label_text, label_description, label_color, label_src_id, label_src_node_id, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: issue_message_ref; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.issue_message_ref (issue_msg_ref_id, issue_id, repo_id, msg_id, issue_msg_ref_src_node_id, issue_msg_ref_src_comment_id, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: issues; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.issues (issue_id, repo_id, pull_request, pull_request_id, created_at, issue_title, issue_body, comment_count, updated_at, closed_at, due_on, repository_url, issue_url, labels_url, comments_url, events_url, html_url, issue_state, issue_node_id, gh_issue_number, gh_issue_id, gh_user_id, tool_source, tool_version, data_source, data_collection_date, reporter_id, cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: libraries; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.libraries (library_id, repo_id, platform, name, created_timestamp, updated_timestamp, library_description, keywords, library_homepage, license, version_count, latest_release_timestamp, latest_release_number, package_manager_id, dependency_count, dependent_library_count, primary_language, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: library_dependencies; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.library_dependencies (lib_dependency_id, library_id, manifest_platform, manifest_filepath, manifest_kind, repo_id_branch, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: library_version; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.library_version (library_version_id, library_id, library_platform, version_number, version_release_date, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: lstm_anomaly_models; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.lstm_anomaly_models (model_id, model_name, model_description, look_back_days, training_days, batch_size, metric, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: lstm_anomaly_results; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.lstm_anomaly_results (result_id, repo_id, repo_category, model_id, metric, contamination_factor, mean_absolute_error, remarks, metric_field, mean_absolute_actual_value, mean_absolute_prediction_value, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: message; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.message (msg_id, rgls_id, platform_msg_id, platform_node_id, repo_id, msg_text, msg_timestamp, msg_sender_email, msg_header, pltfrm_id, tool_source, tool_version, data_source, data_collection_date, cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: message_analysis; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.message_analysis (msg_analysis_id, msg_id, worker_run_id, sentiment_score, reconstruction_error, novelty_flag, feedback_flag, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: message_analysis_summary; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.message_analysis_summary (msg_summary_id, repo_id, worker_run_id, positive_ratio, negative_ratio, novel_count, period, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: message_sentiment; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.message_sentiment (msg_analysis_id, msg_id, worker_run_id, sentiment_score, reconstruction_error, novelty_flag, feedback_flag, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: message_sentiment_summary; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.message_sentiment_summary (msg_summary_id, repo_id, worker_run_id, positive_ratio, negative_ratio, novel_count, period, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: platform; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
+
 
 COPY augur_data.platform (pltfrm_id, pltfrm_name, pltfrm_version, pltfrm_release_date, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 1	GitHub	3	2019-06-05	Manual Entry	Sean Goggins	GitHub	2019-06-05 17:23:42
@@ -6660,130 +6961,130 @@ COPY augur_data.platform (pltfrm_id, pltfrm_name, pltfrm_version, pltfrm_release
 2	GitLab	2	2019-06-05	Manual Entry	Sean Goggins	GitHub	2022-07-28 20:43:00
 \.
 
-
 --
 -- Data for Name: pull_request_analysis; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_analysis (pull_request_analysis_id, pull_request_id, merge_probability, mechanism, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_assignees; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_assignees (pr_assignee_map_id, pull_request_id, repo_id, pr_assignee_src_id, tool_source, tool_version, data_source, data_collection_date, contrib_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_commits; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_commits (pr_cmt_id, pull_request_id, repo_id, pr_cmt_sha, pr_cmt_node_id, pr_cmt_message, pr_cmt_comments_url, pr_cmt_timestamp, pr_cmt_author_email, tool_source, tool_version, data_source, data_collection_date, pr_cmt_author_cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_events; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_events (pr_event_id, pull_request_id, repo_id, action, action_commit_hash, created_at, issue_event_src_id, node_id, node_url, platform_id, pr_platform_event_id, tool_source, tool_version, data_source, data_collection_date, cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_files; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_files (pr_file_id, pull_request_id, repo_id, pr_file_additions, pr_file_deletions, pr_file_path, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_labels; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_labels (pr_label_id, pull_request_id, repo_id, pr_src_id, pr_src_node_id, pr_src_url, pr_src_description, pr_src_color, pr_src_default_bool, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_message_ref; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_message_ref (pr_msg_ref_id, pull_request_id, repo_id, msg_id, pr_message_ref_src_comment_id, pr_message_ref_src_node_id, pr_issue_url, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_meta; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_meta (pr_repo_meta_id, pull_request_id, repo_id, pr_head_or_base, pr_src_meta_label, pr_src_meta_ref, pr_sha, tool_source, tool_version, data_source, data_collection_date, cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_repo; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_repo (pr_repo_id, pr_repo_meta_id, pr_repo_head_or_base, pr_src_repo_id, pr_src_node_id, pr_repo_name, pr_repo_full_name, pr_repo_private_bool, tool_source, tool_version, data_source, data_collection_date, pr_cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_review_message_ref; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_review_message_ref (pr_review_msg_ref_id, pr_review_id, repo_id, msg_id, pr_review_msg_url, pr_review_src_id, pr_review_msg_src_id, pr_review_msg_node_id, pr_review_msg_diff_hunk, pr_review_msg_path, pr_review_msg_position, pr_review_msg_original_position, pr_review_msg_commit_id, pr_review_msg_original_commit_id, pr_review_msg_updated_at, pr_review_msg_html_url, pr_url, pr_review_msg_author_association, pr_review_msg_start_line, pr_review_msg_original_start_line, pr_review_msg_start_side, pr_review_msg_line, pr_review_msg_original_line, pr_review_msg_side, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_reviewers; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_reviewers (pr_reviewer_map_id, pull_request_id, pr_source_id, repo_id, pr_reviewer_src_id, tool_source, tool_version, data_source, data_collection_date, cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_reviews; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_reviews (pr_review_id, pull_request_id, repo_id, pr_review_author_association, pr_review_state, pr_review_body, pr_review_submitted_at, pr_review_src_id, pr_review_node_id, pr_review_html_url, pr_review_pull_request_url, pr_review_commit_id, platform_id, tool_source, tool_version, data_source, data_collection_date, cntrb_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_request_teams; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_request_teams (pr_team_id, pull_request_id, pr_src_team_id, pr_src_team_node, pr_src_team_url, pr_team_name, pr_team_slug, pr_team_description, pr_team_privacy, pr_team_permission, pr_team_src_members_url, pr_team_src_repositories_url, pr_team_parent_id, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: pull_requests; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.pull_requests (pull_request_id, repo_id, pr_url, pr_src_id, pr_src_node_id, pr_html_url, pr_diff_url, pr_patch_url, pr_issue_url, pr_augur_issue_id, pr_src_number, pr_src_state, pr_src_locked, pr_src_title, pr_body, pr_created_at, pr_updated_at, pr_closed_at, pr_merged_at, pr_merge_commit_sha, pr_teams, pr_milestone, pr_commits_url, pr_review_comments_url, pr_review_comment_url, pr_comments_url, pr_statuses_url, pr_meta_head_id, pr_meta_base_id, pr_src_issue_url, pr_src_comments_url, pr_src_review_comments_url, pr_src_commits_url, pr_src_statuses_url, pr_src_author_association, tool_source, tool_version, data_source, data_collection_date, pr_augur_contributor_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: releases; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.releases (release_id, repo_id, release_name, release_description, release_author, release_created_at, release_published_at, release_updated_at, release_is_draft, release_is_prerelease, release_tag_name, release_url, tag_only, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
+
 
 COPY augur_data.repo (repo_id, repo_group_id, repo_git, repo_path, repo_name, repo_added, repo_type, url, owner_id, description, primary_language, created_at, forked_from, updated_at, repo_archived_date_collected, repo_archived, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 25452	10	https://github.com/chaoss/whitepaper	\N	\N	2024-08-05 12:20:22		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:42
@@ -6795,66 +7096,66 @@ COPY augur_data.repo (repo_id, repo_group_id, repo_git, repo_path, repo_name, re
 25450	10	https://github.com/chaoss/grimoirelab-hatstall	\N	\N	2024-08-05 12:20:22		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:42
 \.
 
-
 --
 -- Data for Name: repo_badging; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_badging (badge_collection_id, repo_id, created_at, tool_source, tool_version, data_source, data_collection_date, data) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_clones_data; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_clones_data (repo_clone_data_id, repo_id, unique_clones, count_clones, clone_data_timestamp) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_cluster_messages; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_cluster_messages (msg_cluster_id, repo_id, cluster_content, cluster_mechanism, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_dependencies; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_dependencies (repo_dependencies_id, repo_id, dep_name, dep_count, dep_language, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_deps_libyear; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_deps_libyear (repo_deps_libyear_id, repo_id, name, requirement, type, package_manager, current_verion, latest_version, current_release_date, latest_release_date, libyear, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_deps_scorecard; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_deps_scorecard (repo_deps_scorecard_id, repo_id, name, score, tool_source, tool_version, data_source, data_collection_date, scorecard_check_details) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_group_insights; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_group_insights (rgi_id, repo_group_id, rgi_metric, rgi_value, cms_id, rgi_fresh, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_groups; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
+
 
 COPY augur_data.repo_groups (repo_group_id, rg_name, rg_description, rg_website, rg_recache, rg_last_modified, rg_type, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 1	Default Repo Group	The default repo group created by the schema generation script		0	2019-06-03 15:55:20	GitHub Organization	load	one	git	2019-06-05 13:36:25
@@ -6862,98 +7163,98 @@ COPY augur_data.repo_groups (repo_group_id, rg_name, rg_description, rg_website,
 25430	Frontend Repos	DO NOT DELETE OR FRONTEND REPOS WILL BREAK		0	2023-02-17 15:00:00	\N	\N	\N	\N	\N
 \.
 
-
 --
 -- Data for Name: repo_groups_list_serve; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_groups_list_serve (rgls_id, repo_group_id, rgls_name, rgls_description, rgls_sponsor, rgls_email, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_info; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_info (repo_info_id, repo_id, last_updated, issues_enabled, open_issues, pull_requests_enabled, wiki_enabled, pages_enabled, fork_count, default_branch, watchers_count, "UUID", license, stars_count, committers_count, issue_contributors_count, changelog_file, contributing_file, license_file, code_of_conduct_file, security_issue_file, security_audit_file, status, keywords, commit_count, issues_count, issues_closed, pull_request_count, pull_requests_open, pull_requests_closed, pull_requests_merged, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_insights; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_insights (ri_id, repo_id, ri_metric, ri_value, ri_date, ri_fresh, tool_source, tool_version, data_source, data_collection_date, ri_score, ri_field, ri_detection_method) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_insights_records; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_insights_records (ri_id, repo_id, ri_metric, ri_field, ri_value, ri_date, ri_score, ri_detection_method, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_labor; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_labor (repo_labor_id, repo_id, repo_clone_date, rl_analysis_date, programming_language, file_path, file_name, total_lines, code_lines, comment_lines, blank_lines, code_complexity, repo_url, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_meta; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_meta (repo_id, rmeta_id, rmeta_name, rmeta_value, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_sbom_scans; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_sbom_scans (rsb_id, repo_id, sbom_scan) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_stats; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_stats (repo_id, rstat_id, rstat_name, rstat_value, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_test_coverage; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_test_coverage (repo_id, repo_clone_date, rtc_analysis_date, programming_language, file_path, file_name, testing_tool, file_statement_count, file_subroutine_count, file_statements_tested, file_subroutines_tested, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repo_topic; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repo_topic (repo_topic_id, repo_id, topic_id, topic_prob, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repos_fetch_log; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.repos_fetch_log (repos_id, status, date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: settings; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
+
 
 COPY augur_data.settings (id, setting, value, last_modified) FROM stdin;
 5	report_date	committer	2019-05-07 12:47:26
@@ -6971,158 +7272,156 @@ COPY augur_data.settings (id, setting, value, last_modified) FROM stdin;
 3	utility_status	Idle	1900-01-22 20:38:07
 \.
 
-
 --
 -- Data for Name: topic_words; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.topic_words (topic_words_id, topic_id, word, word_prob, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: unknown_cache; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.unknown_cache (type, repo_group_id, email, domain, added, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: unresolved_commit_emails; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.unresolved_commit_emails (email_unresolved_id, email, name, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: utility_log; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.utility_log (id, level, status, attempted) FROM stdin;
 \.
-
 
 --
 -- Data for Name: working_commits; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
+
 COPY augur_data.working_commits (repos_id, working_commit) FROM stdin;
 \.
-
 
 --
 -- Data for Name: all; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations."all" ("Name", "Bytes", "Lines", "Code", "Comment", "Blank", "Complexity", "Count", "WeightedComplexity", "Files") FROM stdin;
 \.
-
 
 --
 -- Data for Name: augur_settings; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.augur_settings (id, setting, value, last_modified) FROM stdin;
 1	augur_data_version	100	2021-10-12 08:41:51
 \.
-
 
 --
 -- Data for Name: client_applications; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.client_applications (id, api_key, user_id, name, redirect_url) FROM stdin;
 \.
-
 
 --
 -- Data for Name: collection_status; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.collection_status (repo_id, core_data_last_collected, core_status, core_task_id, secondary_data_last_collected, secondary_status, secondary_task_id, event_last_collected, facade_status, facade_data_last_collected, facade_task_id, core_weight, facade_weight, secondary_weight, issue_pr_sum, commit_sum, ml_status, ml_data_last_collected, ml_task_id, ml_weight) FROM stdin;
 \.
-
 
 --
 -- Data for Name: config; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.config (id, section_name, setting_name, value, type) FROM stdin;
 \.
-
 
 --
 -- Data for Name: refresh_tokens; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.refresh_tokens (id, user_session_token) FROM stdin;
 \.
-
 
 --
 -- Data for Name: repos_fetch_log; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.repos_fetch_log (repos_id, status, date) FROM stdin;
 \.
-
 
 --
 -- Data for Name: subscription_types; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
-COPY augur_operations.subscription_types (id, name) FROM stdin;
-\.
-
+COPY augur_operations.subscription_types (id, name) FROM stdin; \.
 
 --
 -- Data for Name: subscriptions; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.subscriptions (application_id, type_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: user_groups; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.user_groups (group_id, user_id, name, favorited) FROM stdin;
 1	1	default	f
 \.
-
 
 --
 -- Data for Name: user_repos; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.user_repos (repo_id, group_id) FROM stdin;
 1	1
 \.
-
 
 --
 -- Data for Name: user_session_tokens; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.user_session_tokens (token, user_id, created_at, expiration, application_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: users; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.users (user_id, login_name, login_hashword, email, text_phone, first_name, last_name, tool_source, tool_version, data_source, data_collection_date, admin, email_verified) FROM stdin;
 1	cli_user	pbkdf2:sha256:260000$oDmAfipU8Ef8TAau$835fce1fc3290b57b5e02ec83aef4613cc06664e6e7535bb6d267dc44563d5d5	cli_user	\N	cli_user	cli_user	Schema Generaation	\N	Schema Generation	2022-10-02 21:49:13	f	f
 \.
 
-
 --
 -- Data for Name: worker_history; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
+
 
 COPY augur_operations.worker_history (history_id, repo_id, worker, job_model, oauth_id, "timestamp", status, total_results) FROM stdin;
 1	1	workers.repo_info_worker.50723	repo_info	0	2021-10-17 12:05:22	Success	1
@@ -7247,85 +7546,80 @@ COPY augur_operations.worker_history (history_id, repo_id, worker, job_model, oa
 120	1	workers.pull_request_worker.9145	repo_info	1017	2021-12-20 13:09:07	Stopped	0
 \.
 
-
 --
 -- Data for Name: worker_job; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.worker_job (job_model, state, zombie_head, since_id_str, description, last_count, last_run, analysis_state, oauth_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: worker_oauth; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.worker_oauth (oauth_id, name, consumer_key, consumer_secret, access_token, access_token_secret, repo_directory, platform) FROM stdin;
 \.
-
 
 --
 -- Data for Name: worker_settings_facade; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.worker_settings_facade (id, setting, value, last_modified) FROM stdin;
 \.
-
 
 --
 -- Data for Name: working_commits; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
+
 COPY augur_operations.working_commits (repos_id, working_commit) FROM stdin;
 \.
-
 
 --
 -- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: augur
 --
 
-COPY public.alembic_version (version_num) FROM stdin;
-28
-\.
-
+COPY public.alembic_version (version_num) FROM stdin; 28 \.
 
 --
 -- Data for Name: test; Type: TABLE DATA; Schema: public; Owner: augur
 --
 
-COPY public.test (test) FROM stdin;
-\.
-
+COPY public.test (test) FROM stdin; \.
 
 --
 -- Data for Name: annotation_types; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
+
 
 COPY spdx.annotation_types (annotation_type_id, name) FROM stdin;
 1	REVIEW
 2	OTHER
 \.
 
-
 --
 -- Data for Name: annotations; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
+
 COPY spdx.annotations (annotation_id, document_id, annotation_type_id, identifier_id, creator_id, created_ts, comment) FROM stdin;
 \.
-
 
 --
 -- Data for Name: augur_repo_map; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
+
 COPY spdx.augur_repo_map (map_id, dosocs_pkg_id, dosocs_pkg_name, repo_id, repo_path) FROM stdin;
 \.
-
 
 --
 -- Data for Name: creator_types; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
+
 
 COPY spdx.creator_types (creator_type_id, name) FROM stdin;
 1	Person
@@ -7333,59 +7627,59 @@ COPY spdx.creator_types (creator_type_id, name) FROM stdin;
 3	Tool
 \.
 
-
 --
 -- Data for Name: creators; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
+
 
 COPY spdx.creators (creator_id, creator_type_id, name, email) FROM stdin;
 1	3	dosocs2-0.16.1	
 \.
 
-
 --
 -- Data for Name: document_namespaces; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
+
 COPY spdx.document_namespaces (document_namespace_id, uri) FROM stdin;
 \.
-
 
 --
 -- Data for Name: documents; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
+
 COPY spdx.documents (document_id, document_namespace_id, data_license_id, spdx_version, name, license_list_version, created_ts, creator_comment, document_comment, package_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: documents_creators; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
+
 COPY spdx.documents_creators (document_creator_id, document_id, creator_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: external_refs; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
+
 COPY spdx.external_refs (external_ref_id, document_id, document_namespace_id, id_string, sha256) FROM stdin;
 \.
-
 
 --
 -- Data for Name: file_contributors; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
+
 COPY spdx.file_contributors (file_contributor_id, file_id, contributor) FROM stdin;
 \.
-
 
 --
 -- Data for Name: file_types; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
+
 
 COPY spdx.file_types (file_type_id, name) FROM stdin;
 4	APPLICATION
@@ -7401,44 +7695,52 @@ COPY spdx.file_types (file_type_id, name) FROM stdin;
 8	VIDEO
 \.
 
-
 --
 -- Data for Name: files; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
+
 COPY spdx.files (file_id, file_type_id, sha256, copyright_text, package_id, comment, notice) FROM stdin;
 \.
-
 
 --
 -- Data for Name: files_licenses; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
+
 COPY spdx.files_licenses (file_license_id, file_id, license_id, extracted_text) FROM stdin;
 \.
-
 
 --
 -- Data for Name: files_scans; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
+
 COPY spdx.files_scans (file_scan_id, file_id, scanner_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: identifiers; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
+
 COPY spdx.identifiers (identifier_id, document_namespace_id, id_string, document_id, package_id, package_file_id) FROM stdin;
 \.
-
 
 --
 -- Data for Name: licenses; Type: TABLE DATA; Schema: spdx; Owner: augur
 --
 
-COPY spdx.licenses (license_id, name, short_name, cross_reference, comment, is_spdx_official) FROM stdin;
+COPY spdx.licenses (
+    license_id,
+    name,
+    short_name,
+    cross_reference,
+    comment,
+    is_spdx_official
+)
+FROM stdin;
+
 1	3dfx Glide License	Glide	http://spdx.org/licenses/Glide.html		t
 2	Abstyles License	Abstyles	http://spdx.org/licenses/Abstyles.html		t
 3	Academic Free License v1.1	AFL-1.1	http://spdx.org/licenses/AFL-1.1.html		t
@@ -9124,6 +9426,14 @@ ALTER TABLE ONLY augur_data.repo_deps_scorecard
 
 ALTER TABLE ONLY augur_data.repo
     ADD CONSTRAINT "repo_git-unique" UNIQUE (repo_git);
+
+
+--
+-- Name: repo repo_src_id_unique; Type: CONSTRAINT; Schema: augur_data; Owner: augur
+--
+
+ALTER TABLE ONLY augur_data.repo
+    ADD CONSTRAINT repo_src_id_unique UNIQUE (repo_src_id);
 
 
 --
@@ -11796,4 +12106,3 @@ REFRESH MATERIALIZED VIEW augur_data.explorer_user_repos;
 --
 -- PostgreSQL database dump complete
 --
-
