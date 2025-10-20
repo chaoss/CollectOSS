@@ -1,10 +1,9 @@
-from flask import request, jsonify, redirect, url_for, flash
+from flask import request, jsonify, redirect, url_for, flash, current_app
 import re
 from flask_login import current_user, login_required
 from augur.application.db.models import Repo, UserGroup, UserRepo
 from augur.tasks.frontend import add_github_orgs_and_repos, parse_org_and_repo_name, parse_org_name, add_gitlab_repos
 from .utils import *
-from .init import logger
 from ..server import app
 
 @app.route('/cache/file/')
@@ -208,7 +207,7 @@ Locking request loop:
     Assumes that the requested repo exists.
 """
 @app.route('/requests/report/wait/<id>')
-def wait_for_report_request(_id):
+def wait_for_report_request(id):
     # Simplified version - reports functionality was removed in rebase
     # Return empty response for now
     return jsonify({"images": {}})

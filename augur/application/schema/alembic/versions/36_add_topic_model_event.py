@@ -1,8 +1,8 @@
 """
 Create topic_model_event table for DB event logging
 
-Revision ID: 35
-Revises: 34
+Revision ID: 36
+Revises: 35
 Create Date: 2025-08-21
 """
 import sqlalchemy as sa
@@ -10,8 +10,8 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "35"
-down_revision = "34"
+revision = "36"
+down_revision = "35"
 branch_labels = None
 depends_on = None
 

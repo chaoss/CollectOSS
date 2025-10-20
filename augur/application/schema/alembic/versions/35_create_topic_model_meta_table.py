@@ -1,7 +1,7 @@
 """Create topic_model_meta table
 
-Revision ID: 34
-Revises: 33
+Revision ID: 35
+Revises: 34
 Create Date: 2024-08-28 20:30:00.000000
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '34'
-down_revision = '33'
+revision = '35'
+down_revision = '34'
 branch_labels = None
 depends_on = None
 
