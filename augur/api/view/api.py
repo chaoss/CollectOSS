@@ -209,5 +209,6 @@ Locking request loop:
 """
 @app.route('/requests/report/wait/<id>')
 def wait_for_report_request(id):
-    requestReports(id)
-    return jsonify(report_requests[id])
+    # Simplified version - reports functionality was removed in rebase
+    # Return empty response for now
+    return jsonify({"images": {}})

@@ -12,7 +12,6 @@ from .server import LoginException
 from augur.application.util import *
 from augur.application.db.lib import get_value
 from ..server import app, db_session
-from .init import reports
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
