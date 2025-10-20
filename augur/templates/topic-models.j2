@@ -1,0 +1,622 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2.1.0/dist/echarts-wordcloud.min.js"></script>
+<script>window.AUGUR_ENV = "{{ 'prod' if request.is_secure else 'dev' }}";</script>
+
+<!-- Add event listeners for proper modal cleanup -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle train modal cleanup
+    const trainModal = document.getElementById('trainModal');
+    if (trainModal) {
+        trainModal.addEventListener('hidden.bs.modal', function() {
+            trainModal.setAttribute('aria-hidden', 'true');
+        });
+    }
+    
+    // Handle comparison modal cleanup
+    const comparisonModal = document.getElementById('comparisonResultModal');
+    if (comparisonModal) {
+        comparisonModal.addEventListener('hidden.bs.modal', function() {
+            comparisonModal.setAttribute('aria-hidden', 'true');
+        });
+    }
+});
+</script>
+
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        
+        <!-- Header -->
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-brain text-primary"></i> Topic Models for: {{ repo.repo_name }}</h2>
+                    <p class="text-muted">
+                        <a href="{{ url_for('repo_repo_view', id=repo.repo_id) }}" class="text-decoration-none">
+                            <i class="fas fa-arrow-left"></i> View Repository
+                        </a>
+                    </p>
+                </div>
+            </div>
+            </div>
+            
+        <!-- Available Topic Models -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Available Topic Models</h5>
+                </div>
+                <div class="card-body">
+                    {% if models %}
+                        <div class="table-responsive">
+                        <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Model ID</th>
+                                        <th>Method</th>
+                                        <th>Topics</th>
+                                        <th>Words per Topic</th>
+                                        <th>NMF Quality</th>
+                                        <th>Training Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for model in models %}
+                                    <tr>
+                                    <td>
+                                        <code>{{ model.model_id|string|truncate(8, true, "") }}...</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ model.model_method }}</span>
+                                    </td>
+                                        <td>{{ model.num_topics }}</td>
+                                        <td>{{ model.num_words_per_topic }}</td>
+                                        <td>
+                                        {% if model.coherence_score is not none %}
+                                                {% if model.coherence_score > 0.7 %}
+                                                    <span class="badge bg-success">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                                    <small class="text-muted d-block">Excellent</small>
+                                                {% elif model.coherence_score > 0.5 %}
+                                                    <span class="badge bg-info">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                                    <small class="text-muted d-block">Good</small>
+                                                {% elif model.coherence_score > 0.3 %}
+                                                    <span class="badge bg-warning">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                                    <small class="text-muted d-block">Fair</small>
+                                                {% elif model.coherence_score > 0 %}
+                                                    <span class="badge bg-danger">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                                    <small class="text-muted d-block">Poor</small>
+                                                {% else %}
+                                                    <span class="badge bg-warning">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                                    <small class="text-muted d-block">Calculating</small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-secondary">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                    <td>{{ model.training_end_time.strftime('%Y-%m-%d %H:%M') if model.training_end_time else 'Unknown' }}</td>
+                                        <td>
+                                            <a href="{{ url_for('topic_model_detail_view', repo_id=repo.repo_id, model_id=model.model_id) }}" 
+                                               class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye"></i> View Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle"></i> <strong>Not enough data</strong> - No topic models are available for this repository yet.
+                        <br><small>Try training a new model using the button below.</small>
+                        </div>
+                    {% endif %}
+                </div>
+                </div>
+            </div>
+            
+        <!-- Actions -->
+        <div class="col-12 mt-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-cog"></i> Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <button class="btn btn-success btn-lg w-100" onclick="openTrainModal()">
+                                <i class="fas fa-plus-circle"></i> Train New Model
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-warning btn-lg w-100" onclick="optimizeParameters()">
+                                <i class="fas fa-sliders-h"></i> Optimize Parameters
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-info btn-lg w-100" onclick="checkTrainingStatus()">
+                                <i class="fas fa-search"></i> Check Status
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {% if models|length >= 2 %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Model Comparison</h6>
+                            <div class="row align-items-end">
+                                <div class="col-md-4">
+                                    <label>Select First Model:</label>
+                                    <select class="form-select" id="compareModel1">
+                                        {% for model in models %}
+                                                                                 <option value="{{ model.model_id }}">{{ model.model_id|string|truncate(8, true, "") }}... ({{ model.training_end_time.strftime('%Y-%m-%d') if model.training_end_time else 'Unknown' }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Select Second Model:</label>
+                                    <select class="form-select" id="compareModel2">
+                                        {% for model in models %}
+                                                                                 <option value="{{ model.model_id }}" {% if loop.index == 2 %}selected{% endif %}>{{ model.model_id|string|truncate(8, true, "") }}... ({{ model.training_end_time.strftime('%Y-%m-%d') if model.training_end_time else 'Unknown' }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-info w-100" onclick="compareSelectedModels()">
+                        <i class="fas fa-balance-scale"></i> Compare Models
+                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Train New Model Modal -->
+<div class="modal fade" id="trainModal" tabindex="-1" aria-labelledby="trainModalLabel" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="trainModalLabel">Train New Topic Model</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="trainForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="numTopics" class="form-label">Number of Topics</label>
+                            <input type="number" class="form-control" id="numTopics" value="8" min="2" max="20">
+                            <div class="form-text">Recommended: 5-15 topics</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="maxFeatures" class="form-label">Max Features</label>
+                            <input type="number" class="form-control" id="maxFeatures" value="1000" min="100" max="10000">
+                            <div class="form-text">Maximum number of words to use</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="minDf" class="form-label">Min DF</label>
+                            <input type="number" class="form-control" id="minDf" value="2" min="1" max="10">
+                            <div class="form-text">Minimum occurrences required</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="maxDf" class="form-label">Max DF</label>
+                            <input type="number" class="form-control" id="maxDf" value="0.8" min="0.1" max="1.0" step="0.1">
+                            <div class="form-text">Maximum fraction of documents</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced options -->
+                    <div class="mt-3">
+                        <a class="text-decoration-none" data-bs-toggle="collapse" href="#advancedTrainOptions" role="button" aria-expanded="false" aria-controls="advancedTrainOptions">
+                            Advanced options
+                        </a>
+                        <div class="collapse mt-2" id="advancedTrainOptions">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label for="numClusters" class="form-label">KMeans Clusters</label>
+                                    <input type="number" class="form-control" id="numClusters" value="5" min="1" max="50">
+                                    <div class="form-text">Auto-clamped to sample count</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitTrain()">
+                    <i class="fas fa-play"></i> Start Training
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Results Modal (following Augur's Bootstrap 5 pattern) -->
+<div class="modal fade" id="comparisonResultModal" tabindex="-1" aria-labelledby="comparisonModalLabel" aria-hidden="true" data-bs-backdrop="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background-color: white; color: black;">
+            <div class="modal-header" style="background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;">
+                <h5 class="modal-title" id="comparisonModalLabel" style="color: black;">
+                    <i class="fas fa-balance-scale"></i> Model Comparison Results
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 20px; color: black;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 style="color: #333;">Model A: <span id="modelAId" style="color: #007bff;">N/A</span></h6>
+                        <p style="color: #333;"><strong>Coherence:</strong> <span id="modelACoherence" style="color: #28a745;">N/A</span></p>
+                        <p style="color: #333;"><strong>Topics:</strong> <span id="modelATopics" style="color: #6c757d;">N/A</span></p>
+                                </div>
+                    <div class="col-md-6">
+                        <h6 style="color: #333;">Model B: <span id="modelBId" style="color: #007bff;">N/A</span></h6>
+                        <p style="color: #333;"><strong>Coherence:</strong> <span id="modelBCoherence" style="color: #28a745;">N/A</span></p>
+                        <p style="color: #333;"><strong>Topics:</strong> <span id="modelBTopics" style="color: #6c757d;">N/A</span></p>
+                        </div>
+                </div>
+                <hr style="border-color: #dee2e6;">
+                <div class="text-center">
+                    <h6 style="color: #333;">Comparison Summary</h6>
+                    <p style="color: #333;"><strong>Coherence Improvement:</strong> <span id="coherenceImprovement" style="color: #dc3545;">0</span></p>
+                    <p style="color: #333;"><strong>Overall Assessment:</strong> <span id="overallAssessment" style="color: #6c757d;">no_change</span></p>
+                </div>
+            </div>
+            <div class="modal-footer" style="background-color: #f8f9fa; border-top: 1px solid #dee2e6;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openTrainModal() {
+    const modalElement = document.getElementById('trainModal');
+    // Remove aria-hidden before showing modal to prevent focus conflicts
+    modalElement.removeAttribute('aria-hidden');
+    const modal = new bootstrap.Modal(modalElement, {
+        backdrop: false,  // Explicitly disable backdrop in JS as well
+        keyboard: true    // Allow ESC key to close
+    });
+    modal.show();
+}
+
+function submitTrain() {
+    const params = {
+        num_topics: parseInt(document.getElementById('numTopics').value),
+        max_features: parseInt(document.getElementById('maxFeatures').value),
+        min_df: parseInt(document.getElementById('minDf').value),
+        max_df: parseFloat(document.getElementById('maxDf').value)
+    };
+    const numClustersEl = document.getElementById('numClusters');
+    if (numClustersEl && numClustersEl.value) {
+        params.num_clusters = parseInt(numClustersEl.value);
+    }
+    
+    // Show loading state
+    const startButton = document.querySelector('[onclick="submitTrain()"]');
+    const originalText = startButton.innerHTML;
+    startButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Training...';
+    startButton.disabled = true;
+    
+    console.log('Starting training with parameters:', params);
+    
+    fetch(`/topic-models/{{ repo.repo_id }}/train`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        body: JSON.stringify(params)
+    })
+    .then(response => {
+        console.log('Training response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+        .then(data => {
+        console.log('Training response data:', data);
+        
+        // Show detailed result
+        let message = '';
+        if (data.status === 'completed') {
+            message = 'Training completed successfully!\n';
+            message += `Repository: ${data.repo_id}\n`;
+            message += `Topics: ${params.num_topics}\n`;
+            message += `Status: ${data.status}\n`;
+            message += `${data.note}\n`;
+            message += 'Refreshing page to show new model...';
+        } else {
+            message = `Training finished with status: ${data.status}\n`;
+            message += `Details: ${JSON.stringify(data, null, 2)}`;
+        }
+        
+        alert(message);
+        
+        const modalElement = document.getElementById('trainModal');
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+            modal.hide();
+        }
+        
+        // Reset button
+        startButton.innerHTML = originalText;
+        startButton.disabled = false;
+        
+        // Refresh after short delay
+        setTimeout(() => {
+            console.log('Refreshing page to check for new models...');
+            location.reload();
+        }, 1000);
+        })
+        .catch(error => {
+        console.error('Training error:', error);
+        
+        let errorMessage = 'Training failed!\n\n';
+        errorMessage += `Error: ${error.message}\n`;
+        errorMessage += 'Possible causes:\n';
+        errorMessage += '   • Database connection issue\n';
+        errorMessage += '   • Insufficient data for training\n';
+        errorMessage += '   • Server processing error\n\n';
+        errorMessage += 'Check browser console for details.';
+        
+        alert(errorMessage);
+        
+        // Reset button
+        startButton.innerHTML = originalText;
+        startButton.disabled = false;
+        });
+}
+
+function optimizeParameters() {
+    console.log('Starting parameter optimization...');
+    
+    // Show loading state
+    const optimizeButton = document.querySelector('[onclick="optimizeParameters()"]');
+    const originalText = optimizeButton.innerHTML;
+    optimizeButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Optimizing...';
+    optimizeButton.disabled = true;
+    
+    const optimizationParams = {
+        num_topics: [5, 8, 10, 12],
+        max_df: [0.7, 0.8, 0.9], 
+        min_df: [1, 2, 3]
+    };
+    
+    console.log('Optimization parameters:', optimizationParams);
+    
+    fetch(`/topic-models/{{ repo.repo_id }}/optimize`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        body: JSON.stringify(optimizationParams)
+    })
+    .then(response => {
+        console.log('Optimization API response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Optimization response data:', data);
+        
+        let message = 'Parameter Optimization Results:\n\n';
+        
+        // Check if we have a nested result structure
+        const result = data.result || data;
+        const outerStatus = data.status;
+        const innerStatus = result.status;
+        
+        // Determine actual status
+        let actualStatus = innerStatus || outerStatus;
+        
+        if (actualStatus === 'completed_with_new_model') {
+            message += 'Success! Optimization completed and new model trained.\n\n';
+            message += `Best Parameters Found:\n`;
+            message += `  • Topics: ${result.best_params.num_topics}\n`;
+            message += `  • Max DF: ${result.best_params.max_df}\n`;
+            message += `  • Min DF: ${result.best_params.min_df}\n`;
+            message += `  • Score: ${result.best_score.toFixed(4)}\n\n`;
+            message += `Evaluated ${result.evaluated_counts} parameter combinations.\n`;
+            message += `New optimized model has been trained and saved!\n\n`;
+            message += 'The page will refresh to show the new model.';
+        } else if (actualStatus === 'optimization_completed_training_failed') {
+            message += 'Optimization completed but model training failed.\n\n';
+            message += `Best Parameters Found:\n`;
+            message += `  • Topics: ${result.best_params.num_topics}\n`;
+            message += `  • Max DF: ${result.best_params.max_df}\n`;
+            message += `  • Min DF: ${result.best_params.min_df}\n`;
+            message += `  • Score: ${result.best_score.toFixed(4)}\n\n`;
+            message += `Training Error: ${result.training_error}\n`;
+            message += 'Optimization results have been saved to model metadata.';
+        } else if (actualStatus === 'failed') {
+            message += 'Optimization failed!\n\n';
+            message += `Error: ${result.error || data.error}`;
+        } else if (outerStatus === 'completed' && result.best_params && result.best_score) {
+            // Handle legacy response format
+            message += 'Success! Optimization completed and new model trained.\n\n';
+            message += `Best Parameters Found:\n`;
+            message += `  • Topics: ${result.best_params.num_topics}\n`;
+            message += `  • Max DF: ${result.best_params.max_df}\n`;
+            message += `  • Min DF: ${result.best_params.min_df}\n`;
+            message += `  • Score: ${result.best_score.toFixed(4)}\n\n`;
+            message += `Evaluated ${result.evaluated_counts || 'multiple'} parameter combinations.\n`;
+            if (result.model_trained) {
+                message += `New optimized model has been trained and saved!\n\n`;
+                message += 'The page will refresh to show the new model.';
+            } else {
+                message += 'Optimization results have been saved to model metadata.';
+            }
+        } else {
+            // Fallback for unexpected format
+            message += `Status: ${actualStatus || outerStatus}\n`;
+            message += `Score: ${result.best_score?.toFixed(4) || 'N/A'}\n`;
+            message += `Parameters: ${JSON.stringify(result.best_params || {})}`;
+        }
+        
+        alert(message);
+        
+        // Reset button state
+        optimizeButton.innerHTML = originalText;
+        optimizeButton.disabled = false;
+        
+        // Refresh page to show new model if training was successful
+        if (actualStatus === 'completed_with_new_model' || (result.model_trained && outerStatus === 'completed')) {
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        }
+    })
+    .catch(error => {
+        console.error('Optimization error:', error);
+        
+        let errorMessage = 'Parameter optimization failed!\n\n';
+        errorMessage += `Error: ${error.message}\n\n`;
+        errorMessage += 'Troubleshooting:\n';
+        errorMessage += '  • Check server logs for details\n';
+        errorMessage += '  • Verify repository has sufficient data\n';
+        errorMessage += '  • Try refreshing the page\n';
+        
+        alert(errorMessage);
+        
+        // Reset button state
+        optimizeButton.innerHTML = originalText;
+        optimizeButton.disabled = false;
+    });
+}
+
+function compareSelectedModels() {
+    const model1 = document.getElementById('compareModel1').value;
+    const model2 = document.getElementById('compareModel2').value;
+    
+    if (model1 === model2) {
+        alert('Please select two different models to compare.');
+        return;
+    }
+    
+    // Show loading state
+    const button = document.querySelector('button[onclick="compareSelectedModels()"]');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Comparing...';
+    button.disabled = true;
+    
+    // Determine endpoint based on environment
+    const isHttps = window.AUGUR_ENV === 'prod' || window.location.protocol === 'https:';
+    const endpoint = isHttps
+        ? `/api/unstable/repos/{{ repo.repo_id }}/topic-models/compare?model_a=${encodeURIComponent(model1)}&model_b=${encodeURIComponent(model2)}`
+        : `/topic-models/{{ repo.repo_id }}/compare?model_a=${encodeURIComponent(model1)}&model_b=${encodeURIComponent(model2)}`;
+    
+    fetch(endpoint)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Debug: Log the received data
+            console.log('Comparison data received:', data);
+            
+            // Update modal content with correct data structure from backend
+            document.getElementById('modelAId').textContent = data.model_a_id ? data.model_a_id.substring(0, 8) : 'N/A';
+            document.getElementById('modelACoherence').textContent = data.model_a_coherence || 'N/A';
+            document.getElementById('modelATopics').textContent = data.model_a_topics || 'N/A';
+            
+            document.getElementById('modelBId').textContent = data.model_b_id ? data.model_b_id.substring(0, 8) : 'N/A';
+            document.getElementById('modelBCoherence').textContent = data.model_b_coherence || 'N/A';
+            document.getElementById('modelBTopics').textContent = data.model_b_topics || 'N/A';
+            
+            document.getElementById('coherenceImprovement').textContent = data.coherence_improvement || 0;
+            document.getElementById('overallAssessment').textContent = data.overall_improvement || 'no_change';
+            
+            const modalElement = document.getElementById('comparisonResultModal');
+            // Remove aria-hidden before showing modal to prevent focus conflicts
+            modalElement.removeAttribute('aria-hidden');
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: false,  // Explicitly disable backdrop in JS as well
+                keyboard: true    // Allow ESC key to close
+            });
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Comparison error:', error);
+            alert('Error comparing models. Please try again.');
+        })
+        .finally(() => {
+            // Reset button state
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+}
+
+function checkTrainingStatus() {
+    console.log('Checking training status...');
+    
+    fetch(`/topic-models/{{ repo.repo_id }}/status`)
+    .then(response => {
+        console.log('Status API response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Training status data:', data);
+        
+        let statusMessage = 'Training Status Check Results:\n\n';
+        
+        if (data.status === 'success') {
+            statusMessage += `Repository ID: ${data.repo_id}\n`;
+            statusMessage += `Total Models: ${data.total_models}\n`;
+            statusMessage += `RepoTopic Entries: ${data.repo_topic_entries}\n`;
+            statusMessage += `Latest Training: ${data.latest_model_time || 'N/A'}\n\n`;
+            
+            if (data.models && data.models.length > 0) {
+                statusMessage += 'Model Details:\n';
+                data.models.forEach((model, index) => {
+                    statusMessage += `${index + 1}. Model ${model.model_id.substring(0, 8)}...\n`;
+                    statusMessage += `    Trained: ${model.training_end_time}\n`;
+                    statusMessage += `    Topics: ${model.num_topics}\n`;
+                    statusMessage += `    Coherence: ${model.coherence_score || 'N/A'}\n`;
+                    statusMessage += `    Method: ${model.model_method}\n`;
+                    statusMessage += `    Messages: ${model.training_message_count || 'N/A'}\n\n`;
+                });
+            } else {
+                statusMessage += 'No models found in database!\n';
+                statusMessage += 'This could mean:\n';
+                statusMessage += '   • Training hasn\'t completed yet\n';
+                statusMessage += '   • Training failed during execution\n';
+                statusMessage += '   • Database write failed\n';
+            }
+        } else {
+            statusMessage += `Status check failed: ${data.error}\n`;
+            statusMessage += 'Check server logs for more details.';
+        }
+        
+        alert(statusMessage);
+    })
+    .catch(error => {
+        console.error('Status check error:', error);
+        let errorMessage = 'Failed to check training status!\n\n';
+        errorMessage += `Error: ${error.message}\n`;
+        errorMessage += 'Possible causes:\n';
+        errorMessage += '   • Server connection issue\n';
+        errorMessage += '   • Database connectivity problem\n';
+        errorMessage += '   • Internal server error\n\n';
+        errorMessage += 'Check browser console and server logs for details.';
+        
+        alert(errorMessage);
+    });
+}
+</script>

@@ -1,0 +1,16 @@
+{
+  "Clustering_Task": {
+    "num_topics": 8,
+    "min_df": 2,
+    "max_df": 0.8,
+    "max_features": 1000,
+    "num_words_per_topic": 12,
+    "num_clusters": 5,
+    "random_state": 42,
+    "coherence_metric": "c_v",
+    "retrain_days": 90,
+    "retrain_msg_growth": 0.2,
+    "quality_threshold": 0.3,
+    "output_dir": "database"
+  }
+} 

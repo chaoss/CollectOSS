@@ -1,9 +1,10 @@
 import logging
 import os
-import time
-import traceback
 import re
-import pickle
+import uuid
+import datetime
+import json
+import hashlib
 
 import sqlalchemy as s
 import pandas as pd
@@ -14,22 +15,274 @@ import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.decomposition import LatentDirichletAllocation  as LDA
+# LDA import removed as we're using NMF model
+# from sklearn.decomposition import LatentDirichletAllocation  as LDA
 from collections import OrderedDict
 from textblob import TextBlob
 from collections import Counter
+from sklearn.decomposition import NMF
+
+# Import for coherence score calculation
+try:
+    from gensim.models import CoherenceModel
+    from gensim.corpora import Dictionary
+    from gensim import utils
+    GENSIM_AVAILABLE = True
+except ImportError:
+    GENSIM_AVAILABLE = False
 
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.lib import get_value, get_session, get_repo_by_repo_git
-from augur.application.db.models import RepoClusterMessage, RepoTopic, TopicWord
+from augur.application.db.models import RepoClusterMessage, TopicWord, TopicModelMeta
 from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
+
+# HDP model import removed as we're using NMF+Count model
+# from gensim.models import HdpModel
+# import gensim.corpora as corpora
 
 
 MODEL_FILE_NAME = "kmeans_repo_messages"
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
 
+# --- Configuration Loading ---
+# This section loads configuration from config.json file if available,
+# otherwise falls back to database configuration.
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
 
-@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+# --- RETRAIN DECISION LOGIC ---
+# Complete should_retrain logic based on 4 dimensions: Age, Params, Quality, Data
+
+def should_retrain_by_age(latest_model, retrain_days, logger):
+    """
+    Check if model needs retraining based on age.
+    
+    Args:
+        latest_model: TopicModelMeta object from database
+        retrain_days: Maximum days before model is considered too old
+        logger: Logger instance
+    
+    Returns:
+        bool: True if model is too old and needs retraining
+    """
+    try:
+        if not latest_model or not latest_model.training_end_time:
+            logger.info("No existing model or training time found - retrain needed")
+            return True
+            
+        model_age_days = (datetime.datetime.now() - latest_model.training_end_time).days
+        logger.info(f"Model age: {model_age_days} days, threshold: {retrain_days} days")
+        
+        if model_age_days > retrain_days:
+            logger.info(f"Model is too old ({model_age_days} > {retrain_days} days) - retrain needed")
+            return True
+        
+        logger.info(f"Model age is acceptable ({model_age_days} <= {retrain_days} days)")
+        return False
+            
+    except Exception as e:
+        logger.warning(f"Error checking model age: {e} - defaulting to retrain")
+        return True
+
+def should_retrain_by_params(latest_model, new_params, logger):
+    """
+    Check if model needs retraining based on parameter changes.
+    
+    Args:
+        latest_model: TopicModelMeta object from database
+        new_params: Dictionary of current training parameters
+        logger: Logger instance
+    
+    Returns:
+        bool: True if parameters have changed and retraining is needed
+    """
+    try:
+        if not latest_model or not latest_model.parameters_hash:
+            logger.info("No existing model or parameters hash found - retrain needed")
+            return True
+            
+        # Calculate current parameters hash
+        params_str = json.dumps(new_params, sort_keys=True)
+        current_hash = hashlib.md5(params_str.encode()).hexdigest()
+        
+        logger.info(f"Current params hash: {current_hash}")
+        logger.info(f"Stored params hash: {latest_model.parameters_hash}")
+        
+        if current_hash != latest_model.parameters_hash:
+            logger.info("Parameters have changed - retrain needed")
+            return True
+        
+        logger.info("Parameters unchanged")
+        return False
+            
+    except Exception as e:
+        logger.warning(f"Error checking parameter changes: {e} - defaulting to retrain")
+        return True
+
+def should_retrain_by_quality(latest_model, quality_threshold, logger):
+    """
+    Check if model needs retraining based on quality metrics.
+    
+    Args:
+        latest_model: TopicModelMeta object from database
+        quality_threshold: Minimum acceptable coherence score (default: 0.3)
+        logger: Logger instance
+    
+    Returns:
+        bool: True if model quality is below threshold and retraining is needed
+    """
+    try:
+        if not latest_model:
+            logger.info("No existing model found - retrain needed")
+            return True
+            
+        coherence_score = latest_model.coherence_score or 0.0
+        logger.info(f"Model coherence score: {coherence_score}, threshold: {quality_threshold}")
+        
+        if coherence_score < quality_threshold:
+            logger.info(f"Model quality too low ({coherence_score} < {quality_threshold}) - retrain needed")
+            return True
+        
+        logger.info(f"Model quality acceptable ({coherence_score} >= {quality_threshold})")
+        return False
+            
+    except Exception as e:
+        logger.warning(f"Error checking model quality: {e} - defaulting to retrain")
+        return True
+
+def should_retrain_by_data(latest_model, current_message_count, growth_threshold, logger):
+    """
+    Check if model needs retraining based on data growth.
+    
+    Args:
+        latest_model: TopicModelMeta object from database
+        current_message_count: Current number of messages in repository
+        growth_threshold: Minimum growth percentage to trigger retrain (default: 0.2 = 20%)
+        logger: Logger instance
+    
+    Returns:
+        bool: True if data has grown significantly and retraining is needed
+    """
+    try:
+        if not latest_model or not latest_model.training_message_count:
+            logger.info("No existing model or training message count found - retrain needed")
+            return True
+            
+        training_count = latest_model.training_message_count
+        logger.info(f"Training message count: {training_count}, current count: {current_message_count}")
+        
+        if training_count == 0:
+            logger.info("Previous training count is 0 - retrain needed")
+            return True
+            
+        growth_rate = (current_message_count - training_count) / training_count
+        logger.info(f"Data growth rate: {growth_rate:.2%}, threshold: {growth_threshold:.2%}")
+        
+        if growth_rate > growth_threshold:
+            logger.info(f"Data growth significant ({growth_rate:.2%} > {growth_threshold:.2%}) - retrain needed")
+            return True
+        
+        logger.info(f"Data growth acceptable ({growth_rate:.2%} <= {growth_threshold:.2%})")
+        return False
+            
+    except Exception as e:
+        logger.warning(f"Error checking data growth: {e} - defaulting to retrain")
+        return True
+
+def should_retrain_model(repo_id, new_params, current_message_count, retrain_days, growth_threshold, quality_threshold, logger):
+    """
+    Comprehensive retrain decision logic combining all 4 dimensions.
+    
+    Args:
+        repo_id: Repository ID to check
+        new_params: Current training parameters
+        current_message_count: Current number of messages
+        retrain_days: Maximum model age in days
+        growth_threshold: Data growth threshold (e.g., 0.2 for 20%)
+        quality_threshold: Minimum quality threshold (e.g., 0.3)
+        logger: Logger instance
+    
+    Returns:
+        tuple: (should_retrain: bool, reasons: list)
+    """
+    try:
+        with get_session() as session:
+            # Get the latest model for this repository
+            latest_model = session.query(TopicModelMeta).filter_by(
+                repo_id=repo_id
+            ).order_by(TopicModelMeta.training_end_time.desc()).first()
+            
+            logger.info(f"Checking retrain conditions for repo {repo_id}")
+            
+            reasons = []
+            
+            # Check all 4 dimensions
+            if should_retrain_by_age(latest_model, retrain_days, logger):
+                reasons.append("Age: Model is too old")
+                
+            if should_retrain_by_params(latest_model, new_params, logger):
+                reasons.append("Params: Training parameters have changed")
+                
+            if should_retrain_by_quality(latest_model, quality_threshold, logger):
+                reasons.append("Quality: Model quality below threshold")
+                
+            if should_retrain_by_data(latest_model, current_message_count, growth_threshold, logger):
+                reasons.append("Data: Significant data growth detected")
+            
+            should_retrain = len(reasons) > 0
+            
+            if should_retrain:
+                logger.info(f"RETRAIN NEEDED - Reasons: {'; '.join(reasons)}")
+            else:
+                logger.info("NO RETRAIN NEEDED - All conditions satisfied")
+                
+            return should_retrain, reasons
+            
+    except Exception as e:
+        logger.error(f"Error in retrain decision logic: {e}")
+        return True, ["Error: Unable to check retrain conditions"]
+
+
+def replace_env_vars(value):
+    """Replace environment variables in string values"""
+    if isinstance(value, str) and value.startswith('${') and value.endswith('}'):
+        # Extract variable name and default value
+        var_content = value[2:-1]  # Remove ${ and }
+        if ':-' in var_content:
+            var_name, default_value = var_content.split(':-', 1)
+        else:
+            var_name = var_content
+            default_value = ''
+        
+        # Get environment variable or use default
+        env_value = os.getenv(var_name, default_value)
+        
+        # Try to convert to appropriate type
+        try:
+            if default_value.isdigit():
+                return int(env_value)
+            if default_value.replace('.', '').isdigit():
+                return float(env_value)
+            return env_value
+        except (ValueError, AttributeError):
+            return env_value
+    
+    return value
+
+def load_config_with_env_vars(config_dict):
+    """Recursively replace environment variables in config dictionary"""
+    if isinstance(config_dict, dict):
+        for key, value in config_dict.items():
+            config_dict[key] = load_config_with_env_vars(value)
+    elif isinstance(config_dict, list):
+        for i, item in enumerate(config_dict):
+            config_dict[i] = load_config_with_env_vars(item)
+    elif isinstance(config_dict, str):
+        return replace_env_vars(config_dict)
+    
+    return config_dict
+
+
+@celery.task(base=AugurMlRepoCollectionTask, bind=True, queue='ml')
 def clustering_task(self, repo_git):
 
     logger = logging.getLogger(clustering_model.__name__)
@@ -38,27 +291,86 @@ def clustering_task(self, repo_git):
     clustering_model(repo_git, logger, engine)
 
 def clustering_model(repo_git: str,logger,engine) -> None:
-
+    """
+    Main entry for clustering and topic modeling on repository messages.
+    
+    AUTOMATIC INTELLIGENT RETRAIN SYSTEM:
+    This function automatically decides whether to retrain or use existing models based on 4 dimensions:
+    - Age: Model age vs retrain_days threshold (default: 90 days)
+    - Params: Training parameter changes vs parameters_hash
+    - Quality: Model coherence_score vs quality_threshold (default: 0.3)
+    - Data: Message count growth vs retrain_msg_growth threshold (default: 20%)
+    
+    WORKFLOW:
+    1. If no model exists -> Train new model
+    2. If model exists -> Check 4 retrain conditions
+    3. If any condition fails -> Retrain model
+    4. If all conditions pass -> Use existing model
+    
+    This eliminates the need for manual retrain decisions and ensures models stay current automatically.
+    
+    Loads parameters from config.json if available, otherwise from database config table.
+    Config parameters:
+      - db: Database connection info (used for standalone runs)
+      - topic_modeling.num_topics: Number of topics for NMF model (int)
+      - topic_modeling.min_df: Min document frequency for vectorizer (int)
+      - topic_modeling.max_df: Max document frequency for vectorizer (float)
+      - topic_modeling.random_state: Random seed (int)
+      - topic_modeling.coherence_metric: Coherence metric (str)
+      - topic_modeling.retrain_days: Retrain if last model older than this (int, days)
+      - topic_modeling.retrain_msg_growth: Retrain if message count grows by this fraction (float)
+      - topic_modeling.quality_threshold: Retrain if coherence score below this (float, default: 0.3)
+      - topic_modeling.output_dir: Where to save models/visualizations (str)
+    """
     logger.info(f"Starting clustering analysis for {repo_git}")
 
-    ngram_range = (1, 4)
-    clustering_by_content = True
-    clustering_by_mechanism = False
-
-    # define topic modeling specific parameters
-    num_topics = 8
-    num_words_per_topic = 12
+    # Load topic modeling parameters from config.json or database
+    if os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH, 'r') as f:
+            config = json.load(f)
+            # Replace environment variables in config
+            config = load_config_with_env_vars(config)
+            topic_cfg = config.get('Clustering_Task', {})
+            num_topics = int(topic_cfg.get('num_topics', 8))
+            min_df = int(topic_cfg.get('min_df', 2))
+            max_df = float(topic_cfg.get('max_df', 0.8))
+            max_features = int(topic_cfg.get('max_features', 1000))
+            num_words_per_topic = int(topic_cfg.get('num_words_per_topic', 12))
+            num_clusters = int(topic_cfg.get('num_clusters', 5))
+            random_state = int(topic_cfg.get('random_state', 42))
+            coherence_metric = topic_cfg.get('coherence_metric', 'c_v')
+            retrain_days = int(topic_cfg.get('retrain_days', 90))
+            retrain_msg_growth = float(topic_cfg.get('retrain_msg_growth', 0.2))
+            quality_threshold = float(topic_cfg.get('quality_threshold', 0.3))
+            output_dir = topic_cfg.get('output_dir', 'database')  # Store in database, not artifacts
+            ngram_range = (1, 4)  # Default ngram range
+            clustering_by_content = True
+            clustering_by_mechanism = False
+            logger.info("Configuration loaded from config.json file")
+    else:
+        # Fallback to database configuration
+        num_topics = get_value("Clustering_Task", 'num_topics') or 8
+        min_df = get_value("Clustering_Task", 'min_df') or 2
+        max_df = get_value("Clustering_Task", 'max_df') or 0.8
+        max_features = get_value("Clustering_Task", 'max_features') or 1000
+        num_words_per_topic = get_value("Clustering_Task", 'num_words_per_topic') or 12
+        num_clusters = get_value("Clustering_Task", 'num_clusters') or 5
+        random_state = get_value("Clustering_Task", 'random_state') or 42
+        coherence_metric = get_value("Clustering_Task", 'coherence_metric') or 'c_v'
+        retrain_days = get_value("Clustering_Task", 'retrain_days') or 90
+        retrain_msg_growth = get_value("Clustering_Task", 'retrain_msg_growth') or 0.2
+        quality_threshold = get_value("Clustering_Task", 'quality_threshold') or 0.3
+        output_dir = get_value("Clustering_Task", 'output_dir') or 'database'  # Store in database, not artifacts
+        ngram_range = (1, 4)
+        clustering_by_content = True
+        clustering_by_mechanism = False
+        logger.info("Configuration loaded from database")
 
     tool_source = 'Clustering Worker'
-    tool_version = '0.2.0'
+    tool_version = '0.3.0'
     data_source = 'Augur Collected Messages'
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
-
-    num_clusters = get_value("Clustering_Task", 'num_clusters')
-    max_df = get_value("Clustering_Task", 'max_df')
-    max_features = get_value("Clustering_Task", 'max_features')
-    min_df = get_value("Clustering_Task", 'min_df')
 
     logger.info(f"Min df: {min_df}. Max df: {max_df}")
 
@@ -116,23 +428,73 @@ def clustering_model(repo_git: str,logger,engine) -> None:
     logger.info(msg_df_cur_repo.head())
     logger.debug(f"Repo message df size: {len(msg_df_cur_repo.index)}")
 
-    # check if dumped pickle file exists, if exists no need to train the model
-    if not os.path.exists(MODEL_FILE_NAME):
-        logger.info("clustering model not trained. Training the model.........")
-        train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source)
+    # Prepare current training parameters for retrain decision
+    current_params = {
+        "max_df": max_df,
+        "min_df": min_df,
+        "max_features": max_features,
+        "ngram_range": ngram_range,
+        "num_clusters": num_clusters,
+        "num_topics": num_topics,
+        "num_words_per_topic": num_words_per_topic
+    }
+    
+    current_message_count = len(msg_df_cur_repo.index)
+    
+    logger.info("=" * 50)
+    logger.info("INTELLIGENT RETRAIN DECISION SYSTEM")
+    logger.info("=" * 50)
+    
+    # Use intelligent retrain decision logic
+    should_retrain, retrain_reasons = should_retrain_model(
+        repo_id=repo_id,
+        new_params=current_params,
+        current_message_count=current_message_count,
+        retrain_days=retrain_days,
+        growth_threshold=retrain_msg_growth,
+        quality_threshold=quality_threshold,
+        logger=logger
+    )
+    
+    if should_retrain:
+        logger.info(" RETRAINING MODEL")
+        logger.info(f"Retrain reasons: {', '.join(retrain_reasons)}")
+        train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source, repo_id)
     else:
-        model_stats = os.stat(MODEL_FILE_NAME)
-        model_age = (time.time() - model_stats.st_mtime)
-        # if the model is more than month old, retrain it.
-        logger.debug(f'model age is: {model_age}')
-        if model_age > 2000000:
-            logger.info("clustering model to old. Retraining the model.........")
-            train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source)
-        else:
-            logger.info("using pre-trained clustering model....")
+        logger.info(" USING EXISTING MODEL")
+        logger.info("All conditions satisfied - no retraining needed")
+        
+        # Load existing model information
+        with get_session() as session:
+            latest_model = session.query(TopicModelMeta).filter_by(
+                repo_id=repo_id
+            ).order_by(TopicModelMeta.training_end_time.desc()).first()
+            
+            if latest_model:
+                logger.info(f"📊 EXISTING MODEL INFO:")
+                logger.info(f"   • Model ID: {latest_model.model_id}")
+                logger.info(f"   • Method: {latest_model.model_method}")
+                logger.info(f"   • Topics: {latest_model.num_topics}")
+                logger.info(f"   • Coherence Score: {latest_model.coherence_score}")
+                logger.info(f"   • Training Date: {latest_model.training_end_time}")
+                logger.info(f"   • Training Messages: {latest_model.training_message_count}")
+                logger.info(f"   • Age: {(datetime.datetime.now() - latest_model.training_end_time).days} days")
+                
+                # Model is already in database and working
+                # No additional training or clustering needed
+                logger.info("   • Model is ready for use via API endpoints")
+                
+                # Since model is good, we can skip the legacy clustering operations below
+                logger.info("Skipping legacy clustering operations - using database model")
+                return
+            
+            # This code path should be unreachable but kept for safety
+            logger.warning("No existing model found despite retrain check - this shouldn't happen")
+            logger.info("Falling back to training new model")
+            train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source, repo_id)
+            return
 
-    with open("kmeans_repo_messages", 'rb') as model_file:
-        kmeans_model = pickle.load(model_file)
+    logger.info("=" * 50)
 
     msg_df = msg_df_cur_repo.groupby('repo_id')['msg_text'].apply(','.join).reset_index()
 
@@ -143,19 +505,25 @@ def clustering_model(repo_git: str,logger,engine) -> None:
         # self.register_task_completion(task, repo_id, 'clustering')
         return
 
-    vocabulary = pickle.load(open("vocabulary", "rb"))
-
+    # Legacy vocabulary loading is also deprecated - models should come from database
+    # TODO: Implement proper model loading from database
+    # For now, creating a fresh model without vocabulary constraint
+    
     tfidf_vectorizer = TfidfVectorizer(max_df=max_df, max_features=max_features,
                                        min_df=min_df, stop_words='english',
                                        use_idf=True, tokenizer=preprocess_and_tokenize,
-                                       ngram_range=ngram_range, vocabulary=vocabulary)
+                                       ngram_range=ngram_range)
     tfidf_transformer = tfidf_vectorizer.fit(
         msg_df['msg_text'])  # might be fitting twice, might have been used in training
 
     # save new vocabulary ??
     feature_matrix_cur_repo = tfidf_transformer.transform(msg_df['msg_text'])
 
-    prediction = kmeans_model.predict(feature_matrix_cur_repo)
+    # TODO: Load kmeans_model from database instead of using undefined variable
+    # For now, creating a simple prediction using basic clustering
+    temp_kmeans_model = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
+    temp_kmeans_model.fit(feature_matrix_cur_repo)
+    prediction = temp_kmeans_model.predict(feature_matrix_cur_repo)
     logger.info("prediction: " + str(prediction[0]))
 
     with get_session() as session:
@@ -176,77 +544,129 @@ def clustering_model(repo_git: str,logger,engine) -> None:
     # result = db.execute(repo_cluster_messages_table.insert().values(record))
     logging.info(
         "Primary key inserted into the repo_cluster_messages table: {}".format(repo_cluster_messages_obj.msg_cluster_id))
-    try:
-        logger.debug('pickling')
-        lda_model = pickle.load(open("lda_model", "rb"))
-        logger.debug('loading vocab')
-        vocabulary = pickle.load(open("vocabulary_count", "rb"))
-        logger.debug('count vectorizing vocab')
-        count_vectorizer = CountVectorizer(max_df=max_df, max_features=max_features, min_df=min_df,
-                                           stop_words="english", tokenizer=preprocess_and_tokenize,
-                                           vocabulary=vocabulary)
-        logger.debug('count transforming vocab')
-        count_transformer = count_vectorizer.fit(
-            msg_df['msg_text'])  # might be fitting twice, might have been used in training
-
-        # save new vocabulary ??
-        logger.debug('count matric cur repo vocab')
-        count_matrix_cur_repo = count_transformer.transform(msg_df['msg_text'])
-        logger.debug('prediction vocab')
-        prediction = lda_model.transform(count_matrix_cur_repo)
-
-        with get_session() as session:
-
-            logger.debug('for loop for vocab')
-            for i, prob_vector in enumerate(prediction):
-                # repo_id = msg_df.loc[i]['repo_id']
-                for i, prob in enumerate(prob_vector):
-                    record = {
-                        'repo_id': int(repo_id),
-                        'topic_id': i + 1,
-                        'topic_prob': prob,
-                        'tool_source': tool_source,
-                        'tool_version': tool_version,
-                        'data_source': data_source
-                    }
-
-                    repo_topic_object = RepoTopic(**record)
-                    session.add(repo_topic_object)
-                    session.commit()
-
-                    # result = db.execute(repo_topic_table.insert().values(record))
-    except Exception as e:
-        logger.debug(f'error is: {e}.')
-        stacker = traceback.format_exc()
-        logger.debug(f"\n\n{stacker}\n\n")
-        pass
+    # Note: Model and vocabulary loading from database not yet implemented
+    # This function needs to be redesigned for database-only storage
+    logger.warning("Model loading from database not yet implemented - skipping RepoTopic generation")
 
     # self.register_task_completion(task, repo_id, 'clustering')
 
 
 def get_tf_idf_matrix(text_list, max_df, max_features, min_df, ngram_range, logger):
-
+    # Validate input parameters
+    if hasattr(text_list, 'empty'):
+        # For pandas Series/DataFrame
+        if text_list.empty:
+            raise ValueError("Text list cannot be empty")
+    elif not text_list:
+        # For regular lists/arrays
+        raise ValueError("Text list cannot be empty")
+    
+    if max_df <= 0 or max_df > 1.0:
+        raise ValueError("max_df must be between 0 and 1")
+    
+    if min_df < 0:
+        raise ValueError("min_df must be non-negative")
+    
+    # For small datasets, allow min_df to be larger than max_df if min_df is an integer
+    if isinstance(min_df, float) and max_df < min_df:
+        raise ValueError("max_df must be >= min_df")
+    
     logger.debug("Getting the tf idf matrix from function")
-    tfidf_vectorizer = TfidfVectorizer(max_df=max_df, max_features=max_features,
-                                       min_df=min_df, stop_words='english',
-                                       use_idf=True, tokenizer=preprocess_and_tokenize,
-                                       ngram_range=ngram_range)
-    tfidf_transformer = tfidf_vectorizer.fit(text_list)
-    tfidf_matrix = tfidf_transformer.transform(text_list)
-    pickle.dump(tfidf_transformer.vocabulary_, open("vocabulary", 'wb'))
-    return tfidf_matrix, tfidf_vectorizer.get_feature_names()
+    
+    # Smart parameter adjustment for small datasets
+    num_docs = len(text_list)
+    logger.debug(f"Dataset size: {num_docs} documents")
+    
+    # Adjust min_df for small datasets
+    adjusted_min_df = min_df
+    if isinstance(min_df, int) and min_df >= num_docs:
+        adjusted_min_df = max(1, num_docs // 4)  # Use 25% of documents as threshold
+        logger.warning(f"Adjusted min_df from {min_df} to {adjusted_min_df} for small dataset")
+    
+    # Adjust max_df if needed
+    adjusted_max_df = max_df
+    if isinstance(min_df, int) and max_df < 1.0:
+        min_docs_for_max_df = int(num_docs * max_df)
+        if min_docs_for_max_df < adjusted_min_df:
+            adjusted_max_df = 0.95  # Use 95% as fallback
+            logger.warning(f"Adjusted max_df from {max_df} to {adjusted_max_df} to avoid conflict with min_df")
+    
+    try:
+        tfidf_vectorizer = TfidfVectorizer(max_df=adjusted_max_df, max_features=max_features,
+                                           min_df=adjusted_min_df, stop_words='english',
+                                           use_idf=True, tokenizer=preprocess_and_tokenize,
+                                           ngram_range=ngram_range)
+        tfidf_transformer = tfidf_vectorizer.fit(text_list)
+        tfidf_matrix = tfidf_transformer.transform(text_list)
+        logger.info(f"TF-IDF successful with adjusted parameters: min_df={adjusted_min_df}, max_df={adjusted_max_df}")
+    except ValueError as e:
+        # Fallback to very conservative parameters
+        logger.warning(f"TF-IDF failed with adjusted parameters: {e}")
+        logger.warning("Using fallback parameters: min_df=1, max_df=0.95")
+        tfidf_vectorizer = TfidfVectorizer(max_df=0.95, max_features=max_features,
+                                           min_df=1, stop_words='english',
+                                           use_idf=True, tokenizer=preprocess_and_tokenize,
+                                           ngram_range=ngram_range)
+        tfidf_transformer = tfidf_vectorizer.fit(text_list)
+        tfidf_matrix = tfidf_transformer.transform(text_list)
+    # vocabulary will be stored in database, not as local file
+    return tfidf_matrix, tfidf_vectorizer.get_feature_names_out()
 
-def cluster_and_label(feature_matrix, num_clusters):
-    kmeans_model = KMeans(n_clusters=num_clusters)
-    kmeans_model.fit(feature_matrix)
-    pickle.dump(kmeans_model, open("kmeans_repo_messages", 'wb'))
-    return kmeans_model.labels_.tolist()
+def cluster_and_label(feature_matrix, num_clusters, logger=None):
+    # Validate input parameters
+    if feature_matrix is None:
+        raise ValueError("Feature matrix cannot be None")
+    
+    if num_clusters <= 0:
+        raise ValueError("Number of clusters must be positive")
+    
+    num_samples = feature_matrix.shape[0]
+    
+    # Smart cluster adjustment for small datasets
+    adjusted_clusters = num_clusters
+    if num_samples < num_clusters:
+        adjusted_clusters = max(1, num_samples)  # Use all samples as separate clusters
+        if logger:
+            logger.warning(f"Adjusted number of clusters from {num_clusters} to {adjusted_clusters} for small dataset with {num_samples} samples")
+    elif num_samples < 10 and num_clusters > num_samples // 2:
+        # For very small datasets, use conservative clustering
+        adjusted_clusters = max(1, num_samples // 2)
+        if logger:
+            logger.warning(f"Adjusted number of clusters from {num_clusters} to {adjusted_clusters} for very small dataset")
+    
+    if adjusted_clusters == 1:
+        # Special case: only one cluster, all samples belong to cluster 0
+        if logger:
+            logger.info("Using single cluster for all samples")
+        return [0] * num_samples
+    
+    try:
+        kmeans_model = KMeans(n_clusters=adjusted_clusters, random_state=42, n_init=10)
+        kmeans_model.fit(feature_matrix)
+        labels = kmeans_model.labels_.tolist()
+        if logger:
+            logger.info(f"K-means clustering successful with {adjusted_clusters} clusters for {num_samples} samples")
+        return labels
+    except Exception as e:
+        # Fallback: assign each sample to its own cluster (up to available samples)
+        if logger:
+            logger.warning(f"K-means clustering failed: {e}. Using fallback: each sample as separate cluster")
+        return list(range(min(num_samples, adjusted_clusters)))
 
 def count_func(msg):
+    # Handle None or empty input
+    if msg is None or not isinstance(msg, str):
+        raise TypeError("Input must be a non-empty string")
+    
+    if not msg.strip():
+        return {}
+    
     blobed = TextBlob(msg)
     counts = Counter(tag for word, tag in blobed.tags if
                      tag not in ['NNPS', 'RBS', 'SYM', 'WP$', 'LS', 'POS', 'RP', 'RBR', 'JJS', 'UH', 'FW', 'PDT'])
     total = sum(counts.values())
+    if total == 0:
+        return {}
     normalized_count = {key: value / total for key, value in counts.items()}
     return normalized_count
 
@@ -260,7 +680,154 @@ def preprocess_and_tokenize(text):
     stems = [stemmer.stem(t) for t in tokens]
     return stems
 
-def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source):
+
+
+def calculate_nmf_interpretability(nmf_model, document_term_matrix, logger):
+    """
+    Calculate NMF interpretability using reconstruction error.
+    Lower reconstruction error = higher interpretability
+    
+    Args:
+        nmf_model: Trained NMF model
+        document_term_matrix: Original document-term matrix
+        logger: Logger instance
+    
+    Returns:
+        float: Interpretability score (0-1, higher is better)
+    """
+    try:
+        # Calculate reconstruction error
+        W = nmf_model.transform(document_term_matrix)  # Document-topic matrix
+        H = nmf_model.components_  # Topic-word matrix
+        reconstructed = W @ H  # Reconstruct original matrix
+        
+        # Calculate normalized reconstruction error
+        original_norm = np.linalg.norm(document_term_matrix.toarray())
+        error_norm = np.linalg.norm(document_term_matrix.toarray() - reconstructed)
+        
+        # Convert to interpretability score (1 - normalized_error)
+        if original_norm > 0:
+            normalized_error = error_norm / original_norm
+            interpretability = max(0.0, 1.0 - normalized_error)
+        else:
+            interpretability = 0.0
+            
+        logger.info(f"NMF Interpretability (reconstruction-based): {interpretability:.4f}")
+        return round(interpretability, 4)
+        
+    except Exception as e:
+        logger.warning(f"Failed to calculate NMF interpretability: {e}")
+        return 0.0
+
+
+def calculate_topic_sparsity(topic_list, logger):
+    """
+    Calculate topic sparsity - a key advantage of NMF.
+    Higher sparsity = better interpretability
+    
+    Args:
+        topic_list: List of topic arrays from NMF
+        logger: Logger instance
+    
+    Returns:
+        float: Average sparsity score (0-1, higher is better)
+    """
+    try:
+        sparsity_scores = []
+        
+        for topic in topic_list:
+            # Calculate sparsity as percentage of near-zero elements
+            total_elements = len(topic)
+            near_zero_elements = np.sum(topic < 0.01)  # Elements close to zero
+            sparsity = near_zero_elements / total_elements if total_elements > 0 else 0.0
+            sparsity_scores.append(sparsity)
+        
+        average_sparsity = np.mean(sparsity_scores) if sparsity_scores else 0.0
+        logger.info(f"NMF Topic Sparsity (higher = more interpretable): {average_sparsity:.4f}")
+        return round(average_sparsity, 4)
+        
+    except Exception as e:
+        logger.warning(f"Failed to calculate topic sparsity: {e}")
+        return 0.0
+
+
+def calculate_real_coherence_score(texts, nmf_model, vectorizer, logger):
+    """
+    Calculate real coherence score using Gensim's CoherenceModel.
+    This is the standard metric for evaluating topic model quality.
+    
+    Args:
+        texts: List of text documents (strings)
+        nmf_model: Trained NMF model
+        vectorizer: Fitted CountVectorizer used for training
+        logger: Logger instance
+    
+    Returns:
+        float: Coherence score (higher is better, typically 0.3-0.7 is good)
+    """
+    try:
+        if not GENSIM_AVAILABLE:
+            logger.warning("Gensim not available for coherence calculation, using fallback")
+            return calculate_nmf_interpretability(nmf_model, vectorizer.transform(texts), logger)
+            
+        if not texts or not nmf_model or not vectorizer:
+            logger.warning("Insufficient data for coherence calculation")
+            return 0.0
+        
+        # Preprocess texts for gensim
+        processed_texts = []
+        for text in texts:
+            if text and isinstance(text, str):
+                # Simple tokenization and cleaning
+                words = utils.simple_preprocess(text, min_len=2, max_len=15)
+                if words:  # Only add non-empty word lists
+                    processed_texts.append(words)
+        
+        if len(processed_texts) == 0:
+            logger.warning("No valid texts after preprocessing")
+            return 0.0
+        
+        # Create dictionary from processed texts
+        dictionary = Dictionary(processed_texts)
+        
+        # Get feature names from vectorizer
+        feature_names = vectorizer.get_feature_names_out()
+        
+        # Extract topic words from NMF model
+        topics = []
+        for topic_idx in range(nmf_model.n_components):
+            topic = nmf_model.components_[topic_idx]
+            # Get top 10 words for this topic
+            top_word_indices = topic.argsort()[-10:][::-1]
+            topic_words = [feature_names[i] for i in top_word_indices]
+            topics.append(topic_words)
+        
+        if len(topics) == 0:
+            logger.warning("No valid topics extracted for coherence calculation")
+            return 0.0
+        
+        # Calculate coherence using C_V measure (most commonly used)
+        coherence_model = CoherenceModel(
+            topics=topics,
+            texts=processed_texts,
+            dictionary=dictionary,
+            coherence='c_v'
+        )
+        
+        coherence_score = coherence_model.get_coherence()
+        logger.info(f"Real Coherence Score (C_V): {coherence_score:.4f}")
+        
+        # Normalize to 0-1 range and ensure valid output
+        normalized_score = max(0.0, min(1.0, coherence_score)) if coherence_score is not None else 0.0
+        return round(normalized_score, 4)
+        
+    except Exception as e:
+        logger.warning(f"Real coherence calculation failed: {e}")
+        # Fallback to reconstruction-based score
+        return calculate_nmf_interpretability(nmf_model, vectorizer.transform(texts), logger)
+
+
+def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source, repo_id=None):
     def visualize_labels_PCA(features, labels, annotations, num_components, title):
         labels_color_map = {-1: "red"}
         for label in labels:
@@ -284,7 +851,7 @@ def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_c
         plt.ylabel("PCA Component 2")
         # plt.show()
         filename = labels + "_PCA.png"
-        plt.save_fig(filename)
+        plt.savefig(filename)
 
     get_messages_sql = s.sql.text(
         """
@@ -307,14 +874,31 @@ def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_c
     with engine.connect() as conn:
         msg_df_all = pd.read_sql(get_messages_sql, conn, params={})
 
-    # select only highly active repos
-    logger.debug("Selecting highly active repos")
-    msg_df_all = msg_df_all.groupby("repo_id").filter(lambda x: len(x) > 500)
+        # select only highly active repos
+        logger.debug("Selecting highly active repos")
+        msg_df_filtered = msg_df_all.groupby("repo_id").filter(lambda x: len(x) > 200)
+        
+        # Check if we have any data after filtering
+        if msg_df_filtered.empty:
+            logger.warning("No repositories with enough messages (>200) found, using less restrictive filter")
+            # Fallback to repos with at least 50 messages
+            msg_df_filtered = msg_df_all.groupby("repo_id").filter(lambda x: len(x) > 50)
+            
+            if msg_df_filtered.empty:
+                logger.warning("No repositories with enough messages (>50) found, using all available data")
+                # Use all available data as last resort
+                msg_df_filtered = msg_df_all
+        
+        msg_df_all = msg_df_filtered
 
     # combining all the messages in a repository to form a single doc
     logger.debug("Combining messages in repo to form single doc")
     msg_df = msg_df_all.groupby('repo_id')['msg_text'].apply(','.join)
     msg_df = msg_df.reset_index()
+    
+    # Ensure we have data to work with
+    if msg_df.empty:
+        raise ValueError("No message data available for training")
 
     # dataframe summarizing total message count in a repositoryde
     logger.debug("Summarizing total message count in a repo")
@@ -325,97 +909,109 @@ def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_c
 
     tfidf_matrix, features = get_tf_idf_matrix(msg_df['msg_text'], max_df, max_features, min_df,
                                                     ngram_range, logger)
-    msg_df['cluster'] = cluster_and_label(tfidf_matrix, num_clusters)
+    msg_df['cluster'] = cluster_and_label(tfidf_matrix, num_clusters, logger)
 
-    # LDA - Topic Modeling
-    logger.debug("Calling CountVectorizer in train model function")
-    count_vectorizer = CountVectorizer(max_df=max_df, max_features=max_features, min_df=min_df,
-                                       stop_words="english", tokenizer=preprocess_and_tokenize)
+    # Count Vectorizer for NMF topic modeling
+    logger.debug("Calling CountVectorizer for NMF topic modeling")
+    
+    # Apply same smart parameter adjustment for CountVectorizer
+    num_docs_count = len(msg_df['msg_text'])
+    logger.debug(f"CountVectorizer dataset size: {num_docs_count} documents")
+    
+    # Adjust parameters for CountVectorizer
+    count_min_df = min_df
+    if isinstance(min_df, int) and min_df >= num_docs_count:
+        count_min_df = max(1, num_docs_count // 4)
+        logger.warning(f"CountVectorizer: Adjusted min_df from {min_df} to {count_min_df}")
+    
+    count_max_df = max_df
+    if isinstance(min_df, int) and max_df < 1.0:
+        min_docs_for_count_max_df = int(num_docs_count * max_df)
+        if min_docs_for_count_max_df < count_min_df:
+            count_max_df = 0.95
+            logger.warning(f"CountVectorizer: Adjusted max_df from {max_df} to {count_max_df}")
+    
+    try:
+        count_vectorizer = CountVectorizer(max_df=count_max_df, max_features=min(max_features, 500), min_df=count_min_df,
+                                           stop_words="english", tokenizer=preprocess_and_tokenize,
+                                           ngram_range=(1, 2))
+        count_transformer = count_vectorizer.fit(msg_df['msg_text'])
+        count_matrix = count_transformer.transform(msg_df['msg_text'])
+        logger.info(f"CountVectorizer successful with adjusted parameters: min_df={count_min_df}, max_df={count_max_df}")
+    except ValueError as e:
+        # Fallback to very conservative parameters
+        logger.warning(f"CountVectorizer failed with adjusted parameters: {e}")
+        logger.warning("CountVectorizer using fallback parameters: min_df=1, max_df=0.95")
+        count_vectorizer = CountVectorizer(max_df=0.95, max_features=min(max_features, 500), min_df=1,
+                                           stop_words="english", tokenizer=preprocess_and_tokenize,
+                                           ngram_range=(1, 2))
+        count_transformer = count_vectorizer.fit(msg_df['msg_text'])
+        count_matrix = count_transformer.transform(msg_df['msg_text'])
+    # vocabulary_count will be stored in database, not as local file
+    feature_names = count_vectorizer.get_feature_names_out()
 
-    # count_matrix = count_vectorizer.fit_transform(msg_df['msg_text'])
-    count_transformer = count_vectorizer.fit(msg_df['msg_text'])
-    count_matrix = count_transformer.transform(msg_df['msg_text'])
-    pickle.dump(count_transformer.vocabulary_, open("vocabulary_count", 'wb'))
-    feature_names = count_vectorizer.get_feature_names()
+    logger.debug("Training NMF model for topic modeling")
+    
+    # Smart topic number adjustment for small datasets
+    num_features = len(feature_names)
+    num_docs_nmf = count_matrix.shape[0]
+    
+    adjusted_topics = num_topics
+    max_possible_topics = min(num_features, num_docs_nmf)
+    
+    if num_topics > max_possible_topics:
+        adjusted_topics = max(1, max_possible_topics)
+        logger.warning(f"Adjusted number of topics from {num_topics} to {adjusted_topics} (max possible with {num_docs_nmf} docs and {num_features} features)")
+    elif num_docs_nmf < 10 and num_topics > num_docs_nmf // 2:
+        # For very small datasets, use conservative topic modeling
+        adjusted_topics = max(1, num_docs_nmf // 2)
+        logger.warning(f"Adjusted number of topics from {num_topics} to {adjusted_topics} for very small dataset")
+    
+    try:
+        nmf_model = NMF(n_components=adjusted_topics, random_state=42, max_iter=100, tol=0.01)
+        nmf_model.fit(count_matrix)
+        logger.info(f"NMF model successful with {adjusted_topics} topics for {num_docs_nmf} documents and {num_features} features")
+    except Exception as e:
+        # Fallback to single topic
+        logger.warning(f"NMF model failed with {adjusted_topics} topics: {e}. Using fallback: single topic")
+        adjusted_topics = 1
+        nmf_model = NMF(n_components=1, random_state=42, max_iter=100, tol=0.01)
+        nmf_model.fit(count_matrix)
+    topic_list = nmf_model.components_
 
-    logger.debug("Calling LDA")
-    lda_model = LDA(n_components=num_topics)
-    lda_model.fit(count_matrix)
-    # each component in lda_model.components_ represents probability distribution over words in that topic
-    topic_list = lda_model.components_
-    # Getting word probability
-    # word_prob = lda_model.exp_dirichlet_component_
-    # word probabilities
-    # lda_model does not have state variable in this library
-    # topics_terms = lda_model.state.get_lambda()
-    # topics_terms_proba = np.apply_along_axis(lambda x: x/x.sum(),1,topics_terms)
-    # word_prob = [lda_model.id2word[i] for i in range(topics_terms_proba.shape[1])]
+    logging.info(f"NMF Topic List Created: {topic_list}")
+    # NMF model will be stored in database, not as local file
+    logging.info("NMF model will be stored in database")
 
-    # Site explaining main library used for parsing topics: https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.LatentDirichletAllocation.html
-
-    # Good site for optimizing: https://medium.com/@yanlinc/how-to-build-a-lda-topic-model-using-from-text-601cdcbfd3a6
-    # Another Good Site: https://towardsdatascience.com/an-introduction-to-clustering-algorithms-in-python-123438574097
-    # https://machinelearningmastery.com/clustering-algorithms-with-python/
-
-    logging.info(f"Topic List Created: {topic_list}")
-    pickle.dump(lda_model, open("lda_model", 'wb'))
-    logging.info("pickle dump")
-
-    ## Advance Sequence SQL
-
-    # key_sequence_words_sql = s.sql.text(
-    #                           """
-    #       SELECT nextval('augur_data.topic_words_topic_words_id_seq'::text)
-    #       """
-    #                               )
-
-    # twid = self.db.execute(key_sequence_words_sql)
-    # logger.info("twid variable is: {}".format(twid))
-    # insert topic list into database
-
+    # Save topics to DB
     with get_session() as session:
-
         topic_id = 1
         for topic in topic_list:
-            # twid = self.get_max_id('topic_words', 'topic_words_id') + 1
-            # logger.info("twid variable is: {}".format(twid))
             for i in topic.argsort()[:-num_words_per_topic - 1:-1]:
-                # twid+=1
-                # logger.info("in loop incremented twid variable is: {}".format(twid))
-                # logger.info("twid variable is: {}".format(twid))
                 record = {
-                    # 'topic_words_id': twid,
-                    # 'word_prob': word_prob[i],
                     'topic_id': int(topic_id),
                     'word': feature_names[i],
                     'tool_source': tool_source,
                     'tool_version': tool_version,
                     'data_source': data_source
                 }
-
                 topic_word_obj = TopicWord(**record)
                 session.add(topic_word_obj)
                 session.commit()
-
-                # result = db.execute(topic_words_table.insert().values(record))
                 logger.info(
                     "Primary key inserted into the topic_words table: {}".format(topic_word_obj.topic_words_id))
             topic_id += 1
-
-    # insert topic list into database
-
-    # save the model and predict on each repo separately
-
-    logger.debug(f'entering prediction in model training, count matric is {count_matrix}')
-    prediction = lda_model.transform(count_matrix)
-
+    
+    # Predict topic distribution for each repo
+    logger.debug(f'entering prediction in model training, count_matrix is {count_matrix.shape}')
+    prediction = nmf_model.transform(count_matrix)
     topic_model_dict_list = []
     logger.debug('entering for loop in model training. ')
     for i, prob_vector in enumerate(prediction):
         topic_model_dict = {}
         topic_model_dict['repo_id'] = msg_df.loc[i]['repo_id']
-        for i, prob in enumerate(prob_vector):
-            topic_model_dict["topic" + str(i + 1)] = prob
+        for j, prob in enumerate(prob_vector):
+            topic_model_dict["topic" + str(j + 1)] = prob
         topic_model_dict_list.append(topic_model_dict)
     logger.debug('creating topic model data frame.')
     topic_model_df = pd.DataFrame(topic_model_dict_list)
@@ -424,26 +1020,120 @@ def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_c
         msg_df.set_index('repo_id'))
     result_content_df = result_content_df.reset_index()
     logger.info(result_content_df)
-    try:
-        POS_count_dict = msg_df.apply(lambda row: count_func(row['msg_text']), axis=1)
-        logger.debug('POS_count_dict has no exceptions.')
-    except Exception as e:
-        logger.debug(f'POS_count_dict error is: {e}.')
-        stacker = traceback.format_exc()
-        logger.debug(f"\n\n{stacker}\n\n")
-        pass
-    try:
-        msg_df_aug = pd.concat([msg_df, pd.DataFrame.from_records(POS_count_dict)], axis=1)
-        logger.info(f'msg_df_aug worked: {msg_df_aug}')
-    except Exception as e:
-        logger.debug(f'msg_df_aug error is: {e}.')
-        stacker = traceback.format_exc()
-        logger.debug(f"\n\n{stacker}\n\n")
-        pass
 
-    visualize_labels_PCA(tfidf_matrix.todense(), msg_df['cluster'], msg_df['repo_id'], 2, "tex!")
-
-# visualize_labels_PCA(tfidf_matrix.todense(), msg_df['cluster'], msg_df['repo_id'], 2, "MIN_DF={} and MAX_DF={} and NGRAM_RANGE={}".format(MIN_DF, MAX_DF, NGRAM_RANGE))
+    # Generate model ID and prepare metadata for database-only storage
+    model_id = str(uuid.uuid4())
+    start_time = datetime.datetime.now()
+    
+    # Prepare metadata for database storage (no file artifacts)
+    meta_json = {
+        "model_id": model_id,
+        "model_type": "NMF_COUNT",
+        "num_topics": int(adjusted_topics),
+        "model_parameters": {
+            "max_df": max_df,
+            "min_df": min_df,
+            "max_features": max_features,
+            "ngram_range": ngram_range,
+            "num_clusters": num_clusters,
+            "num_words_per_topic": int(num_words_per_topic),
+            "adjusted_topics": int(adjusted_topics)
+        },
+        "model_file_paths": {
+            "nmf_model": None,  # No file storage - data in database
+            "vocab": None        # No file storage - data in database
+        },
+        "training_start_time": str(start_time),
+        "training_end_time": str(datetime.datetime.now()),
+        "tool_source": tool_source,
+        "tool_version": tool_version,
+        "data_source": data_source
+    }
+    
+    logger.info(f"Model {model_id} - all data will be stored directly in database")
+    # Prepare visualization data for direct database storage
+    topic_viz_data = {
+            "topics": {},
+        "topic_words": {},
+        "model_info": {
+            "model_id": model_id,
+            "model_type": "NMF_COUNT",
+            "num_topics": int(adjusted_topics),
+            "training_params": meta_json["model_parameters"]
+        }
+    }
+    
+    # Add topic information to visualization data
+    for i, topic_vector in enumerate(topic_list):
+        topic_id = i + 1
+        topic_words = []
+        
+        # Get top words for this topic
+        top_word_indices = topic_vector.argsort()[-num_words_per_topic:][::-1]
+        for word_idx in top_word_indices:
+            if word_idx < len(feature_names):
+                word = feature_names[word_idx]
+                weight = topic_vector[word_idx]
+                topic_words.append({"word": word, "weight": float(weight)})
+        
+        topic_viz_data["topics"][f"topic_{topic_id}"] = {
+            "id": topic_id,
+            "words": topic_words
+        }
+    
+    # Write topic_model_meta ORM record with visualization_data
+    try:
+        with get_session() as session:
+            # Use passed repo_id parameter or find from message data
+            if repo_id is not None:
+                repo_id = int(repo_id)
+            elif not msg_df.empty:
+                repo_id = int(msg_df.iloc[0]['repo_id'])
+            else:
+                repo_id = None
+                
+            # Calculate parameters hash
+            params_str = json.dumps(meta_json["model_parameters"], sort_keys=True)
+            parameters_hash = hashlib.md5(params_str.encode()).hexdigest()
+            
+            # Calculate data fingerprint
+            data_fingerprint = {
+                "repo_id": repo_id,
+                "message_count": len(msg_df),
+                "data_hash": hashlib.md5(str(msg_df['msg_text'].tolist()).encode()).hexdigest()
+            }
+            
+            training_end_time = datetime.datetime.now()
+            
+            topic_model_meta = TopicModelMeta(
+                model_id=model_id,
+                repo_id=repo_id,
+                model_method="NMF_COUNT",
+                num_topics=int(adjusted_topics),
+                num_words_per_topic=int(num_words_per_topic),
+                training_parameters=meta_json["model_parameters"],
+                model_file_paths=meta_json["model_file_paths"],
+                parameters_hash=parameters_hash,
+                coherence_score=calculate_real_coherence_score(msg_df['msg_text'].tolist(), nmf_model, count_vectorizer, logger),  # Real coherence score
+                perplexity_score=0.0,  # For detail page calculation
+                topic_diversity=calculate_topic_sparsity(topic_list, logger),  # NMF sparsity
+                quality={},  # Will be populated later
+                training_message_count=len(msg_df),
+                data_fingerprint=data_fingerprint,
+                visualization_data=topic_viz_data,  # Add visualization data
+                training_start_time=start_time,
+                training_end_time=training_end_time,
+                tool_source=tool_source,
+                tool_version=tool_version,
+                data_source=data_source
+            )
+            session.add(topic_model_meta)
+            session.commit()
+            logger.info(f"Topic model {model_id} with visualization data saved to database")
+            return model_id  # Return the model ID for optimization workflow
+    except Exception as e:
+        logger.warning(f"topic_model_meta DB write failed: {e}")
+        raise  # Re-raise the exception so optimization knows training failed
 
 
 
