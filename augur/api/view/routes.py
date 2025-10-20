@@ -224,7 +224,7 @@ report page:
 def repo_repo_view(id):
     repo = Repo.get_by_id(db_session, id)
 
-    return render_module("repo-info", title="Repo", repo=repo, repo_id=id)
+    return render_module("repo-info", title="Repo", repo=repo, repo_id=id, current_user=current_user)
 
 """ ----------------------------------------------------------------
 default:
@@ -349,6 +349,7 @@ topic_models:
     These routes render topic modeling interfaces with full Augur styling.
 """
 @app.route('/repos/<repo_id>/topic-models')
+@login_required
 def topic_models_view(repo_id):
     """
     Topic models overview page for a specific repository with full Augur styling
@@ -363,9 +364,10 @@ def topic_models_view(repo_id):
     ).all()
     
     print(f"DEBUG: Found {len(models)} models for repo {repo_id}")
-    return render_module('topic-models', title="Topic Models", repo=repo, models=models)
+    return render_module('topic-models', title="Topic Models", repo=repo, models=models, current_user=current_user)
 
 @app.route('/repos/<repo_id>/topic-models/<model_id>')
+@login_required
 def topic_model_detail_view(repo_id, model_id):
     """
     Topic model detail page for a specific model with full Augur styling
@@ -417,6 +419,7 @@ def topic_model_detail_view(repo_id, model_id):
 
 # API routes for Topic Modeling frontend support
 @app.route('/topic-models/<repo_id>/train', methods=['POST'])
+@login_required
 def train_topic_model_api(repo_id):
     """
     API endpoint to train a new topic model
@@ -471,6 +474,7 @@ def train_topic_model_api(repo_id):
         }), 500
 
 @app.route('/topic-models/<repo_id>/optimize', methods=['POST'])
+@login_required
 def optimize_topic_model_api(repo_id):
     """
     API endpoint to optimize topic model parameters
@@ -508,6 +512,7 @@ def optimize_topic_model_api(repo_id):
         }), 500
 
 @app.route('/topic-models/<repo_id>/status', methods=['GET'])
+@login_required
 def topic_model_status_api(repo_id):
     """
     API endpoint to get topic model training status
@@ -545,6 +550,7 @@ def topic_model_status_api(repo_id):
         }), 500
 
 @app.route('/topic-models/<repo_id>/visualization/<model_id>', methods=['GET'])
+@login_required
 def topic_model_visualization_api(repo_id, model_id):
     """
     API endpoint to get topic model visualization data

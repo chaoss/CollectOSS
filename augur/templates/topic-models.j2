@@ -1,3 +1,14 @@
+<!-- Authentication Check -->
+<script>
+// Check if user is authenticated
+document.addEventListener('DOMContentLoaded', function() {
+    {% if not current_user.is_authenticated %}
+        // User not logged in, redirect to login page
+        window.location.href = "{{ url_for('user_login') }}";
+    {% endif %}
+});
+</script>
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2.1.0/dist/echarts-wordcloud.min.js"></script>

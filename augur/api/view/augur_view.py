@@ -65,7 +65,11 @@ def unauthorized():
 
         return jsonify({"status": "Login required"})
 
-    session["login_next"] = url_for(request.endpoint, **request.args)
+    try:
+        session["login_next"] = url_for(request.endpoint, **request.view_args)
+    except Exception:
+        # If we can't build the URL, just redirect to root
+        session["login_next"] = url_for('root')
     return redirect(url_for('user_login'))
 
 @login_manager.user_loader
