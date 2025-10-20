@@ -25,14 +25,14 @@ app.url_map.converters['json'] = JSONConverter
 
 # Code 404 response page, for pages not found
 @app.errorhandler(404)
-def page_not_found(error):
+def page_not_found(_error):
     if AUGUR_API_VERSION in str(request.path):
         return jsonify({"status": "Not Found"}), 404
 
     return render_template('index.j2', title='404'), 404
 
 @app.errorhandler(405)
-def unsupported_method(error):
+def unsupported_method(_error):
     if AUGUR_API_VERSION in str(request.path):
         return jsonify({"status": "Unsupported method"}), 405
     
@@ -83,9 +83,9 @@ def load_user(user_id):
     tokens = user.tokens
     applications = user.applications
     for application in applications:
-        sessions = application.sessions
+        _sessions = application.sessions
     for group in groups:
-        repos = group.repos
+        _repos = group.repos
     for token in tokens:
         application = token.application
 
@@ -100,7 +100,7 @@ def load_user(user_id):
     return user
 
 @login_manager.request_loader
-def load_user_request(req):
+def load_user_request(_req):
     token = get_bearer_token()
 
     current_time = int(time.time())
