@@ -7583,13 +7583,16 @@ COPY augur_operations.working_commits (repos_id, working_commit) FROM stdin;
 -- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: augur
 --
 
-COPY public.alembic_version (version_num) FROM stdin; 28 \.
+COPY public.alembic_version (version_num) FROM stdin;
+28
+\.
 
 --
 -- Data for Name: test; Type: TABLE DATA; Schema: public; Owner: augur
 --
 
-COPY public.test (test) FROM stdin; \.
+COPY public.test (test) FROM stdin;
+\.
 
 --
 -- Data for Name: annotation_types; Type: TABLE DATA; Schema: spdx; Owner: augur
