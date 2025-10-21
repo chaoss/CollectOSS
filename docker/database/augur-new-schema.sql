@@ -7373,7 +7373,8 @@ COPY augur_operations.repos_fetch_log (repos_id, status, date) FROM stdin;
 -- Data for Name: subscription_types; Type: TABLE DATA; Schema: augur_operations; Owner: augur
 --
 
-COPY augur_operations.subscription_types (id, name) FROM stdin; \.
+COPY augur_operations.subscription_types (id, name) FROM stdin;
+\.
 
 --
 -- Data for Name: subscriptions; Type: TABLE DATA; Schema: augur_operations; Owner: augur
