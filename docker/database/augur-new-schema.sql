@@ -7744,7 +7744,6 @@ COPY spdx.licenses (
     is_spdx_official
 )
 FROM stdin;
-
 1	3dfx Glide License	Glide	http://spdx.org/licenses/Glide.html		t
 2	Abstyles License	Abstyles	http://spdx.org/licenses/Abstyles.html		t
 3	Academic Free License v1.1	AFL-1.1	http://spdx.org/licenses/AFL-1.1.html		t
