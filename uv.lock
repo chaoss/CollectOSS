@@ -215,17 +215,20 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+debug = [
+    { name = "ipdb" },
+]
 dev = [
     { name = "docutils" },
     { name = "ipdb" },
     { name = "mypy" },
+    { name = "pylint" },
     { name = "pytest" },
     { name = "setuptools" },
     { name = "sphinx" },
     { name = "sphinx-rtd-theme" },
     { name = "sphinxcontrib-openapi" },
     { name = "sphinxcontrib-redoc" },
-    { name = "toml" },
     { name = "tox" },
     { name = "types-python-dateutil" },
     { name = "types-pyyaml" },
@@ -239,6 +242,18 @@ docs = [
     { name = "sphinx-rtd-theme" },
     { name = "sphinxcontrib-openapi" },
     { name = "sphinxcontrib-redoc" },
+]
+lint = [
+    { name = "mypy" },
+    { name = "pylint" },
+    { name = "types-python-dateutil" },
+    { name = "types-pyyaml" },
+    { name = "types-requests" },
+    { name = "types-toml" },
+]
+test = [
+    { name = "pytest" },
+    { name = "tox" },
 ]
 
 [package.metadata]
@@ -318,18 +333,19 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+debug = [{ name = "ipdb", specifier = "==0.13.9" }]
 dev = [
     { name = "docutils", specifier = "==0.20.1" },
     { name = "ipdb", specifier = "==0.13.9" },
     { name = "mypy", specifier = ">=1.18.2" },
-    { name = "pytest", specifier = "==6.2.5" },
+    { name = "pylint" },
+    { name = "pytest" },
     { name = "setuptools" },
     { name = "sphinx", specifier = "==7.2.6" },
     { name = "sphinx-rtd-theme", specifier = "==2.0.0" },
     { name = "sphinxcontrib-openapi", specifier = "==0.8.3" },
     { name = "sphinxcontrib-redoc", specifier = "==1.6.0" },
-    { name = "toml", specifier = ">=0.10.2" },
-    { name = "tox", specifier = "==3.24.4" },
+    { name = "tox" },
     { name = "types-python-dateutil", specifier = ">=2.9.0.20251008" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
     { name = "types-requests", specifier = ">=2.31.0.6" },
@@ -342,6 +358,18 @@ docs = [
     { name = "sphinx-rtd-theme", specifier = "==2.0.0" },
     { name = "sphinxcontrib-openapi", specifier = "==0.8.3" },
     { name = "sphinxcontrib-redoc", specifier = "==1.6.0" },
+]
+lint = [
+    { name = "mypy", specifier = ">=1.18.2" },
+    { name = "pylint" },
+    { name = "types-python-dateutil", specifier = ">=2.9.0.20251008" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
+    { name = "types-requests", specifier = ">=2.31.0.6" },
+    { name = "types-toml", specifier = ">=0.10.8.20240310" },
+]
+test = [
+    { name = "pytest" },
+    { name = "tox" },
 ]
 
 [[package]]
