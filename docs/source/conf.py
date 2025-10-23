@@ -26,7 +26,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 # Add the project root (two levels up: docs/source → augur)
 sys.path.insert(0, os.path.abspath(os.path.join(here, '../..')))
 
-# Now import metadata
+# Now importing variables from metadata.py
 from metadata import __copyright__, __release__, __version__
 
 # -- General configuration ------------------------------------------------
