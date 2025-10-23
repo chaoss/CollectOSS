@@ -108,7 +108,7 @@ lint = [
     "types-python-dateutil>=2.9.0.20251008",
     "types-toml>=0.10.8.20240310",
 ]
-test = ["tox>=4", "pytest"]
+test = ["tox>=4.0", "tox-uv", "pytest"]
 debug = ["ipdb==0.13.9"]
 docs = [
     "docutils==0.20.1",
@@ -164,6 +164,7 @@ legacy_tox_ini = """
     [tox]
     envlist = py{,311}-{metric-routes,application, workers}
     skip_missing_interpreters = true
+    requires = tox-uv
 
     [testenv]
     passenv = AUGUR_*
