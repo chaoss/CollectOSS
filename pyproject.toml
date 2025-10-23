@@ -84,7 +84,7 @@ dependencies = [
     "tensorflow==2.15.0",
     "textblob==0.15.3",
     "textual>=0.73.0",
-    "toml",
+    "tomli>=2.2.1",
     "toolz>=0.8.2",
     "tornado==6.4.1",
     "typing-extensions>=4.7",
