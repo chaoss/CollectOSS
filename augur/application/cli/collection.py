@@ -78,9 +78,11 @@ def start(ctx, development):
         os.environ["AUGUR_DEV"] = "1"
         logger.info("Starting in development mode")
 
-    worker_vmem_cap = get_value("Celery", 'worker_process_vmem_cap')
+    core_worker_count = get_value("Celery", 'core_worker_count')
+    secondary_worker_count = get_value("Celery", 'secondary_worker_count')
+    facade_worker_count = get_value("Celery", 'facade_worker_count')
 
-    process_list = start_celery_collection_processes(float(worker_vmem_cap))
+    process_list = start_celery_collection_processes((core_worker_count, secondary_worker_count, facade_worker_count))
 
     if os.path.exists("celerybeat-schedule.db"):
             logger.info("Deleting old task schedule")

@@ -87,7 +87,10 @@ def start(ctx, disable_collection, development, pidfile, port):
     if disable_collection:
         os.environ["AUGUR_DISABLE_COLLECTION"] = "1"
     
-    worker_vmem_cap = get_value("Celery", 'worker_process_vmem_cap')
+    core_worker_count = get_value("Celery", 'core_worker_count')
+    secondary_worker_count = get_value("Celery", 'secondary_worker_count')
+    facade_worker_count = get_value("Celery", 'facade_worker_count')
+
 
     # create rabbit messages so if it failed on shutdown the queues are clean
     cleanup_collection_status_and_rabbit(logger, ctx.obj.engine)
@@ -119,7 +122,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
     logger.info(f"The API is available at '{api_response.json()['route']}'")
 
-    processes = start_celery_worker_processes(float(worker_vmem_cap), disable_collection)
+    processes = start_celery_worker_processes((core_worker_count, secondary_worker_count, facade_worker_count), disable_collection)
 
     celery_beat_schedule_db = os.getenv("CELERYBEAT_SCHEDULE_DB", "celerybeat-schedule.db")
     if os.path.exists(celery_beat_schedule_db):
