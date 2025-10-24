@@ -3,6 +3,7 @@ Defines the api routes for the augur views
 """
 import logging
 import math
+from functools import wraps
 from flask import render_template, request, redirect, url_for, session, flash, jsonify
 from .utils import getSetting, render_module, renderRepos, render_message
 from flask_login import login_user, logout_user, current_user, login_required
@@ -15,6 +16,23 @@ from ..server import app, db_session
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+
+def admin_only(f):
+    """
+    Admin-only decorator for write operations
+    Must be used AFTER @login_required
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.admin:
+            return jsonify({
+                'status': 'error', 
+                'message': 'Admin privileges required',
+                'detail': 'Training and optimization operations require admin privileges'
+            }), 403
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 # ROUTES -----------------------------------------------------------------------
@@ -419,6 +437,7 @@ def topic_model_detail_view(repo_id, model_id):
 # API routes for Topic Modeling frontend support
 @app.route('/topic-models/<repo_id>/train', methods=['POST'])
 @login_required
+@admin_only
 def train_topic_model_api(repo_id):
     """
     API endpoint to train a new topic model
@@ -474,6 +493,7 @@ def train_topic_model_api(repo_id):
 
 @app.route('/topic-models/<repo_id>/optimize', methods=['POST'])
 @login_required
+@admin_only
 def optimize_topic_model_api(repo_id):
     """
     API endpoint to optimize topic model parameters
