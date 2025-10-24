@@ -217,8 +217,6 @@ def facade_bulk_insert_commits(logger, records):
             session.rollback()
             
             if len(records) > 1:
-                logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
-
                 #split list into halves and retry insert until we isolate offending record
                 firsthalfRecords = records[:len(records)//2]
                 secondhalfRecords = records[len(records)//2:]

@@ -939,7 +939,7 @@ class Repo(Base):
                 )
                 wait_until_time = localtime(wait_until)
                 logger.error(f"rate limited fetching {url}")
-                logger.error(f"sleeping until {wait_until_time.tm_hour}:{wait_until_time.tm_min} ({wait_in_seconds} seconds)")
+                logger.error(f"sleeping until {wait_until_time.tm_hour:02d}:{wait_until_time.tm_min:02d} ({wait_in_seconds} seconds)")
                 sleep(wait_in_seconds)
                 attempts+=1
                 continue
