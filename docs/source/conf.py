@@ -19,7 +19,7 @@
 #
 import os
 import sys
-
+import sphinx_rtd_theme
 
 here = os.path.abspath(os.path.dirname(__file__))
 
