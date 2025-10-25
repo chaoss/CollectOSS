@@ -20,12 +20,12 @@ def key_fingerprint(key: str, length: int = 12) -> str:
 
 
 class RandomKeyAuth(Auth):
-    """Custom Auth class for httpx that randomly assigns an API key to each request.
+    """Custom Auth class for httpx that randomly assigns an api key to each request.
 
     Attributes:
-        list_of_keys (List[str]): list of keys to choose from
-        header_name (str): name of header to set the key into
-        key_format (str): optional format string with {0} placeholder for key
+        list_of_keys (List[str]): list of keys which are randomly selected from on each request
+        header_name (str): name of header that the keys need to be set to
+        key_format (str): format string that defines the structure of the key and leaves a {} for the key to be inserted
     """
 
     def __init__(self, list_of_keys: List[str], header_name: str, logger, key_format: Optional[str] = None):
