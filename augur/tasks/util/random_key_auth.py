@@ -7,12 +7,6 @@ import hashlib
 from augur.util.keys import mask_key
 
 
-def key_fingerprint(key: str, length: int = 12) -> str:
-    """Return a short non-reversible fingerprint of the key for correlation."""
-    h = hashlib.sha256(key.encode("utf-8")).hexdigest()
-    return h[:length]
-
-
 class RandomKeyAuth(Auth):
     """Custom Auth class for httpx that randomly assigns an api key to each request.
 
@@ -39,8 +33,7 @@ class RandomKeyAuth(Auth):
 
         # Log only masked or hashed form, never the full key
         masked = mask_key(key_value)
-        fingerprint = key_fingerprint(key_value)
-        self.logger.debug(f"Key used for request (masked): {masked} | fingerprint: {fingerprint}")
+        self.logger.debug(f"Key used for request (masked): {masked}")
 
         # Apply formatting if needed
         if self.key_format:
