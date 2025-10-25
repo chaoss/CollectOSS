@@ -4,13 +4,7 @@ from typing import List, Optional, Generator
 from httpx import Auth, Request, Response
 from random import choice
 import hashlib
-
-
-def mask_key(key: str, first: int = 6, last: int = 3, stars: int = 6) -> str:
-    """Mask key except for the first and last few characters."""
-    if not isinstance(key, str) or len(key) <= (first + last):
-        return "*" * stars
-    return f"{key[:first]}{'*' * stars}{key[-last:]}"
+from augur.util.keys import mask_key
 
 
 def key_fingerprint(key: str, length: int = 12) -> str:
