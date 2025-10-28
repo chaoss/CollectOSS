@@ -315,7 +315,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
                     facade_bulk_insert_commits(logger, pendingCommitRecordsToInsert)
                 pendingCommitRecordsToInsert = []
 
-        if commit_msg:
+        if commit_msg and facade_helper.commit_messages:
             pendingCommitMessageRecordsToInsert.append(commit_msg)
 
         if len(pendingCommitMessageRecordsToInsert) >= 1000:
@@ -446,7 +446,8 @@ def generate_analysis_sequence(logger,repo_git, facade_helper):
 
     analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_git))
 
-    analysis_sequence.append(facade_fetch_missing_commit_messages.si(repo_git))
+    if facade_helper.commit_messages:
+        analysis_sequence.append(facade_fetch_missing_commit_messages.si(repo_git))
     
     analysis_sequence.append(facade_analysis_end_facade_task.si())
     
