@@ -31,7 +31,7 @@ Required:
 
 
 
-Our REST API & data collection workers write in Python 3.6. We query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository, so GitLab and GitHub access tokens are **required** for data collection.
+Our REST API & data collection workers query the GitHub & GitLab API to collect data about issues, pull requests, contributors, and other information about a repository. Values for GitLab and GitHub access tokens are **required** for data collection and must be provided (an invalid token can be provided if you don't plan to use one platform) .
 
 Optional:
 
