@@ -16,8 +16,18 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('repo', sa.Column('repo_src_id', sa.BigInteger(), nullable=True), schema='augur_data')
-    op.create_unique_constraint('repo_src_id_unique', 'repo', ['repo_src_id'], schema='augur_data')
+    # Check if repo_src_id column already exists
+    connection = op.get_bind()
+    inspector = sa.inspect(connection)
+    columns = [col['name'] for col in inspector.get_columns('repo', schema='augur_data')]
+    
+    if 'repo_src_id' not in columns:
+        op.add_column('repo', sa.Column('repo_src_id', sa.BigInteger(), nullable=True), schema='augur_data')
+    
+    # Check if constraint already exists
+    constraints = [con['name'] for con in inspector.get_unique_constraints('repo', schema='augur_data')]
+    if 'repo_src_id_unique' not in constraints:
+        op.create_unique_constraint('repo_src_id_unique', 'repo', ['repo_src_id'], schema='augur_data')
     
 
 def downgrade():

@@ -588,7 +588,8 @@ def get_tf_idf_matrix(text_list, max_df, max_features, min_df, ngram_range, logg
     if isinstance(min_df, int) and max_df < 1.0:
         min_docs_for_max_df = int(num_docs * max_df)
         if min_docs_for_max_df < adjusted_min_df:
-            adjusted_max_df = 0.95  # Use 95% as fallback
+            # For single document case, use 1.0 to include all terms
+            adjusted_max_df = 1.0 if num_docs == 1 else 0.95
             logger.warning(f"Adjusted max_df from {max_df} to {adjusted_max_df} to avoid conflict with min_df")
     
     try:
@@ -861,6 +862,7 @@ def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_c
         WHERE r.repo_id=i.repo_id
         AND imr.issue_id=i.issue_id
         AND imr.msg_id=m.msg_id
+        AND r.repo_id = :repo_id
         UNION
         SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, pr.pull_request_id thread_id,m.msg_text,pr.pr_src_title thread_title,m.msg_id
         FROM augur_data.repo r, augur_data.pull_requests pr,
@@ -868,11 +870,12 @@ def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_c
         WHERE r.repo_id=pr.repo_id
         AND prmr.pull_request_id=pr.pull_request_id
         AND prmr.msg_id=m.msg_id
+        AND r.repo_id = :repo_id
         """
     )
 
     with engine.connect() as conn:
-        msg_df_all = pd.read_sql(get_messages_sql, conn, params={})
+        msg_df_all = pd.read_sql(get_messages_sql, conn, params={"repo_id": repo_id})
 
         # select only highly active repos
         logger.debug("Selecting highly active repos")
@@ -928,7 +931,8 @@ def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_c
     if isinstance(min_df, int) and max_df < 1.0:
         min_docs_for_count_max_df = int(num_docs_count * max_df)
         if min_docs_for_count_max_df < count_min_df:
-            count_max_df = 0.95
+            # For single document case, use 1.0 to include all terms
+            count_max_df = 1.0 if num_docs_count == 1 else 0.95
             logger.warning(f"CountVectorizer: Adjusted max_df from {max_df} to {count_max_df}")
     
     try:
@@ -1009,7 +1013,7 @@ def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_c
     logger.debug('entering for loop in model training. ')
     for i, prob_vector in enumerate(prediction):
         topic_model_dict = {}
-        topic_model_dict['repo_id'] = msg_df.loc[i]['repo_id']
+        topic_model_dict['repo_id'] = msg_df.iloc[i]['repo_id']
         for j, prob in enumerate(prob_vector):
             topic_model_dict["topic" + str(j + 1)] = prob
         topic_model_dict_list.append(topic_model_dict)
@@ -1130,6 +1134,52 @@ def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_c
             session.add(topic_model_meta)
             session.commit()
             logger.info(f"Topic model {model_id} with visualization data saved to database")
+            
+            # Write repo_topic data - repository-topic associations
+            logger.info("Writing repo_topic data...")
+            for i, prob_vector in enumerate(prediction):
+                repo_id_for_topic = int(msg_df.iloc[i]['repo_id'])
+                for j, prob in enumerate(prob_vector):
+                    if prob > 0.01:  # Only store topics with probability > 1%
+                        repo_topic_record = {
+                            'repo_id': repo_id_for_topic,
+                            'topic_id': j + 1,
+                            'topic_prob': float(prob),
+                            'tool_source': tool_source,
+                            'tool_version': tool_version,
+                            'data_source': data_source
+                        }
+                        # Use raw SQL insert for repo_topic table
+                        session.execute(s.text("""
+                            INSERT INTO augur_data.repo_topic 
+                            (repo_id, topic_id, topic_prob, tool_source, tool_version, data_source)
+                            VALUES (:repo_id, :topic_id, :topic_prob, :tool_source, :tool_version, :data_source)
+                        """), repo_topic_record)
+            
+            # Write repo_cluster_messages data - clustered messages
+            logger.info("Writing repo_cluster_messages data...")
+            if 'cluster' in msg_df.columns and len(msg_df) > 0:
+                for i, cluster_label in enumerate(msg_df['cluster']):
+                    repo_id_for_cluster = int(msg_df.iloc[i]['repo_id'])
+                    cluster_record = {
+                        'repo_id': repo_id_for_cluster,
+                        'cluster_content': int(cluster_label),
+                        'cluster_mechanism': 1,  # K-means clustering
+                        'tool_source': tool_source,
+                        'tool_version': tool_version,
+                        'data_source': data_source
+                    }
+                    # Use raw SQL insert for repo_cluster_messages table
+                    session.execute(s.text("""
+                        INSERT INTO augur_data.repo_cluster_messages 
+                        (repo_id, cluster_content, cluster_mechanism, tool_source, tool_version, data_source)
+                        VALUES (:repo_id, :cluster_content, :cluster_mechanism, :tool_source, :tool_version, :data_source)
+                    """), cluster_record)
+            else:
+                logger.warning("Cluster column not found or msg_df is empty, skipping cluster data write")
+            
+            session.commit()
+            logger.info(f"Completed writing all Topic Modeling data for model {model_id}")
             return model_id  # Return the model ID for optimization workflow
     except Exception as e:
         logger.warning(f"topic_model_meta DB write failed: {e}")
