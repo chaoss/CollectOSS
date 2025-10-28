@@ -1,5 +1,9 @@
 from postgres:16 AS builder
 
+RUN apt-get update && \
+    apt-get install -y gcc python3-dev && \
+    rm -rf /var/lib/apt/lists/*
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install uv (https://docs.astral.sh/uv/guides/integration/docker/#installing-uv)
