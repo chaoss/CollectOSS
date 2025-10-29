@@ -354,8 +354,10 @@ def bulk_insert_dicts(logger, data_input: Union[List[dict], dict], table, natura
 
         # create a dict that the on_conflict_do_update method requires to be able to map updates whenever there is a conflict. See sqlalchemy docs for more explanation and examples: https://docs.sqlalchemy.org/en/14/dialects/postgresql.html#updating-using-the-excluded-insert-values
         setDict = {}
+        base_table = getattr(table, "__table__", table)
         for key in data[0].keys():
-            setDict[key] = func.coalesce(getattr(stmnt.excluded, key), getattr(table.c, key))
+            existing_col = getattr(base_table.c, key)
+            setDict[key] = func.coalesce(getattr(stmnt.excluded, key), existing_col)
             
         stmnt = stmnt.on_conflict_do_update(
             #This might need to change
