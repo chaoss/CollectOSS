@@ -3,6 +3,7 @@ import random
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import OperationalError
+from sqlalchemy import func
 
 from typing import Optional, List, Union
 from psycopg2.errors import DeadlockDetected
@@ -143,7 +144,7 @@ class DatabaseSession(Session):
             # create a dict that the on_conflict_do_update method requires to be able to map updates whenever there is a conflict. See sqlalchemy docs for more explanation and examples: https://docs.sqlalchemy.org/en/14/dialects/postgresql.html#updating-using-the-excluded-insert-values
             setDict = {}
             for key in data[0].keys():
-                    setDict[key] = getattr(stmnt.excluded, key)
+                setDict[key] = func.coalesce(getattr(stmnt.excluded, key), getattr(table.c, key))
                 
             stmnt = stmnt.on_conflict_do_update(
                 #This might need to change
