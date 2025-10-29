@@ -36,7 +36,6 @@ from psycopg2.errors import DeadlockDetected
 
 from augur.application.db.session import DatabaseSession
 from augur.application.db.lib import execute_sql
-from augur.application.db.lib import get_section
 from logging import Logger
 
 logger = logging.getLogger(__name__)
@@ -110,7 +109,10 @@ class FacadeHelper():
 
         self.logger = logger
         
-        worker_options = get_section("Facade")
+        with DatabaseSession(logger, engine) as session:
+            config = AugurConfig(logger, session)
+        
+            worker_options = config.get_section("Facade")
 
         self.limited_run = worker_options["limited_run"]
         self.delete_marked_repos = worker_options["delete_marked_repos"]
