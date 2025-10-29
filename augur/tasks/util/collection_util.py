@@ -211,7 +211,10 @@ def get_enabled_phase_names_from_config(engine, logger):
 def get_enabled_phase_names_from_config_session(session, logger):
 
     config = AugurConfig(logger, session)
+    return get_enabled_phase_names_from_config_object(config)
 
+
+def get_enabled_phase_names_from_config_object(config):
     phase_options = config.get_section("Task_Routine")
 
     #Get list of enabled phases 
