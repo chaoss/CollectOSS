@@ -28,7 +28,7 @@ from augur.application.db.models import CollectionStatus, Repo
 from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
-from augur.application.db.lib import execute_sql, get_session
+from augur.application.db.lib import execute_sql, get_session, get_section
 
 RUNNING_DOCKER = os.environ.get('AUGUR_DOCKER_DEPLOY') == "1"
 
@@ -175,7 +175,10 @@ def build_primary_repo_collect_request(session, logger, enabled_phase_names, day
     primary_enabled_phases.append(core_task_success_util_gen)
     primary_gitlab_enabled_phases.append(core_task_success_util_gen)
 
-    primary_request = CollectionRequest("core",primary_enabled_phases,max_repo=40, days_until_collect_again=15, gitlab_phases=primary_gitlab_enabled_phases)
+    # Get core collection interval from config
+    tasks_config = get_section("Tasks")
+    core_interval = tasks_config.get('core_collection_interval', 15)
+    primary_request = CollectionRequest("core",primary_enabled_phases,max_repo=40, days_until_collect_again=core_interval, gitlab_phases=primary_gitlab_enabled_phases)
     primary_request.get_valid_repos(session)
     return primary_request
 
@@ -193,7 +196,11 @@ def build_secondary_repo_collect_request(session, logger, enabled_phase_names, d
         return secondary_task_success_util.si(repo_git)
 
     secondary_enabled_phases.append(secondary_task_success_util_gen)
-    request = CollectionRequest("secondary",secondary_enabled_phases,max_repo=60, days_until_collect_again=10)
+    
+    # Get secondary collection interval from config
+    tasks_config = get_section("Tasks")
+    secondary_interval = tasks_config.get('secondary_collection_interval', 10)
+    request = CollectionRequest("secondary",secondary_enabled_phases,max_repo=60, days_until_collect_again=secondary_interval)
 
     request.get_valid_repos(session)
     return request
@@ -215,7 +222,10 @@ def build_facade_repo_collect_request(session, logger, enabled_phase_names, days
 
     facade_enabled_phases.append(facade_task_update_weight_util_gen)
 
-    request = CollectionRequest("facade",facade_enabled_phases,max_repo=30, days_until_collect_again=10)
+    # Get facade collection interval from config
+    tasks_config = get_section("Tasks")
+    facade_interval = tasks_config.get('facade_collection_interval', 10)
+    request = CollectionRequest("facade",facade_enabled_phases,max_repo=30, days_until_collect_again=facade_interval)
 
     request.get_valid_repos(session)
     return request
@@ -230,7 +240,10 @@ def build_ml_repo_collect_request(session, logger, enabled_phase_names, days_unt
 
     ml_enabled_phases.append(ml_task_success_util_gen)
 
-    request = CollectionRequest("ml",ml_enabled_phases,max_repo=5, days_until_collect_again=40)
+    # Get ML collection interval from config
+    tasks_config = get_section("Tasks")
+    ml_interval = tasks_config.get('ml_collection_interval', 40)
+    request = CollectionRequest("ml",ml_enabled_phases,max_repo=5, days_until_collect_again=ml_interval)
     request.get_valid_repos(session)
     return request
 
