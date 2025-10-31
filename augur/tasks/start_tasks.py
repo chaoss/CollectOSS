@@ -255,10 +255,10 @@ def augur_collection_monitor(self):
 
         # Get config values for collection intervals
         config = AugurConfig(logger, session)
-        core_interval = config.get_value('Tasks', 'core_collection_interval') or 15
-        secondary_interval = config.get_value('Tasks', 'secondary_collection_interval') or 10
-        facade_interval = config.get_value('Tasks', 'facade_collection_interval') or 10
-        ml_interval = config.get_value('Tasks', 'ml_collection_interval') or 40
+        core_interval = config.get_value('Tasks', 'core_collection_interval_days') or 15
+        secondary_interval = config.get_value('Tasks', 'secondary_collection_interval_days') or 10
+        facade_interval = config.get_value('Tasks', 'facade_collection_interval_days') or 10
+        ml_interval = config.get_value('Tasks', 'ml_collection_interval_days') or 40
 
         if primary_repo_collect_phase.__name__ in enabled_phase_names:
             enabled_collection_hooks.append(build_primary_repo_collect_request(session, logger, enabled_phase_names, core_interval))

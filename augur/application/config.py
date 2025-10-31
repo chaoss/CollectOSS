@@ -81,10 +81,10 @@ default_config = {
             },
             "Tasks": {
                 "collection_interval": 30,
-                "core_collection_interval": 15,
-                "secondary_collection_interval": 10,
-                "facade_collection_interval": 10,
-                "ml_collection_interval": 40
+                "core_collection_interval_days": 15,
+                "secondary_collection_interval_days": 10,
+                "facade_collection_interval_days": 10,
+                "ml_collection_interval_days": 40
             },
             "Message_Insights": {
                     "insight_days": 30,
