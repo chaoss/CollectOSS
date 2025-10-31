@@ -25,8 +25,8 @@ dependencies = [
     "bokeh==2.0.2",
     "boto3==1.17.57",
     "bs4==0.0.1",
-    "celery==5.2.7",
-    "click==8.0.3",
+    "celery~=5.5",
+    "click~=8.1",
     "cloudpickle>=0.2.2",
     "coloredlogs==15.0",
     "dask>=2021.6.2",
@@ -99,7 +99,12 @@ dev = [
     "pytest==6.2.5",
     "toml>=0.10.2",
     "ipdb==0.13.9",
-    {include-group = "docs"},
+    "mypy>=1.18.2",
+    "types-requests>=2.31.0.6",
+    "types-pyyaml>=6.0.12.20250915",
+    "types-python-dateutil>=2.9.0.20251008",
+    "types-toml>=0.10.8.20240310",
+    { include-group = "docs" },
 ]
 docs = [
     "docutils==0.20.1",
@@ -149,3 +154,10 @@ constraint-dependencies = [
     # https://docs.python.org/3.10/whatsnew/3.10.html#removed
     "graphql-server-core>1.1.1",
 ]
+
+[tool.mypy]
+files = ['augur/application/db/*.py']
+ignore_missing_imports = true
+follow_imports = "skip"
+disallow_untyped_defs = false
+exclude_gitignore = true

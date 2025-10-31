@@ -4,7 +4,8 @@ import json
 from typing import List, Any, Optional
 import os
 from augur.application.db.models import Config 
-from augur.application.db.util import execute_session_query
+from augur.application.db.util import execute_session_query, convert_type_of_value
+from pathlib import Path
 
 def get_development_flag_from_config():
     
@@ -50,7 +51,8 @@ default_config = {
                 "pull_repos": 1,
                 "rebuild_caches": 1,
                 "run_analysis": 1,
-                "run_facade_contributors": 1
+                "run_facade_contributors": 1,
+                "facade_contributor_full_recollect": 0
             },
             "Server": {
                 "cache_expire": "3600",
@@ -109,35 +111,6 @@ default_config = {
         }
 
 
-def convert_type_of_value(config_dict, logger=None):
-        
-        data_type = config_dict["type"]
-
-        if data_type == "str" or data_type is None:
-            return config_dict
-
-        elif data_type == "int":
-            config_dict["value"] = int(config_dict["value"])
-
-        elif data_type == "bool":
-            value = config_dict["value"]
-            
-            if value.lower() == "false":
-                config_dict["value"] = False
-            else:
-                config_dict["value"] = True
-
-        elif data_type == "float":
-            config_dict["value"] = float(config_dict["value"])
-
-        else:
-            if logger:
-                logger.error(f"Need to add support for {data_type} types to config") 
-            else:
-                print(f"Need to add support for {data_type} types to config")
-
-        return config_dict
-
 class AugurConfig():
 
     from augur.application.db.session import DatabaseSession
@@ -150,7 +123,12 @@ class AugurConfig():
         self.logger = logger
 
         self.accepted_types = ["str", "bool", "int", "float", "NoneType"]
-        self.default_config = default_config
+        config_dir = Path(os.getenv("CONFIG_DATADIR", "./"))
+        config_path = config_dir.joinpath("augur.json")
+        if config_path.exists():
+            self.default_config = json.loads(config_path.read_text(encoding="UTF-8"))
+        else:
+            self.default_config = default_config
 
     def get_section(self, section_name) -> dict:
         """Get a section of data from the config.

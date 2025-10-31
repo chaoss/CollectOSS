@@ -1240,3 +1240,59 @@ def aggregate_summary(repo_group_id, repo_id=None, begin_date=None, end_date=Non
             results = pd.read_sql(summarySQL, conn, params={'repo_id': repo_id,
                                                             'begin_date': begin_date, 'end_date': end_date})
         return results
+
+@register_metric()
+def clones(repo_group_id, repo_id=None, begin_date=None, end_date=None):
+    """
+    Returns the number of repository clones (total and unique) for a given repo or repo group.
+    :param repo_group_id: The repository's repo_group_id
+    :param repo_id: The repository's repo_id, defaults to None
+    :param begin_date: Start date for filtering clone data (optional)
+    :param end_date: End date for filtering clone data (optional)
+    :return: DataFrame of clone counts (total and unique) per day
+    """
+    if not begin_date:
+        begin_date = '1970-1-1 00:00:00'
+    if not end_date:
+        end_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    if repo_id:
+        clones_sql = s.sql.text("""
+            SELECT
+                repo_id,
+                clone_data_timestamp AS date,
+                count_clones AS total_clones,
+                unique_clones
+            FROM augur_data.repo_clones_data
+            WHERE repo_id = :repo_id
+              AND clone_data_timestamp BETWEEN :begin_date AND :end_date
+            ORDER BY clone_data_timestamp
+        """)
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(clones_sql, conn, params={
+                'repo_id': repo_id,
+                'begin_date': begin_date,
+                'end_date': end_date
+            })
+        return results
+    else:
+        clones_sql = s.sql.text("""
+            SELECT
+                repo_id,
+                clone_data_timestamp AS date,
+                count_clones AS total_clones,
+                unique_clones
+            FROM augur_data.repo_clones_data
+            WHERE repo_id IN (
+                SELECT repo_id FROM augur_data.repo WHERE repo_group_id = :repo_group_id
+            )
+              AND clone_data_timestamp BETWEEN :begin_date AND :end_date
+            ORDER BY repo_id, clone_data_timestamp
+        """)
+        with current_app.engine.connect() as conn:
+            results = pd.read_sql(clones_sql, conn, params={
+                'repo_group_id': repo_group_id,
+                'begin_date': begin_date,
+                'end_date': end_date
+            })
+        return results

@@ -939,7 +939,7 @@ class Repo(Base):
                 )
                 wait_until_time = localtime(wait_until)
                 logger.error(f"rate limited fetching {url}")
-                logger.error(f"sleeping until {wait_until_time.tm_hour}:{wait_until_time.tm_min} ({wait_in_seconds} seconds)")
+                logger.error(f"sleeping until {wait_until_time.tm_hour:02d}:{wait_until_time.tm_min:02d} ({wait_in_seconds} seconds)")
                 sleep(wait_in_seconds)
                 attempts+=1
                 continue
@@ -2885,7 +2885,7 @@ class PullRequestAssignee(Base):
     @classmethod
     def from_github(cls, assignee, repo_id, tool_source, tool_version, data_source):
         
-        pr_assignee_ojb = cls()
+        pr_assignee_obj = cls()
 
         # store the pr_url data on in the pr assignee data for now so we can relate it back to a pr later
         pr_assignee_obj.contrib_id = assignee["cntrb_id"]

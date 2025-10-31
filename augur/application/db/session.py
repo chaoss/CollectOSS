@@ -93,18 +93,20 @@ class DatabaseSession(Session):
             result = connection.execute(sql_text)
         return [dict(row) for row in result.mappings()]
 
-    def insert_data(self, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
+    def insert_data(self, data_input: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
 
-        if isinstance(data, list) is False:
+        if isinstance(data_input, list) is False:
             
             # if a dict is passed to data then 
             # convert it to a list with one value
-            if isinstance(data, dict) is True:
-                data = [data]
+            if isinstance(data_input, dict) is True:
+                data = [data_input]
             
             else:
                 self.logger.info("Data must be a list or a dict")
                 return None
+        else:
+            data = list(data_input)
 
         if len(data) == 0:
             # self.logger.info("Gave no data to insert, returning...")
@@ -166,7 +168,7 @@ class DatabaseSession(Session):
 
         # if there is no data to return then it executes the insert then returns nothing
         if not return_columns:
-
+            # TODO: duplicate-looking code alert
             while attempts < 10:
                 try:
                     #begin keyword is needed for sqlalchemy 2.x
@@ -205,8 +207,9 @@ class DatabaseSession(Session):
 
             if deadlock_detected is True:
                 self.logger.error("Made it through even though Deadlock was detected")
-                    
-            return "success"
+
+            # success  
+            return None
         
 
         # othewise it gets the requested return columns and returns them as a list of dicts
