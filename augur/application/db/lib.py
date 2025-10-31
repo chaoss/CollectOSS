@@ -19,34 +19,6 @@ from augur.application.db.session import remove_duplicates_by_uniques, remove_nu
 logger = logging.getLogger("db_lib")
 
 
-def get_section(section_name) -> dict:
-    """Get a section of data from the config.
-
-    Args:
-        section_name: The name of the section being retrieved
-
-    Returns:
-        The section data as a dict
-    """
-    with get_session() as session:
-
-        query = session.query(Config).filter_by(section_name=section_name)
-        section_data = execute_session_query(query, 'all')
-        
-        section_dict = {}
-        for setting in section_data:
-            setting_dict = setting.__dict__
-
-            setting_dict = convert_type_of_value(setting_dict, logger)
-
-            setting_name = setting_dict["setting_name"]
-            setting_value = setting_dict["value"]
-
-            section_dict[setting_name] = setting_value
-
-        return section_dict
-
-
 def get_value(section_name: str, setting_name: str) -> Optional[Any]:
     """Get the value of a setting from the config.
 

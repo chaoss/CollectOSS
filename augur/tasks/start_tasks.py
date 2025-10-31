@@ -140,7 +140,7 @@ def non_repo_domain_tasks(self):
 
     logger.info("Executing non-repo domain tasks")
 
-    enabled_phase_names = get_enabled_phase_names_from_config()
+    enabled_phase_names = get_enabled_phase_names_from_config(engine, logger)
 
     enabled_tasks = []
 
@@ -245,7 +245,7 @@ def augur_collection_monitor(self):
 
     
     #Get list of enabled phases 
-    enabled_phase_names = get_enabled_phase_names_from_config()
+    enabled_phase_names = get_enabled_phase_names_from_config(engine, logger)
 
     enabled_collection_hooks = []
 
