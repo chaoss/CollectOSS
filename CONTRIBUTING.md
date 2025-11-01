@@ -97,6 +97,7 @@ git push origin master
 ### CHAOSS
 - [Website](https://chaoss.community/)
 - [Get Involved](https://chaoss.community/participate)
+- [Join the CHAOSS Slack](https://chaoss.community/kb-getting-started/) - Join the `#wg-augur-8knot` channel to participate in discussions, meetings, and planning
 - [Metrics](https://github.com/chaoss/metrics)
 - [Evolution Metrics Working Group](https://github.com/chaoss/wg-evolution)
 - [Common Metrics Working Group](https://github.com/chaoss/wg-common)
