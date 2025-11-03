@@ -110,6 +110,9 @@ default_config = {
                 "secondary_repo_collect_phase": 1,
                 "facade_phase": 1,
                 "machine_learning_phase": 0
+            },
+            "Frontend": {
+                "pagination_offset": 25
             }
         }
 
