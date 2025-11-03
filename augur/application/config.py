@@ -525,3 +525,92 @@ class ConfigStore():
         
 
 
+class JsonConfig(ConfigStore):
+    """A ConfigStore for handling JSON data
+    """
+
+    def __init__(self, json_data):
+        self.json_data = json_data
+
+    @property
+    def writable(self):
+        return False
+    
+    @property
+    def empty(self):
+        return self.json_data == {}
+
+    def load_dict(self, data: dict, ignore_existing=False):
+        if not self.writable:
+            raise NotWriteableException()
+
+        if ignore_existing:
+            self.json_data = data
+        else: 
+            self.json_data.update(data)
+
+    def retrieve_dict(self):
+        return self.json_data
+
+    def clear(self):
+        if not self.writable:
+            raise NotWriteableException()
+        
+        self.json_data = {}
+
+    def remove_section(self, section_name: str) -> None:
+        if not self.writable:
+            raise NotWriteableException()
+
+        del self.json_data[section_name]
+
+
+    def has_section(self, section_name: str) -> bool:
+        return section_name in self.json_data
+
+    def create_section(self, section_name: str, values: Optional[dict] = None, ignore_existing=False) -> None:
+        if not self.writable:
+            raise NotWriteableException()
+
+        if values is None:
+            values = {}
+
+        if ignore_existing:
+            self.json_data[section_name] = values
+        else:
+            self.json_data[section_name].update(values)
+
+    def get_section(self, section_name: str) -> dict:
+        if self.has_section(section_name):
+            return self.json_data[section_name]
+
+    def remove_value(self, section_name: str, value_key: str) -> None:
+        if not self.writable:
+            raise NotWriteableException()
+
+        if self.has_section(section_name):
+            del self.json_data[section_name][value_key]
+    
+
+    def has_value(self, section_name: str, value_key: str) -> bool:
+        return self.has_section(section_name) and self.json_data[section_name].get(value_key, None) is not None
+
+    def add_value(self, section_name: str, value_key: str, value, ignore_existing=False) -> None:
+        if not self.writable:
+            raise NotWriteableException()
+
+        if not self.has_section(section_name):
+            self.create_section(section_name, {[value_key]: value}, ignore_existing=ignore_existing)
+            return
+        
+        if ignore_existing:
+            self.json_data[section_name][value_key] = value
+        else:
+            self.json_data[section_name][value_key].update(value)
+
+
+    def get_value(self, section_name: str, value_key: str):
+        if not self.has_section(section_name):
+            return None
+        
+        return self.json_data[section_name].get(value_key, None)
