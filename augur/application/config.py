@@ -368,3 +368,160 @@ class AugurConfig():
     def create_default_config(self) -> None:
         """Create default config in the database."""
         self.load_config_from_dict(self.default_config)
+
+
+class NotWriteableException(Exception):
+    """Custom Augur exception class to be used when trying to modify a config that is not writeable
+    """
+    pass
+
+class ConfigStore():
+    """A class representing the interface for various possible config backends.
+    This should not contain implementations unless they apply to all possible config backends
+    """
+
+    @property
+    def writable(self):
+        """Determine if this config store is writable.
+        
+        Returns:
+            True if the config store is writable, and False if it is not
+        """
+        raise NotImplementedError()
+    
+    @property
+    def empty(self):
+        """Determine if this config store is empty.
+        
+        Returns:
+            True if the config store is empty, and False if it is not
+        """
+        raise NotImplementedError()
+
+    def load_dict(self, data: dict, ignore_existing=False):
+        """Load config into this store from dict values
+
+        Args:
+            data (dict): the data to load
+            ignore_existing (bool, optional): whether to ignore any values or sections that exist already. Defaults to False.
+        
+        Raises:
+            NotWriteableException: When attempting to modify a config that is not writeable.
+        """
+        raise NotImplementedError()
+
+    def retrieve_dict(self):
+        """Get the full config from this store as a dictionary.
+        
+        Returns:
+            dict: The dict representation of the config from this config store
+        """
+        raise NotImplementedError()
+
+    def clear(self):
+        """Remove all values from this config store.
+    
+        Raises:
+            NotWriteableException: When attempting to modify a config that is not writeable.
+        """
+        raise NotImplementedError()
+
+    def remove_section(self, section_name: str) -> None:
+        """Remove a section from the config.
+        
+        Args:
+            section_name: The name of the section being deleted
+        
+        Raises:
+            NotWriteableException: When attempting to modify a config that is not writeable.
+        """
+        raise NotImplementedError()
+
+    def has_section(self, section_name: str) -> bool:
+        """Determine if a section exists in this config.
+        
+        Args:
+            section_name: The name of the section to check for
+
+        Returns:
+            True if the config store contains this section, and False if it is not
+        """
+        raise NotImplementedError()
+
+    def create_section(self, section_name: str, values: Optional[dict] = None, ignore_existing=False) -> None:
+        """Create a section in this config.
+        
+        Args:
+            section_name: The name of the section being deleted
+            values (Optional[dict], optional): Optional keys and values to populate in this section. Defaults to None.
+            ignore_existing (bool, optional): whether to ignore and overwrite an existing section or value with this name. Defaults to False.
+
+        Raises:
+            NotWriteableException: When attempting to modify a config that is not writeable.
+        """
+        raise NotImplementedError()
+
+    def get_section(self, section_name: str) -> dict:
+        """Return a section from this config store.
+        
+        Args:
+            section_name: The name of the section to check for
+
+        Returns:
+            The section data as a dict
+        """
+        raise NotImplementedError()
+
+    def remove_value(self, section_name: str, value_key: str) -> None:
+        """Remove a value from the config.
+        
+        Args:
+            section_name: The name of the section the value is in
+            value_name: The key of the value being deleted
+        
+        Raises:
+            NotWriteableException: When attempting to modify a config that is not writeable.
+        """
+        raise NotImplementedError()
+
+    def has_value(self, section_name: str, value_key: str) -> bool:
+        """Determine if a section exists in this config.
+        
+        Args:
+            section_name: The name of the section the value is in
+            value_key: The key at which to look for a value
+
+        Returns:
+            True if the config store contains this value, and False if not
+        """
+        raise NotImplementedError()
+
+    def add_value(self, section_name: str, value_key: str, value, ignore_existing=False) -> None:
+        """Create a section in this config.
+        
+        Args:
+            section_name: The name of the section being deleted
+            value_key (str): The key at which to store this value
+            value (any): the value to store at this key
+            ignore_existing (bool, optional): whether to ignore and overwrite an existing value if encountered. Defaults to False.
+
+        Raises:
+            NotWriteableException: When attempting to modify a config that is not writeable.
+        """
+        raise NotImplementedError()
+
+    def get_value(self, section_name: str, value_key: str):
+        """Return a single value from this config store.
+        
+        Args:
+            section_name: The name of the section to check for
+            value_key (str): The key at which to look for a value
+
+        Returns:
+            The section data as a dict
+        """
+        raise NotImplementedError()
+
+        
+
+
