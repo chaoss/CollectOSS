@@ -256,6 +256,28 @@ def batch_insert_contributors(logger, data: Union[List[dict], dict], batch_size 
 
 
 def bulk_insert_dicts(logger, data_input: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
+    """ Provides bulk-insert/update (upsert) capabilitites for adding bulk data (as a column:value dict mapping) into a specific table
+
+    Args:
+        logger (_type_): the logger to use
+        data_input (Union[List[dict], dict]): the dicts to upsert (must match the column names as defined in the schema for the table)
+        table (_type_): the table to upsert the data into
+        natural_keys (List[str]): the columns that define the natural unique keys for the data
+        return_columns (Optional[List[str]], optional): list of the column names to return. Defaults to None.
+        string_fields (Optional[List[str]], optional): list of keys in the incoming dicts that should be cleaned to handle bad characters postgres doesnt like. Defaults to None.
+        on_conflict_update (bool, optional): whether to update on conflict. Defaults to True.
+
+    Raises:
+        e: _description_
+        e: _description_
+        Exception: _description_
+        e: _description_
+        e: _description_
+        Exception: _description_
+
+    Returns:
+        Optional[List[dict]]: the original data with each item filtered to only contain the columns specified by `return_columns`, if present. 
+    """
 
     if isinstance(data_input, list) is False:
         
@@ -304,8 +326,10 @@ def bulk_insert_dicts(logger, data_input: Union[List[dict], dict], table, natura
 
         # create a dict that the on_conflict_do_update method requires to be able to map updates whenever there is a conflict. See sqlalchemy docs for more explanation and examples: https://docs.sqlalchemy.org/en/14/dialects/postgresql.html#updating-using-the-excluded-insert-values
         setDict = {}
+        base_table = getattr(table, "__table__", table)
         for key in data[0].keys():
-                setDict[key] = getattr(stmnt.excluded, key)
+            existing_col = getattr(base_table.c, key)
+            setDict[key] = func.coalesce(getattr(stmnt.excluded, key), existing_col)
             
         stmnt = stmnt.on_conflict_do_update(
             #This might need to change
