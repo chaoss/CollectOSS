@@ -143,6 +143,22 @@ class AugurConfig():
         
         self.config_sources.append( DatabaseConfig(session, logger) )
 
+    def _get_writable_source(self) -> ConfigStore:
+        """Returns the highest precedence source that can be written to.
+        Intended to be used for operations that require changing the config updates.
+
+        Raises:
+            NotWriteableException: If no sources are available for writing, this exception is raised to tell the caller they must proceed in a read only manner
+
+        Returns:
+            ConfigStore: An instance of ConfigStore representing the config storage location that can be written to.
+        """
+        writeable_sources = list(filter(lambda s: source.writable), self.config_sources)
+        if len(writeable_sources) < 1:
+            raise NotWriteableException
+        
+        return writeable_sources[-1]
+            
     def get_section(self, section_name) -> dict:
         """Get a section of data from the config.
 
@@ -152,22 +168,11 @@ class AugurConfig():
         Returns:
             The section data as a dict
         """
-        query = self.session.query(Config).filter_by(section_name=section_name).order_by(Config.setting_name.asc())
-        section_data = execute_session_query(query, 'all')
+        if not self.is_section_in_config(section_name):
+            return {}
         
-        section_dict = {}
-        for setting in section_data:
-            setting_dict = setting.__dict__
-
-            setting_dict = convert_type_of_value(setting_dict, self.logger)
-
-            setting_name = setting_dict["setting_name"]
-            setting_value = setting_dict["value"]
-
-            section_dict[setting_name] = setting_value
-
-        return section_dict
-
+        config_dict = self.load_config()
+        return config_dict[section_name]
 
     def get_value(self, section_name: str, setting_name: str) -> Optional[Any]:
         """Get the value of a setting from the config.
@@ -180,22 +185,15 @@ class AugurConfig():
             The value from config if found, and None otherwise
         """
 
-        # TODO temporary until added to the DB schema
-        if section_name == "frontend" and setting_name == "pagination_offset":
-            return 25
+        # TODO temporary until all uses of the lowercase version are gone
+        if section_name == "frontend":
+            section_name = "Frontend"
 
-        try:
-            query = self.session.query(Config).filter(Config.section_name == section_name, Config.setting_name == setting_name)
-            config_setting = execute_session_query(query, 'one')
-        except s.orm.exc.NoResultFound:
-            return None
-
-        setting_dict = config_setting.__dict__
-
-        setting_dict = convert_type_of_value(setting_dict, self.logger)
-
-        return setting_dict["value"]
-
+        for source in self.config_sources.reverse():
+            val = source.get_value(section_name, setting_name)
+            if val is not None:
+                return val
+        return None
 
     def load_config(self) -> dict:
         """Get full config as a dictionary.
@@ -341,8 +339,14 @@ class AugurConfig():
 
     def clear(self) -> None:
         """Remove all values from the config."""
-        self.session.query(Config).delete()
-        self.session.commit()
+        # note, with the hierarchical nature of the new config setup, this is a pretty useless method
+        # this is because the hierarhical store is designed to always be able to fall back on preconfigured defaults.
+        # Clearing will only reset any changes that the writable source provided to the config.
+        try:
+            writeable_config = self._get_writable_source()
+            writeable_config.clear()
+        except NotWriteableException:
+            return
 
     def remove_section(self, section_name: str) -> None:
         """Remove a section from the config.
@@ -350,9 +354,14 @@ class AugurConfig():
         Args:
             section_name: The name of the section being deleted
         """
-        self.session.query(Config).filter(Config.section_name == section_name).delete()
-        self.session.commit()
-
+        # note, with the hierarchical nature of the new config setup, this is a pretty useless method
+        # this is because the hierarhical store is designed to always be able to fall back on preconfigured defaults.
+        # Removing a section will only reset any changes that the writable source contributed in that section.
+        try:
+            writeable_config = self._get_writable_source()
+            writeable_config.remove_section(section_name)
+        except NotWriteableException:
+            return
 
     def create_default_config(self) -> None:
         """Create default config in the database."""
