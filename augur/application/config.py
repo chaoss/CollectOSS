@@ -6,6 +6,7 @@ import os
 from augur.application.db.models import Config 
 from augur.application.db.util import execute_session_query, convert_type_of_value
 from pathlib import Path
+import logging
 
 def get_development_flag_from_config():
     
@@ -380,6 +381,9 @@ class ConfigStore():
     This should not contain implementations unless they apply to all possible config backends
     """
 
+    def __init__(self, logger: logging.Logger):
+        self.logger = logger
+
     @property
     def writable(self):
         """Determine if this config store is writable.
@@ -529,7 +533,8 @@ class JsonConfig(ConfigStore):
     """A ConfigStore for handling JSON data
     """
 
-    def __init__(self, json_data):
+    def __init__(self, json_data, logger: logging.Logger):
+        super().__init__(logger)
         self.json_data = json_data
 
     @property
