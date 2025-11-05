@@ -27,8 +27,6 @@ from augur.application.db.models import Repo
 from augur.application.cli.csv_utils import (
     process_repo_csv,
     process_repo_group_csv,
-    write_rejection_file,
-    CSVProcessingError,
 )
 
 logger = logging.getLogger(__name__)
@@ -79,7 +77,7 @@ def add_repos(ctx, filename):
             successful = 0
             rejections = []
 
-            for row in rows:
+            for idx, row in enumerate(rows, start=1):
                 try:
                     repo_data = {
                         "url": row["repo_url"],
@@ -91,7 +89,7 @@ def add_repos(ctx, filename):
                     continue
 
                 print(
-                    f"Inserting repo with Git URL `{repo_data['url']}` into repo group {repo_data['repo_group_id']}"
+                    f"Inserting repo {idx}/{len(rows)} with Git URL `{repo_data['url']}` into repo group {repo_data['repo_group_id']}"
                 )
 
                 succeeded, message = controller.add_cli_repo(repo_data)
@@ -106,13 +104,11 @@ def add_repos(ctx, filename):
             logger.info(f"Successfully added {successful} repositories")
 
             if rejections:
-                rejection_file = write_rejection_file(filename, rejections)
-                logger.warning(
-                    f"{len(rejections)} repositories failed. "
-                    f"See {rejection_file} for details."
-                )
+                logger.warning(f"{len(rejections)} repositories failed:")
+                for row_data, reason in rejections:
+                    logger.warning(f"  - {row_data}: {reason}")
 
-        except CSVProcessingError as e:
+        except ValueError as e:
             logger.error(f"CSV processing error: {e}")
             return
         except Exception as e:
@@ -213,13 +209,11 @@ def add_repo_groups(ctx, filename):
             logger.info(f"Successfully added {successful} repository groups")
 
             if rejections:
-                rejection_file = write_rejection_file(filename, rejections)
-                logger.warning(
-                    f"{len(rejections)} groups failed. "
-                    f"See {rejection_file} for details."
-                )
+                logger.warning(f"{len(rejections)} repository groups failed:")
+                for row_data, reason in rejections:
+                    logger.warning(f"  - {row_data}: {reason}")
 
-    except CSVProcessingError as e:
+    except ValueError as e:
         logger.error(f"CSV processing error: {e}")
         return
     except Exception as e:

@@ -5,268 +5,195 @@ CSV processing utilities for Augur CLI
 import csv
 import logging
 import os
-from typing import Dict, List, Tuple
 
 logger = logging.getLogger(__name__)
 
-# Constants
 MAX_FILE_SIZE_MB = 10
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
 
-class CSVProcessingError(Exception):
-    """Raised when CSV processing fails."""
+def validate_git_url(value: str) -> bool:
+    """Validate if value is a valid git repository URL"""
 
-    pass
+    from augur.application.db.models import Repo
+    
+    value = value.strip()
+    github_parse = Repo.parse_github_repo_url(value)
+    gitlab_parse = Repo.parse_gitlab_repo_url(value)
+    return github_parse != (None, None) or gitlab_parse != (None, None)
 
 
-def check_file_size(filename: str) -> None:
-    """Validate file size is under limit"""
+def validate_positive_int(value: str) -> bool:
+    """Validate if value is a positive integer"""
+
+    try:
+        return int(value.strip()) > 0
+    except (ValueError, AttributeError):
+        return False
+
+
+def detect_column_order(sample_rows: list, validators: dict) -> dict:
+    """Detect column order by testing validators against sample data."""
+
+    if not sample_rows or len(sample_rows[0]) != len(validators):
+        raise ValueError(
+            f"Expected {len(validators)} columns. "
+            f"Found {len(sample_rows[0]) if sample_rows else 0} columns."
+        )
+
+    # Sample first 10 rows to determine column types
+    sample_size = min(10, len(sample_rows))
+    sample_data = sample_rows[:sample_size]
+
+    # Try to match each validator to a column using 80% threshold
+    column_mapping = {}
+    used_indices = set()
+
+    for col_name, validator in validators.items():
+        best_match_idx = None
+
+        # Test each column
+        for col_idx in range(len(sample_data[0])):
+            if col_idx in used_indices:
+                continue
+
+            # Count how many values in this column pass validation
+            matches = 0
+            for row in sample_data:
+                if col_idx < len(row) and validator(row[col_idx]):
+                    matches += 1
+
+            # If >80% of values pass validation, this is the correct column
+            match_rate = matches / len(sample_data)
+            if match_rate >= 0.8:
+                best_match_idx = col_idx
+                break
+
+        if best_match_idx is not None:
+            column_mapping[col_name] = best_match_idx
+            used_indices.add(best_match_idx)
+        else:
+            # No match found for this column
+            raise ValueError(
+                f"Could not detect column '{col_name}'. "
+                f"Ensure CSV has valid format or add headers: {', '.join(validators.keys())}"
+            )
+
+    return column_mapping
+
+
+def process_csv(filename: str, expected_columns: dict) -> list:
+    """
+    Generic CSV processor with header detection.
+
+    Uses DictReader for both header and headerless CSVs by detecting column order
+    and reassigning fieldnames when necessary.
+    """
+    
+    # Validate file size
     size = os.path.getsize(filename)
     if size > MAX_FILE_SIZE_BYTES:
         size_mb = size / (1024 * 1024)
-        raise CSVProcessingError(
+        raise ValueError(
             f"File size ({size_mb:.1f}MB) exceeds {MAX_FILE_SIZE_MB}MB limit. "
             f"Consider splitting into smaller batches."
         )
 
+    rows = []
 
-def detect_headers(first_row: List[str], expected_columns: set) -> bool:
-    """Detect if first row contains column headers"""
-    normalized = {col.strip().lower() for col in first_row}
-    return expected_columns.issubset(normalized)
+    with open(filename, "r", newline="") as f:
+        # Create DictReader - it will auto-read first row as fieldnames
+        reader = csv.DictReader(f)
 
+        # Check if auto-detected fieldnames are actual headers or data
+        detected_fieldnames = reader.fieldnames
+        if detected_fieldnames is None:
+            raise ValueError("CSV file is empty")
 
-def detect_column_mapping_repos(rows: List[List[str]]) -> Dict[str, int]:
-    """Detect which column contains URLs vs IDs for headerless repo CSVs"""
-    from augur.application.db.models import Repo
+        # Normalize and check if they match expected columns
+        normalized_fieldnames = {fn.strip().lower() for fn in detected_fieldnames}
+        expected_column_names = set(expected_columns.keys())
 
-    if not rows or len(rows[0]) != 2:
-        raise CSVProcessingError(
-            "Expected 2 columns (repo_url, repo_group_id). "
-            f"Found {len(rows[0]) if rows else 0} columns."
-        )
+        has_headers = expected_column_names.issubset(normalized_fieldnames)
 
-    # Sample first 10 rows to determine column types
-    sample_size = min(10, len(rows))
-    sample_rows = rows[:sample_size]
+        if has_headers:
+            # Headers exist - proceed normally with DictReader
+            logger.info("CSV has headers, using DictReader")
 
-    # Test each column to see if it contains URLs
-    for col_idx in [0, 1]:
-        col_values = [row[col_idx] for row in sample_rows]
+            # Normalize fieldnames for consistent access
+            reader.fieldnames = [fn.strip().lower() for fn in reader.fieldnames]
 
-        # Count how many values in this column parse as valid git URLs
-        url_matches = 0
-        for value in col_values:
-            value = value.strip()
-            github_parse = Repo.parse_github_repo_url(value)
-            gitlab_parse = Repo.parse_gitlab_repo_url(value)
+            # Validate required columns present
+            if not expected_column_names.issubset(set(reader.fieldnames)):
+                missing = expected_column_names - set(reader.fieldnames)
+                raise ValueError(
+                    f"Missing required columns: {missing}. "
+                    f"Expected: {', '.join(expected_column_names)}"
+                )
 
-            if github_parse != (None, None) or gitlab_parse != (None, None):
-                url_matches += 1
+            # Process all rows
+            for row in reader:
+                row_normalized = {k.strip().lower(): v.strip() for k, v in row.items()}
+                rows.append(row_normalized)
 
-        # If >80% of values are valid URLs, this is the URL column
-        match_rate = url_matches / len(col_values)
-        if match_rate >= 0.8:
-            url_col = col_idx
-            id_col = 1 - col_idx  # The other column
-            return {"repo_url": url_col, "repo_group_id": id_col}
+        else:
+            # No headers - detected_fieldnames are actually data
+            logger.info("CSV has no headers, using intelligent column detection")
 
-    raise CSVProcessingError(
-        "Could not detect column types. Ensure CSV contains valid git repository URLs. "
-        "Or add headers: repo_url,repo_group_id"
-    )
+            # We need to:
+            # 1. Read more rows to sample for column detection
+            # 2. Detect column order
+            # 3. Process first row (which is in detected_fieldnames) manually
+            # 4. Continue with remaining rows
 
+            # Seek back to start and read all rows as raw data
+            f.seek(0)
+            all_rows = list(csv.reader(f))
 
-def detect_column_mapping_repo_groups(rows: List[List[str]]) -> Dict[str, int]:
-    """Detect which column contains IDs vs names for headerless repo group CSVs"""
-    if not rows or len(rows[0]) != 2:
-        raise CSVProcessingError(
-            "Expected 2 columns (repo_group_id, repo_group_name). "
-            f"Found {len(rows[0]) if rows else 0} columns."
-        )
+            if not all_rows:
+                raise ValueError("CSV file is empty")
 
-    # Sample first 10 rows
-    sample_size = min(10, len(rows))
-    sample_rows = rows[:sample_size]
+            # Detect column order using sample rows
+            col_mapping = detect_column_order(all_rows, expected_columns)
 
-    # Test each column to see if it contains integers
-    for col_idx in [0, 1]:
-        col_values = [row[col_idx] for row in sample_rows]
+            # Process all rows with detected column order
+            for row in all_rows:
+                if len(row) != len(expected_columns):
+                    logger.warning(
+                        f"Expected {len(expected_columns)} columns, got {len(row)}, skipping"
+                    )
+                    continue
 
-        # Count how many values are positive integers
-        int_matches = 0
-        for value in col_values:
-            try:
-                if int(value.strip()) > 0:
-                    int_matches += 1
-            except (ValueError, AttributeError):
-                pass
+                # Build dict using detected column mapping
+                row_dict = {}
+                for col_name, col_idx in col_mapping.items():
+                    row_dict[col_name] = row[col_idx].strip()
 
-        # If >80% of values are integers, this is the ID column
-        match_rate = int_matches / len(col_values)
-        if match_rate >= 0.8:
-            id_col = col_idx
-            name_col = 1 - col_idx  # The other column
-            return {"repo_group_id": id_col, "repo_group_name": name_col}
+                rows.append(row_dict)
 
-    raise CSVProcessingError(
-        "Could not detect column types. Ensure CSV has valid format. "
-        "Or add headers: repo_group_id,repo_group_name"
-    )
+    logger.info(f"Parsed {len(rows)} rows from CSV")
+    return rows
 
 
-def process_repo_csv(filename: str) -> List[Dict[str, str]]:
+def process_repo_csv(filename: str) -> list:
     """Process repository CSV file with intelligent header detection"""
-    check_file_size(filename)
 
-    rows = []
-
-    with open(filename, "r", newline="") as f:
-        # Read first line to detect headers
-        first_line = f.readline()
-        f.seek(0)
-
-        first_row = next(csv.reader([first_line]))
-        has_headers = detect_headers(first_row, {"repo_url", "repo_group_id"})
-
-        if has_headers:
-            logger.info("CSV has headers, using DictReader")
-            reader = csv.DictReader(f)
-
-            # Normalize fieldnames
-            reader.fieldnames = [fn.strip().lower() for fn in reader.fieldnames]
-
-            # Validate required columns present
-            required = {"repo_url", "repo_group_id"}
-            if not required.issubset(set(reader.fieldnames)):
-                missing = required - set(reader.fieldnames)
-                raise CSVProcessingError(
-                    f"Missing required columns: {missing}. "
-                    f"Expected: repo_url, repo_group_id"
-                )
-
-            for line_num, row in enumerate(reader, start=2):
-                row_normalized = {k.strip().lower(): v.strip() for k, v in row.items()}
-                rows.append(row_normalized)
-
-        else:
-            logger.info("CSV has no headers, using intelligent column detection")
-            # Read all rows
-            all_rows = list(csv.reader(f))
-
-            if not all_rows:
-                raise CSVProcessingError("CSV file is empty")
-
-            # Detect which column is which
-            col_mapping = detect_column_mapping_repos(all_rows)
-
-            # Convert to dicts
-            for line_num, row in enumerate(all_rows, start=1):
-                if len(row) != 2:
-                    logger.warning(
-                        f"Line {line_num}: Expected 2 columns, got {len(row)}, skipping"
-                    )
-                    continue
-
-                row_dict = {
-                    "repo_url": row[col_mapping["repo_url"]].strip(),
-                    "repo_group_id": row[col_mapping["repo_group_id"]].strip(),
-                }
-                rows.append(row_dict)
-
-    logger.info(f"Parsed {len(rows)} rows from CSV")
-    return rows
+    return process_csv(
+        filename,
+        expected_columns={
+            "repo_url": validate_git_url,
+            "repo_group_id": validate_positive_int,
+        },
+    )
 
 
-def process_repo_group_csv(filename: str) -> List[Dict[str, str]]:
+def process_repo_group_csv(filename: str) -> list:
     """Process repository group CSV file with intelligent header detection"""
-    check_file_size(filename)
-
-    rows = []
-
-    with open(filename, "r", newline="") as f:
-        # Read first line to detect headers
-        first_line = f.readline()
-        f.seek(0)
-
-        first_row = next(csv.reader([first_line]))
-        has_headers = detect_headers(first_row, {"repo_group_id", "repo_group_name"})
-
-        if has_headers:
-            logger.info("CSV has headers, using DictReader")
-            reader = csv.DictReader(f)
-
-            # Normalize fieldnames
-            reader.fieldnames = [fn.strip().lower() for fn in reader.fieldnames]
-
-            # Validate required columns present
-            required = {"repo_group_id", "repo_group_name"}
-            if not required.issubset(set(reader.fieldnames)):
-                missing = required - set(reader.fieldnames)
-                raise CSVProcessingError(
-                    f"Missing required columns: {missing}. "
-                    f"Expected: repo_group_id, repo_group_name"
-                )
-
-            for line_num, row in enumerate(reader, start=2):
-                row_normalized = {k.strip().lower(): v.strip() for k, v in row.items()}
-
-                # Skip empty rows
-                if not row_normalized.get("repo_group_id") or not row_normalized.get(
-                    "repo_group_name"
-                ):
-                    continue
-
-                rows.append(row_normalized)
-
-        else:
-            logger.info("CSV has no headers, using intelligent column detection")
-            # Read all rows
-            all_rows = list(csv.reader(f))
-
-            if not all_rows:
-                raise CSVProcessingError("CSV file is empty")
-
-            # Detect which column is which
-            col_mapping = detect_column_mapping_repo_groups(all_rows)
-
-            # Convert to dicts
-            for line_num, row in enumerate(all_rows, start=1):
-                if len(row) != 2:
-                    logger.warning(
-                        f"Line {line_num}: Expected 2 columns, got {len(row)}, skipping"
-                    )
-                    continue
-
-                # Skip empty rows
-                if not row[0].strip() or not row[1].strip():
-                    continue
-
-                row_dict = {
-                    "repo_group_id": row[col_mapping["repo_group_id"]].strip(),
-                    "repo_group_name": row[col_mapping["repo_group_name"]].strip(),
-                }
-                rows.append(row_dict)
-
-    logger.info(f"Parsed {len(rows)} rows from CSV")
-    return rows
-
-
-def write_rejection_file(filename: str, rejections: List[Tuple[Dict, str]]) -> str:
-    """Write rejected rows to a .rejected.csv file"""
-    if not rejections:
-        return None
-
-    rejection_file = f"{filename}.rejected.csv"
-
-    with open(rejection_file, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["original_data", "rejection_reason"])
-
-        for row_dict, reason in rejections:
-            original_data = ",".join(str(v) for v in row_dict.values())
-            writer.writerow([original_data, reason])
-
-    logger.info(f"Wrote {len(rejections)} rejections to {rejection_file}")
-    return rejection_file
+    
+    return process_csv(
+        filename,
+        expected_columns={
+            "repo_group_id": validate_positive_int,
+            "repo_group_name": lambda v: bool(v.strip()),
+        },
+    )
