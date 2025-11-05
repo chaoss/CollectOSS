@@ -228,8 +228,7 @@ class AugurConfig():
         Returns:
             True if section is in the config, and False if it is not
         """
-        query = self.session.query(Config).filter(Config.section_name == section_name)
-        return execute_session_query(query, 'first') is not None
+        return any(map(lambda s: s.has_section(section_name)), self.config_sources)
 
 
     def add_or_update_settings(self, settings: List[dict]):
