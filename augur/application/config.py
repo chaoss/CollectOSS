@@ -763,7 +763,8 @@ class DatabaseConfig(ConfigStore):
             self.session.insert_data(setting,Config, ["section_name", "setting_name"])
         else:
             if not ignore_existing:
-                self.logger.error(f"Could not insert config value '{value if section_name is not "Keys" else "REDACTED"}' into section '{section_name}' for key '{value_key}' database because a value already exists there and caller did not specify override")
+                value_redacted = value if section_name is not "Keys" else "REDACTED"
+                self.logger.error(f"Could not insert config value '{value_redacted}' into section '{section_name}' for key '{value_key}' database because a value already exists there and caller did not specify override")
                 return
             #If setting exists. use raw update to not increase autoincrement
             update_query = (
