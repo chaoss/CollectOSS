@@ -1,12 +1,11 @@
 # SPDX-License-Identifier: MIT
 import os
-from os import environ, chmod, path, getenv, stat
+from os import environ, chmod, path, getenv
 import logging
 from sys import exit
 from subprocess import call
 import random
 import string
-import csv
 import click
 import sqlalchemy as s
 import pandas as pd
@@ -25,6 +24,12 @@ from augur.application.db.session import DatabaseSession
 from sqlalchemy import update
 from datetime import datetime
 from augur.application.db.models import Repo
+from augur.application.cli.csv_utils import (
+    process_repo_csv,
+    process_repo_group_csv,
+    write_rejection_file,
+    CSVProcessingError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +47,14 @@ def cli(ctx):
 @with_database
 @click.pass_context
 def add_repos(ctx, filename):
-    """Add repositories to Augur's database.
+    """Add repositories to Augur's database from a CSV file.
 
-    The .csv file format should be repo_url,group_id
+    The CSV file can have headers (recommended):
+        repo_url,repo_group_id
+        https://github.com/chaoss/augur.git,10
+
+    Or no headers (backward compatible - column order will be auto-detected):
+        https://github.com/chaoss/augur.git,10
 
     NOTE: The Group ID must already exist in the REPO_Groups Table.
 
@@ -55,30 +65,59 @@ def add_repos(ctx, filename):
     with GithubTaskSession(logger, engine=ctx.obj.engine) as session:
         controller = RepoLoadController(session)
 
-        line_total = len(open(filename).readlines())
-        with open(filename) as upload_repos_file:
-            data = csv.reader(upload_repos_file, delimiter=",")
-            for line_num, row in enumerate(data):
-                repo_data = {}
-                repo_data["url"] = row[0]
+        try:
+            # Parse CSV (handles headers and column detection)
+            rows = process_repo_csv(filename)
+
+            if not rows:
+                logger.error("No valid rows found in CSV file")
+                return
+
+            logger.info(f"Processing {len(rows)} repositories...")
+
+            # Process each row using EXISTING logic
+            successful = 0
+            rejections = []
+
+            for row in rows:
                 try:
-                    repo_data["repo_group_id"] = int(row[1])
-                except ValueError:
-                    print(
-                        f"Invalid repo group_id: {row[1]} for Git url: `{repo_data['url']}`"
-                    )
+                    repo_data = {
+                        "url": row["repo_url"],
+                        "repo_group_id": int(row["repo_group_id"]),
+                    }
+                except (ValueError, KeyError) as e:
+                    logger.warning(f"Invalid data format: {row}, error: {e}")
+                    rejections.append((row, f"Invalid format: {e}"))
                     continue
 
                 print(
-                    f"Inserting repo {line_num}/{line_total} with Git URL `{repo_data['url']}` into repo group {repo_data['repo_group_id']}"
+                    f"Inserting repo with Git URL `{repo_data['url']}` into repo group {repo_data['repo_group_id']}"
                 )
 
                 succeeded, message = controller.add_cli_repo(repo_data)
-                if not succeeded:
-                    logger.error(f"insert repo failed with error: {message['status']}`")
-                else:
+                if succeeded:
+                    successful += 1
                     logger.info(f"Repo added: {repo_data}")
                     print("Success")
+                else:
+                    logger.error(f"insert repo failed with error: {message['status']}")
+                    rejections.append((row, f"Failed to add repo: {message['status']}"))
+
+            logger.info(f"Successfully added {successful} repositories")
+
+            if rejections:
+                rejection_file = write_rejection_file(filename, rejections)
+                logger.warning(
+                    f"{len(rejections)} repositories failed. "
+                    f"See {rejection_file} for details."
+                )
+
+        except CSVProcessingError as e:
+            logger.error(f"CSV processing error: {e}")
+            return
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+            raise
 
 
 @cli.command("get-repo-groups")
@@ -113,40 +152,79 @@ def add_repo_groups(ctx, filename):
     """
     Create new repo groups in Augur's database
     """
-    with ctx.obj.engine.begin() as connection:
-        df = pd.read_sql(
-            s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"),
-            connection,
-        )
-        repo_group_IDs = df["repo_group_id"].values.tolist()
+    try:
+        # Parse CSV (handles headers and column detection)
+        rows = process_repo_group_csv(filename)
 
-        insert_repo_group_sql = s.sql.text(
+        if not rows:
+            logger.error("No valid rows found in CSV file")
+            return
+
+        logger.info(f"Processing {len(rows)} repository groups...")
+
+        with ctx.obj.engine.begin() as connection:
+            # Get existing repo group IDs
+            df = pd.read_sql(
+                s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"),
+                connection,
+            )
+            repo_group_IDs = df["repo_group_id"].values.tolist()
+
+            insert_repo_group_sql = s.sql.text(
+                """
+            INSERT INTO "augur_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_id, :repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP);
             """
-        INSERT INTO "augur_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_id, :repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP);
-        """
-        )
+            )
 
-        with open(filename) as create_repo_groups_file:
-            data = csv.reader(create_repo_groups_file, delimiter=",")
-            for row in data:
-                # Handle case where there's a hanging empty row.
-                if not row:
-                    logger.info("Skipping empty data...")
+            # Process each row
+            successful = 0
+            rejections = []
+
+            for row in rows:
+                try:
+                    group_id = int(row["repo_group_id"])
+                    group_name = row["repo_group_name"]
+                except (ValueError, KeyError) as e:
+                    logger.warning(f"Invalid data format: {row}, error: {e}")
+                    rejections.append((row, f"Invalid format: {e}"))
                     continue
 
-                logger.info(f"Inserting repo group with values {row}...")
-                if int(row[0]) not in repo_group_IDs:
-                    repo_group_IDs.append(int(row[0]))
+                # Check if already exists
+                if group_id in repo_group_IDs:
+                    logger.info(f"Repo group {group_id} already exists, skipping")
+                    continue
+
+                try:
+                    logger.info(
+                        f"Inserting repo group: ID={group_id}, Name={group_name}"
+                    )
                     connection.execute(
                         insert_repo_group_sql.bindparams(
-                            repo_group_id=int(row[0]),
-                            repo_group_name=row[1],
+                            repo_group_id=group_id,
+                            repo_group_name=group_name,
                         )
                     )
-                else:
-                    logger.info(
-                        f"Repo group with ID {row[1]} for repo group {row[1]} already exists, skipping..."
-                    )
+                    successful += 1
+                    repo_group_IDs.append(group_id)
+                except Exception as e:
+                    logger.error(f"Failed to insert repo group {group_id}: {e}")
+                    rejections.append((row, f"Database error: {e}"))
+
+            logger.info(f"Successfully added {successful} repository groups")
+
+            if rejections:
+                rejection_file = write_rejection_file(filename, rejections)
+                logger.warning(
+                    f"{len(rejections)} groups failed. "
+                    f"See {rejection_file} for details."
+                )
+
+    except CSVProcessingError as e:
+        logger.error(f"CSV processing error: {e}")
+        return
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        raise
 
 
 @cli.command("add-github-org")
