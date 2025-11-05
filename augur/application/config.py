@@ -201,29 +201,13 @@ class AugurConfig():
         """Get full config as a dictionary.
         
         Returns:
-            The config from the database
+            The config from all sources
         """
-        # get all the sections in the config table
-        query = self.session.query(Config.section_name).order_by(Config.section_name.asc())
-        section_names = execute_session_query(query, 'all')
-
         config = {}
-        # loop through and get the data for each section
-        for section_name in section_names:
 
-            section_data = self.get_section(section_name[0])
-
-            # rows with a section of None are on the top level, 
-            # so we are adding these values to the top level rather 
-            # than creating a section for them
-            if section_name[0] is None:
-                for key in list(section_data.keys()):
-                    config[key] = section_data[key]
-                continue
-
-            # add section data to config object
-            config[section_name[0]] = section_data
-
+        for config_source in self.config_sources:
+            config.update(config_source.retrieve_dict())
+        
         return config
 
 
