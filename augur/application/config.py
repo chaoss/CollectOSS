@@ -130,12 +130,18 @@ class AugurConfig():
         self.logger = logger
 
         self.accepted_types = ["str", "bool", "int", "float", "NoneType"]
+
+        # list items in order of precedence. lowest precedence (i.e. fallback) values first 
+        self.config_sources = [
+            JsonConfig(default_config, logger)
+        ]
+
         config_dir = Path(os.getenv("CONFIG_DATADIR", "./"))
         config_path = config_dir.joinpath("augur.json")
         if config_path.exists():
-            self.default_config = json.loads(config_path.read_text(encoding="UTF-8"))
-        else:
-            self.default_config = default_config
+            self.config_sources.append(JsonConfig(json.loads(config_path.read_text(encoding="UTF-8")), logger))
+        
+        self.config_sources.append( DatabaseConfig(session, logger) )
 
     def get_section(self, section_name) -> dict:
         """Get a section of data from the config.
