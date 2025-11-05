@@ -233,8 +233,7 @@ class AugurConfig():
         Returns:
             True if the config is empty, and False if it is not
         """
-        query = self.session.query(Config)
-        return execute_session_query(query, 'first') is None
+        return all(map(lambda s: s.empty), self.config_sources)
 
     def is_section_in_config(self, section_name: str) -> bool:
         """Determine if a section is in the config.
