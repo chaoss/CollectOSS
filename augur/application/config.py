@@ -619,3 +619,175 @@ class JsonConfig(ConfigStore):
             return None
         
         return self.json_data[section_name].get(value_key, None)
+
+
+
+class DatabaseConfig(ConfigStore):
+    """A ConfigStore for handling JSON data
+    """
+    from augur.application.db.session import DatabaseSession
+
+    def __init__(self, session: DatabaseSession, logger: logging.Logger):
+        super().__init__(logger)
+        self.session = session
+
+    @property
+    def writable(self):
+        return True
+    
+    @property
+    def empty(self):
+        query = self.session.query(Config)
+        return execute_session_query(query, 'first') is None
+
+    @staticmethod
+    def _dict_to_config_table(json_data:dict):
+        """Convert an augur settings dict into a mapping from table columns to values for insertion in bulk
+
+        Args:
+            json_data (dict): The settings to convert, in the same format as the default_dict at the top of this file
+        """
+        
+        config_values = []
+        for section_name, settings in json_data.items():
+            for key, value in settings.items():
+
+                if isinstance(value, dict) is True:
+                    # TODO: Uncomment out when insights worker config stuff is resolved
+                    # self.logger.error(f"Values cannot be of type dict: {value}")
+                    return
+
+                setting = {
+                    "section_name": section_name,
+                    "setting_name": key,
+                    "value": value,
+                }
+
+                if "type" not in setting:
+                    setting["type"] = setting["value"].__class__.__name__
+
+                if setting["type"] == "NoneType":
+                    setting["type"] = None
+
+                config_values.append(setting)
+
+        return config_values
+    
+
+    def load_dict(cls, data: dict, ignore_existing=False):
+        if not self.writable:
+            raise NotWriteableException()
+
+        for section, config_values in data.items():
+            self.create_section(section, values, ignore_existing=ignore_existing)
+
+    def retrieve_dict(self):
+        # get all the sections in the config table
+        query = self.session.query(Config.section_name).order_by(Config.section_name.asc())
+        section_names = execute_session_query(query, 'all')
+
+        config = {}
+        # loop through and get the data for each section
+        for section_name in section_names:
+
+            section_data = self.get_section(section_name[0])
+
+            # rows with a section of None are on the top level, 
+            # so we are adding these values to the top level rather 
+            # than creating a section for them
+            if section_name[0] is None:
+                for key in list(section_data.keys()):
+                    config[key] = section_data[key]
+                continue
+
+            # add section data to config object
+            config[section_name[0]] = section_data
+
+        return config
+
+    def clear(self):
+        if not self.writable:
+            raise NotWriteableException()
+        
+        self.session.query(Config).delete()
+        self.session.commit()
+
+    def remove_section(self, section_name: str) -> None:
+        if not self.writable:
+            raise NotWriteableException()
+
+        self.session.query(Config).filter(Config.section_name == section_name).delete()
+        self.session.commit()
+
+
+    def has_section(self, section_name: str) -> bool:
+        query = self.session.query(Config).filter(Config.section_name == section_name)
+        return execute_session_query(query, 'first') is not None
+
+    def create_section(self, section_name: str, values: Optional[dict] = None, ignore_existing=False) -> None:
+        if not self.writable:
+            raise NotWriteableException()
+
+        if values is None:
+            values = {}
+
+        for key, value in values.items():
+            self.add_value(section_name, key, value, ignore_existing=ignore_existing)
+
+    def get_section(self, section_name: str) -> dict:
+        query = self.session.query(Config).filter_by(section_name=section_name).order_by(Config.setting_name.asc())
+        section_data = execute_session_query(query, 'all')
+        
+        section_dict = {}
+        for setting in section_data:
+            setting_dict = setting.__dict__
+
+            setting_dict = convert_type_of_value(setting_dict, self.logger)
+
+            setting_name = setting_dict["setting_name"]
+            setting_value = setting_dict["value"]
+
+            section_dict[setting_name] = setting_value
+
+        return section_dict
+
+    def remove_value(self, section_name: str, value_key: str) -> None:
+        raise NotImplementedError()
+
+    def has_value(self, section_name: str, value_key: str) -> bool:
+        query = self.session.query(Config).filter(and_(Config.section_name == section_name,Config.setting_name == value_key) )
+        return execute_session_query(query, 'first') is not None
+
+    def add_value(self, section_name: str, value_key: str, value, ignore_existing=False) -> None:
+
+        setting = self._dict_to_config_table({[section_name]: { [value_key]: value}})
+        
+        if not self.has_value(section_name, value_key):
+            self.session.insert_data(setting,Config, ["section_name", "setting_name"])
+        else:
+            if not ignore_existing:
+                self.logger.error(f"Could not insert config value '{value if section_name is not "Keys" else "REDACTED"}' into section '{section_name}' for key '{value_key}' database because a value already exists there and caller did not specify override")
+                return
+            #If setting exists. use raw update to not increase autoincrement
+            update_query = (
+                update(Config)
+                .where(Config.section_name == setting["section_name"])
+                .where(Config.setting_name == setting["setting_name"])
+                .values(value=setting["value"])
+            )
+
+            self.session.execute(update_query)
+            self.session.commit()
+
+    def get_value(self, section_name: str, value_key: str):
+        try:
+            query = self.session.query(Config).filter(Config.section_name == section_name, Config.setting_name == value_key)
+            config_setting = execute_session_query(query, 'one')
+        except s.orm.exc.NoResultFound:
+            return None
+
+        setting_dict = config_setting.__dict__
+
+        setting_dict = convert_type_of_value(setting_dict, self.logger)
+
+        return setting_dict["value"]

@@ -52,3 +52,44 @@ def test_jsonconfig_mutations_raise_not_writable(callable_name, args, kwargs):
     cfg = JsonConfig({"A": {"x": 1}})
     with pytest.raises(NotWriteableException):
         getattr(cfg, callable_name)(*args, **kwargs)
+
+
+def test_dict_to_config_table_happy_path():
+    input_dict = {
+        "Section1": {"alpha": 1, "beta": "x"},
+        "Section2": {"gamma": False, "delta": 3.14},
+    }
+
+    rows = DatabaseConfig._dict_to_config_table(input_dict)
+
+    # Expect a list of row dicts with section_name, setting_name, value
+    assert isinstance(rows, list)
+    expected = [
+        { 
+            "section_name": "Section1",
+            "setting_name": "alpha",
+            "value": 1,
+            "type": "int"
+        },
+        { 
+            "section_name": "Section1",
+            "setting_name": "beta",
+            "value": "x",
+            "type": "str"
+        },
+        { 
+            "section_name": "Section2",
+            "setting_name": "gamma",
+            "value": False,
+            "type": "bool"
+        },
+        { 
+            "section_name": "Section2",
+            "setting_name": "delta",
+            "value": 3.14,
+            "type": "float"
+        },
+    ]
+    assert rows == expected
+
+
