@@ -307,7 +307,7 @@ class AugurConfig():
         """
         try:
             writeable_config = self._get_writable_source()
-            writeable_config.add_section_from_json(section_name, json_data)
+            writeable_config.create_section(section_name, json_data, ignore_existing=True)
         except NotWriteableException:
             return
 
