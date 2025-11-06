@@ -162,34 +162,16 @@ def add_section(ctx, section_name, file):
 @click.option('--section', required=True)
 @click.option('--setting', required=True)
 @click.option('--value', required=True)
-@click.option('--data-type')
 @test_connection
 @test_db_connection
 @with_database
 @click.pass_context
-def config_set(ctx, section, setting, value, data_type):
+def config_set(ctx, section, setting, value):
 
     with DatabaseSession(logger, engine=ctx.obj.engine) as session:
         config = AugurConfig(logger, session)
-        
-        if not data_type:
-            result = session.query(Config).filter(Config.section_name == section, Config.setting_name == setting).all()
-            if not result:
-                return click.echo("You must specify a data-type if the setting does not already exist")
-            data_type = result[0].type
 
-        if data_type not in config.accepted_types:
-            print(f"Error invalid type for config. Please use one of these types: {config.accepted_types}")
-            return
-
-        setting_dict = {
-            "section_name": section,
-            "setting_name": setting, 
-            "value": value,
-            "type": data_type
-        }
-
-        config.add_or_update_settings([setting_dict])
+        config.add_value(section, setting, value)
         print(f"{setting} in {section} section set to {value}")
 
 @cli.command('get')
