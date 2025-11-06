@@ -28,7 +28,9 @@ def get_development_flag_from_config():
 def get_development_flag():
     return os.getenv("AUGUR_DEV") or get_development_flag_from_config() or False
 
-
+def redact_setting_value(section_name, setting_name, value):
+    value_redacted = value if section_name != "Keys" else "REDACTED"
+    return value_redacted
 
 default_config = {
             "Augur": {
@@ -767,8 +769,7 @@ class DatabaseConfig(ConfigStore):
             self.session.insert_data(setting,Config, ["section_name", "setting_name"])
         else:
             if not ignore_existing:
-                value_redacted = value if section_name is not "Keys" else "REDACTED"
-                self.logger.error(f"Could not insert config value '{value_redacted}' into section '{section_name}' for key '{value_key}' database because a value already exists there and caller did not specify override")
+                self.logger.error(f"Could not insert config value '{redact_setting_value(section_name, setting_name, value)}' into section '{section_name}' for key '{value_key}' database because a value already exists there and caller did not specify override")
                 return
             #If setting exists. use raw update to not increase autoincrement
             update_query = (
