@@ -68,15 +68,15 @@ def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redi
 
         config = AugurConfig(logger, session)
 
-        default_config = config.default_config
+        augmented_config = config.base_config
 
         phase_names = get_phase_names_without_import()
 
         #Add all phases as enabled by default
         for name in phase_names:
 
-            if name not in default_config['Task_Routine']:
-                default_config['Task_Routine'].update({name : 1})
+            if name not in augmented_config['Task_Routine']:
+                augmented_config['Task_Routine'].update({name : 1})
 
         #print(default_config)
         if redis_conn_string:
@@ -91,18 +91,18 @@ def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redi
             except ValueError:
                 pass
 
-            default_config["Redis"]["connection_string"] = redis_conn_string
+            augmented_config["Redis"]["connection_string"] = redis_conn_string
 
         if rabbitmq_conn_string:
-            default_config["RabbitMQ"]["connection_string"] = rabbitmq_conn_string
+            augmented_config["RabbitMQ"]["connection_string"] = rabbitmq_conn_string
 
-        default_config["Keys"] = keys
+        augmented_config["Keys"] = keys
 
-        default_config["Facade"]["repo_directory"] = facade_repo_directory
+        augmented_config["Facade"]["repo_directory"] = facade_repo_directory
 
-        default_config["Logging"]["logs_directory"] = logs_directory or (ROOT_AUGUR_DIRECTORY + "/logs/")
+        augmented_config["Logging"]["logs_directory"] = logs_directory or (ROOT_AUGUR_DIRECTORY + "/logs/")
 
-        config.load_config_from_dict(default_config)
+        config.load_config_from_dict(augmented_config)
 
 
 @cli.command('load')
