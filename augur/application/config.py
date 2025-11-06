@@ -143,7 +143,7 @@ class AugurConfig():
         
         self.config_sources.append( DatabaseConfig(session, logger) )
 
-    def _get_writable_source(self) -> ConfigStore:
+    def _get_writable_source(self) -> 'ConfigStore':
         """Returns the highest precedence source that can be written to.
         Intended to be used for operations that require changing the config updates.
 
@@ -153,7 +153,7 @@ class AugurConfig():
         Returns:
             ConfigStore: An instance of ConfigStore representing the config storage location that can be written to.
         """
-        writeable_sources = list(filter(lambda s: source.writable), self.config_sources)
+        writeable_sources = list(filter(lambda s: source.writable, self.config_sources))
         if len(writeable_sources) < 1:
             raise NotWriteableException
         
