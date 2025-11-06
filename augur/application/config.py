@@ -281,26 +281,11 @@ class AugurConfig():
             section_name: The name of the section being added
             json_data: The data being added
         """
-        data_keys = list(json_data.keys())
-
-        settings = []
-        for key in data_keys:
-
-            value = json_data[key]
-
-            if isinstance(value, dict) is True:
-                # TODO: Uncomment out when insights worker config stuff is resolved
-                # self.logger.error(f"Values cannot be of type dict: {value}")
-                return
-
-            setting = {
-                "section_name": section_name,
-                "setting_name": key,
-                "value": json_data[key],
-            }
-            settings.append(setting)
-
-        self.add_or_update_settings(settings)
+        try:
+            writeable_config = self._get_writable_source()
+            writeable_config.add_section_from_json(section_name, json_data)
+        except NotWriteableException:
+            return
 
 
     def load_config_file(self, file_path: str) -> dict:
