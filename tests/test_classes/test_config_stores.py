@@ -1,23 +1,29 @@
 # SPDX-License-Identifier: MIT
 import pytest
+from unittest.mock import Mock
 
 from augur.application.config import JsonConfig, DatabaseConfig, NotWriteableException
 
 
-def test_jsonconfig_readonly_flags():
-    cfg = JsonConfig({"A": {"x": 1}})
+@pytest.fixture
+def mock_logger():
+    return Mock()
+
+
+def test_jsonconfig_readonly_flags(mock_logger):
+    cfg = JsonConfig({"A": {"x": 1}}, mock_logger)
     assert cfg.writable is False
     assert cfg.empty is False
 
 
-def test_jsonconfig_empty_true_false():
-    assert JsonConfig({}).empty is True
-    assert JsonConfig({"A": {}}).empty is False
+def test_jsonconfig_empty_true_false(mock_logger):
+    assert JsonConfig({}, mock_logger).empty is True
+    assert JsonConfig({"A": {}}, mock_logger).empty is False
 
 
-def test_jsonconfig_retrieve_has_get():
+def test_jsonconfig_retrieve_has_get(mock_logger):
     data = {"Alpha": {"a": 1, "b": "str"}, "Beta": {}}
-    cfg = JsonConfig(data)
+    cfg = JsonConfig(data, mock_logger)
 
     # retrieve full dict
     assert cfg.retrieve_dict() is data
@@ -48,8 +54,8 @@ def test_jsonconfig_retrieve_has_get():
         ("add_value", ("X", "y", 2), {"ignore_existing": False}),
     ],
 )
-def test_jsonconfig_mutations_raise_not_writable(callable_name, args, kwargs):
-    cfg = JsonConfig({"A": {"x": 1}})
+def test_jsonconfig_mutations_raise_not_writable(mock_logger, callable_name, args, kwargs):
+    cfg = JsonConfig({"A": {"x": 1}}, mock_logger)
     with pytest.raises(NotWriteableException):
         getattr(cfg, callable_name)(*args, **kwargs)
 
