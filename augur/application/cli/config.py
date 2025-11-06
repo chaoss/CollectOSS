@@ -9,7 +9,7 @@ import logging
 
 from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.config import AugurConfig, redact_setting_value
 from augur.application.cli import DatabaseContext, test_connection, test_db_connection, with_database
 from augur.util.inspect_without_import import get_phase_names_without_import
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
@@ -172,7 +172,7 @@ def config_set(ctx, section, setting, value):
         config = AugurConfig(logger, session)
 
         config.add_value(section, setting, value)
-        print(f"{setting} in {section} section set to {value}")
+        print(f"{setting} in {section} section set to {redact_setting_value(section, setting, value)}")
 
 @cli.command('get')
 @click.option('--section', required=True)
