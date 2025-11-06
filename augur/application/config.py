@@ -252,7 +252,7 @@ class AugurConfig():
         Returns:
             True if section is in the config, and False if it is not
         """
-        return any(map(lambda s: s.has_section(section_name)), self.config_sources)
+        return any(map(lambda s: s.has_section(section_name), self.config_sources))
        
     def add_value(self, section_name, setting_name, value):
         """Adds or updates a config value.
@@ -645,12 +645,12 @@ class DatabaseConfig(ConfigStore):
         return config_values
     
 
-    def load_dict(cls, data: dict, ignore_existing=False):
+    def load_dict(self, data: dict, ignore_existing=False):
         if not self.writable:
             raise NotWriteableException()
 
         for section, config_values in data.items():
-            self.create_section(section, values, ignore_existing=ignore_existing)
+            self.create_section(section, config_values, ignore_existing=ignore_existing)
 
     def retrieve_dict(self):
         # get all the sections in the config table
@@ -740,7 +740,7 @@ class DatabaseConfig(ConfigStore):
             self.session.insert_data(setting,Config, ["section_name", "setting_name"])
         else:
             if not ignore_existing:
-                self.logger.error(f"Could not insert config value '{redact_setting_value(section_name, setting_name, value)}' into section '{section_name}' for key '{value_key}' database because a value already exists there and caller did not specify override")
+                self.logger.error(f"Could not insert config value '{redact_setting_value(section_name, value_key, value)}' into section '{section_name}' for key '{value_key}' database because a value already exists there and caller did not specify override")
                 return
             #If setting exists. use raw update to not increase autoincrement
             update_query = (
