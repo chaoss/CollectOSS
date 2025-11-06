@@ -761,7 +761,7 @@ class DatabaseConfig(ConfigStore):
 
     def add_value(self, section_name: str, value_key: str, value, ignore_existing=False) -> None:
 
-        setting = self._dict_to_config_table({[section_name]: { [value_key]: value}})
+        setting = self._dict_to_config_table({section_name: { value_key: value}})
         
         if not self.has_value(section_name, value_key):
             self.session.insert_data(setting,Config, ["section_name", "setting_name"])
