@@ -124,6 +124,20 @@ class AugurConfig():
 
     session: DatabaseSession
 
+    @property
+    def base_config(self):
+        """Return the "base" config - either the default config or a default config with user modifications on top
+        This is used as a base upon which the Augur CLI injects values, such as API keys, connection strings, 
+        and other values passed in via environment variables.
+        This config is then modified and passed into `load_config_from_dict`.
+        """
+        read_only_sources = self._fetch_config_stores(lambda source: not source.writable)
+        config = {}
+        for config_source in read_only_sources:
+            config.update(config_source.retrieve_dict())
+
+        return config
+
     def __init__(self, logger, session: DatabaseSession):
 
         self.session = session
