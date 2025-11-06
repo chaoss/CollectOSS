@@ -2,11 +2,15 @@
 import pytest
 from unittest.mock import Mock
 
-from augur.application.config import JsonConfig, DatabaseConfig, NotWriteableException
+from augur.application.config import JsonConfig, DatabaseConfig, NotWriteableException, AugurConfig, default_config
 
 
 @pytest.fixture
 def mock_logger():
+    return Mock()
+
+@pytest.fixture
+def mock_session():
     return Mock()
 
 
@@ -99,3 +103,9 @@ def test_dict_to_config_table_happy_path():
     assert rows == expected
 
 
+
+def test_fetching_real_defaults(mock_logger, mock_session):
+    cfg = AugurConfig(mock_logger, mock_session)
+    cfg.config_sources = [JsonConfig(default_config, mock_logger)]
+
+    assert cfg.get_value("Redis", "cache_group") == 0
