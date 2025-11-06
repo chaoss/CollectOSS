@@ -213,7 +213,7 @@ class AugurConfig():
         if section_name == "frontend":
             section_name = "Frontend"
 
-        for source in self.config_sources.reverse():
+        for source in reversed(self.config_sources):
             val = source.get_value(section_name, setting_name)
             if val is not None:
                 return val
