@@ -153,11 +153,21 @@ class AugurConfig():
         Returns:
             ConfigStore: An instance of ConfigStore representing the config storage location that can be written to.
         """
-        writeable_sources = list(filter(lambda s: source.writable, self.config_sources))
+        writeable_sources = self._fetch_config_stores(lambda source: source.writable)
         if len(writeable_sources) < 1:
             raise NotWriteableException
         
         return writeable_sources[-1]
+
+    def _fetch_config_stores(self, filter_func: None):
+        """Fetch the stack of config stores filtered by the provided function
+
+        Args:
+            filter_func (func): a function or lambda accepting a ConfigSource as its only argument and returning a boolean indicating if it should be kept in or left out by the filter
+        """
+        if filter_func is None:
+            return self.config_sources
+        return list(filter(filter_func, self.config_sources))
             
     def get_section(self, section_name) -> dict:
         """Get a section of data from the config.
