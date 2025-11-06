@@ -372,11 +372,6 @@ class AugurConfig():
         except NotWriteableException:
             return
 
-    def create_default_config(self) -> None:
-        """Create default config in the database."""
-        self.load_config_from_dict(self.default_config)
-
-
 class NotWriteableException(Exception):
     """Custom Augur exception class to be used when trying to modify a config that is not writeable
     """
