@@ -253,52 +253,20 @@ class AugurConfig():
             True if section is in the config, and False if it is not
         """
         return any(map(lambda s: s.has_section(section_name)), self.config_sources)
-
-
-    def add_or_update_settings(self, settings: List[dict]):
-        """Add or update a list of settings.
-
-        Args:
-            list of settings with dicts containing section_name, setting_name, value, and optionally type
-
-        Examples:
-            type is optional
-            setting = {
-                    "section_name": section_name,
-                    "setting_name": setting_name,
-                    "value": value,
-                    "type": data_type # optional
-                }
-        """
-        for setting in settings:
-
-            if "type" not in setting:
-                setting["type"] = setting["value"].__class__.__name__
-
-            if setting["type"] == "NoneType":
-                setting["type"] = None
-
-        #print(f"\nsetting: {settings}")
-        #self.session.insert_data(settings,Config, ["section_name", "setting_name"])
-
-            #Check if setting exists.
-            query = self.session.query(Config).filter(and_(Config.section_name == setting["section_name"],Config.setting_name == setting["setting_name"]) )
-
-            if execute_session_query(query, 'first') is None:
-                # TODO: Update to use bulk insert dicts so config doesn't require database session
-                self.session.insert_data(setting,Config, ["section_name", "setting_name"])
-            else:
-                #If setting exists. use raw update to not increase autoincrement
-                update_query = (
-                    update(Config)
-                    .where(Config.section_name == setting["section_name"])
-                    .where(Config.setting_name == setting["setting_name"])
-                    .values(value=setting["value"])
-                )
-
-                self.session.execute(update_query)
-                self.session.commit()
        
+    def add_value(self, section_name, setting_name, value):
+        """Adds or updates a config value.
+        
+        Args:
+            section_name: The name of the section being added
+            json_data: The data being added
+        """
+        try:
+            writeable_config = self._get_writable_source()
+            writeable_config.add_value(section_name, setting_name, value, ignore_existing=True)
+        except NotWriteableException:
+            return
+        
 
     def add_section_from_json(self, section_name: str, json_data: dict) -> None:
         """Add a section from a dict.
