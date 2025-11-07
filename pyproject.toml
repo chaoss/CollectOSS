@@ -163,7 +163,7 @@ constraint-dependencies = [
 [tool.tox]
 legacy_tox_ini = """
     [tox]
-    envlist = py{,311}-{classes}
+    envlist = py{,311}-{classes,worker-persistence,workers}
     skip_missing_interpreters = true
     requires = tox-uv
 
