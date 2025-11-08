@@ -5,6 +5,7 @@ CSV processing utilities for Augur CLI
 import csv
 import logging
 import os
+from typing import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -13,10 +14,19 @@ MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
 
 def validate_git_url(value: str) -> bool:
-    """Validate if value is a valid git repository URL"""
+    """Validate if value is a valid git repository URL.
 
+    Checks if the provided string is a valid GitHub or GitLab repository URL
+    using the Repo model's URL parsing methods.
+
+    Args:
+        value: String to validate as a git repository URL
+
+    Returns:
+        True if the value is a valid GitHub or GitLab URL, False otherwise
+    """
     from augur.application.db.models import Repo
-    
+
     value = value.strip()
     github_parse = Repo.parse_github_repo_url(value)
     gitlab_parse = Repo.parse_gitlab_repo_url(value)
@@ -24,17 +34,40 @@ def validate_git_url(value: str) -> bool:
 
 
 def validate_positive_int(value: str) -> bool:
-    """Validate if value is a positive integer"""
+    """Validate if value is a positive integer.
 
+    Args:
+        value: String to validate as a positive integer
+
+    Returns:
+        True if the value can be converted to a positive integer, False otherwise
+    """
     try:
         return int(value.strip()) > 0
     except (ValueError, AttributeError):
         return False
 
 
-def detect_column_order(sample_rows: list, validators: dict) -> dict:
-    """Detect column order by testing validators against sample data."""
+def detect_column_order(
+    sample_rows: list[list[str]], validators: dict[str, Callable[[str], bool]]
+) -> dict[str, int]:
+    """Detect column order by testing validators against sample data.
 
+    For headerless CSV files, this function determines which column index
+    corresponds to which expected field by validating sample data against
+    validator functions. Uses an 80% threshold for matching.
+
+    Args:
+        sample_rows: List of rows from CSV file, where each row is a list of strings
+        validators: Dictionary mapping column names to validator functions
+
+    Returns:
+        Dictionary mapping column names to their detected column indices
+
+    Raises:
+        ValueError: If column count doesn't match expected validators or if
+                   a column cannot be detected with sufficient confidence
+    """
     if not sample_rows or len(sample_rows[0]) != len(validators):
         raise ValueError(
             f"Expected {len(validators)} columns. "
@@ -82,14 +115,28 @@ def detect_column_order(sample_rows: list, validators: dict) -> dict:
     return column_mapping
 
 
-def process_csv(filename: str, expected_columns: dict) -> list:
-    """
-    Generic CSV processor with header detection.
+def process_csv(
+    filename: str, expected_columns: dict[str, Callable[[str], bool]]
+) -> list[dict[str, str]]:
+    """Generic CSV processor with header detection.
 
-    Uses DictReader for both header and headerless CSVs by detecting column order
-    and reassigning fieldnames when necessary.
+    Processes CSV files with or without headers by automatically detecting the
+    column order. For files with headers, uses DictReader directly. For headerless
+    files, detects column order by validating sample data against expected validators.
+
+    Args:
+        filename: Path to the CSV file to process
+        expected_columns: Dictionary mapping column names to validator functions
+                         that check if a value is valid for that column
+
+    Returns:
+        List of dictionaries, where each dictionary represents a row with
+        column names as keys and cell values as strings
+
+    Raises:
+        ValueError: If file is empty, exceeds size limit, has wrong number of
+                   columns, or missing required headers
     """
-    
     # Validate file size
     size = os.path.getsize(filename)
     if size > MAX_FILE_SIZE_BYTES:
@@ -99,7 +146,7 @@ def process_csv(filename: str, expected_columns: dict) -> list:
             f"Consider splitting into smaller batches."
         )
 
-    rows = []
+    rows: list[dict[str, str]] = []
 
     with open(filename, "r", newline="") as f:
         # Create DictReader - it will auto-read first row as fieldnames
@@ -175,9 +222,21 @@ def process_csv(filename: str, expected_columns: dict) -> list:
     return rows
 
 
-def process_repo_csv(filename: str) -> list:
-    """Process repository CSV file with intelligent header detection"""
+def process_repo_csv(filename: str) -> list[dict[str, str]]:
+    """Process repository CSV file with header detection.
 
+    Processes a CSV file containing repository information with columns for
+    repo_url and repo_group_id. Supports both header and headerless formats.
+
+    Args:
+        filename: Path to the repository CSV file
+
+    Returns:
+        List of dictionaries with keys 'repo_url' and 'repo_group_id'
+
+    Raises:
+        ValueError: If file format is invalid or columns cannot be detected
+    """
     return process_csv(
         filename,
         expected_columns={
@@ -187,9 +246,21 @@ def process_repo_csv(filename: str) -> list:
     )
 
 
-def process_repo_group_csv(filename: str) -> list:
-    """Process repository group CSV file with intelligent header detection"""
-    
+def process_repo_group_csv(filename: str) -> list[dict[str, str]]:
+    """Process repository group CSV file with header detection.
+
+    Processes a CSV file containing repository group information with columns
+    for repo_group_id and repo_group_name. Supports both header and headerless formats.
+
+    Args:
+        filename: Path to the repository group CSV file
+
+    Returns:
+        List of dictionaries with keys 'repo_group_id' and 'repo_group_name'
+
+    Raises:
+        ValueError: If file format is invalid or columns cannot be detected
+    """
     return process_csv(
         filename,
         expected_columns={

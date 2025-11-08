@@ -44,7 +44,7 @@ def cli(ctx):
 @test_db_connection
 @with_database
 @click.pass_context
-def add_repos(ctx, filename):
+def add_repos(ctx: click.Context, filename: str) -> None:
     """Add repositories to Augur's database from a CSV file.
 
     The CSV file can have headers (recommended):
@@ -56,7 +56,18 @@ def add_repos(ctx, filename):
 
     NOTE: The Group ID must already exist in the REPO_Groups Table.
 
-    If you want to add an entire GitHub organization, refer to the command: augur db add-github-org"""
+    Args:
+        ctx: Click context object containing the database engine
+        filename: Path to the CSV file containing repository data
+
+    Raises:
+        ValueError: If CSV file is malformed or exceeds size limit
+        Exception: For database connection or other unexpected errors
+
+    Note:
+        If you want to add an entire GitHub organization, refer to the
+        command: augur db add-github-org
+    """
     from augur.tasks.github.util.github_task_session import GithubTaskSession
     from augur.util.repo_load_controller import RepoLoadController
 
@@ -121,7 +132,7 @@ def add_repos(ctx, filename):
 @test_db_connection
 @with_database
 @click.pass_context
-def get_repo_groups(ctx):
+def get_repo_groups(ctx: click.Context) -> pd.DataFrame:
     """
     List all repo groups and their associated IDs
     """
@@ -144,9 +155,16 @@ def get_repo_groups(ctx):
 @test_db_connection
 @with_database
 @click.pass_context
-def add_repo_groups(ctx, filename):
-    """
-    Create new repo groups in Augur's database
+def add_repo_groups(ctx: click.Context, filename: str) -> None:
+    """Create new repo groups in Augur's database from a CSV file.
+
+    Args:
+        ctx: Click context object containing the database engine
+        filename: Path to the CSV file containing repository group data
+
+    Raises:
+        ValueError: If CSV file is malformed or exceeds size limit
+        Exception: For database connection or other unexpected errors
     """
     try:
         # Parse CSV (handles headers and column detection)
