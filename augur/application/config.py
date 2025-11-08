@@ -38,7 +38,6 @@ default_config = {
                 "github": "<gh_api_key>",
                 "gitlab": "<gl_api_key>"
             },
-            #TODO: a lot of these are deprecated.
             "Facade": {
                 "check_updates": 1,
                 "create_xlsx_summary_files": 1,
@@ -80,7 +79,11 @@ default_config = {
                 "connection_string": "amqp://augur:password123@localhost:5672/augur_vhost"
             },
             "Tasks": {
-                "collection_interval": 30
+                "collection_interval": 30,
+                "core_collection_interval_days": 15,
+                "secondary_collection_interval_days": 10,
+                "facade_collection_interval_days": 10,
+                "ml_collection_interval_days": 40
             },
             "Message_Insights": {
                     "insight_days": 30,

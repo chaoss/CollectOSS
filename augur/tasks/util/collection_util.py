@@ -10,12 +10,13 @@ from augur.application.logs import AugurLogger
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import get_section
 from augur.tasks.github.util.util import get_repo_weight_core, get_repo_weight_by_issue
 from augur.application.db import get_engine
 from augur.application.db.lib import execute_sql, get_session, get_active_repo_count, get_repo_by_repo_git
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 from augur.tasks.util.collection_state import CollectionState
+from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
 
 
 def get_list_of_all_users():
@@ -204,9 +205,19 @@ def get_repos_for_recollection(session, limit, hook, days_until_collect_again):
     return valid_repo_git_list
 
 
-def get_enabled_phase_names_from_config():
+def get_enabled_phase_names_from_config(engine, logger):
+    with DatabaseSession(logger, engine) as session:
+        return get_enabled_phase_names_from_config_session(session, logger)
 
-    phase_options = get_section("Task_Routine")
+
+def get_enabled_phase_names_from_config_session(session, logger):
+
+    config = AugurConfig(logger, session)
+    return get_enabled_phase_names_from_config_object(config)
+
+
+def get_enabled_phase_names_from_config_object(config):
+    phase_options = config.get_section("Task_Routine")
 
     #Get list of enabled phases 
     enabled_phase_names = [name for name, phase in phase_options.items() if phase == 1]

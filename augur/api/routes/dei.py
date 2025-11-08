@@ -69,7 +69,7 @@ def dei_track_repo(application: ClientApplication):
         "repo_id": repo_id
     }
 
-    enabled_phase_names = get_enabled_phase_names_from_config()
+    enabled_phase_names = get_enabled_phase_names_from_config_session(session, logger)
 
     #Primary collection hook.
     primary_enabled_phases = []

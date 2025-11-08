@@ -2885,7 +2885,7 @@ class PullRequestAssignee(Base):
     @classmethod
     def from_github(cls, assignee, repo_id, tool_source, tool_version, data_source):
         
-        pr_assignee_ojb = cls()
+        pr_assignee_obj = cls()
 
         # store the pr_url data on in the pr assignee data for now so we can relate it back to a pr later
         pr_assignee_obj.contrib_id = assignee["cntrb_id"]

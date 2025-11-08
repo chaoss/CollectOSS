@@ -1,10 +1,20 @@
-from flask import request, jsonify, redirect, url_for, flash, current_app
+import logging
 import re
+
+from flask import flash, current_app, jsonify, redirect, request, url_for
 from flask_login import current_user, login_required
-from augur.application.db.models import Repo, UserGroup, UserRepo
-from augur.tasks.frontend import add_github_orgs_and_repos, parse_org_and_repo_name, parse_org_name, add_gitlab_repos
-from .utils import *
+
+from augur.application.db.models import Repo, RepoGroup, UserGroup, UserRepo
+from augur.application.db.session import DatabaseSession
+from augur.tasks.frontend import (
+    add_github_orgs_and_repos,
+    add_gitlab_repos,
+    parse_org_and_repo_name,
+    parse_org_name
+)
+
 from ..server import app
+from .utils import *
 
 @app.route('/cache/file/')
 @app.route('/cache/file/<path:file>')
@@ -154,21 +164,37 @@ def user_remove_repo():
     group = request.args.get("group_name")
     repo = request.args.get("repo_id")
 
-    if not repo:
-        flash("No repo id provided")
-    if not group:
-        flash("No group name provided")
+    
+    if not repo or not group:
+        if not repo:
+            flash("No repo id provided")
+        if not group:
+            flash("No group name provided")
+        # Staying on same page instead of redirecting to settings
+        return redirect(url_for("user_group_view", group=group))
 
-    repo = int(repo)
+    try:
+        repo_id = int(repo)
+    except (TypeError, ValueError) as e:
+        flash("Invalid repo id provided")
+        
+        logging.error(f"Invalid repo id provided for repo '{repo}'. Error: {e}")
+        
+        
+        return redirect(url_for("user_group_view", group=group))
 
-    result = current_user.remove_repo(group, repo)[0]
+    result = current_user.remove_repo(group, repo_id)[0]
 
     if result:
         flash(f"Successfully removed repo {repo} from group {group}")
     else:
         flash("An error occurred removing repo from group")
     
-    return redirect(url_for("user_group_view") + f"?group={group}")
+    
+    return redirect(url_for("user_group_view", group=group))
+
+   
+    
 
 @app.route('/account/application/deauthorize')
 @login_required
