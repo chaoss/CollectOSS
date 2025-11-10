@@ -6,7 +6,7 @@ LABEL maintainer="outdoors@acm.org"
 ARG VERSION
 LABEL version=${VERSION}
 
-ENV POSTGRES_DB="test"
+ENV POSTGRES_DB="augur_test"
 ENV POSTGRES_USER="augur"
 ENV POSTGRES_PASSWORD="augur"
 
