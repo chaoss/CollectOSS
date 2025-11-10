@@ -1,6 +1,7 @@
 #SPDX-License-Identifier: MIT
 import pytest
 import re
+import os
 import logging
 import sqlalchemy as s
 import psycopg2
@@ -8,17 +9,137 @@ from psycopg2 import sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 import uuid
 from sqlalchemy.pool import StaticPool
+from sqlalchemy.exc import ProgrammingError
 
 
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.engine import get_database_string, create_database_engine, parse_database_string, execute_sql_file
 
+from augur.application.db.engine import create_database_engine
 
 logger = logging.getLogger(__name__)
 
 default_repo_id = "25430"
 default_repo_group_id = "10"
+
+def _build_test_db_url(port=5432) -> str:
+    # Full URL override if provided
+    url = os.getenv("AUGUR_DB_TEST_URL")
+    if url:
+        return url
+
+    # Otherwise, construct from parts (customize the defaults as needed)
+    host = os.getenv("AUGUR_TEST_DB_HOST", "127.0.0.1")
+    port = os.getenv("AUGUR_TEST_DB_PORT", str(port))  # set your specific port here or via env
+    user = os.getenv("AUGUR_TEST_DB_USER", "augur")
+    password = os.getenv("AUGUR_TEST_DB_PASSWORD", "augur")
+    database = os.getenv("AUGUR_TEST_DB_NAME", "augur_test")
+    return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"
+
+
+@pytest.fixture(scope="session")
+def database_engine():
+
+    url = _build_test_db_url(port=5325)
+
+    # Get a database connection object from postgres to test connection and pass to test when ready
+    engine = create_database_engine(url)
+    print("yield")
+
+
+    # create_database_from_cursor(conn, cursor, test_db_name)
+
+    # Install schema
+    # execute_sql_file(sql_file_path, test_db_name, user, password, host, port)
+
+
+    # Setup complete, return the database object
+    yield engine
+
+
+@pytest.fixture(scope="session")
+def db_session(database_engine):
+    logger = logging.getLogger("tests.pg")
+    session = DatabaseSession(logger, database_engine)
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+@pytest.fixture
+def new_blank_db(database_engine):
+    schemas = ["augur_data", "augur_operations", "spdx", "toss_specific"]
+    with database_engine.connect() as conn:
+        # query = s.sql.text("SELECT EXISTS(SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'augur_operations')")
+        # for schema in schemas:
+        #     query = s.sql.text(f"DROP SCHEMA IF EXISTS {schema} CASCADE;")
+        #     conn.execute(query)
+        #     conn.commit()
+        try:
+            with open("tests/entire_db.sql") as file:
+                query = s.sql.text(file.read())
+                conn.execute(query)
+            conn.commit()
+        except ProgrammingError as e:
+            conn.rollback()
+            if "already exists" in str(e)[:200]:
+                pass
+            else:
+                raise e
+
+        # truncate tables here to ensure the DB is blank but the schema is correct
+        # --- TRUNCATE LOGIC STARTS HERE ---
+        
+        # 1. Format the schema list for the SQL 'IN' clause
+        schema_list_sql = ", ".join([f"'{schema}'" for schema in schemas])
+
+        # 2. Build a dynamic SQL query for PostgreSQL to truncate all tables
+        #    in the specified schemas.
+        #    - 'TRUNCATE TABLE ...' : The command to run.
+        #    - 'string_agg(...)': Gathers all table names into a single, 
+        #                         comma-separated list.
+        #    - 'quote_ident(...)': Safely handles table/schema names.
+        #    - 'RESTART IDENTITY': Resets all auto-incrementing sequences.
+        #    - 'CASCADE': Automatically truncates tables with foreign key
+        #                 references to the target tables.
+        truncate_script = f"""
+        DO $$
+        DECLARE
+            truncate_cmd TEXT;
+        BEGIN
+            -- Build the TRUNCATE command by selecting tables from pg_tables
+            SELECT INTO truncate_cmd
+                'TRUNCATE TABLE ' || 
+                string_agg(quote_ident(schemaname) || '.' || quote_ident(tablename), ', ') ||
+                ' RESTART IDENTITY CASCADE'
+            FROM pg_tables
+            WHERE schemaname IN ({schema_list_sql});
+
+            -- Execute the command if tables were found
+            IF truncate_cmd IS NOT NULL THEN
+                EXECUTE truncate_cmd;
+            END IF;
+        END $$;
+        """
+        
+        # 3. Execute the truncation script
+        try:
+            print("\nTRUNCATING all tables to ensure a blank database...")
+            conn.execute(s.sql.text(truncate_script))
+            conn.commit()
+            print("Truncation complete.")
+        except Exception as e:
+            print(f"Error during truncation: {e}")
+            conn.rollback() # Rollback on error
+            raise e
+
+        # --- TRUNCATE LOGIC ENDS HERE ---
+
+    yield database_engine
+
+
 
 def create_full_routes(routes):
     full_routes = []
