@@ -68,7 +68,9 @@ default_config = {
                 "log_level": "INFO",
             },
             "Celery": {
-                "worker_process_vmem_cap": 0.25,
+                "core_worker_count": 5,
+                "secondary_worker_count": 5,
+                "facade_worker_count": 5,
                 "refresh_materialized_views_interval_in_days": 1
             },
             "Redis": {
