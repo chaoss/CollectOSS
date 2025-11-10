@@ -11,7 +11,7 @@ LABEL org.opencontainers.image.version=${VERSION}
 ARG REVISION
 LABEL org.opencontainers.image.revision=${REVISION}
 
-ENV POSTGRES_DB="test"
+ENV POSTGRES_DB="augur_test"
 ENV POSTGRES_USER="augur"
 ENV POSTGRES_PASSWORD="augur"
 
