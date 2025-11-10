@@ -1,0 +1,22 @@
+#SPDX-License-Identifier: MIT
+services:
+  augurtest-db:
+    image: postgres:16
+    # image: my-database-image:latest
+    # build:
+    #   context: ../
+    #   dockerfile: ./docker/database/Dockerfile
+    restart: unless-stopped
+    # user: 999:999
+    environment:
+      - "POSTGRES_DB=augur_test"
+      - "POSTGRES_USER=augur"
+      - "POSTGRES_PASSWORD=augur"
+      # - "PGDATA=/postgresql"
+      - "PGDATA=/var/lib/postgresql/data"
+    volumes:
+      - augurpostgrestest:/var/lib/postgresql/data:Z
+    ports:
+      - 5325:5432
+volumes:
+  augurpostgrestest:
