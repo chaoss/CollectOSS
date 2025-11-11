@@ -168,11 +168,9 @@ def test_config_is_section_in_config(test_db_config, test_db_engine):
 def test_config_add_settings(test_db_config, test_db_engine):
 
     try:
-        ip_standard = {"section_name": "Network", "setting_name": "ip_standard", "value": "ipv4"}
-        subnet_mask = {"section_name": "Network", "setting_name": "subnet_mask", "value": "/24"}
-        settings = [ip_standard, subnet_mask]
 
-        test_db_config.add_or_update_settings(settings)
+        test_db_config.add_value("Network", "ip_standard", "ipv4")
+        test_db_config.add_value("Network", "subnet_mask", "/24")
 
         with test_db_engine.connect() as connection:
 
@@ -208,12 +206,7 @@ def test_config_update_settings(test_db_config, test_db_engine):
         new_ip = "1.1.1.1"
         new_subnet_mask = "/16"
 
-        ip_standard_updated["value"] = new_ip_standard
-        ip_updated["value"] = new_ip
-        subnet_mask_updated["value"] = new_subnet_mask
-
         all_data = [ip_standard, ip, subnet_mask]
-        updated_settings = [ip_standard_updated, ip_updated, subnet_mask_updated]
 
         with test_db_engine.connect() as connection:
 
@@ -223,7 +216,9 @@ def test_config_update_settings(test_db_config, test_db_engine):
 
                 connection.execute(query, **data)
 
-        test_db_config.add_or_update_settings(updated_settings)
+        test_db_config.add_value("Network", "ip_standard", new_ip_standard)
+        test_db_config.add_value("Network", "ip", new_ip)
+        test_db_config.add_value("Network", "subnet_mask", new_subnet_mask)
 
         with test_db_engine.connect() as connection:
 
@@ -402,39 +397,6 @@ def test_remove_section(test_db_config, test_db_engine):
         with test_db_engine.connect() as connection:
             connection.execute("""DELETE FROM augur_operations.config""")
 
-
-
-def test_create_default_config(test_db_config, test_db_engine):
-
-    from augur.application.config import default_config
-
-    test_db_config.create_default_config()
-
-    config_sections = list(default_config.keys())
-
-    try:
-
-        with test_db_engine.connect() as connection:
-
-            result = connection.execute("""SELECT * FROM augur_operations.config""").fetchall()
-
-            assert result is not None
-            assert len(result) > 0
-
-            result_sections = []
-            for row in result:
-                dict_data = dict(row)
-
-                if dict_data["section_name"] not in result_sections:
-                    result_sections.append(dict_data["section_name"])
-
-                assert dict_data["section_name"] and dict_data["setting_name"]
-
-        assert len(config_sections) == len(result_sections)
-
-    finally:
-        with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
 
 
 
