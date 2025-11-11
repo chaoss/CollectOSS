@@ -22,6 +22,7 @@ def update_repo_with_dict(repo,new_dict,logger):
             db: db object
     """
     to_insert = {}
+    to_insert['repo_id'] = repo.repo_id # this is here because its needed as a unique key for bulk_insert_dicts
     to_insert['repo_git'] = repo.repo_git
     to_insert['repo_path'] = repo.repo_path
     to_insert['repo_name'] = repo.repo_name
