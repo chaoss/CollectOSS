@@ -21,9 +21,11 @@ def update_repo_with_dict(repo,new_dict,logger):
             logger: logging object
             db: db object
     """
-    
-    to_insert = repo.__dict__
-    del to_insert['_sa_instance_state']
+    to_insert = {}
+    to_insert['repo_git'] = repo.repo_git
+    to_insert['repo_path'] = repo.repo_path
+    to_insert['repo_name'] = repo.repo_name
+    to_insert['description'] = repo.description
     to_insert.update(new_dict)
 
     result = bulk_insert_dicts(logger, to_insert, Repo, ['repo_id'])
