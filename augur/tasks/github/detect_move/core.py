@@ -1,5 +1,5 @@
 from augur.tasks.github.util.github_task_session import *
-from augur.application.db.models import *
+from augur.application.db.models import Repo, CollectionStatus
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.util import parse_json_response
