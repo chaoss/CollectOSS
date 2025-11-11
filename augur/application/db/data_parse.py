@@ -457,7 +457,7 @@ def extract_needed_gitlab_issue_label_data(labels: List[dict], repo_id: int, too
 
 
 
-def extract_needed_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+def extract_needed_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
     """
     Retrieve only the needed data for pr labels from the api response
 
@@ -487,7 +487,7 @@ def extract_needed_issue_message_ref_data(message: dict, issue_id: int, repo_id:
     return message_ref_dict
 
 # retrieve only the needed data for pr labels from the api response
-def extract_needed_pr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+def extract_needed_pr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
 
     message_ref_dict = {
             'pull_request_id': pull_request_id,
@@ -1128,7 +1128,7 @@ def extract_needed_mr_metadata(mr_dict, repo_id, pull_request_id, tool_source, t
     return all_meta
 
 
-def extract_needed_gitlab_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+def extract_needed_gitlab_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
     """
     Extract the message id for a given message on an issue from an api response
     and connect it to the relevant repo id.
@@ -1190,7 +1190,7 @@ def extract_needed_gitlab_message_data(comment: dict, platform_id: int, repo_id:
 
     return comment_dict
 
-def extract_needed_gitlab_mr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+def extract_needed_gitlab_mr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
     """
     Retrieve only the needed data for pr labels from the api response
 

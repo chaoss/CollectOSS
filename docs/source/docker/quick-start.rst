@@ -9,7 +9,7 @@ Before you get off to such a quick start, go ahead and
 
      git checkout main
 
-  4. Create a .env file in the top level directory with the following fields:
+  4. Create a .env file in the top level directory with the following fields (don't remove any variable, keep placeholder values if you don't need some of them):
 
 .. code:: python
 

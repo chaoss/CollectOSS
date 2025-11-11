@@ -435,7 +435,7 @@ def git_repo_updates(facade_helper, repo_git):
 
                 cmdpull2 = (f"git -C {absolute_path} pull")
 
-                cmd_reset = (f"git -C {absolute_path} reset --hard origin")
+                cmd_reset = (f"git -C {absolute_path} reset --hard origin/{remotedefault}")
 
                 cmd_reset_wait = subprocess.Popen(
                     [cmd_reset], shell=True).wait()

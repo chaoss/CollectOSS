@@ -19,34 +19,6 @@ from augur.application.db.session import remove_duplicates_by_uniques, remove_nu
 logger = logging.getLogger("db_lib")
 
 
-def get_section(section_name) -> dict:
-    """Get a section of data from the config.
-
-    Args:
-        section_name: The name of the section being retrieved
-
-    Returns:
-        The section data as a dict
-    """
-    with get_session() as session:
-
-        query = session.query(Config).filter_by(section_name=section_name)
-        section_data = execute_session_query(query, 'all')
-        
-        section_dict = {}
-        for setting in section_data:
-            setting_dict = setting.__dict__
-
-            setting_dict = convert_type_of_value(setting_dict, logger)
-
-            setting_name = setting_dict["setting_name"]
-            setting_value = setting_dict["value"]
-
-            section_dict[setting_name] = setting_value
-
-        return section_dict
-
-
 def get_value(section_name: str, setting_name: str) -> Optional[Any]:
     """Get the value of a setting from the config.
 
@@ -217,8 +189,6 @@ def facade_bulk_insert_commits(logger, records):
             session.rollback()
             
             if len(records) > 1:
-                logger.error(f"Ran into issue when trying to insert commits \n Error: {e}")
-
                 #split list into halves and retry insert until we isolate offending record
                 firsthalfRecords = records[:len(records)//2]
                 secondhalfRecords = records[len(records)//2:]
@@ -273,31 +243,54 @@ def facade_bulk_insert_commits(logger, records):
                 session.commit()
             else:
                 raise e
-            
 
-def batch_insert_contributors(logger, data: Union[List[dict], dict]) -> Optional[List[dict]]:
-
-    batch_size = 1000
+def batch_insert_contributors(logger, data: Union[List[dict], dict], batch_size = 1000) -> Optional[List[dict]]:
 
     for i in range(0, len(data), batch_size):
         batch = data[i:i + batch_size]
 
         bulk_insert_dicts(logger, batch, Contributor, ['cntrb_id'])
+    
+    return None
 
 
 
-def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
+def bulk_insert_dicts(logger, data_input: Union[List[dict], dict], table, natural_keys: List[str], return_columns: Optional[List[str]] = None, string_fields: Optional[List[str]] = None, on_conflict_update:bool = True) -> Optional[List[dict]]:
+    """ Provides bulk-insert/update (upsert) capabilitites for adding bulk data (as a column:value dict mapping) into a specific table
 
-    if isinstance(data, list) is False:
+    Args:
+        logger (_type_): the logger to use
+        data_input (Union[List[dict], dict]): the dicts to upsert (must match the column names as defined in the schema for the table)
+        table (_type_): the table to upsert the data into
+        natural_keys (List[str]): the columns that define the natural unique keys for the data
+        return_columns (Optional[List[str]], optional): list of the column names to return. Defaults to None.
+        string_fields (Optional[List[str]], optional): list of keys in the incoming dicts that should be cleaned to handle bad characters postgres doesnt like. Defaults to None.
+        on_conflict_update (bool, optional): whether to update on conflict. Defaults to True.
+
+    Raises:
+        e: _description_
+        e: _description_
+        Exception: _description_
+        e: _description_
+        e: _description_
+        Exception: _description_
+
+    Returns:
+        Optional[List[dict]]: the original data with each item filtered to only contain the columns specified by `return_columns`, if present. 
+    """
+
+    if isinstance(data_input, list) is False:
         
         # if a dict is passed to data then 
         # convert it to a list with one value
-        if isinstance(data, dict) is True:
-            data = [data]
+        if isinstance(data_input, dict) is True:
+            data = [data_input]
         
         else:
             logger.error("Data must be a list or a dict")
             return None
+    else:
+        data = list(data_input)
 
     if len(data) == 0:
         # self.logger.info("Gave no data to insert, returning...")
@@ -333,8 +326,10 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
 
         # create a dict that the on_conflict_do_update method requires to be able to map updates whenever there is a conflict. See sqlalchemy docs for more explanation and examples: https://docs.sqlalchemy.org/en/14/dialects/postgresql.html#updating-using-the-excluded-insert-values
         setDict = {}
+        base_table = getattr(table, "__table__", table)
         for key in data[0].keys():
-                setDict[key] = getattr(stmnt.excluded, key)
+            existing_col = getattr(base_table.c, key)
+            setDict[key] = func.coalesce(getattr(stmnt.excluded, key), existing_col)
             
         stmnt = stmnt.on_conflict_do_update(
             #This might need to change
@@ -399,8 +394,9 @@ def bulk_insert_dicts(logger, data: Union[List[dict], dict], table, natural_keys
 
         if deadlock_detected is True:
             logger.error("Made it through even though Deadlock was detected")
-                
-        return "success"
+
+        # success 
+        return None
     
 
     # othewise it gets the requested return columns and returns them as a list of dicts
