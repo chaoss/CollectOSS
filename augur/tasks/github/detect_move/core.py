@@ -51,7 +51,7 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
 
     attempts = 0
     while attempts < 10:
-        response_from_gh = hit_api(key_auth, url, logger)
+        response_from_gh = hit_api(key_auth, url, logger, follow_redirects=False)
 
         if response_from_gh and response_from_gh.status_code != 404:
             break
