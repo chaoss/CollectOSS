@@ -67,8 +67,12 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
     #Update Url and retry if 301
     #301 moved permanently 
     if response_from_gh.status_code == 301:
+        redirect_location = response_from_gh.headers.get('location') or response_from_gh.headers.get('Location')
+        if not redirect_location:
+            logger.error(f"Could not check if repo moved because the redirect location is not present. Url: {url}")
+            raise Exception(f"ERROR: Could not get redirect location for repo: {url}")
 
-        owner, name = extract_owner_and_repo_from_endpoint(key_auth, response_from_gh.headers['location'], logger)
+        owner, name = extract_owner_and_repo_from_endpoint(key_auth, redirect_location, logger)
 
         try:
             old_description = str(repo.description)
