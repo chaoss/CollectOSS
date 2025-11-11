@@ -60,6 +60,10 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
 
         attempts += 1
 
+    if attempts >= 10:
+        logger.error(f"Could not check if repo moved because the api timed out 10 times. Url: {url}")
+        raise Exception(f"ERROR: Could not get api response for repo: {url}")
+
     #Update Url and retry if 301
     #301 moved permanently 
     if response_from_gh.status_code == 301:
@@ -119,10 +123,6 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
         session.commit()
         raise Exception("ERROR: Repo has moved, and there is no redirection! 404 returned, not 301. Resetting Collection!")
 
-
-    if attempts >= 10:
-        logger.error(f"Could not check if repo moved because the api timed out 10 times. Url: {url}")
-        raise Exception(f"ERROR: Could not get api response for repo: {url}")
     
     #skip if not 404
     logger.info(f"Repo found at url: {url}")
