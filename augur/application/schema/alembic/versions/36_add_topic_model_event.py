@@ -22,7 +22,7 @@ def upgrade():
         sa.Column("event_id", sa.BigInteger(), primary_key=True),
         sa.Column(
             "ts",
-            postgresql.TIMESTAMP(timezone=True),
+            sa.TIMESTAMP(timezone=True),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
