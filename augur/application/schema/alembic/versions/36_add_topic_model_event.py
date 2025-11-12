@@ -46,13 +46,11 @@ def upgrade():
         "ix_tme_repo_ts", "topic_model_event", ["repo_id", "ts"], schema="augur_data"
     )
     op.create_index("ix_tme_event", "topic_model_event", ["event"], schema="augur_data")
+    # btree index on payload for exact match queries (following Augur conventions)
+    # Note: btree only supports equality comparison, not JSON containment queries
     op.create_index(
-        "ix_tme_payload",
-        "topic_model_event",
-        [sa.text("(payload)")],
-        unique=False,
-        schema="augur_data",
-        postgresql_using="gin",
+        "ix_tme_payload", "topic_model_event", ["payload"], 
+        unique=False, schema="augur_data"
     )
 
 
