@@ -5,7 +5,7 @@ import sqlalchemy as s
 
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.util.github_task_session import GithubTaskSession
-from tests.test_applicaton.test_repo_load_controller.helper import *
+from tests.test_application.test_repo_load_controller.helper import *
 from augur.application.db.models import Repo, RepoGroup, UserRepo, UserGroup
 
 logger = logging.getLogger(__name__)
