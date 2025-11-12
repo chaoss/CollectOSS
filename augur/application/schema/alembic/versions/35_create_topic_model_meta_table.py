@@ -49,9 +49,9 @@ def upgrade():
         sa.Column('visualization_data', postgresql.JSONB(), nullable=True),
         
         # Timestamps (NOT NULL with defaults)
-        sa.Column('training_start_time', sa.TIMESTAMP(), nullable=False),
-        sa.Column('training_end_time', sa.TIMESTAMP(), nullable=False),
-        sa.Column('data_collection_date', sa.TIMESTAMP(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('training_start_time', postgresql.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column('training_end_time', postgresql.TIMESTAMP(timezone=True), nullable=False),
+        sa.Column('data_collection_date', postgresql.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
         
         # Standard Augur metadata (NOT NULL)
         sa.Column('tool_source', sa.String(), nullable=False),

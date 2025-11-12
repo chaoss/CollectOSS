@@ -22,7 +22,7 @@ def upgrade():
         sa.Column("event_id", sa.BigInteger(), primary_key=True),
         sa.Column(
             "ts",
-            sa.TIMESTAMP(),
+            postgresql.TIMESTAMP(timezone=True),
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
@@ -46,16 +46,9 @@ def upgrade():
         "ix_tme_repo_ts", "topic_model_event", ["repo_id", "ts"], schema="augur_data"
     )
     op.create_index("ix_tme_event", "topic_model_event", ["event"], schema="augur_data")
-    # btree index on payload for exact match queries (following Augur conventions)
-    # Note: btree only supports equality comparison, not JSON containment queries
-    op.create_index(
-        "ix_tme_payload", "topic_model_event", ["payload"], 
-        unique=False, schema="augur_data"
-    )
 
 
 def downgrade():
-    op.drop_index("ix_tme_payload", table_name="topic_model_event", schema="augur_data")
     op.drop_index("ix_tme_event", table_name="topic_model_event", schema="augur_data")
     op.drop_index("ix_tme_repo_ts", table_name="topic_model_event", schema="augur_data")
     op.drop_table("topic_model_event", schema="augur_data")

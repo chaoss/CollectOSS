@@ -3687,12 +3687,12 @@ class TopicModelMeta(Base):
         comment="JSON object containing visualization data for the model"
     )
     training_start_time = Column(
-        TIMESTAMP(),
+        TIMESTAMP(timezone=True),
         nullable=False,
         comment="When training started"
     )
     training_end_time = Column(
-        TIMESTAMP(),
+        TIMESTAMP(timezone=True),
         nullable=False,
         comment="When training ended"
     )
@@ -3700,7 +3700,7 @@ class TopicModelMeta(Base):
     tool_version = Column(String, comment="Standard Augur Metadata")
     data_source = Column(String, comment="Standard Augur Metadata")
     data_collection_date = Column(
-        TIMESTAMP(precision=0),
+        TIMESTAMP(timezone=True, precision=0),
         server_default=text("CURRENT_TIMESTAMP")
     )
 
