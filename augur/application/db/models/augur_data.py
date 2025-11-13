@@ -1854,7 +1854,7 @@ class Release(Base):
     __table_args__ = {"schema": "augur_data"}
 
     release_id = Column(
-        CHAR(128),
+        CHAR(256),
         primary_key=True,
         server_default=text("nextval('augur_data.releases_release_id_seq'::regclass)"),
     )
