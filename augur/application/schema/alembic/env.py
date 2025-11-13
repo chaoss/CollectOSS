@@ -95,14 +95,6 @@ def run_migrations_online():
     url = sqlalchemy_url
     engine = create_engine(url)
 
-    @event.listens_for(engine, "connect", insert=True)
-    def set_search_path(dbapi_connection, connection_record):
-        existing_autocommit = dbapi_connection.autocommit
-        dbapi_connection.autocommit = True
-        cursor = dbapi_connection.cursor()
-        cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
-        cursor.close()
-        dbapi_connection.autocommit = existing_autocommit
 
 
     with engine.connect() as connection:
