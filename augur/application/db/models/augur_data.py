@@ -3705,3 +3705,58 @@ class TopicModelMeta(Base):
     )
 
     repo = relationship("Repo")
+
+
+class TopicModelEvent(Base):
+    __tablename__ = "topic_model_event"
+    __table_args__ = (
+        Index("ix_tme_repo_ts", "repo_id", "ts"),
+        Index("ix_tme_event", "event"),
+        {"schema": "augur_data"}
+    )
+
+    event_id = Column(
+        BigInteger,
+        primary_key=True,
+        comment="Unique identifier for the event"
+    )
+    ts = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+        comment="Timestamp when the event occurred"
+    )
+    repo_id = Column(
+        ForeignKey("augur_data.repo.repo_id", name="fk_tme_repo_id"),
+        nullable=True,
+        comment="Repository associated with this event"
+    )
+    model_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "augur_data.topic_model_meta.model_id",
+            name="fk_tme_model_id",
+            ondelete="SET NULL"
+        ),
+        nullable=True,
+        comment="Topic model associated with this event"
+    )
+    event = Column(
+        Text,
+        nullable=False,
+        comment="Event type or name"
+    )
+    level = Column(
+        Text,
+        nullable=False,
+        server_default=text("'INFO'"),
+        comment="Log level (INFO, WARNING, ERROR, etc.)"
+    )
+    payload = Column(
+        JSONB,
+        nullable=False,
+        comment="Event payload data"
+    )
+
+    repo = relationship("Repo")
+    topic_model = relationship("TopicModelMeta")
