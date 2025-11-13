@@ -3727,6 +3727,7 @@ class TopicModelEvent(Base):
         comment="Timestamp when the event occurred"
     )
     repo_id = Column(
+        Integer,
         ForeignKey("augur_data.repo.repo_id", name="fk_tme_repo_id"),
         nullable=True,
         comment="Repository associated with this event"
