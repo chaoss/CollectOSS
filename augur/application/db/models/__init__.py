@@ -39,6 +39,7 @@ from augur.application.db.models.augur_data import (
     RepoSbomScan,
     RepoStat,
     RepoTopic,
+    TopicModelMeta,
     CommitCommentRef,
     CommitParent,
     DiscourseInsight,

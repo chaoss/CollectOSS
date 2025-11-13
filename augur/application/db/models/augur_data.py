@@ -3601,3 +3601,107 @@ class RepoClone(Base):
     clone_data_timestamp = Column(TIMESTAMP(precision=6))
 
     repo = relationship("Repo")
+
+
+class TopicModelMeta(Base):
+    __tablename__ = "topic_model_meta"
+    __table_args__ = {"schema": "augur_data"}
+
+    model_id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        comment="Unique identifier for the topic model"
+    )
+    repo_id = Column(
+        ForeignKey("augur_data.repo.repo_id"),
+        comment="Repository this model was trained on"
+    )
+    model_method = Column(
+        String,
+        nullable=False,
+        comment="Method used for topic modeling (e.g., 'NMF_COUNT', 'LDA_TFIDF')"
+    )
+    num_topics = Column(
+        Integer,
+        nullable=False,
+        comment="Number of topics in the model"
+    )
+    num_words_per_topic = Column(
+        Integer,
+        nullable=False,
+        comment="Number of words per topic"
+    )
+    training_parameters = Column(
+        JSON,
+        nullable=False,
+        comment="JSON object containing training parameters"
+    )
+    model_file_paths = Column(
+        JSON,
+        nullable=False,
+        comment="JSON object containing paths to model artifacts"
+    )
+    parameters_hash = Column(
+        String,
+        nullable=False,
+        comment="Hash of parameters for deduplication"
+    )
+    coherence_score = Column(
+        Float,
+        nullable=False,
+        server_default=text("0.0"),
+        comment="Coherence score of the model"
+    )
+    perplexity_score = Column(
+        Float,
+        nullable=False,
+        server_default=text("0.0"),
+        comment="Perplexity score of the model"
+    )
+    topic_diversity = Column(
+        Float,
+        nullable=False,
+        server_default=text("0.0"),
+        comment="Topic diversity score"
+    )
+    quality = Column(
+        JSON,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+        comment="Quality metrics"
+    )
+    training_message_count = Column(
+        BigInteger,
+        nullable=False,
+        comment="Number of messages used for training"
+    )
+    data_fingerprint = Column(
+        JSON,
+        nullable=False,
+        comment="Fingerprint of training data"
+    )
+    visualization_data = Column(
+        JSON,
+        nullable=True,
+        comment="JSON object containing visualization data for the model"
+    )
+    training_start_time = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        comment="When training started"
+    )
+    training_end_time = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        comment="When training ended"
+    )
+    tool_source = Column(String, comment="Standard Augur Metadata")
+    tool_version = Column(String, comment="Standard Augur Metadata")
+    data_source = Column(String, comment="Standard Augur Metadata")
+    data_collection_date = Column(
+        TIMESTAMP(timezone=True, precision=0),
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    repo = relationship("Repo")
