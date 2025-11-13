@@ -42,11 +42,8 @@ VERSIONS_DIR = Path(__file__).parent / "versions"
 def _next_int_rev() -> str:
     max_rev = 0
     for p in VERSIONS_DIR.glob("*.py"):
-        try:
-            txt = p.read_text(encoding="utf-8")
-        except Exception:
-            continue
-        m = re.search(r"^revision\s*=\s*['\"]([^'\"]+)['\"]", txt, re.M)
+        pathname = Path(p).name
+        m = re.search(r"^([\d]+)_[a-zA-Z0-9_]+.py", pathname, re.M)
         if m and m.group(1).isdigit():
             max_rev = max(max_rev, int(m.group(1)))
     return str(max_rev + 1)
