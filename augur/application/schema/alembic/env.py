@@ -7,6 +7,8 @@ from augur.application.db.engine import get_database_string
 from sqlalchemy import create_engine, event
 from dotenv import load_dotenv
 import os
+import re
+from pathlib import Path
 
 load_dotenv()
 
@@ -34,6 +36,34 @@ target_metadata = Base.metadata
 
 sqlalchemy_url = os.getenv("AUGUR_DB") or config.get_main_option("sqlalchemy.url")
 
+
+VERSIONS_DIR = Path(__file__).parent / "versions"
+
+def _next_int_rev() -> str:
+    max_rev = 0
+    for p in VERSIONS_DIR.glob("*.py"):
+        try:
+            txt = p.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        m = re.search(r"^revision\s*=\s*['\"]([^'\"]+)['\"]", txt, re.M)
+        if m and m.group(1).isdigit():
+            max_rev = max(max_rev, int(m.group(1)))
+    return str(max_rev + 1)
+
+def process_revision_directives(context, revision, directives):
+    if not directives:
+        return
+    script = directives[0]
+    # If user passed --rev-id, honor it; otherwise override Alembic's default
+    opts = getattr(context.config, "cmd_opts", None)
+    user_rev_id = getattr(opts, "rev_id", None)
+    if user_rev_id:
+        script.rev_id = str(user_rev_id)
+    else:
+        script.rev_id = _next_int_rev()
+
+
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
 
@@ -51,6 +81,7 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        process_revision_directives=process_revision_directives,
     )
 
     with context.begin_transaction():
@@ -84,6 +115,7 @@ def run_migrations_online():
             version_table_schema=target_metadata.schema,
             include_schemas=True,
             compare_type=True,
+            process_revision_directives=process_revision_directives,
         )
 
         with context.begin_transaction():
