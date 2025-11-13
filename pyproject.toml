@@ -180,7 +180,7 @@ legacy_tox_ini = """
         metric-routes: python tests/test_routes/runner.py
         workers: pytest tests/test_workers/
         classes: pytest tests/test_classes/
-        worker-persistance: pytest test/test_workers/worker_persistance/
+        worker-persistence: pytest tests/test_workers/worker_persistence/
 
     [pytest]
     addopts = -ra -s
