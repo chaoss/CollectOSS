@@ -5,6 +5,8 @@ from alembic import context
 from augur.application.db.models.base import Base
 from augur.application.db.engine import get_database_string
 from sqlalchemy import create_engine, event
+import os
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -26,6 +28,9 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+# possibly swap sqlalchemy.url with AUGUR_DB env var too
+
+sqlalchemy_url = os.getenv("AUGUR_DB") or config.get_main_option("sqlalchemy.url")
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
@@ -39,9 +44,8 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url,
+        url=sqlalchemy_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -58,7 +62,7 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    url = get_database_string()
+    url = sqlalchemy_url
     engine = create_engine(url)
 
     @event.listens_for(engine, "connect", insert=True)
