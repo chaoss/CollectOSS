@@ -102,7 +102,6 @@ def run_migrations_online():
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            version_table_schema=target_metadata.schema,
             include_schemas=True,
             compare_type=True,
             process_revision_directives=process_revision_directives,
