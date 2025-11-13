@@ -5,8 +5,10 @@ from alembic import context
 from augur.application.db.models.base import Base
 from augur.application.db.engine import get_database_string
 from sqlalchemy import create_engine, event
+from dotenv import load_dotenv
 import os
 
+load_dotenv()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
