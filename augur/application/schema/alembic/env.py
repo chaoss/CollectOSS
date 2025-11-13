@@ -79,6 +79,7 @@ def run_migrations_offline():
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         process_revision_directives=process_revision_directives,
+        include_schemas=True,
     )
 
     with context.begin_transaction():
