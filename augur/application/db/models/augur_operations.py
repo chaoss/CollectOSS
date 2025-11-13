@@ -217,6 +217,10 @@ t_working_commits = Table(
 )
 
 class BadgingDEI(Base):
+    __tablename__ = 'dei_badging'
+    __table_args__ = (
+        {"schema": "augur_data"}
+    )
     id = Column(Integer, primary_key=True, nullable=False)
     badging_id = Column(Integer, nullable=False)
     level = Column(String, nullable=False)
@@ -227,27 +231,31 @@ class BadgingDEI(Base):
 
     repo = relationship("Repo")
 
-    __tablename__ = 'dei_badging'
-    __table_args__ = (
-        {"schema": "augur_data"}
-    )
-
 
 class Config(Base):
-    id = Column(SmallInteger, primary_key=True, nullable=False)
-    section_name = Column(String, nullable=False)
-    setting_name = Column(String, nullable=False)
-    value = Column(String)
-    type = Column(String)
-
     __tablename__ = 'config'
     __table_args__ = (
         UniqueConstraint('section_name', "setting_name", name='unique-config-setting'),
         {"schema": "augur_operations"}
     )
 
+    id = Column(SmallInteger, primary_key=True, nullable=False)
+    section_name = Column(String, nullable=False)
+    setting_name = Column(String, nullable=False)
+    value = Column(String)
+    type = Column(String)
+
+    
+
 # add admit column to database
 class User(Base):
+    __tablename__ = 'users'
+    __table_args__ = (
+        UniqueConstraint('email', name='user-unique-email'),
+        UniqueConstraint('login_name', name='user-unique-name'),
+        UniqueConstraint('text_phone', name='user-unique-phone'),
+        {"schema": "augur_operations"}
+    )
 
     user_id = Column(Integer, primary_key=True)
     login_name = Column(String, nullable=False)
@@ -262,13 +270,6 @@ class User(Base):
     data_source = Column(String)
     data_collection_date = Column(TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP"))
 
-    __tablename__ = 'users'
-    __table_args__ = (
-        UniqueConstraint('email', name='user-unique-email'),
-        UniqueConstraint('login_name', name='user-unique-name'),
-        UniqueConstraint('text_phone', name='user-unique-phone'),
-        {"schema": "augur_operations"}
-    )
 
     groups = relationship("UserGroup", back_populates="user")
     tokens = relationship("UserSessionToken", back_populates="user")
@@ -629,17 +630,19 @@ class User(Base):
 
 
 class UserGroup(Base):
+    __tablename__ = 'user_groups'
+    __table_args__ = (
+        UniqueConstraint('user_id', 'name', name='user_group_unique'),
+        {"schema": "augur_operations"}
+    )
+    
     group_id = Column(BigInteger, primary_key=True)
     user_id = Column(Integer,
                     ForeignKey("augur_operations.users.user_id", name="user_group_user_id_fkey")
     )
     name = Column(String, nullable=False)
     favorited = Column(Boolean, nullable=False, server_default=text("FALSE"))
-    __tablename__ = 'user_groups'
-    __table_args__ = (
-        UniqueConstraint('user_id', 'name', name='user_group_unique'),
-        {"schema": "augur_operations"}
-    )
+    
 
     user = relationship("User", back_populates="groups")
     repos = relationship("UserRepo", back_populates="group")
