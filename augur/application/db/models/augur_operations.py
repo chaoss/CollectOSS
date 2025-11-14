@@ -630,7 +630,7 @@ class User(Base):
 class UserGroup(Base):
     __tablename__ = 'user_groups'
     __table_args__ = (
-        UniqueConstraint('user_id', 'name', name='user_group_unique'),
+        UniqueConstraint('user_id', 'name', name='user_groups_user_id_name_key'),
         {"schema": "augur_operations"}
     )
     
