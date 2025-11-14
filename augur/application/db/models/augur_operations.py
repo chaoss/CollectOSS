@@ -218,9 +218,7 @@ t_working_commits = Table(
 
 class BadgingDEI(Base):
     __tablename__ = 'dei_badging'
-    __table_args__ = (
-        {"schema": "augur_data"}
-    )
+    __table_args__ = {"schema": "augur_data"}
     id = Column(Integer, primary_key=True, nullable=False)
     badging_id = Column(Integer, nullable=False)
     level = Column(String, nullable=False)
@@ -742,11 +740,7 @@ class UserGroup(Base):
 
 class UserRepo(Base):
     __tablename__ = "user_repos"
-    __table_args__ = (
-        {
-            "schema": "augur_operations"
-        }
-    )
+    __table_args__ = { "schema": "augur_operations" }
 
     group_id = Column(
         ForeignKey("augur_operations.user_groups.group_id", name="user_repo_group_id_fkey"), primary_key=True, nullable=False
@@ -1013,11 +1007,7 @@ class UserRepo(Base):
 
 class UserSessionToken(Base):
     __tablename__ = "user_session_tokens"
-    __table_args__ = (
-        {
-            "schema": "augur_operations"
-        }
-    )
+    __table_args__ = { "schema": "augur_operations" }
 
     token = Column(String, primary_key=True, nullable=False)
     user_id = Column(ForeignKey("augur_operations.users.user_id", name="user_session_token_user_id_fkey"))
@@ -1055,11 +1045,7 @@ class UserSessionToken(Base):
 
 class ClientApplication(Base):
     __tablename__ = "client_applications"
-    __table_args__ = (
-        {
-            "schema": "augur_operations"
-        }
-    )
+    __table_args__ = { "schema": "augur_operations" }
 
     id = Column(String, primary_key=True, nullable=False)
     user_id = Column(ForeignKey("augur_operations.users.user_id", name="client_application_user_id_fkey"), nullable=False)
@@ -1086,11 +1072,7 @@ class ClientApplication(Base):
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
-    __table_args__ = (
-        {
-            "schema": "augur_operations"
-        }
-    )
+    __table_args__ = { "schema": "augur_operations" }
 
     application_id = Column(ForeignKey("augur_operations.client_applications.id", name="subscriptions_application_id_fkey"), primary_key=True)
     type_id = Column(ForeignKey("augur_operations.subscription_types.id", name="subscriptions_type_id_fkey"), primary_key=True)
