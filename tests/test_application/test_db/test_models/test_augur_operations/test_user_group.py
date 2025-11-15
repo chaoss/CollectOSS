@@ -3,7 +3,7 @@ import pytest
 import sqlalchemy as s
 
 from augur.application.db.session import DatabaseSession
-from tests.test_applicaton.test_repo_load_controller.helper import *
+from tests.test_application.test_repo_load_controller.helper import *
 from augur.application.db.models import UserGroup
 
 logger = logging.getLogger(__name__)

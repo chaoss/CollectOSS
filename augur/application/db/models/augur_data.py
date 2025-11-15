@@ -3601,3 +3601,163 @@ class RepoClone(Base):
     clone_data_timestamp = Column(TIMESTAMP(precision=6))
 
     repo = relationship("Repo")
+
+
+class TopicModelMeta(Base):
+    __tablename__ = "topic_model_meta"
+    __table_args__ = {"schema": "augur_data"}
+
+    model_id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        comment="Unique identifier for the topic model"
+    )
+    repo_id = Column(
+        ForeignKey("augur_data.repo.repo_id"),
+        comment="Repository this model was trained on"
+    )
+    model_method = Column(
+        String,
+        nullable=False,
+        comment="Method used for topic modeling (e.g., 'NMF_COUNT', 'LDA_TFIDF')"
+    )
+    num_topics = Column(
+        Integer,
+        nullable=False,
+        comment="Number of topics in the model"
+    )
+    num_words_per_topic = Column(
+        Integer,
+        nullable=False,
+        comment="Number of words per topic"
+    )
+    training_parameters = Column(
+        JSON,
+        nullable=False,
+        comment="JSON object containing training parameters"
+    )
+    model_file_paths = Column(
+        JSON,
+        nullable=False,
+        comment="JSON object containing paths to model artifacts"
+    )
+    parameters_hash = Column(
+        String,
+        nullable=False,
+        comment="Hash of parameters for deduplication"
+    )
+    coherence_score = Column(
+        Float,
+        nullable=False,
+        server_default=text("0.0"),
+        comment="Coherence score of the model"
+    )
+    perplexity_score = Column(
+        Float,
+        nullable=False,
+        server_default=text("0.0"),
+        comment="Perplexity score of the model"
+    )
+    topic_diversity = Column(
+        Float,
+        nullable=False,
+        server_default=text("0.0"),
+        comment="Topic diversity score"
+    )
+    quality = Column(
+        JSON,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+        comment="Quality metrics"
+    )
+    training_message_count = Column(
+        BigInteger,
+        nullable=False,
+        comment="Number of messages used for training"
+    )
+    data_fingerprint = Column(
+        JSON,
+        nullable=False,
+        comment="Fingerprint of training data"
+    )
+    visualization_data = Column(
+        JSON,
+        nullable=True,
+        comment="JSON object containing visualization data for the model"
+    )
+    training_start_time = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        comment="When training started"
+    )
+    training_end_time = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        comment="When training ended"
+    )
+    tool_source = Column(String, comment="Standard Augur Metadata")
+    tool_version = Column(String, comment="Standard Augur Metadata")
+    data_source = Column(String, comment="Standard Augur Metadata")
+    data_collection_date = Column(
+        TIMESTAMP(timezone=True, precision=0),
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    repo = relationship("Repo")
+
+
+class TopicModelEvent(Base):
+    __tablename__ = "topic_model_event"
+    __table_args__ = (
+        Index("ix_tme_repo_ts", "repo_id", "ts"),
+        Index("ix_tme_event", "event"),
+        {"schema": "augur_data"}
+    )
+
+    event_id = Column(
+        BigInteger,
+        primary_key=True,
+        comment="Unique identifier for the event"
+    )
+    ts = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+        comment="Timestamp when the event occurred"
+    )
+    repo_id = Column(
+        Integer,
+        ForeignKey("augur_data.repo.repo_id", name="fk_tme_repo_id"),
+        nullable=True,
+        comment="Repository associated with this event"
+    )
+    model_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "augur_data.topic_model_meta.model_id",
+            name="fk_tme_model_id",
+            ondelete="SET NULL"
+        ),
+        nullable=True,
+        comment="Topic model associated with this event"
+    )
+    event = Column(
+        Text,
+        nullable=False,
+        comment="Event type or name"
+    )
+    level = Column(
+        Text,
+        nullable=False,
+        server_default=text("'INFO'"),
+        comment="Log level (INFO, WARNING, ERROR, etc.)"
+    )
+    payload = Column(
+        JSONB,
+        nullable=False,
+        comment="Event payload data"
+    )
+
+    repo = relationship("Repo")
+    topic_model = relationship("TopicModelMeta")
