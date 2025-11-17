@@ -161,7 +161,7 @@ class KeyOrchestrator:
                 return
 
             min_timeout = 0
-            for key, timeout in self.expired_keys[platform].items():
+            for _, timeout in self.expired_keys[platform].items():
                 if not min_timeout or timeout < min_timeout:
                     min_timeout = timeout
 
