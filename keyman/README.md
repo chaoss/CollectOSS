@@ -119,8 +119,6 @@ python keyman/Orchestrator.py
 
 ## Adding Keys
 
-### Database (recommended)
-
 ```sql
 INSERT INTO augur_operations.worker_oauth
 (name, consumer_key, consumer_secret, access_token, access_token_secret, platform)
@@ -129,16 +127,6 @@ VALUES
 ```
 
 Keys are loaded on Augur startup and published to orchestrator.
-
-### Config file (single key only)
-
-```json
-{
-  "Keys": {
-    "github_api_key": "ghp_YOURTOKEN"
-  }
-}
-```
 
 ## Troubleshooting
 
