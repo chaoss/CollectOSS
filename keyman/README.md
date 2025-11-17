@@ -123,7 +123,7 @@ python keyman/Orchestrator.py
 INSERT INTO augur_operations.worker_oauth
 (name, consumer_key, consumer_secret, access_token, access_token_secret, platform)
 VALUES
-('My GitHub Key', 'not_used', 'not_used', 'ghp_YOURTOKEN', 'not_used', 'github');
+('My GitHub Key', 'not_used', 'not_used', 'ghp_YOURTOKEN', 'not_used', 'github_rest');
 ```
 
 Keys are loaded on Augur startup and published to orchestrator.
