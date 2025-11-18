@@ -13,7 +13,7 @@ This file contains full attribution lists for:
 - Adrian Edwards — [@MoralCode](https://github.com/MoralCode)
 - Andrew Brain — [@ABrain7710](https://github.com/ABrain7710)
 - Isaac Milarsky — [@IsaacMilarky](https://github.com/IsaacMilarky)
-- John McGinnis — [@Ulincys](https://github.com/Ulincsys) 
+- John McGinness — [@Ulincys](https://github.com/Ulincsys) 
 
 ---
 
@@ -85,3 +85,4 @@ This file contains full attribution lists for:
 
 ## GSoC 2018 Participants
 - [Keanu Nichols](https://github.com/kmn5409)
+
