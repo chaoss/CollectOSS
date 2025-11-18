@@ -64,6 +64,7 @@ dependencies = [
     "psycopg2-binary==2.9.9",
     "pylint==2.15.5",
     "python-crfsuite>=0.9.8",
+    "python-dotenv>=1.2.1",
     "pyYaml",
     "redis==4.3.3",
     "requests==2.32.0",
@@ -99,7 +100,6 @@ dev = [
     { include-group = "test" },
     { include-group = "debug" },
     { include-group = "docs" },
-    "python-dotenv>=1.2.1",
 ]
 lint = [
     "pylint",
