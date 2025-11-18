@@ -97,7 +97,10 @@ The celery monitor is responsible for generating the tasks that will tell the ot
 - ``refresh_materialized_views_interval_in_days``, number of days to wait between refreshes of materialized views.
 
 If you choose, you can also adjust the values in the ``Tasks`` block if you would like to control when tasks should be re-run on a given repository. 
-This is specified as a number of days since the last successful run.
+
+- ``collection_interval``, the interval (in seconds) at which the collection monitor task runs to schedule new collection jobs. This is different from the other interval values which use days.
+
+- ``core_collection_interval_days``, ``secondary_collection_interval_days``, ``facade_collection_interval_days``, and ``ml_collection_interval_days``, which specify the number of days since the last successful run before a task should be re-run on a given repository.
 
 Adding repos for collection
 -----------------------------
