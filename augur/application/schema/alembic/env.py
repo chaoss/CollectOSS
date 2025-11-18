@@ -3,8 +3,7 @@ from logging.config import fileConfig
 
 from alembic import context
 from augur.application.db.models.base import Base
-from augur.application.db.engine import get_database_string
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
 from dotenv import load_dotenv
 import os
 import re
