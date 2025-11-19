@@ -149,7 +149,18 @@ def git_repo_initialize(facade_helper, session, repo_git):
         facade_helper.log_activity('Verbose', f"Cloning: {git}")
 
         cmd = f"git -C {repo_path} clone '{git}' {repo_name}"
-        return_code = subprocess.Popen([cmd], shell=True).wait()
+        try:
+            result = subprocess.run(
+                cmd, shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=7200,  # 2 hours for large repos
+                check=False
+            )
+            return_code = result.returncode
+        except subprocess.TimeoutExpired:
+            facade_helper.log_activity('Error', f'Git clone timed out: {cmd}')
+            return_code = -1  # Timeout error code
 
         if (return_code == 0):
             # If cloning succeeded, repo is ready for analysis
@@ -317,8 +328,18 @@ def git_repo_updates(facade_helper, repo_git):
 
             firstpull = (f"git -C {absolute_path} pull")
 
-            return_code_remote = subprocess.Popen(
-                [firstpull], shell=True).wait()
+            try:
+                result = subprocess.run(
+                    firstpull, shell=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=600,  # 10 minutes for git pull
+                    check=False
+                )
+                return_code_remote = result.returncode
+            except subprocess.TimeoutExpired:
+                facade_helper.log_activity('Error', f'Git operation timed out: {firstpull}')
+                return_code_remote = -1  # Timeout error code
 
             facade_helper.log_activity('Verbose', 'Got to here. 1.')
 
@@ -334,13 +355,20 @@ def git_repo_updates(facade_helper, repo_git):
                 getremotedefault = (
                     f"git -C {absolute_path} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
 
-                return_code_remote = subprocess.Popen(
-                    [getremotedefault], stdout=subprocess.PIPE, shell=True).wait()
-
-                remotedefault = subprocess.Popen(
-                    [getremotedefault], stdout=subprocess.PIPE, shell=True).communicate()[0]
-
-                remotedefault = remotedefault.decode()
+                try:
+                    result = subprocess.run(
+                        getremotedefault, shell=True,
+                        capture_output=True,
+                        encoding='utf-8', errors='replace',
+                        timeout=60,  # 1 minute for remote query
+                        check=False
+                    )
+                    return_code_remote = result.returncode
+                    remotedefault = result.stdout.strip()
+                except subprocess.TimeoutExpired:
+                    facade_helper.log_activity('Error', f'Git operation timed out: {getremotedefault}')
+                    return_code_remote = -1
+                    remotedefault = ''
 
                 facade_helper.log_activity(
                     'Verbose', f'remote default getting checked out is: {remotedefault}.')
@@ -351,14 +379,35 @@ def git_repo_updates(facade_helper, repo_git):
                 facade_helper.log_activity(
                     'Verbose', f"get remote default command is: \n \n {getremotedefault} \n \n ")
 
-                return_code_remote_default_again = subprocess.Popen(
-                    [getremotedefault], shell=True).wait()
+                try:
+                    result = subprocess.run(
+                        getremotedefault, shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        timeout=600,  # 10 minutes for git checkout
+                        check=False
+                    )
+                    return_code_remote_default_again = result.returncode
+                except subprocess.TimeoutExpired:
+                    facade_helper.log_activity('Error', f'Git operation timed out: {getremotedefault}')
+                    return_code_remote_default_again = -1  # Timeout error code
 
                 if return_code_remote_default_again == 0:
                     facade_helper.log_activity('Verbose', "local checkout worked.")
                     cmd = (f"git -C {absolute_path} pull")
 
-                    return_code = subprocess.Popen([cmd], shell=True).wait()
+                    try:
+                        result = subprocess.run(
+                            cmd, shell=True,
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL,
+                            timeout=600,  # 10 minutes for git pull
+                            check=False
+                        )
+                        return_code = result.returncode
+                    except subprocess.TimeoutExpired:
+                        facade_helper.log_activity('Error', f'Git operation timed out: {cmd}')
+                        return_code = -1  # Timeout error code
 
         except Exception as e:
             facade_helper.log_activity(
@@ -369,7 +418,18 @@ def git_repo_updates(facade_helper, repo_git):
 
             cmd = (f"git -C {absolute_path} pull")
 
-            return_code = subprocess.Popen([cmd], shell=True).wait()
+            try:
+                result = subprocess.run(
+                    cmd, shell=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=600,  # 10 minutes for git pull
+                    check=False
+                )
+                return_code = result.returncode
+            except subprocess.TimeoutExpired:
+                facade_helper.log_activity('Error', f'Git operation timed out: {cmd}')
+                return_code = -1  # Timeout error code
 
         # If the attempt succeeded, then don't try any further fixes. If
         # the attempt to fix things failed, give up and try next time.
@@ -392,37 +452,58 @@ def git_repo_updates(facade_helper, repo_git):
             getremotedefault = (
                 f"git -C {absolute_path} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
 
-            return_code_remote = subprocess.Popen(
-                [getremotedefault], stdout=subprocess.PIPE, shell=True).wait()
-
-            remotedefault = subprocess.Popen(
-                [getremotedefault], stdout=subprocess.PIPE, shell=True).communicate()[0]
-
-            remotedefault = remotedefault.decode()
+            try:
+                result = subprocess.run(
+                    getremotedefault, shell=True,
+                    capture_output=True,
+                    encoding='utf-8', errors='replace',
+                    timeout=60,  # 1 minute for remote query
+                    check=False
+                )
+                return_code_remote = result.returncode
+                remotedefault = result.stdout.strip()
+            except subprocess.TimeoutExpired:
+                facade_helper.log_activity('Error', f'Git operation timed out: {getremotedefault}')
+                return_code_remote = -1
+                remotedefault = ''
 
             try:
 
                 getremotedefault = (
                     f"git -C {absolute_path} checkout {remotedefault}")
 
-                return_code_remote_default = subprocess.Popen(
-                    [getremotedefault], stdout=subprocess.PIPE, shell=True).wait()
-
-                return_message_getremotedefault = subprocess.Popen(
-                    [getremotedefault], stdout=subprocess.PIPE, shell=True).communicate()[0]
+                try:
+                    result = subprocess.run(
+                        getremotedefault, shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        timeout=600,  # 10 minutes for git checkout
+                        check=False
+                    )
+                    return_code_remote_default = result.returncode
+                except subprocess.TimeoutExpired:
+                    facade_helper.log_activity('Error', f'Git operation timed out: {getremotedefault}')
+                    return_code_remote_default = -1  # Timeout error code
 
                 facade_helper.log_activity(
-                    'Verbose', f'get remote default result: {return_message_getremotedefault}')
+                    'Verbose', f'get remote default result (return code): {return_code_remote_default}')
 
                 getcurrentbranch = (f"git -C {absolute_path} branch")
 
-                return_code_local = subprocess.Popen(
-                    [getcurrentbranch], stdout=subprocess.PIPE, shell=True).wait()
-
-                localdefault = subprocess.Popen(
-                    [getcurrentbranch], stdout=subprocess.PIPE, shell=True).communicate()[0]
-
-                localdefault = localdefault.decode()
+                try:
+                    result = subprocess.run(
+                        getcurrentbranch, shell=True,
+                        capture_output=True,
+                        encoding='utf-8', errors='replace',
+                        timeout=60,  # 1 minute for branch query
+                        check=False
+                    )
+                    return_code_local = result.returncode
+                    localdefault = result.stdout
+                except subprocess.TimeoutExpired:
+                    facade_helper.log_activity('Error', f'Git operation timed out: {getcurrentbranch}')
+                    return_code_local = -1
+                    localdefault = ''
 
                 facade_helper.log_activity(
                     'Verbose', f'remote default is: {remotedefault}, and localdefault is {localdefault}.')
@@ -430,20 +511,50 @@ def git_repo_updates(facade_helper, repo_git):
                 cmd_checkout_default = (
                     f"git -C {absolute_path} checkout {remotedefault}")
 
-                cmd_checkout_default_wait = subprocess.Popen(
-                    [cmd_checkout_default], shell=True).wait()
+                try:
+                    result = subprocess.run(
+                        cmd_checkout_default, shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        timeout=600,  # 10 minutes for git checkout
+                        check=False
+                    )
+                    cmd_checkout_default_wait = result.returncode
+                except subprocess.TimeoutExpired:
+                    facade_helper.log_activity('Error', f'Git operation timed out: {cmd_checkout_default}')
+                    cmd_checkout_default_wait = -1
 
                 cmdpull2 = (f"git -C {absolute_path} pull")
 
                 cmd_reset = (f"git -C {absolute_path} reset --hard origin/{remotedefault}")
 
-                cmd_reset_wait = subprocess.Popen(
-                    [cmd_reset], shell=True).wait()
+                try:
+                    result = subprocess.run(
+                        cmd_reset, shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        timeout=300,  # 5 minutes for git reset
+                        check=False
+                    )
+                    cmd_reset_wait = result.returncode
+                except subprocess.TimeoutExpired:
+                    facade_helper.log_activity('Error', f'Git operation timed out: {cmd_reset}')
+                    cmd_reset_wait = -1
 
                 cmd_clean = (f"git -C {absolute_path} clean -df")
 
-                return_code_clean = subprocess.Popen(
-                    [cmd_clean], shell=True).wait()
+                try:
+                    result = subprocess.run(
+                        cmd_clean, shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        timeout=300,  # 5 minutes for git clean
+                        check=False
+                    )
+                    return_code_clean = result.returncode
+                except subprocess.TimeoutExpired:
+                    facade_helper.log_activity('Error', f'Git operation timed out: {cmd_clean}')
+                    return_code_clean = -1
 
             except Exception as e:
 
@@ -453,7 +564,18 @@ def git_repo_updates(facade_helper, repo_git):
         cmdpull2 = (f"git -C {absolute_path} pull")
 
         print(cmdpull2)
-        return_code = subprocess.Popen([cmdpull2], shell=True).wait()
+        try:
+            result = subprocess.run(
+                cmdpull2, shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=600,  # 10 minutes for git pull
+                check=False
+            )
+            return_code = result.returncode
+        except subprocess.TimeoutExpired:
+            facade_helper.log_activity('Error', f'Git operation timed out: {cmdpull2}')
+            return_code = -1  # Timeout error code
 
         attempt += 1
 
