@@ -1,4 +1,5 @@
 name: Publish Docker Images
+# Publish docker images to our registry
 on:
   push:
     branches:

@@ -1,4 +1,5 @@
 name: Test MacOS
+# Unknown. MacOS functionality test i guess, probably incomplete
 on:
   push:
     branches:
@@ -17,7 +18,7 @@ jobs:
     name: Test on macOS
     runs-on: macos-latest
     env:
-      UV_LOCKED: true  # Assert that uv.lock is up-to-date
+      UV_LOCKED: true # Assert that uv.lock is up-to-date
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

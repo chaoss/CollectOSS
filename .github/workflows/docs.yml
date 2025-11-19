@@ -1,4 +1,5 @@
 name: "Docs build test"
+# ensure the docs build still works
 on:
   pull_request:
     branches: [main, release]

@@ -1,4 +1,5 @@
 name: End to end Smoke Tests
+# perform an end to end smoke test on docker and podman to make sure things work as expected
 on:
   push:
     branches:

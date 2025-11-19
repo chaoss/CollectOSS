@@ -1,4 +1,5 @@
 name: "Lint and Style Checks"
+# Checks that automate detection of basic errors (type declaration, spelling, linting, forgetting to update the lockfile, etc)
 on:
   pull_request:
     branches: [main, release]
