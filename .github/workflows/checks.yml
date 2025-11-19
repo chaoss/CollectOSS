@@ -41,3 +41,15 @@ jobs:
         uses: astral-sh/setup-uv@v6
       - name: Ensure uv lockfile is up to date
         run: uv lock --check
+
+  run-mypy:
+    name: runner / mypy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tsuyoshicho/action-mypy@v4
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          level: warning
+          execute_command: "uv run mypy"
