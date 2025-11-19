@@ -1,5 +1,8 @@
 name: "Docs build test"
 # ensure the docs build still works
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches: [main, release]

@@ -45,6 +45,9 @@ jobs:
   run-mypy:
     name: runner / mypy
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: tsuyoshicho/action-mypy@v4
