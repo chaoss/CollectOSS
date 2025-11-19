@@ -10,7 +10,6 @@ import logging
 import psutil
 import signal
 from redis.exceptions import ConnectionError as RedisConnectionError
-import uuid
 import traceback
 import sqlalchemy as s
 
@@ -145,22 +144,22 @@ def start_celery_collection_processes(worker_counts: tuple[int, int, int]):
     core_worker_count, secondary_worker_count, facade_worker_count = worker_counts
 
     #2 processes are always reserved as a baseline.
-    scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+    scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling@%h -Q scheduling"
     process_list.append(subprocess.Popen(scheduling_worker.split(" ")))
     sleep_time += 6
 
     logger.info(f"Starting core collection processes with concurrency={core_worker_count}")
-    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_worker_count} -n core:{uuid.uuid4().hex}@%h"
+    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_worker_count} -n core@%h"
     process_list.append(subprocess.Popen(core_worker.split(" ")))
     sleep_time += 6
 
     logger.info(f"Starting secondary collection processes with concurrency={secondary_worker_count}")
-    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_worker_count} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_worker_count} -n secondary@%h -Q secondary"
     process_list.append(subprocess.Popen(secondary_worker.split(" ")))
     sleep_time += 6
 
     logger.info(f"Starting facade collection processes with concurrency={facade_worker_count}")
-    facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={facade_worker_count} -n facade:{uuid.uuid4().hex}@%h -Q facade"
+    facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={facade_worker_count} -n facade@%h -Q facade"
     
     process_list.append(subprocess.Popen(facade_worker.split(" ")))
     sleep_time += 6

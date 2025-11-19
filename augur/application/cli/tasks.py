@@ -7,7 +7,6 @@ Augur library commands for controlling the backend components
 import os
 import click
 import subprocess
-import uuid
 import time
 # from redis.exceptions import ConnectionError as RedisConnectionError
 
@@ -34,9 +33,9 @@ def start():
     core_worker_process = None
     secondary_worker_process = None
 
-    scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=90 -n core:{uuid.uuid4().hex}@%h"
-    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+    scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling@%h -Q scheduling"
+    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=90 -n core@%h"
+    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=20 -n secondary@%h -Q secondary"
     
     scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
     core_worker_process = subprocess.Popen(core_worker.split(" "))
