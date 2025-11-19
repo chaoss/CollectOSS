@@ -9,6 +9,12 @@ from augur.application.db.util import execute_session_query
 from augur.application.db.lib import bulk_insert_dicts
 
 
+class RepoMovedException(Exception):
+    pass
+
+class RepoGoneException(Exception):
+    pass
+
 
 def update_repo_with_dict(repo,new_dict,logger):
     """
@@ -86,7 +92,7 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
 
         update_repo_with_dict(repo, repo_update_dict, logger)
 
-        raise Exception("ERROR: Repo has moved! Resetting Collection!")
+        raise RepoMovedException("ERROR: Repo has moved! Resetting Collection!")
     
     #Mark as ignore if 404
     if response_from_gh.status_code == 404:
@@ -122,7 +128,7 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
 
 
         session.commit()
-        raise Exception("ERROR: Repo has moved, and there is no redirection! 404 returned, not 301. Resetting Collection!")
+        raise RepoGoneException("ERROR: Repo has moved, and there is no redirection! 404 returned, not 301. Resetting Collection!")
 
     
     #skip if not 404
