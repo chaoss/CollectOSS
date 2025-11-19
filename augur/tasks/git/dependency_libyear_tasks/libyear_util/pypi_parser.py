@@ -103,8 +103,6 @@ def map_dependencies_pipfile(packages, type):
 ## Erro handling Means that the parse_pipfile(...) old function is assuming the presence of a dev-packages key in the parsed Pipfile, but that key does not exist in some cases.
 
 def parse_pipfile(file_handle):
-    import tomllib
-
     try:
         manifest = tomllib.load(file_handle)
     except Exception as e:
