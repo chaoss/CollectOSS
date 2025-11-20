@@ -62,7 +62,7 @@ def collect_issues(repo_git: str, full_collection: bool) -> int:
             batch.append(issue)
 
             if len(batch) >= batch_size:
-                logger.info(f"{owner}/{repo}: Processing batch of {len(batch)} issues (total so far: {total_issues})")
+                logger.info(f"{owner}/{repo}: Processing batch of {len(batch)} issues (total so far: {total_issues + len(batch)})")
                 process_issues(batch, f"{owner}/{repo}: Issue task", repo_id, logger)
                 total_issues += len(batch)
                 batch.clear()
