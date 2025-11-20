@@ -84,7 +84,7 @@ def collect_issues(repo_git: str, full_collection: bool) -> int:
 
 
 
-def retrieve_all_issue_data(repo_git: str, logger:logging.Logger, key_auth: GithubRandomKeyAuth, since: datetime | None = None):
+def retrieve_all_issue_data(repo_git: str, logger: logging.Logger, key_auth: GithubRandomKeyAuth, since: datetime | None = None):
     """
     Retrieve all issue data for a repository as a generator.
 
