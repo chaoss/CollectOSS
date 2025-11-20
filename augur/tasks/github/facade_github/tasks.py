@@ -253,6 +253,10 @@ def insert_facade_contributors(self, repo_git):
     #Execute statement with session.
     result = execute_sql(new_contrib_sql)
 
+    # Fetch all results immediately to close the database cursor/connection
+    # This prevents holding the connection open during GitHub API calls
+    rows = result.mappings().fetchall()
+
     #print(new_contribs)
 
     #json.loads(pd.read_sql(new_contrib_sql, self.db, params={
@@ -265,7 +269,7 @@ def insert_facade_contributors(self, repo_git):
     batch = []
     BATCH_SIZE = 1000
 
-    for row in result.mappings():
+    for row in rows:
         batch.append(dict(row))
 
         if len(batch) >= BATCH_SIZE:
@@ -313,11 +317,15 @@ def insert_facade_contributors(self, repo_git):
 
     result = execute_sql(resolve_email_to_cntrb_id_sql)
 
+    # Fetch all results immediately to close the database cursor/connection
+    # This prevents holding the connection open during database UPDATE operations
+    rows = result.mappings().fetchall()
+
     # Process results in batches to reduce memory usage
     batch = []
     BATCH_SIZE = 1000
 
-    for row in result.mappings():
+    for row in rows:
         batch.append(dict(row))
 
         if len(batch) >= BATCH_SIZE:
