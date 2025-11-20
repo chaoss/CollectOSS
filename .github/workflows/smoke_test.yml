@@ -14,7 +14,6 @@ on:
 permissions: {}
 
 jobs:
-
   test-e2e:
     name: End-to-end test (Docker)
     runs-on: ubuntu-latest
@@ -23,7 +22,7 @@ jobs:
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -263,8 +262,6 @@ jobs:
         # We use tail so that we can see the name of each file as it's printed
         run: "podman run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs tail -n +0'"
 
-
-
   push-image:
     name: Push image
     needs: test-e2e
@@ -303,9 +300,9 @@ jobs:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index,manifest
         with:
           annotations: |
-            org.opencontainers.image.title=augur_${{ matrix.image}}
+            org.opencontainers.image.title=augur_${{ matrix.image }}
           labels: |
-            org.opencontainers.image.title=augur_${{ matrix.image}}
+            org.opencontainers.image.title=augur_${{ matrix.image }}
           images: ghcr.io/${{ github.repository_owner }}/augur_${{ matrix.image }}
           # Pushes to the main branch update the *:devel-latest tag
           # Releases update the *:latest tag and the *:<version> tag

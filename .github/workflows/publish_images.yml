@@ -52,9 +52,9 @@ jobs:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index,manifest
         with:
           annotations: |
-            org.opencontainers.image.title=augur_${{ matrix.image}}
+            org.opencontainers.image.title=augur_${{ matrix.image }}
           labels: |
-            org.opencontainers.image.title=augur_${{ matrix.image}}
+            org.opencontainers.image.title=augur_${{ matrix.image }}
           images: ghcr.io/${{ github.repository_owner }}/augur_${{ matrix.image }}
           # Pushes to the main branch update the *:devel-latest tag
           # Releases update the *:latest tag and the *:<version> tag
