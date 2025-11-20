@@ -105,22 +105,22 @@ def get_absolute_repo_path(repo_base_dir, repo_id, repo_path,repo_name):
 	
 	return f"{repo_base_dir}{repo_id}-{repo_path}/{repo_name}"
 
-def get_parent_commits_set(absolute_repo_path, logger=None):
+def get_parent_commits_set(absolute_repo_path, facade_helper, logger=None):
 
 	cmd = "git --git-dir %s log --ignore-missing --pretty=format:'%%H'" % (absolute_repo_path)
-	try:
-		result = subprocess.run(
-			cmd, shell=True,
-			capture_output=True,
-			encoding='utf-8', errors='replace',  # Handle non-UTF-8 gracefully
-			timeout=600,  # 10 minutes for git log
-			check=False
-		)
-		parent_commits = set(result.stdout.split(os.linesep))
-	except subprocess.TimeoutExpired:
-		if logger:
-			logger.error(f"Git log timed out for repo: {absolute_repo_path}")
-		parent_commits = set()  # Return empty set on timeout
+
+	# Use facade_helper's unified git command runner
+	return_code, stdout = facade_helper.run_git_command(
+		cmd,
+		timeout=600,  # 10 minutes for git log
+		capture_output=True,
+		operation_description=f'git log for {absolute_repo_path}'
+	)
+
+	if return_code == 0:
+		parent_commits = set(stdout.split(os.linesep))
+	else:
+		parent_commits = set()  # Return empty set on timeout or error
 
 	# If there are no commits in the range, we still get a blank entry in
 	# the set. Remove it, as it messes with the calculations
