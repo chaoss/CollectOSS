@@ -252,7 +252,6 @@ def insert_facade_contributors(self, repo_git):
 
     #Execute statement with session.
     result = execute_sql(new_contrib_sql)
-    new_contribs = [dict(row) for row in result.mappings()]
 
     #print(new_contribs)
 
@@ -262,7 +261,20 @@ def insert_facade_contributors(self, repo_git):
 
     key_auth = GithubRandomKeyAuth(logger)
 
-    process_commit_metadata(logger, key_auth, list(new_contribs), repo_id, platform_id)
+    # Process results in batches to reduce memory usage
+    batch = []
+    BATCH_SIZE = 1000
+
+    for row in result.mappings():
+        batch.append(dict(row))
+
+        if len(batch) >= BATCH_SIZE:
+            process_commit_metadata(logger, key_auth, batch, repo_id, platform_id)
+            batch.clear()
+
+    # Process remaining items in batch
+    if batch:
+        process_commit_metadata(logger, key_auth, batch, repo_id, platform_id)
 
     logger.debug("DEBUG: Got through the new_contribs")
     
@@ -300,10 +312,21 @@ def insert_facade_contributors(self, repo_git):
 
 
     result = execute_sql(resolve_email_to_cntrb_id_sql)
-    existing_cntrb_emails = [dict(row) for row in result.mappings()]
 
-    print(existing_cntrb_emails)
-    link_commits_to_contributor(logger, facade_helper,list(existing_cntrb_emails))
+    # Process results in batches to reduce memory usage
+    batch = []
+    BATCH_SIZE = 1000
+
+    for row in result.mappings():
+        batch.append(dict(row))
+
+        if len(batch) >= BATCH_SIZE:
+            link_commits_to_contributor(logger, facade_helper, batch)
+            batch.clear()
+
+    # Process remaining items in batch
+    if batch:
+        link_commits_to_contributor(logger, facade_helper, batch)
 
     return
 
