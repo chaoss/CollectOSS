@@ -1,17 +1,9 @@
 Running Augur in Production
 ===========================
 
-This guide explains how to run Augur in a production environment and how to configure
-important environment variables such as ``AUGUR_RESET_LOGS``.
-
-Prerequisites
--------------
-
-Before deploying Augur in production, ensure the following are installed and configured:
-
-- Docker and Docker Compose
-- PostgreSQL (configured and accessible)
-- Redis (installed and running)
+This page collects practical tips, configuration notes, and important considerations
+for deploying Augur in a production environment. This is a reference to help
+configure Augur effectively.
 
 Environment Variables
 ---------------------
@@ -19,51 +11,50 @@ Environment Variables
 Augur uses several environment variables in production. Make sure to configure the ones relevant
 to your deployment:
 
-- ``AUGUR_DB`` — PostgreSQL database connection string  
-- ``AUGUR_REDIS_URL`` — Redis connection string  
-- ``AUGUR_RESET_LOGS`` — controls automatic log reset on server startup
+- ``AUGUR_RESET_LOGS`` : Controls automatic log reset on server startup
+- ``AUGUR_DB`` : PostgreSQL database connection string (used if variable not set)
 
-Resetting Logs with AUGUR_RESET_LOGS
--------------------------------------
+AUGUR_RESET_LOGS
+----------------
 
-Augur provides the ``AUGUR_RESET_LOGS`` environment variable to control whether logs are reset when
-the server starts. This gives system administrators flexibility over log management.
+**Description:**  
+Controls whether Augur resets its log files every time the server starts. Useful for managing log size or integrating with external log rotation systems.
 
-Default Behavior
-~~~~~~~~~~~~~~~~
+**Type:**  
+boolean
 
-If ``AUGUR_RESET_LOGS`` is **not set**, it defaults to **True**, meaning Augur will reset logs
-on startup to prevent unbounded log growth.
+**Default:**  
+`True` : Augur clears old logs at startup.
 
-Custom Behavior
-~~~~~~~~~~~~~~~~
+**Environment Variable:**  
+AUGUR_RESET_LOGS
 
-If set to ``False`` (or common variations), Augur will **not** reset logs automatically.  
-In this case, log rotation or manual log cleanup is the responsibility of the administrator.
+**Notes:**  
+If set to `False`, Augur will not reset logs automatically. Administrators must ensure log rotation or cleanup is handled manually.
 
-Usage Example
-~~~~~~~~~~~~~
+**Usage Example:**
 
 .. code-block:: bash
 
    export AUGUR_RESET_LOGS=False
+
+AUGUR_DB
+--------
+
+**Description:**  
+Specifies the connection string for the PostgreSQL database used by Augur. If omitted, the default Docker database is used.
+
+**Type:**  
+string
+
+**Default:**  
+Docker container database (if `AUGUR_DB` is not specified)
+
+**Environment Variable:**  
+AUGUR_DB
 
 Related Resources
 -----------------
 
 - https://github.com/oss-aspen/infra-ansible/
 - https://github.com/chaoss/augur-utilities/
-
-Steps to Run in Production
---------------------------
-
-1. Clone the repository:
-
-   .. code-block:: bash
-
-      git clone https://github.com/chaoss/augur.git
-      cd augur
-
-2. Configure all required environment variables  
-3. Set up Docker + Docker Compose or your deployment infrastructure  
-4. Start Augur following your deployment method.
