@@ -51,6 +51,7 @@ services:
     build:
       context: .
       dockerfile: ./docker/backend/${AUGUR_TARGET:-Dockerfile}
+    hostname: augur-container
     volumes:
       - cache:/cache:rw
       - config:/config:rw
