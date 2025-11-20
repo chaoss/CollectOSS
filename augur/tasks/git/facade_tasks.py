@@ -212,7 +212,7 @@ def facade_fetch_missing_commit_messages(repo_git):
             
             if len(to_insert) >= 1000:
                 bulk_insert_dicts(logger,to_insert, CommitMessage, ["repo_id","cmt_hash"])
-                to_insert = []
+                to_insert.clear()
             
             to_insert.append(msg_record)
         except Exception as e: 
@@ -313,13 +313,14 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
                 )
                 if pendingCommitRecordsToInsert:
                     facade_bulk_insert_commits(logger, pendingCommitRecordsToInsert)
-                pendingCommitRecordsToInsert = []
+                pendingCommitRecordsToInsert.clear()
 
         if commit_msg:
             pendingCommitMessageRecordsToInsert.append(commit_msg)
 
         if len(pendingCommitMessageRecordsToInsert) >= 1000:
             bulk_insert_dicts(logger, pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id", "cmt_hash"])
+            pendingCommitMessageRecordsToInsert.clear()
 
     # FINAL MESSAGE INSERT
     bulk_insert_dicts(logger, pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id", "cmt_hash"])
