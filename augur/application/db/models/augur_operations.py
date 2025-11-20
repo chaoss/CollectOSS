@@ -1234,48 +1234,58 @@ class CollectionStatus(Base):
         from augur.tasks.github.util.util import get_repo_weight_by_issue
         from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
+        # Defensive: ensure repo exists
         repo = Repo.get_by_id(session, repo_id)
-        repo_git = repo.repo_git
-
-        collection_status_unique = ["repo_id"]
-        pr_issue_count = 0
-        github_weight = 0
-        if "github" in repo_git:
-
-            try:
-                pr_issue_count = get_repo_weight_by_issue(logger, repo_git)
-                #session.logger.info(f"date weight: {calculate_date_weight_from_timestamps(repo.repo_added, None)}")
-                github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
-            except Exception as e:
-                pr_issue_count = None
-                github_weight = None
-                logger.error(
-                        ''.join(traceback.format_exception(None, e, e.__traceback__)))
-        else:   
-            try:
-                pr_issue_count = 0
-                github_weight = pr_issue_count - calculate_date_weight_from_timestamps(repo.repo_added, None)
-            except Exception as e:
-                pr_issue_count = None
-                github_weight = None
-                logger.error(
-                        ''.join(traceback.format_exception(None, e, e.__traceback__)))
-
-
-        record = {
-            "repo_id": repo_id,
-            "issue_pr_sum": pr_issue_count,
-            "core_weight": github_weight,
-            "secondary_weight": github_weight,
-            "ml_weight": github_weight
-        }
-     
-
-        result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)
-
-        logger.info(f"Trying to insert repo \n issue and pr sum: {record['issue_pr_sum']}")
-
-        if not result:
+        if not repo:
+            logger.error(f"CollectionStatus.insert: Repo with id {repo_id} not found")
             return False
 
-        return True
+        repo_git = repo.repo_git or ""
+        collection_status_unique = ["repo_id"]
+
+        # Default numeric values (avoid None)
+        pr_issue_count = 0
+        github_weight = 0
+
+        # Only attempt GitHub operations if this is a GitHub repo
+        try:
+            if repo_git and "github" in repo_git:
+                result = get_repo_weight_by_issue(logger, repo_git)
+                pr_issue_count = int(result) if (result is not None) else 0
+
+                # calculate_date_weight_from_timestamps may return None or numeric
+                date_weight = calculate_date_weight_from_timestamps(repo.repo_added, None)
+                date_weight = int(date_weight) if (date_weight is not None) else 0
+
+                github_weight = pr_issue_count - date_weight
+            else:
+                # Non-github repos: keep zero defaults
+                pr_issue_count = 0
+                github_weight = 0
+        except Exception as e:
+            # Log full traceback, but do not leave None in numeric fields
+            logger.error("Error computing repo weight in CollectionStatus.insert: %s", ''.join(traceback.format_exception(None, e, e.__traceback__)))
+            pr_issue_count = 0
+            github_weight = 0
+
+        # Ensure integers for DB insertion
+        try:
+            record = {
+                "repo_id": repo_id,
+                "issue_pr_sum": int(pr_issue_count),
+                "core_weight": int(github_weight),
+                "secondary_weight": int(github_weight),
+                "ml_weight": int(github_weight)
+            }
+
+            result = session.insert_data(record, CollectionStatus, collection_status_unique, on_conflict_update=False)
+
+            logger.info(f"Trying to insert repo \n issue and pr sum: {record['issue_pr_sum']}")
+
+            if not result:
+                return False
+
+            return True
+        except Exception as e:
+            logger.error("CollectionStatus.insert failed to insert record: %s", ''.join(traceback.format_exception(None, e, e.__traceback__)))
+            return False

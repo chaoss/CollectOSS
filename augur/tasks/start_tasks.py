@@ -4,6 +4,8 @@ import os
 #from celery.result import AsyncResult
 from celery import group, chain
 from sqlalchemy import and_,update
+import sqlalchemy as s
+import traceback
 
 
 from augur.tasks.github import *
@@ -382,9 +384,14 @@ def create_collection_status_records(self):
     repo = execute_sql(query).first()
 
     with DatabaseSession(logger) as session:
-
         while repo is not None:
-            CollectionStatus.insert(session, logger, repo[0])
+            try:
+                success = CollectionStatus.insert(session, logger, repo[0])
+                if not success:
+                    logger.warning(f"create_collection_status_records: failed to add collection_status for repo_id {repo[0]}")
+            except Exception as e:
+                logger.error("create_collection_status_records: unexpected error inserting collection status for repo_id %s: %s", repo[0], ''.join(traceback.format_exception(None, e, e.__traceback__)))
+            # fetch next repo (don't let one error block the loop)
             repo = execute_sql(query).first()
 
     # no longer recursively run this task because collection status records are added when repos are inserted

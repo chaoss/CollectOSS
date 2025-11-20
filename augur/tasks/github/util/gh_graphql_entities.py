@@ -260,6 +260,11 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
         result_dict = responseDict['data']
 
+        # Guard against repository: None responses from GraphQL
+        if 'repository' in result_dict and result_dict['repository'] is None:
+            self.logger.warning("extract_paginate_result: repository not found in GraphQL response: %s", responseDict.get('errors'))
+            return None
+
         #print(result_dict)
         #extract the core keys that we want from our query
         #core = result_dict[self.bind['values'][0]][self.bind['values'][1]]

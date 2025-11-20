@@ -111,21 +111,31 @@ def get_repo_weight_by_issue(logger,repo_git):
     return number_of_issues_and_prs
 
 #Get the weight for each repo for the core collection hook
-def get_repo_weight_core(logger,repo_git):
-    
+def get_repo_weight_core(logger, repo_git):
+    # Defensive: ensure repo exists
     repo = get_repo_by_repo_git(repo_git)
-
     if not repo:
-        raise Exception(f"Task with repo_git of {repo_git} but could not be found in Repo table")
-    
-    #try to get the collection status if it exists at this point
+        logger.error(f"get_repo_weight_core: Repo with repo_git '{repo_git}' not found")
+        return 0
+
+    # try to get the collection status if it exists at this point
     try:
         status = repo.collection_status[0]
-        time_factor = calculate_date_weight_from_timestamps(repo.repo_added,status.core_data_last_collected)
-    except IndexError:
-        time_factor = calculate_date_weight_from_timestamps(repo.repo_added,None)
+        time_factor = calculate_date_weight_from_timestamps(repo.repo_added, status.core_data_last_collected)
+    except Exception:
+        # If no collection status or other error, fall back to using repo.repo_added
+        time_factor = calculate_date_weight_from_timestamps(repo.repo_added, None)
 
+    # get the raw issue/pr count defensively
+    try:
+        raw = get_repo_weight_by_issue(logger, repo_git)
+        raw_count = int(raw) if (raw is not None) else 0
+    except Exception as e:
+        logger.error("get_repo_weight_core: error getting repo weight by issue for %s: %s", repo_git, e)
+        raw_count = 0
 
-    #Don't go below zero.
-    return max(0,get_repo_weight_by_issue(logger, repo_git) - time_factor)
+    time_factor_val = int(time_factor) if (time_factor is not None) else 0
+
+    # Don't go below zero.
+    return max(0, raw_count - time_factor_val)
 
