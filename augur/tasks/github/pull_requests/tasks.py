@@ -381,6 +381,7 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
             logger.debug(f"{owner}/{repo} No pr reviews for repo")
             return
 
+        # Process contributors (all_pr_reviews already in memory, so no OOM risk)
         contributors = []
         for pull_request_id, reviews in all_pr_reviews.items():
 
@@ -389,32 +390,20 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
                 if contributor:
                     contributors.append(contributor)
 
-            logger.info(f"{owner}/{repo} Pr reviews: Inserting {len(contributors)} contributors")
-            augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+        logger.info(f"{owner}/{repo} Pr reviews: Inserting {len(contributors)} contributors")
+        augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
 
 
+        # Process pr reviews (all_pr_reviews already in memory, so no OOM risk)
         pr_reviews = []
         for pull_request_id, reviews in all_pr_reviews.items():
 
             for review in reviews:
-                
+
                 if "cntrb_id" in review:
                     pr_reviews.append(extract_needed_pr_review_data(review, pull_request_id, repo_id, platform_id, tool_source, tool_version))
 
-            logger.info(f"{owner}/{repo}: Inserting pr reviews of length: {len(pr_reviews)}")
-            pr_review_natural_keys = ["pr_review_src_id",]
-            augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys)
-
-
-
-
-
-
-
-
-
-
-
-
-
+        logger.info(f"{owner}/{repo}: Inserting {len(pr_reviews)} pr reviews")
+        pr_review_natural_keys = ["pr_review_src_id",]
+        augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys)
 
