@@ -361,8 +361,8 @@ def dashboard_view():
     # Load backend configuration from database using AugurConfig
     # The original requestJson function was never defined, so we use AugurConfig directly
     try:
-        with DatabaseSession(logger, engine=app.engine) as session:
-            backend_config = AugurConfig(logger, session).config.load_config()
+        with DatabaseSession(logger, engine=app.engine) as db_session:
+            backend_config = AugurConfig(logger, db_session).base_config
     except Exception as e:
         logger.warning(f"Failed to load backend config: {e}")
         backend_config = {}

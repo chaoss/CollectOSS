@@ -1,9 +1,6 @@
 import logging
 import os
-import time
-import traceback
 import re
-import pickle
 import uuid
 import datetime
 import json
@@ -460,7 +457,8 @@ def clustering_model(repo_git: str,logger,engine) -> None:
         # train_model handles all model training, storage, and data persistence
         # No need for legacy clustering code below
         return
-    else:
+    
+    # Using existing model - no retraining needed
         logger.info(" USING EXISTING MODEL")
         logger.info("All conditions satisfied - no retraining needed")
         
