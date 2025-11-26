@@ -5,17 +5,19 @@ import logging
 import math
 from functools import wraps
 from flask import render_template, request, redirect, url_for, session, flash, jsonify
-from .utils import *
 from flask_login import login_user, logout_user, current_user, login_required
 
 from augur.application.db.models import User, Repo, ClientApplication
 from .server import LoginException
-from augur.application.util import *
+from augur.application.util import get_all_repos, get_all_repos_count
 from augur.application.db.lib import get_value
 from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
 from ..server import app, db_session
 from datetime import datetime
+
+# Import utility functions from local utils module
+from .utils import getSetting, render_module, renderRepos, render_message
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +80,7 @@ def repo_table_view():
     query = request.args.get('q')
     try:
         page = int(request.args.get('p') or 0)
-    except:
+    except (ValueError, TypeError):
         page = 1
 
     sorting = request.args.get('s')
@@ -168,9 +170,8 @@ def user_login():
                 result = User.create_user(username, password, email, first_name, last_name, admin)
                 if not result[0]:
                     raise LoginException("An error occurred registering your account")
-                else:
-                    user = User.get_user(db_session, username)
-                    flash(result[1]["status"])
+                user = User.get_user(db_session, username)
+                flash(result[1]["status"])
 
             # Log the user in if the password is valid
             if user.validate(password) and login_user(user, remember = remember):
@@ -178,9 +179,9 @@ def user_login():
                 if "login_next" in session:
                     return redirect(session.pop("login_next"))
                 return redirect(url_for('root'))
-            else:
-                print("Invalid login")
-                raise LoginException("Invalid login credentials")
+            
+            print("Invalid login")
+            raise LoginException("Invalid login credentials")
         except LoginException as e:
             flash(str(e))
     return render_module('login', title="Login")
@@ -277,7 +278,7 @@ def user_groups_view():
 
     try:
         activepage = int(request.args.get('p')) if 'p' in request.args else 0
-    except:
+    except (ValueError, TypeError):
         activepage = 0
 
     (groups, status) = current_user.get_groups_info(**params)
@@ -312,7 +313,7 @@ def user_group_view(group = None):
 
     try:
         params["page"] = int(request.args.get('p') or 0)
-    except:
+    except (ValueError, TypeError):
         params["page"] = 1
     
     if query := request.args.get('q'):
@@ -361,8 +362,8 @@ def dashboard_view():
     # Load backend configuration from database using AugurConfig
     # The original requestJson function was never defined, so we use AugurConfig directly
     try:
-        with DatabaseSession(logger, engine=app.engine) as db_session:
-            backend_config = AugurConfig(logger, db_session).base_config
+        with DatabaseSession(logger, engine=app.engine) as db_session_context:
+            backend_config = AugurConfig(logger, db_session_context).base_config
     except Exception as e:
         logger.warning(f"Failed to load backend config: {e}")
         backend_config = {}

@@ -13,7 +13,7 @@ from augur.tasks.frontend import (
 )
 
 from ..server import app
-from .utils import *
+from .utils import render_module, renderRepos, render_message, toCacheFilename, getSetting
 from .init import report_requests
 
 logger = logging.getLogger(__name__)
