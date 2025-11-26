@@ -1,0 +1,553 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2/dist/echarts-wordcloud.min.js"></script>
+<script>
+window.addEventListener('error', function(e){
+    const t = e.target || e.srcElement;
+    if (t && t.tagName==='SCRIPT' && t.src && t.src.includes('echarts@5')){
+        const s = document.createElement('script'); s.src='/static/js/vendor/echarts.min.js'; document.head.appendChild(s);
+    }
+    if (t && t.tagName==='SCRIPT' && t.src && t.src.includes('echarts-wordcloud')){
+        const s = document.createElement('script'); s.src='/static/js/vendor/echarts-wordcloud.min.js'; document.head.appendChild(s);
+    }
+}, true);
+</script>
+
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1>Topic Model Details</h1>
+                    <a href="{{ url_for('repo_repo_view', id=repo.repo_id) }}" class="text-decoration-none text-muted">
+                        <i class="fas fa-arrow-left"></i> View Repository
+                    </a>
+                </div>
+                <a href="{{ url_for('topic_models_view', repo_id=repo.repo_id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Models
+                </a>
+            </div>
+            
+            <div class="row align-items-stretch">
+                <div class="col-md-6 d-flex">
+                    <div class="card h-100 w-100">
+                        <div class="card-header">
+                            <h3>Model Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Model ID:</strong></td>
+                                    <td><code>{{ model.model_id }}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Method:</strong></td>
+                                    <td>{{ model.model_method }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Topics:</strong></td>
+                                    <td>{{ model.num_topics }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Words per Topic:</strong></td>
+                                    <td>{{ model.num_words_per_topic }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>NMF Reconstruction Quality:</strong></td>
+                                    <td>
+                                        {% if model.coherence_score is not none %}
+                                            {% if model.coherence_score > 0.7 %}
+                                            <span class="badge bg-success">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                                <small class="text-muted ms-2">Excellent reconstruction</small>
+                                            {% elif model.coherence_score > 0.5 %}
+                                                <span class="badge bg-info">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                                <small class="text-muted ms-2">Good reconstruction</small>
+                                            {% elif model.coherence_score > 0.3 %}
+                                                <span class="badge bg-warning">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                                <small class="text-muted ms-2">Fair reconstruction</small>
+                                            {% elif model.coherence_score > 0 %}
+                                                <span class="badge bg-danger">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                                <small class="text-muted ms-2">Poor reconstruction</small>
+                                            {% else %}
+                                                <span class="badge bg-warning">{{ "%.3f"|format(model.coherence_score) }}</span>
+                                                <small class="text-muted ms-2">Calculating...</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Topic Sparsity:</strong></td>
+                                    <td>
+                                        {% if model.topic_diversity is not none %}
+                                            {% if model.topic_diversity > 0.7 %}
+                                                <span class="badge bg-success">{{ "%.3f"|format(model.topic_diversity) }}</span>
+                                                <small class="text-muted ms-2">Highly sparse (very interpretable)</small>
+                                            {% elif model.topic_diversity > 0.5 %}
+                                                <span class="badge bg-info">{{ "%.3f"|format(model.topic_diversity) }}</span>
+                                                <small class="text-muted ms-2">Moderately sparse</small>
+                                            {% elif model.topic_diversity > 0 %}
+                                                <span class="badge bg-warning">{{ "%.3f"|format(model.topic_diversity) }}</span>
+                                                <small class="text-muted ms-2">Low sparsity</small>
+                                            {% else %}
+                                                <span class="badge bg-warning">{{ "%.3f"|format(model.topic_diversity) }}</span>
+                                                <small class="text-muted ms-2">Calculating...</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Training Date:</strong></td>
+                                    <td>{{ model.training_end_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tool Source:</strong></td>
+                                    <td>{{ model.tool_source }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tool Version:</strong></td>
+                                    <td>{{ model.tool_version }}</td>
+                                </tr>
+                                {% if model.quality and model.quality.param_optimization %}
+                                <tr>
+                                    <td><strong>Best Params:</strong></td>
+                                    <td>
+                                        {% set po = model.quality.param_optimization %}
+                                        <code>num_topics={{ po.best_params.num_topics }}</code>,
+                                        <code>max_df={{ po.best_params.max_df }}</code>,
+                                        <code>min_df={{ po.best_params.min_df }}</code>
+                                        <span class="ms-2 badge bg-info">score: {{ '%.3f'|format(po.best_score) }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Evaluated ranges:</strong></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#evalRanges">Show</button>
+                                        <div id="evalRanges" class="collapse mt-2">
+                                            <div><strong>num_topics:</strong> {{ po.evaluated.num_topics|tojson }}</div>
+                                            <div><strong>max_df:</strong> {{ po.evaluated.max_df|tojson }}</div>
+                                            <div><strong>min_df:</strong> {{ po.evaluated.min_df|tojson }}</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 d-flex">
+                    <div class="card h-100 w-100">
+                        <div class="card-header">
+                            <h3>Repository Topics</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="topicDistribution" style="width:100%;height:280px;"></div>
+                            {% if repo_topics %}
+                                {% set top_topics = (repo_topics | sort(attribute='topic_prob', reverse=True))[:10] %}
+                                <small class="text-muted">Showing top 10 topics by probability</small>
+                                <div class="table-responsive mt-2">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Topic ID</th>
+                                                <th>Probability</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for topic in top_topics %}
+                                            <tr>
+                                                <td>{{ topic.topic_id }}</td>
+                                                <td>
+                                                    <div class="progress">
+                                                        <div class="progress-bar" style="width: {{ (topic.topic_prob * 100)|round(1) }}%">
+                                                            {{ "%.1f"|format(topic.topic_prob * 100) }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No topic assignments found for this repository.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-tags"></i> Topic Words</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="topicWordsContainer">
+                        {% for topic_id in range(1, model.num_topics + 1) %}
+                        <div class="col-md-6 col-lg-4 mb-3 topic-card" data-topic="{{ topic_id }}">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Topic {{ topic_id }}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="wc_detail_{{ topic_id }}" style="width:100%;height:200px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center">
+                        <button id="loadMoreTopics" class="btn btn-outline-secondary btn-sm">Load More Topics</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions Section -->
+            <div class="card mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-cogs"></i> Actions</h3>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-success" onclick="retrainModel()">
+                            <i class="fas fa-sync-alt"></i> Retrain Model
+                        </button>
+                        <button class="btn btn-warning" onclick="exportModel()">
+                            <i class="fas fa-download"></i> Export Model
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Visualization Modal -->
+<div class="modal fade" id="visualizationModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Topic Model Visualization</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="visualizationContent">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Render ECharts for detail page
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const dist = echarts.init(document.getElementById('topicDistribution'));
+        const repoTopics = [
+            {% if repo_topics %}
+            {% set top_topics = (repo_topics | sort(attribute='topic_prob', reverse=True))[:10] %}
+            {% for topic in top_topics %}
+            {name: 'Topic {{ topic.topic_id }}', value: {{ '%.6f'|format(topic.topic_prob) }}},
+            {% endfor %}
+            {% endif %}
+        ];
+        dist.setOption({
+            tooltip: {formatter: ({name, value}) => `${name}: ${(value*100).toFixed(1)}%`},
+            xAxis: {type: 'category', data: repoTopics.map(d => d.name)},
+            yAxis: {type: 'value'},
+            series: [{type: 'bar', data: repoTopics.map(d => d.value)}]
+        });
+    } catch (e) {}
+
+    // Precompute topic words per topic for lazy rendering
+    const topicWordsData = {
+        {% for topic_id in range(1, model.num_topics + 1) %}
+        {{ topic_id }}: [
+            {% set tw = topic_words.get(topic_id, []) %}
+            {% for word in tw %}
+            {name: '{{ word.word }}', value: {{ '%.6f'|format(word.word_prob or 0) }} }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]{% if not loop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    // Word clouds for each topic (lazy)
+    (function(){
+        const BATCH = 10;
+        const total = {{ model.num_topics }};
+        let rendered = 0;
+        function renderBatch() {
+            const end = Math.min(rendered + BATCH, total);
+            for (let t = rendered + 1; t <= end; t++) {
+                try {
+                    const el = document.getElementById('wc_detail_'+t);
+                    if (!el) continue;
+                    const wc = echarts.init(el);
+                    const words = Array.isArray(topicWordsData[t]) ? topicWordsData[t] : [];
+                    wc.setOption({
+                        series: [{
+                            type: 'wordCloud',
+                            gridSize: 8,
+                            sizeRange: [12, 36],
+                            rotationRange: [-30, 30],
+                            textStyle: {color: () => `hsl(${Math.floor(Math.random()*360)},70%,50%)`},
+                            data: words.length ? words : [{name: 'No Data', value: 1}]
+                        }]
+                    });
+                } catch (e) {}
+            }
+            rendered = end;
+            const btn = document.getElementById('loadMoreTopics');
+            if (btn) btn.style.display = rendered >= total ? 'none' : '';
+        }
+        // hide all topic cards first
+        document.querySelectorAll('.topic-card').forEach((card, idx) => {
+            card.style.display = idx < BATCH ? '' : 'none';
+        });
+        rendered = 0; renderBatch();
+        const btn = document.getElementById('loadMoreTopics');
+        if (btn) btn.addEventListener('click', () => {
+            const container = document.getElementById('topicWordsContainer');
+            const nextCards = Array.from(container.querySelectorAll('.topic-card')).slice(rendered, rendered + BATCH);
+            nextCards.forEach(c => c.style.display = '');
+            renderBatch();
+        });
+    })();
+});
+
+function showVisualization() {
+    // Check if visualization modal exists and show it
+    const modal = document.getElementById('visualizationModal');
+    if (modal) {
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+        loadVisualization(); // Load the visualization content
+    } else {
+        // Fallback: scroll to visualization content if it exists
+        const vizContent = document.getElementById('visualizationContent');
+        if (vizContent) {
+            vizContent.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert('Visualization feature is not available on this page.');
+        }
+    }
+}
+
+function loadVisualization() {
+    const content = document.getElementById('visualizationContent');
+    if (!content) return;
+    
+    // Show loading state
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading visualization data...</p>
+        </div>
+    `;
+    
+    // Fetch visualization data from API
+    fetch("{{ url_for('topic_model_visualization_api', repo_id=repo.repo_id, model_id=model.model_id) }}")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Create comprehensive visualization
+            content.innerHTML = `
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5><i class="fas fa-info-circle text-primary"></i> Model Overview</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Model ID:</strong> ${data.model_id || 'Unknown'}</p>
+                                <p><strong>Topics:</strong> ${data.num_topics || 'N/A'}</p>
+                                <p><strong>Method:</strong> ${data.model_method || 'N/A'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Coherence:</strong> ${data.coherence_score ? data.coherence_score.toFixed(3) : 'N/A'}</p>
+                                <p><strong>Training Date:</strong> ${data.training_date || 'Unknown'}</p>
+                                <p><strong>Repository Topics:</strong> ${data.repo_topics ? data.repo_topics.length : 0}</p>
+                            </div>
+                        </div>
+                        
+                        <h6><i class="fas fa-chart-bar text-success"></i> Repository Topic Distribution</h6>
+                        <div id="repoTopicChart" style="width:100%;height:300px;"></div>
+                        
+                        <h6 class="mt-4"><i class="fas fa-map-marker-alt text-info"></i> Topic Similarity Map (PCA)</h6>
+                        <div id="topicScatterPlot" style="width:100%;height:300px;"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-cloud text-warning"></i> Topic Word Clouds</h6>
+                        <div id="topicWordClouds"></div>
+                    </div>
+                </div>
+            `;
+            
+            // Render ECharts visualizations
+            renderTopicDistribution(data);
+            renderTopicScatter(data);
+            renderWordClouds(data);
+        })
+        .catch(error => {
+            console.error('Visualization loading error:', error);
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Visualization Error</h5>
+                    <p><strong>Failed to load visualization:</strong> ${error.message}</p>
+                    <p class="mb-0"><small>This might be due to:</small></p>
+                    <ul class="mb-0">
+                        <li>API connectivity issues</li>
+                        <li>Missing visualization data</li>
+                        <li>Model processing still in progress</li>
+                    </ul>
+                </div>
+            `;
+        });
+}
+
+function renderTopicDistribution(data) {
+    if (!data.repo_topics || !Array.isArray(data.repo_topics)) return;
+    
+    const chart = echarts.init(document.getElementById('repoTopicChart'));
+    const topics = data.repo_topics.map(rt => `Topic ${rt.topic_id}`);
+    const probabilities = data.repo_topics.map(rt => rt.topic_prob);
+    
+    chart.setOption({
+        title: { text: 'Repository Topic Probabilities', left: 'center' },
+        tooltip: { formatter: '{b}: {c}% probability' },
+        xAxis: { type: 'category', data: topics },
+        yAxis: { type: 'value', name: 'Probability' },
+        series: [{
+            type: 'bar',
+            data: probabilities,
+            itemStyle: { color: '#007bff' }
+        }]
+    });
+}
+
+function renderTopicScatter(data) {
+    if (!data.topic_positions || !Array.isArray(data.topic_positions)) return;
+    
+    const chart = echarts.init(document.getElementById('topicScatterPlot'));
+    const scatterData = data.topic_positions.map(pos => [pos.x, pos.y, pos.topic_id]);
+    
+    chart.setOption({
+        title: { text: 'Topic Similarity (PCA Projection)', left: 'center' },
+        tooltip: { formatter: 'Topic {c}<br/>X: {a}<br/>Y: {b}' },
+        xAxis: { type: 'value', name: 'PC1' },
+        yAxis: { type: 'value', name: 'PC2' },
+        series: [{
+            type: 'scatter',
+            data: scatterData,
+            symbolSize: 15,
+            itemStyle: { color: '#28a745' }
+        }]
+    });
+}
+
+function renderWordClouds(data) {
+    const container = document.getElementById('topicWordClouds');
+    if (!data.topics || !container) return;
+    
+    Object.entries(data.topics).forEach(([topicId, words]) => {
+        if (!words || !Array.isArray(words)) return;
+        
+        const cloudDiv = document.createElement('div');
+        cloudDiv.innerHTML = `
+            <div class="card mb-2">
+                <div class="card-header py-1">
+                    <small><strong>${topicId.replace('_', ' ').toUpperCase()}</strong></small>
+                </div>
+                <div class="card-body p-2">
+                    <div id="wc_${topicId}" style="width:100%;height:150px;"></div>
+                </div>
+            </div>
+        `;
+        container.appendChild(cloudDiv);
+        
+        // Render word cloud using ECharts
+        const wordChart = echarts.init(document.getElementById(`wc_${topicId}`));
+        const wordData = words.map(w => ({
+            name: w.word || 'unknown',
+            value: Math.max(w.word_prob || w.probability || 0.001, 0.001)
+        }));
+        
+        wordChart.setOption({
+            series: [{
+                type: 'wordCloud',
+                gridSize: 8,
+                sizeRange: [10, 24],
+                rotationRange: [-30, 30],
+                textStyle: {
+                    color: () => `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`
+                },
+                data: wordData
+            }]
+        });
+    });
+}
+
+function retrainModel() {
+    if (confirm('Retrain this topic model? This will create a new version.')) {
+        fetch("{{ url_for('train_topic_model_api', repo_id=repo.repo_id) }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                num_topics: {{ model.num_topics }},
+                num_words_per_topic: {{ model.num_words_per_topic }},
+                max_df: 0.8,
+                min_df: 2,
+                max_features: 1000
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Retraining started! Check back in a few minutes.');
+            location.reload();
+        })
+        .catch(error => {
+            alert('Error starting retraining: ' + error.message);
+        });
+    }
+}
+
+function exportModel() {
+    // Download JSON from backend export API for parity with server-side export structure
+    const url = "{{ url_for('topic_model_export_api', repo_id=repo.repo_id, model_id=model.model_id) }}";
+    fetch(url)
+        .then(resp => {
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            return resp.json();
+        })
+        .then(data => {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const dl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = dl;
+            a.download = `augur_topic_model_{{ model.model_id|string|truncate(8, true, "") }}_{{ model.training_end_time.strftime('%Y%m%d') if model.training_end_time else 'unknown' }}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(dl);
+            alert('Model JSON exported from server and downloaded.');
+        })
+        .catch(err => alert('Export failed: ' + err.message));
+}
+
+
+</script>

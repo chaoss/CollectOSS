@@ -234,5 +234,11 @@ Locking request loop:
 """
 @app.route('/requests/report/wait/<id>')
 def wait_for_report_request(id):
-    requestReports(id)
+    # Initialize report_requests for this id if it doesn't exist
+    # Return the report request data (or empty images dict if not populated)
+    if id not in report_requests:
+        report_requests[id] = {"images": {}}
+    elif "images" not in report_requests[id]:
+        report_requests[id]["images"] = {}
+    
     return jsonify(report_requests[id])

@@ -1,0 +1,55 @@
+{
+  "_file_description": "Topic Modeling Configuration File Template - Copy to config.json and modify as needed. If config.json does not exist, system uses database configuration. Environment variables supported: ${VAR_NAME:-default_value}",
+  
+  "Clustering_Task": {
+    "_section_description": "Topic modeling parameters for NMF model. All _comment fields are ignored by code and only for documentation.",
+    
+    "_num_topics_comment": "Number of topics to discover. Range: 1-50 (recommended: 5-15). More topics = more granular but less coherent. Adjust based on repo size.",
+    "num_topics": 8,
+    
+    "_min_df_comment": "Minimum document frequency for word filtering. Words must appear in at least this many documents. Higher = filters more rare words. Integer (1-10) or float (0.0-1.0).",
+    "min_df": 2,
+    
+    "_max_df_comment": "Maximum document frequency. Words in more than this fraction are filtered (removes common words). Range: 0.0-1.0 (recommended: 0.7-0.9).",
+    "max_df": 0.8,
+    
+    "_max_features_comment": "Maximum vocabulary size. Higher = more words but slower. Range: 100-10000 (recommended: 500-2000). Adjust based on message count.",
+    "max_features": 1000,
+    
+    "_num_words_per_topic_comment": "Number of top words shown per topic. Range: 5-20 (recommended: 10-15).",
+    "num_words_per_topic": 12,
+    
+    "_num_clusters_comment": "K-means cluster count (separate from topics). Range: 2-20 (recommended: 3-10). Usually slightly less than num_topics.",
+    "num_clusters": 5,
+    
+    "_random_state_comment": "Random seed for reproducibility. Use any integer.",
+    "random_state": 42,
+    
+    "_coherence_metric_comment": "Quality metric: 'c_v' (recommended), 'u_mass', 'c_uci', 'c_npmi'. Higher coherence = better quality.",
+    "coherence_metric": "c_v",
+    
+    "_retrain_days_comment": "Auto-retrain if model older than this (days). Range: 30-365 (recommended: 60-180). Active repos: 60-90, inactive: 180-365.",
+    "retrain_days": 90,
+    
+    "_retrain_msg_growth_comment": "Auto-retrain if messages grow by this fraction. Range: 0.1-1.0 (recommended: 0.2-0.5). Example: 0.2 = 20% growth triggers retrain.",
+    "retrain_msg_growth": 0.2,
+    
+    "_quality_threshold_comment": "Minimum coherence score. Models below this retrain. Range: 0.0-1.0 (recommended: 0.3-0.6). 0.3-0.4=acceptable, 0.4-0.6=good, >0.6=excellent.",
+    "quality_threshold": 0.3,
+    
+    "_output_dir_comment": "Storage location. Only 'database' supported. All data stored in database. File storage deprecated.",
+    "output_dir": "database",
+    
+    "_examples": {
+      "_small_repo": "Messages < 500: num_topics=5, min_df=1, max_df=0.9, max_features=500, retrain_days=180, retrain_msg_growth=0.5",
+      "_large_repo": "Messages > 5000: num_topics=15, min_df=3, max_df=0.7, max_features=2000, retrain_days=60, retrain_msg_growth=0.2"
+    },
+    
+    "_notes": [
+      "File is optional - missing file uses database config",
+      "Parameters auto-adjusted for small datasets",
+      "Environment variables: ${VAR_NAME:-default}",
+      "Check logs for parameter warnings"
+    ]
+  }
+}
