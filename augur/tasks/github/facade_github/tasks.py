@@ -5,7 +5,6 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.application.db.models import Contributor
 from augur.tasks.github.facade_github.core import *
 from augur.application.db.lib import execute_sql, get_contributor_aliases_by_email, get_unresolved_commit_emails_by_name, get_contributors_by_full_name, get_repo_by_repo_git, batch_insert_contributors
 from augur.application.db.lib import get_session, execute_session_query

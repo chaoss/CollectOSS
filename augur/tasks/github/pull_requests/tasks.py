@@ -11,12 +11,12 @@ from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor, Repo
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.application.db.lib import get_session, get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id, batch_insert_contributors
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id, batch_insert_contributors
 from augur.application.db.util import execute_session_query
 from ..messages import process_github_comment_contributors
 from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs, get_core_data_last_collected
 
-from typing import Generator, List, Dict
+from typing import List
 
 
 platform_id = 1
@@ -52,15 +52,15 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
                 total_count += len(all_data)
                 all_data.clear()
 
-        if len(all_data):
+        if all_data:
             process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, augur_db)
             total_count += len(all_data)
 
         if total_count > 0:
-            return total_count
-        else:
             logger.debug(f"{owner}/{repo} has no pull requests")
             return 0
+
+        return total_count
         
         
     
@@ -180,30 +180,6 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
     pr_metadata_string_fields = ["pr_src_meta_label"]
     augur_db.insert_data(pr_metadata_dicts, PullRequestMeta,
                         pr_metadata_natural_keys, string_fields=pr_metadata_string_fields)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def process_pull_request_review_contributor(pr_review: dict, tool_source: str, tool_version: str, data_source: str):
