@@ -279,23 +279,28 @@ class FacadeHelper():
             operation_description = cmd
 
         try:
+            # Common options for all subprocess.run calls
+            run_options = {
+                'shell': True,
+                'timeout': timeout,
+                'check': False
+            }
+
+            # Add capture_output-specific options
             if capture_output:
-                result = subprocess.run(
-                    cmd, shell=True,
-                    capture_output=True,
-                    encoding='utf-8', errors='replace',
-                    timeout=timeout,
-                    check=False
-                )
+                run_options['capture_output'] = True
+                run_options['encoding'] = 'utf-8'
+                run_options['errors'] = 'replace'
+            else:
+                run_options['stdout'] = subprocess.DEVNULL
+                run_options['stderr'] = subprocess.DEVNULL
+
+            result = subprocess.run(cmd, **run_options)
+
+            # Return appropriate output based on capture_output flag
+            if capture_output:
                 return result.returncode, result.stdout.strip()
             else:
-                result = subprocess.run(
-                    cmd, shell=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    timeout=timeout,
-                    check=False
-                )
                 return result.returncode, ''
         except subprocess.TimeoutExpired:
             self.log_activity('Error', f'Git operation timed out: {operation_description}')
