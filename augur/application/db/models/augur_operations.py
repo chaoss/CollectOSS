@@ -1012,7 +1012,7 @@ class UserSessionToken(Base):
     token = Column(String, primary_key=True, nullable=False)
     user_id = Column(ForeignKey("augur_operations.users.user_id", name="user_session_token_user_id_fkey"), nullable=False)
     expiration = Column(BigInteger)
-    application_id = Column(ForeignKey("augur_operations.client_applications.id", name="user_session_token_application_id_fkey"), nullable=False)
+    application_id = Column(ForeignKey("augur_operations.client_applications.id", name="user_session_token_application_id_fkey"))
     created_at = Column(BigInteger)
 
     user = relationship("User", back_populates="tokens")
