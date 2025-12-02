@@ -7,6 +7,8 @@ from datetime import datetime
 from augur.tasks.util.collection_state import CollectionState
 from augur.application.db.util import execute_session_query
 from augur.application.db.lib import bulk_insert_dicts
+from augur.application.db.models import HistoricalRepoURLs
+from sqlalchemy.exc import IntegrityError
 
 
 class RepoMovedException(Exception):
@@ -29,12 +31,24 @@ def update_repo_with_dict(repo,new_dict,logger):
     """
     to_insert = dict(repo.__dict__)
     del to_insert['_sa_instance_state']
+
+    old_url = to_insert["repo_git"]
+    repo_id = to_insert["repo_id"]
+
+    with DatabaseSession(logger) as session:
+        previous_alias = HistoricalRepoURLs(repo_id=repo_id, git_url=old_url)
+        try:
+            result = session.add(previous_alias)
+            session.commit()
+        except IntegrityError as e: #Unique violation
+            session.rollback()    
+
     to_insert.update(new_dict)
 
     result = bulk_insert_dicts(logger, to_insert, Repo, ['repo_id'])
 
     url = to_insert['repo_git']
-    logger.info(f"Updated repo for {url}\n")
+    logger.info(f"Updated repo {old_url} to {url} and set alias\n")
 
 
 
