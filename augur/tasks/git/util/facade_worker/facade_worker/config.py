@@ -298,10 +298,7 @@ class FacadeHelper():
             result = subprocess.run(cmd, **run_options)
 
             # Return appropriate output based on capture_output flag
-            if capture_output:
-                return result.returncode, result.stdout.strip()
-            else:
-                return result.returncode, ''
+            return result.returncode, (result.stdout.strip() if capture_output else '')
         except subprocess.TimeoutExpired:
             self.log_activity('Error', f'Git operation timed out: {operation_description}')
             return -1, ''
