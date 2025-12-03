@@ -267,7 +267,7 @@ class User(Base):
     tool_version = Column(String)
     data_source = Column(String)
     data_collection_date = Column(TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP"))
-
+    email_verified = Column(Boolean, server_default='false', nullable=False)
 
     groups = relationship("UserGroup", back_populates="user")
     tokens = relationship("UserSessionToken", back_populates="user")
