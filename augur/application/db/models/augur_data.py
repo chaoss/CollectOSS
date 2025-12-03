@@ -1339,7 +1339,14 @@ class Commit(Base):
     cmt_whitespace = Column(Integer, nullable=False)
     cmt_filename = Column(String, nullable=False)
     cmt_date_attempted = Column(TIMESTAMP(precision=0), nullable=False)
-    cmt_ght_author_id = Column(ForeignKey("augur_data.contributors.cntrb_id", name="cmt_ght_author_cntrb_id_fk"))
+    cmt_ght_author_id = Column(ForeignKey(
+        "augur_data.contributors.cntrb_id",
+        name="cmt_ght_author_cntrb_id_fk",
+        onupdate="CASCADE",
+        ondelete="RESTRICT",
+        initially="DEFERRED",
+        deferrable=True
+    ))
     cmt_ght_committer_id = Column(Integer)
     cmt_ght_committed_at = Column(TIMESTAMP(precision=0))
     cmt_committer_timestamp = Column(TIMESTAMP(True, 0))
@@ -1715,7 +1722,7 @@ class PullRequest(Base):
         UniqueConstraint("repo_id", "pr_src_id", name="unique-pr"),
         UniqueConstraint("repo_id", "pr_src_id", name="unique-prx"),
         UniqueConstraint("pr_url", name="pull-request-insert-unique"),
-        Index("id_node", "pr_src_id", "pr_src_node_id"),
+        Index("id_node", text("pr_src_id DESC"), text("pr_src_node_id DESC NULLS LAST")),
         Index(
             "pull_requests_idx_repo_id_data_datex", "repo_id", "data_collection_date"
         ),
@@ -2020,7 +2027,7 @@ class RepoDepsLibyear(Base):
 class RepoDepsScorecard(Base):
     __tablename__ = "repo_deps_scorecard"
     __table_args__ = (
-        UniqueConstraint("repo_id","name", name="deps_scorecard_new_unique"),
+        UniqueConstraint("repo_id","name", "data_collection_date", name="deps_scorecard_new_unique"),
         {"schema": "augur_data"}
     )
 
@@ -3080,7 +3087,7 @@ class PullRequestEvent(Base):
 class PullRequestFile(Base):
     __tablename__ = "pull_request_files"
     __table_args__ = (
-        UniqueConstraint("pull_request_id", name="pr_id_pr_files"),
+        Index("pr_id_pr_files","pull_request_id"),
         UniqueConstraint("pull_request_id", "repo_id", "pr_file_path", name="prfiles_unique"),
         {
             "schema": "augur_data",
@@ -3380,7 +3387,7 @@ class PullRequestReviewer(Base):
 class PullRequestReview(Base):
     __tablename__ = "pull_request_reviews"
     __table_args__ = (
-        UniqueConstraint("pr_review_src_id", "tool_source"),
+        UniqueConstraint("pr_review_src_id", "tool_source", name="pr_review_unique"),
         Index("pr_id_pr_reviews", "pull_request_id"),
         {"schema": "augur_data"},
     )
