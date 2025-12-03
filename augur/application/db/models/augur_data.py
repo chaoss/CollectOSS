@@ -163,6 +163,7 @@ class Contributor(Base):
         Index("contributors_idx_cntrb_email3", "cntrb_email"),
         Index("cntrb_canonica-idx11", "cntrb_canonical"),
         Index("cntrb_login_platform_index", "cntrb_login"),
+        Index("gh_login", text("gh_login ASC NULLS FIRST")),
 
 
         # added
