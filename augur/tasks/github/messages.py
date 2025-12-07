@@ -137,7 +137,7 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
             logger.info(f"{task_name}: PR or issue comment url of {comment_url} returned 404. Skipping.")
             skipped_urls += 1
        
-        if len(all_data) >= 1000:
+        if len(all_data) >= 200:
             process_messages(all_data, task_name, repo_id, logger, augur_db, issue_url_to_id_map, pr_issue_url_to_id_map)
             all_data.clear()
 
