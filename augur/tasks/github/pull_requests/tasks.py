@@ -403,7 +403,8 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
             logger.info(f"{owner}/{repo}: Inserting pr reviews of length: {len(pr_reviews)}")
             pr_review_natural_keys = ["pr_review_src_id",]
-            augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys)
+            pr_review_string_fields = ["pr_review_body",]
+            augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys, string_fields=pr_review_string_fields)
 
 
 
