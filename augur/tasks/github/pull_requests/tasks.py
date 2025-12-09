@@ -355,7 +355,8 @@ def _flush_pr_review_batch(augur_db, contributors: list, pr_reviews: list, logge
     if pr_reviews:
         logger.info(f"{owner}/{repo}: Inserting {len(pr_reviews)} pr reviews")
         pr_review_natural_keys = ["pr_review_src_id"]
-        augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys)
+        pr_review_string_fields = ["pr_review_body"]
+        augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys, string_fields=pr_review_string_fields)
 
 
 @celery.task(base=AugurSecondaryRepoCollectionTask)
