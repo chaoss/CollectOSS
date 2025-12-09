@@ -11,12 +11,12 @@ from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_
 from augur.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor, Repo
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.application.db.lib import get_session, get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id, batch_insert_contributors
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id, batch_insert_contributors
 from augur.application.db.util import execute_session_query
 from ..messages import process_github_comment_contributors
 from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs, get_core_data_last_collected
 
-from typing import Generator, List, Dict
+from typing import List
 
 
 platform_id = 1
@@ -182,30 +182,6 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
                         pr_metadata_natural_keys, string_fields=pr_metadata_string_fields)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def process_pull_request_review_contributor(pr_review: dict, tool_source: str, tool_version: str, data_source: str):
 
     # get contributor data and set pr cntrb_id
@@ -220,7 +196,27 @@ def process_pull_request_review_contributor(pr_review: dict, tool_source: str, t
 
 @celery.task(base=AugurSecondaryRepoCollectionTask)
 def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -> None:
+    """
+    Collect pull request review comments for a repository from the GitHub API.
 
+    Fetches review comments and inserts them into the database along with
+    their associated contributors. Uses batched processing to limit memory
+    usage - processes comments in batches of ~1000 instead of accumulating all
+    comments in memory before insertion.
+
+    Args:
+        repo_git: The repository's git URL (e.g., 'https://github.com/owner/repo').
+        full_collection: If True, collects all review comments. If False, only
+            collects comments created since the last secondary collection.
+
+    Returns:
+        None. Data is inserted directly into the database.
+
+    Note:
+        - Inherits error handling from AugurSecondaryRepoCollectionTask base class.
+        - Contributors are deduplicated within each batch before insertion.
+        - Uses ON CONFLICT upsert logic to handle duplicate messages gracefully.
+    """
     owner, repo = get_owner_repo(repo_git)
 
     review_msg_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/comments"
@@ -232,9 +228,9 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
 
     if not full_collection:
         last_collected_date = get_secondary_data_last_collected(repo_id)
-        
+
         if last_collected_date:
-            # subtract 2 days to ensure all data is collected 
+            # Subtract 2 days to ensure all data is collected
             core_data_last_collected = (last_collected_date - timedelta(days=2)).replace(tzinfo=timezone.utc)
             review_msg_url += f"?since={core_data_last_collected.isoformat()}"
         else:
@@ -242,11 +238,8 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
 
     pr_reviews = get_pull_request_reviews_by_repo_id(repo_id)
 
-    # maps the github pr_review id to the auto incrementing pk that augur stores as pr_review id
-    pr_review_id_mapping = {}
-    for review in pr_reviews:
-        pr_review_id_mapping[review.pr_review_src_id] = review.pr_review_id
-
+    # Build mapping once: github pr_review_src_id -> augur pr_review_id
+    pr_review_id_mapping = {review.pr_review_src_id: review.pr_review_id for review in pr_reviews}
 
     tool_source = "Pr review comment task"
     tool_version = "2.0"
@@ -255,76 +248,72 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
     key_auth = GithubRandomKeyAuth(logger)
     github_data_access = GithubDataAccess(key_auth, logger)
 
-    all_raw_pr_review_messages = list(github_data_access.paginate_resource(review_msg_url))
-
+    # Batch processing: accumulate comments until batch size reached, then flush
+    COMMENT_BATCH_SIZE = 1000
     contributors = []
-    for comment in all_raw_pr_review_messages:
-        
+    pr_review_comment_dicts = []
+    pr_review_msg_mapping_data = {}
+    total_refs_inserted = 0
+
+    # Single-pass extraction: get both contributor and comment data together
+    for comment in github_data_access.paginate_resource(review_msg_url):
+        # Extract contributor
         _, contributor = process_github_comment_contributors(comment, tool_source, tool_version, data_source)
         if contributor is not None:
             contributors.append(contributor)
 
-    logger.info(f"{owner}/{repo} Pr review messages: Inserting {len(contributors)} contributors")
-    batch_insert_contributors(logger, contributors)
+        # Extract message data (only if it has a pr review id)
+        if comment.get("pull_request_review_id"):
+            pr_review_comment_dicts.append(
+                extract_needed_message_data(comment, platform_id, repo_id, tool_source, tool_version, data_source)
+            )
+            # Map github message id to raw comment data for later ref creation
+            pr_review_msg_mapping_data[comment["id"]] = comment
 
+        # Flush batch when threshold reached (check both to prevent unbounded growth)
+        if len(pr_review_comment_dicts) >= COMMENT_BATCH_SIZE or len(contributors) >= COMMENT_BATCH_SIZE:
+            refs_inserted = _flush_pr_review_comment_batch(
+                logger, contributors, pr_review_comment_dicts, pr_review_msg_mapping_data,
+                pr_review_id_mapping, repo_id, tool_version, data_source, owner, repo
+            )
+            total_refs_inserted += refs_inserted
+            contributors.clear()
+            pr_review_comment_dicts.clear()
+            pr_review_msg_mapping_data.clear()
 
-    pr_review_comment_dicts = []
-    pr_review_msg_mapping_data = {}
-
-    pr_review_comments_len = len(all_raw_pr_review_messages)
-    for comment in all_raw_pr_review_messages:
-
-        # pull_request_review_id is required to map it to the correct pr review
-        if not comment["pull_request_review_id"]:
-            continue
-
-        pr_review_comment_dicts.append(
-                                extract_needed_message_data(comment, platform_id, repo_id, tool_source, tool_version, data_source)
+    # Flush any remaining data
+    if pr_review_comment_dicts:
+        refs_inserted = _flush_pr_review_comment_batch(
+            logger, contributors, pr_review_comment_dicts, pr_review_msg_mapping_data,
+            pr_review_id_mapping, repo_id, tool_version, data_source, owner, repo
         )
+        total_refs_inserted += refs_inserted
 
-        # map github message id to the data that maps it to the pr review
-        github_msg_id = comment["id"]
-        pr_review_msg_mapping_data[github_msg_id] = comment
-
-
-
-    logger.info(f"Inserting {len(pr_review_comment_dicts)} pr review comments")
-    message_natural_keys = ["platform_msg_id", "pltfrm_id"]
-    message_return_columns = ["msg_id", "platform_msg_id"]
-    message_string_fields = ["msg_text"]
-    message_return_data = bulk_insert_dicts(logger, pr_review_comment_dicts, Message, message_natural_keys, 
-                                            return_columns=message_return_columns, string_fields=message_string_fields)
-    if message_return_data is None:
-        return
+    if total_refs_inserted == 0:
+        logger.debug(f"{owner}/{repo} No pr review comments found for repo")
+    else:
+        logger.info(f"{owner}/{repo}: Completed - collected {total_refs_inserted} pr review comment refs total")
 
 
-    pr_review_message_ref_insert_data = []
-    for data in message_return_data:
+def _flush_contributors(logger, contributors: list, owner: str, repo: str, context: str) -> None:
+    """
+    Deduplicate and insert contributors for a batch.
 
-        augur_msg_id = data["msg_id"]
-        github_msg_id = data["platform_msg_id"]
+    Shared helper used by both PR review and PR review comment flush functions.
+    Handles deduplication via remove_duplicate_dicts() and bulk insert via
+    batch_insert_contributors().
 
-        comment = pr_review_msg_mapping_data[github_msg_id]
-        comment["msg_id"] = augur_msg_id
-
-        github_pr_review_id = comment["pull_request_review_id"]
-
-        try:
-            augur_pr_review_id = pr_review_id_mapping[github_pr_review_id]
-        except KeyError:
-            logger.warning(f"{owner}/{repo}: Could not find related pr review. We were searching for pr review with id: {github_pr_review_id}")
-            continue
-
-        pr_review_message_ref = extract_pr_review_message_ref_data(comment, augur_pr_review_id, github_pr_review_id, repo_id, tool_version, data_source)
-        pr_review_message_ref_insert_data.append(pr_review_message_ref)
-
-
-    logger.info(f"Inserting {len(pr_review_message_ref_insert_data)} pr review refs")
-    pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
-    pr_review_msg_ref_string_columns = ["pr_review_msg_diff_hunk"]
-    bulk_insert_dicts(logger, pr_review_message_ref_insert_data, PullRequestReviewMessageRef, pr_comment_ref_natural_keys, string_fields=pr_review_msg_ref_string_columns)
-
-
+    Args:
+        logger: Logger instance for status messages.
+        contributors: List of contributor dicts to insert.
+        owner: Repository owner (for log messages).
+        repo: Repository name (for log messages).
+        context: Description of what's being processed (e.g., "PR reviews", "PR review comments").
+    """
+    if contributors:
+        unique_contributors = remove_duplicate_dicts(contributors)
+        logger.info(f"{owner}/{repo} {context}: Inserting {len(unique_contributors)} contributors")
+        batch_insert_contributors(logger, unique_contributors)
 
 
 def _flush_pr_review_batch(augur_db, contributors: list, pr_reviews: list, logger, owner: str, repo: str) -> None:
@@ -346,16 +335,98 @@ def _flush_pr_review_batch(augur_db, contributors: list, pr_reviews: list, logge
     Returns:
         None. Lists are NOT cleared by this function - caller must clear them.
     """
-    if contributors:
-        # Remove duplicates within the batch before inserting
-        unique_contributors = remove_duplicate_dicts(contributors)
-        logger.info(f"{owner}/{repo} Pr reviews: Inserting {len(unique_contributors)} contributors")
-        augur_db.insert_data(unique_contributors, Contributor, ["cntrb_id"])
+    _flush_contributors(logger, contributors, owner, repo, "PR reviews")
 
     if pr_reviews:
         logger.info(f"{owner}/{repo}: Inserting {len(pr_reviews)} pr reviews")
         pr_review_natural_keys = ["pr_review_src_id"]
         augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys)
+
+
+def _flush_pr_review_comment_batch(
+    logger,
+    contributors: list,
+    pr_review_comment_dicts: list,
+    pr_review_msg_mapping_data: dict,
+    pr_review_id_mapping: dict,
+    repo_id: int,
+    tool_version: str,
+    data_source: str,
+    owner: str,
+    repo: str
+) -> int:
+    """
+    Insert accumulated PR review comment batch data into the database.
+
+    Handles contributor deduplication before insertion, bulk inserts both
+    contributors and messages, then creates the message-to-review reference links.
+    Uses ON CONFLICT upsert logic via bulk_insert_dicts().
+
+    Args:
+        logger: Logger instance for status messages.
+        contributors: List of contributor dicts to insert. Will be deduplicated
+            using remove_duplicate_dicts() before insertion.
+        pr_review_comment_dicts: List of message dicts to insert into Message table.
+        pr_review_msg_mapping_data: Dict mapping github_msg_id to raw comment data
+            (needed for creating review refs after message insert).
+        pr_review_id_mapping: Dict mapping github pr_review_src_id to augur pr_review_id.
+        repo_id: The repository ID.
+        tool_version: Tool version string for metadata.
+        data_source: Data source string for metadata.
+        owner: Repository owner (for log messages).
+        repo: Repository name (for log messages).
+
+    Returns:
+        Number of PR review message refs successfully inserted.
+    """
+    _flush_contributors(logger, contributors, owner, repo, "PR review comments")
+
+    if not pr_review_comment_dicts:
+        return 0
+
+    logger.info(f"{owner}/{repo}: Inserting {len(pr_review_comment_dicts)} pr review comments")
+    message_natural_keys = ["platform_msg_id", "pltfrm_id"]
+    message_return_columns = ["msg_id", "platform_msg_id"]
+    message_string_fields = ["msg_text"]
+    message_return_data = bulk_insert_dicts(
+        logger, pr_review_comment_dicts, Message, message_natural_keys,
+        return_columns=message_return_columns, string_fields=message_string_fields
+    )
+
+    if message_return_data is None:
+        return 0
+
+    pr_review_message_ref_insert_data = []
+    for data in message_return_data:
+        augur_msg_id = data["msg_id"]
+        github_msg_id = data["platform_msg_id"]
+
+        comment = pr_review_msg_mapping_data[github_msg_id]
+        comment["msg_id"] = augur_msg_id
+
+        github_pr_review_id = comment["pull_request_review_id"]
+
+        try:
+            augur_pr_review_id = pr_review_id_mapping[github_pr_review_id]
+        except KeyError:
+            logger.warning(f"{owner}/{repo}: Could not find related pr review. We were searching for pr review with id: {github_pr_review_id}")
+            continue
+
+        pr_review_message_ref = extract_pr_review_message_ref_data(
+            comment, augur_pr_review_id, github_pr_review_id, repo_id, tool_version, data_source
+        )
+        pr_review_message_ref_insert_data.append(pr_review_message_ref)
+
+    if pr_review_message_ref_insert_data:
+        logger.info(f"{owner}/{repo}: Inserting {len(pr_review_message_ref_insert_data)} pr review refs")
+        pr_comment_ref_natural_keys = ["pr_review_msg_src_id"]
+        pr_review_msg_ref_string_columns = ["pr_review_msg_diff_hunk"]
+        bulk_insert_dicts(
+            logger, pr_review_message_ref_insert_data, PullRequestReviewMessageRef,
+            pr_comment_ref_natural_keys, string_fields=pr_review_msg_ref_string_columns
+        )
+
+    return len(pr_review_message_ref_insert_data)
 
 
 @celery.task(base=AugurSecondaryRepoCollectionTask)
