@@ -29,6 +29,7 @@ import os
 import json
 import logging
 import random
+import subprocess
 from urllib.parse import urlparse
 import sqlalchemy as s
 from sqlalchemy.exc import OperationalError
@@ -254,3 +255,50 @@ class FacadeHelper():
             return
     def inc_repos_processed(self):
         self.repos_processed += 1
+
+    def run_git_command(self, cmd: str, timeout: int, capture_output: bool = False, operation_description: str = None) -> tuple:
+        """
+        Execute a git command with timeout handling.
+
+        This method provides a unified interface for running git commands with
+        consistent timeout handling and error logging across all facade operations.
+
+        Args:
+            cmd: The git command to execute
+            timeout: Timeout in seconds
+            capture_output: If True, capture stdout/stderr; if False, discard them
+            operation_description: Human-readable description for error logging
+                                 (defaults to cmd if not provided)
+
+        Returns:
+            tuple: (return_code, stdout_content)
+                   return_code is -1 on timeout
+                   stdout_content is empty string if capture_output=False
+        """
+        if operation_description is None:
+            operation_description = cmd
+
+        try:
+            # Common options for all subprocess.run calls
+            run_options = {
+                'shell': True,
+                'timeout': timeout,
+                'check': False
+            }
+
+            # Add capture_output-specific options
+            if capture_output:
+                run_options['capture_output'] = True
+                run_options['encoding'] = 'utf-8'
+                run_options['errors'] = 'replace'
+            else:
+                run_options['stdout'] = subprocess.DEVNULL
+                run_options['stderr'] = subprocess.DEVNULL
+
+            result = subprocess.run(cmd, **run_options)
+
+            # Return appropriate output based on capture_output flag
+            return result.returncode, (result.stdout.strip() if capture_output else '')
+        except subprocess.TimeoutExpired:
+            self.log_activity('Error', f'Git operation timed out: {operation_description}')
+            return -1, ''

@@ -121,7 +121,7 @@ def trim_commits_post_analysis_facade_task(repo_git):
     repo_loc = (f"{absolute_path}/.git")
     # Grab the parents of HEAD
 
-    parent_commits = get_parent_commits_set(repo_loc)
+    parent_commits = get_parent_commits_set(repo_loc, facade_helper)
 
     # Grab the existing commits from the database
     existing_commits = get_existing_commits_set(repo_id)
@@ -244,7 +244,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     repo_loc = (f"{absolute_path}/.git")
     # Grab the parents of HEAD
 
-    parent_commits = get_parent_commits_set(repo_loc)
+    parent_commits = get_parent_commits_set(repo_loc, facade_helper)
 
     # Grab the existing commits from the database
     existing_commits = get_existing_commits_set(repo_id)
@@ -255,7 +255,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     facade_helper.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
 
     
-    if missing_commits or repo_id is None:
+    if not missing_commits or repo_id is None:
         #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
         return
     
