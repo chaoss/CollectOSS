@@ -153,13 +153,10 @@ class Contributor(Base):
     __tablename__ = "contributors"
     __table_args__ = (
         # add uniques explitcitly, they were inline before
-        UniqueConstraint('gh_login', name='GH-UNIQUE-C', initially="DEFERRED", deferrable=True),
         UniqueConstraint('gl_id', name='GL-UNIQUE-B', initially="DEFERRED", deferrable=True),
 
         # unique key for gitlab users on insertion
         UniqueConstraint('gl_username', name='GL-UNIQUE-C', initially="DEFERRED", deferrable=True),
-        UniqueConstraint('cntrb_login', name='GL-cntrb-LOGIN-UNIQUE'),
-
 
         # changed from inline to not inline
         Index("cnt-fullname", "cntrb_full_name", postgresql_using='hash'),
