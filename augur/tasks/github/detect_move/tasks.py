@@ -29,7 +29,10 @@ def detect_github_repo_move_core(repo_git : str) -> None:
         try:
             ping_github_for_repo_move(session, key_auth, repo, logger)
         except RepoMovedException as e:
-            raise Retry(e)
+            if e.new_url is not None:
+                raise Retry(e.new_url)
+            else:
+                raise Reject(e)
         except RepoGoneException as e:
             raise Reject(e)
 

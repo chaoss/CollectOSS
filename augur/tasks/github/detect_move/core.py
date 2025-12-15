@@ -12,7 +12,9 @@ from sqlalchemy.exc import IntegrityError
 
 
 class RepoMovedException(Exception):
-    pass
+    def __init__(self, message, new_url=None): 
+        super().__init__(message)
+        self.new_url = new_url 
 
 class RepoGoneException(Exception):
     pass
@@ -49,6 +51,7 @@ def update_repo_with_dict(repo,new_dict,logger):
 
     url = to_insert['repo_git']
     logger.info(f"Updated repo {old_url} to {url} and set alias\n")
+    return url
 
 
 
@@ -104,9 +107,9 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
             'description': f"(Originally hosted at {url}) {old_description}"
         }
 
-        update_repo_with_dict(repo, repo_update_dict, logger)
+        new_url = update_repo_with_dict(repo, repo_update_dict, logger)
 
-        raise RepoMovedException("ERROR: Repo has moved! Resetting Collection!")
+        raise RepoMovedException("ERROR: Repo has moved! Resetting Collection!", new_url=new_url)
     
     #Mark as ignore if 404
     if response_from_gh.status_code == 404:
