@@ -11,6 +11,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     text,
+    Sequence
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import TIMESTAMP
@@ -27,10 +28,8 @@ class SpdxAnnotationType(Base):
 
     annotation_type_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('spdx.annotation_types_annotation_type_id_seq'::regclass)"
-        ),
+        Sequence("annotation_types_annotation_type_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     name = Column(String(255), nullable=False, unique=True)
 
@@ -41,8 +40,8 @@ class SpdxAugurRepoMap(Base):
 
     map_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text("nextval('spdx.augur_repo_map_map_id_seq'::regclass)"),
+        Sequence("augur_repo_map_map_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     dosocs_pkg_id = Column(Integer)
     dosocs_pkg_name = Column(Text)
@@ -56,10 +55,8 @@ class SpdxCreatorType(Base):
 
     creator_type_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('spdx.creator_types_creator_type_id_seq'::regclass)"
-        ),
+        Sequence("creator_types_creator_type_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     name = Column(String(255), nullable=False)
 
@@ -70,10 +67,8 @@ class SpdxDocumentNamespace(Base):
 
     document_namespace_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('spdx.document_namespaces_document_namespace_id_seq'::regclass)"
-        ),
+        Sequence("document_namespaces_document_namespace_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     uri = Column(String(500), nullable=False, unique=True)
 
@@ -92,8 +87,8 @@ class SpdxFile(Base):
 
     file_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text("nextval('spdx.files_file_id_seq'::regclass)"),
+        Sequence("files_file_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     file_type_id = Column(Integer)
     sha256 = Column(String(64), nullable=False, unique=True)
@@ -109,8 +104,8 @@ class SpdxLicense(Base):
 
     license_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text("nextval('spdx.licenses_license_id_seq'::regclass)"),
+        Sequence("licenses_license_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     name = Column(String(255))
     short_name = Column(String(255), nullable=False, unique=True)
@@ -131,8 +126,8 @@ class SpdxPackage(Base):
 
     package_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text("nextval('spdx.packages_package_id_seq'::regclass)"),
+        Sequence("packages_package_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     name = Column(String(255), nullable=False)
     version = Column(String(255), nullable=False)
@@ -183,10 +178,8 @@ class SpdxPackagesFile(Base):
 
     package_file_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('spdx.packages_files_package_file_id_seq'::regclass)"
-        ),
+        Sequence("packages_files_package_file_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     package_id = Column(ForeignKey("spdx.packages.package_id"), nullable=False)
     file_id = Column(ForeignKey("spdx.files.file_id"), nullable=False)
@@ -207,8 +200,8 @@ class SpdxProject(Base):
 
     package_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text("nextval('spdx.projects_package_id_seq'::regclass)"),
+        Sequence("projects_package_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     name = Column(Text, nullable=False)
     homepage = Column(Text, nullable=False)
@@ -221,10 +214,8 @@ class SpdxRelationshipType(Base):
 
     relationship_type_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('spdx.relationship_types_relationship_type_id_seq'::regclass)"
-        ),
+        Sequence("relationship_types_relationship_type_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     name = Column(String(255), nullable=False, unique=True)
 
@@ -244,8 +235,8 @@ class SpdxScanner(Base):
 
     scanner_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text("nextval('spdx.scanners_scanner_id_seq'::regclass)"),
+        Sequence("scanners_scanner_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     name = Column(String(255), nullable=False, unique=True)
 
@@ -256,8 +247,8 @@ class SpdxCreator(Base):
 
     creator_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text("nextval('spdx.creators_creator_id_seq'::regclass)"),
+        Sequence("creators_creator_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     creator_type_id = Column(
         ForeignKey("spdx.creator_types.creator_type_id"), nullable=False
@@ -274,8 +265,8 @@ class SpdxDocument(Base):
 
     document_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text("nextval('spdx.documents_document_id_seq'::regclass)"),
+        Sequence("documents_document_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     document_namespace_id = Column(
         ForeignKey("spdx.document_namespaces.document_namespace_id"),
@@ -302,10 +293,8 @@ class SpdxFileContributor(Base):
 
     file_contributor_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('spdx.file_contributors_file_contributor_id_seq'::regclass)"
-        ),
+        Sequence("file_contributors_file_contributor_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     file_id = Column(ForeignKey("spdx.files.file_id"), nullable=False)
     contributor = Column(Text, nullable=False)
@@ -322,10 +311,8 @@ class SpdxFilesLicense(Base):
 
     file_license_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('spdx.files_licenses_file_license_id_seq'::regclass)"
-        ),
+        Sequence("files_licenses_file_license_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     file_id = Column(ForeignKey("spdx.files.file_id"), nullable=False)
     license_id = Column(ForeignKey("spdx.licenses.license_id"), nullable=False)
@@ -344,8 +331,8 @@ class SpdxFilesScan(Base):
 
     file_scan_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text("nextval('spdx.files_scans_file_scan_id_seq'::regclass)"),
+        Sequence("files_scans_file_scan_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     file_id = Column(ForeignKey("spdx.files.file_id"), nullable=False)
     scanner_id = Column(ForeignKey("spdx.scanners.scanner_id"), nullable=False)
@@ -363,10 +350,8 @@ class SpdxPackagesScan(Base):
 
     package_scan_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('spdx.packages_scans_package_scan_id_seq'::regclass)"
-        ),
+        Sequence("packages_scans_package_scan_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     package_id = Column(ForeignKey("spdx.packages.package_id"), nullable=False)
     scanner_id = Column(ForeignKey("spdx.scanners.scanner_id"), nullable=False)
@@ -381,10 +366,8 @@ class SpdxDocumentsCreator(Base):
 
     document_creator_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('spdx.documents_creators_document_creator_id_seq'::regclass)"
-        ),
+        Sequence("documents_creators_document_creator_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     document_id = Column(ForeignKey("spdx.documents.document_id"), nullable=False)
     creator_id = Column(ForeignKey("spdx.creators.creator_id"), nullable=False)
@@ -402,10 +385,8 @@ class SpdxExternalRef(Base):
 
     external_ref_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('spdx.external_refs_external_ref_id_seq'::regclass)"
-        ),
+        Sequence("external_refs_external_ref_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     document_id = Column(ForeignKey("spdx.documents.document_id"), nullable=False)
     document_namespace_id = Column(
@@ -424,8 +405,8 @@ class SpdxAnnotation(Base):
 
     annotation_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text("nextval('spdx.annotations_annotation_id_seq'::regclass)"),
+        Sequence("annotations_annotation_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     document_id = Column(ForeignKey("spdx.documents.document_id"), nullable=False)
     annotation_type_id = Column(
@@ -453,10 +434,8 @@ class SpdxRelationship(Base):
 
     relationship_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text(
-            "nextval('spdx.relationships_relationship_id_seq'::regclass)"
-        ),
+        Sequence("relationships_relationship_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     left_identifier_id = Column(
         ForeignKey("spdx.identifiers.identifier_id"), nullable=False
@@ -497,8 +476,8 @@ class SpdxIdentifier(Base):
 
     identifier_id = Column(
         Integer,
-        primary_key=True,
-        server_default=text("nextval('spdx.identifiers_identifier_id_seq'::regclass)"),
+        Sequence("identifiers_identifier_id_seq", start=1, schema="spdx"),
+        primary_key=True
     )
     document_namespace_id = Column(
         ForeignKey("spdx.document_namespaces.document_namespace_id"), nullable=False
