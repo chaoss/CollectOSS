@@ -1,5 +1,5 @@
 # encoding: utf-8
-from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey, update, CheckConstraint
+from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey, update, CheckConstraint, Sequence
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.exc import IntegrityError
@@ -96,10 +96,8 @@ class AugurSetting(Base):
 
     id = Column(
         BigInteger,
+        Sequence("augur_settings_id_seq", start=1, schema="augur_operations"),
         primary_key=True,
-        server_default=text(
-            "nextval('augur_operations.augur_settings_id_seq'::regclass)"
-        ),
     )
     setting = Column(String)
     value = Column(String)
@@ -131,10 +129,8 @@ class WorkerHistory(Base):
 
     history_id = Column(
         BigInteger,
+        Sequence("gh_worker_history_history_id_seq", start=1, schema="augur_operations"),
         primary_key=True,
-        server_default=text(
-            "nextval('augur_operations.gh_worker_history_history_id_seq'::regclass)"
-        ),
     )
     repo_id = Column(BigInteger)
     worker = Column(String(255), nullable=False)
@@ -176,10 +172,8 @@ class WorkerOauth(Base):
 
     oauth_id = Column(
         BigInteger,
+        Sequence("worker_oauth_oauth_id_seq", start=1000, schema="augur_operations"),
         primary_key=True,
-        server_default=text(
-            "nextval('augur_operations.worker_oauth_oauth_id_seq'::regclass)"
-        ),
     )
     name = Column(String(255), nullable=False)
     consumer_key = Column(String(255), nullable=False)
