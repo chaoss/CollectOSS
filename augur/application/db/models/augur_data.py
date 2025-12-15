@@ -3388,7 +3388,7 @@ class PullRequestReviewer(Base):
 class PullRequestReview(Base):
     __tablename__ = "pull_request_reviews"
     __table_args__ = (
-        UniqueConstraint("pr_review_src_id", "tool_source", name="pr_review_unique"),
+        UniqueConstraint("pr_review_src_id", name="pr_review_unique"),
         Index("pr_id_pr_reviews", "pull_request_id"),
         {"schema": "augur_data"},
     )
