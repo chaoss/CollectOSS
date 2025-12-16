@@ -38,7 +38,7 @@ def get_release_inf(repo_id, release, tag_only):
             'tag_only': tag_only
         }
     else:
-        if 'tagger' in release['target']:
+        if release['target'] and 'tagger' in release['target']:
 
             tagger = release["target"]["tagger"]
 

@@ -5,7 +5,6 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.application.db.models import Contributor
 from augur.tasks.github.facade_github.core import *
 from augur.application.db.lib import execute_sql, get_contributor_aliases_by_email, get_unresolved_commit_emails_by_name, get_contributors_by_full_name, get_repo_by_repo_git, batch_insert_contributors
 from augur.application.db.lib import get_session, execute_session_query
@@ -252,7 +251,10 @@ def insert_facade_contributors(self, repo_git):
 
     #Execute statement with session.
     result = execute_sql(new_contrib_sql)
-    new_contribs = [dict(row) for row in result.mappings()]
+
+    # Fetch all results immediately to close the database cursor/connection
+    # This prevents holding the connection open during GitHub API calls
+    rows = result.mappings().fetchall()
 
     #print(new_contribs)
 
@@ -262,7 +264,20 @@ def insert_facade_contributors(self, repo_git):
 
     key_auth = GithubRandomKeyAuth(logger)
 
-    process_commit_metadata(logger, key_auth, list(new_contribs), repo_id, platform_id)
+    # Process results in batches to reduce memory usage
+    batch = []
+    BATCH_SIZE = 1000
+
+    for row in rows:
+        batch.append(dict(row))
+
+        if len(batch) >= BATCH_SIZE:
+            process_commit_metadata(logger, key_auth, batch, repo_id, platform_id)
+            batch.clear()
+
+    # Process remaining items in batch
+    if batch:
+        process_commit_metadata(logger, key_auth, batch, repo_id, platform_id)
 
     logger.debug("DEBUG: Got through the new_contribs")
     
@@ -300,10 +315,25 @@ def insert_facade_contributors(self, repo_git):
 
 
     result = execute_sql(resolve_email_to_cntrb_id_sql)
-    existing_cntrb_emails = [dict(row) for row in result.mappings()]
 
-    print(existing_cntrb_emails)
-    link_commits_to_contributor(logger, facade_helper,list(existing_cntrb_emails))
+    # Fetch all results immediately to close the database cursor/connection
+    # This prevents holding the connection open during database UPDATE operations
+    rows = result.mappings().fetchall()
+
+    # Process results in batches to reduce memory usage
+    batch = []
+    BATCH_SIZE = 1000
+
+    for row in rows:
+        batch.append(dict(row))
+
+        if len(batch) >= BATCH_SIZE:
+            link_commits_to_contributor(logger, facade_helper, batch)
+            batch.clear()
+
+    # Process remaining items in batch
+    if batch:
+        link_commits_to_contributor(logger, facade_helper, batch)
 
     return
 
