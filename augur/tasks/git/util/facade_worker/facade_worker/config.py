@@ -132,6 +132,7 @@ class FacadeHelper():
         self.multithreaded = worker_options["multithreaded"]
         self.create_xlsx_summary_files = worker_options["create_xlsx_summary_files"]
         self.facade_contributor_full_recollect = worker_options["facade_contributor_full_recollect"]
+        self.commit_messages = worker_options["commit_messages"]
 
         self.tool_source = "Facade"
         self.data_source = "Git Log"
