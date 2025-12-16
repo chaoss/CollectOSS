@@ -52,15 +52,15 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
                 total_count += len(all_data)
                 all_data.clear()
 
-        if len(all_data):
+        if all_data:
             process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, augur_db)
             total_count += len(all_data)
 
         if total_count > 0:
-            return total_count
-        else:
             logger.debug(f"{owner}/{repo} has no pull requests")
             return 0
+
+        return total_count
         
         
     
