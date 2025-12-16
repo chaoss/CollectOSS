@@ -43,13 +43,15 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
     logger.info(f"Getting pull request commits for repo: {repo.repo_git}")
 
     github_data_access = GithubDataAccess(key_auth, logger)
-        
+
+    BATCH_SIZE = 1000
+    pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
     all_data = []
     for index,pr_info in enumerate(pr_urls):
         logger.info(f'{task_name}: Querying commits for pull request #{index + 1} of {len(pr_urls)}')
 
         commits_url = pr_info['pr_url'] + '/commits?state=all'
-        
+
         if not pr_info.get('pr_url'):
             logger.warning(f"{task_name}: No pr_url found for pull request info: {pr_info}. Skipping.")
             continue
@@ -70,13 +72,17 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
                     'repo_id': repo.repo_id,
                 }
                 all_data.append(pr_commit_row)
+
+                if len(all_data) >= BATCH_SIZE:
+                    logger.info(f"{task_name}: Inserting {len(all_data)} rows")
+                    augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
+                    all_data.clear()
         except UrlNotFoundException:
             logger.info(f"{task_name}: PR with url of {pr_info['pr_url']} returned 404 on commit data. Skipping.")
             continue
-            
+
     if len(all_data) > 0:
         logger.info(f"{task_name}: Inserting {len(all_data)} rows")
-        pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
         augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
             
 
