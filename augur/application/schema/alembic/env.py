@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 import os
 import re
 from pathlib import Path
+# Added for db.config.json support
+import json
+from urllib.parse import quote_plus
 
 load_dotenv()
 
@@ -33,7 +36,39 @@ target_metadata = Base.metadata
 
 # possibly swap sqlalchemy.url with AUGUR_DB env var too
 
-sqlalchemy_url = os.getenv("AUGUR_DB") or config.get_main_option("sqlalchemy.url")
+###########################
+# Need to get database information from db.config.json on bare metal: 
+def sqlalchemy_url_from_db_config() -> str | None:
+    """
+    Reads db.config.json located next to alembic.ini (preferred),
+    falling back to next to this env.py if config_file_name is missing.
+    Returns a SQLAlchemy URL string or None.
+    """
+    # Prefer directory containing alembic.ini
+    if config.config_file_name:
+        base_dir = Path(config.config_file_name).resolve().parent
+    else:
+        base_dir = Path(__file__).resolve().parent
+
+    p = base_dir / "db.config.json"
+    if not p.exists():
+        return None
+
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        user = data["user"]
+        password = quote_plus(data["password"])
+        host = data.get("host", "localhost")
+        port = int(data.get("port", 5432))
+        dbname = data["database_name"]
+        return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
+    except Exception:
+        # If the JSON is malformed or missing keys, fail back to alembic.ini
+        return None
+###########################
+
+
+sqlalchemy_url = os.getenv("AUGUR_DB") or sqlalchemy_url_from_db_config() or config.get_main_option("sqlalchemy.url")
 
 
 VERSIONS_DIR = Path(__file__).parent / "versions"
