@@ -46,8 +46,8 @@ The ``message_insights_worker`` uses a system-level package called OpenMP. You w
 
 Caching System (Redis)
 ----------------------
-* `Linux Installation <https://redis.io/docs/getting-started/installation/install-redis-on-linux/>`__
-* `Mac Installation <https://redis.io/docs/getting-started/installation/install-redis-on-mac-os/>`__
+* `Linux Installation <https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/install-redis-on-linux/>`__
+* `Mac Installation <https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/install-redis-on-mac-os/>`__
 * `Windows Installation <https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/install-redis-on-windows/>`__
 
 Message Broker (RabbitMQ)
