@@ -10,7 +10,6 @@ keyman coordinates API key distribution and rate limit tracking between a centra
 - Round-robin key distribution (random selection)
 - Automatic rate limit tracking and key refresh
 - Support for multiple platforms (GitHub REST/GraphQL/Search, GitLab)
-- Duplicate key prevention
 
 ## Architecture
 

@@ -70,9 +70,7 @@ class KeyOrchestrator:
             self.expired_keys[platform] = {}
             self.invalid_keys[platform] = set()
         else:
-            # Prevent duplicate keys from increasing selection probability
-            if key not in self.fresh_keys[platform]:
-                self.fresh_keys[platform].append(key)
+            self.fresh_keys[platform].append(key)
 
     def unpublish_key(self, key: str, platform: str) -> None:
         """Remove a key from circulation (fresh or expired pool).
