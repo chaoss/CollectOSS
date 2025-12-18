@@ -115,17 +115,20 @@ class BulkGithubEventCollection(GithubEventCollection):
         owner, repo = get_owner_repo(repo_git)
         self.repo_identifier = f"{owner}/{repo}"
 
+        # Build mappings once before processing any events
+        issue_url_to_id_map = self._get_map_from_issue_url_to_id(repo_id)
+        pr_url_to_id_map = self._get_map_from_pr_url_to_id(repo_id)
+
         events = []
         for event in self._collect_events(repo_git, key_auth, since):
             events.append(event)
 
-            # making this a decent size since process_events retrieves all the issues and prs each time
             if len(events) >= 500:
-                self._process_events(events, repo_id)
+                self._process_events(events, repo_id, issue_url_to_id_map, pr_url_to_id_map)
                 events.clear()
     
         if events:
-            self._process_events(events, repo_id)
+            self._process_events(events, repo_id, issue_url_to_id_map, pr_url_to_id_map)
         
     def _collect_events(self, repo_git: str, key_auth, since):
 
@@ -143,7 +146,7 @@ class BulkGithubEventCollection(GithubEventCollection):
             if since and datetime.fromisoformat(event["created_at"].replace("Z", "+00:00")).replace(tzinfo=timezone.utc) < since:
                 return  
 
-    def _process_events(self, events, repo_id):
+    def _process_events(self, events, repo_id, issue_url_to_id_map, pr_url_to_id_map):
 
         issue_events = []
         pr_events = []
@@ -161,18 +164,15 @@ class BulkGithubEventCollection(GithubEventCollection):
         if not_mappable_events:
             self._logger.warning(f"{self.repo_identifier} - {self.task_name}: Unable to map these github events to an issue or pr: {not_mappable_events}")
 
-        self._process_issue_events(issue_events, repo_id)
-        self._process_pr_events(pr_events, repo_id)
+        self._process_issue_events(issue_events, repo_id, issue_url_to_id_map)
+        self._process_pr_events(pr_events, repo_id, pr_url_to_id_map)
 
         update_issue_closed_cntrbs_by_repo_id(repo_id)
 
-    def _process_issue_events(self, issue_events, repo_id):
+    def _process_issue_events(self, issue_events, repo_id, issue_url_to_id_map):
         
         issue_event_dicts = []
         contributors = []
-
-
-        issue_url_to_id_map = self._get_map_from_issue_url_to_id(repo_id)
 
         for event in issue_events:
 
@@ -200,12 +200,10 @@ class BulkGithubEventCollection(GithubEventCollection):
 
         self._insert_issue_events(issue_event_dicts)
 
-    def _process_pr_events(self, pr_events, repo_id):
+    def _process_pr_events(self, pr_events, repo_id, pr_url_to_id_map):
                 
         pr_event_dicts = []
         contributors = []
-
-        pr_url_to_id_map = self._get_map_from_pr_url_to_id(repo_id)
 
         for event in pr_events:
 
