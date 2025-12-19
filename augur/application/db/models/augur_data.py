@@ -1981,7 +1981,7 @@ class RepoDepsLibyear(Base):
     requirement = Column(String)
     type = Column(String)
     package_manager = Column(String)
-    current_verion = Column(String)
+    current_version = Column(String)
     latest_version = Column(String)
     current_release_date = Column(String)
     latest_release_date = Column(String)

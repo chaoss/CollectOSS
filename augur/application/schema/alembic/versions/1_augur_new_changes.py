@@ -644,14 +644,14 @@ def add_materialized_views_13(upgrade=True):
             a.repo_name,
             b.name,
             b.requirement,
-            b.current_verion,
+            b.current_version,
             b.latest_version,
             b.current_release_date,
             b.libyear,
             max(b.data_collection_date) AS max
         FROM augur_data.repo a,
             augur_data.repo_deps_libyear b
-        GROUP BY a.repo_id, a.repo_name, b.name, b.requirement, b.current_verion, b.latest_version, b.current_release_date, b.libyear
+        GROUP BY a.repo_id, a.repo_name, b.name, b.requirement, b.current_version, b.latest_version, b.current_release_date, b.libyear
         ORDER BY a.repo_id, b.requirement; """))
 
         conn.execute(text("""

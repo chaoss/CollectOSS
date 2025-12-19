@@ -28872,7 +28872,7 @@
                   },
                   {
                     "objectType": "TableField_PGSQL",
-                    "name": "current_verion",
+                    "name": "current_version",
                     "type": "varchar",
                     "length": 0,
                     "decimals": 0,
@@ -28882,7 +28882,7 @@
                     "defaultType": "None",
                     "defaultValue": "",
                     "comment": "",
-                    "oldName": "current_verion",
+                    "oldName": "current_version",
                     "typeOID": 1,
                     "fieldObjectType": "",
                     "objectTypeSchema": "",
