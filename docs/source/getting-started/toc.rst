@@ -1,6 +1,6 @@
-==================
+===============
 Getting Started
-==================
+===============
 
 This section of the documentation is a no work experience required walkthrough of the Augur project. By the end, you'll hopefully have a fully functioning local installation of Augur ready to collect data.
 
