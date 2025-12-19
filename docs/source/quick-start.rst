@@ -1,14 +1,20 @@
 Quickstart
 ===============
 
-Select installation instructions from those most closely related to the operating system that you use below. Note that Augur's dependencies do not consistently support python 3.11 at this time. Python 3.8 - Python 3.10 have been tested on each platform.
+Get Augur running in minutes! We offer two straightforward paths:
+
+**Docker Quickstart (Fastest)** - Get started in minutes with Docker or Podman. Requires ~10 GB RAM, 8 CPUs, and 100 GB disk.
+
+**Manual Installation** - For production deployments, development work, or if Docker isn't available on your platform.
+
+Note: Augur's dependencies support Python 3.8 - Python 3.10. Python 3.11+ is not yet fully supported.
 
 .. toctree::
    :maxdepth: 2
 
+   getting-started/using-docker
    getting-started/new-install
    getting-started/dev-osx-install
-   getting-started/using-docker
 
 
 Explanations of Technologies
