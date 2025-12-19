@@ -2906,7 +2906,7 @@ CREATE TABLE "augur_data"."repo_deps_libyear" (
   "requirement" varchar COLLATE "pg_catalog"."default",
   "type" varchar COLLATE "pg_catalog"."default",
   "package_manager" varchar COLLATE "pg_catalog"."default",
-  "current_verion" varchar COLLATE "pg_catalog"."default",
+  "current_version" varchar COLLATE "pg_catalog"."default",
   "latest_version" varchar COLLATE "pg_catalog"."default",
   "current_release_date" varchar COLLATE "pg_catalog"."default",
   "latest_release_date" varchar COLLATE "pg_catalog"."default",

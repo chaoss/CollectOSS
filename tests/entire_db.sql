@@ -1941,7 +1941,7 @@ CREATE TABLE augur_data.repo_deps_libyear (
     requirement character varying,
     type character varying,
     package_manager character varying,
-    current_verion character varying,
+    current_version character varying,
     latest_version character varying,
     current_release_date character varying,
     latest_release_date character varying,
@@ -1983,14 +1983,14 @@ CREATE MATERIALIZED VIEW augur_data.explorer_libyear_detail AS
     a.repo_name,
     b.name,
     b.requirement,
-    b.current_verion,
+    b.current_version,
     b.latest_version,
     b.current_release_date,
     b.libyear,
     max(b.data_collection_date) AS max
    FROM augur_data.repo a,
     augur_data.repo_deps_libyear b
-  GROUP BY a.repo_id, a.repo_name, b.name, b.requirement, b.current_verion, b.latest_version, b.current_release_date, b.libyear
+  GROUP BY a.repo_id, a.repo_name, b.name, b.requirement, b.current_version, b.latest_version, b.current_release_date, b.libyear
   ORDER BY a.repo_id, b.requirement
   WITH NO DATA;
 
@@ -6714,7 +6714,7 @@ COPY augur_data.repo_dependencies (repo_dependencies_id, repo_id, dep_name, dep_
 -- Data for Name: repo_deps_libyear; Type: TABLE DATA; Schema: augur_data; Owner: augur
 --
 
-COPY augur_data.repo_deps_libyear (repo_deps_libyear_id, repo_id, name, requirement, type, package_manager, current_verion, latest_version, current_release_date, latest_release_date, libyear, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
+COPY augur_data.repo_deps_libyear (repo_deps_libyear_id, repo_id, name, requirement, type, package_manager, current_version, latest_version, current_release_date, latest_release_date, libyear, tool_source, tool_version, data_source, data_collection_date) FROM stdin;
 \.
 
 
