@@ -9,8 +9,8 @@ Augur Documentation
 
    getting-started/Welcome
    quick-start
-   deployment/toc
    getting-started/toc
+   deployment/toc
    development-guide/toc
    rest-api/api
    docker/toc
