@@ -78,7 +78,7 @@ If you get stuck, please feel free to [ask for help](https://github.com/chaoss/a
 
 ## Contributing
 
-To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md). Augur is a welcoming community that is open to all, regardless if you're working on your 1000th contribution to open source or your 1st.
+To contribute to Augur, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and the CHAOSS [Code of Conduct]([CODE_OF_CONDUCT.md](https://github.com/chaoss/.github/blob/main/CODE_OF_CONDUCT.md)). Augur is a welcoming community that is open to all, regardless if you're working on your 1000th contribution to open source or your 1st.
 We strongly believe that much of what makes open source so great is the incredible communities it brings together, so we invite you to join us!
 
 ## License, Copyright, and Funding
