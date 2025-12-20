@@ -81,8 +81,7 @@ class KeyClient:
 
         if "wait" in msg:
             raise WaitKeyTimeout(msg["wait"])
-        else:
-            return msg
+        return msg
     
     def request(self, platform: str | None = None) -> str:
         """Request a new key from the orchestrator.
@@ -106,9 +105,7 @@ class KeyClient:
                 msg = self._recv()
                 if "key" in msg:
                     return msg["key"]
-
-                else:
-                    raise Exception(f"Invalid response type: {msg}")
+                raise Exception(f"Invalid response type: {msg}")
             except WaitKeyTimeout as e:
                 self.logger.debug(f"NO FRESH KEYS: sleeping for {e.timeout_seconds} seconds")
                 time.sleep(e.timeout_seconds)
