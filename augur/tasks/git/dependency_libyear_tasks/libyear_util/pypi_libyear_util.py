@@ -17,6 +17,19 @@ def get_pypi_data(name, version=None):
 
 
 def clean_version(version):
+    """
+    Clean version string by keeping only digits and dots.
+    
+    Args:
+        version: Version string or value to clean
+        
+    Returns:
+        str: Cleaned version string with only digits and dots
+    """
+    # Defensive check: ensure version is a string
+    if not isinstance(version, str):
+        return ''
+    
     version = [v for v in version if v.isdigit() or v == '.']
     return ''.join(version)
 
@@ -47,7 +60,12 @@ def get_version(pypi_data, version, lt=False):
 
 
 def handle_upper_limit_dependency(dependency, data):
-    versions = dependency['requirement'].split(',')
+    # Defensive check: ensure requirement is a string before calling string methods
+    requirement = dependency.get('requirement')
+    if not isinstance(requirement, str):
+        return None
+    
+    versions = requirement.split(',')
     upper_limit = clean_version(versions[0])
     release_list = list(data['releases'])
 
@@ -88,18 +106,27 @@ def get_release_date(data, version,logger):
 
 
 def sort_dependency_requirement(dependency,data):
-    if dependency['requirement'] == '' or dependency['requirement'] is None or dependency['requirement'] == '*':
+    # Defensive check: ensure requirement exists and is a string
+    requirement = dependency.get('requirement')
+    
+    # Handle None, empty string, wildcard, or non-string types
+    if requirement is None or requirement == '' or requirement == '*':
+        return None
+    
+    if not isinstance(requirement, str):
+        # Requirement is not a string (e.g., dict, list) - cannot process
         return None
 
-    elif re.search(r'<', dependency['requirement']):
+    # Now safe to use string operations on requirement
+    if re.search(r'<', requirement):
         return handle_upper_limit_dependency(dependency, data)
 
-    elif re.search(r'>=', dependency['requirement']):
+    elif re.search(r'>=', requirement):
         return None
 
     else:
-        # return get_version(data, clean_version(dependency['requirement']))
-        return clean_version(dependency['requirement'])
+        # return get_version(data, clean_version(requirement))
+        return clean_version(requirement)
 
 
 def get_libyear(current_version, current_release_date, latest_version, latest_release_date):

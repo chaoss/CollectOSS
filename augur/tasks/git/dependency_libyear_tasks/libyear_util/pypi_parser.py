@@ -71,24 +71,125 @@ def parse_requirement_txt(file_handle):
     return deps
 
 
-def map_dependencies(info):
-    if type(info) is dict:
+def normalize_pipfile_version(dep_value):
+    """
+    Normalize Pipfile dependency values to a version string suitable for version comparison.
+    
+    Handles multiple Pipfile dependency specification formats:
+    - Simple string: ">=2.0" or "*"
+    - Dict with version: {"version": ">=2.0", "markers": "..."}
+    - Dict with git ref: {"git": "https://...", "ref": "main"}
+    - Dict with only extras/markers: {"extras": ["security"]}
+    - Dict with path: {"path": "./local-package"}
+    - Dict with editable: {"editable": true, "path": "..."}
+    
+    Args:
+        dep_value: The dependency value from Pipfile, can be str, dict, or other types
+        
+    Returns:
+        str or None: 
+            - Version string if parseable (e.g., ">=2.0", "*")
+            - Git reference string if git dependency (e.g., "https://...#ref")
+            - None for unsupported formats (path, editable, or malformed entries)
+    
+    Examples:
+        >>> normalize_pipfile_version(">=2.0")
+        ">=2.0"
+        >>> normalize_pipfile_version({"version": ">=2.0"})
+        ">=2.0"
+        >>> normalize_pipfile_version({"git": "https://github.com/...", "ref": "main"})
+        "https://github.com/...#main"
+        >>> normalize_pipfile_version({"extras": ["security"]})
+        None
+    """
+    # Case 1: Already a string (e.g., ">=2.0", "*", "==1.2.3")
+    if isinstance(dep_value, str):
+        return dep_value
+    
+    # Case 2: Dictionary format - check for various keys
+    if isinstance(dep_value, dict):
+        # Case 2a: Explicit version key (most common dict format)
+        # Example: {"version": ">=2.0", "markers": "python_version >= '3.6'"}
+        if "version" in dep_value:
+            version = dep_value['version']
+            # Ensure the version value itself is a string
+            if isinstance(version, str):
+                return version
+            else:
+                logging.warning(f"Pipfile dependency has non-string version value: {dep_value}")
+                return None
+        
+        # Case 2b: Git dependency
+        # Example: {"git": "https://github.com/user/repo.git", "ref": "main"}
+        elif 'git' in dep_value:
+            try:
+                git_url = dep_value['git']
+                ref = dep_value.get('ref', 'HEAD')  # Default to HEAD if no ref specified
+                return f"{git_url}#{ref}"
+            except (KeyError, TypeError) as e:
+                logging.warning(f"Malformed git dependency in Pipfile: {dep_value}, error: {e}")
+                return None
+        
+        # Case 2c: Path dependencies (local packages) - not supported for version comparison
+        # Example: {"path": "./local-package"} or {"editable": true, "path": "..."}
+        elif 'path' in dep_value or 'editable' in dep_value:
+            logging.debug(f"Skipping path/editable dependency (not suitable for version tracking): {dep_value}")
+            return None
+        
+        # Case 2d: Dict with only extras/markers but no version
+        # Example: {"extras": ["security"], "markers": "..."}
+        else:
+            logging.warning(f"Pipfile dependency dict has no version, git, or path key: {dep_value}")
+            return None
+    
+    # Case 3: Unexpected type (not string or dict)
+    # This shouldn't happen with valid Pipfile format, but handle defensively
+    else:
+        logging.warning(f"Unexpected dependency value type in Pipfile: {type(dep_value).__name__}, value: {dep_value}")
+        return None
 
-        if "version" in info:
-            return info['version']
-        elif 'git' in info:
-            return info['git']+'#'+info['ref']
-    else:            
-        return info
+
+def map_dependencies(info):
+    """
+    Legacy wrapper for normalize_pipfile_version for backward compatibility.
+    
+    Note: This function is kept for compatibility but delegates to normalize_pipfile_version.
+    Consider using normalize_pipfile_version directly in new code.
+    """
+    return normalize_pipfile_version(info)
 
 
 def map_dependencies_pipfile(packages, type):
+    """
+    Map Pipfile package dependencies to a standardized format.
+    
+    Filters out dependencies that cannot be normalized (e.g., path dependencies,
+    editable installs, or malformed entries) and logs them for debugging.
+    
+    Args:
+        packages: Dictionary of package names to their dependency specifications
+        type: Dependency type ('runtime' or 'develop')
+        
+    Returns:
+        list: List of dependency dictionaries with normalized requirements
+    """
     deps = list()
     if not packages:
         return []
+    
     for name, info in packages.items():
-        Dict = {'name': name, 'requirement': map_dependencies(info), 'type': type, 'package': 'PYPI'}
+        # Normalize the dependency value (handles strings, dicts, etc.)
+        requirement = map_dependencies(info)
+        
+        # Skip dependencies that couldn't be normalized (path deps, invalid formats, etc.)
+        if requirement is None:
+            logging.debug(f"Skipping dependency '{name}' (type: {type}) - unsupported format: {info}")
+            continue
+        
+        # Only add valid dependencies with parseable requirements
+        Dict = {'name': name, 'requirement': requirement, 'type': type, 'package': 'PYPI'}
         deps.append(Dict)
+    
     return deps 
 
 

@@ -6,12 +6,13 @@ from augur.tasks.git.dependency_libyear_tasks.libyear_util.pypi_libyear_util imp
 from augur.tasks.git.dependency_libyear_tasks.libyear_util.npm_libyear_utils import get_NPM_data, get_npm_release_date, get_npm_latest_version,get_npm_current_version
 
 #Files That would be parsed should be added here
+# Note: Pipfile.lock is listed before Pipfile to ensure locked versions are preferred
 file_list = [
     'Requirement.txt',
     'requirements.txt',
     'setup.py',
-    'Pipfile',
-    'Pipfile.lock',
+    'Pipfile.lock',  # Process lock file first (more reliable)
+    'Pipfile',       # Fall back to Pipfile if no lock file
     'pyproject.toml',
     'poetry.lock',
     'environment.yml',
@@ -30,6 +31,9 @@ def find(name, path):
 def get_parsed_deps(path, logger):
     import traceback
     dependency_list = []
+    
+    # Track which Pipfile variant was processed to avoid duplicates
+    pipfile_processed = False
 
     for f in file_list:
         deps_file = find(f, path)
@@ -49,11 +53,26 @@ def get_parsed_deps(path, logger):
                     if short_file_name in ['Requirement.txt', 'requirements.txt']:
                         dependency_list.extend(parse_requirement_txt(file_handle))
 
-                    elif short_file_name == 'Pipfile':
-                        dependency_list.extend(parse_pipfile(file_handle))
-
                     elif short_file_name == 'Pipfile.lock':
+                        # Prefer Pipfile.lock over Pipfile (more reliable, locked versions)
+                        logger.info("Using Pipfile.lock (preferred over Pipfile for reliability)")
                         dependency_list.extend(parse_pipfile_lock(file_handle))
+                        pipfile_processed = True
+
+                    elif short_file_name == 'Pipfile':
+                        # Only parse Pipfile if Pipfile.lock hasn't been processed
+                        if pipfile_processed:
+                            logger.info("Skipping Pipfile (already processed Pipfile.lock)")
+                            continue
+                        
+                        # Check if Pipfile.lock exists in the same directory
+                        pipfile_lock_path = os.path.join(os.path.dirname(deps_file), 'Pipfile.lock')
+                        if os.path.exists(pipfile_lock_path):
+                            logger.info("Skipping Pipfile (Pipfile.lock exists and will be processed)")
+                            continue
+                        
+                        logger.info("Using Pipfile (no Pipfile.lock found)")
+                        dependency_list.extend(parse_pipfile(file_handle))
 
                     elif short_file_name == 'pyproject.toml':
                         try:
