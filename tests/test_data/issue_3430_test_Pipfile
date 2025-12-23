@@ -1,0 +1,33 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+# Simple string format - this works before and after fix
+requests = ">=2.20.0"
+flask = "*"
+
+# Inline table format with version - TRIGGERS THE BUG
+django = {version = ">=3.0", extras = ["async"]}
+celery = {version = ">=5.0", markers = "python_version >= '3.7'"}
+
+# Inline table with only extras - TRIGGERS THE BUG  
+pytest-cov = {extras = ["toml"]}
+
+# Path dependency - TRIGGERS THE BUG
+local-package = {path = "./local-lib"}
+
+# Editable dependency - TRIGGERS THE BUG
+dev-tools = {editable = true, path = "../dev-tools"}
+
+# Git dependency - might trigger issues
+experimental = {git = "https://github.com/user/repo.git", ref = "main"}
+
+[dev-packages]
+pytest = "*"
+black = {version = "==22.3.0"}
+mypy = {extras = ["python2"], version = ">=0.950"}
+
+[requires]
+python_version = "3.8"

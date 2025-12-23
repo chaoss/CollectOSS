@@ -171,3 +171,8 @@ nohup.out
 # local db volume
 pgdata/
 postgres-data/
+
+# Helper files for PR preparation (do not commit)
+PR_DESCRIPTION.md
+PR_SUBMISSION_CHECKLIST.md
+COMMIT_MESSAGE.txt
