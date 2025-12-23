@@ -13,6 +13,8 @@ import json
 from urllib.parse import quote_plus
 
 load_dotenv()
+import logging
+logger = logging.getLogger(__name__)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -64,6 +66,8 @@ def sqlalchemy_url_from_db_config() -> str | None:
         return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
     except Exception:
         # If the JSON is malformed or missing keys, fail back to alembic.ini
+        logger.warning("Error reading database configuration from db.config.json. \n \n")
+        logger.warning("Falling back to alembic.ini, which is not configured by default or recommended for non-Docker installations.")
         return None
 ###########################
 
