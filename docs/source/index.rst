@@ -67,11 +67,11 @@ See it in action
 
 Current maintainers
 --------------------
-- `Derek Howard <https://github.com/howderek>`_
+- `Sean P. Goggins <https://github.com/sgoggins>`_
+- `Adrian Edwards <https://github.com/MoralCode>`_
 - `Andrew Brain <https://github.com/ABrain7710>`_
 - `Isaac Milarsky <https://github.com/IsaacMilarky>`_
-- `John McGinnes <https://github.com/Ulincys>`_
-- `Sean P. Goggins <https://github.com/sgoggins>`_
+- `John McGinnes <https://github.com/Ulincsys>`_
 
 
 
