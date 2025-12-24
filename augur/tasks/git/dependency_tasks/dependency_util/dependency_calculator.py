@@ -11,7 +11,7 @@ from augur.tasks.git.dependency_tasks.dependency_util import go_deps
 from augur.tasks.git.dependency_tasks.dependency_util import kotlin_deps
 from augur.tasks.git.dependency_tasks.dependency_util import rust_deps
 from augur.tasks.git.dependency_tasks.dependency_util import r_deps
-from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator
+
 
 #Returns generator iterable to tuples of modules and their names
 def get_dependency_analysis_module_tuples():

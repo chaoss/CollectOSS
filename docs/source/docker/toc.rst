@@ -6,6 +6,8 @@ While Docker is recommended for getting started quickly (see :doc:`Getting Start
 .. toctree::
    :maxdepth: 1
 
+   getting-started
+   quick-start
    docker
    docker-compose
    usage
