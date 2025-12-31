@@ -66,12 +66,11 @@ See it in action
 
 
 Current maintainers
---------------------
-- `Sean P. Goggins <https://github.com/sgoggins>`_
-- `Adrian Edwards <https://github.com/MoralCode>`_
-- `Andrew Brain <https://github.com/ABrain7710>`_
-- `Isaac Milarsky <https://github.com/IsaacMilarky>`_
-- `John McGinnes <https://github.com/Ulincsys>`_
+-------------------
+
+For the current list of Augur maintainers, please refer to the
+`CONTRIBUTORS.md <https://github.com/chaoss/augur/blob/main/CONTRIBUTORS.md>`_
+file.
 
 
 
