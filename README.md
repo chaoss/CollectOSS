@@ -43,10 +43,12 @@ For more information on [how to get involved on the CHAOSS website](https://chao
 
 ## Collecting Data
 
-Augur supports ```Python 3.7``` through ```Python 3.11``` on all platforms. ```Python 3.12``` and above do not yet work because of machine learning worker dependencies. On OSX, you can create a ```Python 3.11``` environment by running:
+Augur supports ```Python3.7``` through ```Python3.11``` on all platforms.
+```Python3.12``` and above do not yet work because of machine learning worker dependencies.
+On OSX, you can create a ```Python3.11``` environment by running:
 
 ```bash
-$ python3.11 -m venv path/to/venv 
+python3.11 -m venv path/to/venv
 ```
 
 Augur's main focus is to measure the overall health and sustainability of open source projects.
