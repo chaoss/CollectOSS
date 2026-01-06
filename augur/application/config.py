@@ -624,6 +624,9 @@ class JsonConfig(ConfigStore):
         
         return self.json_data[section_name].get(value_key, None)
 
+    def __repr__(self):
+        return f"JsonSource({self.json_data})"
+
 
 
 class DatabaseConfig(ConfigStore):
