@@ -1,27 +1,12 @@
-#!/usr/bin/env python3
-"""
-Simple test script to verify that our R dependency parser is working correctly.
-"""
-
-import os
-import sys
-import tempfile
 import json
-from pathlib import Path
-
-# Add project root to path so we can import augur modules
-# This assumes the file is at tests/test_tasks/test_dependency_tasks/test_r_deps.py
-project_root = Path(__file__).resolve().parents[3]
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
-
+import pytest
 from augur.tasks.git.dependency_tasks.dependency_util import r_deps
 
-
-def test_description_file():
-    print("Checking DESCRIPTION file parsing...")
-    
-    # A standard looking DESCRIPTION file with various edge cases to test our parser
+def test_description_file_parsing(tmp_path):
+    """
+    Test that standard R DESCRIPTION files are parsed correctly,
+    extracting dependencies from Depends, Imports, Suggests, and LinkingTo.
+    """
     description_content = """Package: mypackage
 Type: Package
 Title: My Test Package
@@ -45,33 +30,23 @@ Suggests:
     rmarkdown
 LinkingTo:
     Rcpp (>= 1.0.0)
-"""
+    """
     
-    with tempfile.TemporaryDirectory() as tmpdir:
-        temp_file = os.path.join(tmpdir, 'DESCRIPTION')
-        with open(temp_file, 'w') as f:
-            f.write(description_content)
+    d_file = tmp_path / "DESCRIPTION"
+    d_file.write_text(description_content, encoding="utf-8")
     
-        deps = r_deps.get_deps_for_file(temp_file)
-        
-        # Verify we found exactly what we expected
-        expected_deps = {'dplyr', 'ggplot2', 'tidyr', 'stringr', 'testthat', 
-                        'knitr', 'rmarkdown', 'Rcpp'}
-        missing = expected_deps - set(deps)
-        extra = set(deps) - expected_deps
-        
-        if not missing and not extra:
-            print("Looks good! All dependencies found.")
-            return True
-        else:
-            print(f"Something's off. Missing: {missing}, Extra: {extra}")
-            return False
+    deps = r_deps.get_deps_for_file(str(d_file))
+    
+    expected_deps = {'dplyr', 'ggplot2', 'tidyr', 'stringr', 'testthat', 
+                     'knitr', 'rmarkdown', 'Rcpp'}
+    
+    # Assert we found exactly the expected dependencies
+    assert set(deps) == expected_deps
 
-
-def test_renv_lock_file():
-    print("\nChecking renv.lock parsing...")
-    
-    # A basic renv.lock json structure
+def test_renv_lock_parsing(tmp_path):
+    """
+    Test that renv.lock JSON files are parsed correctly.
+    """
     renv_lock_content = {
         "R": {"Version": "4.3.0", "Repositories": [{"Name": "CRAN", "URL": "https://cran.rstudio.com"}]},
         "Packages": {
@@ -82,68 +57,34 @@ def test_renv_lock_file():
         }
     }
     
-    with tempfile.TemporaryDirectory() as tmpdir:
-        temp_file = os.path.join(tmpdir, 'renv.lock')
-        with open(temp_file, 'w') as f:
-            json.dump(renv_lock_content, f)
+    l_file = tmp_path / "renv.lock"
+    measure = l_file.write_text(json.dumps(renv_lock_content), encoding="utf-8")
     
-        deps = r_deps.get_deps_for_file(temp_file)
-        
-        expected_deps = {'ggplot2', 'dplyr', 'tidyr', 'rmarkdown'}
-        missing = expected_deps - set(deps)
-        extra = set(deps) - expected_deps
-        
-        if not missing and not extra:
-            print("renv.lock parsed successfully.")
-            return True
-        else:
-            print(f"renv.lock parsing failed. Missing: {missing}, Extra: {extra}")
-            return False
-
-
-def test_get_files():
-    print("\nChecking file discovery...")
+    deps = r_deps.get_deps_for_file(str(l_file))
     
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # We set up a fake directory structure with some hidden files to find
-        (Path(tmpdir) / 'DESCRIPTION').touch()
-        (Path(tmpdir) / 'renv.lock').touch()
-        (Path(tmpdir) / 'subdir').mkdir()
-        (Path(tmpdir) / 'subdir' / 'DESCRIPTION').touch()
-        (Path(tmpdir) / 'another' / 'nested').mkdir(parents=True)
-        (Path(tmpdir) / 'another' / 'nested' / 'renv.lock').touch()
-        
-        files = r_deps.get_files(tmpdir)
-        file_names = [f.name for f in files]
-        
-        desc_count = file_names.count('DESCRIPTION')
-        lock_count = file_names.count('renv.lock')
-        
-        # We hid 2 DESCRIPTIONs and 2 lockfiles, let's make sure we found them all
-        if desc_count == 2 and lock_count == 2:
-            print("Found all the files we hid.")
-            return True
-        else:
-            print(f"File discovery missed something. Found {desc_count} DESCRIPTIONs and {lock_count} lockfiles.")
-            return False
-
-
-def main():
-    print("Starting tests...\n")
+    expected_deps = {'ggplot2', 'dplyr', 'tidyr', 'rmarkdown'}
     
-    results = [
-        test_description_file(),
-        test_renv_lock_file(),
-        test_get_files()
-    ]
+    assert set(deps) == expected_deps
+
+def test_file_discovery(tmp_path):
+    """
+    Test that the tool finds DESCRIPTION and renv.lock files recursively.
+    """
+    # Create a nested directory structure
+    (tmp_path / 'DESCRIPTION').touch()
+    (tmp_path / 'renv.lock').touch()
     
-    if all(results):
-        print("\nAll tests passed!")
-        return 0
-    else:
-        print("\nSome tests failed.")
-        return 1
-
-
-if __name__ == '__main__':
-    sys.exit(main())
+    subdir = tmp_path / 'subdir'
+    subdir.mkdir()
+    (subdir / 'DESCRIPTION').touch()
+    
+    nested = tmp_path / 'another' / 'nested'
+    nested.mkdir(parents=True)
+    (nested / 'renv.lock').touch()
+    
+    # Run the discovery
+    files = r_deps.get_files(str(tmp_path))
+    file_names = [f.name for f in files]
+    
+    assert file_names.count('DESCRIPTION') == 2
+    assert file_names.count('renv.lock') == 2

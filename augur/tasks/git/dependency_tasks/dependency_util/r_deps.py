@@ -86,6 +86,8 @@ def parse_r_package_list(field_value):
             continue
         
         # We need to grab the package name and ignore version numbers like (>= 1.0.0)
+        # Note: We are currently stripping version info because the Augur dependency
+        # model only tracks package names. If that changes, we can capture versions here.
         match = re.match(r'^([A-Za-z][A-Za-z0-9.]*)', part)
         if match:
             package_name = match.group(1).rstrip('.')
