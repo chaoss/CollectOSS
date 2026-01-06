@@ -143,24 +143,28 @@ class AugurConfig():
 
         return config
 
-    def __init__(self, logger, session: DatabaseSession):
+    def __init__(self, logger, session: DatabaseSession, config_sources: list = None):
 
         self.session = session
         self.logger = logger
 
         self.accepted_types = ["str", "bool", "int", "float", "NoneType"]
 
-        # list items in order of precedence. lowest precedence (i.e. fallback) values first 
-        self.config_sources = [
-            JsonConfig(default_config, logger)
-        ]
+        if not config_sources:
+            # list items in order of precedence. lowest precedence (i.e. fallback) values first 
+            config_sources = [
+                JsonConfig(default_config, logger)
+            ]
 
-        config_dir = Path(os.getenv("CONFIG_DATADIR", "./"))
-        config_path = config_dir.joinpath("augur.json")
-        if config_path.exists():
-            self.config_sources.append(JsonConfig(json.loads(config_path.read_text(encoding="UTF-8")), logger))
+            config_dir = Path(os.getenv("CONFIG_DATADIR", "./"))
+            config_path = config_dir.joinpath("augur.json")
+            if config_path.exists():
+                config_sources.append(JsonConfig(json.loads(config_path.read_text(encoding="UTF-8")), logger))
+            
+            config_sources.append( DatabaseConfig(session, logger) )
+
+        self.config_sources = config_sources
         
-        self.config_sources.append( DatabaseConfig(session, logger) )
 
     def _get_writable_source(self) -> 'ConfigStore':
         """Returns the highest precedence source that can be written to.
