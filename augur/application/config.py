@@ -1,6 +1,7 @@
 import sqlalchemy as s
 from sqlalchemy import and_, update
 import json
+import copy
 from typing import List, Any, Optional
 import os
 from augur.application.db.models import Config 
@@ -559,6 +560,11 @@ class JsonConfig(ConfigStore):
             self.json_data.update(data)
 
     def retrieve_dict(self):
+        # if this dict isnt supposed to be mutable, we need to make a copy
+        # this prevents being able to change data in this object by reference
+        
+        if not self.writable:
+            return copy.deepcopy(self.json_data)
         return self.json_data
 
     def clear(self):
