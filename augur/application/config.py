@@ -145,6 +145,14 @@ class AugurConfig():
         return config
 
     def __init__(self, logger, session: DatabaseSession, config_sources: list = None):
+        """Create a new AugurConfig class
+
+        Args:
+            logger (_type_): The logger instance to use for logging
+            session (DatabaseSession): a connection to the database for configuring the database source.
+            config_sources (list, optional): An alternative way to pass in config sources. Used for unit testing only.
+                Specifying a value here enables you to supply `None` to the `session` argument, since it will be unused. Defaults to None.
+        """
 
         self.session = session
         self.logger = logger
