@@ -234,10 +234,36 @@ class AugurConfig():
         Returns:
             The config from all sources
         """
+
+        def merge(a: dict, b: dict, path=[]):
+            """Do a deep merge of two python dictionaries (standard library update and merge dont do this)
+            This is what allows updated values in higher priority config sources to take precedence.
+
+            This function is lightly modified from https://stackoverflow.com/a/7205107
+
+            Args:
+                a (dict): The dict to merge into. Will be mutated
+                b (dict): The incoming dict to merge in. Data in this dict will take precedence when there is a conflict
+                path (list, optional): Keeps track of the path during the recursion process. Not intended for use by consumers. Defaults to [].
+
+            Returns:
+                dict: The dict passed in via parameter a, now modified with the new values
+            """
+            for key in b:
+                if key in a:
+                    if isinstance(a[key], dict) and isinstance(b[key], dict):
+                        merge(a[key], b[key], path + [str(key)])
+                    elif a[key] != b[key]:
+                        # raise Exception('Conflict at ' + '.'.join(path + [str(key)]))
+                        a[key] = b[key]
+                else:
+                    a[key] = b[key]
+            return a
+
         config = {}
 
         for config_source in self.config_sources:
-            config.update(config_source.retrieve_dict())
+            merge(config, config_source.retrieve_dict())
         
         return config
 
