@@ -30,7 +30,7 @@ def test_jsonconfig_retrieve_has_get(mock_logger):
     cfg = JsonConfig(data, mock_logger)
 
     # retrieve full dict
-    assert cfg.retrieve_dict() is data
+    assert cfg.retrieve_dict() == data
 
     # has/get section
     assert cfg.has_section("Alpha") is True
