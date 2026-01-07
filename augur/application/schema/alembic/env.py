@@ -6,7 +6,6 @@ from augur.application.db.models.base import Base
 from augur.application.db.engine import get_database_string
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
-import os
 import re
 from pathlib import Path
 
@@ -32,10 +31,7 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
-# possibly swap sqlalchemy.url with AUGUR_DB env var too
-
 sqlalchemy_url = get_database_string()
-
 
 VERSIONS_DIR = Path(__file__).parent / "versions"
 
