@@ -15,7 +15,7 @@ from augur.tasks.git.correction import (
 
 
 @pytest.fixture
-def logger():
+def test_logger():
     """Provide a basic logger for tests."""
     return logging.getLogger("test_correction")
 
@@ -23,55 +23,55 @@ def logger():
 class TestCorrectTimestamp:
     """Tests for the correct_timestamp function."""
 
-    def test_valid_timestamp_unchanged(self, logger):
+    def test_valid_timestamp_unchanged(self, test_logger):
         """Valid timestamp should pass through unchanged."""
         valid_ts = "2025-11-03 16:28:43 -0500"
-        result = correct_timestamp(valid_ts, logger=logger)
+        result = correct_timestamp(valid_ts, logger=test_logger)
         assert result == valid_ts
 
-    def test_valid_utc_timestamp(self, logger):
+    def test_valid_utc_timestamp(self, test_logger):
         """UTC timestamp (offset 0) should pass through unchanged."""
         utc_ts = "2025-11-03 16:28:43 +0000"
-        result = correct_timestamp(utc_ts, logger=logger)
+        result = correct_timestamp(utc_ts, logger=test_logger)
         assert result == utc_ts
 
-    def test_invalid_timezone_uses_fallback(self, logger):
+    def test_invalid_timezone_uses_fallback(self, test_logger):
         """Invalid timezone should use fallback timestamp."""
         invalid_ts = "2106-02-07 06:28:23 -13068837"
         fallback_ts = "2025-11-03 16:28:43 -0500"
-        result = correct_timestamp(invalid_ts, fallback=fallback_ts, logger=logger)
+        result = correct_timestamp(invalid_ts, fallback=fallback_ts, logger=test_logger)
         assert result == fallback_ts
 
-    def test_invalid_timezone_uses_utc_if_no_fallback(self, logger):
+    def test_invalid_timezone_uses_utc_if_no_fallback(self, test_logger):
         """Invalid timezone without fallback should default to UTC."""
         invalid_ts = "2106-02-07 06:28:23 -13068837"
-        result = correct_timestamp(invalid_ts, fallback=None, logger=logger)
+        result = correct_timestamp(invalid_ts, fallback=None, logger=test_logger)
         # Should replace timezone with +0000, keep date/time
         assert result == "2106-02-07 06:28:23 +0000"
 
-    def test_empty_string_returns_default(self, logger):
+    def test_empty_string_returns_default(self, test_logger):
         """Empty timestamp string should return default epoch."""
-        result = correct_timestamp("", logger=logger)
+        result = correct_timestamp("", logger=test_logger)
         assert result == "1970-01-01 00:00:15 +0000"
 
-    def test_unparseable_format_returns_default(self, logger):
+    def test_unparseable_format_returns_default(self, test_logger):
         """Unparseable timestamp format should return default."""
         unparseable = "not a timestamp"
-        result = correct_timestamp(unparseable, logger=logger)
+        result = correct_timestamp(unparseable, logger=test_logger)
         assert result == "1970-01-01 00:00:15 +0000"
 
-    def test_unparseable_with_fallback_returns_fallback(self, logger):
+    def test_unparseable_with_fallback_returns_fallback(self, test_logger):
         """Unparseable timestamp with fallback should return fallback."""
         unparseable = "not a timestamp"
         fallback = "2025-11-03 16:28:43 -0500"
-        result = correct_timestamp(unparseable, fallback=fallback, logger=logger)
+        result = correct_timestamp(unparseable, fallback=fallback, logger=test_logger)
         assert result == fallback
 
 
 class TestCleanCommitTimestamps:
     """Tests for the clean_commit_timestamps function."""
 
-    def test_issue_3472_exact_case(self, logger):
+    def test_issue_3472_exact_case(self, test_logger):
         """Reproduce the exact bug from issue #3472.
 
         Author timestamp has valid timezone (-0500).
@@ -86,7 +86,7 @@ class TestCleanCommitTimestamps:
             }
         ]
 
-        clean_commit_timestamps(records, logger)
+        clean_commit_timestamps(records, test_logger)
 
         # Author should be unchanged (valid)
         assert records[0]['cmt_author_timestamp'] == '2025-11-03 16:28:43 -0500'
@@ -94,7 +94,7 @@ class TestCleanCommitTimestamps:
         # Committer should use author as fallback (invalid → fallback)
         assert records[0]['cmt_committer_timestamp'] == '2025-11-03 16:28:43 -0500'
 
-    def test_clean_commit_timestamps_batch(self, logger):
+    def test_clean_commit_timestamps_batch(self, test_logger):
         """Test batch processing of multiple commits."""
         records = [
             {
@@ -111,7 +111,7 @@ class TestCleanCommitTimestamps:
             }
         ]
 
-        clean_commit_timestamps(records, logger)
+        clean_commit_timestamps(records, test_logger)
 
         # Record 1: Both valid, unchanged
         assert records[0]['cmt_author_timestamp'] == '2025-11-03 16:28:43 -0500'
@@ -125,7 +125,7 @@ class TestCleanCommitTimestamps:
         assert records[2]['cmt_author_timestamp'] == '2025-11-05 12:00:00 +0000'
         assert records[2]['cmt_committer_timestamp'] == '2025-11-05 13:00:00 +0530'
 
-    def test_both_timestamps_invalid(self, logger):
+    def test_both_timestamps_invalid(self, test_logger):
         """When both timestamps invalid, both should default to UTC."""
         records = [
             {
@@ -134,7 +134,7 @@ class TestCleanCommitTimestamps:
             }
         ]
 
-        clean_commit_timestamps(records, logger)
+        clean_commit_timestamps(records, test_logger)
 
         # Author invalid → UTC (no fallback)
         assert records[0]['cmt_author_timestamp'] == '2025-11-03 16:28:43 +0000'

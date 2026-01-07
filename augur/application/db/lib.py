@@ -1,10 +1,8 @@
-import re
 import time
 import random
 import logging
 import sqlalchemy as s
-from sqlalchemy import func 
-from sqlalchemy.exc import DataError
+from sqlalchemy import func
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
@@ -140,7 +138,7 @@ def get_working_commits_by_repo_id(repo_id):
 
     try:
         working_commits = fetchall_data_from_sql_text(query)
-    except:
+    except Exception:
         working_commits = []
 
     return working_commits
@@ -156,7 +154,7 @@ def get_missing_commit_message_hashes(repo_id):
 
     try:
         missing_commit_hashes = fetchall_data_from_sql_text(fetch_missing_hashes_sql)
-    except:
+    except Exception:
         missing_commit_hashes = []
     
     return missing_commit_hashes
