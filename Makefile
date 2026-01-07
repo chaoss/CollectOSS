@@ -163,16 +163,19 @@ compose-run-database:
 docker-build: docker-build-backend docker-build-frontend docker-build-database docker-build-rabbitmq
 
 docker-build-backend:
-	@ docker build -t augurlabs/augur:backend -f util/docker/backend/Dockerfile .
+	@ docker build -t augurlabs/augur:backend -f docker/backend/Dockerfile .
 
 docker-build-frontend:
-	@ docker build -t augurlabs/augur:frontend -f util/docker/frontend/Dockerfile .
+	@ docker build -t augurlabs/augur:frontend -f docker/frontend/Dockerfile .
 
 docker-build-database:
-	@ docker build -t augurlabs/augur:database -f util/docker/database/Dockerfile .
+	@ docker build -t augurlabs/augur:database -f docker/database/Dockerfile .
 
 docker-build-rabbitmq:
-	@ docker build -t augurlabs/augur:rabbitmq -f util/docker/rabbitmq/Dockerfile .
+	@ docker build -t augurlabs/augur:rabbitmq -f docker/rabbitmq/Dockerfile .
+
+docker-keyman-build:
+	@ docker build -t augurlabs/augur:keyman -f docker/keyman/Dockerfile .
 
 docker-run-backend:
 	@ - docker stop augur_backend
@@ -192,4 +195,9 @@ docker-run-database:
 docker-run-rabbitmq:
 	@ - docker stop augur_rabbitmq
 	@ - docker rm augur_rabbitmq
-	docker run -p 5434:5432 --name augur_rabbitmq augurlabs/augur:rabbitmq
+	docker run -p 5672:5672 --name augur_rabbitmq augurlabs/augur:rabbitmq
+
+docker-run-keyman:
+	@ - docker stop augur_keyman
+	@ - docker rm augur_keyman
+	docker run --name augur_keyman --env-file docker_env.txt augurlabs/augur:keyman
