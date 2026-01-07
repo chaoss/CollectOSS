@@ -17,6 +17,9 @@ from augur.application.config import get_development_flag
 from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected, batch_insert_contributors
 
 
+# Batch size for processing issues - controls memory usage during collection
+ISSUE_BATCH_SIZE = 1000
+
 development = get_development_flag()
 
 @celery.task(base=AugurCoreRepoCollectionTask)
@@ -56,12 +59,11 @@ def collect_issues(repo_git: str, full_collection: bool) -> int:
         # Process issues in batches to avoid memory spikes
         batch = []
         total_issues = 0
-        batch_size = 1000
 
         for issue in issue_data_generator:
             batch.append(issue)
 
-            if len(batch) >= batch_size:
+            if len(batch) >= ISSUE_BATCH_SIZE:
                 logger.info(f"{owner}/{repo}: Processing batch of {len(batch)} issues (total so far: {total_issues + len(batch)})")
                 process_issues(batch, f"{owner}/{repo}: Issue task", repo_id, logger)
                 total_issues += len(batch)

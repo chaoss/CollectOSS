@@ -13,6 +13,10 @@ from augur.application.db import get_engine, get_session
 from augur.application.db.lib import get_core_data_last_collected
 from sqlalchemy.sql import text
 
+
+# Batch size for processing messages - smaller due to large text content per message
+MESSAGE_BATCH_SIZE = 20
+
 platform_id = 1
 
 @celery.task(base=AugurCoreRepoCollectionTask)
@@ -123,8 +127,8 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
         except UrlNotFoundException:
             logger.info(f"{task_name}: PR or issue comment url of {comment_url} returned 404. Skipping.")
             skipped_urls += 1
-       
-        if len(all_data) >= 20:
+
+        if len(all_data) >= MESSAGE_BATCH_SIZE:
             process_messages(all_data, task_name, repo_id, logger, augur_db)
             all_data.clear()
 

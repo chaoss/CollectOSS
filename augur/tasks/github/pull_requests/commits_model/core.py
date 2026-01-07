@@ -6,6 +6,10 @@ from augur.application.db.util import execute_session_query
 from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs
 
 
+# Batch size for PR commit collection
+PR_COMMIT_BATCH_SIZE = 1000
+
+
 def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collection=False):
     
     if full_collection:
@@ -44,7 +48,6 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
 
     github_data_access = GithubDataAccess(key_auth, logger)
 
-    BATCH_SIZE = 1000
     pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
     all_data = []
     for index,pr_info in enumerate(pr_urls):
@@ -73,7 +76,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
                 }
                 all_data.append(pr_commit_row)
 
-                if len(all_data) >= BATCH_SIZE:
+                if len(all_data) >= PR_COMMIT_BATCH_SIZE:
                     logger.info(f"{task_name}: Inserting {len(all_data)} rows")
                     augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
                     all_data.clear()
