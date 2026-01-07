@@ -91,13 +91,14 @@ spec = {
 }
 
 class WaitKeyTimeout(Exception):
-    """Raised when waiting for a key exceeds the specified timeout.
+    """Raised when the Key Orchestrator returns a 'wait' message.
 
-    This typically occurs when all keys for a platform are expired and none
-    are available within the wait period.
+    This indicates that there are no fresh keys available for the requested
+    platform.
 
     Args:
-        timeout_seconds: Maximum wait time before raising this exception
+        timeout_seconds: How long the client needs to sleep (in seconds)
+            before a fresh key will become available.
     """
     def __init__(self, timeout_seconds: int) -> None:
         self.timeout_seconds = timeout_seconds
