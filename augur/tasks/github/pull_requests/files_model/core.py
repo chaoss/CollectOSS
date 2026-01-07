@@ -3,11 +3,12 @@ from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlData
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs
+from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs, get_batch_size
 
 
 # Batch size for PR file collection
-PR_FILE_BATCH_SIZE = 1000
+# Uses default_batch_size from config (default: 1000)
+PR_FILE_BATCH_SIZE = get_batch_size()
 
 
 def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection=False):

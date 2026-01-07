@@ -14,11 +14,12 @@ from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import Issue, IssueLabel, IssueAssignee
 from augur.application.config import get_development_flag
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected, batch_insert_contributors
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected, batch_insert_contributors, get_batch_size
 
 
 # Batch size for processing issues - controls memory usage during collection
-ISSUE_BATCH_SIZE = 1000
+# Uses default_batch_size from config (default: 1000)
+ISSUE_BATCH_SIZE = get_batch_size()
 
 development = get_development_flag()
 

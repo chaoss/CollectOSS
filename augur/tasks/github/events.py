@@ -14,11 +14,12 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequestEvent, IssueEvent, Contributor, Repo
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id, update_issue_closed_cntrbs_by_repo_id, get_session, get_engine, get_core_data_last_collected, batch_insert_contributors
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id, update_issue_closed_cntrbs_by_repo_id, get_session, get_engine, get_core_data_last_collected, batch_insert_contributors, get_batch_size
 
 
 # Batch size for processing events - smaller than issues/PRs due to higher processing overhead per event
-EVENT_BATCH_SIZE = 500
+# Uses github_event_batch_size from config (default: 500)
+EVENT_BATCH_SIZE = get_batch_size("event")
 
 platform_id = 1
 

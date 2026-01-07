@@ -10,12 +10,13 @@ from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import PullRequest, Message, Issue, PullRequestMessageRef, IssueMessageRef, Contributor, Repo, CollectionStatus
 from augur.application.db import get_engine, get_session
-from augur.application.db.lib import get_core_data_last_collected
+from augur.application.db.lib import get_core_data_last_collected, get_batch_size
 from sqlalchemy.sql import text
 
 
 # Batch size for processing messages - smaller due to large text content per message
-MESSAGE_BATCH_SIZE = 20
+# Uses github_message_batch_size from config (default: 20)
+MESSAGE_BATCH_SIZE = get_batch_size("message")
 
 platform_id = 1
 
