@@ -3,6 +3,7 @@ from logging.config import fileConfig
 
 from alembic import context
 from augur.application.db.models.base import Base
+from augur.application.db.engine import get_database_string
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 import os
@@ -33,7 +34,7 @@ target_metadata = Base.metadata
 
 # possibly swap sqlalchemy.url with AUGUR_DB env var too
 
-sqlalchemy_url = os.getenv("AUGUR_DB") or config.get_main_option("sqlalchemy.url")
+sqlalchemy_url = get_database_string()
 
 
 VERSIONS_DIR = Path(__file__).parent / "versions"
