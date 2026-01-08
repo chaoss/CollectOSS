@@ -20,6 +20,11 @@ def get_deps_for_file(path):
 			content = f.read()
 	except UnicodeDecodeError:
 		# Try with latin-1 encoding as fallback
+		# Fallback to latin-1 encoding because CRAN DESCRIPTION files may contain non-UTF-8 characters.
+# R historically tolerates latin-1 in metadata parsing.
+# See: https://cran.r-project.org/web/packages/desc/readme/README.html
+#      https://cran.r-project.org/web/packages/desc/index.html
+
 		with open(path, 'r', encoding='latin-1') as f:
 			content = f.read()
 	
