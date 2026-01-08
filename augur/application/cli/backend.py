@@ -4,6 +4,7 @@ Augur library commands for controlling the backend components
 """
 import resource
 import os
+import sys
 import time
 import subprocess
 import click
@@ -55,17 +56,93 @@ def start(ctx, disable_collection, development, pidfile, port):
     """Start Augur's backend server."""
     with open(pidfile, "w") as pidfile_io:
         pidfile_io.write(str(os.getpid()))
+
+    # Store process references for signal handler
+    shutdown_context = {
+        'server': None,
+        'processes': [],
+        'celery_beat_process': None,
+        'keypub': None,
+        'disable_collection': disable_collection,
+        'engine': ctx.obj.engine,
+        'pidfile': pidfile,
+        'shutting_down': False
+    }
+
+    def shutdown_handler(signum, frame):
+        if shutdown_context['shutting_down']:
+            return
         
+        shutdown_context['shutting_down'] = True
+        logger.info(f"Received signal {signum}, shutting down gracefully")
+
+        # Stop server
+        if shutdown_context['server']:
+            logger.info("Stopping server")
+            shutdown_context['server'].terminate()
+            try:
+                shutdown_context['server'].wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                logger.warning("Server did not terminate in time, killing")
+                shutdown_context['server'].kill()
+
+        # Stop celery workers
+        logger.info("Stopping celery workers")
+        for p in shutdown_context['processes']:
+            if p and p.poll() is None:
+                p.terminate()
+        
+        # Wait for workers to terminate
+        for p in shutdown_context['processes']:
+            if p:
+                try:
+                    p.wait(timeout=3)
+                except subprocess.TimeoutExpired:
+                    logger.warning(f"Worker {p.pid} did not terminate in time, killing")
+                    p.kill()
+
+        # Stop celery beat
+        if shutdown_context['celery_beat_process']:
+            logger.info("Stopping celery beat")
+            shutdown_context['celery_beat_process'].terminate()
+            try:
+                shutdown_context['celery_beat_process'].wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                logger.warning("Celery beat did not terminate in time, killing")
+                shutdown_context['celery_beat_process'].kill()
+
+        # Cleanup collection resources
+        if not shutdown_context['disable_collection']:
+            try:
+                if shutdown_context['keypub']:
+                    shutdown_context['keypub'].shutdown()
+                cleanup_collection_status_and_rabbit(logger, shutdown_context['engine'])
+            except Exception as e:
+                logger.debug(f"Error during collection cleanup: {e}")
+
+        # Remove pidfile
+        if os.path.exists(shutdown_context['pidfile']):
+            try:
+                os.unlink(shutdown_context['pidfile'])
+            except OSError:
+                pass
+
+        sys.exit(0)
+
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGTERM, shutdown_handler)
+    signal.signal(signal.SIGINT, shutdown_handler)
+
     try:
         if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
             raise_open_file_limit(100000)
-    except Exception as e: 
+    except Exception as e:
         logger.error(
                     ''.join(traceback.format_exception(None, e, e.__traceback__)))
-        
+
         logger.error("Failed to raise open file limit!")
         raise e
-    
+
     if development:
         os.environ["AUGUR_DEV"] = "1"
         logger.info("Starting in development mode")
@@ -101,6 +178,7 @@ def start(ctx, disable_collection, development, pidfile, port):
 
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file {gunicorn_log_file}"
     server = subprocess.Popen(gunicorn_command.split(" "))
+    shutdown_context['server'] = server
 
     logger.info("awaiting Gunicorn start")
     while not server.poll():
@@ -123,6 +201,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     logger.info(f"The API is available at '{api_response.json()['route']}'")
 
     processes = start_celery_worker_processes((core_worker_count, secondary_worker_count, facade_worker_count), disable_collection)
+    shutdown_context['processes'] = processes
 
     celery_beat_schedule_db = os.getenv("CELERYBEAT_SCHEDULE_DB", "celerybeat-schedule.db")
     if os.path.exists(celery_beat_schedule_db):
@@ -132,8 +211,10 @@ def start(ctx, disable_collection, development, pidfile, port):
     log_level = get_value("Logging", "log_level")
     celery_beat_process = None
     celery_command = f"celery -A augur.tasks.init.celery_app.celery_app beat -l {log_level.lower()} -s {celery_beat_schedule_db}"
-    celery_beat_process = subprocess.Popen(celery_command.split(" "))    
+    celery_beat_process = subprocess.Popen(celery_command.split(" "))
+    shutdown_context['celery_beat_process'] = celery_beat_process    
     keypub = KeyPublisher()
+    shutdown_context['keypub'] = keypub
     
     if not disable_collection:
         if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
@@ -180,29 +261,15 @@ def start(ctx, disable_collection, development, pidfile, port):
     try:
         server.wait()
     except KeyboardInterrupt:
-        
-        if server:
-            logger.info("Shutting down server")
-            server.terminate()
-
-        logger.info("Shutting down all celery worker processes")
-        for p in processes:
-            if p:
-                p.terminate()
-
-        if celery_beat_process:
-            logger.info("Shutting down celery beat process")
-            celery_beat_process.terminate()
-
-        if not disable_collection:
-
+        # Signal handler will take care of cleanup
+        pass
+    finally:
+        # Ensure pidfile is cleaned up if we exit normally
+        if os.path.exists(pidfile):
             try:
-                keypub.shutdown()
-                cleanup_collection_status_and_rabbit(logger, ctx.obj.engine)
-            except RedisConnectionError:
+                os.unlink(pidfile)
+            except OSError:
                 pass
-            
-    os.unlink(pidfile)
 
 def start_celery_worker_processes(worker_counts: tuple[int, int, int], disable_collection=False):
     """
