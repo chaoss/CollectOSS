@@ -1226,7 +1226,88 @@ def pull_request_merged_status_counts(repo_group_id, repo_id=None, begin_date='1
     
     return pr_merged_counts
 
+@register_metric()
+def accepted_change_requests_count(repo_group_id,repo_id=None,begin_date=None,end_date=None,submitter_id=None,merger_id=None):
+    """
+    Returns the number of accepted (merged) change requests.
 
+    Definition:
+    - Accepted change requests are pull requests that have been merged.
+    - Data source: GitHub (via Augur's ingested database).
+
+    Supported Filters:
+    - Time period (begin_date, end_date)
+    - Repository or repository group
+    - Submitter (PR author)
+    - Merger (user who merged the PR)
+
+    :param repo_group_id: Repository group ID
+    :param repo_id: Repository ID 
+    :param begin_date: Start date 
+    :param end_date: End date
+    :param submitter_id: Contributor ID of PR author 
+    :param merger_id: Contributor ID of PR merger 
+    :return: DataFrame with accepted change request count
+    """
+
+    if not begin_date:
+        begin_date = '1970-01-01 00:00:01'
+    if not end_date:
+        end_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    
+    # Base query
+
+    sql = """
+        SELECT COUNT(DISTINCT pr.pull_request_id) AS accepted_change_requests
+        FROM pull_requests pr
+        JOIN repo r ON pr.repo_id = r.repo_id
+        WHERE pr.pr_merged_at IS NOT NULL
+          AND pr.pr_merged_at BETWEEN :begin_date AND :end_date
+    """
+
+    params = {
+        'begin_date': begin_date,
+        'end_date': end_date
+    }
+
+    # Repo / repo-group filter
+ 
+    if repo_id:
+        sql += " AND pr.repo_id = :repo_id"
+        params['repo_id'] = repo_id
+    else:
+        sql += " AND r.repo_group_id = :repo_group_id"
+        params['repo_group_id'] = repo_group_id
+
+   
+    # Submitter filter (PR author)
+  
+    if submitter_id:
+        sql += " AND pr.pr_src_author_id = :submitter_id"
+        params['submitter_id'] = submitter_id
+
+    
+    # Merger filter (who merged PR)
+    
+    if merger_id:
+        sql += """
+            AND pr.pull_request_id IN (
+                SELECT ie.issue_id
+                FROM issue_events ie
+                WHERE ie.action = 'merged'
+                  AND ie.cntrb_id = :merger_id
+            )
+        """
+        params['merger_id'] = merger_id
+
+    
+    # Execute query
+    
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(s.sql.text(sql), conn, params=params)
+
+    return results
 
 
 
