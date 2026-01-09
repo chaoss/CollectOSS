@@ -1293,10 +1293,10 @@ def accepted_change_requests_count(repo_group_id,repo_id=None,begin_date=None,en
     if merger_id:
         sql += """
             AND pr.pull_request_id IN (
-                SELECT ie.issue_id
-                FROM issue_events ie
-                WHERE ie.action = 'merged'
-                  AND ie.cntrb_id = :merger_id
+                SELECT pre.pull_request_id
+                FROM pull_request_events pre
+                WHERE pre.action = 'merged'
+                  AND pre.cntrb_id = :merger_id
             )
         """
         params['merger_id'] = merger_id
