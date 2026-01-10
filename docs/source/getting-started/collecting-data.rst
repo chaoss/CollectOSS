@@ -26,6 +26,49 @@ Now, here's a ton of brain-splitting detail about celery collection. There are 2
 
 Since the default setup will work for most use cases, we'll first cover how to configure some specific data collection jobs and then briefly touch on the celery configuration options, after which we'll cover how to add repos and repo groups to the database.
 
+Authentication and API Tokens
+=============================
+
+Augur collects data from hosted source control platforms such as GitHub and GitLab using
+their respective REST APIs. To avoid strict API rate limits and to enable access to
+private repositories, Augur requires Personal Access Tokens (PATs) with appropriate
+read-only permissions.
+
+GitHub Authentication
+---------------------
+
+Augur uses the GitHub REST API to collect repository metadata, issues, pull requests,
+releases, and contributor information.
+
+A GitHub Personal Access Token (PAT) is required. The minimum recommended permissions are:
+
+- **Classic Personal Access Token (recommended)**
+  - ``repo`` — required for private repositories
+  - ``read:org`` — required when collecting data from repositories owned by an organization
+  - ``read:user`` — required for contributor and user metadata returned by the GitHub API
+
+For public repositories only, a token without ``repo`` scope may be sufficient, but API
+rate limits will be significantly lower when requests are unauthenticated or made without a token.
+
+GitHub tokens should be treated as secrets and supplied to Augur using environment
+variables or configuration options described during installation.
+
+GitLab Authentication
+---------------------
+
+Augur collects data from the GitLab API using a GitLab Personal Access Token.
+
+The token must include the following scopes:
+
+- ``read_api`` — required for accessing repository metadata, issues, and merge requests
+- ``read_repository`` — required for repository and commit data
+
+These scopes apply to both GitLab.com and self-hosted GitLab instances. When using a
+self-hosted GitLab deployment, ensure the API base URL is configured correctly.
+
+As with GitHub tokens, GitLab tokens should be stored securely and provided to Augur
+through environment variables or configuration files.
+
 Configuring Collection
 ----------------------
 
