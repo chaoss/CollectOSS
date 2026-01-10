@@ -241,12 +241,33 @@ def sync_phase(repo_git):
         for name in phase_names:
             assert isinstance(name, str)
     
+    
     def test_no_duplicates(self):
         """Ensures we don't accidentally return the same function twice."""
         phase_names = get_phase_names_without_import()
         
         assert len(phase_names) == len(set(phase_names)), \
             f"Found duplicates: {phase_names}"
+
+    def test_ignores_variables_with_matching_name(self):
+        """Ensures that variables with '_phase' in their name are NOT picked up."""
+        test_code = '''
+this_is_a_variable_phase = 1
+
+def actual_function_phase(repo_git):
+    pass
+'''
+        
+        tree = ast.parse(test_code)
+        phase_names = []
+        
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and '_phase' in node.name:
+                phase_names.append(node.name)
+        
+        assert 'actual_function_phase' in phase_names
+        assert 'this_is_a_variable_phase' not in phase_names
+        assert len(phase_names) == 1
 
 
 class TestEdgeCases:
