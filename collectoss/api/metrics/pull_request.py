@@ -1248,6 +1248,8 @@ def accepted_change_requests_count(repo_group_id, repo_id=None, begin_date=None,
     :param merger_id: Augur contributor ID (cntrb_id) of PR merger (optional)
     :return: DataFrame with accepted change request count
     """
+    if not repo_id and not repo_group_id:
+        raise ValueError("Must provide either repo_id or repo_group_id")
     
     if not begin_date:
         begin_date = '1970-01-01 00:00:01'
@@ -1266,7 +1268,6 @@ def accepted_change_requests_count(repo_group_id, repo_id=None, begin_date=None,
         'begin_date': begin_date,
         'end_date': end_date
     }
-
     # Repo / repo-group filter
     if repo_id:
         sql += " AND pr.repo_id = :repo_id"
