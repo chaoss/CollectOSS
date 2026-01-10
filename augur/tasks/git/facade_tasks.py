@@ -212,7 +212,7 @@ def facade_fetch_missing_commit_messages(repo_git):
             
             if len(to_insert) >= 1000:
                 bulk_insert_dicts(logger,to_insert, CommitMessage, ["repo_id","cmt_hash"])
-                to_insert = []
+                to_insert.clear()
             
             to_insert.append(msg_record)
         except Exception as e: 
@@ -255,7 +255,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     facade_helper.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
 
     
-    if not len(missing_commits) or repo_id is None:
+    if not missing_commits or repo_id is None:
         #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
         return
     
@@ -313,13 +313,14 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
                 )
                 if pendingCommitRecordsToInsert:
                     facade_bulk_insert_commits(logger, pendingCommitRecordsToInsert)
-                pendingCommitRecordsToInsert = []
+                pendingCommitRecordsToInsert.clear()
 
-        if commit_msg:
+        if commit_msg and facade_helper.commit_messages:
             pendingCommitMessageRecordsToInsert.append(commit_msg)
 
         if len(pendingCommitMessageRecordsToInsert) >= 1000:
             bulk_insert_dicts(logger, pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id", "cmt_hash"])
+            pendingCommitMessageRecordsToInsert.clear()
 
     # FINAL MESSAGE INSERT
     bulk_insert_dicts(logger, pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id", "cmt_hash"])
@@ -446,7 +447,8 @@ def generate_analysis_sequence(logger,repo_git, facade_helper):
 
     analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_git))
 
-    analysis_sequence.append(facade_fetch_missing_commit_messages.si(repo_git))
+    if facade_helper.commit_messages:
+        analysis_sequence.append(facade_fetch_missing_commit_messages.si(repo_git))
     
     analysis_sequence.append(facade_analysis_end_facade_task.si())
     

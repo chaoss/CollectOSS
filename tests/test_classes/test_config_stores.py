@@ -109,3 +109,47 @@ def test_fetching_real_defaults(mock_logger, mock_session):
     cfg.config_sources = [JsonConfig(default_config, mock_logger)]
 
     assert cfg.get_value("Redis", "cache_group") == 0
+
+
+def test_load_config_utilizes_hierarchy():
+
+    default_dict = {
+        "Section1": {"alpha": 1, "beta": "x"},
+        "Section2": {"gamma": False, "delta": 3.14},
+    }
+
+    override_dict = {
+        "Section1": {"beta": "y"},
+        "Section2": {"Epsilon": True, "delta": 6.28},
+        "Section3": {"hi": "there"}
+    }
+
+    cfg = AugurConfig(None, None, [JsonConfig(default_dict, mock_logger), JsonConfig(override_dict, mock_logger)])
+
+    expected_dict = {
+        "Section1": {"alpha": 1, "beta": "y"},
+        "Section2": {"gamma": False, "Epsilon": True, "delta": 6.28},
+        "Section3": {"hi": "there"} # test that new sections are accounted for too
+    }
+
+    assert cfg.load_config() == expected_dict
+
+
+def test_get_section_incorporates_hierarchy():
+
+    default_dict = {
+        "Section1": {"alpha": 1, "beta": "x"},
+        "Section2": {"gamma": False, "delta": 3.14},
+    }
+
+    override_dict = {
+        "Section1": {"beta": "y"},
+        "Section2": {"gamma": False, "delta": 3.14},
+    }
+
+    cfg = AugurConfig(None, None, [JsonConfig(default_dict, mock_logger), JsonConfig(override_dict, mock_logger)])
+
+    expected_dict = {"alpha": 1, "beta": "y"}
+
+    assert cfg.get_section("Section1") == expected_dict
+
