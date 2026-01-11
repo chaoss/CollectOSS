@@ -14,6 +14,11 @@ services:
       - augurpostgres:/var/lib/postgresql/data
     networks:
       - augur
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUGUR_DB_USER:-augur} -d augur"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: "redis:alpine"
@@ -77,8 +82,10 @@ services:
       - CACHE_DATADIR=/cache
       - CACHE_LOCKDIR=/cache
       - CELERYBEAT_SCHEDULE_DB=/tmp/celerybeat-schedule.db
+      - HOME=/tmp
     depends_on:
-      - augur-db
+      augur-db:
+        condition: service_healthy
       - redis
       - augur-keyman
       - rabbitmq
