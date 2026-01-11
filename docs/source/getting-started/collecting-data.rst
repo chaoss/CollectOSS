@@ -47,8 +47,8 @@ A GitHub Personal Access Token (PAT) is required. The minimum recommended permis
   - ``read:org`` — required when collecting data from repositories owned by an organization
   - ``read:user`` — required for contributor and user metadata returned by the GitHub API
 
-For public repositories only, a token without ``repo`` scope may be sufficient, but API
-rate limits will be significantly lower when requests are unauthenticated or made without a token.
+For public repositories only, a token without ``repo`` scope may be sufficient, though a
+GitHub Personal Access Token is still required for Augur to authenticate API requests.
 
 GitHub tokens should be treated as secrets and supplied to Augur using environment
 variables or configuration options described during installation.
