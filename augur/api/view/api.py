@@ -1,6 +1,7 @@
 import logging
 import re
 
+from augur.api.view.init import report_requests
 from flask import flash, current_app, jsonify, redirect, request, url_for
 from flask_login import current_user, login_required
 
@@ -234,5 +235,4 @@ Locking request loop:
 """
 @app.route('/requests/report/wait/<id>')
 def wait_for_report_request(id):
-    requestReports(id)
-    return jsonify(report_requests[id])
+    return jsonify(report_requests.get(id, {}))
