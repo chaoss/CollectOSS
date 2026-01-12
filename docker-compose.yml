@@ -15,7 +15,8 @@ services:
     networks:
       - augur
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${AUGUR_DB_USER:-augur} -d augur"]
+      test: ["CMD-SHELL", "pg_isready -U ${AUGUR_DB_USER:-augur} -d ${AUGUR_DB_NAME:-augur}"]
+
       interval: 10s
       timeout: 5s
       retries: 5
@@ -86,9 +87,12 @@ services:
     depends_on:
       augur-db:
         condition: service_healthy
-      - redis
-      - augur-keyman
-      - rabbitmq
+      redis:
+        condition: service_started
+      augur-keyman:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
     networks:
       - augur
     user: 2345:2345  # Run as an arbitrary non-root user
