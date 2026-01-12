@@ -546,6 +546,8 @@ class JsonConfig(ConfigStore):
 
     def __init__(self, json_data, logger: logging.Logger):
         super().__init__(logger)
+        if not self.writable:
+            json_data = copy.deepcopy(json_data)
         self.json_data = json_data
 
     @property
