@@ -1,5 +1,3 @@
-import os
-from pathlib import Path
 from .server import Environment
 from augur.application.logs import AugurLogger
 from augur.application.config_paths import get_view_config_path
