@@ -8,6 +8,7 @@ import subprocess
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from augur.application.db.util import catch_operational_error
+from augur.application.config_paths import get_db_config_path
 
 
 def parse_database_string(db_string: str) -> tuple[str,str, str, str, str]:
@@ -63,25 +64,19 @@ def get_database_string() -> str:
 
     augur_db_environment_var = os.getenv("AUGUR_DB")
 
-    try:
-        current_dir = os.getcwd()
-    except FileNotFoundError:
-        print("\n\nPlease run augur commands in the root directory\n\n")
-        sys.exit()
-
-    db_json_file_location = current_dir + "/db.config.json"
+    db_json_file_location = get_db_config_path()
     db_json_exists = os.path.exists(db_json_file_location)
 
     if not augur_db_environment_var and not db_json_exists:
 
-        print("ERROR no way to get connection to the database. \n\t\t\t\t\t\t    There is no db.config.json and the AUGUR_DB environment variable is not set\n\t\t\t\t\t\t    Please run make install or set the AUGUR_DB environment then run make install")
+        print(f"ERROR: Cannot connect to database.\n       No db.config.json found at {db_json_file_location} and the AUGUR_DB environment variable is not set.\n       Please run make install or set the AUGUR_DB environment variable.")
         sys.exit()
 
     if augur_db_environment_var:
         return augur_db_environment_var
 
 
-    with open("db.config.json", 'r') as f:
+    with open(db_json_file_location, 'r') as f:
         db_config = json.load(f)
 
     db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
