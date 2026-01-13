@@ -24,6 +24,7 @@ class KeyClient:
     Raises:
         ValueError: If platform is empty or None
     """
+    # pylint: disable=no-member
     def __init__(self, platform: str, logger: Logger):
         self.id = getpid()
         
@@ -191,7 +192,8 @@ class KeyPublisher:
 
     Typically used during Augur startup to load keys from database.
     """
-    
+    # pylint: disable=no-member
+
     def __init__(self) -> None:
         # Load channel names and IDs from the spec
         for channel in spec["channels"]:
