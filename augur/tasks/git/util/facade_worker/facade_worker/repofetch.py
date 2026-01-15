@@ -359,7 +359,7 @@ def git_repo_updates(facade_helper, repo_git):
                 getremotedefault = ["git", "-C", absolute_path, "checkout", remotedefault]
 
                 facade_helper.log_activity(
-                    'Verbose', f"get remote default command is: \n \n git -C {absolute_path} checkout {remotedefault} \n \n ")
+                    'Verbose', f"get remote default command is: \n \n {' '.join(getremotedefault)} \n \n ")
 
                 return_code_remote_default_again, _ = facade_helper.run_git_command(
                     getremotedefault,
