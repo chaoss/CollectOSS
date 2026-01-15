@@ -340,24 +340,34 @@ def git_repo_updates(facade_helper, repo_git):
 
                 #                    session.log_activity('Verbose', f'remote default is {logremotedefault}.')
 
-                getremotedefault = ["git", "-C", absolute_path, "symbolic-ref", "refs/remotes/origin/HEAD"]
+                getremotedefault = ["git", "-C", absolute_path, "remote", "show", "origin"]
 
-                return_code_remote, remotedefault = facade_helper.run_git_command(
+                return_code_remote, output = facade_helper.run_git_command(
                     getremotedefault,
-                    timeout=60,
+                    timeout=60,  # 1 minute for remote query
                     capture_output=True,
                     operation_description='get remote default branch'
                 )
-                if return_code_remote == 0 and remotedefault:
-                    remotedefault = remotedefault.split('/')[-1]
+
+                remotedefault = ""
+                if return_code_remote == 0 and output:
+                    for line in output.split('\n'):
+                        if "HEAD branch" in line:
+                            parts = line.split(":", 1)
+                            if len(parts) > 1:
+                                remotedefault = parts[1].strip()
+                            break
 
                 facade_helper.log_activity(
                     'Verbose', f'remote default getting checked out is: {remotedefault}.')
 
-                checkout_cmd = ["git", "-C", absolute_path, "checkout", remotedefault]
+                getremotedefault = ["git", "-C", absolute_path, "checkout", remotedefault]
+
+                facade_helper.log_activity(
+                    'Verbose', f"get remote default command is: \n \n git -C {absolute_path} checkout {remotedefault} \n \n ")
 
                 return_code_remote_default_again, _ = facade_helper.run_git_command(
-                    checkout_cmd,
+                    getremotedefault,
                     timeout=600,  # 10 minutes for git checkout
                     capture_output=False,
                     operation_description=f'git checkout {remotedefault}'
@@ -408,23 +418,30 @@ def git_repo_updates(facade_helper, repo_git):
 
 #                session.log_activity('Verbose', f'remote default is {logremotedefault}.')
 
-            getremotedefault = ["git", "-C", absolute_path, "symbolic-ref", "refs/remotes/origin/HEAD"]
+            getremotedefault = ["git", "-C", absolute_path, "remote", "show", "origin"]
 
-            return_code_remote, remotedefault = facade_helper.run_git_command(
+            return_code_remote, output = facade_helper.run_git_command(
                 getremotedefault,
-                timeout=60,
+                timeout=60,  # 1 minute for remote query
                 capture_output=True,
                 operation_description='get remote default branch'
             )
-            if return_code_remote == 0 and remotedefault:
-                remotedefault = remotedefault.split('/')[-1]
+
+            remotedefault = ""
+            if return_code_remote == 0 and output:
+                for line in output.split('\n'):
+                    if "HEAD branch" in line:
+                        parts = line.split(":", 1)
+                        if len(parts) > 1:
+                            remotedefault = parts[1].strip()
+                        break
 
             try:
 
-                checkout_cmd = ["git", "-C", absolute_path, "checkout", remotedefault]
+                getremotedefault = ["git", "-C", absolute_path, "checkout", remotedefault]
 
                 return_code_remote_default, _ = facade_helper.run_git_command(
-                    checkout_cmd,
+                    getremotedefault,
                     timeout=600,  # 10 minutes for git checkout
                     capture_output=False,
                     operation_description=f'git checkout {remotedefault}'
@@ -480,6 +497,8 @@ def git_repo_updates(facade_helper, repo_git):
                 pass
 
         cmdpull2 = ["git", "-C", absolute_path, "pull"]
+
+        print(cmdpull2)
         return_code, _ = facade_helper.run_git_command(
             cmdpull2,
             timeout=600,  # 10 minutes for git pull

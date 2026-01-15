@@ -257,7 +257,7 @@ class FacadeHelper():
     def inc_repos_processed(self):
         self.repos_processed += 1
 
-    def run_git_command(self, cmd: list, timeout: int, capture_output: bool = False, operation_description: str = None) -> tuple:
+    def run_git_command(self, cmd: list[str], timeout: int, capture_output: bool = False, operation_description: str = None) -> tuple:
         """
         Execute a git command with timeout handling.
 
@@ -265,7 +265,7 @@ class FacadeHelper():
         consistent timeout handling and error logging across all facade operations.
 
         Args:
-            cmd: The git command to execute as a list of arguments (e.g., ["git", "clone", url])
+            cmd: The git command to execute
             timeout: Timeout in seconds
             capture_output: If True, capture stdout/stderr; if False, discard them
             operation_description: Human-readable description for error logging
