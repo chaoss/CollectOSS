@@ -30,7 +30,7 @@ import subprocess
 import os
 import pathlib
 import sqlalchemy as s
-from .utilitymethods import update_repo_log, get_absolute_repo_path
+from .utilitymethods import update_repo_log, get_absolute_repo_path, parse_remote_default_branch
 from sqlalchemy.orm.exc import NoResultFound
 from augur.application.db.models.augur_data import *
 from augur.application.db.models.augur_operations import CollectionStatus
@@ -351,12 +351,7 @@ def git_repo_updates(facade_helper, repo_git):
 
                 remotedefault = ""
                 if return_code_remote == 0 and output:
-                    for line in output.split('\n'):
-                        if "HEAD branch" in line:
-                            parts = line.split(":", 1)
-                            if len(parts) > 1:
-                                remotedefault = parts[1].strip()
-                            break
+                    remotedefault = parse_remote_default_branch(output)
 
                 facade_helper.log_activity(
                     'Verbose', f'remote default getting checked out is: {remotedefault}.')
@@ -429,12 +424,7 @@ def git_repo_updates(facade_helper, repo_git):
 
             remotedefault = ""
             if return_code_remote == 0 and output:
-                for line in output.split('\n'):
-                    if "HEAD branch" in line:
-                        parts = line.split(":", 1)
-                        if len(parts) > 1:
-                            remotedefault = parts[1].strip()
-                        break
+                remotedefault = parse_remote_default_branch(output)
 
             try:
 
@@ -498,7 +488,7 @@ def git_repo_updates(facade_helper, repo_git):
 
         cmdpull2 = ["git", "-C", absolute_path, "pull"]
 
-        print(cmdpull2)
+
         return_code, _ = facade_helper.run_git_command(
             cmdpull2,
             timeout=600,  # 10 minutes for git pull
