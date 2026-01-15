@@ -3,7 +3,7 @@ import os
 from os import environ, chmod, path, getenv
 import logging
 from sys import exit
-from subprocess import call
+from subprocess import check_call
 import random
 import string
 import click
@@ -280,7 +280,7 @@ def print_db_version():
     """
     Get the version of the configured database
     """
-    call(["alembic", "current"])
+    check_call(["alembic", "current"])
 
 
 @cli.command("upgrade-db-version")
@@ -290,7 +290,7 @@ def upgrade_db_version():
     """
     Upgrade the configured database to the latest version
     """
-    call(["alembic", "upgrade", "head"])
+    check_call(["alembic", "upgrade", "head"])
 
 
 @cli.command("check-for-upgrade")
@@ -300,7 +300,7 @@ def check_for_upgrade():
     """
     Upgrade the configured database to the latest version
     """
-    call(["alembic", "history", "-i"])
+    check_call(["alembic", "history", "-i"])
 
 
 @cli.command("create-schema")
@@ -310,7 +310,7 @@ def create_schema():
     """
     Create schema in the configured database
     """
-    call(["alembic", "upgrade", "head"])
+    check_call(["alembic", "upgrade", "head"])
 
 
 def generate_key(length):
@@ -513,7 +513,7 @@ def run_psql_command_in_database(target_type, target):
             db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
             engine = s.create_engine(db_conn_string)
 
-    call(
+    check_call(
         [
             "psql",
             "-h",
