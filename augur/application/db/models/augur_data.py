@@ -189,6 +189,12 @@ class Contributor(Base):
         String,
         comment="Will be a double population with the same value as gh_login for github, but the local value for other systems. ",
     )
+    platform = Column(
+        String,
+        server_default=text("'github'::character varying"),
+        nullable=False
+    )
+    platform_username = Column(String)
     cntrb_email = Column(
         String,
         comment="This needs to be here for matching contributor ids, which are augur, to the commit information. ",
@@ -280,6 +286,8 @@ class Contributor(Base):
 
         contributor_obj.cntrb_id = cntrb_id.to_UUID()
         contributor_obj.cntrb_login = contributor['login']
+        contributor_obj.platform = 'github'
+        contributor_obj.platform_username = contributor['login']
         contributor_obj.cntrb_created_at = contributor['created_at'] if 'created_at' in contributor else None
         contributor_obj.cntrb_email = contributor['email'] if 'email' in contributor else None
         contributor_obj.cntrb_company = contributor['company'] if 'company' in contributor else None

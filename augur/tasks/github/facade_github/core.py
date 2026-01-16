@@ -85,6 +85,8 @@ def query_github_contributors(logger, key_auth, github_url):
             cntrb = {
                 "cntrb_id" : cntrb_id.to_UUID(),
                 "cntrb_login": contributor['login'],
+                "platform": "github",
+                "platform_username": contributor['login'],
                 "cntrb_created_at": contributor['created_at'],
                 "cntrb_email": email,
                 "cntrb_company": company,

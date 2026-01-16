@@ -644,6 +644,21 @@ def extract_needed_message_data(comment: dict, platform_id: int, repo_id: int, t
 
     return dict_data
 
+def _extract_base_contributor_data(contributor_data, tool_source, tool_version, data_source):
+    """
+    Helper function to extract common contributor data.
+    """
+    return {
+        "cntrb_created_at": contributor_data.get('created_at'),
+        "cntrb_email": contributor_data.get('email'),
+        "cntrb_company": contributor_data.get('company'),
+        "cntrb_location": contributor_data.get('location'),
+        "cntrb_canonical": contributor_data.get('email'),
+        "tool_source": tool_source,
+        "tool_version": tool_version,
+        "data_source": data_source
+    }
+
 def extract_needed_contributor_data(contributor, tool_source, tool_version, data_source):
 
     if not contributor:
@@ -651,16 +666,12 @@ def extract_needed_contributor_data(contributor, tool_source, tool_version, data
 
     cntrb_id = GithubUUID()   
     cntrb_id["user"] = contributor["id"]
+    
+    base_data = _extract_base_contributor_data(contributor, tool_source, tool_version, data_source)
 
-    contributor = {
+    specific_data = {
             "cntrb_id": cntrb_id.to_UUID(),
             "cntrb_login": contributor['login'],
-            "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,
-            "cntrb_email": contributor['email'] if 'email' in contributor else None,
-            "cntrb_company": contributor['company'] if 'company' in contributor else None,
-            "cntrb_location": contributor['location'] if 'location' in contributor else None,
-            # "cntrb_type": , dont have a use for this as of now ... let it default to null
-            "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
             "gh_user_id": contributor['id'],
             "gh_login": str(contributor['login']),  ## cast as string by SPG on 11/28/2021 due to `nan` user
             "gh_url": contributor['url'],
@@ -679,14 +690,13 @@ def extract_needed_contributor_data(contributor, tool_source, tool_version, data
             "gh_received_events_url": contributor['received_events_url'],
             "gh_type": contributor['type'],
             "gh_site_admin": contributor['site_admin'],
-            "cntrb_last_used" : None if 'updated_at' not in contributor else contributor['updated_at'],
-            "cntrb_full_name" : None if 'name' not in contributor else contributor['name'],
-            "tool_source": tool_source,
-            "tool_version": tool_version,
-            "data_source": data_source
+            "cntrb_last_used" : contributor.get('updated_at'),
+            "cntrb_full_name" : contributor.get('name'),
+            "platform": "github",
+            "platform_username": contributor['login']
         }
-
-    return contributor
+    
+    return {**base_data, **specific_data}
 
 def extract_needed_gitlab_contributor_data(contributor, tool_source, tool_version,  data_source):
 
@@ -696,21 +706,19 @@ def extract_needed_gitlab_contributor_data(contributor, tool_source, tool_versio
     cntrb_id = GitlabUUID()   
     cntrb_id["user"] = contributor["id"]
 
-    contributor = {
+    base_data = _extract_base_contributor_data(contributor, tool_source, tool_version, data_source)
+
+    specific_data = {
             "cntrb_id": cntrb_id.to_UUID(),
             "cntrb_login": contributor['username'],
-            "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,
-            "cntrb_email": contributor['email'] if 'email' in contributor else None,
-            "cntrb_company": contributor['company'] if 'company' in contributor else None,
-            "cntrb_location": contributor['location'] if 'location' in contributor else None,
-            # "cntrb_type": , dont have a use for this as of now ... let it default to null
-            "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
-            "gh_user_id": contributor['id'],
-            "gh_login": str(contributor['username']),  ## cast as string by SPG on 11/28/2021 due to `nan` user
-            "gh_url": contributor['web_url'],
+            
+            # Nullify GitHub columns
+            "gh_user_id": None,
+            "gh_login": None,
+            "gh_url": None,
             "gh_html_url": None,
             "gh_node_id": None,
-            "gh_avatar_url": contributor['avatar_url'],
+            "gh_avatar_url": None,
             "gh_gravatar_id": None,
             "gh_followers_url": None,
             "gh_following_url": None,
@@ -723,14 +731,19 @@ def extract_needed_gitlab_contributor_data(contributor, tool_source, tool_versio
             "gh_received_events_url": None,
             "gh_type": None,
             "gh_site_admin": None,
+            
             "cntrb_last_used" : None,
             "cntrb_full_name" : None,
-            "tool_source": tool_source,
-            "tool_version": tool_version,
-            "data_source": data_source
+            
+            "platform": "gitlab",
+            "platform_username": contributor['username'],
+            "gl_username": contributor['username'],
+            "gl_id": contributor['id'],
+            "gl_web_url": contributor['web_url'],
+            "gl_avatar_url": contributor['avatar_url']
         }
 
-    return contributor
+    return {**base_data, **specific_data}
 
 
 def extract_needed_clone_history_data(clone_history_data:List[dict], repo_id:int):
