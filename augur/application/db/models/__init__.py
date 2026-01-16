@@ -14,6 +14,7 @@ from augur.application.db.models.augur_data import (
     ContributorRepo,
     ContributorsAlias,
     Repo,
+    HistoricalRepoURLs,
     RepoTestCoverage,
     RepoGroupInsight,
     RepoGroupsListServe,

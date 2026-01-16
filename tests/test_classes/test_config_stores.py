@@ -25,12 +25,31 @@ def test_jsonconfig_empty_true_false(mock_logger):
     assert JsonConfig({"A": {}}, mock_logger).empty is False
 
 
+def test_jsonconfig_write_protection(mock_logger):
+    # JsonConfig should be not writeable by default, so we should be unable to change
+    # its values, even by abusing references
+    
+    data = {"Alpha": {"a": 1, "b": "str"}, "Beta": {}}
+    cfg = JsonConfig(data, mock_logger)
+
+    # mutation via input
+    data["Alpha"]["a"] = 2
+
+    config_test = cfg.retrieve_dict() 
+    assert config_test != data # the data in the config should not change
+
+    # mutation via output
+    config_test["Alpha"]["a"] = 3
+    
+    config_test = cfg.retrieve_dict() 
+    assert config_test != data # the data in the config should not change
+
 def test_jsonconfig_retrieve_has_get(mock_logger):
     data = {"Alpha": {"a": 1, "b": "str"}, "Beta": {}}
     cfg = JsonConfig(data, mock_logger)
 
     # retrieve full dict
-    assert cfg.retrieve_dict() is data
+    assert cfg.retrieve_dict() == data
 
     # has/get section
     assert cfg.has_section("Alpha") is True
