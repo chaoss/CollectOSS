@@ -136,7 +136,6 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
 
 def process_messages(messages, task_name, repo_id, logger, augur_db):
 
-    tool_source = "Pr comment task"
     tool_version = "2.0"
     data_source = "Github API"
 
@@ -174,6 +173,12 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
                 logger.info(f"{task_name}: Processing {message_len-index} messages")
 
         related_pr_or_issue_found = False
+
+        # determine whether this is an issue or PR message so we can set the correct tool_source in metadata
+        if is_issue_message(message["html_url"]):
+            tool_source = "Issue comment task"
+        else:
+            tool_source = "Pr comment task"
 
         # this adds the cntrb_id to the message data
         # the returned contributor will be added to the contributors list later, if the related issue or pr are found
