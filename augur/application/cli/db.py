@@ -298,7 +298,7 @@ def upgrade_db_version():
 @test_db_connection
 def check_for_upgrade():
     """
-    Upgrade the configured database to the latest version
+    Show available database migration history
     """
     check_call(["alembic", "history", "-i"])
 
