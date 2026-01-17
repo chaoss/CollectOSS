@@ -187,6 +187,19 @@ legacy_tox_ini = """
     addopts = -ra -s
 """
 
+[tool.pytest.ini_options]
+addopts = "-ra -s"
+testpaths = [
+    "tests/test_classes",
+    # "tests/test_routes", # runs, but needs a fixture for connecting to the web interface of Augur
+    # "tests/test_metrics",
+    # "tests/test_tasks",
+    # "tests/test_application",
+    # "tests/test_workers",
+    # "tests/test_workers/worker_persistence/",
+    # "tests/test_routes/runner.py"
+]
+
 [tool.mypy]
 files = ['augur/application/db/*.py']
 ignore_missing_imports = true
