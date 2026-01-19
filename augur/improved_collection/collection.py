@@ -526,3 +526,102 @@ class AugurCollection:
         except Exception as e:
             logger.error(f"Error creating collection for repo {repo_id}: {e}")
             return None
+    
+    @staticmethod
+    def find_repos_needing_initial_collection() -> List[str]:
+        """Find repositories that have never been successfully collected.
+        
+        Returns:
+            List of repo_ids that need initial collection.
+        """
+        new_repo_sql = text("""    
+        SELECT DISTINCT rc.repo_id
+        FROM repo_collections rc
+        LEFT JOIN task_runs tr 
+            ON tr.collection_record_id = rc.id
+        GROUP BY rc.repo_id
+        HAVING COUNT(*) = 0
+        OR NOT EXISTS (
+            SELECT 1
+            FROM repo_collections rc2
+            JOIN task_runs tr2 ON tr2.collection_record_id = rc2.id
+            WHERE rc2.repo_id = rc.repo_id
+                AND tr2.state = 'Complete'
+       );""")
+        
+        with DatabaseSession(logger) as session:
+            result = session.fetchall_data_from_sql_text(new_repo_sql)
+        
+        return [row['repo_id'] for row in result]
+    
+    @staticmethod
+    def find_failed_collections(retry_hours: int) -> List[dict]:
+        """Find failed collections that are ready to be retried.
+        
+        Args:
+            retry_hours: Number of hours to wait before retrying a failed collection.
+            
+        Returns:
+            List of dicts containing collection_id, repo_id, workflow_id, completed_on, state.
+        """
+        failed_sql = text("""    
+        SELECT rc.id AS collection_id,
+            rc.repo_id,
+            rc.workflow_id,
+            rc.completed_on,
+            rc.state
+        FROM repo_collections rc
+        JOIN (
+            -- Get the last collection for each repo
+            SELECT repo_id, MAX(id) AS last_collection_id
+            FROM repo_collections
+            GROUP BY repo_id
+        ) lc ON rc.id = lc.last_collection_id
+        WHERE rc.state = 'Failed'
+        AND rc.completed_on < NOW() - INTERVAL ':retry_hours HOURS';
+      """)
+        
+        with DatabaseSession(logger) as session:
+            result = session.fetchall_data_from_sql_text(
+                failed_sql.bindparams(retry_hours=retry_hours)
+            )
+        
+        return [
+            {
+                'collection_id': row['collection_id'],
+                'repo_id': row['repo_id'],
+                'workflow_id': row['workflow_id'],
+                'completed_on': row['completed_on'],
+                'state': row['state']
+            }
+            for row in result
+        ]
+    
+    @staticmethod
+    def find_repos_needing_recollection(recollection_days: int) -> List[str]:
+        """Find repositories whose last collection is older than specified days.
+        
+        Args:
+            recollection_days: Number of days to wait before recollecting a repository.
+            
+        Returns:
+            List of repo_ids that need recollection.
+        """
+        recollection_sql = text("""    
+        SELECT rc.repo_id
+        FROM repo_collections rc
+        JOIN (
+            SELECT repo_id, MAX(completed_on) AS last_completed
+            FROM repo_collections
+            WHERE completed_on IS NOT NULL
+            GROUP BY repo_id
+        ) lc ON rc.repo_id = lc.repo_id AND rc.completed_on = lc.last_completed
+        WHERE rc.completed_on < NOW() - INTERVAL ':recollection_days DAYS';
+       """)
+        
+        with DatabaseSession(logger) as session:
+            result = session.fetchall_data_from_sql_text(
+                recollection_sql.bindparams(recollection_days=recollection_days)
+            )
+        
+        return [row['repo_id'] for row in result]
