@@ -15,7 +15,7 @@ from sqlalchemy import text
 
 from augur.application.db.session import DatabaseSession
 from augur.improved_collection.rabbit_client import RabbitClient
-from augur.improved_collection.models import TaskRunState
+from augur.improved_collection.models import TaskRunState, CollectionType
 
 logger = logging.getLogger(__name__)
 
@@ -568,11 +568,12 @@ class AugurCollection:
         ]
     
     @staticmethod
-    def create_new_collection_from_most_recent_workflow(repo_id: str) -> Optional[int]:
+    def create_new_collection_from_most_recent_workflow(repo_id: str, collection_type: CollectionType = CollectionType.FULL) -> Optional[int]:
         """Create a new collection record and associated task runs for a repository.
         
         Args:
             repo_id: The repository ID to create a collection for.
+            collection_type: Type of collection (full or incremental). Defaults to full.
             
         Returns:
             The collection ID if successful, None otherwise.
@@ -585,8 +586,8 @@ class AugurCollection:
             LIMIT 1
         ),
         new_collection AS (
-            INSERT INTO repo_collections (repo_id, workflow_id, origin, state)
-            SELECT :repo_id, lw.workflow_id, 'automation', 'Collecting'
+            INSERT INTO repo_collections (repo_id, workflow_id, origin, state, collection_type)
+            SELECT :repo_id, lw.workflow_id, 'automation', 'Collecting', :collection_type
             FROM latest_workflow lw
             RETURNING id AS collection_id, workflow_id
         )
@@ -601,7 +602,10 @@ class AugurCollection:
         try:
             with DatabaseSession(logger) as session:
                 result = session.fetchall_data_from_sql_text(
-                    create_new_collection_sql.bindparams(repo_id=repo_id)
+                    create_new_collection_sql.bindparams(
+                        repo_id=repo_id,
+                        collection_type=collection_type.value
+                    )
                 )
             
             if result:

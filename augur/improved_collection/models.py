@@ -5,6 +5,12 @@ Shared models and enums for the improved collection system.
 from enum import Enum
 
 
+class CollectionType(str, Enum):
+    """Enum for collection types."""
+    FULL = 'full'
+    INCREMENTAL = 'incremental'
+
+
 class TaskRunState(str, Enum):
     """Enum for task run states."""
     PENDING = 'Pending'

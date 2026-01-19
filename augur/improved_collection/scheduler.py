@@ -3,6 +3,7 @@ import logging
 from sqlalchemy import text
 
 from augur.improved_collection.collection import AugurCollection
+from augur.improved_collection.models import CollectionType
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,10 @@ def start_collection_on_new_repos() -> List[int]:
     
     collection_ids = []
     for repo_id in repo_ids:
-        collection_id = AugurCollection.create_new_collection_from_most_recent_workflow(repo_id)
+        collection_id = AugurCollection.create_new_collection_from_most_recent_workflow(
+            repo_id,
+            collection_type=CollectionType.FULL
+        )
         if collection_id:
             collection_ids.append(collection_id)
     
@@ -110,7 +114,10 @@ def start_recollection_on_collected_repos(recollection_days: int = 7) -> List[in
     
     collection_ids = []
     for repo_id in repo_ids:
-        collection_id = AugurCollection.create_new_collection_from_most_recent_workflow(repo_id)
+        collection_id = AugurCollection.create_new_collection_from_most_recent_workflow(
+            repo_id,
+            collection_type=CollectionType.INCREMENTAL
+        )
         if collection_id:
             collection_ids.append(collection_id)
     
