@@ -45,6 +45,8 @@ CREATE TABLE repo_collections (
 
 -- 5. Task Run State Enum
 CREATE TYPE task_run_state AS ENUM (
+    'Pending',
+    'Queued',
     'Collecting',
     'Failed',
     'Complete'

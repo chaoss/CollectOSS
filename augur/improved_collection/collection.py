@@ -1,0 +1,528 @@
+"""
+AugurCollection domain class for managing collection and task state transitions.
+
+This class owns the responsibility for:
+- Updating task states (Queued, Collecting, Complete, Failed)
+- Updating collection states (Complete, Failed)
+- Publishing events for all state transitions
+"""
+
+import logging
+from dataclasses import dataclass
+from typing import List, Optional
+from datetime import datetime
+from sqlalchemy import text
+
+from augur.application.db.session import DatabaseSession
+from augur.improved_collection.rabbit_client import RabbitClient
+from augur.improved_collection.models import TaskRunState
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class TaskRunInfo:
+    """Represents a task run with its dependencies."""
+    id: int
+    name: str
+    state: TaskRunState
+    start_date: Optional[datetime]
+    dependency_states: Optional[List[TaskRunState]]
+    
+    def is_pending(self) -> bool:
+        """Check if task is in Pending state."""
+        return self.state == TaskRunState.PENDING
+    
+    def is_queued(self) -> bool:
+        """Check if task is in Queued state."""
+        return self.state == TaskRunState.QUEUED
+    
+    def is_collecting(self) -> bool:
+        """Check if task is in Collecting state."""
+        return self.state == TaskRunState.COLLECTING
+    
+    def is_complete(self) -> bool:
+        """Check if task is in Complete state."""
+        return self.state == TaskRunState.COMPLETE
+    
+    def is_failed(self) -> bool:
+        """Check if task is in Failed state."""
+        return self.state == TaskRunState.FAILED
+    
+    def all_dependencies_complete(self) -> bool:
+        """Check if all dependencies are in Complete state."""
+        if not self.dependency_states:
+            return True
+        return all(state == TaskRunState.COMPLETE for state in self.dependency_states)
+    
+    def is_ready_to_queue(self) -> bool:
+        """Check if task is ready to be queued (pending with all deps complete)."""
+        return self.is_pending() and self.all_dependencies_complete()
+
+
+@dataclass
+class CollectionRun:
+    """Represents a collection run with all its tasks."""
+    id: int
+    repo_id: str
+    workflow_id: int
+    tasks: List[TaskRunInfo]
+    
+    def get_queued_tasks(self) -> List[TaskRunInfo]:
+        """Get all queued tasks."""
+        return [task for task in self.tasks if task.is_queued()]
+    
+    def get_collecting_tasks(self) -> List[TaskRunInfo]:
+        """Get all collecting tasks."""
+        return [task for task in self.tasks if task.is_collecting()]
+    
+    def get_ready_to_queue_tasks(self) -> List[TaskRunInfo]:
+        """Get all tasks that are ready to be queued."""
+        return [task for task in self.tasks if task.is_ready_to_queue()]
+    
+    def all_tasks_complete(self) -> bool:
+        """Check if all tasks in the collection are complete."""
+        return len(self.tasks) > 0 and all(task.is_complete() for task in self.tasks)
+    
+    def has_failed_tasks(self) -> bool:
+        """Check if collection has any failed tasks."""
+        return any(task.is_failed() for task in self.tasks)
+    
+    def should_be_marked_complete(self) -> bool:
+        """Check if collection should be marked as complete."""
+        return self.all_tasks_complete()
+    
+    def should_be_marked_failed(self) -> bool:
+        """Check if collection should be marked as failed.
+        
+        A collection should be failed if:
+        - It has at least one failed task
+        - No tasks are currently queued or collecting (nothing actively running)
+        - No pending tasks are ready to queue (nothing can progress)
+        """
+        if not self.has_failed_tasks():
+            return False
+        
+        # Check if there are any queued or collecting tasks (work in progress)
+        if self.get_queued_tasks() or self.get_collecting_tasks():
+            return False
+        
+        # If no tasks are ready to queue, nothing can progress
+        return len(self.get_ready_to_queue_tasks()) == 0
+
+
+class AugurCollection:
+    """Domain class for managing collection and task lifecycle with event publishing."""
+    
+    def __init__(self, rabbit_client: Optional[RabbitClient] = None):
+        """
+        Initialize AugurCollection.
+        
+        Args:
+            rabbit_client: Optional RabbitClient for publishing events.
+                          If None, events will not be published (useful for testing).
+        """
+        self.rabbit_client = rabbit_client
+        self.exchange = "augur.collection"
+        self.source = "augur.collection.scheduler"
+    
+    def _publish_event(self, event_type: str, routing_key: str, data: dict):
+        """
+        Publish an event to RabbitMQ.
+        
+        Args:
+            event_type: CloudEvent type (e.g., 'task.queued')
+            routing_key: Routing key for the message
+            data: Event payload data
+        """
+        if self.rabbit_client:
+            try:
+                self.rabbit_client.publish(
+                    exchange=self.exchange,
+                    routing_key=routing_key,
+                    data=data,
+                    event_type=event_type,
+                    source=self.source,
+                    persistent=True
+                )
+                logger.debug(f"Published event {event_type} with routing key {routing_key}")
+            except Exception as e:
+                logger.error(f"Failed to publish event {event_type}: {e}")
+        else:
+            logger.debug(f"No RabbitClient configured, skipping event publish: {event_type}")
+    
+    def update_task_to_queued(self, task_run_id: int, collection_id: int, 
+                              repo_id: str, task_name: str) -> bool:
+        """
+        Update a task to Queued state and publish a task.queued event.
+        
+        Args:
+            task_run_id: ID of the task run to update
+            collection_id: ID of the collection this task belongs to
+            repo_id: Repository ID
+            task_name: Name of the task
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with DatabaseSession(logger) as session:
+                update_sql = text("""
+                    UPDATE task_runs
+                    SET state = 'Queued'
+                    WHERE id = :task_run_id
+                """)
+                session.execute_sql(update_sql.bindparams(task_run_id=task_run_id))
+            
+            logger.info(f"Updated task {task_name} (id: {task_run_id}) to Queued state")
+            
+            # Publish task.queued event
+            self._publish_event(
+                event_type="task.queued",
+                routing_key=f"task.queued.{repo_id}",
+                data={
+                    "task_run_id": task_run_id,
+                    "collection_id": collection_id,
+                    "repo_id": repo_id,
+                    "task_name": task_name,
+                    "state": "Queued",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to update task {task_run_id} to Queued: {e}")
+            return False
+    
+    def update_task_to_collecting(self, task_run_id: int, collection_id: int,
+                                   repo_id: str, task_name: str) -> bool:
+        """
+        Update a task to Collecting state and publish a task.collecting event.
+        
+        Args:
+            task_run_id: ID of the task run to update
+            collection_id: ID of the collection this task belongs to
+            repo_id: Repository ID
+            task_name: Name of the task
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with DatabaseSession(logger) as session:
+                update_sql = text("""
+                    UPDATE task_runs
+                    SET state = 'Collecting', start_date = NOW()
+                    WHERE id = :task_run_id
+                """)
+                session.execute_sql(update_sql.bindparams(task_run_id=task_run_id))
+            
+            logger.info(f"Updated task {task_name} (id: {task_run_id}) to Collecting state")
+            
+            # Publish task.collecting event
+            self._publish_event(
+                event_type="task.collecting",
+                routing_key=f"task.collecting.{repo_id}",
+                data={
+                    "task_run_id": task_run_id,
+                    "collection_id": collection_id,
+                    "repo_id": repo_id,
+                    "task_name": task_name,
+                    "state": "Collecting",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to update task {task_run_id} to Collecting: {e}")
+            return False
+    
+    def update_task_to_complete(self, task_run_id: int, collection_id: int,
+                                repo_id: str, task_name: str) -> bool:
+        """
+        Update a task to Complete state and publish a task.completed event.
+        
+        Args:
+            task_run_id: ID of the task run to update
+            collection_id: ID of the collection this task belongs to
+            repo_id: Repository ID
+            task_name: Name of the task
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with DatabaseSession(logger) as session:
+                update_sql = text("""
+                    UPDATE task_runs
+                    SET state = 'Complete'
+                    WHERE id = :task_run_id
+                """)
+                session.execute_sql(update_sql.bindparams(task_run_id=task_run_id))
+            
+            logger.info(f"Updated task {task_name} (id: {task_run_id}) to Complete state")
+            
+            # Publish task.completed event
+            self._publish_event(
+                event_type="task.completed",
+                routing_key=f"task.completed.{repo_id}",
+                data={
+                    "task_run_id": task_run_id,
+                    "collection_id": collection_id,
+                    "repo_id": repo_id,
+                    "task_name": task_name,
+                    "state": "Complete",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to update task {task_run_id} to Complete: {e}")
+            return False
+    
+    def update_task_to_failed(self, task_run_id: int, collection_id: int,
+                              repo_id: str, task_name: str, 
+                              stacktrace: Optional[str] = None) -> bool:
+        """
+        Update a task to Failed state and publish a task.failed event.
+        
+        Args:
+            task_run_id: ID of the task run to update
+            collection_id: ID of the collection this task belongs to
+            repo_id: Repository ID
+            task_name: Name of the task
+            stacktrace: Optional error stacktrace
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with DatabaseSession(logger) as session:
+                update_sql = text("""
+                    UPDATE task_runs
+                    SET state = 'Failed', stacktrace = :stacktrace
+                    WHERE id = :task_run_id
+                """)
+                session.execute_sql(update_sql.bindparams(
+                    task_run_id=task_run_id,
+                    stacktrace=stacktrace
+                ))
+            
+            logger.info(f"Updated task {task_name} (id: {task_run_id}) to Failed state")
+            
+            # Publish task.failed event
+            event_data = {
+                "task_run_id": task_run_id,
+                "collection_id": collection_id,
+                "repo_id": repo_id,
+                "task_name": task_name,
+                "state": "Failed",
+                "timestamp": datetime.utcnow().isoformat()
+            }
+            
+            if stacktrace:
+                event_data["stacktrace"] = stacktrace
+            
+            self._publish_event(
+                event_type="task.failed",
+                routing_key=f"task.failed.{repo_id}",
+                data=event_data
+            )
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to update task {task_run_id} to Failed: {e}")
+            return False
+    
+    def update_collection_to_complete(self, collection_id: int) -> bool:
+        """
+        Update a collection to Complete state and publish a collection.completed event.
+        
+        Args:
+            collection_id: ID of the collection to update
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with DatabaseSession(logger) as session:
+                update_sql = text("""
+                    UPDATE repo_collections
+                    SET state = 'Complete', completed_on = NOW()
+                    WHERE id = :collection_id
+                """)
+                session.execute_sql(update_sql.bindparams(collection_id=collection_id))
+            
+            logger.info(f"Updated collection {collection_id} to Complete state")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to update collection {collection_id} to Complete: {e}")
+            return False
+    
+    def update_collection_to_failed(self, collection_id: int, repo_id: str,
+                                    workflow_id: int) -> bool:
+        """
+        Update a collection to Failed state and publish a collection.failed event.
+        
+        Args:
+            collection_id: ID of the collection to update
+            repo_id: Repository ID
+            workflow_id: Workflow ID
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with DatabaseSession(logger) as session:
+                update_sql = text("""
+                    UPDATE repo_collections
+                    SET state = 'Failed', completed_on = NOW()
+                    WHERE id = :collection_id
+                """)
+                session.execute_sql(update_sql.bindparams(collection_id=collection_id))
+            
+            logger.info(f"Updated collection {collection_id} to Failed state")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to update collection {collection_id} to Failed: {e}")
+            return False
+    
+    @staticmethod
+    def get_running_collections() -> List[CollectionRun]:
+        """Get all collection runs currently in 'Collecting' state with their tasks.
+        
+        Returns:
+            List of CollectionRun objects, each containing their tasks and metadata.
+        """
+        get_tasks_for_collection_sql = text("""
+            WITH collecting_collections AS (
+                SELECT *
+                FROM repo_collections
+                WHERE state = 'Collecting'
+            )
+            SELECT
+                rc.id AS collection_id,
+                rc.repo_id,
+                rc.workflow_id,
+                tr.id AS task_run_id,
+                wt.task_name,
+                tr.state AS task_run_state,
+                tr.start_date,
+                -- Array of dependency task run states
+                array_agg(dep_tr.state) FILTER (WHERE dep_tr.state IS NOT NULL) AS depends_on_task_states
+            FROM collecting_collections rc
+            JOIN task_runs tr
+                ON tr.collection_record_id = rc.id
+            JOIN workflow_tasks wt
+                ON wt.id = tr.workflow_task_id
+            LEFT JOIN workflow_dependencies wd
+                ON wd.workflow_task_id = wt.id
+            LEFT JOIN task_runs dep_tr
+                ON dep_tr.collection_record_id = rc.id
+            AND dep_tr.workflow_task_id = wd.depends_on_workflow_task_id
+            GROUP BY rc.id, rc.repo_id, rc.workflow_id, tr.id, wt.task_name, tr.state, tr.start_date
+            ORDER BY rc.id, tr.id;
+        """)
+        
+        with DatabaseSession(logger) as session:
+            result = session.fetchall_data_from_sql_text(get_tasks_for_collection_sql)
+        
+        # Group tasks by collection_id
+        collections_dict = {}
+        for row in result:
+            collection_id = row['collection_id']
+            
+            if collection_id not in collections_dict:
+                collections_dict[collection_id] = {
+                    'collection_id': collection_id,
+                    'repo_id': row['repo_id'],
+                    'workflow_id': row['workflow_id'],
+                    'tasks': []
+                }
+            
+            # Convert string states to enum
+            task_state = TaskRunState(row['task_run_state'])
+            dep_states = [TaskRunState(state) for state in row['depends_on_task_states']] if row['depends_on_task_states'] else None
+            
+            task = TaskRunInfo(
+                id=row['task_run_id'],
+                name=row['task_name'],
+                state=task_state,
+                start_date=row['start_date'],
+                dependency_states=dep_states
+            )
+            collections_dict[collection_id]['tasks'].append(task)
+        
+        # Convert to CollectionRun objects
+        return [
+            CollectionRun(
+                id=data['collection_id'],
+                repo_id=data['repo_id'],
+                workflow_id=data['workflow_id'],
+                tasks=data['tasks']
+            )
+            for data in collections_dict.values()
+        ]
+    
+    @staticmethod
+    def create_new_collection_from_most_recent_workflow(repo_id: str) -> Optional[int]:
+        """Create a new collection record and associated task runs for a repository.
+        
+        Args:
+            repo_id: The repository ID to create a collection for.
+            
+        Returns:
+            The collection ID if successful, None otherwise.
+        """
+        create_new_collection_sql = text("""
+        WITH latest_workflow AS (
+            SELECT id AS workflow_id
+            FROM workflows
+            ORDER BY id DESC
+            LIMIT 1
+        ),
+        new_collection AS (
+            INSERT INTO repo_collections (repo_id, workflow_id, origin, state)
+            SELECT :repo_id, lw.workflow_id, 'automation', 'Collecting'
+            FROM latest_workflow lw
+            RETURNING id AS collection_id, workflow_id
+        )
+        INSERT INTO task_runs (collection_record_id, workflow_task_id, state)
+        SELECT nc.collection_id, wt.id, 'Pending'
+        FROM new_collection nc
+        JOIN workflow_tasks wt
+        ON wt.workflow_id = nc.workflow_id
+        RETURNING collection_record_id, workflow_task_id, state;
+        """)
+        
+        try:
+            with DatabaseSession(logger) as session:
+                result = session.fetchall_data_from_sql_text(
+                    create_new_collection_sql.bindparams(repo_id=repo_id)
+                )
+            
+            if result:
+                collection_id = result[0]['collection_record_id']
+                logger.info(
+                    f"Created new collection {collection_id} for repo {repo_id} "
+                    f"with {len(result)} task runs"
+                )
+                return collection_id
+            else:
+                logger.warning(f"No workflow found to create collection for repo {repo_id}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error creating collection for repo {repo_id}: {e}")
+            return None
