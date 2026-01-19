@@ -657,11 +657,7 @@ class AugurCollection:
             List of dicts containing collection_id, repo_id, workflow_id, completed_on, state.
         """
         failed_sql = text("""    
-        SELECT rc.id AS collection_id,
-            rc.repo_id,
-            rc.workflow_id,
-            rc.completed_on,
-            rc.state
+        SELECT rc.id AS collection_id
         FROM repo_collections rc
         JOIN (
             -- Get the last collection for each repo

@@ -1,22 +1,10 @@
-from dataclasses import dataclass
-from typing import List, Optional
-from datetime import datetime
+from typing import List
 import logging
 from sqlalchemy import text
 
 from augur.improved_collection.collection import AugurCollection
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class FailedCollectionInfo:
-    """Represents a failed collection that can be retried."""
-    collection_id: int
-    repo_id: str
-    workflow_id: int
-    completed_on: Optional[datetime]
-    state: str
 
 
 def queue_tasks_for_running_collections() -> int:
@@ -93,24 +81,15 @@ def retry_collection_on_failed_repos(retry_hours: int = 24) -> int:
     """
     failed_collection_dicts = AugurCollection.find_failed_collections(retry_hours)
     
-    failed_collections = [
-        FailedCollectionInfo(
-            collection_id=row['collection_id'],
-            repo_id=row['repo_id'],
-            workflow_id=row['workflow_id'],
-            completed_on=row['completed_on'],
-            state=row['state']
-        )
-        for row in failed_collection_dicts
-    ]
+    collection_ids = [row['collection_id'] for row in failed_collection_dicts]
     
-    logger.info(f"Found {len(failed_collections)} failed collections to retry")
+    logger.info(f"Found {len(collection_ids)} failed collections to retry")
     
     augur_collection = AugurCollection()
     retry_count = 0
     
-    for failed in failed_collections:
-        if augur_collection.retry_failed_collection(failed.collection_id):
+    for collection_id in collection_ids:
+        if augur_collection.retry_failed_collection(collection_id):
             retry_count += 1
     
     logger.info(f"Retried {retry_count} failed collections")
