@@ -14,6 +14,15 @@ services:
       - "${COLLECTOSS_DB_PORT:-5432}:5432"
     volumes:
       - augurpostgres:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${COLLECTOSS_DB_USER:-augur} -d ${COLLECTOSS_DB_NAME:-augur}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: "redis:alpine"
@@ -74,10 +83,14 @@ services:
       - CACHE_LOCKDIR=/cache
       - CELERYBEAT_SCHEDULE_DB=/tmp/celerybeat-schedule.db
     depends_on:
-      - database
-      - redis
-      - keyman
-      - rabbitmq
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      keyman:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
     user: 2345:2345 # Run as an arbitrary non-root user
     post_start:
       # Make sure the user has access to the volumes
