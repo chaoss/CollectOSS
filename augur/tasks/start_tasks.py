@@ -118,11 +118,14 @@ def primary_repo_collect_phase_gitlab(repo_git, full_collection):
 def secondary_repo_collect_phase(repo_git, full_collection):
     logger = logging.getLogger(secondary_repo_collect_phase.__name__)
 
-    repo_task_group = group(
-        process_pull_request_files.si(repo_git, full_collection),
-        process_pull_request_commits.si(repo_git, full_collection),
-        chain(collect_pull_request_reviews.si(repo_git, full_collection), collect_pull_request_review_comments.si(repo_git, full_collection)),
-        process_ossf_dependency_metrics.si(repo_git)
+    repo_task_group = chain(
+        group(
+            process_pull_request_files.si(repo_git, full_collection),
+            process_pull_request_commits.si(repo_git, full_collection),
+            collect_pull_request_reviews.si(repo_git, full_collection),
+            process_ossf_dependency_metrics.si(repo_git)
+        ),
+        collect_pull_request_review_comments.si(repo_git, full_collection)
     )
 
     return repo_task_group
