@@ -368,8 +368,7 @@ class AugurCollection:
             logger.error(f"Failed to update collection {collection_id} to Complete: {e}")
             return False
     
-    def update_collection_to_failed(self, collection_id: int, repo_id: str,
-                                    workflow_id: int) -> bool:
+    def update_collection_to_failed(self, collection_id: int) -> bool:
         """
         Update a collection to Failed state and publish a collection.failed event.
         
@@ -396,6 +395,99 @@ class AugurCollection:
             
         except Exception as e:
             logger.error(f"Failed to update collection {collection_id} to Failed: {e}")
+            return False
+    
+    def retry_failed_task(self, task_run_id: int) -> bool:
+        """
+        Retry a single failed task by resetting it to Pending.
+        Also updates the collection back to Collecting if it was Failed.
+        Both updates happen in a single transaction.
+        
+        Args:
+            task_run_id: ID of the failed task run to retry
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with DatabaseSession(logger) as session:
+                # Execute both updates in a single transaction
+                with session.engine.begin() as connection:
+                    # Reset the specific failed task to Pending
+                    reset_task_sql = text("""
+                        UPDATE task_runs
+                        SET state = 'Pending', 
+                            stacktrace = NULL,
+                            start_date = NULL
+                        WHERE id = :task_run_id
+                        AND state = 'Failed'
+                    """)
+                    connection.execute(reset_task_sql.bindparams(task_run_id=task_run_id))
+                    
+                    # Update collection back to Collecting if it was Failed
+                    # This uses the task's collection_record_id to find the collection
+                    reset_collection_sql = text("""
+                        UPDATE repo_collections
+                        SET state = 'Collecting',
+                            completed_on = NULL
+                        WHERE id = (
+                            SELECT collection_record_id 
+                            FROM task_runs 
+                            WHERE id = :task_run_id
+                        )
+                        AND state = 'Failed'
+                    """)
+                    connection.execute(reset_collection_sql.bindparams(task_run_id=task_run_id))
+            
+            logger.info(f"Reset failed task {task_run_id} for retry")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to retry task {task_run_id}: {e}")
+            return False
+    
+    def retry_failed_collection(self, collection_id: int) -> bool:
+        """
+        Retry a failed collection by resetting all failed tasks to Pending.
+        Both the task and collection updates happen in a single transaction,
+        so if either fails, both will be rolled back.
+        
+        Args:
+            collection_id: ID of the failed collection to retry
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            with DatabaseSession(logger) as session:
+                # Execute both updates in a single transaction
+                with session.engine.begin() as connection:
+                    # Reset failed tasks to Pending
+                    reset_tasks_sql = text("""
+                        UPDATE task_runs
+                        SET state = 'Pending', 
+                            stacktrace = NULL,
+                            start_date = NULL
+                        WHERE collection_record_id = :collection_id
+                        AND state = 'Failed'
+                    """)
+                    connection.execute(reset_tasks_sql.bindparams(collection_id=collection_id))
+                    
+                    # Update collection back to Collecting
+                    reset_collection_sql = text("""
+                        UPDATE repo_collections
+                        SET state = 'Collecting',
+                            completed_on = NULL
+                        WHERE id = :collection_id
+                        AND state = 'Failed'
+                    """)
+                    connection.execute(reset_collection_sql.bindparams(collection_id=collection_id))
+            
+            logger.info(f"Reset failed collection {collection_id} for retry")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to retry collection {collection_id}: {e}")
             return False
     
     @staticmethod

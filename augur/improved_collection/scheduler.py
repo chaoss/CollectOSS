@@ -79,14 +79,17 @@ def start_collection_on_new_repos() -> List[int]:
     
     return collection_ids
 
-def retry_collection_on_failed_repos(retry_hours: int = 24):
+def retry_collection_on_failed_repos(retry_hours: int = 24) -> int:
     """Retry collection on repositories whose last collection failed.
+    
+    Resets failed tasks back to Pending and collection back to Collecting
+    so they can be picked up by the scheduler again.
     
     Args:
         retry_hours: Number of hours to wait before retrying a failed collection.
         
     Returns:
-        List of new collection IDs that were created for retry.
+        Number of collections that were retried.
     """
     failed_collection_dicts = AugurCollection.find_failed_collections(retry_hours)
     
@@ -103,14 +106,15 @@ def retry_collection_on_failed_repos(retry_hours: int = 24):
     
     logger.info(f"Found {len(failed_collections)} failed collections to retry")
     
-    # TODO: Rather than creating a new collection,
-    # I would like to figure out a way to restart each of the failed tasks so they are collected again
-    # collection_ids = []
-    # for failed in failed_collections:
-    #     collection_id = AugurCollection.create_new_collection_from_most_recent_workflow(failed.repo_id)
-    #     if collection_id:
-    #         collection_ids.append(collection_id)
+    augur_collection = AugurCollection()
+    retry_count = 0
     
+    for failed in failed_collections:
+        if augur_collection.retry_failed_collection(failed.collection_id):
+            retry_count += 1
+    
+    logger.info(f"Retried {retry_count} failed collections")
+    return retry_count
 
 def start_recollection_on_collected_repos(recollection_days: int = 7) -> List[int]:
     """Start recollection on repositories whose last collection is older than specified days.
@@ -170,13 +174,9 @@ def trueup_collection_states():
             )
         
         for collection_id in collections_to_fail:
-            # Get collection details
-            collection = next(c for c in collections if c.id == collection_id)
             
             augur_collection.update_collection_to_failed(
                 collection_id=collection_id,
-                repo_id=collection.repo_id,
-                workflow_id=collection.workflow_id
             )
     
     logger.info(
