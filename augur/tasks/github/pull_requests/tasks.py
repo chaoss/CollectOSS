@@ -535,3 +535,4 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
             logger.debug(f"{owner}/{repo} No pr reviews found for repo")
         else:
             logger.info(f"{owner}/{repo}: Completed - collected {total_reviews_collected} reviews total")
+    collect_pull_request_review_comments(repo_git, full_collection)
