@@ -64,7 +64,8 @@ def start_collection_on_new_repos() -> List[int]:
     for repo_id in repo_ids:
         collection_id = AugurCollection.create_new_collection_from_most_recent_workflow(
             repo_id,
-            collection_type=CollectionType.FULL
+            collection_type=CollectionType.FULL,
+            is_new_repo=True
         )
         if collection_id:
             collection_ids.append(collection_id)
@@ -102,6 +103,9 @@ def retry_collection_on_failed_repos(retry_hours: int = 24) -> int:
 def start_recollection_on_collected_repos(recollection_days: int = 7) -> List[int]:
     """Start recollection on repositories whose last collection is older than specified days.
     
+    Checks the force_full_collection flag for each repo to determine if it should be
+    a full collection or incremental collection.
+    
     Args:
         recollection_days: Number of days to wait before recollecting a repository.
         
@@ -114,9 +118,12 @@ def start_recollection_on_collected_repos(recollection_days: int = 7) -> List[in
     
     collection_ids = []
     for repo_id in repo_ids:
+        # Check if this repo needs a full collection
+        collection_type = AugurCollection.get_collection_type_for_repo(repo_id)
+        
         collection_id = AugurCollection.create_new_collection_from_most_recent_workflow(
             repo_id,
-            collection_type=CollectionType.INCREMENTAL
+            collection_type=collection_type
         )
         if collection_id:
             collection_ids.append(collection_id)

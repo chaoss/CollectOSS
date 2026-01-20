@@ -45,6 +45,7 @@ CREATE TABLE repo_collections (
     workflow_id INT NOT NULL REFERENCES workflows(id),
     origin TEXT NOT NULL CHECK (origin IN ('automation', 'manual')),
     collection_type collection_type NOT NULL DEFAULT 'full',
+    is_new_repo BOOLEAN NOT NULL DEFAULT FALSE,
     started_on TIMESTAMP NOT NULL DEFAULT NOW(),
     completed_on TIMESTAMP,
     state collection_state NOT NULL DEFAULT 'Collecting'
@@ -72,7 +73,14 @@ CREATE TABLE task_runs (
     UNIQUE(collection_record_id, workflow_task_id)
 );
 
--- 9. Optional: Task Status Activity (for detailed metrics later)
+-- 9. Repo Collection Settings
+CREATE TABLE repo_collection_settings (
+    repo_id TEXT PRIMARY KEY,
+    force_full_collection BOOLEAN NOT NULL DEFAULT FALSE,
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- 10. Optional: Task Status Activity (for detailed metrics later)
 CREATE TABLE task_status_activity (
     id SERIAL PRIMARY KEY,
     task_run_id INT NOT NULL REFERENCES task_runs(id) ON DELETE CASCADE,
@@ -90,6 +98,7 @@ CREATE INDEX idx_dependencies_task ON workflow_dependencies(workflow_task_id);
 CREATE INDEX idx_dependencies_depends_on ON workflow_dependencies(depends_on_workflow_task_id);
 
 CREATE INDEX idx_repo_collections_repo ON repo_collections(repo_id);
+CREATE INDEX idx_repo_collection_settings_force_full ON repo_collection_settings(force_full_collection) WHERE force_full_collection = TRUE;
 CREATE INDEX idx_task_runs_collection ON task_runs(collection_record_id);
 CREATE INDEX idx_task_runs_state ON task_runs(state);
 

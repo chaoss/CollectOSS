@@ -66,6 +66,7 @@ class CollectionRun:
     id: int
     repo_id: str
     workflow_id: int
+    is_new_repo: bool
     tasks: List[TaskRunInfo]
     
     def get_queued_tasks(self) -> List[TaskRunInfo]:
@@ -507,6 +508,7 @@ class AugurCollection:
                 rc.id AS collection_id,
                 rc.repo_id,
                 rc.workflow_id,
+                rc.is_new_repo,
                 tr.id AS task_run_id,
                 wt.task_name,
                 tr.state AS task_run_state,
@@ -523,7 +525,7 @@ class AugurCollection:
             LEFT JOIN task_runs dep_tr
                 ON dep_tr.collection_record_id = rc.id
             AND dep_tr.workflow_task_id = wd.depends_on_workflow_task_id
-            GROUP BY rc.id, rc.repo_id, rc.workflow_id, tr.id, wt.task_name, tr.state, tr.start_date
+            GROUP BY rc.id, rc.repo_id, rc.workflow_id, rc.is_new_repo, tr.id, wt.task_name, tr.state, tr.start_date
             ORDER BY rc.id, tr.id;
         """)
         
@@ -540,6 +542,7 @@ class AugurCollection:
                     'collection_id': collection_id,
                     'repo_id': row['repo_id'],
                     'workflow_id': row['workflow_id'],
+                    'is_new_repo': row['is_new_repo'],
                     'tasks': []
                 }
             
@@ -562,18 +565,20 @@ class AugurCollection:
                 id=data['collection_id'],
                 repo_id=data['repo_id'],
                 workflow_id=data['workflow_id'],
+                is_new_repo=data['is_new_repo'],
                 tasks=data['tasks']
             )
             for data in collections_dict.values()
         ]
     
     @staticmethod
-    def create_new_collection_from_most_recent_workflow(repo_id: str, collection_type: CollectionType = CollectionType.FULL) -> Optional[int]:
+    def create_new_collection_from_most_recent_workflow(repo_id: str, collection_type: CollectionType = CollectionType.FULL, is_new_repo: bool = False) -> Optional[int]:
         """Create a new collection record and associated task runs for a repository.
         
         Args:
             repo_id: The repository ID to create a collection for.
             collection_type: Type of collection (full or incremental). Defaults to full.
+            is_new_repo: Whether this is the first collection for a new repo. Defaults to False.
             
         Returns:
             The collection ID if successful, None otherwise.
@@ -586,8 +591,8 @@ class AugurCollection:
             LIMIT 1
         ),
         new_collection AS (
-            INSERT INTO repo_collections (repo_id, workflow_id, origin, state, collection_type)
-            SELECT :repo_id, lw.workflow_id, 'automation', 'Collecting', :collection_type
+            INSERT INTO repo_collections (repo_id, workflow_id, origin, state, collection_type, is_new_repo)
+            SELECT :repo_id, lw.workflow_id, 'automation', 'Collecting', :collection_type, :is_new_repo
             FROM latest_workflow lw
             RETURNING id AS collection_id, workflow_id
         )
@@ -604,7 +609,8 @@ class AugurCollection:
                 result = session.fetchall_data_from_sql_text(
                     create_new_collection_sql.bindparams(
                         repo_id=repo_id,
-                        collection_type=collection_type.value
+                        collection_type=collection_type.value,
+                        is_new_repo=is_new_repo
                     )
                 )
             
@@ -717,3 +723,99 @@ class AugurCollection:
             )
         
         return [row['repo_id'] for row in result]
+    
+    @staticmethod
+    def get_collection_type_for_repo(repo_id: str) -> CollectionType:
+        """Get the appropriate collection type for a repo based on its settings.
+        
+        Checks the force_full_collection flag in repo_collection_settings.
+        If flag is TRUE, returns FULL and clears the flag.
+        Otherwise returns INCREMENTAL.
+        
+        Args:
+            repo_id: The repository ID to check.
+            
+        Returns:
+            CollectionType.FULL if force_full_collection is set, otherwise INCREMENTAL.
+        """
+        check_flag_sql = text("""
+            SELECT force_full_collection
+            FROM repo_collection_settings
+            WHERE repo_id = :repo_id
+        """)
+        
+        try:
+            with DatabaseSession(logger) as session:
+                result = session.fetchall_data_from_sql_text(
+                    check_flag_sql.bindparams(repo_id=repo_id)
+                )
+                
+                if result and result[0]['force_full_collection']:
+                    logger.info(f"Repo {repo_id} flagged for full collection")
+                    # Clear the flag since we're about to create a full collection
+                    AugurCollection.clear_force_full_collection(repo_id)
+                    return CollectionType.FULL
+                else:
+                    return CollectionType.INCREMENTAL
+                    
+        except Exception as e:
+            logger.error(f"Error checking force_full_collection for repo {repo_id}: {e}")
+            # Default to incremental on error
+            return CollectionType.INCREMENTAL
+    
+    @staticmethod
+    def set_force_full_collection(repo_id: str) -> bool:
+        """Set the force_full_collection flag for a repo.
+        
+        This will cause the next collection for this repo to be a full collection.
+        
+        Args:
+            repo_id: The repository ID to flag.
+            
+        Returns:
+            True if successful, False otherwise.
+        """
+        set_flag_sql = text("""
+            INSERT INTO repo_collection_settings (repo_id, force_full_collection, updated_at)
+            VALUES (:repo_id, TRUE, NOW())
+            ON CONFLICT (repo_id) 
+            DO UPDATE SET force_full_collection = TRUE, updated_at = NOW()
+        """)
+        
+        try:
+            with DatabaseSession(logger) as session:
+                session.execute_sql(set_flag_sql.bindparams(repo_id=repo_id))
+            
+            logger.info(f"Set force_full_collection flag for repo {repo_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to set force_full_collection for repo {repo_id}: {e}")
+            return False
+    
+    @staticmethod
+    def clear_force_full_collection(repo_id: str) -> bool:
+        """Clear the force_full_collection flag for a repo.
+        
+        Args:
+            repo_id: The repository ID to clear the flag for.
+            
+        Returns:
+            True if successful, False otherwise.
+        """
+        clear_flag_sql = text("""
+            UPDATE repo_collection_settings
+            SET force_full_collection = FALSE, updated_at = NOW()
+            WHERE repo_id = :repo_id
+        """)
+        
+        try:
+            with DatabaseSession(logger) as session:
+                session.execute_sql(clear_flag_sql.bindparams(repo_id=repo_id))
+            
+            logger.debug(f"Cleared force_full_collection flag for repo {repo_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to clear force_full_collection for repo {repo_id}: {e}")
+            return False
