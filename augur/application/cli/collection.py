@@ -144,6 +144,10 @@ def start_celery_collection_processes(worker_counts: tuple[int, int, int]):
 
     core_worker_count, secondary_worker_count, facade_worker_count = worker_counts
 
+    # Schedule at least one process on the default celery task chain
+    default_celery_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n celery:{uuid.uuid4().hex}@%h -Q celery"
+    process_list.append(subprocess.Popen(default_celery_worker.split(" ")))
+
     #2 processes are always reserved as a baseline.
     scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
     process_list.append(subprocess.Popen(scheduling_worker.split(" ")))
