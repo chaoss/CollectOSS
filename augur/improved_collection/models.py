@@ -5,6 +5,13 @@ Shared models and enums for the improved collection system.
 from enum import Enum
 
 
+class TaskType(str, Enum):
+    """Enum for task types that determine RabbitMQ queue routing."""
+    CORE = 'core'
+    SECONDARY = 'secondary'
+    FACADE = 'facade'
+
+
 class CollectionType(str, Enum):
     """Enum for collection types."""
     FULL = 'full'

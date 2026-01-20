@@ -8,15 +8,23 @@ CREATE TABLE workflows (
     created_on TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- 2. Workflow Tasks
+-- 2. Task Type Enum
+CREATE TYPE task_type AS ENUM (
+    'core',
+    'secondary',
+    'facade'
+);
+
+-- 3. Workflow Tasks
 CREATE TABLE workflow_tasks (
     id SERIAL PRIMARY KEY,
     workflow_id INT NOT NULL REFERENCES workflows(id) ON DELETE CASCADE,
     task_name TEXT NOT NULL,
+    task_type task_type NOT NULL,
     UNIQUE(workflow_id, task_name)
 );
 
--- 3. Workflow Dependencies (Dependency Graph)
+-- 4. Workflow Dependencies (Dependency Graph)
 -- Each row means: workflow_task_id depends on depends_on_workflow_task_id
 CREATE TABLE workflow_dependencies (
     workflow_task_id INT NOT NULL REFERENCES workflow_tasks(id) ON DELETE CASCADE,
@@ -25,20 +33,20 @@ CREATE TABLE workflow_dependencies (
     CHECK (workflow_task_id <> depends_on_workflow_task_id)
 );
 
--- 4. Collection Type Enum
+-- 5. Collection Type Enum
 CREATE TYPE collection_type AS ENUM (
     'full',        -- Full collection for new repos or forced full recollection
     'incremental'  -- Incremental collection that only collects new data
 );
 
--- 5. Collection State Enum
+-- 6. Collection State Enum
 CREATE TYPE collection_state AS ENUM (
     'Collecting',  -- Collection in progress, some tasks running
     'Failed',      -- Collection has failed tasks and no runnable tasks remain
     'Complete'     -- All tasks in collection completed successfully
 );
 
--- 6. Repo Collections
+-- 7. Repo Collections
 CREATE TABLE repo_collections (
     id SERIAL PRIMARY KEY,
     repo_id TEXT NOT NULL,
@@ -51,7 +59,7 @@ CREATE TABLE repo_collections (
     state collection_state NOT NULL DEFAULT 'Collecting'
 );
 
--- 7. Task Run State Enum
+-- 8. Task Run State Enum
 CREATE TYPE task_run_state AS ENUM (
     'Pending',
     'Queued',
@@ -60,7 +68,7 @@ CREATE TYPE task_run_state AS ENUM (
     'Complete'
 );
 
--- 8. Task Runs
+-- 9. Task Runs
 CREATE TABLE task_runs (
     id SERIAL PRIMARY KEY,
     collection_record_id INT NOT NULL REFERENCES repo_collections(id) ON DELETE CASCADE,
@@ -73,14 +81,14 @@ CREATE TABLE task_runs (
     UNIQUE(collection_record_id, workflow_task_id)
 );
 
--- 9. Repo Collection Settings
+-- 10. Repo Collection Settings
 CREATE TABLE repo_collection_settings (
     repo_id TEXT PRIMARY KEY,
     force_full_collection BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- 10. Optional: Task Status Activity (for detailed metrics later)
+-- 11. Optional: Task Status Activity (for detailed metrics later)
 CREATE TABLE task_status_activity (
     id SERIAL PRIMARY KEY,
     task_run_id INT NOT NULL REFERENCES task_runs(id) ON DELETE CASCADE,

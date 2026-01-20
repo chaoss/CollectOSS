@@ -15,7 +15,7 @@ from sqlalchemy import text
 
 from augur.application.db.session import DatabaseSession
 from augur.improved_collection.rabbit_client import RabbitClient
-from augur.improved_collection.models import TaskRunState, CollectionType
+from augur.improved_collection.models import TaskRunState, CollectionType, TaskType
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ class TaskRunInfo:
     """Represents a task run with its dependencies."""
     id: int
     name: str
+    task_type: TaskType
     state: TaskRunState
     start_date: Optional[datetime]
     dependency_states: Optional[List[TaskRunState]]
@@ -511,6 +512,7 @@ class AugurCollection:
                 rc.is_new_repo,
                 tr.id AS task_run_id,
                 wt.task_name,
+                wt.task_type,
                 tr.state AS task_run_state,
                 tr.start_date,
                 -- Array of dependency task run states
@@ -525,7 +527,7 @@ class AugurCollection:
             LEFT JOIN task_runs dep_tr
                 ON dep_tr.collection_record_id = rc.id
             AND dep_tr.workflow_task_id = wd.depends_on_workflow_task_id
-            GROUP BY rc.id, rc.repo_id, rc.workflow_id, rc.is_new_repo, tr.id, wt.task_name, tr.state, tr.start_date
+            GROUP BY rc.id, rc.repo_id, rc.workflow_id, rc.is_new_repo, tr.id, wt.task_name, wt.task_type, tr.state, tr.start_date
             ORDER BY rc.id, tr.id;
         """)
         
@@ -548,11 +550,13 @@ class AugurCollection:
             
             # Convert string states to enum
             task_state = TaskRunState(row['task_run_state'])
+            task_type = TaskType(row['task_type'])
             dep_states = [TaskRunState(state) for state in row['depends_on_task_states']] if row['depends_on_task_states'] else None
             
             task = TaskRunInfo(
                 id=row['task_run_id'],
                 name=row['task_name'],
+                task_type=task_type,
                 state=task_state,
                 start_date=row['start_date'],
                 dependency_states=dep_states
