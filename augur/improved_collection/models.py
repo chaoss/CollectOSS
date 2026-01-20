@@ -6,7 +6,7 @@ from enum import Enum
 
 
 class TaskType(str, Enum):
-    """Enum for task types that determine RabbitMQ queue routing."""
+    """Enum for task types"""
     CORE = 'core'
     SECONDARY = 'secondary'
     FACADE = 'facade'

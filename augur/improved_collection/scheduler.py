@@ -44,7 +44,8 @@ def queue_tasks_for_running_collections() -> int:
                 task_run_id=task.id,
                 collection_id=collection_id,
                 repo_id=collection.repo_id,
-                task_name=task.name
+                task_name=task.name,
+                task_type=task.task_type
             )
     
     return len(tasks_to_queue)
