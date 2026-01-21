@@ -1,4 +1,4 @@
-# Augur NEW Release v0.91.0
+# Augur NEW Release v0.92.0
 
 Augur is primarily a data engineering tool that makes it possible for data scientists to gather open source software community data - less data carpentry for everyone else! 
 The primary way of looking at Augur data is through [8Knot](https://github.com/oss-aspen/8knot), a public instance of 8Knot is available [here](https://metrix.chaoss.io) - this is tied to a public instance of [Augur](https://ai.chaoss.io). 
@@ -11,7 +11,7 @@ We follow the [First Timers Only](https://www.firsttimersonly.com/) philosophy o
 ## NEW RELEASE ALERT!
 **If you want to jump right in, the updated docker, docker-compose and bare metal installation instructions are available [here](docs/new-install.md)**.
 
-Augur is now releasing a dramatically improved new version. It is also available [here](https://github.com/chaoss/augur/releases/tag/v0.91.0).
+Augur is now releasing a dramatically improved new version. It is also available [here](https://github.com/chaoss/augur/releases/tag/v0.92.0).
 
 
 - The `release` branch is a stable version of our new architecture, which features:
@@ -83,7 +83,7 @@ We strongly believe that much of what makes open source so great is the incredib
 
 ## License, Copyright, and Funding
 
-Copyright © 2025 University of Nebraska at Omaha, University of Missouri, Brian Warner, and the CHAOSS Project.
+Copyright © 2025 University of Missouri, Sean Goggins, and Derek Howard.
 
 Augur is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the [LICENSE](LICENSE) file for more details.
 
