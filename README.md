@@ -83,7 +83,7 @@ We strongly believe that much of what makes open source so great is the incredib
 
 ## License, Copyright, and Funding
 
-Copyright © 2025 University of Missouri, Sean Goggins, and Derek Howard.
+Copyright © 2026 University of Missouri, Sean Goggins, and Derek Howard.
 
 Augur is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the [LICENSE](LICENSE) file for more details.
 
