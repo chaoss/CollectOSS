@@ -19,7 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10"
 ]
 dependencies = [
-    "alembic==1.8.1",
+    "alembic>=1.17.1",
     "Beaker==1.11.0",
     "blinker==1.4",
     "bokeh==2.0.2",
@@ -64,6 +64,7 @@ dependencies = [
     "psycopg2-binary==2.9.9",
     "pylint==2.15.5",
     "python-crfsuite>=0.9.8",
+    "python-dotenv>=1.2.1",
     "pyYaml",
     "redis==4.3.3",
     "requests==2.32.0",
@@ -83,10 +84,10 @@ dependencies = [
     "tensorflow==2.15.0",
     "textblob==0.15.3",
     "textual>=0.73.0",
-    "toml",
+    "tomli>=2.2.1 ; python_full_version < '3.11'",
     "toolz>=0.8.2",
     "tornado==6.4.1",
-    "typing-extensions==4.7.1",
+    "typing-extensions>=4.7",
     "Werkzeug~=2.0.0",
     "xgboost==3.0.2",
     "xlrd==2.0.1",
@@ -180,11 +181,24 @@ legacy_tox_ini = """
         metric-routes: python tests/test_routes/runner.py
         workers: pytest tests/test_workers/
         classes: pytest tests/test_classes/
-        worker-persistance: pytest test/test_workers/worker_persistance/
+        worker-persistence: pytest tests/test_workers/worker_persistence/
 
     [pytest]
     addopts = -ra -s
 """
+
+[tool.pytest.ini_options]
+addopts = "-ra -s"
+testpaths = [
+    "tests/test_classes",
+    # "tests/test_routes", # runs, but needs a fixture for connecting to the web interface of Augur
+    # "tests/test_metrics",
+    # "tests/test_tasks",
+    # "tests/test_application",
+    # "tests/test_workers",
+    # "tests/test_workers/worker_persistence/",
+    # "tests/test_routes/runner.py"
+]
 
 [tool.mypy]
 files = ['augur/application/db/*.py']
