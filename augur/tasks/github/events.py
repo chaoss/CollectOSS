@@ -17,6 +17,9 @@ from augur.application.db.models import PullRequestEvent, IssueEvent, Contributo
 from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id, update_issue_closed_cntrbs_by_repo_id, get_session, get_engine, get_core_data_last_collected, batch_insert_contributors
 
 
+# Batch size for processing events - smaller than issues/PRs due to higher processing overhead per event
+EVENT_BATCH_SIZE = 500
+
 platform_id = 1
 
 @celery.task(base=AugurCoreRepoCollectionTask)
@@ -120,7 +123,7 @@ class BulkGithubEventCollection(GithubEventCollection):
             events.append(event)
 
             # making this a decent size since process_events retrieves all the issues and prs each time
-            if len(events) >= 500:
+            if len(events) >= EVENT_BATCH_SIZE:
                 self._process_events(events, repo_id)
                 events.clear()
     
@@ -327,7 +330,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
             except UrlNotFoundException as e:
                 self._logger.info(f"{self.repo_identifier}: Issue with number of {issue_number} returned 404 on event data. Skipping.")
 
-            if len(events) > 500:
+            if len(events) >= EVENT_BATCH_SIZE:
                 self._insert_contributors(contributors)
                 self._insert_issue_events(events)
                 events.clear()
@@ -389,7 +392,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
                 self._logger.info(f"{self.repo_identifier}: PR with number of {pr_number} returned 404 on event data. Skipping.")
                 continue
 
-            if len(events) > 500:
+            if len(events) >= EVENT_BATCH_SIZE:
                 self._insert_contributors(contributors)
                 self._insert_pr_events(events)
                 events.clear()
