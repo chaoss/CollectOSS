@@ -292,10 +292,6 @@ def augur_collection_monitor(self):
             #start_facade_collection(session, max_repo=30)
             enabled_collection_hooks.append(build_facade_repo_collect_request(session, logger, enabled_phase_names, facade_interval))
         
-        if not RUNNING_DOCKER and machine_learning_phase.__name__ in enabled_phase_names:
-            enabled_collection_hooks.append(build_ml_repo_collect_request(session, logger, enabled_phase_names, ml_interval))
-            #start_ml_collection(session,max_repo=5)
-        
         logger.info(f"Starting collection phases: {[h.name for h in enabled_collection_hooks]}")
 
         main_routine = AugurTaskRoutine(logger, enabled_collection_hooks)
