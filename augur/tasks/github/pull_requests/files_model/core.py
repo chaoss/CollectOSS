@@ -6,6 +6,10 @@ from augur.application.db.util import execute_session_query
 from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs
 
 
+# Batch size for PR file collection
+PR_FILE_BATCH_SIZE = 1000
+
+
 def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection=False):
     
     if full_collection:
@@ -40,7 +44,6 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
 
     github_graphql_data_access = GithubGraphQlDataAccess(key_auth, logger)
 
-    BATCH_SIZE = 1000
     pr_file_natural_keys = ["pull_request_id", "repo_id", "pr_file_path"]
     pr_file_rows = []
     logger.info(f"Getting pull request files for repo: {repo.repo_git}")
@@ -95,7 +98,7 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
 
                 pr_file_rows.append(data)
 
-                if len(pr_file_rows) >= BATCH_SIZE:
+                if len(pr_file_rows) >= PR_FILE_BATCH_SIZE:
                     logger.info(f"{task_name}: Inserting {len(pr_file_rows)} rows")
                     augur_db.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)
                     pr_file_rows.clear()
