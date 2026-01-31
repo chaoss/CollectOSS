@@ -74,6 +74,60 @@ To ensure all your commits are signed, you may choose to [configure git](https:/
 
 **Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
 
+## Generative AI Policy
+
+You can use AI tools to help with your contributions. **You are the author, and you are accountable for the result.**
+
+### What we require
+
+1. **Disclose AI use.** Complete the AI disclosure section in the PR template. This is mandatory. If no AI was used, leave the checkbox unchecked — that's a valid answer.
+
+2. **Review before submitting.** Read and test all AI-generated code or text before asking maintainers to review it. If you can't explain why a change works, it's not ready for review.
+
+3. **Engage as yourself.** When maintainers give feedback, respond with your own understanding. Passing review comments into an LLM and pasting the output back doesn't help you learn and doesn't respect the reviewer's time.
+
+### Why we ask
+
+Reviewing contributions takes real time and energy. Submitting unreviewed AI output shifts that burden onto maintainers — this is sometimes called an "extractive contribution."
+
+Disclosure matters because:
+
+- **Respect.** Discovering a PR was unreviewed AI output after spending time on it feels like a waste. Telling us upfront lets us calibrate.
+- **Research.** Augur measures open source community health. Understanding how AI tools are used in our own community is directly relevant to our mission.
+- **Honesty.** Citing your tools is the same principle as citing Stack Overflow. It builds trust.
+
+### What counts
+
+This applies to all contributions: code, issues, PR comments, documentation.
+
+**Disclose:** code generation, test generation, documentation drafting, AI-assisted code review, substantial refactoring suggestions.
+
+**No need to disclose:** spell check, grammar correction, syntax highlighting, basic IDE autocomplete.
+
+### Quality standards
+
+AI-assisted contributions are held to the **same bar** as everything else. Good code is good code regardless of how it was written. Bad code gets rejected regardless of how it was written.
+
+For new contributors: **start small.** Submit changes you fully understand, get feedback, and build from there. Large AI-generated PRs that you can't fully explain are hard to review and unlikely to be merged.
+
+### Copyright
+
+You are responsible for ensuring you have the right to contribute code under our license. AI tools can reproduce copyrighted material, and using an AI to generate it doesn't remove the copyright. Contributions found to contain improperly licensed material will be removed.
+
+### Enforcement
+
+This policy is about transparency, not punishment. If you forget to check the box, just update your PR when asked.
+
+Patterns of submitting unreviewed AI output that repeatedly waste maintainer time may be addressed through the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/) process, the same as any other behavior that harms the community.
+
+### References
+
+- [ada-url AI Usage Policy](https://github.com/ada-url/ada/blob/main/AI_USAGE_POLICY.md)
+- [Zulip AI Use Policy](https://github.com/zulip/zulip/blob/main/CONTRIBUTING.md#ai-use-policy-and-guidelines)
+- [LLVM AI Tool Use Policy](https://discourse.llvm.org/t/rfc-llvm-ai-tool-policy-human-in-the-loop/89159)
+- [Linux Foundation Generative AI Guidance](https://www.linuxfoundation.org/legal/generative-ai)
+- [AI Attribution Spec](https://aiattribution.github.io/)
+
 ## Keeping in sync with the Augur Repository
 
 Remember to sync your fork with the ```main``` branch regularly, by taking the following steps:
