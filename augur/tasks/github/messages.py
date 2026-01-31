@@ -98,21 +98,21 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
 
         if since:
              query = text(f"""
-                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_updated_at > timestamptz(timestamp '{since}') order by pr_created_at desc)
+                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_comments_url IS NOT NULL AND pr_updated_at > timestamptz(timestamp '{since}') order by pr_created_at desc)
                 UNION
-                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND updated_at > timestamptz(timestamp '{since}') order by created_at desc);
+                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND comments_url IS NOT NULL AND updated_at > timestamptz(timestamp '{since}') order by created_at desc);
             """)
         else:
 
             query = text(f"""
-                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} order by pr_created_at desc)
+                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_comments_url IS NOT NULL order by pr_created_at desc)
                 UNION
-                (select comments_url as comment_url from issues WHERE repo_id={repo_id} order by created_at desc);
+                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND comments_url IS NOT NULL order by created_at desc);
             """)
         
 
         result = connection.execute(query).fetchall()
-    comment_urls = [x[0] for x in result]
+    comment_urls = [x[0] for x in result if x[0] is not None]
 
     github_data_access = GithubDataAccess(key_auth, logger)
 
@@ -141,7 +141,6 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
 
 def process_messages(messages, task_name, repo_id, logger, augur_db):
 
-    tool_source = "Pr comment task"
     tool_version = "2.0"
     data_source = "Github API"
 
@@ -179,6 +178,12 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
                 logger.info(f"{task_name}: Processing {message_len-index} messages")
 
         related_pr_or_issue_found = False
+
+        # determine whether this is an issue or PR message so we can set the correct tool_source in metadata
+        if is_issue_message(message["html_url"]):
+            tool_source = "Issue comment task"
+        else:
+            tool_source = "Pr comment task"
 
         # this adds the cntrb_id to the message data
         # the returned contributor will be added to the contributors list later, if the related issue or pr are found

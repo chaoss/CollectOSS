@@ -4,6 +4,7 @@ import os
 #from celery.result import AsyncResult
 from celery import group, chain
 from sqlalchemy import and_,update
+import sqlalchemy as s
 
 
 from augur.tasks.github import *
