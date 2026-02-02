@@ -125,7 +125,6 @@ class AugurCollection:
                           If None, events will not be published (useful for testing).
         """
         self.rabbit_client = rabbit_client
-        self.exchange = "augur.collection"
         self.source = "augur.collection.scheduler"
         self._topology_initialized = False
     
@@ -137,62 +136,31 @@ class AugurCollection:
             self.setup_collection_topology()
             self._topology_initialized = True
     
-    def _publish_event(self, event_type: str, routing_key: str, data: dict):
-        """
-        Publish an event to RabbitMQ.
-        
-        Args:
-            event_type: CloudEvent type (e.g., 'TaskQueued')
-            routing_key: Routing key for the message
-            data: Event payload data
-        """
-        if self.rabbit_client:
-            try:
-                self.rabbit_client.publish(
-                    exchange=self.exchange,
-                    routing_key=routing_key,
-                    data=data,
-                    event_type=event_type,
-                    source=self.source,
-                    persistent=True
-                )
-                logger.debug(f"Published event {event_type} with routing key {routing_key}")
-            except Exception as e:
-                logger.error(f"Failed to publish event {event_type}: {e}")
-        else:
-            logger.debug(f"No RabbitClient configured, skipping event publish: {event_type}")
-    
     def _publish_task_event(self, event_type: str, task_run_id: int, collection_id: int,
-                           repo_id: str, task_name: str, task_type: TaskType,
-                           state: str, stacktrace: Optional[str] = None):
+                           repo_id: str, task_name: str, task_type: TaskType, state: str):
         """
         Publish a task event to the appropriate exchange based on task type.
         
-        Ensures topology is set up before publishing.
+        Currently only publishes TaskQueued events to notify workers.
+        State transition events (TaskCompleted, TaskFailed, TaskCollecting) are not published
+        because there's no immediate need to consume them - tasks update the database state
+        directly when they complete, and the scheduler periodically trues up collection state
+        when scheduling new tasks
         
         Args:
-            event_type: CloudEvent type (e.g., 'TaskQueued', 'TaskCompleted')
+            event_type: CloudEvent type (currently only 'TaskQueued' is used)
             task_run_id: ID of the task run
             collection_id: ID of the collection
             repo_id: Repository ID
             task_name: Name of the task
             task_type: Type of task (determines which exchange to publish to)
             state: Current state of the task
-            stacktrace: Optional error stacktrace for failed tasks
         """
         # Ensure topology is set up
         self._ensure_topology_setup()
         
         # Determine exchange based on task type
-        if task_type == TaskType.CORE:
-            exchange = "augur.collection.core"
-        elif task_type == TaskType.SECONDARY:
-            exchange = "augur.collection.secondary"
-        elif task_type == TaskType.FACADE:
-            exchange = "augur.collection.facade"
-        else:
-            logger.error(f"Unknown task type: {task_type}")
-            return
+        exchange = self.get_queue_name(task_type)
         
         # Build event data
         event_data = {
@@ -205,10 +173,7 @@ class AugurCollection:
             "timestamp": datetime.utcnow().isoformat()
         }
         
-        if stacktrace:
-            event_data["stacktrace"] = stacktrace
-        
-        # Publish to appropriate exchange
+        # Publish to task-type specific exchange
         routing_key = f"{event_type}"
         
         if self.rabbit_client:
@@ -222,6 +187,7 @@ class AugurCollection:
                     persistent=True
                 )
                 logger.debug(f"Published {event_type} to {exchange} with routing key {routing_key}")
+                    
             except Exception as e:
                 logger.error(f"Failed to publish {event_type}: {e}")
         else:
@@ -246,27 +212,43 @@ class AugurCollection:
         try:
             # Core exchange and queue
             logger.info("Declaring Core exchange and queue")
-            self.rabbit_client.configure_exchange(exchange="augur.collection.core", exchange_type="topic", durable=True)
-            self.rabbit_client.configure_queue(queue="augur.collection.core", durable=True)
-            self.rabbit_client.bind_queue(queue="augur.collection.core", exchange="augur.collection.core", routing_key="#")
+            core_queue = self.get_queue_name(TaskType.CORE)
+            self.rabbit_client.configure_exchange(exchange=core_queue, exchange_type="topic", durable=True)
+            self.rabbit_client.configure_queue(queue=core_queue, durable=True)
+            self.rabbit_client.bind_queue(queue=core_queue, exchange=core_queue, routing_key="#")
             
             # Secondary exchange and queue
             logger.info("Declaring Secondary exchange and queue")
-            self.rabbit_client.configure_exchange(exchange="augur.collection.secondary", exchange_type="topic", durable=True)
-            self.rabbit_client.configure_queue(queue="augur.collection.secondary", durable=True)
-            self.rabbit_client.bind_queue(queue="augur.collection.secondary", exchange="augur.collection.secondary", routing_key="#")
+            secondary_queue = self.get_queue_name(TaskType.SECONDARY)
+            self.rabbit_client.configure_exchange(exchange=secondary_queue, exchange_type="topic", durable=True)
+            self.rabbit_client.configure_queue(queue=secondary_queue, durable=True)
+            self.rabbit_client.bind_queue(queue=secondary_queue, exchange=secondary_queue, routing_key="#")
             
             # Facade exchange and queue
             logger.info("Declaring Facade exchange and queue")
-            self.rabbit_client.configure_exchange(exchange="augur.collection.facade", exchange_type="topic", durable=True)
-            self.rabbit_client.configure_queue(queue="augur.collection.facade", durable=True)
-            self.rabbit_client.bind_queue(queue="augur.collection.facade", exchange="augur.collection.facade", routing_key="#")
+            facade_queue = self.get_queue_name(TaskType.FACADE)
+            self.rabbit_client.configure_exchange(exchange=facade_queue, exchange_type="topic", durable=True)
+            self.rabbit_client.configure_queue(queue=facade_queue, durable=True)
+            self.rabbit_client.bind_queue(queue=facade_queue, exchange=facade_queue, routing_key="#")
             
             logger.info("Collection topology setup complete")
             
         except Exception as e:
             logger.error(f"Failed to setup collection topology: {e}")
             raise
+    
+    @staticmethod
+    def get_queue_name(task_type: TaskType) -> str:
+        """
+        Get the queue name for a given task type.
+        
+        Args:
+            task_type: The type of task
+            
+        Returns:
+            Queue name for the task type
+        """
+        return f"augur.collection.{task_type.value}"
     
     def update_task_to_queued(self, task_run_id: int, collection_id: int, 
                               repo_id: str, task_name: str, task_type: TaskType) -> bool:
@@ -336,18 +318,6 @@ class AugurCollection:
                 session.execute_sql(update_sql.bindparams(task_run_id=task_run_id))
             
             logger.info(f"Updated task {task_name} (id: {task_run_id}) to Collecting state")
-            
-            # Publish task.collecting event
-            self._publish_task_event(
-                event_type="task.collecting",
-                task_run_id=task_run_id,
-                collection_id=collection_id,
-                repo_id=repo_id,
-                task_name=task_name,
-                task_type=task_type,
-                state="Collecting"
-            )
-            
             return True
             
         except Exception as e:
@@ -379,18 +349,6 @@ class AugurCollection:
                 session.execute_sql(update_sql.bindparams(task_run_id=task_run_id))
             
             logger.info(f"Updated task {task_name} (id: {task_run_id}) to Complete state")
-            
-            # Publish TaskCompleted event
-            self._publish_task_event(
-                event_type="TaskCompleted",
-                task_run_id=task_run_id,
-                collection_id=collection_id,
-                repo_id=repo_id,
-                task_name=task_name,
-                task_type=task_type,
-                state="Complete"
-            )
-            
             return True
             
         except Exception as e:
@@ -427,19 +385,6 @@ class AugurCollection:
                 ))
             
             logger.info(f"Updated task {task_name} (id: {task_run_id}) to Failed state")
-            
-            # Publish TaskFailed event
-            self._publish_task_event(
-                event_type="TaskFailed",
-                task_run_id=task_run_id,
-                collection_id=collection_id,
-                repo_id=repo_id,
-                task_name=task_name,
-                task_type=task_type,
-                state="Failed",
-                stacktrace=stacktrace
-            )
-            
             return True
             
         except Exception as e:
@@ -553,7 +498,9 @@ class AugurCollection:
     
     def retry_failed_collection(self, collection_id: int) -> bool:
         """
-        Retry a failed collection by resetting all failed tasks to Pending.
+        Retry a failed collection by resetting all failed tasks to Pending and
+        updating the collection back to Collecting.
+        
         Both the task and collection updates happen in a single transaction,
         so if either fails, both will be rolled back.
         
