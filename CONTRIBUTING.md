@@ -116,7 +116,7 @@ You are responsible for ensuring you have the right to contribute code under our
 
 ### Enforcement
 
-This policy is about transparency, not punishment. If you forget to check the box, just update your PR when asked.
+This policy is about transparency, not punishment. If you forget to check the box, just update your PR when asked. All contributions, whether AI-assisted or not, are expected to follow the same standards of quality before being merged.
 
 Patterns of submitting unreviewed AI output that repeatedly waste maintainer time may be addressed through the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/) process, the same as any other behavior that harms the community.
 
