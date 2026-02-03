@@ -82,7 +82,7 @@ You can use AI tools to help with your contributions. **You are the author, and 
 
 1. **Disclose AI use.** Complete the AI disclosure section in the PR template. This is mandatory. If no AI was used, leave the checkbox unchecked — that's a valid answer.
 
-2. **Review before submitting.** Read and test all AI-generated code or text before asking maintainers to review it. If you can't explain why a change works, it's not ready for review.
+2. **Review before submitting.** Read and test all AI-generated code or text before asking maintainers to review it. If you can't explain why a change works, it's not ready for a maintainer to review. If your changes are too long for you to read and review, that is a good indication that they are also too long for maintainers to read.
 
 3. **Engage as yourself.** When maintainers give feedback, respond with your own understanding. Passing review comments into an LLM and pasting the output back doesn't help you learn and doesn't respect the reviewer's time.
 
