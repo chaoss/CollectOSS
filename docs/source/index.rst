@@ -32,16 +32,40 @@ Augur Documentation
 What is Augur?
 ~~~~~~~~~~~~~~~~
 
-Augur is a software suite for collecting and measuring structured data about free and open-source software (FOSS) communities.
+Augur is a software tool that helps you **collect and measure information about open-source software projects**. Open-source projects are software projects where anyone can see and contribute to the code.
 
-Augur's main focus is to measure the overall health and sustainability of open source projects, as these types of projects are system critical for nearly every software organization or company. We do this by gathering data about project repositories and normalizing that into our data model to provide useful metrics about your project's health. For example, one of our metrics is Burstiness. Burstiness - how are short timeframes of intense activity, followed by a corresponding return to a typical pattern of activity, observed in a project? This can paint a picture of a project's focus and gain insight into the potential stability of a project and how its typical cycle of updates occurs. There are many more useful metrics, and you can find a full list of them `here <https://chaoss.community/metrics/>`__.
+The main goal of Augur is to **understand how healthy and sustainable a project is**. Healthy projects are easier to rely on, and they are important because many software organizations or companies depend on open-source software.
 
+How Augur works
+---------------
 
-Augur gathers trace data for a group of repositories, normalize it into our data model, and provide a variety of metrics about that data.
+1. Augur **looks at the project’s repositories** (the place where the project’s code and files live).
+2. It **collects data** about what is happening in those repositories.
+3. It **organizes this data** into a standard format called a data model.
+4. Then it **calculates metrics** that tell you about the project’s health.
 
-This software is developed as part of the CHAOSS (Community Health Analytics Open Source Software) project. Many of our metrics are implementations of the metrics defined by our community. You can find more information about how to get involved on the `CHAOSS website <https://chaoss.community>`_.
+Example of a metric: Burstiness
+-------------------------------
 
-If you want to see augur in action, you can view CHAOSS's augur instance `here <http://augur.chaoss.io>`_.
+- **Burstiness** is **one of Augur’s metrics**.
+- It shows periods when a project has **a lot of activity in a short time**, followed by periods when activity goes back to normal.
+- This helps you see a project’s **focus, update patterns, and stability**.
+- In other words, you can tell **how often big changes happen** and whether the project works in a steady, predictable way.
+
+Augur calculates **many other metrics**, which you can see in the full list `here <https://chaoss.community/metrics/>`_.
+
+Who develops Augur
+-----------------
+
+- Augur is developed as part of **CHAOSS** (Community Health Analytics Open Source Software).
+- Many of Augur’s metrics come directly from the CHAOSS community.
+- If you want to **get involved**, visit the `CHAOSS website <https://chaoss.community>`_.
+
+See it in action
+----------------
+
+- You can check out Augur live on the CHAOSS instance `here <http://augur.chaoss.io>`_.
+
 
 
 Current maintainers
