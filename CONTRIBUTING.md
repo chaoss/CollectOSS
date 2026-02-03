@@ -118,7 +118,9 @@ You are responsible for ensuring you have the right to contribute code under our
 
 This policy is about transparency, not punishment. If you forget to check the box, just update your PR when asked. All contributions, whether AI-assisted or not, are expected to follow the same standards of quality before being merged.
 
-Patterns of submitting unreviewed AI output that repeatedly waste maintainer time may be addressed through the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/) process, the same as any other behavior that harms the community.
+Patterns of submitting low-quality contributions (such as large, unreviewed, or unfocused contributions made with or without AI) that repeatedly waste maintainer time may be addressed using the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/), which states:
+
+> Project maintainers are responsible for clarifying the standards of acceptable behavior and are expected to take appropriate and fair corrective action in response to any instances of unacceptable behavior.
 
 ### References
 
