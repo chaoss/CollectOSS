@@ -17,7 +17,7 @@ Augur is now releasing a dramatically improved new version. It is also available
 - The `release` branch is a stable version of our new architecture, which features:
   - Dramatic improvement in the speed of large scale data collection (100,000+ repos). All data is obtained for 100k+ repos within 2 weeks.
   - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard.
-  - Materialized views to increase the snappiness of API’s and Frontends on large scale data.
+  - Materialized views to increase the snappiness of APIs and Frontends on large scale data.
   - Changes to primary keys, which now employ a UUID strategy that ensures unique keys across all Augur instances.
   - Support for [8knot](https://github.com/oss-aspen/8knot) dashboards (view a sample [here](https://eightknot.osci.io/)).
   *beautification coming soon!*
@@ -44,13 +44,14 @@ For more information on [how to get involved on the CHAOSS website](https://chao
 ## Collecting Data
 
 Augur supports ```Python3.7``` through ```Python3.11``` on all platforms. ```Python3.12``` and above do not yet work because of machine learning worker dependencies. On OSX, you can create a ```Python3.11``` environment, by running:
-```
-$ python3.11 -m venv path/to/venv
+
+```bash
+python3.11 -m venv path/to/venv
 ```
 
 Augur's main focus is to measure the overall health and sustainability of open source projects.
 
-Augur collects more data about open source software projects than any other available software. Augur's main focus is to measure the overall health and sustainability of open source projects.
+Augur collects more data about open source software projects than any other available software. 
 
 One of Augur's core tenets is a desire to openly gather data that people can trust, and then provide useful and well-defined metrics that help give important context to the larger stories being told by that data.
 
