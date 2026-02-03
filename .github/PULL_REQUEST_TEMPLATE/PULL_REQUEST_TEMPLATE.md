@@ -15,7 +15,9 @@ Add any notes about why you made these changes, note-worthy technical details or
 ### Generative AI Disclosure
 <!-- Required. See CONTRIBUTING.md for our full AI policy. -->
 
-- [ ] This contribution was assisted or created by Generative AI tools.
+- [ ] No generative AI was used in this contribution.
+- [ ] This contribution was assisted by generative AI tools.
     - Tools used: <!-- e.g. ChatGPT, Claude, Copilot, Cursor, Gemini -->
     - How were they used? <!-- e.g. generated initial draft / wrote tests / code review / documentation -->
-    - What did you change after review? <!-- e.g. "Gemini hallucinated a nonexistent API method, replaced with correct call" / "Restructured the error handling Copilot suggested" / "Used as-is after verifying tests pass" -->
+    - How did you review the AI output? <!-- e.g. read the code, ran it locally, wrote unit tests -->
+    - What did you fix as a result? <!-- e.g. "Gemini hallucinated a nonexistent API method, replaced with correct call" / "Used as-is after verifying tests pass" / "No changes needed" -->

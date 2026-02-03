@@ -76,11 +76,11 @@ To ensure all your commits are signed, you may choose to [configure git](https:/
 
 ## Generative AI Policy
 
-You can use AI tools to help with your contributions. **You are the author, and you are accountable for the result.**
+You can use AI tools to help with your contributions, subject to the requirements below. **You are the author, and you are accountable for the result.**
 
 ### What we require
 
-1. **Disclose AI use.** Complete the AI disclosure section in the PR template. This is mandatory. If no AI was used, leave the checkbox unchecked — that's a valid answer.
+1. **Disclose AI use.** Complete the AI disclosure section in the PR template. This is mandatory. If no AI was used, check the "No generative AI" box — that's a valid answer, and it helps us distinguish from incomplete templates.
 
 2. **Review before submitting.** Read and test all AI-generated code or text before asking maintainers to review it. If you can't explain why a change works, it's not ready for a maintainer to review. If your changes are too long for you to read and review, that is a good indication that they are also too long for maintainers to read.
 
@@ -102,7 +102,7 @@ This applies to all contributions: code, issues, PR comments, documentation.
 
 **Disclose:** code generation, test generation, documentation drafting, AI-assisted code review, substantial refactoring suggestions.
 
-**No need to disclose:** spell check, grammar correction, syntax highlighting, basic IDE autocomplete.
+This policy covers generative AI tools specifically. Non-generative tools like spell check, grammar correction, syntax highlighting, and basic IDE autocomplete are not in scope.
 
 ### Quality standards
 
@@ -121,14 +121,6 @@ This policy is about transparency, not punishment. If you forget to check the bo
 Patterns of submitting low-quality contributions (such as large, unreviewed, or unfocused contributions made with or without AI) that repeatedly waste maintainer time may be addressed using the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/), which states:
 
 > Project maintainers are responsible for clarifying the standards of acceptable behavior and are expected to take appropriate and fair corrective action in response to any instances of unacceptable behavior.
-
-### References
-
-- [ada-url AI Usage Policy](https://github.com/ada-url/ada/blob/main/AI_USAGE_POLICY.md)
-- [Zulip AI Use Policy](https://github.com/zulip/zulip/blob/main/CONTRIBUTING.md#ai-use-policy-and-guidelines)
-- [LLVM AI Tool Use Policy](https://discourse.llvm.org/t/rfc-llvm-ai-tool-policy-human-in-the-loop/89159)
-- [Linux Foundation Generative AI Guidance](https://www.linuxfoundation.org/legal/generative-ai)
-- [AI Attribution Spec](https://aiattribution.github.io/)
 
 ## Keeping in sync with the Augur Repository
 
