@@ -344,7 +344,8 @@ class AugurCollection:
             with DatabaseSession(logger) as session:
                 update_sql = text("""
                     UPDATE task_runs
-                    SET state = 'Complete'
+                    SET state = 'Complete',
+                        completed_date = NOW()
                     WHERE id = :task_run_id
                 """)
                 session.execute_sql(update_sql.bindparams(task_run_id=task_run_id))

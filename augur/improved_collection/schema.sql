@@ -33,25 +33,31 @@ CREATE TABLE augur_operations.workflow_dependencies (
     CHECK (workflow_task_id <> depends_on_workflow_task_id)
 );
 
--- 5. Collection Type Enum
+-- 5. Origin Type Enum
+CREATE TYPE augur_operations.origin_type AS ENUM (
+    'automation',
+    'manual'
+);
+
+-- 6. Collection Type Enum
 CREATE TYPE augur_operations.collection_type AS ENUM (
     'full',        -- Full collection for new repos or forced full recollection
     'incremental'  -- Incremental collection that only collects new data
 );
 
--- 6. Collection State Enum
+-- 7. Collection State Enum
 CREATE TYPE augur_operations.collection_state AS ENUM (
     'Collecting',  -- Collection in progress, some tasks running
     'Failed',      -- Collection has failed tasks and no runnable tasks remain
     'Complete'     -- All tasks in collection completed successfully
 );
 
--- 7. Repo Collections
+-- 8. Repo Collections
 CREATE TABLE augur_operations.repo_collections (
     id SERIAL PRIMARY KEY,
     repo_id TEXT NOT NULL,
     workflow_id INT NOT NULL REFERENCES augur_operations.workflows(id),
-    origin TEXT NOT NULL CHECK (origin IN ('automation', 'manual')),
+    origin augur_operations.origin_type NOT NULL,
     collection_type augur_operations.collection_type NOT NULL DEFAULT 'full',
     is_new_repo BOOLEAN NOT NULL DEFAULT FALSE,
     started_on TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -59,7 +65,7 @@ CREATE TABLE augur_operations.repo_collections (
     state augur_operations.collection_state NOT NULL DEFAULT 'Collecting'
 );
 
--- 8. Task Run State Enum
+-- 9. Task Run State Enum
 CREATE TYPE augur_operations.task_run_state AS ENUM (
     'Pending',
     'Queued',
@@ -68,27 +74,28 @@ CREATE TYPE augur_operations.task_run_state AS ENUM (
     'Complete'
 );
 
--- 9. Task Runs
+-- 10. Task Runs
 CREATE TABLE augur_operations.task_runs (
     id SERIAL PRIMARY KEY,
     collection_record_id INT NOT NULL REFERENCES augur_operations.repo_collections(id) ON DELETE CASCADE,
     workflow_task_id INT NOT NULL REFERENCES augur_operations.workflow_tasks(id),
     restarted BOOLEAN NOT NULL DEFAULT FALSE,
     start_date TIMESTAMP,
+    completed_date TIMESTAMP,
     state augur_operations.task_run_state NOT NULL DEFAULT 'Pending',
     stacktrace TEXT,
 
     UNIQUE(collection_record_id, workflow_task_id)
 );
 
--- 10. Repo Collection Settings
+-- 11. Repo Collection Settings
 CREATE TABLE augur_operations.repo_collection_settings (
     repo_id TEXT PRIMARY KEY,
     force_full_collection BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- 11. Optional: Task Status Activity (for detailed metrics later)
+-- 12. Optional: Task Status Activity (for detailed metrics later)
 CREATE TABLE augur_operations.task_status_activity (
     id SERIAL PRIMARY KEY,
     task_run_id INT NOT NULL REFERENCES augur_operations.task_runs(id) ON DELETE CASCADE,
