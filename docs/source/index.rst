@@ -57,7 +57,7 @@ Augur calculates **many other metrics**, which you can see in the full list `her
 Who develops Augur
 -----------------
 
-- Augur is developed as part of **CHAOSS** (Community Health Analytics Open Source Software).
+- Augur is developed as part of **CHAOSS** (Community Health Analytics for Open Source Software).
 - Many of Augur’s metrics come directly from the CHAOSS community.
 - If you want to **get involved**, visit the `CHAOSS website <https://chaoss.community>`_.
 
