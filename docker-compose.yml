@@ -59,7 +59,6 @@ services:
       - facade:/facade:rw
       - logs:/logs:rw
     restart: unless-stopped
-    stop_grace_period: 10s
     ports:
       - 5002:5000
     #extra_hosts:
