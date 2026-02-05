@@ -29,29 +29,25 @@ Since the default setup will work for most use cases, we'll first cover how to c
 Authentication and API Tokens
 =============================
 
-Augur collects data from hosted source control platforms such as GitHub and GitLab using
-their respective REST APIs. To avoid strict API rate limits and to enable access to
-private repositories, Augur requires Personal Access Tokens (PATs) with appropriate
-read-only permissions.
+Augur collects data from hosted source control platforms such as GitHub and GitLab using their respective APIs. To avoid strict API rate limits and to enable access to private repositories, Augur requires Personal Access Tokens (PATs) with appropriate read-only permissions.
 
 GitHub Authentication
 ---------------------
 
-Augur uses the GitHub REST API to collect repository metadata, issues, pull requests,
-releases, and contributor information.
+Augur uses GitHub APIs to collect repository metadata, issues, pull requests, releases, and contributor information.
 
-A GitHub Personal Access Token (PAT) is required. The minimum recommended permissions are:
+Augur requires a GitHub Personal Access Token (PAT). Two token types are supported:
 
-- **Classic Personal Access Token (recommended)**
+- **Classic Personal Access Token**
   - ``repo`` — required for private repositories
   - ``read:org`` — required when collecting data from repositories owned by an organization
   - ``read:user`` — required for contributor and user metadata returned by the GitHub API
 
-For public repositories only, a token without ``repo`` scope may be sufficient, though a
-GitHub Personal Access Token is still required for Augur to authenticate API requests.
+- **Fine-grained Personal Access Token**
+  - Fine-grained tokens provide repository-specific access with more precise permission controls.
+  - For public repository data collection, fine-grained tokens include read-only public repository access by default and typically require no additional permission changes.
 
-GitHub tokens should be treated as secrets and supplied to Augur using environment
-variables or configuration options described during installation.
+GitHub tokens should be treated as secrets and supplied to Augur using environment variables or configuration options described during installation.
 
 GitLab Authentication
 ---------------------
@@ -63,11 +59,9 @@ The token must include the following scopes:
 - ``read_api`` — required for accessing repository metadata, issues, and merge requests
 - ``read_repository`` — required for repository and commit data
 
-These scopes apply to both GitLab.com and self-hosted GitLab instances. When using a
-self-hosted GitLab deployment, ensure the API base URL is configured correctly.
+These scopes apply to GitLab.com and most standard GitLab deployments.
 
-As with GitHub tokens, GitLab tokens should be stored securely and provided to Augur
-through environment variables or configuration files.
+As with GitHub tokens, GitLab tokens should be stored securely and provided to Augur through environment variables or configuration files.
 
 Configuring Collection
 ----------------------
