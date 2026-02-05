@@ -185,11 +185,7 @@ class Contributor(Base):
 
     cntrb_id = Column(
         UUID(as_uuid=True),
-        Sequence('contributors_cntrb_id_seq', start=25430, schema='augur_data'),
         primary_key=True,
-        server_default=text(
-            "nextval('augur_data.contributors_cntrb_id_seq'::regclass)"
-        ),
     )
     cntrb_login = Column(
         String,
