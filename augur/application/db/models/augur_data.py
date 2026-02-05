@@ -847,6 +847,7 @@ class Repo(Base):
 
     repo_id = Column(
         BigInteger,
+        Sequence('repo_repo_id_seq', start=25480, schema='augur_data'),
         primary_key=True,
         server_default=text("nextval('augur_data.repo_repo_id_seq'::regclass)"),
     )
