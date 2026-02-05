@@ -31,8 +31,7 @@ Augur Documentation
 
 What is Augur?
 ~~~~~~~~~~~~~~~~
-
-Augur is a software tool that helps you **collect and measure information about open-source software projects**. Open-source projects are software projects where anyone can see and contribute to the code.
+Augur is a software tool that helps you **collect and measure information about open-source software projects**. Open-source projects are software projects where anyone can see and contribute to the code. Augur focuses on collecting data from public git-based code hosting platforms ("Forges") such as GitHub and GitLab to produce data about the health and sustainability of software projects based on the relevant CHAOSS metrics.
 
 The main goal of Augur is to **understand how healthy and sustainable a project is**. Healthy projects are easier to rely on, and they are important because many software organizations or companies depend on open-source software.
 
@@ -64,7 +63,7 @@ Who develops Augur
 See it in action
 ----------------
 
-- You can check out Augur live on the CHAOSS instance `here <http://augur.chaoss.io>`_.
+- You can check out Augur live on the CHAOSS instance `here <https://ai.chaoss.io>`_.
 
 
 
