@@ -55,7 +55,7 @@ CREATE TYPE augur_operations.collection_state AS ENUM (
 -- 8. Repo Collections
 CREATE TABLE augur_operations.repo_collections (
     id SERIAL PRIMARY KEY,
-    repo_id TEXT NOT NULL,
+    repo_id BIGINT NOT NULL,
     workflow_id INT NOT NULL REFERENCES augur_operations.workflows(id),
     origin augur_operations.origin_type NOT NULL,
     collection_type augur_operations.collection_type NOT NULL DEFAULT 'full',
@@ -90,7 +90,7 @@ CREATE TABLE augur_operations.task_runs (
 
 -- 11. Repo Collection Settings
 CREATE TABLE augur_operations.repo_collection_settings (
-    repo_id TEXT PRIMARY KEY,
+    repo_id BIGINT PRIMARY KEY,
     force_full_collection BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
