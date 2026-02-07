@@ -1,7 +1,9 @@
 #SPDX-License-Identifier: MIT
 services:
   augur-db:
-    image: postgres:16
+    build:
+      context: .
+      dockerfile: ./docker/database/Dockerfile
     restart: unless-stopped
     environment:
       - "POSTGRES_DB=augur"
@@ -87,7 +89,7 @@ services:
     user: 2345:2345  # Run as an arbitrary non-root user
     post_start:
       # Make sure the user has access to the volumes
-      - command: chmod -R 777 /facade /logs /config /cache
+      - command: chmod 777 /facade /logs /config /cache
         user: root
   
   # Flower is a UI that helps more easily monitor running tasks for celery workers.
