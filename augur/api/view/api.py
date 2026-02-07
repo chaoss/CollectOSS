@@ -1,7 +1,6 @@
 import logging
 import re
 
-from augur.api.view.init import report_requests
 from flask import flash, current_app, jsonify, redirect, request, url_for
 from flask_login import current_user, login_required
 
@@ -225,14 +224,3 @@ def user_app_create():
         flash("Could not create app")
     
     return redirect(url_for("user_settings") + "?section=application")
-
-
-""" ----------------------------------------------------------------
-Locking request loop:
-    This route will lock the current request until the
-    report request completes. A json response is guaranteed.
-    Assumes that the requested repo exists.
-"""
-@app.route('/requests/report/wait/<id>')
-def wait_for_report_request(id):
-    return jsonify(report_requests.get(id, {}))
