@@ -17,9 +17,6 @@ from augur.application.config import get_development_flag
 from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected, batch_insert_contributors, get_batch_size
 
 
-# Batch size for processing issues - controls memory usage during collection
-# Uses default_batch_size from config (default: 1000)
-ISSUE_BATCH_SIZE = get_batch_size()
 
 development = get_development_flag()
 
@@ -57,6 +54,8 @@ def collect_issues(repo_git: str, full_collection: bool) -> int:
     try:
         issue_data_generator = retrieve_all_issue_data(repo_git, logger, key_auth, core_data_last_collected)
 
+        issue_batch_size = get_batch_size()
+
         # Process issues in batches to avoid memory spikes
         batch = []
         total_issues = 0
@@ -64,7 +63,7 @@ def collect_issues(repo_git: str, full_collection: bool) -> int:
         for issue in issue_data_generator:
             batch.append(issue)
 
-            if len(batch) >= ISSUE_BATCH_SIZE:
+            if len(batch) >= issue_batch_size:
                 logger.info(f"{owner}/{repo}: Processing batch of {len(batch)} issues (total so far: {total_issues + len(batch)})")
                 process_issues(batch, f"{owner}/{repo}: Issue task", repo_id, logger)
                 total_issues += len(batch)

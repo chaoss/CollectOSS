@@ -14,9 +14,6 @@ from augur.application.db.lib import get_core_data_last_collected, get_batch_siz
 from sqlalchemy.sql import text
 
 
-# Batch size for processing messages - smaller due to large text content per message
-# Uses github_message_batch_size from config (default: 20)
-MESSAGE_BATCH_SIZE = get_batch_size("message")
 
 platform_id = 1
 
@@ -87,6 +84,8 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
 
 def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger, key_auth, task_name, augur_db, since) -> None:
 
+    message_batch_size = get_batch_size("message")
+
     owner, repo = get_owner_repo(repo_git)
 
     # define logger for task
@@ -129,7 +128,7 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
             logger.info(f"{task_name}: PR or issue comment url of {comment_url} returned 404. Skipping.")
             skipped_urls += 1
 
-        if len(all_data) >= MESSAGE_BATCH_SIZE:
+        if len(all_data) >= message_batch_size:
             process_messages(all_data, task_name, repo_id, logger, augur_db)
             all_data.clear()
 

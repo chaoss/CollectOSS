@@ -6,13 +6,12 @@ from augur.application.db.util import execute_session_query
 from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs, get_batch_size
 
 
-# Batch size for PR file collection
-# Uses default_batch_size from config (default: 1000)
-PR_FILE_BATCH_SIZE = get_batch_size()
 
 
 def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection=False):
-    
+
+    pr_file_batch_size = get_batch_size()
+
     if full_collection:
         # query existing PRs and the respective url we will append the commits url to
         pr_number_sql = s.sql.text("""
@@ -99,7 +98,7 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
 
                 pr_file_rows.append(data)
 
-                if len(pr_file_rows) >= PR_FILE_BATCH_SIZE:
+                if len(pr_file_rows) >= pr_file_batch_size:
                     logger.info(f"{task_name}: Inserting {len(pr_file_rows)} rows")
                     augur_db.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)
                     pr_file_rows.clear()

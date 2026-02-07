@@ -19,9 +19,6 @@ from augur.application.db.lib import get_secondary_data_last_collected, get_upda
 from typing import List
 
 
-# Batch sizes for PR-related data collection
-# All use default_batch_size from config (default: 1000)
-PR_BATCH_SIZE = PR_REVIEW_COMMENT_BATCH_SIZE = PR_REVIEW_BATCH_SIZE = get_batch_size()
 
 platform_id = 1
 
@@ -45,13 +42,15 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
             # subtract 2 days to ensure all data is collected 
             core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
+        pr_batch_size = get_batch_size()
+
         total_count = 0
         all_data = []
         for pr in retrieve_all_pr_data(repo_git, logger, manifest.key_auth, core_data_last_collected):
 
             all_data.append(pr)
 
-            if len(all_data) >= PR_BATCH_SIZE:
+            if len(all_data) >= pr_batch_size:
                 process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, augur_db)
                 total_count += len(all_data)
                 all_data.clear()
@@ -252,6 +251,8 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
     key_auth = GithubRandomKeyAuth(logger)
     github_data_access = GithubDataAccess(key_auth, logger)
 
+    pr_review_comment_batch_size = get_batch_size()
+
     # Batch processing: accumulate comments until batch size reached, then flush
     contributors = []
     pr_review_comment_dicts = []
@@ -274,7 +275,7 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
             pr_review_msg_mapping_data[comment["id"]] = comment
 
         # Flush batch when threshold reached (check both to prevent unbounded growth)
-        if len(pr_review_comment_dicts) >= PR_REVIEW_COMMENT_BATCH_SIZE or len(contributors) >= PR_REVIEW_COMMENT_BATCH_SIZE:
+        if len(pr_review_comment_dicts) >= pr_review_comment_batch_size or len(contributors) >= pr_review_comment_batch_size:
             refs_inserted = _flush_pr_review_comment_batch(
                 logger, contributors, pr_review_comment_dicts, pr_review_msg_mapping_data,
                 pr_review_id_mapping, repo_id, tool_version, data_source, owner, repo
@@ -487,6 +488,8 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
         github_data_access = GithubDataAccess(manifest.key_auth, logger)
 
+        pr_review_batch_size = get_batch_size()
+
         # Batch processing: accumulate reviews until batch size reached, then flush
         contributors = []
         pr_review_dicts = []
@@ -522,7 +525,7 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
                     )
 
             # Flush batch when threshold reached
-            if len(pr_review_dicts) >= PR_REVIEW_BATCH_SIZE:
+            if len(pr_review_dicts) >= pr_review_batch_size:
                 _flush_pr_review_batch(augur_db, contributors, pr_review_dicts, logger, owner, repo)
                 total_reviews_collected += len(pr_review_dicts)
                 contributors.clear()

@@ -11,9 +11,6 @@ from augur.application.db.lib import get_session, execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 
 
-# Batch size for facade contributor processing
-# Uses default_batch_size from config (default: 1000)
-FACADE_CONTRIBUTOR_BATCH_SIZE = get_batch_size()
 
 
 def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id):
@@ -269,13 +266,15 @@ def insert_facade_contributors(self, repo_git):
 
     key_auth = GithubRandomKeyAuth(logger)
 
+    facade_batch_size = get_batch_size()
+
     # Process results in batches to reduce memory usage
     batch = []
 
     for row in rows:
         batch.append(dict(row))
 
-        if len(batch) >= FACADE_CONTRIBUTOR_BATCH_SIZE:
+        if len(batch) >= facade_batch_size:
             process_commit_metadata(logger, key_auth, batch, repo_id, platform_id)
             batch.clear()
 
@@ -330,7 +329,7 @@ def insert_facade_contributors(self, repo_git):
     for row in rows:
         batch.append(dict(row))
 
-        if len(batch) >= FACADE_CONTRIBUTOR_BATCH_SIZE:
+        if len(batch) >= facade_batch_size:
             link_commits_to_contributor(logger, facade_helper, batch)
             batch.clear()
 
