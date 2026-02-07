@@ -21,9 +21,7 @@ from typing import List
 
 # Batch sizes for PR-related data collection
 # All use default_batch_size from config (default: 1000)
-PR_BATCH_SIZE = get_batch_size()
-PR_REVIEW_COMMENT_BATCH_SIZE = get_batch_size()
-PR_REVIEW_BATCH_SIZE = get_batch_size()
+PR_BATCH_SIZE = PR_REVIEW_COMMENT_BATCH_SIZE = PR_REVIEW_BATCH_SIZE = get_batch_size()
 
 platform_id = 1
 
