@@ -1,12 +1,41 @@
+import os
+from pathlib import Path
+
+
+class ConfigPaths:
+    """Centralized config path utilities."""
+
+    @property
+    def config_dir(self) -> Path:
+        """Get config directory from CONFIG_DATADIR env var, or current directory."""
+        return Path(os.getenv("CONFIG_DATADIR", "."))
+
+    @property
+    def db_config(self) -> Path:
+        """Get path to db.config.json."""
+        return self.config_dir / "db.config.json"
+
+    @property
+    def augur_config(self) -> Path:
+        """Get path to augur.json."""
+        return self.config_dir / "augur.json"
+
+    @property
+    def view_config(self) -> Path:
+        """Get path to config.yml. Uses CONFIG_LOCATION if set."""
+        config_location = os.getenv("CONFIG_LOCATION")
+        if config_location:
+            return Path(config_location)
+        return self.config_dir / "config.yml"
+
+
 import sqlalchemy as s
 from sqlalchemy import and_, update
 import json
 import copy
 from typing import List, Any, Optional
-import os
 from augur.application.db.models import Config 
 from augur.application.db.util import execute_session_query, convert_type_of_value
-from pathlib import Path
 import logging
 
 def get_development_flag_from_config():

@@ -1,12 +1,12 @@
 from .server import Environment
 from augur.application.logs import AugurLogger
-from augur.application.config_paths import get_view_config_path
+from augur.application.config import ConfigPaths
 import secrets, yaml
 
 env = Environment()
 
 # load configuration files and initialize globals
-configFile = get_view_config_path()
+configFile = ConfigPaths().view_config
 
 settings = {}
 

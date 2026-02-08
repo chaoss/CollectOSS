@@ -8,7 +8,7 @@ import subprocess
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from augur.application.db.util import catch_operational_error
-from augur.application.config_paths import get_db_config_path
+from augur.application.config import ConfigPaths
 
 
 def parse_database_string(db_string: str) -> tuple[str,str, str, str, str]:
@@ -64,12 +64,12 @@ def get_database_string() -> str:
 
     augur_db_environment_var = os.getenv("AUGUR_DB")
 
-    db_json_file_location = get_db_config_path()
+    db_json_file_location = ConfigPaths().db_config
     db_json_exists = os.path.exists(db_json_file_location)
 
     if not augur_db_environment_var and not db_json_exists:
 
-        print(f"ERROR: Cannot connect to database.\n       No db.config.json found at {db_json_file_location} and the AUGUR_DB environment variable is not set.\n       Please run make install or set the AUGUR_DB environment variable.")
+        print("ERROR no way to get connection to the database. \n\t\t\t\t\t\t    There is no db.config.json and the AUGUR_DB environment variable is not set\n\t\t\t\t\t\t    Please run make install or set the AUGUR_DB environment then run make install")
         sys.exit()
 
     if augur_db_environment_var:

@@ -21,7 +21,7 @@ from augur.application.cli import (
 )
 
 from augur.application.db.session import DatabaseSession
-from augur.application.config_paths import get_db_config_path
+from augur.application.config import ConfigPaths
 from sqlalchemy import update
 from datetime import datetime
 from augur.application.db.models import Repo
@@ -405,7 +405,7 @@ def check_pgpass():
             print("Database string is invalid and cannot be used")
 
     else:
-        db_config_path = get_db_config_path()
+        db_config_path = ConfigPaths().db_config
         with open(db_config_path, "r") as f:
             config = json.load(f)
             print(f"Config from {db_config_path}: {config}")
@@ -506,7 +506,7 @@ def run_psql_command_in_database(target_type, target):
         pass
         # TODO: Add functionality for environment variable
     else:
-        with open(get_db_config_path(), "r") as f:
+        with open(ConfigPaths().db_config, "r") as f:
             db_config = json.load(f)
 
             host = db_config["host"]

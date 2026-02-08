@@ -38,7 +38,7 @@ from psycopg2.errors import DeadlockDetected
 from augur.application.db.session import DatabaseSession
 from augur.application.config import AugurConfig
 from augur.application.db.lib import execute_sql
-from augur.application.config_paths import get_db_config_path
+from augur.application.config import ConfigPaths
 from logging import Logger
 
 logger = logging.getLogger(__name__)
@@ -46,13 +46,13 @@ logger = logging.getLogger(__name__)
 def get_database_args_from_env():
 
     db_str = os.getenv("AUGUR_DB")
-    db_json_file_location = get_db_config_path()
+    db_json_file_location = ConfigPaths().db_config
 
     db_json_exists = os.path.exists(db_json_file_location)
 
     if not db_str and not db_json_exists:
 
-        logger.error(f"ERROR: Cannot connect to database.\n       No db.config.json found at {db_json_file_location} and the AUGUR_DB environment variable is not set.\n       Please run make install or set the AUGUR_DB environment variable.")
+        logger.error("ERROR no way to get connection to the database. \n\t\t\t\t\t\t    There is no db.config.json and the AUGUR_DB environment variable is not set\n\t\t\t\t\t\t    Please run make install or set the AUGUR_DB environment then run make install")
         sys.exit()
 
     credentials = {}
