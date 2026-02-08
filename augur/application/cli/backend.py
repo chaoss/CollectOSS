@@ -105,7 +105,7 @@ class AugurServiceManager:
             try:
                 os.unlink(self.pidfile)
             except OSError as e:
-                logger.warning("Could not remove pidfile %s: %s", self.pidfile, e)
+                logger.error(f"Could not remove pidfile {self.pidfile}: {e}")
 
         sys.exit(0)
 
@@ -271,7 +271,7 @@ def start(ctx, disable_collection, development, pidfile, port):
             try:
                 os.unlink(pidfile)
             except OSError as e:
-                logger.warning("Could not remove pidfile %s: %s", pidfile, e)
+                logger.error(f"Could not remove pidfile {pidfile}: {e}")
 
 def start_celery_worker_processes(worker_counts: tuple[int, int, int], disable_collection=False):
     """
