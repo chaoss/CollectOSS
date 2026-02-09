@@ -13,10 +13,7 @@ Older versions are not actively supported. In exceptional circumstances, maintai
 
 ### Private Disclosure Process
 
-If you discover a security vulnerability in Augur, please report it privately:
-
-1. **GitHub Security Advisory**: Use GitHub's [private vulnerability reporting](https://github.com/chaoss/augur/security/advisories/new) for this repository
-2. **Use the Template**: Please fill out the provided advisory template to ensure we have all the details (Impact, Reproduction Steps, and Affected Versions) needed to investigate.
+If you discover a security vulnerability in Augur, please report it privately by opening a [New Private Vulnerability Report](https://github.com/chaoss/augur/security/advisories/new). Please fill out the provided advisory template to ensure we have all the details (Impact, Reproduction Steps, and Affected Versions) needed to investigate.
 
 ### Responsible Disclosure Guidelines
 
