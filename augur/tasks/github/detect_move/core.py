@@ -59,7 +59,12 @@ def extract_owner_and_repo_from_endpoint(key_auth, url, logger):
     response_from_gh = hit_api(key_auth, url, logger)
 
     page_data = parse_json_response(logger, response_from_gh)
-
+    if response_from_gh.status_code != 200 or 'full_name' not in page_data:
+        logger.error(
+            f"Unexpected response fetching redirect target: status={response_from_gh.status_code}, "
+            f"url={url}, body={page_data}"
+        )
+        raise Exception("Could not resolve owner/repo from redirect target due to missing data in the github response")
     full_repo_name = page_data['full_name']
 
     splits = full_repo_name.split('/')
