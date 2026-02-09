@@ -7,7 +7,7 @@ If you have questions or would like to help please open an issue on GitHub_.
 
 .. _GitHub: https://github.com/chaoss/augur/issues
 
-These commands are used to run specific subsets of unit tests. We previously used ``tox`` to manage the test environments, but now use ``pytest`` as the test runner.
+These commands are used to run specific subsets of unit tests. We use ``pytest`` as our test runner.
 
 --------------
 
@@ -55,4 +55,4 @@ Example\:
 
 .. code-block:: bash
 
-  $ pytest
+  $ uv run pytest
