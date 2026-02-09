@@ -93,7 +93,7 @@ lint = [
     "types-python-dateutil>=2.9.0.20251008",
     "types-toml>=0.10.8.20240310",
 ]
-test = ["tox>=4.0", "tox-uv", "pytest"]
+test = ["pytest"]
 debug = ["ipdb==0.13.9"]
 docs = [
     "docutils==0.20.1",
@@ -144,32 +144,7 @@ constraint-dependencies = [
     "graphql-server-core>1.1.1",
 ]
 
-[tool.tox]
-legacy_tox_ini = """
-    [tox]
-    envlist = py{,311}-{classes}
-    skip_missing_interpreters = true
-    requires = tox-uv
 
-    [testenv]
-    passenv = AUGUR_*
-    whitelist_externals = make
-                        /bin/bash
-    deps =
-        pytest
-    setenv =
-        AUGUR_LOG_DEBUG = 0
-        AUGUR_LOG_QUIET = 1
-    commands =
-        application: pytest tests --ignore=tests/test_routes --ignore=tests/test_workers
-        metric-routes: python tests/test_routes/runner.py
-        workers: pytest tests/test_workers/
-        classes: pytest tests/test_classes/
-        worker-persistence: pytest tests/test_workers/worker_persistence/
-
-    [pytest]
-    addopts = -ra -s
-"""
 
 [tool.pytest.ini_options]
 addopts = "-ra -s"
