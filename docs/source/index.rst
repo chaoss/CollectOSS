@@ -50,7 +50,7 @@ Example of a metric: Burstiness
 - This helps you see a project’s focus, update patterns, and stability.
 - In other words, you can tell how often big changes happen and whether the project works in a steady, predictable way.
 
-Augur calculates many other metrics, which you can see in the full list `here <https://chaoss.community/metrics/>`_.
+Augur calculates many other metrics, which you can see in the `full list <https://chaoss.community/metrics/>`_.
 
 Who develops Augur
 -----------------
@@ -62,7 +62,7 @@ Who develops Augur
 See it in action
 ----------------
 
-- You can check out Augur live on the CHAOSS instance `here <https://ai.chaoss.io>`_.
+- You can check out Augur live on the `CHAOSS instance <https://ai.chaoss.io>`_.
 
 
 Current maintainers
