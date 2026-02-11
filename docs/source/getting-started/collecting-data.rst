@@ -38,14 +38,19 @@ Augur uses GitHub APIs to collect repository metadata, issues, pull requests, re
 
 Augur requires a GitHub Personal Access Token (PAT). Two token types are supported:
 
-- **Classic Personal Access Token**
-  - ``repo`` — required for private repositories
-  - ``read:org`` — required when collecting data from repositories owned by an organization
-  - ``read:user`` — required for contributor and user metadata returned by the GitHub API
+- **Classic Personal Access Token (recommended)**
+
+  A PAT with minimal permissions is sufficient for most public repository data collection.
+  The following permissions are optional and only required for specific use cases:
+
+  - ``repo`` — required only when collecting data from private repositories
+  - ``read:org`` — required only when collecting organization-related metadata (e.g., organization members or org-owned repository data)
+  - ``read:user`` — required when collecting contributor and user metadata returned by the GitHub API
 
 - **Fine-grained Personal Access Token**
-  - Fine-grained tokens provide repository-specific access with more precise permission controls.
-  - For public repository data collection, fine-grained tokens include read-only public repository access by default and typically require no additional permission changes.
+
+  Fine-grained tokens provide repository-specific access with more precise permission controls.
+  For public repository data collection, fine-grained tokens include read-only public repository access by default and typically require no additional permission changes.
 
 GitHub tokens should be treated as secrets and supplied to Augur using environment variables or configuration options described during installation.
 
