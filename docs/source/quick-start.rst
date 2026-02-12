@@ -7,7 +7,7 @@ Get Augur running in minutes! We offer two straightforward paths:
 
 **Manual Installation** - For production deployments, development work, or if Docker isn't available on your platform.
 
-Note: We support all officially supported versions of Python. Although some features may not work on brand new Python versions as soon as they release, we currently test on Python 3.10 and 3.11.
+Note: We aim to support all officially supported versions of Python, although it may take some time to support new Python versions as soon as they release. Please see the `README <https://github.com/chaoss/augur/blob/main/README.md>`__ for more details on what specific versions are supported.
 
 .. toctree::
    :maxdepth: 2
