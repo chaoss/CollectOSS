@@ -39,7 +39,7 @@ How Augur works
 ---------------
 
 1. Augur looks at the project’s repositories (the place where the project’s code and files live).
-2. It collect data about activity that is happening in the project, including issues, comments, code changes, etc.
+2. It collects data about activity that is happening in the project, including issues, comments, code changes, etc.
 3. It organizes this data into a standard format called a data model.
 4. Then it calculates metrics that tell you about the project’s health.
 
@@ -55,7 +55,7 @@ Augur calculates many other metrics, which you can see in the `full list <https:
 Who develops Augur
 --------------------
 
-- Augur is developed as part of CHAOSS (Community Health Analytics for Open Source Software).
+- Augur is developed as part of CHAOSS (Community Health Analytics in Open Source Software).
 - Many of Augur’s metrics come directly from the CHAOSS community.
 - If you want to get involved, visit the `CHAOSS website <https://chaoss.community>`_.
 
