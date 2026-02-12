@@ -4,7 +4,6 @@ Augur library commands for controlling the backend components
 """
 import resource
 import os
-import sys
 import time
 import subprocess
 import click
@@ -27,6 +26,7 @@ from augur.tasks.init.redis_connection import get_redis_connection
 from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import AugurLogger
+from augur.application.service_manager import AugurServiceManager
 from augur.application.db.lib import get_value
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 import sqlalchemy as s
@@ -36,79 +36,6 @@ from keyman.KeyClient import KeyClient, KeyPublisher
 reset_logs = os.getenv("AUGUR_RESET_LOGS", 'True').lower() in ('true', '1', 't', 'y', 'yes')
 
 logger = AugurLogger("augur", reset_logfiles=reset_logs).get_logger()
-
-
-class AugurServiceManager:
-    def __init__(self, ctx, pidfile, disable_collection):
-        self.ctx = ctx
-        self.pidfile = pidfile
-        self.disable_collection = disable_collection
-        self.server = None
-        self.processes = []
-        self.celery_beat_process = None
-        self.keypub = None
-        self.shutting_down = False
-
-    def shutdown_signal_handler(self, signum, frame):
-        if self.shutting_down:
-            return
-        
-        self.shutting_down = True
-        logger.info(f"Received signal {signum}, shutting down gracefully")
-
-        # Stop server
-        if self.server:
-            logger.info("Stopping server")
-            self.server.terminate()
-            try:
-                self.server.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                logger.warning("Server did not terminate in time, killing")
-                self.server.kill()
-
-        # Stop celery workers
-        logger.info("Stopping celery workers")
-        for p in self.processes:
-            if p and p.poll() is None:
-                p.terminate()
-        
-        # Wait for workers to terminate
-        for p in self.processes:
-            if p:
-                try:
-                    p.wait(timeout=3)
-                except subprocess.TimeoutExpired:
-                    logger.warning(f"Worker {p.pid} did not terminate in time, killing")
-                    p.kill()
-
-        # Stop celery beat
-        if self.celery_beat_process:
-            logger.info("Stopping celery beat")
-            self.celery_beat_process.terminate()
-            try:
-                self.celery_beat_process.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                logger.warning("Celery beat did not terminate in time, killing")
-                self.celery_beat_process.kill()
-
-        # Cleanup collection resources
-        if not self.disable_collection:
-            try:
-                if self.keypub:
-                    self.keypub.shutdown()
-                cleanup_collection_status_and_rabbit(logger, self.ctx.obj.engine)
-            except Exception as e:
-                logger.debug(f"Error during collection cleanup: {e}")
-
-        # Remove pidfile
-        if os.path.exists(self.pidfile):
-            try:
-                os.unlink(self.pidfile)
-            except OSError as e:
-                logger.error(f"Could not remove pidfile {self.pidfile}: {e}")
-
-        sys.exit(0)
-
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 @click.pass_context
