@@ -48,8 +48,29 @@ def get_value(section_name: str, setting_name: str) -> Optional[Any]:
         setting_dict = convert_type_of_value(setting_dict, logger)
 
         return setting_dict["value"]
-    
-    
+
+
+def get_batch_size(task_type: str = None) -> int:
+    """Get batch size for a task, with fallback to default.
+
+    Args:
+        task_type: Optional task type (e.g., "event", "message").
+                   If provided and a specific config exists for it,
+                   that value is used. Otherwise falls back to default_batch_size.
+
+    Returns:
+        Batch size integer (default: 1000)
+    """
+    if task_type:
+        specific_key = f"github_{task_type}_batch_size"
+        value = get_value("Tasks", specific_key)
+        if value is not None:
+            return int(value)
+
+    default_value = get_value("Tasks", "default_batch_size")
+    return int(default_value) if default_value is not None else 1000
+
+
 def execute_sql(sql_text):
 
     engine = get_engine()
