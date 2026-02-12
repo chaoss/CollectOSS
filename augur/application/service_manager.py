@@ -1,7 +1,12 @@
 import sys
 import os
 import subprocess
+import sqlalchemy as s
 from augur.application.logs import AugurLogger
+from augur.application.db.session import DatabaseSession
+from augur.application.db.lib import get_value
+from augur.tasks.init.redis_connection import get_redis_connection
+from urllib.parse import urlparse
 
 logger = AugurLogger("augur_servicemanager").get_logger()
 
@@ -76,3 +81,83 @@ class AugurServiceManager:
                 logger.error(f"Could not remove pidfile {self.pidfile}: {e}")
 
         sys.exit(0)
+
+def cleanup_collection_status_and_rabbit(logger, engine):
+    # TODO: tech debt: this should probbaly be in a helper function but its so tightly coupled with other stuff
+    clear_redis_caches()
+
+    connection_string = get_value("RabbitMQ", "connection_string")
+
+    with DatabaseSession(logger, engine=engine) as session:
+
+        clean_collection_status(session)
+
+    clear_rabbitmq_messages(connection_string)
+
+def clear_redis_caches():
+    """Clears the redis databases that celery and redis use."""
+
+    logger.info("Flushing all redis databases this instance was using")
+    celery_purge_command = "celery -A augur.tasks.init.celery_app.celery_app purge -f"
+    subprocess.call(celery_purge_command.split(" "))
+
+    redis_connection = get_redis_connection()
+    redis_connection.flushdb()
+
+#Make sure that database reflects collection status when processes are killed/stopped.
+def clean_collection_status(session):
+    session.execute_sql(s.sql.text("""
+        UPDATE augur_operations.collection_status 
+        SET core_status='Pending',core_task_id = NULL
+        WHERE core_status='Collecting' AND core_data_last_collected IS NULL;
+
+        UPDATE augur_operations.collection_status
+        SET core_status='Success',core_task_id = NULL
+        WHERE core_status='Collecting' AND core_data_last_collected IS NOT NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET secondary_status='Pending',secondary_task_id = NULL
+        WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET secondary_status='Success',secondary_task_id = NULL
+        WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NOT NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET facade_status='Update', facade_task_id=NULL
+        WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NULL;
+
+        UPDATE augur_operations.collection_status 
+        SET facade_status='Success', facade_task_id=NULL
+        WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NOT NULL;
+
+        UPDATE augur_operations.collection_status
+        SET facade_status='Pending', facade_task_id=NULL
+        WHERE facade_status='Failed Clone' OR facade_status='Initializing';
+    """))
+    #TODO: write timestamp for currently running repos.
+
+
+def clear_rabbitmq_messages(connection_string):
+    #virtual_host_string = connection_string.split("/")[-1]
+
+    logger.info("Clearing all messages from celery queue in rabbitmq")
+    from augur.tasks.init.celery_app import celery_app
+    celery_app.control.purge()
+
+    clear_all_message_queues(connection_string)
+    #rabbitmq_purge_command = f"sudo rabbitmqctl purge_queue celery -p {virtual_host_string}"
+    #subprocess.call(rabbitmq_purge_command.split(" "))
+
+
+def clear_all_message_queues(connection_string):
+    queues = ['celery','secondary','scheduling','facade']
+
+    virtual_host_string = connection_string.split("/")[-1]
+
+    #Parse username and password with urllib
+    parsed = urlparse(connection_string)
+
+    for q in queues:
+        curl_cmd = f"curl -i -u {parsed.username}:{parsed.password} -XDELETE http://localhost:15672/api/queues/{virtual_host_string}/{q}"
+        subprocess.call(curl_cmd.split(" "),stdout=subprocess.PIPE, stderr=subprocess.PIPE)
