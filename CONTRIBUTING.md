@@ -36,6 +36,11 @@ New to open source or Augur? Here's how most people get started. Go at your own 
 - Try [`challenging first issue`](https://github.com/chaoss/augur/labels/challenging%20first%20issue) labels
 - Look at [`documentation`](https://github.com/chaoss/augur/labels/documentation) or [`tech debt`](https://github.com/chaoss/augur/labels/tech%20debt) issues
 - Ask in the Slack workspace linked above what would be a good fit for your interests.
+## Opening an issue
+If you're experiencing an issue with Augur or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/augur/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our [issues](https://github.com/chaoss/augur/issues) before opening a new one.
+
+Please note that if you open a bug report and your issue **does not** follow our template, we cannot help you until you have provided us all the relevant information in that format. 
+Respectfully, we do not have the time to try and recreate an error given with minimal or no context, so by providing this information you are helping us help you!
 ### How to submit a bug report
 To see the template referred to in the above section, click on **New Issue**, then click on the **Get Started** button on the **Bug Report** option.
 A dialogue box populated with descriptions of what to put in each section, will pop up on a new page.
