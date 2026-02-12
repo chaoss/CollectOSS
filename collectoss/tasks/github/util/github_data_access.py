@@ -35,6 +35,11 @@ class ResourceGoneException(Exception):
         super().__init__(message)
 
 class GithubDataAccess:
+    """Utilities for accessing the GitHub REST API
+    
+    Public facing functions in this class should refrain from returning data in a structure
+    that is derived from githubs API responses to keep all platform-specific parsing here.
+    """
 
     def _base_url(self):
         return "https://api.github.com"
