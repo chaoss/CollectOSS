@@ -12,6 +12,9 @@ logger = AugurLogger("augur_servicemanager").get_logger()
 
 
 class AugurServiceManager:
+    """ Provides a storage space for references to the various components of augur
+    This enables them to all be properly shut down in the event a shutdown signal (SIGINT - AKA ctrl-c, or SIGTERM) is received 
+    """
     def __init__(self, ctx, pidfile, disable_collection):
         self.ctx = ctx
         self.pidfile = pidfile
