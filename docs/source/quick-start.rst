@@ -1,18 +1,30 @@
 Quickstart
-===============
+==========
 
-Get Augur running in minutes! We offer two straightforward paths:
+Get Augur running in minutes! For more in-depth detail on using Augur, see :doc:`the tutorials <getting-started/toc>`
 
-**Docker Quickstart (Fastest)** - Get started in minutes with Docker or Podman. Requires ~10 GB RAM, 8 CPUs, and 100 GB disk.
 
-**Manual Installation** - For production deployments, development work, or if Docker isn't available on your platform.
+We offer two methods for installing Augur:
 
-Note: We aim to support all officially supported versions of Python, although it may take some time to support new Python versions as soon as they release. Please see the `README <https://github.com/chaoss/augur/blob/main/README.md>`__ for more details on what specific versions are supported.
+Containers
+^^^^^^^^^^
+
+Container images are the fastest way to get started with Augur using Docker or Podman with minimal setup. Viable and supported for installations of any size on Linux and macOS hosts.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    getting-started/using-docker
+
+Manual Installation
+^^^^^^^^^^^^^^^^^^^
+
+For power users, deployments requiring more direct system access (such as for machine learning workloads, or if Docker/Podman aren't available on your platform. We officially support macOS, Ubuntu, and Fedora for manual installation.
+
+
+.. toctree::
+   :maxdepth: 1
+
    getting-started/new-install
    getting-started/dev-osx-install
 
