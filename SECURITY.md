@@ -17,21 +17,11 @@ If you discover a security vulnerability in Augur, please report it privately by
 
 ### Responsible Disclosure Guidelines
 
-We follow responsible disclosure practices:
+We do our best to follow responsible disclosure practices:
 
-- **Embargo Period**: We ask that you allow maintainers a reasonable amount of time to investigate and release a fix before public disclosure.
 - **Credit**: We will acknowledge your discovery in security release notes (unless you prefer anonymity)
-- **Coordination**: We will work with you to coordinate the disclosure and release timeline
-- **No Public Issues**: Please do not create public GitHub issues or pull requests for security vulnerabilities
-- **Confidentiality**: We treat all vulnerability reports with strict confidentiality
-
-### Security Release Process
-
-When a security vulnerability is confirmed:
-
-1. A fix is developed and tested
-2. A security release is prepared
-3. Users are notified via security advisories
-4. The vulnerability is publicly disclosed only after the patch is released and available
+- **Coordination**: We will work with you to coordinate the disclosure and release timeline based on our capacity to resolve the issue
+- **Communication**: We aim to remain communicative and keep your ticket updated with the status so you know what to expect
+- **No Public Issues**: Please avoid creating public GitHub issues pull requests, branches, or forks for developing fixes to security vulnerabilities unless told otherwise. All of these can leak the existence of the vulnerability before it is fully fixed.
 
 Thank you for helping keep Augur secure!  
