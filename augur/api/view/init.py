@@ -9,7 +9,6 @@ env = Environment()
 # load configuration files and initialize globals
 configFile = Path(env.setdefault("CONFIG_LOCATION", "config.yml"))
 
-report_requests = {}
 settings = {}
 
 def init_settings():
