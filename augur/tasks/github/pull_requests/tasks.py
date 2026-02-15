@@ -244,6 +244,10 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
     # Build mapping once: github pr_review_src_id -> augur pr_review_id
     pr_review_id_mapping = {review.pr_review_src_id: review.pr_review_id for review in pr_reviews}
 
+    if not pr_review_id_mapping:
+        logger.debug(f"{owner}/{repo} No PR reviews to collect review comments for")
+        return
+
     tool_source = "Pr review comment task"
     tool_version = "2.0"
     data_source = "Github API"
