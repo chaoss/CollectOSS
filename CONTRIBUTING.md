@@ -72,43 +72,38 @@ $ git commit -s -m “my commit message w/signoff”
 
 To ensure all your commits are signed, you may choose to [configure git](https://gist.github.com/xavierfoucrier/c156027fcc6ae23bcee1204199f177da) properly by editing your global ```.gitconfig```
 
-**Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
+**Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.**
+
+## Contribution Guidelines
+
+These apply to all contributions, AI-assisted or not.
+
+- **Discuss first, then code.** Open or comment on an issue before submitting a PR. This avoids wasted effort on both sides.
+- **Read your own work.** If you're not willing to read what you're submitting, don't expect someone else to. Review your changes before requesting review.
+- **Engage directly with reviewers.** When a maintainer gives feedback, respond with your own understanding. Maintainer feedback is a directive — engage with it seriously, don't treat it as a suggestion to relay elsewhere.
+- **Start small.** Especially for new contributors — submit changes you fully understand, get feedback, iterate.
 
 ## Generative AI Policy
 
-You can use AI tools to help with your contributions, subject to the requirements below. **You are the author, and you are accountable for the result.**
+Use whatever tools you want, but there must be a human in the loop. **You are the author, and you are accountable for the result.**
 
-### What we require
+### Your Responsibility
 
-1. **Disclose AI use.** Complete the AI disclosure section in the PR template. This is mandatory. If no AI was used, check the "No generative AI" box — that's a valid answer, and it helps us distinguish from incomplete templates.
+1. **Review your own work.** Read and test all AI-generated code or text before submitting. If you can't explain why a change works, it's not ready for review. If your changes are too long for you to read, they're too long for maintainers to read.
 
-2. **Review before submitting.** Read and test all AI-generated code or text before asking maintainers to review it. If you can't explain why a change works, it's not ready for a maintainer to review. If your changes are too long for you to read and review, that is a good indication that they are also too long for maintainers to read.
+2. **Disclose AI use.** Complete the AI disclosure section in the PR template. If no AI was used, check the "No generative AI" box — that's a valid answer, and it helps us distinguish from incomplete templates.
 
-3. **Engage as yourself.** When maintainers give feedback, respond with your own understanding. Passing review comments into an LLM and pasting the output back doesn't help you learn and doesn't respect the reviewer's time.
+3. **Engage with reviewers as yourself.** Passing maintainer feedback to an LLM and relaying the output back doesn't help anyone grow and doesn't sustain our community. Respond with your own understanding.
 
 ### Why we ask
 
-Reviewing contributions takes real time and energy. Submitting unreviewed AI output shifts that burden onto maintainers — this is sometimes called an "extractive contribution."
+Citing your sources is the difference between plagiarism and reusing/adapting ideas. You should cite the tools you use, whether that is Stack Overflow or an AI tool. It builds trust with reviewers and helps us as a CHAOSS project understand how AI tools are used in our own community.
 
-Disclosure matters because:
+### What counts as generative AI
 
-- **Respect.** Discovering a PR was unreviewed AI output after spending time on it feels like a waste. Telling us upfront lets us calibrate.
-- **Research.** Augur measures open source community health. Understanding how AI tools are used in our own community is directly relevant to our mission.
-- **Honesty.** Citing your tools is the same principle as citing Stack Overflow. It builds trust.
+This policy covers generative AI tools, especially (but not only) when used for contributing code, issues, PR comments, and documentation. Non-generative tools like spell check, grammar correction, syntax highlighting, and basic/deterministic IDE autocomplete are not in scope.
 
-### What counts
-
-This applies to all contributions: code, issues, PR comments, documentation.
-
-**Disclose:** code generation, test generation, documentation drafting, AI-assisted code review, substantial refactoring suggestions.
-
-This policy covers generative AI tools specifically. Non-generative tools like spell check, grammar correction, syntax highlighting, and basic IDE autocomplete are not in scope.
-
-### Quality standards
-
-AI-assisted contributions are held to the **same bar** as everything else. Good code is good code regardless of how it was written. Bad code gets rejected regardless of how it was written.
-
-For new contributors: **start small.** Submit changes you fully understand, get feedback, and build from there. Large AI-generated PRs that you can't fully explain are hard to review and unlikely to be merged.
+**Examples:** Claude Code, ChatGPT, GitHub Copilot, Cursor, Codex, Gemini, and similar tools that generate, write, or test code or text on your behalf.
 
 ### Copyright
 
@@ -116,9 +111,7 @@ You are responsible for ensuring you have the right to contribute code under our
 
 ### Enforcement
 
-This policy is about transparency, not punishment. If you forget to check the box, just update your PR when asked. All contributions, whether AI-assisted or not, are expected to follow the same standards of quality before being merged.
-
-Patterns of submitting low-quality contributions (such as large, unreviewed, or unfocused contributions made with or without AI) that repeatedly waste maintainer time may be addressed using the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/), which states:
+This policy is about transparency, not punishment. If you forget to check the box, just update your PR when asked. All contributions, whether AI-assisted or not, are expected to meet the same quality standards. Patterns of submitting large, unreviewed, or unfocused contributions that repeatedly waste maintainer time may be addressed through the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/), which states:
 
 > Project maintainers are responsible for clarifying the standards of acceptable behavior and are expected to take appropriate and fair corrective action in response to any instances of unacceptable behavior.
 
