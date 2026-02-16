@@ -15,8 +15,8 @@ This PR fixes #
 - [ ] This contribution was assisted by generative AI tools.
     - Tools used: <!-- e.g. ChatGPT, Claude, Copilot, Cursor, Gemini -->
     - How were they used? <!-- e.g. generated initial draft / wrote tests / code review / documentation -->
-    - How did you review the AI output? <!-- e.g. read the code, ran it locally, wrote unit tests -->
-    - What did you fix as a result? <!-- e.g. "Gemini hallucinated a nonexistent API method, replaced with correct call" / "Used as-is after verifying tests pass" / "No changes needed" -->
+    - How did you review the AI output? <!-- Be specific: e.g. "when reviewing, I found that Gemini hallucinated a nonexistent API method — replaced it with the correct call" / "ran all tests locally, no changes needed" -->
+    - What did you fix or change? <!-- e.g. "I found that <tool> incorrectly handled the edge case for empty arrays, so I rewrote that block" / "Used as-is after verifying tests pass" -->
 
 <!--
 Thank you for contributing to CHAOSS projects!
