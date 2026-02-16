@@ -55,7 +55,7 @@ def get_phase_names_without_import() -> List[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
             # We want any function that identifies itself as a 'phase'
-            if '_phase' in node.name:
+            if node.name.endswith('_phase'):
                 phase_names.append(node.name)
     
     return phase_names

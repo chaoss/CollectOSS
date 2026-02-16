@@ -25,16 +25,19 @@ class TestGetPhaseNamesWithoutImport:
         for name in phase_names:
             assert '_phase' in name, f"Function {name} doesn't seem to be a phase function."
         
+        # These are the outputs of the original version of the function as of 7a46497aaed6c6dbecce9a1f8dda58282f9dd9fe
         expected_phases = [
             'prelim_phase',
-            'prelim_phase_secondary',
             'primary_repo_collect_phase',
-            'primary_repo_collect_phase_gitlab',
             'secondary_repo_collect_phase'
         ]
         
         for expected in expected_phases:
             assert expected in phase_names, f"We missed a required phase: '{expected}'"
+
+        for actual in phase_names:
+            assert actual in expected_phases, f"We have an extra phase: '{actual}'"
+
     
     def test_handles_different_indentation(self):
         """Ensures that messed up (but valid) indentation doesn't break anything."""
