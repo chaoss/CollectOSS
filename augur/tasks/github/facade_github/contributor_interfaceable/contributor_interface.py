@@ -27,13 +27,18 @@ def clean_dict(d):
     return {k: ("" if v is None else v) for k, v in d.items()}
 
 
-# Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
-# Returns None on failure.
-# NOTE: This function is being deprecated in favor of GithubDataAcess.get_resource()
-# No functional change in this function body; logic preserved fully.
-# This function still attempts to hit a GitHub API endpoint and return a dictionary if successful.
-
+# deprecated in favor of GithubDataAcess.get_resource()
 def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
+    """Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
+    
+    NOTE: This function is being deprecated in favor of GithubDataAcess.get_resource()
+    No functional change in this function body; logic preserved fully.
+    This function still attempts to hit a GitHub API endpoint and return a dictionary if successful.
+
+
+    Returns:
+        None on failure. Dict on success
+    """
     attempts = 0
     response_data = None
     success = False
@@ -138,8 +143,18 @@ def create_endpoint_from_commit_sha(logger, commit_sha, repo_id):
     return url
 
 
-# Try to construct the best url to ping GitHub's API for a username given a full name.
 def create_endpoint_from_name(contributor):
+    """Try to construct the best url to ping GitHub's API for a username given a full name.
+
+    Args:
+        contributor (_type_): _description_
+
+    Raises:
+        ValueError: raises when name is one word or none.
+
+    Returns:
+        str: url
+    """
     # Try to get the 'names' field if 'commit_name' field is not present in contributor data.
     name_field = 'cmt_author_name' if 'commit_name' in contributor else 'name'
 
@@ -157,9 +172,11 @@ def create_endpoint_from_name(contributor):
     return url
 
 def insert_alias(logger, contributor, email):
-    # Insert cntrb_id and email of the corresponding record into the alias table
-    # Another database call to get the contributor id is needed because it's an autokeyincrement accessed by multiple workers
-    # Same principle as enrich_cntrb_id method.
+    """
+    Insert cntrb_id and email of the corresponding record into the alias table
+    Another database call to get the contributor id is needed because it's an autokeyincrement accessed by multiple workers
+    Same principle as enrich_cntrb_id method.
+    """
 
     contributor_table_data = get_contributors_by_github_user_id(contributor["gh_user_id"])
 
@@ -196,10 +213,13 @@ def insert_alias(logger, contributor, email):
 
     return
 
-# Takes the user data from the endpoint as arg
-# Updates the alias table if the login is already in the contributor's table with the new email.
-# Returns whether the login was found in the contributors table
-def resolve_if_login_existing(logger, contributor):
+def resolve_if_login_existing(logger, contributor) -> bool:
+    """ Takes the user data from the endpoint as arg
+    Updates the alias table if the login is already in the contributor's table with the new email.
+    Return:
+        bool: whether the login was found in the contributors table
+    """
+
     # check if login exists in contributors table
     select_cntrbs_query = s.sql.text("""
         SELECT cntrb_id from contributors
@@ -262,13 +282,23 @@ def update_contributor(self, cntrb, max_attempts=3):
         attempts += 1
 """
 
-# Try every distinct email found within a commit for possible username resolution.
-# Add email to garbage table if can't be resolved.
-#   \param contributor is the raw database entry
-#   \return A dictionary of response data from github with potential logins on success.
-#           None on failure
 
-def fetch_username_from_email(logger, auth, commit):
+
+def fetch_username_from_email(logger, auth, commit) -> dict:
+    """Try every distinct email found within a commit for possible username resolution.
+    Add email to garbage table if can't be resolved.
+    
+    #   \param contributor is the raw database entry
+ 
+    Args:
+        logger (_type_): logging instance to use
+        auth (_type_): Keymanager instance to use for auth
+        commit (_type_): _description_
+
+    Returns:
+        dict: A dictionary of response data from github with potential logins on success.
+#           None on failure
+    """
 
     # Default to failed state
     login_json = None
@@ -306,10 +336,10 @@ def fetch_username_from_email(logger, auth, commit):
 
     return login_json
 
-# Method to return the login given commit data using the supplemental data in the commit
-#   -email
-#   -name
+
 def get_login_with_supplemental_data(logger, auth, commit_data):
+    """Method to return the login given commit data using the supplemental data in the commit (email and name)
+    """
 
     # Try to get login from all possible emails
     # Is None upon failure.
