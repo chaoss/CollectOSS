@@ -289,7 +289,7 @@ def update_contributor(self, cntrb, max_attempts=3):
 
 
 
-def fetch_username_from_email(logger, auth, commit) -> dict:
+def fetch_username_from_email(logger, auth, commit) -> dict | None:
     """Try every distinct email found within a commit for possible username resolution.
     Add email to garbage table if can't be resolved.
     
