@@ -43,11 +43,13 @@ For more information on [how to get involved on the CHAOSS website](https://chao
 
 ## Collecting Data
 
-Augur aims to support the current officially supported Python versions (currently centered around **Python 3.11**). On OSX, you can create a ```Python3.11``` environment, by running:
+Augur aims to support the current officially supported Python versions (currently centered around **Python 3.11**). We use [uv](https://github.com/astral-sh/uv) to manage the Python environment because it is fast and takes care of virtual environments for you. To run a command, such as `pytest` in the python environment, you would write:
 
 ```bash
-python3.11 -m venv path/to/venv
+uv run pytest
 ```
+
+The first time this is run, `uv` will automatically download and install the python dependencies for you.
 
 Augur's main focus is to measure the overall health and sustainability of open source projects.
 
