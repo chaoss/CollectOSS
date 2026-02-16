@@ -172,10 +172,15 @@ def create_endpoint_from_name(contributor):
     return url
 
 def insert_alias(logger, contributor, email):
-    """
-    Insert cntrb_id and email of the corresponding record into the alias table
-    Another database call to get the contributor id is needed because it's an autokeyincrement accessed by multiple workers
-    Same principle as enrich_cntrb_id method.
+    """Insert cntrb_id and email of the corresponding record into the alias table.
+    Another database call to get the contributor id is needed because it's an
+    autokeyincrement accessed by multiple workers. Same principle as enrich_cntrb_id method.
+    Args:
+        logger: Logger instance.
+        contributor (dict): Contributor record containing 'gh_user_id' and optionally 'cntrb_canonical'.
+        email (str): Email address to create the alias for.
+    Raises:
+        LookupError: If the contributor cannot be found in the database by gh_user_id.
     """
 
     contributor_table_data = get_contributors_by_github_user_id(contributor["gh_user_id"])
