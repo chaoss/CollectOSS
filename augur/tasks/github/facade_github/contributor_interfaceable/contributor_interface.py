@@ -338,7 +338,15 @@ def fetch_username_from_email(logger, auth, commit) -> dict:
 
 
 def get_login_with_supplemental_data(logger, auth, commit_data):
-    """Method to return the login given commit data using the supplemental data in the commit (email and name)
+    """Return the login given commit data using the supplemental data in the commit (email and name).
+
+    Args:
+        logger: Logger instance.
+        auth: GithubRandomKeyAuth instance for API authentication.
+        commit_data (dict): Commit record containing 'email_raw' and 'name'.
+
+    Returns:
+        str: GitHub login username on success. None if unresolved.
     """
 
     # Try to get login from all possible emails
