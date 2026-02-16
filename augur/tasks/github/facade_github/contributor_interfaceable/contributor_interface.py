@@ -214,12 +214,12 @@ def insert_alias(logger, contributor, email):
     return
 
 def resolve_if_login_existing(logger, contributor) -> bool:
-    """ Takes the user data from the endpoint as arg
+    """Takes the user data from the endpoint as arg.
     Updates the alias table if the login is already in the contributor's table with the new email.
-    Return:
-        bool: whether the login was found in the contributors table
-    """
 
+    Returns:
+        bool: Whether the login was found in the contributors table.
+    """
     # check if login exists in contributors table
     select_cntrbs_query = s.sql.text("""
         SELECT cntrb_id from contributors
