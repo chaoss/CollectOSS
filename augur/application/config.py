@@ -96,6 +96,9 @@ default_config = {
                 "retry_errored_repos_cron_minute": 0,
                 "process_contributors_interval_in_seconds": 3600,
                 "create_collection_status_records_interval_in_seconds": 86400
+                "default_batch_size": 1000,
+                "github_event_batch_size": 500,
+                "github_message_batch_size": 20
             },
             "Message_Insights": {
                     "insight_days": 30,
