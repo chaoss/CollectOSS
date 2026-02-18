@@ -1,4 +1,4 @@
-Collecting data
+Collecting Data
 ===============
 
 Now that you’ve installed Augur’s application server, it’s time to configure data collection if needed. If you just want to run Augur using the default repositories in the default database, and default celery collection settings, all you need to do is start the redis server in one terminal, make sure rabbitmq is running, and the augur application in the other terminal. (Don't forget that the AUGUR_DB environment variable needs to be set in the terminal, or set permanently)
@@ -27,12 +27,11 @@ Now, here's a ton of brain-splitting detail about celery collection. There are 2
 Since the default setup will work for most use cases, we'll first cover how to configure some specific data collection jobs and then briefly touch on the celery configuration options, after which we'll cover how to add repos and repo groups to the database.
 
 Authentication and API Tokens
-=============================
+------------------------------
 
 Augur collects data from hosted source control platforms such as GitHub and GitLab using their respective APIs. To avoid strict API rate limits and to enable access to private repositories, Augur requires Personal Access Tokens (PATs) with appropriate read-only permissions.
 
 GitHub Authentication
----------------------
 
 Augur uses GitHub APIs to collect repository metadata, issues, pull requests, releases, and contributor information.
 
@@ -45,28 +44,28 @@ Augur requires a GitHub Personal Access Token (PAT). Two token types are support
 
   - ``repo`` — required only when collecting data from private repositories
   - ``read:org`` — required only when collecting organization-related metadata (e.g., organization members or org-owned repository data)
-  - ``read:user`` — required when collecting contributor and user metadata returned by the GitHub API
+  - ``read:user`` — required only when collecting detailed user profile information (e.g., email, bio) beyond what is available
+in public API responses
 
 - **Fine-grained Personal Access Token**
 
   Fine-grained tokens provide repository-specific access with more precise permission controls.
   For public repository data collection, fine-grained tokens include read-only public repository access by default and typically require no additional permission changes.
 
-GitHub tokens should be treated as secrets and supplied to Augur using environment variables or configuration options described during installation.
+GitHub tokens should be treated as secrets and supplied to Augur using environment variables or the `installation process <../getting-started/installation.html>`_.
 
 GitLab Authentication
----------------------
 
 Augur collects data from the GitLab API using a GitLab Personal Access Token.
 
 The token must include the following scopes:
 
 - ``read_api`` — required for accessing repository metadata, issues, and merge requests
-- ``read_repository`` — required for repository and commit data
+- ``read_repository`` — required only for private repositories when running git-level analysis tasks (facade) that clone via Git over HTTP
 
 These scopes apply to GitLab.com and most standard GitLab deployments.
 
-As with GitHub tokens, GitLab tokens should be stored securely and provided to Augur through environment variables or configuration files.
+As with GitHub tokens, GitLab tokens should be stored securely and provided to Augur through environment variables or the `installation process <../getting-started/installation.html>`_.
 
 Configuring Collection
 ----------------------
