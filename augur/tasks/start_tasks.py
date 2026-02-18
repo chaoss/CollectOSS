@@ -29,7 +29,7 @@ from augur.application.db.models import CollectionStatus, Repo
 from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
-from augur.application.db.lib import execute_sql, get_session
+from augur.application.db.lib import execute_sql, get_session, clear_unresolved_commit_emails_table
 from augur.application.config import AugurConfig
 
 RUNNING_DOCKER = os.environ.get('AUGUR_DOCKER_DEPLOY') == "1"
@@ -390,3 +390,9 @@ def create_collection_status_records(self):
 
     # no longer recursively run this task because collection status records are added when repos are inserted
     #create_collection_status_records.si().apply_async(countdown=60*7)
+
+
+#Automatically re-try to resolve unresolved emails after a set amount of time
+@celery.task(bind=True)
+def clear_all_unresolved_commit_emails(self):
+    clear_unresolved_commit_emails_table()

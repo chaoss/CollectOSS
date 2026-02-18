@@ -517,6 +517,10 @@ def get_contributor_aliases_by_email(email):
     with get_session() as session:
 
         return session.query(ContributorsAlias).filter_by(alias_email=email).all()
+
+def clear_unresolved_commit_emails_table():
+    remove_commit = s.sql.text("""DELETE FROM unresolved_commit_emails""")
+    execute_sql(remove_commit)
     
 def get_unresolved_commit_emails_by_name(name):
 

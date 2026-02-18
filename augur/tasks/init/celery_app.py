@@ -219,7 +219,7 @@ def setup_periodic_tasks(sender, **kwargs):
     """
     from celery.schedules import crontab
     from augur.tasks.start_tasks import augur_collection_monitor
-    from augur.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos, create_collection_status_records
+    from augur.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos, create_collection_status_records, clear_all_unresolved_commit_emails
     from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.github.contributors import process_contributors
     from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
@@ -249,6 +249,9 @@ def setup_periodic_tasks(sender, **kwargs):
 
         # logger.info(f"Scheduling update of collection weights on midnight each day")
         # sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
+        clear_unres_emails_interval = config.get_value('Facade', 'unresolved_commit_emails_refresh_interval_hours') or 24
+        logger.info(f"Setting unresolved commit emails to automatically be cleared every {clear_unres_emails_interval} hours")
+        sender.add_periodic_task(clear_unres_emails_interval*60*60, clear_all_unresolved_commit_emails.s())
 
         logger.info(f"Setting 404 repos to be marked for retry on midnight each day")
         sender.add_periodic_task(crontab(hour=0, minute=0),retry_errored_repos.s())

@@ -57,6 +57,7 @@ default_config = {
                 "run_facade_contributors": 1,
                 "facade_contributor_full_recollect": 0,
                 "commit_messages": 1,
+                "unresolved_commit_emails_refresh_interval_hours": 48,
             },
             "Server": {
                 "cache_expire": "3600",
