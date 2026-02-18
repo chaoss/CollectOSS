@@ -523,6 +523,12 @@ def get_unresolved_commit_emails_by_name(name):
     with get_session() as session:
 
         return session.query(UnresolvedCommitEmail).filter_by(name=name).all()
+
+def get_unresolved_commit_emails_by_email(email):
+
+    with get_session() as session:
+
+        return session.query(UnresolvedCommitEmail).filter_by(email=email).all()
  
 def get_contributors_by_full_name(full_name):
 
