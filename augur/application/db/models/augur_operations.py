@@ -267,7 +267,7 @@ class User(Base):
     tool_version = Column(String)
     data_source = Column(String)
     data_collection_date = Column(TIMESTAMP(precision=0), server_default=text("CURRENT_TIMESTAMP"))
-
+    email_verified = Column(Boolean, server_default='false', nullable=False)
 
     groups = relationship("UserGroup", back_populates="user")
     tokens = relationship("UserSessionToken", back_populates="user")
@@ -630,13 +630,13 @@ class User(Base):
 class UserGroup(Base):
     __tablename__ = 'user_groups'
     __table_args__ = (
-        UniqueConstraint('user_id', 'name', name='user_group_unique'),
+        UniqueConstraint('user_id', 'name', name='user_groups_user_id_name_key'),
         {"schema": "augur_operations"}
     )
     
     group_id = Column(BigInteger, primary_key=True)
     user_id = Column(Integer,
-                    ForeignKey("augur_operations.users.user_id", name="user_group_user_id_fkey")
+                    ForeignKey("augur_operations.users.user_id", name="user_group_user_id_fkey"), nullable=False
     )
     name = Column(String, nullable=False)
     favorited = Column(Boolean, nullable=False, server_default=text("FALSE"))
@@ -1010,9 +1010,9 @@ class UserSessionToken(Base):
     __table_args__ = { "schema": "augur_operations" }
 
     token = Column(String, primary_key=True, nullable=False)
-    user_id = Column(ForeignKey("augur_operations.users.user_id", name="user_session_token_user_id_fkey"))
+    user_id = Column(ForeignKey("augur_operations.users.user_id", name="user_session_token_user_id_fkey"), nullable=False)
     expiration = Column(BigInteger)
-    application_id = Column(ForeignKey("augur_operations.client_applications.id", name="user_session_token_application_id_fkey"), nullable=False)
+    application_id = Column(ForeignKey("augur_operations.client_applications.id", name="user_session_token_application_id_fkey"))
     created_at = Column(BigInteger)
 
     user = relationship("User", back_populates="tokens")
