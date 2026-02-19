@@ -264,7 +264,7 @@ def setup_periodic_tasks(sender, **kwargs):
 def setup_loggers(*args,**kwargs):
     """Override Celery loggers with our own."""
 
-    all_celery_tasks = list(current_app.tasks.keys())
+    all_celery_tasks = list(celery_app.tasks.keys())
 
     tasks = [task for task in all_celery_tasks if 'celery.' not in task]
     
