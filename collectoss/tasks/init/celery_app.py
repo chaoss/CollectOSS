@@ -8,7 +8,6 @@ import traceback
 import inspect
 import celery
 from celery import Celery
-from celery import current_app 
 from celery.signals import after_setup_logger
 
 
