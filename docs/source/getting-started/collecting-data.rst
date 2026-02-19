@@ -7,7 +7,7 @@ Now that you’ve installed Augur’s application server, it’s time to configu
 
     # Terminal Window 1
 
-   # Starts the redis server
+    # Starts the redis server
     redis-server
 
 
@@ -15,12 +15,12 @@ Now that you’ve installed Augur’s application server, it’s time to configu
 
     # Terminal Window 3
 
-   # To Start Augur:
-   (uv run nohup augur backend start)
+    # To Start Augur:
+    (uv run nohup augur backend start)
 
-   # To Stop Augur:
-   uv run augur backend stop
-   uv run augur backend kill
+    # To Stop Augur:
+    uv run augur backend stop
+    uv run augur backend kill
 
 Now, here's a ton of brain-splitting detail about celery collection. There are 2 pieces to data collection with Augur: the celery worker processes, and the job messages passed through rabbitmq. The jobs to collect are determined by a monitor process started through the cli that starts the rest of augur. The monitor process generates the jobs messages to send to rabbitmq through the collection_status table that informs the status of jobs that have yet to be run. The celery collection workers can then accept these jobs, after which they will use the information provided in the job to find the repositories in question and collect the requested data.
 
@@ -40,16 +40,23 @@ Augur requires a GitHub Personal Access Token (PAT). Two token types are support
 - **Classic Personal Access Token (recommended)**
 
   A PAT with minimal permissions is sufficient for most public repository data collection.
+
   The following permissions are optional and only required for specific use cases:
 
   - ``repo`` — required only when collecting data from private repositories
+<<<<<<< HEAD
   - ``read:org`` — required only when collecting organization-related metadata (e.g., organization members or org-owned repository data)
   - ``read:user`` — required only when collecting detailed user profile information (e.g., email, bio) beyond what is available
 in public API responses
+=======
+  - ``read:org`` — required only when collecting organization-related metadata
+  - ``read:user`` — required when collecting contributor and user metadata
+>>>>>>> 843681e4b (docs: clarify identation issue)
 
 - **Fine-grained Personal Access Token**
 
   Fine-grained tokens provide repository-specific access with more precise permission controls.
+
   For public repository data collection, fine-grained tokens include read-only public repository access by default and typically require no additional permission changes.
 
 GitHub tokens should be treated as secrets and supplied to Augur using environment variables or the `installation process <../getting-started/installation.html>`_.
