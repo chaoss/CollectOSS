@@ -32,6 +32,7 @@ Authentication and API Tokens
 Augur collects data from hosted source control platforms such as GitHub and GitLab using their respective APIs. To avoid strict API rate limits and to enable access to private repositories, Augur requires Personal Access Tokens (PATs) with appropriate read-only permissions.
 
 GitHub Authentication
+~~~~~~~~~~~~~~~~~~~~~
 
 Augur uses GitHub APIs to collect repository metadata, issues, pull requests, releases, and contributor information.
 
@@ -44,14 +45,8 @@ Augur requires a GitHub Personal Access Token (PAT). Two token types are support
   The following permissions are optional and only required for specific use cases:
 
   - ``repo`` — required only when collecting data from private repositories
-<<<<<<< HEAD
   - ``read:org`` — required only when collecting organization-related metadata (e.g., organization members or org-owned repository data)
-  - ``read:user`` — required only when collecting detailed user profile information (e.g., email, bio) beyond what is available
-in public API responses
-=======
-  - ``read:org`` — required only when collecting organization-related metadata
-  - ``read:user`` — required when collecting contributor and user metadata
->>>>>>> 843681e4b (docs: clarify identation issue)
+  - ``read:user`` — required only when collecting detailed user profile information (e.g., email, bio) beyond what is available in public API responses
 
 - **Fine-grained Personal Access Token**
 
@@ -62,6 +57,7 @@ in public API responses
 GitHub tokens should be treated as secrets and supplied to Augur using environment variables or the `installation process <../getting-started/installation.html>`_.
 
 GitLab Authentication
+~~~~~~~~~~~~~~~~~~~~~
 
 Augur collects data from the GitLab API using a GitLab Personal Access Token.
 
