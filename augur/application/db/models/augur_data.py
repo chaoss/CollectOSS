@@ -5,6 +5,7 @@ from sqlalchemy import (
     CHAR,
     Column,
     Date,
+    DateTime,
     Float,
     ForeignKey,
     Index,
@@ -17,6 +18,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     text,
+    func
 )
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import relationship
@@ -1166,6 +1168,23 @@ class Repo(Base):
 
 
 
+class HistoricalRepoURLs(Base):
+    """ A table for storing previously-used git URLs for a repository
+    This is used to enable lookups that resolve historical URLs to the repo_id for a given repository
+    When a repo is detected as moved and its url is updated in the repo table, the old URL gets added to this table.
+    
+    The date_collected field allows for history of a repo with multiple URL changes to be inferred,
+    for example, when an old url is moved to this table, its date serves as both an end date
+    for the previous old url, and as the start date for the one that was just moved.
+    The currently-valid URL remains in the repo table and is not moved here until it has been superseded.
+    """
+
+    __tablename__ = "historical_repo_urls"
+    __table_args__ = {"schema": "augur_data"}
+
+    repo_id = Column(ForeignKey("augur_data.repo.repo_id"), primary_key=True)
+    git_url = Column(String, primary_key=True)
+    date_collected = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
         
 class RepoTestCoverage(Base):
     __tablename__ = "repo_test_coverage"

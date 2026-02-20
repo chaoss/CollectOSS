@@ -20,7 +20,7 @@ def contributor_breadth_model(self) -> None:
 
     engine = self.app.engine
 
-    logger = logging.getLogger(contributor_breadth_model.__name__)
+    logger = logging.getLogger(__name__)
 
     tool_source = 'Contributor Breadth Worker'
     tool_version = '0.0.1'
@@ -89,7 +89,7 @@ def contributor_breadth_model(self) -> None:
     total = len(current_cntrb_logins)
     for cntrb in current_cntrb_logins:
 
-        print(f"Processing cntrb {index} of {total}")
+        logger.info(f"Processing cntrb {index} of {total}")
         index += 1
 
         repo_cntrb_url = f"https://api.github.com/users/{cntrb['gh_login']}/events"
