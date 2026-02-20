@@ -62,58 +62,52 @@ def query_github_contributors(logger, key_auth, github_url):
 
             contributor = github_data_access.get_resource(cntrb_url)
 
-            #logger.info(f"Contributor: {contributor} \n")
-            company = None
-            location = None
-            email = None
-            if 'company' in contributor:
-                company = contributor['company']
-            if 'location' in contributor:
-                location = contributor['location']
-            if 'email' in contributor:
-                email = contributor['email']
-                canonical_email = contributor['email']
+            # Extract all available profile fields using .get() so we never miss or crash on
+            # optional keys. Email is only present when the user has made it public or when
+            # the request is appropriately authenticated (see GitHub API docs).
+            email = contributor.get('email')
+            canonical_email = email
+            company = contributor.get('company')
+            location = contributor.get('location')
+            full_name = contributor.get('name')
+            created_at = contributor.get('created_at')
+            updated_at = contributor.get('updated_at')
 
-            #TODO get and store an owner id
-            
-            #Generate ID for cntrb table
-            #cntrb_id = AugurUUID(session.platform_id,contributor['id']).to_UUID()
+            # TODO get and store an owner id
+
+            # Generate ID for cntrb table
             cntrb_id = GithubUUID()
             cntrb_id["user"] = int(contributor['id'])
             cntrb_id["platform"] = platform_id
 
             cntrb = {
-                "cntrb_id" : cntrb_id.to_UUID(),
+                "cntrb_id": cntrb_id.to_UUID(),
                 "cntrb_login": contributor['login'],
-                "cntrb_created_at": contributor['created_at'],
+                "cntrb_created_at": created_at,
                 "cntrb_email": email,
                 "cntrb_company": company,
                 "cntrb_location": location,
-                # "cntrb_type": , dont have a use for this as of now ... let it default to null
                 "cntrb_canonical": canonical_email,
+                "cntrb_full_name": full_name,
+                "cntrb_last_used": updated_at,
                 "gh_user_id": contributor['id'],
                 "gh_login": contributor['login'],
-                "gh_url": contributor['url'],
-                "gh_html_url": contributor['html_url'],
-                "gh_node_id": contributor['node_id'], #This is what we are dup checking
-                "gh_avatar_url": contributor['avatar_url'],
-                "gh_gravatar_id": contributor['gravatar_id'],
-                "gh_followers_url": contributor['followers_url'],
-                "gh_following_url": contributor['following_url'],
-                "gh_gists_url": contributor['gists_url'],
-                "gh_starred_url": contributor['starred_url'],
-                "gh_subscriptions_url": contributor['subscriptions_url'],
-                "gh_organizations_url": contributor['organizations_url'],
-                "gh_repos_url": contributor['repos_url'],
-                "gh_events_url": contributor['events_url'],
-                "gh_received_events_url": contributor['received_events_url'],
-                "gh_type": contributor['type'],
-                "gh_site_admin": contributor['site_admin'],
-                "cntrb_last_used" : None if 'updated_at' not in contributor else contributor['updated_at'],
-                "cntrb_full_name" : None if 'name' not in contributor else contributor['name'],
-                #"tool_source": session.tool_source,
-                #"tool_version": session.tool_version,
-                #"data_source": session.data_source
+                "gh_url": contributor.get('url'),
+                "gh_html_url": contributor.get('html_url'),
+                "gh_node_id": contributor.get('node_id'),
+                "gh_avatar_url": contributor.get('avatar_url'),
+                "gh_gravatar_id": contributor.get('gravatar_id'),
+                "gh_followers_url": contributor.get('followers_url'),
+                "gh_following_url": contributor.get('following_url'),
+                "gh_gists_url": contributor.get('gists_url'),
+                "gh_starred_url": contributor.get('starred_url'),
+                "gh_subscriptions_url": contributor.get('subscriptions_url'),
+                "gh_organizations_url": contributor.get('organizations_url'),
+                "gh_repos_url": contributor.get('repos_url'),
+                "gh_events_url": contributor.get('events_url'),
+                "gh_received_events_url": contributor.get('received_events_url'),
+                "gh_type": contributor.get('type'),
+                "gh_site_admin": contributor.get('site_admin'),
             }
 
             #insert cntrb to table.
