@@ -90,7 +90,10 @@ default_config = {
                 "core_collection_interval_days": 15,
                 "secondary_collection_interval_days": 10,
                 "facade_collection_interval_days": 10,
-                "ml_collection_interval_days": 40
+                "ml_collection_interval_days": 40,
+                "default_batch_size": 1000,
+                "github_event_batch_size": 500,
+                "github_message_batch_size": 20
             },
             "Message_Insights": {
                     "insight_days": 30,
