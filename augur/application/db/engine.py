@@ -8,7 +8,6 @@ import subprocess
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from augur.application.db.util import catch_operational_error
-from augur.application.config import ConfigPaths
 
 
 def parse_database_string(db_string: str) -> tuple[str,str, str, str, str]:
@@ -64,6 +63,7 @@ def get_database_string() -> str:
 
     augur_db_environment_var = os.getenv("AUGUR_DB")
 
+    from augur.application.config import ConfigPaths
     db_json_file_location = ConfigPaths.db_config()
     db_json_exists = os.path.exists(db_json_file_location)
 
