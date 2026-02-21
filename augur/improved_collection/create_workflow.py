@@ -45,7 +45,7 @@ def _has_cycle(tasks: List[Dict[str, Any]]) -> bool:
     return False
 
 
-def insert_workflow_dag(dag_json: Dict[str, Any], session: Optional[DatabaseSession] = None) -> Optional[int]:
+def insert_workflow_dag(dag_json: Dict[str, Any], conn) -> Optional[int]:
     """
     Insert a workflow DAG into the database.
     
@@ -117,17 +117,11 @@ def insert_workflow_dag(dag_json: Dict[str, Any], session: Optional[DatabaseSess
     if _has_cycle(tasks):
         logger.error("Cycle detected in task dependencies. The workflow must be a DAG (Directed Acyclic Graph)")
         return None
-    
-    # Create session if not provided
-    session_created = False
-    if session is None:
-        session = DatabaseSession(logger)
-        session_created = True
-    
+        
     try:
         # 1. Insert workflow
-        workflow_result = session.execute(
-            text("INSERT INTO workflows DEFAULT VALUES RETURNING id")
+        workflow_result = conn.execute(
+            text("INSERT INTO augur_operations.workflows DEFAULT VALUES RETURNING id")
         )
         workflow_id = workflow_result.fetchone()[0]
         logger.info(f"Created workflow with id: {workflow_id}")
@@ -139,9 +133,9 @@ def insert_workflow_dag(dag_json: Dict[str, Any], session: Optional[DatabaseSess
             task_name = task["task_name"]
             task_type = task["task_type"]
             
-            task_result = session.execute(
+            task_result = conn.execute(
                 text("""
-                    INSERT INTO workflow_tasks (workflow_id, task_name, task_type)
+                    INSERT INTO augur_operations.workflow_tasks (workflow_id, task_name, task_type)
                     VALUES (:workflow_id, :task_name, :task_type)
                     RETURNING id
                 """),
@@ -162,9 +156,9 @@ def insert_workflow_dag(dag_json: Dict[str, Any], session: Optional[DatabaseSess
             depends_on = task.get("depends_on", [])
             
             for dependency_name in depends_on:
-                session.execute(
+                conn.execute(
                     text("""
-                        INSERT INTO workflow_dependencies (workflow_task_id, depends_on_workflow_task_id)
+                        INSERT INTO augur_operations.workflow_dependencies (workflow_task_id, depends_on_workflow_task_id)
                         VALUES (:workflow_task_id, :depends_on_workflow_task_id)
                     """),
                     {
@@ -175,19 +169,13 @@ def insert_workflow_dag(dag_json: Dict[str, Any], session: Optional[DatabaseSess
                 dependency_count += 1
                 logger.debug(f"Created dependency: '{task_name}' depends on '{dependency_name}'")
         
-        session.commit()
         logger.info(f"Successfully created workflow {workflow_id} with {len(tasks)} tasks and {dependency_count} dependencies")
         
         return workflow_id
         
     except Exception as e:
         logger.error(f"Error inserting workflow DAG: {e}")
-        session.rollback()
         return None
-        
-    finally:
-        if session_created:
-            session.close()
 
 
 def insert_workflow_dag_from_json_string(dag_json_string: str, session: Optional[DatabaseSession] = None) -> Optional[int]:
