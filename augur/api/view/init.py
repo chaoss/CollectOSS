@@ -6,7 +6,7 @@ import secrets, yaml
 env = Environment()
 
 # load configuration files and initialize globals
-configFile = ConfigPaths().view_config
+configFile = ConfigPaths.view_config()
 
 settings = {}
 

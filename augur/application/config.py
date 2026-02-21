@@ -3,30 +3,31 @@ from pathlib import Path
 
 
 class ConfigPaths:
-    """Centralized config path utilities."""
+    """Centralized config path utilities.
 
-    @property
-    def config_dir(self) -> Path:
+    All methods are static so callers can use ConfigPaths.db_config()
+    without needing to instantiate the class.
+    """
+
+    @staticmethod
+    def config_dir() -> Path:
         """Get config directory from CONFIG_DATADIR env var, or current directory."""
         return Path(os.getenv("CONFIG_DATADIR", "."))
 
-    @property
-    def db_config(self) -> Path:
+    @staticmethod
+    def db_config() -> Path:
         """Get path to db.config.json."""
-        return self.config_dir / "db.config.json"
+        return ConfigPaths.config_dir() / "db.config.json"
 
-    @property
-    def augur_config(self) -> Path:
+    @staticmethod
+    def augur_config() -> Path:
         """Get path to augur.json."""
-        return self.config_dir / "augur.json"
+        return ConfigPaths.config_dir() / "augur.json"
 
-    @property
-    def view_config(self) -> Path:
-        """Get path to config.yml. Uses CONFIG_LOCATION if set."""
-        config_location = os.getenv("CONFIG_LOCATION")
-        if config_location:
-            return Path(config_location)
-        return self.config_dir / "config.yml"
+    @staticmethod
+    def view_config() -> Path:
+        """Get path to config.yml."""
+        return ConfigPaths.config_dir() / "config.yml"
 
 
 import sqlalchemy as s
