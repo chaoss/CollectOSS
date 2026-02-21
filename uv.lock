@@ -195,7 +195,6 @@ dependencies = [
     { name = "tenacity" },
     { name = "tensorflow", marker = "(platform_machine == 'x86_64' and sys_platform == 'darwin') or sys_platform == 'linux'" },
     { name = "tensorflow-macos", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "tensorflow-metal", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
     { name = "textblob" },
     { name = "textual" },
     { name = "tomli", marker = "python_full_version < '3.11'" },
@@ -298,7 +297,6 @@ requires-dist = [
     { name = "tensorflow", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin'", specifier = "==2.15.0" },
     { name = "tensorflow", marker = "sys_platform == 'linux'", specifier = "==2.15.0" },
     { name = "tensorflow-macos", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'", specifier = "==2.15.0" },
-    { name = "tensorflow-metal", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'", specifier = "==1.1.0" },
     { name = "textblob", specifier = "==0.15.3" },
     { name = "textual", specifier = ">=0.73.0" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.2.1" },
@@ -3439,19 +3437,6 @@ dependencies = [
 wheels = [
     { url = "https://files.pythonhosted.org/packages/98/35/844093df99983773f2c33be2f332047e1a531998f67da712358250cbf5e8/tensorflow_macos-2.15.0-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:cdfb4cd80ddfdf189212f4e3747a4404702d58cc6a346ab8887bd567ca3284f8", size = 208752302, upload-time = "2023-11-13T21:55:57.814Z" },
     { url = "https://files.pythonhosted.org/packages/eb/9f/0759e2fea4a3c48f070b64811c2c57036b46353ba87263afc810b8f4188a/tensorflow_macos-2.15.0-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:6933b6a298bcce3b302fa55c6943a2e2caba44601d0e5d0a86cae248fd90da8f", size = 208795494, upload-time = "2023-11-13T21:56:11.398Z" },
-]
-
-[[package]]
-name = "tensorflow-metal"
-version = "1.1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "six", marker = "(platform_machine != 'x86_64' and sys_platform == 'darwin') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
-    { name = "wheel", marker = "(platform_machine != 'x86_64' and sys_platform == 'darwin') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9c/21/cac4d1f8fda8a30f631a60a7669ca1de2665189e060604a5e8f96a145ba6/tensorflow_metal-1.1.0-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:443d71b3a567fe3f45f982c4794d357b55dec01a4ff1d6d8ba152a68a2c018ab", size = 1424879, upload-time = "2023-09-29T23:36:23.591Z" },
-    { url = "https://files.pythonhosted.org/packages/52/56/8373f5751011304a346f07e5423e69f809b626989d2541ae9e816ae7ced2/tensorflow_metal-1.1.0-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:1c365669fc9d764edcc1773254a477db7096975b1bff58fb37a11d7b8ca4295f", size = 1424880, upload-time = "2023-09-29T23:36:25.184Z" },
 ]
 
 [[package]]

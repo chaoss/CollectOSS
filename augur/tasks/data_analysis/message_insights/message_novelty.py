@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-from keras.layers import Dense, Input
+#from keras.layers import Dense, Input
 from keras.models import Model, load_model
 from skimage.filters import threshold_otsu
 from sklearn import utils as skl_utils
@@ -42,6 +42,7 @@ def build_model(max_epochs, vec_size, alpha, tag_data):
 # '''
 
 def autoencoder(vec_input, train):
+    from keras.layers import Dense, Input
     input_dim = Input(shape = (vec_input, ))
     encoded1 = Dense(vec_input//2, activation='sigmoid')(input_dim)
     encoded2 = Dense(1, activation='sigmoid')(encoded1)
