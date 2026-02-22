@@ -130,30 +130,28 @@ def process_contributor_events(cntrb, cntrb_events, logger, tool_source, tool_ve
     cntrb_repos_insert = []
     for event_id_api in cntrb_events:
         
-        repo=event_id_api.get('repo')
+        repo = event_id_api.get("repo")
         
         if not repo or not repo.get("url"):
             logger.warning(
-                 "Skipping GitHub event due to missing repo.url",
+                "Skipping GitHub event due to empty repo or missing repo.url",
                 extra={
                     "event_id": event_id_api.get("id"),
                     "event_type": event_id_api.get("type"),
                     "public": event_id_api.get("public"),
-                    "repo": repo
-                }               
+                    "repo": repo,
+                },
             )
             continue
         
-        
-
         cntrb_repos_insert.append({
             "cntrb_id": cntrb['cntrb_id'],
             "repo_git": repo['url'],
             "tool_source": tool_source,
             "tool_version": tool_version,
             "data_source": data_source,
-            "repo_name": repo.get("name"),
-            "gh_repo_id": repo.get("id"),
+            "repo_name": repo['name'],
+            "gh_repo_id": repo['id'],
             "cntrb_category": event_id_api.get('type'),
             "event_id": int(event_id_api['id']),
             "created_at": event_id_api.get('created_at')
