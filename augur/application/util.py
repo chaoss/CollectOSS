@@ -1,8 +1,14 @@
 import logging
-
+import sys
 from augur.application.db.session import DatabaseSession
 from augur.application.db.engine import DatabaseEngine
 from augur.util.repo_load_controller import RepoLoadController
+
+if sys.version_info >= (3, 13):
+    from typing import deprecated
+else:
+    # This will be available via the dependency added above
+    from typing_extensions import deprecated
 
 logger = logging.getLogger(__name__)
 
