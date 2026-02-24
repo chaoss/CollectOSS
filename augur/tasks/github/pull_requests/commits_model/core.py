@@ -3,15 +3,15 @@ from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotF
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.util import execute_session_query
-from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs
+from augur.application.db.lib import get_secondary_data_last_collected, get_updated_prs, get_batch_size
 
 
-# Batch size for PR commit collection
-PR_COMMIT_BATCH_SIZE = 1000
 
 
 def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collection=False):
-    
+
+    pr_commit_batch_size = get_batch_size()
+
     if full_collection:
         # query existing PRs and the respective url we will append the commits url to
         pr_url_sql = s.sql.text("""
@@ -76,7 +76,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
                 }
                 all_data.append(pr_commit_row)
 
-                if len(all_data) >= PR_COMMIT_BATCH_SIZE:
+                if len(all_data) >= pr_commit_batch_size:
                     logger.info(f"{task_name}: Inserting {len(all_data)} rows")
                     augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
                     all_data.clear()
