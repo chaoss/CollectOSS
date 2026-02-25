@@ -3,7 +3,8 @@ Timestamp correction utilities for git commit data.
 
 This module provides functions to validate and correct timestamp strings
 before database insertion, specifically handling invalid timezone offsets
-that PostgreSQL cannot process.
+that PostgreSQL cannot process. Resides in the db layer so it can be used
+by db-layer bulk insert logic without crossing into the tasks layer.
 """
 
 import logging
