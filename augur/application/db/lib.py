@@ -525,6 +525,8 @@ def get_unresolved_commit_emails_by_name(name):
         return session.query(UnresolvedCommitEmail).filter_by(name=name).all()
  
 def get_contributors_by_full_name(full_name):
+    if not full_name or full_name == '':
+        return None 
 
     with get_session() as session:
 

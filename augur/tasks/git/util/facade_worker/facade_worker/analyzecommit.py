@@ -161,7 +161,7 @@ def analyze_commit(
         )
         git_log = check_output(
             [f"git", "--git-dir", repo_loc, "log", "-p", "-M", commit, "-n1",
-             f"--pretty=format:'{pretty_format}'"]
+             f"--pretty=format:{pretty_format}"]
         )
     except Exception as e:
         logger.error(f"Failed to run git log for commit {commit}: {e}")
