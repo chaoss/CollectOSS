@@ -1,7 +1,7 @@
 #SPDX-License-Identifier: MIT
 import json
 import sqlalchemy as s
-from augur.tasks.github.util.github_data_access import GithubDataAccess
+from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.util.util import get_owner_repo
@@ -36,7 +36,7 @@ def query_committers_count(key_auth, logger, owner, repo):
         data=0
     
     return data 
-
+"""
 def get_repo_data(logger, url, response):
     data = {}
     try:
@@ -54,36 +54,39 @@ def get_repo_data(logger, url, response):
             raise Exception(f"Github repo was not found or does not exist for endpoint: {url}\n")
 
     return data
+""" 
+def get_repo_data(logger, owner, repo):
 
+    try:
+        url = f'https://api.github.com/repos/{owner}/{repo}'
+        github_data_access = GithubDataAccess(None, logger)
+        result = github_data_access.get_resource(url)
+        return result
+    except UrlNotFoundException as e:
+        message = f"GitHub repo was not found or does not exist for endpoint: {url}"
+        logger.error(message)
+        raise Exception(message) from e
+    except Exception as e:
+        logger.error(e)
+        raise e
 
-def is_forked(key_auth, logger, owner, repo): #/repos/:owner/:repo parent
-    logger.info('Querying parent info to verify if the repo is forked\n')
-    url = f'https://api.github.com/repos/{owner}/{repo}'
-
-    r = hit_api(key_auth, url, logger)#requests.get(url, headers=self.headers)
-
-    data = get_repo_data(logger, url, r)
-
-    if 'fork' in data:
-        if 'parent' in data:
-            return data['parent']['full_name']
+def is_forked(logger, repo_data): #/repos/:owner/:repo parent
+    logger.info('Determining if the repo is forked\n')
+    
+    if 'fork' in repo_data:
+        if 'parent' in repo_data:
+            return repo_data['parent']['full_name']
         return 'Parent not available'
 
     return False
 
-def is_archived(key_auth, logger, owner, repo):
-    logger.info('Querying committers count\n')
-    url = f'https://api.github.com/repos/{owner}/{repo}'
+def is_archived(logger, repo_data):
+    logger.info('Determining if the repo is archived\n')
 
-    r = hit_api(key_auth, url, logger)#requests.get(url, headers=self.headers)
-    #self.update_gh_rate_limit(r)
-
-    data = get_repo_data(logger, url, r)
-
-    if 'archived' in data:
-        if data['archived']:
-            if 'updated_at' in data:
-                return data['updated_at']
+    if 'archived' in repo_data:
+        if repo_data['archived']:
+            if 'updated_at' in repo_data:
+                return repo_data['updated_at']
             return 'Date not available'
         return False
 
@@ -242,8 +245,10 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
     execute_sql(insert_statement)
 
     # Note that the addition of information about where a repository may be forked from, and whether a repository is archived, updates the `repo` table, not the `repo_info` table.
-    forked = is_forked(key_auth, logger, owner, repo)
-    archived = is_archived(key_auth, logger, owner, repo)
+    repo_data = get_repo_data(logger, owner, repo)
+
+    forked = is_forked(logger, repo_data)
+    archived = is_archived(logger, repo_data)
     archived_date_collected = None
     if archived is not False:
         archived_date_collected = archived

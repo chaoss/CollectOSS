@@ -32,6 +32,17 @@ from augur.tasks.git.scc_value_tasks.tasks import process_scc_value_metrics
 
 from augur.tasks.github.util.github_task_session import *
 
+def filter_null_repo_id(records, logger, context=""):
+    """Remove and log records with null/None repo_id."""
+    filtered = []
+    for rec in records:
+        if rec.get("repo_id") is None:
+            logger.error(
+                f"[{context}] Null repo_id in commit record: {json.dumps(rec, default=str)}"
+            )
+        else:
+            filtered.append(rec)
+    return filtered
 
 #define an error callback for chains in facade collection so facade doesn't make the program crash
 #if it does.
@@ -101,8 +112,6 @@ def trim_commits_post_analysis_facade_task(repo_git):
     repo = repo = get_repo_by_repo_git(repo_git)
     repo_id = repo.repo_id
 
-    start_date = facade_helper.get_setting('start_date')
-    
     logger.info(f"Generating sequence for repo {repo_id}")
 
     repo = get_repo_by_repo_git(repo_git)
@@ -112,7 +121,7 @@ def trim_commits_post_analysis_facade_task(repo_git):
     repo_loc = (f"{absolute_path}/.git")
     # Grab the parents of HEAD
 
-    parent_commits = get_parent_commits_set(repo_loc, start_date)
+    parent_commits = get_parent_commits_set(repo_loc, facade_helper)
 
     # Grab the existing commits from the database
     existing_commits = get_existing_commits_set(repo_id)
@@ -203,7 +212,7 @@ def facade_fetch_missing_commit_messages(repo_git):
             
             if len(to_insert) >= 1000:
                 bulk_insert_dicts(logger,to_insert, CommitMessage, ["repo_id","cmt_hash"])
-                to_insert = []
+                to_insert.clear()
             
             to_insert.append(msg_record)
         except Exception as e: 
@@ -226,8 +235,6 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     repo = get_repo_by_repo_git(repo_git)
     repo_id = repo.repo_id
 
-    start_date = facade_helper.get_setting('start_date')
-
     logger.info(f"Generating sequence for repo {repo_id}")
     
     repo = get_repo_by_repo_id(repo_id)
@@ -237,7 +244,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     repo_loc = (f"{absolute_path}/.git")
     # Grab the parents of HEAD
 
-    parent_commits = get_parent_commits_set(repo_loc, start_date)
+    parent_commits = get_parent_commits_set(repo_loc, facade_helper)
 
     # Grab the existing commits from the database
     existing_commits = get_existing_commits_set(repo_id)
@@ -248,7 +255,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     facade_helper.log_activity('Debug',f"Commits missing from repo {repo_id}: {len(missing_commits)}")
 
     
-    if not len(missing_commits) or repo_id is None:
+    if not missing_commits or repo_id is None:
         #session.log_activity('Info','Type of missing_commits: %s' % type(missing_commits))
         return
     
@@ -261,6 +268,7 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     pendingCommitRecordsToInsert = []
     pendingCommitMessageRecordsToInsert = []
 
+    """
     for count, commitTuple in enumerate(queue):
         quarterQueue = int(len(queue) / 4)
 
@@ -288,7 +296,42 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     
     bulk_insert_dicts(logger,pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id","cmt_hash"])
     facade_bulk_insert_commits(logger,pendingCommitRecordsToInsert)
+    """
+    for count, commitTuple in enumerate(queue):
+        quarterQueue = int(len(queue) / 4) or 1
 
+        if (count + 1) % quarterQueue == 0:
+            logger.info(f"Progress through current analysis queue is {(count / len(queue)) * 100}%")
+
+        commitRecords, commit_msg = analyze_commit(logger, repo_id, repo_loc, commitTuple)
+        if commitRecords:
+            pendingCommitRecordsToInsert.extend(commitRecords)
+            if len(pendingCommitRecordsToInsert) >= 1000:
+                # FILTER AND LOG NULL REPO_IDs HERE
+                pendingCommitRecordsToInsert = filter_null_repo_id(
+                    pendingCommitRecordsToInsert, logger, context="batch insert"
+                )
+                if pendingCommitRecordsToInsert:
+                    facade_bulk_insert_commits(logger, pendingCommitRecordsToInsert)
+                pendingCommitRecordsToInsert.clear()
+
+        if commit_msg and facade_helper.commit_messages:
+            pendingCommitMessageRecordsToInsert.append(commit_msg)
+
+        if len(pendingCommitMessageRecordsToInsert) >= 1000:
+            bulk_insert_dicts(logger, pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id", "cmt_hash"])
+            pendingCommitMessageRecordsToInsert.clear()
+
+    # FINAL MESSAGE INSERT
+    bulk_insert_dicts(logger, pendingCommitMessageRecordsToInsert, CommitMessage, ["repo_id", "cmt_hash"])
+
+    # FINAL COMMIT INSERT, FILTER & LOG NULLS
+    pendingCommitRecordsToInsert = filter_null_repo_id(
+        pendingCommitRecordsToInsert, logger, context="final insert"
+    )
+    if pendingCommitRecordsToInsert:
+        facade_bulk_insert_commits(logger, pendingCommitRecordsToInsert)
+        
     # Remove the working commit.
     remove_working_commits_by_repo_id_and_hashes(repo_id, queue)
 
@@ -392,11 +435,6 @@ def generate_analysis_sequence(logger,repo_git, facade_helper):
 
     analysis_sequence = []
 
-    #repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_git=:value""").bindparams(value=repo_git)
-    #repos = fetchall_data_from_sql_text(repo_list)
-
-    start_date = facade_helper.get_setting('start_date')
-
     #repo_ids = [repo['repo_id'] for repo in repos]
 
     #repo_id = repo_ids.pop(0)
@@ -409,7 +447,8 @@ def generate_analysis_sequence(logger,repo_git, facade_helper):
 
     analysis_sequence.append(trim_commits_post_analysis_facade_task.si(repo_git))
 
-    analysis_sequence.append(facade_fetch_missing_commit_messages.si(repo_git))
+    if facade_helper.commit_messages:
+        analysis_sequence.append(facade_fetch_missing_commit_messages.si(repo_git))
     
     analysis_sequence.append(facade_analysis_end_facade_task.si())
     
@@ -427,8 +466,6 @@ def facade_phase(repo_git, full_collection):
     #repo_list = s.sql.text("""SELECT repo_id,repo_group_id,repo_path,repo_name FROM repo WHERE repo_git=:value""").bindparams(value=repo_git)
     #repos = fetchall_data_from_sql_text(repo_list)
 
-    start_date = facade_helper.get_setting('start_date')
-
     #repo_ids = [repo['repo_id'] for repo in repos]
 
     #repo_id = repo_ids.pop(0)
@@ -445,7 +482,6 @@ def facade_phase(repo_git, full_collection):
     #force_analysis = session.force_analysis
     run_facade_contributors = facade_helper.run_facade_contributors
 
-    facade_sequence = []
     facade_core_collection = []
 
     if not limited_run or (limited_run and pull_repos):
@@ -463,14 +499,12 @@ def facade_phase(repo_git, full_collection):
 
 
     #These tasks need repos to be cloned by facade before they can work.
-    facade_sequence.append(
-        group(
-            chain(*facade_core_collection),
-            process_dependency_metrics.si(repo_git),
-            process_libyear_dependency_metrics.si(repo_git),
-            process_scc_value_metrics.si(repo_git)
-        )
+    facade_sequence = group(
+        chain(*facade_core_collection),
+        process_dependency_metrics.si(repo_git),
+        process_libyear_dependency_metrics.si(repo_git),
+        process_scc_value_metrics.si(repo_git)
     )
 
     logger.info(f"Facade sequence: {facade_sequence}")
-    return chain(*facade_sequence)
+    return facade_sequence

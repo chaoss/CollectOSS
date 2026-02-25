@@ -5,10 +5,14 @@ from augur.tasks.init.celery_app import celery_app as celery
 from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
 from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.application.db.models import Contributor
 from augur.tasks.github.facade_github.core import *
 from augur.application.db.lib import execute_sql, get_contributor_aliases_by_email, get_unresolved_commit_emails_by_name, get_contributors_by_full_name, get_repo_by_repo_git, batch_insert_contributors
+from augur.application.db.lib import get_session, execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
+
+
+# Batch size for facade contributor processing
+FACADE_CONTRIBUTOR_BATCH_SIZE = 1000
 
 
 def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id):
@@ -198,6 +202,12 @@ def insert_facade_contributors(self, repo_git):
     logger = logging.getLogger(insert_facade_contributors.__name__)
     repo = get_repo_by_repo_git(repo_git)
     repo_id = repo.repo_id
+    facade_helper = FacadeHelper(logger)
+
+    with get_session() as session:
+        query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo.repo_id)
+        collection_status = execute_session_query(query,'one')
+        last_collected_date = collection_status.facade_data_last_collected if not facade_helper.facade_contributor_full_recollect else None
 
     # Get all of the commit data's emails and names from the commit table that do not appear
     # in the contributors table or the contributors_aliases table.
@@ -214,6 +224,7 @@ def insert_facade_contributors(self, repo_git):
                 commits
             WHERE
                 commits.repo_id = :repo_id
+                AND (:since_date is NULL OR commits.data_collection_date > :since_date)
                 AND (NOT EXISTS ( SELECT contributors.cntrb_canonical FROM contributors WHERE contributors.cntrb_canonical = commits.cmt_author_raw_email )
                 or NOT EXISTS ( SELECT contributors_aliases.alias_email from contributors_aliases where contributors_aliases.alias_email = commits.cmt_author_raw_email)
                 AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name ))
@@ -231,6 +242,7 @@ def insert_facade_contributors(self, repo_git):
                 commits
             WHERE
                 commits.repo_id = :repo_id
+                AND (:since_date is NULL OR commits.data_collection_date > :since_date)
                 AND EXISTS ( SELECT unresolved_commit_emails.email FROM unresolved_commit_emails WHERE unresolved_commit_emails.email = commits.cmt_author_raw_email )
                 AND ( commits.cmt_author_name ) IN ( SELECT C.cmt_author_name FROM commits AS C WHERE C.repo_id = :repo_id GROUP BY C.cmt_author_name )
             GROUP BY
@@ -239,11 +251,14 @@ def insert_facade_contributors(self, repo_git):
                 commits.cmt_author_raw_email
             ORDER BY
             hash
-    """).bindparams(repo_id=repo_id)
+    """).bindparams(repo_id=repo_id,since_date=last_collected_date)
 
     #Execute statement with session.
     result = execute_sql(new_contrib_sql)
-    new_contribs = [dict(row) for row in result.mappings()]
+
+    # Fetch all results immediately to close the database cursor/connection
+    # This prevents holding the connection open during GitHub API calls
+    rows = result.mappings().fetchall()
 
     #print(new_contribs)
 
@@ -253,11 +268,22 @@ def insert_facade_contributors(self, repo_git):
 
     key_auth = GithubRandomKeyAuth(logger)
 
-    process_commit_metadata(logger, key_auth, list(new_contribs), repo_id, platform_id)
+    # Process results in batches to reduce memory usage
+    batch = []
+
+    for row in rows:
+        batch.append(dict(row))
+
+        if len(batch) >= FACADE_CONTRIBUTOR_BATCH_SIZE:
+            process_commit_metadata(logger, key_auth, batch, repo_id, platform_id)
+            batch.clear()
+
+    # Process remaining items in batch
+    if batch:
+        process_commit_metadata(logger, key_auth, batch, repo_id, platform_id)
 
     logger.debug("DEBUG: Got through the new_contribs")
     
-    facade_helper = FacadeHelper(logger)
     # sql query used to find corresponding cntrb_id's of emails found in the contributor's table
     # i.e., if a contributor already exists, we use it!
     resolve_email_to_cntrb_id_sql = s.sql.text("""
@@ -271,6 +297,7 @@ def insert_facade_contributors(self, repo_git):
             commits
         WHERE
             contributors.cntrb_canonical = commits.cmt_author_raw_email
+            AND (:since_date is NULL OR commits.data_collection_date > :since_date)
             AND commits.repo_id = :repo_id
         UNION
         SELECT DISTINCT
@@ -286,14 +313,29 @@ def insert_facade_contributors(self, repo_git):
             contributors_aliases.alias_email = commits.cmt_author_raw_email
                             AND contributors.cntrb_id = contributors_aliases.cntrb_id
             AND commits.repo_id = :repo_id
-    """).bindparams(repo_id=repo_id)
+            AND (:since_date is NULL OR commits.data_collection_date > :since_date)
+    """).bindparams(repo_id=repo_id,since_date=last_collected_date)
 
 
     result = execute_sql(resolve_email_to_cntrb_id_sql)
-    existing_cntrb_emails = [dict(row) for row in result.mappings()]
 
-    print(existing_cntrb_emails)
-    link_commits_to_contributor(logger, facade_helper,list(existing_cntrb_emails))
+    # Fetch all results immediately to close the database cursor/connection
+    # This prevents holding the connection open during database UPDATE operations
+    rows = result.mappings().fetchall()
+
+    # Process results in batches to reduce memory usage
+    batch = []
+
+    for row in rows:
+        batch.append(dict(row))
+
+        if len(batch) >= FACADE_CONTRIBUTOR_BATCH_SIZE:
+            link_commits_to_contributor(logger, facade_helper, batch)
+            batch.clear()
+
+    # Process remaining items in batch
+    if batch:
+        link_commits_to_contributor(logger, facade_helper, batch)
 
     return
 

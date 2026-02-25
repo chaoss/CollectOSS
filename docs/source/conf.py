@@ -23,9 +23,11 @@ import sphinx_rtd_theme
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-exec(open(os.path.join(here, "../../metadata.py")).read())
+# Add the project root (two levels up: docs/source → augur)
+sys.path.insert(0, os.path.abspath(os.path.join(here, '../..')))
 
-sys.path.insert(0, os.path.abspath('../../../augur'))
+# Now importing variables from metadata.py
+from metadata import __copyright__, __release__, __version__
 
 # -- General configuration ------------------------------------------------
 
@@ -49,7 +51,6 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx_rtd_theme',
     'sphinxcontrib.openapi',
     'sphinxcontrib.redoc',
-    'sphinx.ext.autosectionlabel'
 ]
 
 redoc = [
@@ -96,7 +97,7 @@ release = __release__
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -193,4 +194,4 @@ autosummary_generate = True
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}

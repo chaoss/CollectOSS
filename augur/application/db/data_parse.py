@@ -291,7 +291,7 @@ def extract_pr_event_data(event: dict, pr_id: int, gh_src_id: int, platform_id: 
         'action': event['event'],
         'action_commit_hash': None,
         'created_at': event['created_at'],
-        'issue_event_src_id': gh_src_id,
+        'issue_event_src_id': event["id"],
         'node_id': event['node_id'],
         'node_url': event['url'],
         'tool_source': tool_source,
@@ -457,7 +457,7 @@ def extract_needed_gitlab_issue_label_data(labels: List[dict], repo_id: int, too
 
 
 
-def extract_needed_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+def extract_needed_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
     """
     Retrieve only the needed data for pr labels from the api response
 
@@ -487,7 +487,7 @@ def extract_needed_issue_message_ref_data(message: dict, issue_id: int, repo_id:
     return message_ref_dict
 
 # retrieve only the needed data for pr labels from the api response
-def extract_needed_pr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+def extract_needed_pr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
 
     message_ref_dict = {
             'pull_request_id': pull_request_id,
@@ -1088,14 +1088,17 @@ def extract_needed_mr_metadata(mr_dict, repo_id, pull_request_id, tool_source, t
     Returns:
         List of dicts of parsed mr metadata
     """
-    head = {'sha': mr_dict['diff_refs']['head_sha'],
+
+    diff_refs = mr_dict.get('diff_refs', {})
+
+    head = {'sha': diff_refs.get('head_sha', None),
             'ref': mr_dict['target_branch'],
             'label': str(mr_dict['target_project_id']) + ':' + mr_dict['target_branch'],
             'author': mr_dict['author']['username'],
             'repo': str(mr_dict['target_project_id'])
             }
 
-    base = {'sha': mr_dict['diff_refs']['base_sha'],
+    base = {'sha': diff_refs.get('base_sha', None),
             'ref': mr_dict['source_branch'],
             'label': str(mr_dict['source_project_id']) + ':' + mr_dict['source_branch'],
             'author': mr_dict['author']['username'],
@@ -1125,7 +1128,7 @@ def extract_needed_mr_metadata(mr_dict, repo_id, pull_request_id, tool_source, t
     return all_meta
 
 
-def extract_needed_gitlab_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+def extract_needed_gitlab_issue_message_ref_data(message: dict, issue_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
     """
     Extract the message id for a given message on an issue from an api response
     and connect it to the relevant repo id.
@@ -1187,7 +1190,7 @@ def extract_needed_gitlab_message_data(comment: dict, platform_id: int, repo_id:
 
     return comment_dict
 
-def extract_needed_gitlab_mr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> List[dict]:
+def extract_needed_gitlab_mr_message_ref_data(comment: dict, pull_request_id: int, repo_id: int, tool_source: str, tool_version: str, data_source: str) -> dict:
     """
     Retrieve only the needed data for pr labels from the api response
 

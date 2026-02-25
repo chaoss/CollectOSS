@@ -1,13 +1,14 @@
 Quickstart
 ===============
 
-Select installation instructions from those most closely related to the operating system that you use below. Note that Augur's dependencies do not consistently support python 3.11 at this time. Python 3.8 - Python 3.10 have been tested on each platform. 
+Select installation instructions from those most closely related to the operating system that you use below. Note that Augur's dependencies do not consistently support python 3.11 at this time. Python 3.8 - Python 3.10 have been tested on each platform.
 
 .. toctree::
    :maxdepth: 2
 
    getting-started/new-install
    getting-started/dev-osx-install
+   getting-started/using-docker
 
 
 Explanations of Technologies
@@ -91,8 +92,6 @@ Specifically, you may find this error in your augur logs:
 
    GRUB_DISABLE_OS_PROBER=true
 
-.. _postgresql-configuration-1:
-
 Postgresql Configuration
 ------------------------
 
@@ -153,25 +152,3 @@ You can stop augur with ``augur backend stop``, followed by
 so Augur can shutdown more gently. There is no issue with data integrity
 if you issue them seconds apart, its just that stopping is nicer than
 killing.
-
-Docker
-~~~~~~
-
-1. Make sure docker, and docker compose are both installed
-2. Modify the ``environment.txt`` file in the root of the repository to
-   include your GitHub and GitLab API keys.
-3. If you are already running postgresql on your server you have two
-   choices:
-
-   -  Change the port mappings in the ``docker-compose.yml`` file to
-      match ports for Postgresql not currently in use.
-   -  Change to variables in ``environment.txt`` to include the correct
-      values for your local, non-docker-container database.
-
-4. ``sudo docker build -t augur-new -f docker/backend/Dockerfile .``
-5. ``sudo docker compose --env-file ./environment.txt --file docker-compose.yml up``
-   to run the database in a Docker Container or
-   ``sudo docker compose --env-file ./environment.txt --file docker-compose.yml up``
-   to connect to an already running database.
-
-

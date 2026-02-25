@@ -48,4 +48,3 @@ Conclusion
 -----------
 
 This wraps up the Docker section of the Augur documentation. We hope it was useful! Happy hacking!
-

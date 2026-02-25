@@ -176,7 +176,10 @@ class SpdxPackage(Base):
 
 class SpdxPackagesFile(Base):
     __tablename__ = "packages_files"
-    __table_args__ = (UniqueConstraint("package_id", "file_name"), {"schema": "spdx"})
+    __table_args__ = (
+        UniqueConstraint("package_id", "file_name"),
+        {"schema": "spdx"}
+    )
 
     package_file_id = Column(
         Integer,
@@ -312,7 +315,10 @@ class SpdxFileContributor(Base):
 
 class SpdxFilesLicense(Base):
     __tablename__ = "files_licenses"
-    __table_args__ = (UniqueConstraint("file_id", "license_id"), {"schema": "spdx"})
+    __table_args__ = (
+        UniqueConstraint("file_id", "license_id"), 
+        {"schema": "spdx"}
+    )
 
     file_license_id = Column(
         Integer,
@@ -331,7 +337,10 @@ class SpdxFilesLicense(Base):
 
 class SpdxFilesScan(Base):
     __tablename__ = "files_scans"
-    __table_args__ = (UniqueConstraint("file_id", "scanner_id"), {"schema": "spdx"})
+    __table_args__ = (
+        UniqueConstraint("file_id", "scanner_id"), 
+        {"schema": "spdx"}
+    )
 
     file_scan_id = Column(
         Integer,
@@ -347,7 +356,10 @@ class SpdxFilesScan(Base):
 
 class SpdxPackagesScan(Base):
     __tablename__ = "packages_scans"
-    __table_args__ = (UniqueConstraint("package_id", "scanner_id"), {"schema": "spdx"})
+    __table_args__ = (
+        UniqueConstraint("package_id", "scanner_id"), 
+        {"schema": "spdx"}
+    )
 
     package_scan_id = Column(
         Integer,
@@ -383,7 +395,10 @@ class SpdxDocumentsCreator(Base):
 
 class SpdxExternalRef(Base):
     __tablename__ = "external_refs"
-    __table_args__ = (UniqueConstraint("document_id", "id_string"), {"schema": "spdx"})
+    __table_args__ = (
+        UniqueConstraint("document_id", "id_string"), 
+        {"schema": "spdx"}
+    )
 
     external_ref_id = Column(
         Integer,

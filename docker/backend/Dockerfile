@@ -1,15 +1,35 @@
 # SPDX-License-Identifier: MIT
+
+
+
+FROM golang:1.23-bullseye AS golang-builder
+
+# Write final binaries to / so it's easy to copy them out
+ENV GOBIN=/
+# Disable CGO to ensure the binaries are statically linked
+# Discussion: https://github.com/chaoss/augur/pull/3142
+ENV CGO_ENABLED=0
+
+RUN go install github.com/boyter/scc/v3@v3.4.0 \
+    && /scc --version
+RUN go install github.com/ossf/scorecard/v5@v5.1.1 \
+    && /scorecard version
+
+
+########################################
 FROM python:3.11-slim-bullseye
 
 LABEL maintainer="outdoors@acm.org"
-LABEL version="0.76.6"
+
+ARG VERSION
+LABEL version=${VERSION}
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/usr/bin/:/usr/local/bin:/usr/lib:${PATH}"
 
 RUN set -x \
     && apt-get update \
-    && apt-get -y install \
+    && apt-get -y install --no-install-recommends \
         git \
         bash \
         curl \
@@ -17,27 +37,17 @@ RUN set -x \
         software-properties-common \
         postgresql-contrib \
         musl-dev \
-        python3-dev \
-        python3-distutils \
-        python3-venv \
         wget \
         postgresql-client \
         libpq-dev \
         build-essential \
-        rustc \
-        cargo \
         chromium \
         tar \
-	jq \
+        jq \
         chromium-driver \
-        && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-
-# Install Firefox from Debian repositories for ARM64 architecture
-RUN set -x \
-    && apt-get update \
-    && apt-get install -y firefox-esr
+        firefox-esr \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install Geckodriver
 RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | jq -r '.tag_name' | sed 's/v//') \
@@ -58,59 +68,69 @@ RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriv
 RUN firefox --version
 RUN geckodriver --version
 
-# Ensure Rust directories are writable
-RUN mkdir -p /root/.rustup/downloads /root/.cargo/registry && \
-    chmod -R 777 /root/.rustup /root/.cargo
-
-# Add rust and cargo to PATH
-ENV PATH="/root/.cargo/bin:${PATH}"
-
-# Install the specific version of Rust
-RUN set -x \
-    && rustup install 1.78.0
-RUN set -x \
-    && rustup default 1.78.0
 
 EXPOSE 5000
 
+# Install uv (https://docs.astral.sh/uv/guides/integration/docker/#installing-uv)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+ENV UV_COMPILE_BYTECODE=1
+# The uv package cache will be on a cache volume, so can't be linked
+ENV UV_LINK_MODE=copy
+# Assert that the lockfile (uv.lock) is up-to-date. Use `uv lock` to update it
+# manually if this fails the container build.
+ENV UV_LOCKED=1
+
 WORKDIR /augur
-COPY ./README.md .
-COPY ./alembic.ini .
-COPY ./augur/ augur/
-COPY ./metadata.py .
-COPY ./setup.py .
-COPY ./scripts/ scripts/
 
-# Add rust and cargo to PATH
-ENV PATH="/usr/bin/:/root/.cargo/bin:/usr/local/bin:${PATH}"
+COPY pyproject.toml .
+COPY uv.lock .
+COPY .python-version .
 
-RUN python3 -m venv /opt/venv
+# Install augur's dependencies early to take advantage of build cache
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-install-project --no-dev
 
-RUN set -x \
-    && /opt/venv/bin/pip install --upgrade pip 
+# Copy in the actual code
+# The RUN line below ensure that permissions are set correctly.
+# This is the equivalent of the following docker --chmod flags, but done in a way thats compatible with podman.
+# This can be removed once https://github.com/containers/buildah/issues/6066 or relevant equivalent is fixed
+# - u=rw,u+X: user can read and write all files/dirs and execute directories
+# - go=r,go+X: group and others can read all files/dirs and execute directories
+COPY README.md .
+COPY LICENSE .
+COPY alembic.ini .
+COPY augur/ augur/
+COPY metadata.py .
+COPY scripts/ scripts/
+COPY keyman/ keyman/
 
-RUN set -x \
-    && /opt/venv/bin/pip install wheel
-    
-RUN set -x \
-    && /opt/venv/bin/pip install .
+RUN find augur -type d -exec chmod u=rwx,go=rx {} + && find augur -type f -exec chmod u=rw,go=r {} +
+RUN find keyman -type d -exec chmod u=rwx,go=rx {} + && find keyman -type f -exec chmod u=rw,go=r {} +
+RUN find scripts -exec chmod u=rwx,go=rx {} +
 
-RUN set -x \
-    && /opt/venv/bin/pip install --upgrade pip \
-    && /opt/venv/bin/pip install wheel \
-    && /opt/venv/bin/pip install .
 
-RUN ./scripts/docker/install-go.sh
-ENV PATH="${PATH}:/usr/local/go/bin"
-RUN ./scripts/docker/install-workers-deps.sh
+# Install the main project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-dev
 
-# RUN ./scripts/install/workers.sh 
+# We aren't going to activate the virtualenv (manually or via uv run), so we
+# need adjust the PATH
+ENV PATH="/augur/.venv/bin:${PATH}"
+
+ENV SCC_DIR=/scc
+COPY --from=golang-builder --chmod=755 "/scc" "/scc/scc"
+ENV SCORECARD_DIR=/scorecard
+COPY --from=golang-builder --chmod=755 "/scorecard" "/scorecard/scorecard"
+# Verify installations
+RUN ${SCC_DIR}/scc --version
+RUN ${SCORECARD_DIR}/scorecard version
 
 RUN mkdir -p repos/ logs/ /augur/facade/
+RUN ln -s /cache /augur/augur/static/cache
 
-COPY ./docker/backend/entrypoint.sh /
-COPY ./docker/backend/init.sh /
+# Copy in the entrypoint and init scripts, ensuring they are executable
+COPY --chmod=755 ./docker/backend/entrypoint.sh /
+COPY --chmod=755 ./docker/backend/init.sh /
 RUN chmod +x /entrypoint.sh /init.sh
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
-#ENTRYPOINT ["/entrypoint.sh"]
-CMD /init.sh
+CMD ["/init.sh"]

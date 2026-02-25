@@ -5,6 +5,7 @@ from sqlalchemy import (
     CHAR,
     Column,
     Date,
+    DateTime,
     Float,
     ForeignKey,
     Index,
@@ -17,6 +18,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     text,
+    func
 )
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import relationship
@@ -939,7 +941,7 @@ class Repo(Base):
                 )
                 wait_until_time = localtime(wait_until)
                 logger.error(f"rate limited fetching {url}")
-                logger.error(f"sleeping until {wait_until_time.tm_hour}:{wait_until_time.tm_min} ({wait_in_seconds} seconds)")
+                logger.error(f"sleeping until {wait_until_time.tm_hour:02d}:{wait_until_time.tm_min:02d} ({wait_in_seconds} seconds)")
                 sleep(wait_in_seconds)
                 attempts+=1
                 continue
@@ -1166,6 +1168,23 @@ class Repo(Base):
 
 
 
+class HistoricalRepoURLs(Base):
+    """ A table for storing previously-used git URLs for a repository
+    This is used to enable lookups that resolve historical URLs to the repo_id for a given repository
+    When a repo is detected as moved and its url is updated in the repo table, the old URL gets added to this table.
+    
+    The date_collected field allows for history of a repo with multiple URL changes to be inferred,
+    for example, when an old url is moved to this table, its date serves as both an end date
+    for the previous old url, and as the start date for the one that was just moved.
+    The currently-valid URL remains in the repo table and is not moved here until it has been superseded.
+    """
+
+    __tablename__ = "historical_repo_urls"
+    __table_args__ = {"schema": "augur_data"}
+
+    repo_id = Column(ForeignKey("augur_data.repo.repo_id"), primary_key=True)
+    git_url = Column(String, primary_key=True)
+    date_collected = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
         
 class RepoTestCoverage(Base):
     __tablename__ = "repo_test_coverage"
@@ -1359,7 +1378,8 @@ class Commit(Base):
 
 class CommitMessage(Base):
     __tablename__ = "commit_messages"
-    __table_args__ = ( UniqueConstraint("repo_id","cmt_hash", name="commit-message-insert-unique"),
+    __table_args__ = (
+        UniqueConstraint("repo_id","cmt_hash", name="commit-message-insert-unique"),
         { 
             "schema": "augur_data",
             "comment": "This table holds commit messages",
@@ -1930,9 +1950,12 @@ class RepoClusterMessage(Base):
 
 class RepoDependency(Base):
     __tablename__ = "repo_dependencies"
-    __table_args__ = ( UniqueConstraint("repo_id","dep_name","data_collection_date", name="deps-insert-unique"),
-        {"schema": "augur_data",
-        "comment": "Contains the dependencies for a repo.",},
+    __table_args__ = (
+        UniqueConstraint("repo_id","dep_name","data_collection_date", name="deps-insert-unique"),
+        {
+            "schema": "augur_data",
+            "comment": "Contains the dependencies for a repo."
+        },
     )
 
     repo_dependencies_id = Column(
@@ -1960,7 +1983,8 @@ class RepoDependency(Base):
 
 class RepoDepsLibyear(Base):
     __tablename__ = "repo_deps_libyear"
-    __table_args__ = ( UniqueConstraint("repo_id","name", "data_collection_date", name="deps-libyear-insert-unique"),
+    __table_args__ = (
+        UniqueConstraint("repo_id","name", "data_collection_date", name="deps-libyear-insert-unique"),
         {"schema": "augur_data"}
     )
 
@@ -1993,7 +2017,8 @@ class RepoDepsLibyear(Base):
 
 class RepoDepsScorecard(Base):
     __tablename__ = "repo_deps_scorecard"
-    __table_args__ = ( UniqueConstraint("repo_id","name", name="deps-scorecard-insert-unique"),
+    __table_args__ = (
+        UniqueConstraint("repo_id","name", name="deps-scorecard-insert-unique"),
         {"schema": "augur_data"}
     )
 
@@ -2885,7 +2910,7 @@ class PullRequestAssignee(Base):
     @classmethod
     def from_github(cls, assignee, repo_id, tool_source, tool_version, data_source):
         
-        pr_assignee_ojb = cls()
+        pr_assignee_obj = cls()
 
         # store the pr_url data on in the pr assignee data for now so we can relate it back to a pr later
         pr_assignee_obj.contrib_id = assignee["cntrb_id"]
@@ -3601,3 +3626,163 @@ class RepoClone(Base):
     clone_data_timestamp = Column(TIMESTAMP(precision=6))
 
     repo = relationship("Repo")
+
+
+class TopicModelMeta(Base):
+    __tablename__ = "topic_model_meta"
+    __table_args__ = {"schema": "augur_data"}
+
+    model_id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        comment="Unique identifier for the topic model"
+    )
+    repo_id = Column(
+        ForeignKey("augur_data.repo.repo_id"),
+        comment="Repository this model was trained on"
+    )
+    model_method = Column(
+        String,
+        nullable=False,
+        comment="Method used for topic modeling (e.g., 'NMF_COUNT', 'LDA_TFIDF')"
+    )
+    num_topics = Column(
+        Integer,
+        nullable=False,
+        comment="Number of topics in the model"
+    )
+    num_words_per_topic = Column(
+        Integer,
+        nullable=False,
+        comment="Number of words per topic"
+    )
+    training_parameters = Column(
+        JSON,
+        nullable=False,
+        comment="JSON object containing training parameters"
+    )
+    model_file_paths = Column(
+        JSON,
+        nullable=False,
+        comment="JSON object containing paths to model artifacts"
+    )
+    parameters_hash = Column(
+        String,
+        nullable=False,
+        comment="Hash of parameters for deduplication"
+    )
+    coherence_score = Column(
+        Float,
+        nullable=False,
+        server_default=text("0.0"),
+        comment="Coherence score of the model"
+    )
+    perplexity_score = Column(
+        Float,
+        nullable=False,
+        server_default=text("0.0"),
+        comment="Perplexity score of the model"
+    )
+    topic_diversity = Column(
+        Float,
+        nullable=False,
+        server_default=text("0.0"),
+        comment="Topic diversity score"
+    )
+    quality = Column(
+        JSON,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+        comment="Quality metrics"
+    )
+    training_message_count = Column(
+        BigInteger,
+        nullable=False,
+        comment="Number of messages used for training"
+    )
+    data_fingerprint = Column(
+        JSON,
+        nullable=False,
+        comment="Fingerprint of training data"
+    )
+    visualization_data = Column(
+        JSON,
+        nullable=True,
+        comment="JSON object containing visualization data for the model"
+    )
+    training_start_time = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        comment="When training started"
+    )
+    training_end_time = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        comment="When training ended"
+    )
+    tool_source = Column(String, comment="Standard Augur Metadata")
+    tool_version = Column(String, comment="Standard Augur Metadata")
+    data_source = Column(String, comment="Standard Augur Metadata")
+    data_collection_date = Column(
+        TIMESTAMP(timezone=True, precision=0),
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    repo = relationship("Repo")
+
+
+class TopicModelEvent(Base):
+    __tablename__ = "topic_model_event"
+    __table_args__ = (
+        Index("ix_tme_repo_ts", "repo_id", "ts"),
+        Index("ix_tme_event", "event"),
+        {"schema": "augur_data"}
+    )
+
+    event_id = Column(
+        BigInteger,
+        primary_key=True,
+        comment="Unique identifier for the event"
+    )
+    ts = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+        comment="Timestamp when the event occurred"
+    )
+    repo_id = Column(
+        Integer,
+        ForeignKey("augur_data.repo.repo_id", name="fk_tme_repo_id"),
+        nullable=True,
+        comment="Repository associated with this event"
+    )
+    model_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "augur_data.topic_model_meta.model_id",
+            name="fk_tme_model_id",
+            ondelete="SET NULL"
+        ),
+        nullable=True,
+        comment="Topic model associated with this event"
+    )
+    event = Column(
+        Text,
+        nullable=False,
+        comment="Event type or name"
+    )
+    level = Column(
+        Text,
+        nullable=False,
+        server_default=text("'INFO'"),
+        comment="Log level (INFO, WARNING, ERROR, etc.)"
+    )
+    payload = Column(
+        JSONB,
+        nullable=False,
+        comment="Event payload data"
+    )
+
+    repo = relationship("Repo")
+    topic_model = relationship("TopicModelMeta")

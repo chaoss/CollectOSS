@@ -5,25 +5,43 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, 
 from urllib.parse import urlparse, parse_qs, urlencode
 from keyman.KeyClient import KeyClient
 
+GITHUB_RATELIMIT_REMAINING_CAP = 50
+
 
 class RatelimitException(Exception):
 
-    def __init__(self, response, message="Github Rate limit exceeded") -> None:
+    def __init__(self, response, keys_used, message="Github Rate limit exceeded") -> None:
 
         self.response = response
 
-        super().__init__(message)
+        super().__init__(f"{message}. Keys used: {keys_used}")
 
 class UrlNotFoundException(Exception):
     pass
 
+class NotAuthorizedException(Exception):
+    pass
+
+class ResourceGoneException(Exception):
+    """Exception class indicating the requested resource (or necessary parent resource)
+    is intentionally unavailable (such as requesting issues for a repo when they are disabled)
+
+    example: https://api.github.com/repos/openshift/release/issues/4352/comments
+
+    See also: https://httpstatuses.com/410
+    """
+    def __init__(self, message="Resource returned HTTP 410 Gone. It is likely intentionally removed"):
+        super().__init__(message)
+
 class GithubDataAccess:
 
-    def __init__(self, key_manager, logger: logging.Logger):
+    def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
         self.logger = logger
-        self.key_client = KeyClient("github_rest", logger)
+        self.feature = feature
+        self.key_client = KeyClient(f"github_{feature}", logger)
         self.key = None
+        self.expired_keys_for_request = []
 
     def get_resource_count(self, url):
 
@@ -103,12 +121,36 @@ class GithubDataAccess:
             response = client.request(method=method, url=url, headers=headers, timeout=timeout, follow_redirects=True)
 
             if response.status_code in [403, 429]:
-                raise RatelimitException(response)
+                self.expired_keys_for_request.append(self.key)
+                self.logger.warning(f"Github rate limit exceeded. Key: {self.key[-5:]}. Response: {response.text}")
+                raise RatelimitException(response, self.expired_keys_for_request[-5:])
 
+            # There are cases with PR files, PR commits, and messages where the parent object is removed after 
+            # It is collected, leading the the associated URL for those objects to return a 404. 
+            # This is not an issue that is really an Exception. It is more of a nominal signal. 
+            
             if response.status_code == 404:
                 raise UrlNotFoundException(f"Could not find {url}")
             
+            if response.status_code == 401:
+                raise NotAuthorizedException(f"Could not authorize with the github api")
+            
+            if response.status_code == 410:
+                response_msg = response.json().get("message")
+                if response_msg is not None:
+                    raise ResourceGoneException(response_msg)
+                else:
+                    raise ResourceGoneException()
+                
             response.raise_for_status()
+
+            try:
+                if self.feature == "rest" and "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
+                    self.expired_keys_for_request.append(self.key)
+                    raise RatelimitException(response, self.expired_keys_for_request[-5:])
+            except ValueError:
+                self.logger.warning(f"X-RateLimit-Remaining was not an integer. Value: {response.headers['X-RateLimit-Remaining']}")
+
 
             return response
         
@@ -121,34 +163,53 @@ class GithubDataAccess:
             return self.__make_request_with_retries(url, method, timeout)
         except RetryError as e:
             raise e.last_attempt.exception()
+
+    def _decide_retry_policy(exception: Exception) -> bool:
+        """Defines whether or not to retry a failed request based on the exception thrown
+
+        Returns:
+            bool: Boolean describing whether or not the request should be retried
+        """
+        return not isinstance(exception, (UrlNotFoundException, ResourceGoneException))
         
-    @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(lambda exc: not isinstance(exc, UrlNotFoundException)))
+    @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(_decide_retry_policy))
     def __make_request_with_retries(self, url, method="GET", timeout=100):
         """ What method does?
             1. Retires 10 times
             2. Waits 5 seconds between retires
-            3. Does not rety UrlNotFoundException
+            3. Does not retry any exceptions excluded by _decide_retry_policy
             4. Catches RatelimitException and waits or expires key before raising exception
         """
 
         try:
-            return self.make_request(url, method, timeout)
+            result = self.make_request(url, method, timeout)
+            self.expired_keys_for_request = []
+            return result
         except RatelimitException as e:
             self.__handle_github_ratelimit_response(e.response)
             raise e
+        except NotAuthorizedException as e:
+            self.expired_keys_for_request = []
+            self.__handle_github_not_authorized_response()
+            raise e
+
+    def __handle_github_not_authorized_response(self):
+
+        self.key = self.key_client.invalidate(self.key)
+
         
     def __handle_github_ratelimit_response(self, response):
 
         headers = response.headers
+        previous_key = self.key
 
         if "Retry-After" in headers:
 
             retry_after = int(headers["Retry-After"])
-            self.logger.info(
-                f'\n\n\n\nSleeping for {retry_after} seconds due to secondary rate limit issue.\n\n\n\n')
-            time.sleep(retry_after)
+            self.logger.info('\n\n\n\nEncountered secondary rate limit issue.\n\n\n\n')
+            self.key = self.key_client.expire(self.key, time.time() + retry_after)
 
-        elif "X-RateLimit-Remaining" in headers and int(headers["X-RateLimit-Remaining"]) == 0:
+        elif "X-RateLimit-Remaining" in headers and int(headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
             current_epoch = int(time.time())
             epoch_when_key_resets = int(headers["X-RateLimit-Reset"])
             key_reset_time =  epoch_when_key_resets - current_epoch
@@ -161,7 +222,10 @@ class GithubDataAccess:
             self.key = self.key_client.expire(self.key, epoch_when_key_resets)
 
         else:
-            time.sleep(60)
+            self.key = self.key_client.expire(self.key, time.time() + 60)
+
+        if previous_key == self.key:
+            self.logger.error(f"The same key was returned after a request to expire it was sent (key: {self.key[-5:]})")
 
     def __add_query_params(self, url: str, additional_params: dict) -> str:
         """Add query params to a url.

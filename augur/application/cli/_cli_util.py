@@ -5,7 +5,7 @@ import psutil
 import signal
 from urllib.parse import urlparse
 
-from augur.tasks.init.redis_connection import redis_connection 
+from augur.tasks.init.redis_connection import get_redis_connection
 
 def clear_redis_caches(logger):
     """Clears the redis databases that celery and redis use."""
@@ -13,6 +13,9 @@ def clear_redis_caches(logger):
     logger.info("Flushing all redis databases this instance was using")
     celery_purge_command = "celery -A augur.tasks.init.celery_app.celery_app purge -f"
     subprocess.call(celery_purge_command.split(" "))
+
+
+    redis_connection = get_redis_connection()
     redis_connection.flushdb()
 
 

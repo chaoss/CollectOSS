@@ -32,7 +32,7 @@ List of Unused Data Tables In Augur
 
         .. image:: images/library_version.png
             :width: 200
-    
+
     * lstm_anomaly_models
 
         .. image:: images/lstm_anomaly_models.png
@@ -53,11 +53,11 @@ List of Unused Data Tables In Augur
         .. image:: images/message_sentiment_summary.png
             :width: 200
 
-    * Repo_group_insights 
+    * Repo_group_insights
 
         .. image:: images/repo_group_insights.png
             :width: 200
-    
+
     * repo_groups_list_serve
 
         .. image:: images/repo_groups_list_serve.png

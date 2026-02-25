@@ -26,7 +26,7 @@
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
 import subprocess
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError
 import os
 import sqlalchemy as s
 from augur.application.db.models import *
@@ -105,13 +105,22 @@ def get_absolute_repo_path(repo_base_dir, repo_id, repo_path,repo_name):
 	
 	return f"{repo_base_dir}{repo_id}-{repo_path}/{repo_name}"
 
-def get_parent_commits_set(absolute_repo_path, start_date):
-	
-	parents = subprocess.Popen(["git --git-dir %s log --ignore-missing "
-								"--pretty=format:'%%H' --since=%s" % (absolute_repo_path,start_date)],
-	stdout=subprocess.PIPE, shell=True)
+def get_parent_commits_set(absolute_repo_path, facade_helper, logger=None):
 
-	parent_commits = set(parents.stdout.read().decode("utf-8",errors="ignore").split(os.linesep))
+	cmd = "git --git-dir %s log --ignore-missing --pretty=format:'%%H'" % (absolute_repo_path)
+
+	# Use facade_helper's unified git command runner
+	return_code, stdout = facade_helper.run_git_command(
+		cmd,
+		timeout=600,  # 10 minutes for git log
+		capture_output=True,
+		operation_description=f'git log for {absolute_repo_path}'
+	)
+
+	if return_code == 0:
+		parent_commits = set(stdout.split(os.linesep))
+	else:
+		parent_commits = set()  # Return empty set on timeout or error
 
 	# If there are no commits in the range, we still get a blank entry in
 	# the set. Remove it, as it messes with the calculations
@@ -154,7 +163,15 @@ def get_repo_commit_count(logger, facade_helper, repo_git):
 	if count_branches(repo_loc) == 0:
 		return 0
 
-	check_commit_count_cmd = check_output(["git", "--git-dir", repo_loc, "rev-list", "--count", "HEAD"])
+	try:
+		check_commit_count_cmd = check_output(
+			["git", "--git-dir", repo_loc, "rev-list", "--count", "HEAD"],
+			stderr=subprocess.PIPE)
+	except CalledProcessError as e:
+		logger.error(f"Ran into {e}: {e.output} {e.stderr} \n With return code {e.returncode}")
+		raise e
+		
+
 	commit_count = int(check_commit_count_cmd)
 
 	return commit_count

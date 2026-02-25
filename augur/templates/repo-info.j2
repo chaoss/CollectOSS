@@ -5,21 +5,7 @@
         {% if repo.repo_id %}
         <h1 id="message">Report for: {{ repo.repo_name|title }}</h1>
         <p><a href="{{ repo.repo_git }}" target="_blank" data-toggle="tooltip" title="opens in new tab">{{ repo.repo_git }}</a></p>
-        {% for report in reports %}
-        <h2>{{ report|replace("_", " ")|title }}</h2>
-        {% for image in images[report] %}
-        <div class="row row-cols-1 col-auto g-3" style="margin-bottom: 30px;">
-            <div class="col">
-                <div class="card img_placeholder d-flex justify-content-center align-items-center">
-                    <div class="dot-flashing" id="{{ image['id'] }}"></div>
-                </div>
-                <div class="card-footer card-footer-wrap">
-                    <small class="text-muted" id="desc_report_image_{{ image['id'] }}">{{ image['description'] }}</small>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-        {% endfor %}
+        
         {% else %}
         <h1 id="message">Repository {{ repo_id }} not found<h1>
         {% endif %}

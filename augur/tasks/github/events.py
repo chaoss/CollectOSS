@@ -17,6 +17,9 @@ from augur.application.db.models import PullRequestEvent, IssueEvent, Contributo
 from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id, update_issue_closed_cntrbs_by_repo_id, get_session, get_engine, get_core_data_last_collected, batch_insert_contributors
 
 
+# Batch size for processing events - smaller than issues/PRs due to higher processing overhead per event
+EVENT_BATCH_SIZE = 500
+
 platform_id = 1
 
 @celery.task(base=AugurCoreRepoCollectionTask)
@@ -78,7 +81,7 @@ class GithubEventCollection(ABC):
         bulk_insert_dicts(self._logger, events, IssueEvent, issue_event_natural_keys)
 
     def _insert_pr_events(self, events):
-        pr_event_natural_keys = ["node_id"]
+        pr_event_natural_keys = ["repo_id", "issue_event_src_id"]
         bulk_insert_dicts(self._logger, events, PullRequestEvent, pr_event_natural_keys)
 
     def _insert_contributors(self, contributors):
@@ -120,7 +123,7 @@ class BulkGithubEventCollection(GithubEventCollection):
             events.append(event)
 
             # making this a decent size since process_events retrieves all the issues and prs each time
-            if len(events) >= 500:
+            if len(events) >= EVENT_BATCH_SIZE:
                 self._process_events(events, repo_id)
                 events.clear()
     
@@ -281,14 +284,23 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
         with engine.connect() as connection:
 
-            # TODO: Remove src id if it ends up not being needed
-            query = text(f"""
-                select issue_id as issue_id, gh_issue_number as issue_number, gh_issue_id as gh_src_id 
-                from issues 
-                where repo_id={repo_id} 
-                and updated_at > timestamptz(timestamp '{since}')
-                order by created_at desc;
-            """)
+            if since:
+                # TODO: Remove src id if it ends up not being needed
+                query = text(f"""
+                    select issue_id as issue_id, gh_issue_number as issue_number, gh_issue_id as gh_src_id 
+                    from issues 
+                    where repo_id={repo_id} 
+                    and updated_at > timestamptz(timestamp '{since}')
+                    order by created_at desc;
+                """)
+            else:
+                # TODO: Remove src id if it ends up not being needed
+                query = text(f"""
+                    select issue_id as issue_id, gh_issue_number as issue_number, gh_issue_id as gh_src_id 
+                    from issues 
+                    where repo_id={repo_id} 
+                    order by created_at desc;
+                """)
 
             issue_result = connection.execute(query).fetchall()
 
@@ -316,9 +328,9 @@ class ThoroughGithubEventCollection(GithubEventCollection):
                                             self._tool_source, self._tool_version, self._data_source)
                     )
             except UrlNotFoundException as e:
-                self._logger.warning(f"{self.repo_identifier}: Url not found for {event_url}")
+                self._logger.info(f"{self.repo_identifier}: Issue with number of {issue_number} returned 404 on event data. Skipping.")
 
-            if len(events) > 500:
+            if len(events) >= EVENT_BATCH_SIZE:
                 self._insert_contributors(contributors)
                 self._insert_issue_events(events)
                 events.clear()
@@ -335,13 +347,21 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
         with engine.connect() as connection:
 
-            query = text(f"""
-                select pull_request_id, pr_src_number as gh_pr_number, pr_src_id 
-                from pull_requests 
-                where repo_id={repo_id}
-                and pr_updated_at > timestamptz(timestamp '{since}') 
-                order by pr_created_at desc;
-            """)
+            if since:
+                query = text(f"""
+                    select pull_request_id, pr_src_number as gh_pr_number, pr_src_id 
+                    from pull_requests 
+                    where repo_id={repo_id}
+                    and pr_updated_at > timestamptz(timestamp '{since}') 
+                    order by pr_created_at desc;
+                """)
+            else:
+                query = text(f"""
+                    select pull_request_id, pr_src_number as gh_pr_number, pr_src_id 
+                    from pull_requests 
+                    where repo_id={repo_id}
+                    order by pr_created_at desc;
+                """)
 
             pr_result = connection.execute(query).fetchall()
 
@@ -354,20 +374,25 @@ class ThoroughGithubEventCollection(GithubEventCollection):
             pr_number = pr["gh_pr_number"]
 
             event_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{pr_number}/events"
+
+            try:
             
-            for event in github_data_access.paginate_resource(event_url):
+                for event in github_data_access.paginate_resource(event_url):
 
-                event, contributor = self._process_github_event_contributors(event)
+                    event, contributor = self._process_github_event_contributors(event)
 
-                if contributor:
-                    contributors.append(contributor)
+                    if contributor:
+                        contributors.append(contributor)
 
-                events.append(
-                    extract_pr_event_data(event, pr["pull_request_id"], pr["pr_src_id"] , platform_id, repo_id,
-                                        self._tool_source, self._tool_version, self._data_source)
-                )
+                    events.append(
+                        extract_pr_event_data(event, pr["pull_request_id"], pr["pr_src_id"] , platform_id, repo_id,
+                                            self._tool_source, self._tool_version, self._data_source)
+                    )
+            except UrlNotFoundException:
+                self._logger.info(f"{self.repo_identifier}: PR with number of {pr_number} returned 404 on event data. Skipping.")
+                continue
 
-            if len(events) > 500:
+            if len(events) >= EVENT_BATCH_SIZE:
                 self._insert_contributors(contributors)
                 self._insert_pr_events(events)
                 events.clear()

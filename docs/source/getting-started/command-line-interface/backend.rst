@@ -10,17 +10,17 @@ The ``augur backend`` CLI group is for controlling Augur's API server & data col
 
 ``start``
 ============
-This command is for starting Augur's API server & (optionally) data collection workers. Example usages are shown below the parameters. After starting up, it will run indefinitely (but might not show any output, unless it's being queried or the housekeeper is working).
+This command is for starting Augur's API server & (optionally) data collection workers. Example usages are shown below the parameters. After starting up, it will run indefinitely (but might not show any output, unless it's being queried or the data collection is working).
 
---disable-housekeeper      Flag that turns off the housekeeper. Useful for testing the REST API or if you want to pause data collection without editing your config.
+--disable-collection      Flag that turns off the data collection. Useful for testing the REST API or if you want to pause data collection without editing your config.
 
 --skip-cleanup      Flag that disables the old process cleanup that runs before Augur starts. Useful for Python scripts where Augur needs to be run in the background: see the `test/api/runner.py` file for an example.
 
 **To start the backend normally:**
 
-.. code-block:: 
+.. code-block::
 
-  augur backend start
+  uv run augur backend start
 
   # successful output looks like:
   >[43389] augur [INFO] Augur application initialized
@@ -52,19 +52,19 @@ This command is for starting Augur's API server & (optionally) data collection w
   > ...
   > From this point on, the housekeeper and broker logs detailing the worker's progress will take over
 
-To start the backend as a background process: 
+To start the backend as a background process:
 
 .. code-block:: bash
 
-  nohup augur backend start >logs/base.log 2>logs/base.err &
-  
+  uv run nohup augur backend start >logs/base.log 2>logs/base.err &
+
 Successful output looks like the generation of standard Augur logfiles in the logs/ directory.
 
 To start the backend server without the housekeeper:
 
 .. code-block:: bash
 
-  augur backend start --disable-housekeeper
+  uv run augur backend start --disable-housekeeper
 
 Successful output looks like:
 
@@ -85,11 +85,11 @@ Example usage:
 
 .. code-block:: bash
 
-  augur backend stop
+  uv run augur backend stop
 
 Successful output looks like:
 
-.. code-block:: bash 
+.. code-block:: bash
 
   > CLI: [backend.stop] [INFO] Stopping process 33607
   > CLI: [backend.stop] [INFO] Stopping process 33775
@@ -99,13 +99,13 @@ Successful output looks like:
 ``kill``
 ---------
 **Forcefully** terminates (using ``SIGKILL``) all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
-Should only be used when ``augur backend stop`` is not working.
+Should only be used when ``uv run augur backend stop`` is not working.
 
 Example usage:
 
 .. code-block:: bash
 
-  augur backend kill
+  uv run augur backend kill
 
   # successful output looks like:
   > CLI: [backend.kill] [INFO] Killing process 87340
@@ -121,13 +121,13 @@ Outputs the process ID (PID) of all currently running backend Augur processes, i
 
 Example usage:
 
-.. code-block:: bash 
+.. code-block:: bash
 
-  augur backend processes
+  uv run augur backend processes
 
 Successful output looks like:
 
-.. code-block:: bash 
+.. code-block:: bash
 
   > CLI: [backend.processes] [INFO] Found process 14467
   > CLI: [backend.processes] [INFO] Found process 14725
@@ -160,11 +160,11 @@ Start the http server with::
 
 Then start Augur with ``logstash`` flag::
 
-  $ augur backend start --logstash
+  $ uv run augur backend start --logstash
 
 If you'd like to clean all previously collected errors, run::
-  
-  $ augur backend start --logstash-with-cleanup
+
+  $ uv run augur backend start --logstash-with-cleanup
 
 Open http://localhost:8003 and select workers to check for errors.
 
@@ -175,10 +175,10 @@ Exports your GitHub key and database credentials to 2 files. The first is ``augu
 
 Example usage:
 
-.. code-block:: bash 
+.. code-block:: bash
 
   # to export your environment
-  $ augur util export-env
+  $ uv run augur util export-env
 
 Successful output looks like:
 
@@ -218,8 +218,7 @@ Example usage:
 .. code-block:: bash
 
   # to reset the repo collection status to "New"
-  $ augur util repo-reset
+  $ uv run augur util repo-reset
 
   # successful output looks like:
   > CLI: [util.repo_reset] [INFO] Repos successfully reset
-

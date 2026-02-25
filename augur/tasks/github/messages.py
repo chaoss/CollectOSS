@@ -13,6 +13,10 @@ from augur.application.db import get_engine, get_session
 from augur.application.db.lib import get_core_data_last_collected
 from sqlalchemy.sql import text
 
+
+# Batch size for processing messages - smaller due to large text content per message
+MESSAGE_BATCH_SIZE = 20
+
 platform_id = 1
 
 @celery.task(base=AugurCoreRepoCollectionTask)
@@ -93,43 +97,45 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
 
         if since:
              query = text(f"""
-                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_updated_at > timestamptz(timestamp '{since}') order by pr_created_at desc)
+                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_comments_url IS NOT NULL AND pr_updated_at > timestamptz(timestamp '{since}') order by pr_created_at desc)
                 UNION
-                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND updated_at > timestamptz(timestamp '{since}') order by created_at desc);
+                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND comments_url IS NOT NULL AND updated_at > timestamptz(timestamp '{since}') order by created_at desc);
             """)
         else:
 
             query = text(f"""
-                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} order by pr_created_at desc)
+                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_comments_url IS NOT NULL order by pr_created_at desc)
                 UNION
-                (select comments_url as comment_url from issues WHERE repo_id={repo_id} order by created_at desc);
+                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND comments_url IS NOT NULL order by created_at desc);
             """)
         
 
         result = connection.execute(query).fetchall()
-    comment_urls = [x[0] for x in result]
+    comment_urls = [x[0] for x in result if x[0] is not None]
 
     github_data_access = GithubDataAccess(key_auth, logger)
 
     logger.info(f"{task_name}: Collecting github messages for {len(comment_urls)} prs/issues")
 
     all_data = []
-    for comment_url in comment_urls:
+    skipped_urls = 0
 
+    for comment_url in comment_urls:
         try:
             messages = list(github_data_access.paginate_resource(comment_url))
-        except UrlNotFoundException as e:
-            logger.warning(e)
-            continue
+            all_data += messages
+        except UrlNotFoundException:
+            logger.info(f"{task_name}: PR or issue comment url of {comment_url} returned 404. Skipping.")
+            skipped_urls += 1
 
-        all_data += messages
-
-        if len(all_data) >= 20:
+        if len(all_data) >= MESSAGE_BATCH_SIZE:
             process_messages(all_data, task_name, repo_id, logger, augur_db)
             all_data.clear()
 
     if len(all_data) > 0:
         process_messages(all_data, task_name, repo_id, logger, augur_db)
+
+    logger.info(f"{task_name}: Finished. Skipped {skipped_urls} comment URLs due to 404.")
         
 
 def process_messages(messages, task_name, repo_id, logger, augur_db):

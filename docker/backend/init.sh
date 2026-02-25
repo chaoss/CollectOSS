@@ -19,11 +19,8 @@ if [[ -f /repos.csv ]]; then
    augur db add-repos /repos.csv
 fi
 
-if [[ -d /augur/logs ]]; then
-    echo "The directory exists" > /augur/logs/log.holder
+echo "PATH: $PATH"
+echo "Python executable: $(which python)"
+python --version
 
-fi
-
-echo $PATH
-
-exec augur backend start
+exec augur backend start --pidfile /tmp/main.pid

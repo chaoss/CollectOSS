@@ -39,7 +39,7 @@ def generate_deps_data(logger, repo_git):
                 'dep_count' : dep.count,
                 'dep_language' : dep.language,
                 'tool_source': 'deps_model',
-                'tool_version': '0.43.9',
+                'tool_version': '0.89.1',
                 'data_source': 'Git',
                 'data_collection_date': scan_date
             }
@@ -47,7 +47,7 @@ def generate_deps_data(logger, repo_git):
             to_insert.append(repo_deps)
         
         bulk_insert_dicts(logger, to_insert,RepoDependency,["repo_id","dep_name","data_collection_date"])
-        
+                
         logger.info(f"Inserted {len(deps)} dependencies for repo {repo_id}")
 
 """
@@ -76,10 +76,10 @@ def generate_scorecard(logger, repo_git):
     path = repo_git[8:]
     if path[-4:] == '.git':
         path = path.replace(".git", "")
-    command = '--local=' + path
+    command = '--repo=' + path
     
     #this is path where our scorecard project is located
-    path_to_scorecard = os.environ['HOME'] + '/scorecard'
+    path_to_scorecard = os.getenv('SCORECARD_DIR', os.environ['HOME'] + '/scorecard')
 
     #setting the environmental variable which is required by scorecard
 
@@ -111,7 +111,7 @@ def generate_scorecard(logger, repo_git):
             'scorecard_check_details': required_output['repo'],
             'score': required_output['score'],
             'tool_source': 'scorecard_model',
-            'tool_version': '0.43.9',
+            'tool_version': '0.89.1',
             'data_source': 'Git',
             'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         }
@@ -126,16 +126,19 @@ def generate_scorecard(logger, repo_git):
                 'scorecard_check_details': check,
                 'score': check['score'],
                 'tool_source': 'scorecard_model',
-                'tool_version': '0.43.9',
+                'tool_version': '0.89.1',
                 'data_source': 'Git',
                 'data_collection_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
             }
             to_insert.append(repo_deps_scorecard)
+            
+        bulk_insert_dicts(logger, to_insert, RepoDepsScorecard, ["repo_id","name","data_collection_date"])
         
-        bulk_insert_dicts(logger, to_insert, RepoDepsScorecard, ["repo_id","name"])
+        logger.info(f"Inserted {len(to_insert)} scorecard entries for repo {repo_id}")
         
         logger.info(f"Done generating scorecard for repo {repo_id} from path {path}")
 
     except Exception as e: 
         
-        raise MetadataException(e, f"required_output: {required_output}")
+        logger.exception("Error generating scorecard", exc_info=e)
+        raise MetadataException(e, f"required_output: {required_output}; error {e}")

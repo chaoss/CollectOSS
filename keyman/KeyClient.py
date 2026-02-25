@@ -1,4 +1,4 @@
-from augur.tasks.init.redis_connection import redis_connection as conn
+from augur.tasks.init.redis_connection import get_redis_connection
 from redis.client import PubSub
 from logging import Logger
 from os import getpid
@@ -12,6 +12,9 @@ class KeyClient:
         Only one KeyClient can exist at a time per *process*, as
         the process ID is used for async communication between
         the client and the orchestrator.
+
+        All functions will block indefinitely if the orchestration
+        server is not running or not responding.
         
         param platform: The default platform to use for key requests
     """
@@ -26,8 +29,10 @@ class KeyClient:
         if not platform:
             raise ValueError("Platform must not be empty")
         
-        self.stdout = conn
-        self.stdin: PubSub = conn.pubsub(ignore_subscribe_messages = True)
+        self.conn = get_redis_connection()
+        
+        self.stdout = self.conn
+        self.stdin: PubSub = self.conn.pubsub(ignore_subscribe_messages = True)
         self.stdin.subscribe(f"{self.REQUEST}-{self.id}")
         self.platform = platform
         self.logger = logger
@@ -53,17 +58,17 @@ class KeyClient:
         else:
             return msg
     
-    """ Request a new key from the Orchestrator
-    
-        Will block until a key is available. Will block
-        *indefinitely* if no keys are available for the
-        requested platform.
-        
-        Optionally supply a platform string, if the default
-        one provided during initialization does not match
-        the desired platform for this request.
-    """
     def request(self, platform = None) -> str:
+        """ Request a new key from the Orchestrator
+        
+            Will block until a key is available. Will block
+            *indefinitely* if no keys are available for the
+            requested platform.
+            
+            Optionally supply a platform string, if the default
+            one provided during initialization does not match
+            the desired platform for this request.
+        """
         while True:
             self._send("NEW", key_platform = platform or self.platform)
             try:
@@ -80,18 +85,25 @@ class KeyClient:
                 self.logger.exception("Error during key request")
                 time.sleep(20)
     
-    """ Expire a key, and get a new key in return
-    
-        Will block until a key is available. Will block
-        *indefinitely* if no keys are available for the
-        requested platform.
-        
-        Optionally supply a platform string, if the default
-        one provided during initialization does not match
-        the desired platform for this request. The platform
-        given *must* match the old key, and also the new key.
-    """
     def expire(self, key: str, refresh_timestamp: int, platform: str = None) -> str:
+        """ Expire a key, and get a new key in return
+
+            Multiple expiration messages can be sent for the
+            same key simultaneously. The final expiration
+            message to be received will take precedence.
+        
+            Will block until a key is available. Will block
+            *indefinitely* if no keys are available for the
+            requested platform.
+
+            param refresh_timestamp: The Unix timestamp denoting
+            when the key will become available again for new requests
+            
+            Optionally supply a platform string, if the default
+            one provided during initialization does not match
+            the desired platform for this request. The platform
+            given *must* match the old key, and also the new key.
+        """
         message = {
             "type": "EXPIRE",
             "key_str": key,
@@ -102,7 +114,36 @@ class KeyClient:
 
         self.stdout.publish(self.REQUEST, json.dumps(message))
         time.sleep(0.1)
-        return self.request()
+        return self.request(platform)
+    
+    def invalidate(self, key: str, platform: str = None) -> str:
+        """ Notify the orchestration server that the given key is
+            no longer valid, IE: cannot be used to service any
+            future requests, and will not refresh.
+
+            Multiple invalidation messages can be sent for the
+            same key simultaneously. The initial invalidation
+            message to be received will take precedence.
+
+            Will block until a key is available. Will block
+            *indefinitely* if less than two remaining valid keys
+            were available for the given platform before invalidation.
+            
+            Optionally supply a platform string, if the default
+            one provided during initialization does not match
+            the desired platform for this request. The platform
+            given *must* match the old key, and also the new key.
+        """
+        message = {
+            "type": "INVALIDATE",
+            "key_str": key,
+            "key_platform": platform or self.platform,
+            "requester_id": self.id
+        }
+
+        self.stdout.publish(self.REQUEST, json.dumps(message))
+        time.sleep(0.1)
+        return self.request(platform)
 
 class KeyPublisher:
     """ NOT THREAD SAFE!
@@ -111,62 +152,63 @@ class KeyPublisher:
         as the process ID is used for async communication between
         the publisher and the orchestrator.
     """
+    
     def __init__(self) -> None:
         # Load channel names and IDs from the spec
         for channel in spec["channels"]:
             # IE: self.ANNOUNCE = "augur-oauth-announce"
             setattr(self, channel["name"], channel["id"])
-            
+        self.conn = get_redis_connection()
         self.id = getpid()
-        self.stdin: PubSub = conn.pubsub(ignore_subscribe_messages = True)
+        self.stdin: PubSub = self.conn.pubsub(ignore_subscribe_messages = True)
         self.stdin.subscribe(f"{self.ANNOUNCE}-{self.id}")
 
-    """ Publish a key to the orchestration server
-    
-        No reply is sent, and keys are added or overwritten
-        silently.
-    """
     def publish(self, key: str, platform: str):
+        """ Publish a key to the orchestration server
+        
+            No reply is sent, and keys are added or overwritten
+            silently.
+        """
         message = {
             "type": "PUBLISH",
             "key_str": key,
             "key_platform": platform
         }
 
-        conn.publish(self.ANNOUNCE, json.dumps(message))
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
     
-    """ Unpublish a key, and remove it from orchestration
-    
-        They key will remain in use by any workers that are currently
-        using it, but it will not be assigned to any new requests.
-        
-        No reply is sent, and non-existent keys or platforms are
-        ignored silently. 
-    """
     def unpublish(self, key: str, platform: str):
+        """ Unpublish a key, and remove it from orchestration
+        
+            They key will remain in use by any workers that are currently
+            using it, but it will not be assigned to any new requests.
+            
+            No reply is sent, and non-existent keys or platforms are
+            ignored silently. 
+        """
         message = {
             "type": "UNPUBLISH",
             "key_str": key,
             "key_platform": platform
         }
 
-        conn.publish(self.ANNOUNCE, json.dumps(message))
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
     
-    """ Wait for ACK from the orchestrator
-    
-        If a lot of publish or unpublish messages are waiting to
-        be processed, this will block until all of them have been
-        read. If the timeout is reached, this returns False, or if
-        the orchestration server acknkowledges within the time
-        limit, this returns True.
-        
-        If republish is true, the initial ACK request will be resent
-        10 times per second until the orchestrator responds. This
-        should only be used to wait for the orchestrator to come
-        online, as it could put a lot of unnecessary messages on the
-        queue if the orchestrator is running, but very busy.
-    """
     def wait(self, timeout_seconds = 30, republish = False):
+        """ Wait for ACK from the orchestrator
+        
+            If a lot of publish or unpublish messages are waiting to
+            be processed, this will block until all of them have been
+            read. If the timeout is reached, this returns False, or if
+            the orchestration server acknkowledges within the time
+            limit, this returns True.
+            
+            If republish is True, the initial ACK request will be resent
+            10 times per second until the orchestrator responds. This
+            should only be used to wait for the orchestrator to come
+            online, as it could put a lot of unnecessary messages on the
+            queue if the orchestrator is running, but very busy.
+        """
         if timeout_seconds < 0:
             raise ValueError("timeout cannot be negative")
         
@@ -176,7 +218,7 @@ class KeyPublisher:
         }
         
         listen_delta = 0.1
-        conn.publish(self.ANNOUNCE, json.dumps(message))
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
         
         # Just wait for and consume the next incoming message
         while timeout_seconds >= 0:
@@ -188,25 +230,25 @@ class KeyPublisher:
             elif timeout_seconds < listen_delta:
                 break
             elif republish:
-                conn.publish(self.ANNOUNCE, json.dumps(message))
+                self.conn.publish(self.ANNOUNCE, json.dumps(message))
             
             time.sleep(listen_delta)
             timeout_seconds -= listen_delta
         
         return False
 
-    """ Get a list of currently loaded orchestration platforms
-    
-        Will raise a ValueError if the orchestration server
-        returns a malformed response.
-    """
     def list_platforms(self):
+        """ Get a list of currently loaded orchestration platforms
+        
+            Will raise a ValueError if the orchestration server
+            returns a malformed response.
+        """
         message = {
             "type": "LIST_PLATFORMS",
             "requester_id": self.id
         }
         
-        conn.publish(self.ANNOUNCE, json.dumps(message))
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
         
         reply = next(self.stdin.listen())
         
@@ -220,20 +262,50 @@ class KeyPublisher:
         
         raise ValueError(f"Unexpected reply during list operation: {reply}")
         
-    """ Get a list of currently loaded keys for the given platform
-    
-        Will raise a ValueError if the orchestration server
-        returns a malformed response, or if the platform does
-        not exist.
-    """
     def list_keys(self, platform):
+        """ Get a list of currently loaded keys for the given platform
+        
+            Will raise a ValueError if the orchestration server
+            returns a malformed response, or if the platform does
+            not exist.
+        """
         message = {
             "type": "LIST_KEYS",
             "requester_id": self.id,
             "key_platform": platform
         }
         
-        conn.publish(self.ANNOUNCE, json.dumps(message))
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
+        
+        reply = next(self.stdin.listen())
+        
+        try:
+            reply = json.loads(reply["data"])
+        except Exception as e:
+            raise ValueError("Exception during key list decoding")
+        
+        if isinstance(reply, list):
+            return reply
+        elif isinstance(reply, dict) and "status" in reply:
+            raise ValueError(f"Orchestration error: {reply['status']}")
+        else:
+            raise ValueError(f"Unexpected reply during list operation: {reply}")
+        
+    def list_invalid_keys(self, platform):
+        """ Get a list of currently loaded keys for the given platform,
+            which have been marked as invalid during runtime
+        
+            Will raise a ValueError if the orchestration server
+            returns a malformed response, or if the platform does
+            not exist.
+        """
+        message = {
+            "type": "LIST_INVALID_KEYS",
+            "requester_id": self.id,
+            "key_platform": platform
+        }
+        
+        self.conn.publish(self.ANNOUNCE, json.dumps(message))
         
         reply = next(self.stdin.listen())
         
@@ -250,4 +322,10 @@ class KeyPublisher:
             raise ValueError(f"Unexpected reply during list operation: {reply}")
         
     def shutdown(self):
-        conn.publish(self.ANNOUNCE, json.dumps({"type": "SHUTDOWN"}))
+        """ Instruct the orchestration server to shutdown
+
+            The orchestration server will process any requests that
+            were sent prior to this message, and will then shut down
+            immediately upon processing of the shutdown command
+        """
+        self.conn.publish(self.ANNOUNCE, json.dumps({"type": "SHUTDOWN"}))

@@ -29,6 +29,7 @@ from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 from augur.application.db.lib import execute_sql, get_session
+from augur.application.config import AugurConfig
 
 RUNNING_DOCKER = os.environ.get('AUGUR_DOCKER_DEPLOY') == "1"
 
@@ -140,7 +141,7 @@ def non_repo_domain_tasks(self):
 
     logger.info("Executing non-repo domain tasks")
 
-    enabled_phase_names = get_enabled_phase_names_from_config()
+    enabled_phase_names = get_enabled_phase_names_from_config(engine, logger)
 
     enabled_tasks = []
 
@@ -175,7 +176,7 @@ def build_primary_repo_collect_request(session, logger, enabled_phase_names, day
     primary_enabled_phases.append(core_task_success_util_gen)
     primary_gitlab_enabled_phases.append(core_task_success_util_gen)
 
-    primary_request = CollectionRequest("core",primary_enabled_phases,max_repo=40, days_until_collect_again=15, gitlab_phases=primary_gitlab_enabled_phases)
+    primary_request = CollectionRequest("core",primary_enabled_phases,max_repo=40, days_until_collect_again=days_until_collect_again, gitlab_phases=primary_gitlab_enabled_phases)
     primary_request.get_valid_repos(session)
     return primary_request
 
@@ -193,7 +194,8 @@ def build_secondary_repo_collect_request(session, logger, enabled_phase_names, d
         return secondary_task_success_util.si(repo_git)
 
     secondary_enabled_phases.append(secondary_task_success_util_gen)
-    request = CollectionRequest("secondary",secondary_enabled_phases,max_repo=60, days_until_collect_again=10)
+    
+    request = CollectionRequest("secondary",secondary_enabled_phases,max_repo=60, days_until_collect_again=days_until_collect_again)
 
     request.get_valid_repos(session)
     return request
@@ -215,7 +217,7 @@ def build_facade_repo_collect_request(session, logger, enabled_phase_names, days
 
     facade_enabled_phases.append(facade_task_update_weight_util_gen)
 
-    request = CollectionRequest("facade",facade_enabled_phases,max_repo=30, days_until_collect_again=10)
+    request = CollectionRequest("facade",facade_enabled_phases,max_repo=30, days_until_collect_again=days_until_collect_again)
 
     request.get_valid_repos(session)
     return request
@@ -230,7 +232,7 @@ def build_ml_repo_collect_request(session, logger, enabled_phase_names, days_unt
 
     ml_enabled_phases.append(ml_task_success_util_gen)
 
-    request = CollectionRequest("ml",ml_enabled_phases,max_repo=5, days_until_collect_again=40)
+    request = CollectionRequest("ml",ml_enabled_phases,max_repo=5, days_until_collect_again=days_until_collect_again)
     request.get_valid_repos(session)
     return request
 
@@ -245,25 +247,32 @@ def augur_collection_monitor(self):
 
     
     #Get list of enabled phases 
-    enabled_phase_names = get_enabled_phase_names_from_config()
+    enabled_phase_names = get_enabled_phase_names_from_config(engine, logger)
 
     enabled_collection_hooks = []
 
     with DatabaseSession(logger, self.app.engine) as session:
 
+        # Get config values for collection intervals
+        config = AugurConfig(logger, session)
+        core_interval = config.get_value('Tasks', 'core_collection_interval_days') or 15
+        secondary_interval = config.get_value('Tasks', 'secondary_collection_interval_days') or 10
+        facade_interval = config.get_value('Tasks', 'facade_collection_interval_days') or 10
+        ml_interval = config.get_value('Tasks', 'ml_collection_interval_days') or 40
+
         if primary_repo_collect_phase.__name__ in enabled_phase_names:
-            enabled_collection_hooks.append(build_primary_repo_collect_request(session, logger, enabled_phase_names))
+            enabled_collection_hooks.append(build_primary_repo_collect_request(session, logger, enabled_phase_names, core_interval))
         
         if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-            enabled_collection_hooks.append(build_secondary_repo_collect_request(session, logger, enabled_phase_names))
+            enabled_collection_hooks.append(build_secondary_repo_collect_request(session, logger, enabled_phase_names, secondary_interval))
             #start_secondary_collection(session, max_repo=10)
 
         if facade_phase.__name__ in enabled_phase_names:
             #start_facade_collection(session, max_repo=30)
-            enabled_collection_hooks.append(build_facade_repo_collect_request(session, logger, enabled_phase_names))
+            enabled_collection_hooks.append(build_facade_repo_collect_request(session, logger, enabled_phase_names, facade_interval))
         
         if not RUNNING_DOCKER and machine_learning_phase.__name__ in enabled_phase_names:
-            enabled_collection_hooks.append(build_ml_repo_collect_request(session, logger, enabled_phase_names))
+            enabled_collection_hooks.append(build_ml_repo_collect_request(session, logger, enabled_phase_names, ml_interval))
             #start_ml_collection(session,max_repo=5)
         
         logger.info(f"Starting collection phases: {[h.name for h in enabled_collection_hooks]}")
@@ -378,5 +387,5 @@ def create_collection_status_records(self):
             CollectionStatus.insert(session, logger, repo[0])
             repo = execute_sql(query).first()
 
-    #Check for new repos every seven minutes to be out of step with the clone_repos task
-    create_collection_status_records.si().apply_async(countdown=60*7)
+    # no longer recursively run this task because collection status records are added when repos are inserted
+    #create_collection_status_records.si().apply_async(countdown=60*7)
