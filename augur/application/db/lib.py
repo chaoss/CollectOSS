@@ -517,12 +517,6 @@ def get_contributor_aliases_by_email(email):
     with get_session() as session:
 
         return session.query(ContributorsAlias).filter_by(alias_email=email).all()
-    
-def get_unresolved_commit_emails_by_name(name):
-
-    with get_session() as session:
-
-        return session.query(UnresolvedCommitEmail).filter_by(name=name).all()
 
 def get_unresolved_commit_emails_by_email(email):
 
