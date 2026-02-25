@@ -1,13 +1,13 @@
 """
 Unit tests for git commit timestamp correction functions.
 
-Tests the correction.py module which validates and corrects invalid
+Tests the timestamp_utils module which validates and corrects invalid
 timezone offsets in git commit timestamps before PostgreSQL insertion.
 """
 
 import pytest
 import logging
-from augur.tasks.git.correction import (
+from augur.application.db.timestamp_utils import (
     correct_timestamp,
     clean_commit_timestamps,
     POSTGRES_VALID_TIMEZONES
@@ -65,6 +65,17 @@ class TestCorrectTimestamp:
         unparseable = "not a timestamp"
         fallback = "2025-11-03 16:28:43 -0500"
         result = correct_timestamp(unparseable, fallback=fallback, logger=test_logger)
+        assert result == fallback
+
+    def test_none_returns_default(self, test_logger):
+        """None timestamp (e.g. from record.get() with no default) should return default epoch."""
+        result = correct_timestamp(None, logger=test_logger)
+        assert result == "1970-01-01 00:00:15 +0000"
+
+    def test_none_with_fallback_returns_fallback(self, test_logger):
+        """None timestamp with fallback should return fallback."""
+        fallback = "2025-11-03 16:28:43 -0500"
+        result = correct_timestamp(None, fallback=fallback, logger=test_logger)
         assert result == fallback
 
 
