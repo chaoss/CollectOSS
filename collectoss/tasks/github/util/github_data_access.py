@@ -65,6 +65,30 @@ class GithubDataAccess:
 
         return self.__add_query_params(url, params or {})
 
+    def user_endpoint_urls(self, username:str) -> dict:
+        """the github REST API urls beneath the users endpoint, in dict form.
+        Intended to enable the recreation of a subset of what is returned by the github API
+
+        Args:
+            username (str): the github username to query
+
+        Returns:
+            dict: a dict of various user sub urls like would be returned by github's API.
+        """
+        return {
+            "url": self.endpoint_url(f"users/{username}"),
+            "html_url": f"https://github.com/{username}",
+            "followers_url": self.endpoint_url(f"users/{username}/followers"),
+            "following_url": self.endpoint_url(f"users/{username}/following" + "{/other_user}"),
+            "gists_url": self.endpoint_url(f"users/{username}/gists" + "{/gist_id}"),
+            "starred_url": self.endpoint_url(f"users/{username}/starred" + "{/owner}{/repo}"),
+            "subscriptions_url": self.endpoint_url(f"users/{username}/subscriptions"),
+            "organizations_url": self.endpoint_url(f"users/{username}/orgs"),
+            "repos_url": self.endpoint_url(f"users/{username}/repos"),
+            "events_url": self.endpoint_url(f"users/{username}/events" + "{/privacy}"),
+            "received_events_url": self.endpoint_url(f"users/{username}/received_events"),
+        }
+
     def get_resource_count(self, url):
 
         # set per_page to 100 explicitly so we know each page is 100 long
