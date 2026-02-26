@@ -9,6 +9,12 @@ from collectoss.tasks.github.util.github_graphql_data_access import GithubGraphQ
 from collectoss.application.db.lib import get_repo_by_repo_git
 from collectoss.tasks.util.worker_util import calculate_date_weight_from_timestamps
 from typing_extensions import deprecated
+from enum import Enum
+
+class AugurPlatformType(Enum):
+    UNKNOWN = 0
+    GITHUB = 1
+    GITLAB = 2
 
 def get_repo_src_id(owner, repo, logger):
     
