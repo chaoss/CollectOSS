@@ -12,7 +12,7 @@ from typing_extensions import deprecated
 from enum import Enum
 
 class AugurPlatformType(Enum):
-    UNKNOWN = 0
+    UNRESOLVEABLE = 0
     GITHUB = 1
     GITLAB = 2
 
