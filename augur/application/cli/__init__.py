@@ -65,9 +65,8 @@ def test_db_connection(function_db_connection):
                 location = f"the AUGUR_DB environment variable\nAUGUR_DB={os.getenv('AUGUR_DB')}"
             else:
                 db_config_path = ConfigPaths.db_config()
-                with open(db_config_path, 'r') as f:
-                    db_config = json.load(f)
-                    location = f"{db_config_path}\nYour db.config.json is: {db_config}"
+                db_config = ConfigPaths.read_db_config()
+                location = f"{db_config_path}\nYour db.config.json is: {db_config}"
             
             incorrect_values = "host name is" 
             #  determine which value in the database string is causing the error

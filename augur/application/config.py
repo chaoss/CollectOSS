@@ -20,14 +20,35 @@ class ConfigPaths:
         return ConfigPaths.config_dir() / "db.config.json"
 
     @staticmethod
+    def read_db_config() -> dict:
+        """Read and parse db.config.json."""
+        import json
+        with open(ConfigPaths.db_config(), 'r') as f:
+            return json.load(f)
+
+    @staticmethod
     def augur_config() -> Path:
         """Get path to augur.json."""
         return ConfigPaths.config_dir() / "augur.json"
 
     @staticmethod
+    def read_augur_config() -> dict:
+        """Read and parse augur.json."""
+        import json
+        with open(ConfigPaths.augur_config(), 'r') as f:
+            return json.load(f)
+
+    @staticmethod
     def view_config() -> Path:
         """Get path to config.yml."""
         return ConfigPaths.config_dir() / "config.yml"
+
+    @staticmethod
+    def read_view_config() -> dict:
+        """Read and parse config.yml."""
+        import yaml
+        with open(ConfigPaths.view_config(), 'r') as f:
+            return yaml.safe_load(f)
 
 
 import sqlalchemy as s

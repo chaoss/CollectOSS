@@ -65,8 +65,7 @@ def get_database_args_from_env():
         credentials['db_host'] = parsedArgs.hostname#read_config('Database', 'host', 'AUGUR_DB_HOST', 'localhost')
         credentials['db_port'] = parsedArgs.port#read_config('Database', 'port', 'AUGUR_DB_PORT', 5432)
     else:
-        with open(db_json_file_location, 'r') as f:
-            db_config = json.load(f)
+        db_config = ConfigPaths.read_db_config()
 
         credentials['db_user'] = db_config["user"]#read_config('Database', 'user', 'AUGUR_DB_USER', 'augur')
         credentials['db_pass'] = db_config["password"]#read_config('Database', 'password', 'AUGUR_DB_PASSWORD', 'augur')

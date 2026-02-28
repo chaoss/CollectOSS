@@ -76,8 +76,7 @@ def get_database_string() -> str:
         return augur_db_environment_var
 
 
-    with open(db_json_file_location, 'r') as f:
-        db_config = json.load(f)
+    db_config = ConfigPaths.read_db_config()
 
     db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
 
