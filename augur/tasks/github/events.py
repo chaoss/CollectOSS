@@ -118,6 +118,9 @@ class BulkGithubEventCollection(GithubEventCollection):
 
         event_batch_size = get_batch_size("event")
 
+        issue_url_to_id_map = self._get_map_from_issue_url_to_id(repo_id)
+        pr_url_to_id_map = self._get_map_from_pr_url_to_id(repo_id)
+        
         events = []
         for event in self._collect_events(repo_git, key_auth, since):
             events.append(event)
