@@ -15,8 +15,8 @@ from augur import instance_id
 from augur.application.logs import AugurLogger
 from augur.application.config import AugurConfig
 from augur.application.db.session import DatabaseSession
-from augur.application.cli import test_connection, test_db_connection 
-from augur.application.cli.backend import clear_rabbitmq_messages, raise_open_file_limit
+from augur.application.cli import test_connection, test_db_connection
+from augur.application.cli._cli_util import clear_rabbitmq_messages, raise_open_file_limit
 
 
 logger = AugurLogger("augur", reset_logfiles=False).get_logger()

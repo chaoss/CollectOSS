@@ -4,7 +4,7 @@
 import pytest
 from unittest.mock import patch
 
-from augur.application.cli.csv_utils import (
+from augur.application.cli._csv_utils import (
     validate_git_url,
     validate_positive_int,
     detect_column_order,
