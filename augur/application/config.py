@@ -3,52 +3,58 @@ from pathlib import Path
 
 
 class ConfigPaths:
-    """Centralized config path utilities.
+    """Centralized config path utilities."""
 
-    All methods are static so callers can use ConfigPaths.db_config()
-    without needing to instantiate the class.
-    """
-
-    @staticmethod
-    def config_dir() -> Path:
+    @classmethod
+    def config_dir(cls) -> Path:
         """Get config directory from CONFIG_DATADIR env var, or current directory."""
         return Path(os.getenv("CONFIG_DATADIR", "."))
 
-    @staticmethod
-    def db_config() -> Path:
-        """Get path to db.config.json."""
-        return ConfigPaths.config_dir() / "db.config.json"
-
-    @staticmethod
-    def read_db_config() -> dict:
-        """Read and parse db.config.json."""
+    @classmethod
+    def _read_json(cls, file_name: str) -> dict:
+        """Helper to read and parse a JSON configuration file."""
         import json
-        with open(ConfigPaths.db_config(), 'r') as f:
+        file_path = cls.config_dir() / file_name
+        with open(file_path, 'r') as f:
             return json.load(f)
 
-    @staticmethod
-    def augur_config() -> Path:
-        """Get path to augur.json."""
-        return ConfigPaths.config_dir() / "augur.json"
-
-    @staticmethod
-    def read_augur_config() -> dict:
-        """Read and parse augur.json."""
-        import json
-        with open(ConfigPaths.augur_config(), 'r') as f:
-            return json.load(f)
-
-    @staticmethod
-    def view_config() -> Path:
-        """Get path to config.yml."""
-        return ConfigPaths.config_dir() / "config.yml"
-
-    @staticmethod
-    def read_view_config() -> dict:
-        """Read and parse config.yml."""
+    @classmethod
+    def _read_yaml(cls, file_name: str) -> dict:
+        """Helper to read and parse a YAML configuration file."""
         import yaml
-        with open(ConfigPaths.view_config(), 'r') as f:
+        file_path = cls.config_dir() / file_name
+        with open(file_path, 'r') as f:
             return yaml.safe_load(f)
+
+    @classmethod
+    def db_config(cls) -> Path:
+        """Get path to db.config.json."""
+        return cls.config_dir() / "db.config.json"
+
+    @classmethod
+    def read_db_config(cls) -> dict:
+        """Read and parse db.config.json."""
+        return cls._read_json("db.config.json")
+
+    @classmethod
+    def augur_config(cls) -> Path:
+        """Get path to augur.json."""
+        return cls.config_dir() / "augur.json"
+
+    @classmethod
+    def read_augur_config(cls) -> dict:
+        """Read and parse augur.json."""
+        return cls._read_json("augur.json")
+
+    @classmethod
+    def view_config(cls) -> Path:
+        """Get path to config.yml."""
+        return cls.config_dir() / "config.yml"
+
+    @classmethod
+    def read_view_config(cls) -> dict:
+        """Read and parse config.yml."""
+        return cls._read_yaml("config.yml")
 
 
 import sqlalchemy as s
