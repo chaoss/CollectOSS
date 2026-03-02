@@ -218,8 +218,14 @@ class Contributor(Base):
         String,
         comment="populated with the github user name for github originated data. ",
     )
-    gh_url = Column(String)
-    gh_html_url = Column(String)
+    gh_url = Column(
+        String,
+        comment="Convenience url to aid in manually debugging database and sanity checking against GitHub API results (tools like dbeaver make links like this clickable). May be removed in the future."
+    )
+    gh_html_url = Column(
+        String,
+        comment="Convenience url to aid in manually debugging database and sanity checking against GitHub API results (tools like dbeaver make links like this clickable). May be removed in the future."
+    )
     gh_node_id = Column(String)
     gh_avatar_url = Column(String)
     gh_gravatar_id = Column(String)
