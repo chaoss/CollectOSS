@@ -1,22 +1,22 @@
 /augur/cli/ @sgoggins
-/augur/metrics/ @sgoggins @sgoggins
+/augur/metrics/ @sgoggins
 /augur/housekeeper/ @sgoggins
-/augur/server.py @sgoggins @sgoggins
-/augur/application.py @sgoggins @sgoggins @sgoggins
-/augur/routes/ @sgoggins @sgoggins @sgoggins
+/augur/server.py @sgoggins
+/augur/application.py @sgoggins
+/augur/routes/ @sgoggins
 
-/frontend/ @sgoggins @sgoggins
+/frontend/ @sgoggins
 
-/schema/ @sgoggins @sgoggins
+/schema/ @sgoggins
 
 /schema/generate @sgoggins 
 
-/workers/ @sgoggins @sgoggins @sgoggins
+/workers/ @sgoggins
 
-/README.md @sgoggins @sgoggins
-/CONTRIBUTING.md @sgoggins @sgoggins
-/LICENSE @sgoggins @sgoggins
-/CODE_OF_CONDUCT.md @sgoggins @sgoggins
+/README.md @sgoggins
+/CONTRIBUTING.md @sgoggins
+/LICENSE @sgoggins
+/CODE_OF_CONDUCT.md @sgoggins
 
 /tests/ @sgoggins
 /util/docker @sgoggins
@@ -29,4 +29,4 @@
 /Makefile @sgoggins
 /tox.ini @sgoggins
 *requirements.txt @sgoggins
-/setup.py @sgoggins @sgoggins
+/setup.py @sgoggins
