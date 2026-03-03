@@ -3,6 +3,8 @@
 /augur/housekeeper/ @sgoggins
 /augur/server.py @sgoggins
 /augur/application.py @sgoggins
+/augur/application/config.py @MoralCode
+
 /augur/routes/ @sgoggins
 
 /frontend/ @sgoggins
