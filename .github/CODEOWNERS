@@ -1,6 +1,9 @@
 # API
 /augur/api/ @sgoggins
 
+/augur/api/view @Ulincsys 
+/augur/api/routes/user.py @Ulincsys 
+
 # CLI
 /augur/cli/ @sgoggins
 
