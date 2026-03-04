@@ -24,7 +24,7 @@ from augur.application.db.session import DatabaseSession
 from sqlalchemy import update
 from datetime import datetime
 from augur.application.db.models import Repo
-from augur.application.cli.csv_utils import (
+from augur.application.cli._csv_utils import (
     process_repo_csv,
     process_repo_group_csv,
 )

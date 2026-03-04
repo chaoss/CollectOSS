@@ -1,5 +1,6 @@
 #SPDX-License-Identifier: MIT
 from augur.tasks.github.util.github_task_session import *
+from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
 from augur.application.db.models import *
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.gh_graphql_entities import request_graphql_dict
@@ -159,7 +160,7 @@ def fetch_data(key_auth, logger, github_url, repo_id, tag_only = False):
 
     owner, repo = get_owner_repo(github_url)
 
-    url = 'https://api.github.com/graphql'
+    url = GithubGraphQlDataAccess.base_url()
 
     query = get_query(logger, owner, repo, tag_only)
 
