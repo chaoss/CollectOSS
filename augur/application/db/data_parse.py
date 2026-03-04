@@ -649,7 +649,7 @@ def extract_needed_contributor_data(contributor, tool_source, tool_version, data
     if not contributor:
         return None
 
-    cntrb_id = GithubUUID()   
+    cntrb_id = GithubUUID()
     cntrb_id["user"] = contributor["id"]
 
     contributor = {
