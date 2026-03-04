@@ -56,7 +56,7 @@ def process_contributors():
             continue
 
 
-        new_contributor_data = extract_github_contributor(data)
+        new_contributor_data = extract_github_contributor(data, tool_source, tool_version, data_source)
         
 
         contributor_dict.update(new_contributor_data)
