@@ -10,7 +10,7 @@ from augur.tasks.github.util.github_data_access import GithubDataAccess
 
 
 
-def query_github_contributors(logger, key_auth, github_url):
+def query_github_contributors(logger, key_auth, github_url, tool_source:str, tool_version:str, data_source:str):
 
     """ Data collection function
     Query the GitHub API for contributors
@@ -63,7 +63,7 @@ def query_github_contributors(logger, key_auth, github_url):
 
             contributor = github_data_access.get_resource(cntrb_url)
 
-            cntrb = extract_github_contributor(contributor)
+            cntrb = extract_github_contributor(contributor, tool_source, tool_version, data_source)
 
             #insert cntrb to table.
             #session.logger.info(f"Contributor:  {cntrb}  \n")
@@ -76,8 +76,8 @@ def query_github_contributors(logger, key_auth, github_url):
 
 # Get all the committer data for a repo.
 # Used by facade in facade03analyzecommit
-def grab_committer_list(logger, key_auth, repo_git, platform="github"):
+def grab_committer_list(logger, key_auth, repo_git, tool_source: str, tool_version: str, data_source: str, platform="github" ):
 
     # Create API endpoint from repo_id
-    query_github_contributors(logger, key_auth, repo_git)
+    query_github_contributors(logger, key_auth, repo_git, tool_source, tool_version, data_source)
     
