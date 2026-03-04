@@ -655,7 +655,12 @@ def extract_needed_contributor_data(contributor, tool_source, tool_version, data
     cntrb_id["user"] = contributor["id"]
     cntrb_id["platform"] = platform_id
 
+    # Extract all available profile fields using .get() so we never miss or crash on
+    # optional keys. Email is only present when the user has made it public or when
+    # the request is appropriately authenticated (see GitHub API docs).
     email = contributor.get('email')
+
+    # TODO get and store an owner id
 
     contributor = {
             "cntrb_id": cntrb_id.to_UUID(),
