@@ -2,6 +2,12 @@ from __future__ import annotations
 
 import uuid
 import typing
+from enum import Enum
+
+class AugurPlatformType(Enum):
+    UNRESOLVEABLE = 0
+    GITHUB = 1
+    GITLAB = 2
 
 class ContributorUUID:
     struct = {
