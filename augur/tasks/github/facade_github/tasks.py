@@ -9,6 +9,7 @@ from augur.tasks.github.facade_github.core import *
 from augur.application.db.lib import execute_sql, get_contributor_aliases_by_email, get_unresolved_commit_emails_by_email, get_repo_by_repo_git, batch_insert_contributors, get_batch_size
 from augur.application.db.lib import get_session, execute_session_query
 from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
+from augur.application.db.lib import bulk_insert_dicts
 
 
 
@@ -70,6 +71,20 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
     
         if login == None or login == "":
             logger.error("Failed to get login from supplemental data!")
+
+            unresolved = {
+                "email": email,
+                "name": name,
+            }
+            logger.debug(f"No more username resolution methods available. Inserting data into unresolved table: {unresolved}")
+
+            try:
+                unresolved_natural_keys = ['email']
+                bulk_insert_dicts(logger, unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
+            except Exception as e:
+                logger.error(
+                    f"Could not create new unresolved email {email}. Error: {e}")
+            # move on to the next contributor
             continue
 
         url = ("https://api.github.com/users/" + login)
