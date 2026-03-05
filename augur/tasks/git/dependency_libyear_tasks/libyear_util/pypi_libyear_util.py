@@ -70,7 +70,7 @@ def get_latest_version(data):
     return data['info']['version']
 
 
-def get_release_date(data, version):
+def get_release_date(data, version, logger):
     if not data:
         logger.info('invalid data')
         return None
