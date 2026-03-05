@@ -23,6 +23,8 @@ from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
+from augur.application.config import AugurConfig
+from augur.application.db import get_engine
 from augur.application.logs import AugurLogger
 from augur.application.service_manager import AugurServiceManager, cleanup_collection_status_and_rabbit, clean_collection_status
 from augur.application.db.lib import get_value
@@ -34,6 +36,39 @@ from keyman.KeyClient import KeyClient, KeyPublisher
 reset_logs = os.getenv("AUGUR_RESET_LOGS", 'True').lower() in ('true', '1', 't', 'y', 'yes')
 
 logger = AugurLogger("augur", reset_logfiles=reset_logs).get_logger()
+
+def create_git_credential_file(github_key, gitlab_key):
+    if 'AUGUR_GITHUB_USERNAME' in os.environ:
+        print("Found AUGUR_GITHUB_USERNAME env variable")
+        github_username = os.environ.get("AUGUR_GITHUB_USERNAME")
+    else:
+        github_username = input("Please input your GitHub username")
+    
+    if 'AUGUR_GITLAB_USERNAME' in os.environ:
+        print("Found AUGUR_GITLAB_USERNAME env variable")
+        gitlab_username = os.environ.get("AUGUR_GITLAB_USERNAME")
+    else:
+        gitlab_username = input("Please input your GitHub username")
+    
+
+    engine = get_engine()
+    with DatabaseSession(logger, engine) as session:
+        config = AugurConfig(logger, session)
+    
+        worker_options = config.get_section("Facade")
+        repo_base_directory = worker_options['repo_directory']
+    
+    credential_file_text = f"""
+        https://{github_username}:{github_key}@github.com
+        https://{gitlab_username}:{gitlab_key}@gitlab.com
+    """
+
+    with open("/tmp/.git-credentials", "w") as f:
+        f.write(credential_file_text)
+    
+    os.symlink("/tmp/.git-credentials", f"{repo_base_directory}/.git-credentials")
+    
+
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 @click.pass_context
@@ -168,7 +203,10 @@ def start(ctx, disable_collection, development, pidfile, port):
 
             clean_collection_status(session)
             assign_orphan_repos_to_default_user(session)
-        
+
+        #Create git credentials file
+        create_git_credential_file(ghkeyman.keys[0], glkeyman.keys[0])
+
         create_collection_status_records.si().apply_async()
         time.sleep(3)
 
