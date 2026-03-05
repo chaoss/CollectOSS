@@ -343,12 +343,12 @@ def fetch_username_from_email(logger, auth, commit) -> dict | None:
 
 
 def get_login_with_supplemental_data(logger, auth, commit_data):
-    """Return the login given commit data using the supplemental data in the commit (email and name).
+    """Return the login given commit data using the supplemental data in the commit (email).
 
     Args:
         logger: Logger instance.
         auth: GithubRandomKeyAuth instance for API authentication.
-        commit_data (dict): Commit record containing 'email_raw' and 'name'.
+        commit_data (dict): Commit record containing 'email_raw'.
 
     Returns:
         str: GitHub login username on success. None if unresolved.
@@ -358,38 +358,12 @@ def get_login_with_supplemental_data(logger, auth, commit_data):
     # Is None upon failure.
     login_json = fetch_username_from_email(logger,auth,commit_data)
 
-    # Check if the email result got anything, if it failed, place in unresolved and try a name search.
-    if login_json is None or 'total_count' not in login_json or login_json['total_count'] == 0:
-        
-        unresolved = {
-            "email": commit_data['email_raw'],
-            "name": commit_data['name'],
-        }
-        logger.debug(f"Inserting data to unresolved: {unresolved}")
-
-        try:
-            
-            unresolved_natural_keys = ['email']
-            bulk_insert_dicts(logger, unresolved, UnresolvedCommitEmail, unresolved_natural_keys)
-        except Exception as e:
-            logger.error(
-                f"Could not create new unresolved email {unresolved['email']}. Error: {e}")
-
-        logger.warning(
-            "Could not resolve the username from the email. Trying a name only search...")
-        try:
-            url = create_endpoint_from_name(commit_data)
-        except Exception as e:
-            logger.warning(
-                f"Couldn't resolve name url with given data. Reason: {e}")
-            return None
-        
-        login_json = GithubDataAccess(auth, logger, "search").get_resource(url)
-
     # total_count is the count of username's found by the endpoint.
+    # This Checks if the email result got anything.
+    # If it fails, dont place it in unresolved yet as we may add more steps later
     if login_json is None or 'total_count' not in login_json:
         logger.error(
-            "Search query returned an empty response, moving on...\n")
+            "Search query returned an empty response. Could not resolve the username from the email. Moving on...\n")
         return None
     if login_json['total_count'] == 0:
         logger.error(
