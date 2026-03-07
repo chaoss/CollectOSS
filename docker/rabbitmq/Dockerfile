@@ -23,3 +23,5 @@ RUN apk add --no-cache python3
 COPY docker/rabbitmq/update_config.py /
 
 RUN exec python3 update_config.py
+
+EXPOSE 15672

@@ -45,6 +45,8 @@ services:
       - RABBIT_MQ_DEFAULT_USER=${AUGUR_RABBITMQ_USERNAME:-augur}
       - RABBIT_MQ_DEFAULT_PASSWORD=${AUGUR_RABBITMQ_PASSWORD:-password123}
       - RABBIT_MQ_DEFAULT_VHOST=${AUGUR_RABBITMQ_VHOST:-augur_vhost}
+    ports:
+      - "15672:15672"
     networks:
       - augur
 
