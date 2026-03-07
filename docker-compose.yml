@@ -94,6 +94,34 @@ services:
       - command: chmod 777 /facade /logs /config /cache
         user: root
   
+  augur-collection-scheduler:
+    image: augur-new:latest
+    build:
+      context: .
+      dockerfile: ./docker/backend/${AUGUR_TARGET:-Dockerfile}
+    volumes:
+      - cache:/cache:rw
+      - config:/config:rw
+      - facade:/facade:rw
+      - logs:/logs:rw
+    restart: unless-stopped
+    environment:
+      - "AUGUR_DB=postgresql+psycopg2://${AUGUR_DB_USER:-augur}:${AUGUR_DB_PASSWORD:-augur}@augur-db:5432/augur"
+      - AUGUR_FACADE_REPO_DIRECTORY=/facade
+      - RABBITMQ_CONN_STRING=amqp://${AUGUR_RABBITMQ_USERNAME:-augur}:${AUGUR_RABBITMQ_PASSWORD:-password123}@rabbitmq:5672/${AUGUR_RABBITMQ_VHOST:-augur_vhost}
+      - CONFIG_LOCATION=/config/config.yml
+      - CONFIG_DATADIR=/config
+      - CACHE_DATADIR=/cache
+      - CACHE_LOCKDIR=/cache
+    command: ["augur", "collection", "improved", "scheduler", "--interval", "120"]
+    depends_on:
+      - augur
+      - augur-db
+      - rabbitmq
+    networks:
+      - augur
+    user: 2345:2345
+
   # Flower is a UI that helps more easily monitor running tasks for celery workers.
   # This wont show you every error from the entire augur system, but it should show most of them.
   # uncomment the section below to use flower

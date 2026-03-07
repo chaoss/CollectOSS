@@ -312,6 +312,24 @@ def clean_collection_status(session):
     """))
     #TODO: write timestamp for currently running repos.
 
+@cli.group("improved", short_help="Commands for the improved (non-Celery) collection system")
+def improved():
+    pass
+
+
+@improved.command("scheduler")
+@click.option("--interval", type=int, default=None,
+    help="Tick interval in seconds. Reads Tasks.scheduler_interval_seconds from config if not set.")
+def improved_scheduler(interval):
+    """Start the improved collection scheduler loop."""
+    if interval is None:
+        interval = get_value("Tasks", "scheduler_interval_seconds") or 30
+        interval = int(interval)
+    logger.info(f"Launching improved collection scheduler with interval={interval}s")
+    from augur.improved_collection.runner import run_scheduler
+    run_scheduler(interval)
+
+
 def assign_orphan_repos_to_default_user(session):
     query = s.sql.text("""
         SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.user_repos)

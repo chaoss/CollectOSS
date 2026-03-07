@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import Callable
 
 import pika
-from cloudevents.http import CloudEvent, to_structured, from_structured
+from cloudevents.http import CloudEvent, to_structured, from_http
 
 
 class RabbitClient:
@@ -87,7 +87,7 @@ class RabbitClient:
 
         def _on_message(ch, method, properties, body):
             try:
-                event = from_structured(properties.headers or {}, body)
+                event = from_http(body, properties.headers or {})
                 handler(event._attributes, event.data)
                 if not auto_ack:
                     ch.basic_ack(method.delivery_tag)
