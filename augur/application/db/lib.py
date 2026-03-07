@@ -48,8 +48,29 @@ def get_value(section_name: str, setting_name: str) -> Optional[Any]:
         setting_dict = convert_type_of_value(setting_dict, logger)
 
         return setting_dict["value"]
-    
-    
+
+
+def get_batch_size(task_type: str = None) -> int:
+    """Get batch size for a task, with fallback to default.
+
+    Args:
+        task_type: Optional task type (e.g., "event", "message").
+                   If provided and a specific config exists for it,
+                   that value is used. Otherwise falls back to default_batch_size.
+
+    Returns:
+        Batch size integer (default: 1000)
+    """
+    if task_type:
+        specific_key = f"github_{task_type}_batch_size"
+        value = get_value("Tasks", specific_key)
+        if value is not None:
+            return int(value)
+
+    default_value = get_value("Tasks", "default_batch_size")
+    return int(default_value) if default_value is not None else 1000
+
+
 def execute_sql(sql_text):
 
     engine = get_engine()
@@ -496,14 +517,16 @@ def get_contributor_aliases_by_email(email):
     with get_session() as session:
 
         return session.query(ContributorsAlias).filter_by(alias_email=email).all()
-    
-def get_unresolved_commit_emails_by_name(name):
+
+def get_unresolved_commit_emails_by_email(email):
 
     with get_session() as session:
 
-        return session.query(UnresolvedCommitEmail).filter_by(name=name).all()
+        return session.query(UnresolvedCommitEmail).filter_by(email=email).all()
  
 def get_contributors_by_full_name(full_name):
+    if not full_name or full_name == '':
+        return None 
 
     with get_session() as session:
 

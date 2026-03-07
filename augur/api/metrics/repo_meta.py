@@ -347,12 +347,15 @@ def cii_best_practices_badge(repo_group_id, repo_id=None):
 
 @register_metric()
 def forks(repo_group_id, repo_id=None):
-    """
-    Returns a time series of the fork count
+    """CHAOSS Technical Fork Metric (Time Series)
+
+    Measures the number of technical forks of a repository on the same code development platform over time.
+    A technical fork is a platform-native fork (e.g., a GitHub fork),excluding local clones.
+    Canonical definition: https://chaoss.community/?p=3431
 
     :param repo_group_id: The repository's repo_group_id
     :param repo_id: The repository's repo_id, defaults to None
-    :return: Time series of fork count
+    :return: Time series of technical fork counts
     """
     if not repo_id:
         forks_SQL = s.sql.text("""
@@ -389,13 +392,17 @@ def forks(repo_group_id, repo_id=None):
 
 @register_metric()
 def fork_count(repo_group_id, repo_id=None):
-    """
-    Returns the latest fork count
+    """CHAOSS Technical Fork Metric (Latest Value)
+
+    Returns the most recent count of technical forks for a repository.
+    A technical fork is a platform-native fork on the same code development platform.
+    Canonical definition: https://chaoss.community/?p=3431
 
     :param repo_group_id: The repository's repo_group_id
     :param repo_id: The repository's repo_id, defaults to None
-    :return: Fork count
+    :return: Latest technical fork count
     """
+
     if not repo_id:
         fork_count_SQL = s.sql.text("""
             SELECT a.repo_id, repo_name, a.fork_count AS forks

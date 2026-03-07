@@ -10,8 +10,10 @@ from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.tasks.github.util.util import get_owner_repo
 from augur.application.db.models import PullRequest, Message, Issue, PullRequestMessageRef, IssueMessageRef, Contributor, Repo, CollectionStatus
 from augur.application.db import get_engine, get_session
-from augur.application.db.lib import get_core_data_last_collected
+from augur.application.db.lib import get_core_data_last_collected, get_batch_size
 from sqlalchemy.sql import text
+
+
 
 platform_id = 1
 MESSAGE_BATCH_SIZE = 200
@@ -95,6 +97,8 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
 
 def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger, key_auth, task_name, augur_db, since, issue_url_to_id_map, pr_issue_url_to_id_map) -> None:
 
+    message_batch_size = get_batch_size("message")
+
     owner, repo = get_owner_repo(repo_git)
 
     # define logger for task
@@ -136,9 +140,9 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
         except UrlNotFoundException:
             logger.info(f"{task_name}: PR or issue comment url of {comment_url} returned 404. Skipping.")
             skipped_urls += 1
-       
-        if len(all_data) >= MESSAGE_BATCH_SIZE:
-            process_messages(all_data, task_name, repo_id, logger, augur_db, issue_url_to_id_map, pr_issue_url_to_id_map)
+
+        if len(all_data) >= message_batch_size:
+            process_messages(all_data, task_name, repo_id, logger, augur_db)
             all_data.clear()
 
     if len(all_data) > 0:
@@ -149,7 +153,6 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
 
 def process_messages(messages, task_name, repo_id, logger, augur_db, issue_url_to_id_map, pr_issue_url_to_id_map):
 
-    tool_source = "Pr comment task"
     tool_version = "2.0"
     data_source = "Github API"
 
@@ -175,6 +178,12 @@ def process_messages(messages, task_name, repo_id, logger, augur_db, issue_url_t
                 logger.info(f"{task_name}: Processing {message_len-index} messages")
 
         related_pr_or_issue_found = False
+
+        # determine whether this is an issue or PR message so we can set the correct tool_source in metadata
+        if is_issue_message(message["html_url"]):
+            tool_source = "Issue comment task"
+        else:
+            tool_source = "Pr comment task"
 
         # this adds the cntrb_id to the message data
         # the returned contributor will be added to the contributors list later, if the related issue or pr are found

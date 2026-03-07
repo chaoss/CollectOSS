@@ -14,7 +14,8 @@ from augur.tasks.github.util.github_task_session import GithubTaskManifest
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.util.worker_util import remove_duplicate_dicts
 from augur.application.db.models import PullRequestEvent, IssueEvent, Contributor, Repo
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id, update_issue_closed_cntrbs_by_repo_id, get_session, get_engine, get_core_data_last_collected, batch_insert_contributors
+from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id, update_issue_closed_cntrbs_by_repo_id, get_session, get_engine, get_core_data_last_collected, batch_insert_contributors, get_batch_size
+
 
 
 platform_id = 1
@@ -115,16 +116,15 @@ class BulkGithubEventCollection(GithubEventCollection):
         owner, repo = get_owner_repo(repo_git)
         self.repo_identifier = f"{owner}/{repo}"
 
-        # Build mappings once before processing any events
-        issue_url_to_id_map = self._get_map_from_issue_url_to_id(repo_id)
-        pr_url_to_id_map = self._get_map_from_pr_url_to_id(repo_id)
+        event_batch_size = get_batch_size("event")
 
         events = []
         for event in self._collect_events(repo_git, key_auth, since):
             events.append(event)
 
-            if len(events) >= 500:
-                self._process_events(events, repo_id, issue_url_to_id_map, pr_url_to_id_map)
+            # making this a decent size since process_events retrieves all the issues and prs each time
+            if len(events) >= event_batch_size:
+                self._process_events(events, repo_id)
                 events.clear()
     
         if events:
@@ -275,6 +275,8 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
     def _collect_and_process_issue_events(self, owner, repo, repo_id, key_auth, since):
 
+        event_batch_size = get_batch_size("event")
+
         engine = get_engine()
 
         with engine.connect() as connection:
@@ -325,18 +327,20 @@ class ThoroughGithubEventCollection(GithubEventCollection):
             except UrlNotFoundException as e:
                 self._logger.info(f"{self.repo_identifier}: Issue with number of {issue_number} returned 404 on event data. Skipping.")
 
-            if len(events) > 500:
+            if len(events) >= event_batch_size:
                 self._insert_contributors(contributors)
                 self._insert_issue_events(events)
                 events.clear()
-        
+
         if events:
             self._insert_contributors(contributors)
             self._insert_issue_events(events)
             events.clear()
-            
+
 
     def _collect_and_process_pr_events(self, owner, repo, repo_id, key_auth, since):
+
+        event_batch_size = get_batch_size("event")
 
         engine = get_engine()
 
@@ -387,7 +391,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
                 self._logger.info(f"{self.repo_identifier}: PR with number of {pr_number} returned 404 on event data. Skipping.")
                 continue
 
-            if len(events) > 500:
+            if len(events) >= event_batch_size:
                 self._insert_contributors(contributors)
                 self._insert_pr_events(events)
                 events.clear()
