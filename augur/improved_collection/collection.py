@@ -692,20 +692,15 @@ class AugurCollection:
         Returns:
             List of repo_ids that need initial collection.
         """
-        new_repo_sql = text("""    
-        SELECT DISTINCT rc.repo_id
-        FROM repo_collections rc
-        LEFT JOIN task_runs tr 
-            ON tr.collection_record_id = rc.id
-        GROUP BY rc.repo_id
-        HAVING COUNT(*) = 0
-        OR NOT EXISTS (
+        new_repo_sql = text("""
+        SELECT r.repo_id
+        FROM augur_data.repo r
+        WHERE NOT EXISTS (
             SELECT 1
-            FROM repo_collections rc2
-            JOIN task_runs tr2 ON tr2.collection_record_id = rc2.id
-            WHERE rc2.repo_id = rc.repo_id
-                AND tr2.state = 'Complete'
-       );""")
+            FROM repo_collections rc
+            WHERE rc.repo_id = r.repo_id
+                AND rc.state = 'Complete'
+        );""")
         
         with DatabaseSession(logger) as session:
             result = session.fetchall_data_from_sql_text(new_repo_sql)
