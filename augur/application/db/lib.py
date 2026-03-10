@@ -524,14 +524,6 @@ def get_unresolved_commit_emails_by_email(email):
 
         return session.query(UnresolvedCommitEmail).filter_by(email=email).all()
  
-def get_contributors_by_full_name(full_name):
-    if not full_name or full_name == '':
-        return None 
-
-    with get_session() as session:
-
-        return session.query(Contributor).filter_by(cntrb_full_name=full_name).all()
-    
 def get_contributors_by_github_user_id(id):
 
     with get_session() as session:
