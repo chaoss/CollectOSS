@@ -52,7 +52,7 @@ def process_contributors():
         data = retrieve_dict_data(url, key_auth, logger)
 
         if data is None:
-            print(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
+            logger.info(f"Unable to get contributor data for: {contributor_dict['cntrb_login']}")
             continue
 
 
