@@ -13,6 +13,7 @@ import signal
 import uuid
 import traceback
 import requests
+import tempfile
 from redis.exceptions import ConnectionError as RedisConnectionError
 
 from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
@@ -63,8 +64,16 @@ def create_git_credential_file(github_key, gitlab_key):
         https://{gitlab_username}:{gitlab_key}@gitlab.com
     """
 
-    with open("/tmp/.git-credentials", "w") as f:
+    link_path = f"{repo_base_directory}/.git-credentials"
+    fd, temp_path = tempfile.mkstemp(prefix="myapp_", suffix=".tmp")
+    with os.fdopen(fd, "w") as f:
         f.write(credential_file_text)
+    
+    # Create a temporary symlink
+    tmp_link = link_path + ".new"
+    os.symlink(temp_path, tmp_link)
+    # Atomically swap it into place
+    os.replace(tmp_link, link_path)
     
     os.symlink("/tmp/.git-credentials", f"{repo_base_directory}/.git-credentials")
 
