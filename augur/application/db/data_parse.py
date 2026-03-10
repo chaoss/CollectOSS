@@ -649,38 +649,45 @@ def extract_needed_contributor_data(contributor, tool_source, tool_version, data
     if not contributor:
         return None
 
-    cntrb_id = GithubUUID()   
-    cntrb_id["user"] = contributor["id"]
+    cntrb_id = GithubUUID()
+    cntrb_id["user"] = int(contributor["id"])
+
+    # Extract all available profile fields using .get() so we never miss or crash on
+    # optional keys. Email is only present when the user has made it public or when
+    # the request is appropriately authenticated (see GitHub API docs).
+    email = contributor.get('email')
+
+    # TODO get and store an owner id
 
     contributor = {
             "cntrb_id": cntrb_id.to_UUID(),
             "cntrb_login": contributor['login'],
-            "cntrb_created_at": contributor['created_at'] if 'created_at' in contributor else None,
-            "cntrb_email": contributor['email'] if 'email' in contributor else None,
-            "cntrb_company": contributor['company'] if 'company' in contributor else None,
-            "cntrb_location": contributor['location'] if 'location' in contributor else None,
+            "cntrb_created_at": contributor.get('created_at'),
+            "cntrb_email": email,
+            "cntrb_company": contributor.get('company'),
+            "cntrb_location": contributor.get('location'),
             # "cntrb_type": , dont have a use for this as of now ... let it default to null
-            "cntrb_canonical": contributor['email'] if 'email' in contributor else None,
+            "cntrb_canonical": email,
+            "cntrb_full_name": contributor.get('name'),
             "gh_user_id": contributor['id'],
             "gh_login": str(contributor['login']),  ## cast as string by SPG on 11/28/2021 due to `nan` user
-            "gh_url": contributor['url'],
-            "gh_html_url": contributor['html_url'],
-            "gh_node_id": contributor['node_id'],
-            "gh_avatar_url": contributor['avatar_url'],
-            "gh_gravatar_id": contributor['gravatar_id'],
-            "gh_followers_url": contributor['followers_url'],
-            "gh_following_url": contributor['following_url'],
-            "gh_gists_url": contributor['gists_url'],
-            "gh_starred_url": contributor['starred_url'],
-            "gh_subscriptions_url": contributor['subscriptions_url'],
-            "gh_organizations_url": contributor['organizations_url'],
-            "gh_repos_url": contributor['repos_url'],
-            "gh_events_url": contributor['events_url'],
-            "gh_received_events_url": contributor['received_events_url'],
-            "gh_type": contributor['type'],
-            "gh_site_admin": contributor['site_admin'],
-            "cntrb_last_used" : None if 'updated_at' not in contributor else contributor['updated_at'],
-            "cntrb_full_name" : None if 'name' not in contributor else contributor['name'],
+            "gh_url": contributor.get('url'),
+            "gh_html_url": contributor.get('html_url'),
+            "gh_node_id": contributor.get('node_id'),
+            "gh_avatar_url": contributor.get('avatar_url'),
+            "gh_gravatar_id": contributor.get('gravatar_id'),
+            "gh_followers_url": contributor.get('followers_url'),
+            "gh_following_url": contributor.get('following_url'),
+            "gh_gists_url": contributor.get('gists_url'),
+            "gh_starred_url": contributor.get('starred_url'),
+            "gh_subscriptions_url": contributor.get('subscriptions_url'),
+            "gh_organizations_url": contributor.get('organizations_url'),
+            "gh_repos_url": contributor.get('repos_url'),
+            "gh_events_url": contributor.get('events_url'),
+            "gh_received_events_url": contributor.get('received_events_url'),
+            "gh_type": contributor.get('type'),
+            "gh_site_admin": contributor.get('site_admin'),
+            "cntrb_last_used" : contributor.get('updated_at'),
             "tool_source": tool_source,
             "tool_version": tool_version,
             "data_source": data_source
