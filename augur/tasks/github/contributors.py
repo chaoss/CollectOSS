@@ -12,6 +12,7 @@ from augur.application.db.data_parse import extract_needed_contributor_data as e
 
 from augur.application.db.lib import bulk_insert_dicts, get_session, batch_insert_contributors
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+import json
 
 
 
