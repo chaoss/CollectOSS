@@ -49,7 +49,7 @@ def create_git_credential_file(github_key, gitlab_key):
         print("Found AUGUR_GITLAB_USERNAME env variable")
         gitlab_username = os.environ.get("AUGUR_GITLAB_USERNAME")
     else:
-        gitlab_username = input("Please input your GitHub username")
+        gitlab_username = input("Please input your GitLab username")
     
 
     engine = get_engine()
