@@ -74,8 +74,6 @@ def create_git_credential_file(github_key, gitlab_key):
     os.symlink(temp_path, tmp_link)
     # Atomically swap it into place
     os.replace(tmp_link, link_path)
-    
-    os.symlink("/tmp/.git-credentials", f"{repo_base_directory}/.git-credentials")
 
     facade_credential_store = f"git config --global credential.helper \"store --file {repo_base_directory}/.git-credentials\""
     subprocess.Popen(facade_credential_store.split(" "))
