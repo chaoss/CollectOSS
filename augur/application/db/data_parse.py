@@ -645,8 +645,6 @@ def extract_needed_message_data(comment: dict, platform_id: int, repo_id: int, t
     return dict_data
 
 def extract_needed_contributor_data(contributor, tool_source, tool_version, data_source):
-    # Set platform id to 1 since it is a github method
-    platform_id = 1
 
     if not contributor:
         return None
