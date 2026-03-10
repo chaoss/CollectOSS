@@ -18,7 +18,7 @@ def process_contributors():
 
     logger = logging.getLogger(process_contributors.__name__)
 
-    tool_source = "Contributors task"
+    tool_source = "Process Contributors task"
     tool_version = "2.0"
     data_source = "Github API"
 
@@ -109,13 +109,17 @@ def retrieve_dict_data(url: str, key_auth, logger):
 @celery.task(base=AugurCoreRepoCollectionTask, bind=True)
 def grab_comitters(self, repo_git,platform="github"):
 
+    tool_source = "Committers task"
+    tool_version = "1.0"
+    data_source = "Github API"
+
     engine = self.app.engine
 
     logger = logging.getLogger(grab_comitters.__name__)
 
     try:
         key_auth = GithubRandomKeyAuth(logger)
-        grab_committer_list(logger, key_auth, repo_git, platform)
+        grab_committer_list(logger, key_auth, repo_git, tool_source, tool_version, data_source, platform)
     except Exception as e:
         logger.error(f"Could not grab committers from github endpoint!\n Reason: {e} \n Traceback: {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
