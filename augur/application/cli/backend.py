@@ -67,6 +67,9 @@ def create_git_credential_file(github_key, gitlab_key):
         f.write(credential_file_text)
     
     os.symlink("/tmp/.git-credentials", f"{repo_base_directory}/.git-credentials")
+
+    facade_credential_store = f"git config --global credential.helper \"store --file {repo_base_directory}/.git-credentials\""
+    subprocess.Popen(facade_credential_store.split(" "))
     
 
 
@@ -204,7 +207,7 @@ def start(ctx, disable_collection, development, pidfile, port):
             clean_collection_status(session)
             assign_orphan_repos_to_default_user(session)
 
-        #Create git credentials file
+        #Create git credentials file and store git credentials
         create_git_credential_file(ghkeyman.keys[0], glkeyman.keys[0])
 
         create_collection_status_records.si().apply_async()
