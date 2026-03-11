@@ -96,9 +96,7 @@ services:
   
   augur-collection-scheduler:
     image: augur-new:latest
-    build:
-      context: .
-      dockerfile: ./docker/backend/${AUGUR_TARGET:-Dockerfile}
+    pull_policy: never
     volumes:
       - cache:/cache:rw
       - config:/config:rw
@@ -113,7 +111,7 @@ services:
       - CONFIG_DATADIR=/config
       - CACHE_DATADIR=/cache
       - CACHE_LOCKDIR=/cache
-    command: ["augur", "collection", "improved", "scheduler", "--interval", "120"]
+    command: ["augur", "collection", "improved", "scheduler", "--interval", "30"]
     depends_on:
       - augur
       - augur-db

@@ -40,7 +40,12 @@ def upgrade():
             {
                 "task_name": "task_2",
                 "task_type": "secondary",
-                "depends_on": ["task_1"]
+                "depends_on": []
+            },
+            {
+                "task_name": "task_3",
+                "task_type": "secondary",
+                "depends_on": ["task_1", "task_2"]
             }
         ]
     }

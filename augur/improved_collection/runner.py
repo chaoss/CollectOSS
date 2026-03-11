@@ -3,6 +3,9 @@ import signal
 import sys
 import time
 
+from augur.application.db.lib import get_value
+from augur.improved_collection.rabbit_client import RabbitClient
+
 logger = logging.getLogger(__name__)
 _running = True
 
@@ -15,7 +18,7 @@ def _configure_stdout_logging():
 
 def _handle_shutdown(signum, frame):
     global _running
-    logger.info(f"Received {signal.Signals(signum).name} — shutting down after current tick")
+    print(f"Received {signal.Signals(signum).name} — shutting down after current tick", flush=True)
     _running = False
 
 
@@ -24,19 +27,25 @@ def run_scheduler(interval_seconds: int):
     _configure_stdout_logging()
     signal.signal(signal.SIGTERM, _handle_shutdown)
     signal.signal(signal.SIGINT, _handle_shutdown)
-    logger.info(f"Improved collection scheduler starting — interval={interval_seconds}s")
+    print(f"Improved collection scheduler starting — interval={interval_seconds}s", flush=True)
+
+    amqp_url = get_value("RabbitMQ", "connection_string")
+    rabbit_client = RabbitClient(amqp_url)
+
     tick = 0
     while _running:
         tick += 1
-        logger.info(f"[tick={tick}] Scheduler tick starting")
+        print(f"[tick={tick}] Scheduler tick starting", flush=True)
         try:
             from augur.improved_collection.scheduler import schedule_collection
-            schedule_collection()
-            logger.info(f"[tick={tick}] Scheduler tick complete")
-        except Exception:
-            logger.exception(f"[tick={tick}] schedule_collection() raised an unhandled exception — will retry")
+            schedule_collection(rabbit_client)
+            print(f"[tick={tick}] Scheduler tick complete", flush=True)
+        except Exception as e:
+            import traceback
+            print(f"[tick={tick}] schedule_collection() raised an unhandled exception — will retry", flush=True)
+            traceback.print_exc()
         for _ in range(interval_seconds):
             if not _running:
                 break
             time.sleep(1)
-    logger.info("Improved collection scheduler shut down cleanly")
+    print("Improved collection scheduler shut down cleanly", flush=True)

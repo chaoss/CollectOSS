@@ -127,8 +127,9 @@ def start(ctx, disable_collection, development, pidfile, port):
     logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
     logger.info(f"The API is available at '{api_response.json()['route']}'")
 
-    processes = start_celery_worker_processes((core_worker_count, secondary_worker_count, facade_worker_count), disable_collection)
-    manager.processes = processes
+    # TODO: Uncomment
+    #processes = start_celery_worker_processes((core_worker_count, secondary_worker_count, facade_worker_count), disable_collection)
+    #manager.processes = processes
 
     celery_beat_schedule_db = os.getenv("CELERYBEAT_SCHEDULE_DB", "celerybeat-schedule.db")
     if os.path.exists(celery_beat_schedule_db):
@@ -138,7 +139,8 @@ def start(ctx, disable_collection, development, pidfile, port):
     log_level = get_value("Logging", "log_level")
     celery_beat_process = None
     celery_command = f"celery -A augur.tasks.init.celery_app.celery_app beat -l {log_level.lower()} -s {celery_beat_schedule_db}"
-    celery_beat_process = subprocess.Popen(celery_command.split(" "))
+    # TODO: Uncomment
+    #celery_beat_process = subprocess.Popen(celery_command.split(" "))
     manager.celery_beat_process = celery_beat_process    
     keypub = KeyPublisher()
     manager.keypub = keypub
@@ -172,15 +174,19 @@ def start(ctx, disable_collection, development, pidfile, port):
         create_collection_status_records.si().apply_async()
         time.sleep(3)
 
+        # TODO: Uncomment
         #put contributor breadth back in. Not sure why it was commented out
-        contributor_breadth_model.si().apply_async()
+        #contributor_breadth_model.si().apply_async()
 
+        # TODO: Uncomment
         # start cloning repos when augur starts
-        clone_repos.si().apply_async()
+        #clone_repos.si().apply_async()
 
-        process_contributors.si().apply_async()
+        # TODO: Uncomment
+        #process_contributors.si().apply_async()
 
-        augur_collection_monitor.si().apply_async()
+        # TODO: Uncomment
+        #augur_collection_monitor.si().apply_async()
         
     else:
         logger.info("Collection disabled")

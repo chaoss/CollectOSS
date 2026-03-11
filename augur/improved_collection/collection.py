@@ -117,13 +117,12 @@ class CollectionRun:
 class AugurCollection:
     """Domain class for managing collection and task lifecycle with event publishing."""
     
-    def __init__(self, rabbit_client: Optional[RabbitClient] = None):
+    def __init__(self, rabbit_client: RabbitClient):
         """
         Initialize AugurCollection.
-        
+
         Args:
-            rabbit_client: Optional RabbitClient for publishing events.
-                          If None, events will not be published (useful for testing).
+            rabbit_client: RabbitClient for publishing events.
         """
         self.rabbit_client = rabbit_client
         self.source = "augur.collection.scheduler"
@@ -133,7 +132,7 @@ class AugurCollection:
         """
         Ensure RabbitMQ topology is set up (called once on first publish).
         """
-        if not self._topology_initialized and self.rabbit_client:
+        if not self._topology_initialized:
             self.setup_collection_topology()
             self._topology_initialized = True
     
@@ -207,8 +206,10 @@ class AugurCollection:
         to receive all messages published to that exchange.
         """
         if not self.rabbit_client:
-            logger.warning("No RabbitClient configured, skipping topology setup")
+            print("No RabbitClient configured, skipping topology setup")
             return
+
+        print("Setting up rabbit queues")
         
         try:
             # Core exchange and queue
@@ -232,10 +233,10 @@ class AugurCollection:
             self.rabbit_client.configure_queue(queue=facade_queue, durable=True)
             self.rabbit_client.bind_queue(queue=facade_queue, exchange=facade_queue, routing_key="#")
             
-            logger.info("Collection topology setup complete")
+            print("Collection topology setup complete")
             
         except Exception as e:
-            logger.error(f"Failed to setup collection topology: {e}")
+            print(f"Failed to setup collection topology: {e}")
             raise
     
     @staticmethod
@@ -603,7 +604,15 @@ class AugurCollection:
             # Convert string states to enum
             task_state = TaskRunState(row['task_run_state'])
             task_type = TaskType(row['task_type'])
-            dep_states = [TaskRunState(state) for state in row['depends_on_task_states']] if row['depends_on_task_states'] else None
+            dep_states_raw = row['depends_on_task_states']
+            if dep_states_raw is None:
+                dep_states = None
+            elif isinstance(dep_states_raw, list):
+                dep_states = [TaskRunState(s) for s in dep_states_raw]
+            else:
+                # PostgreSQL returns array_agg as a string: "{val1,val2}"
+                inner = dep_states_raw.strip('{}')
+                dep_states = [TaskRunState(s) for s in inner.split(',')] if inner else None
             
             task = TaskRunInfo(
                 id=row['task_run_id'],
@@ -699,7 +708,7 @@ class AugurCollection:
             SELECT 1
             FROM repo_collections rc
             WHERE rc.repo_id = r.repo_id
-                AND rc.state = 'Complete'
+                AND rc.state IN ('Complete', 'Collecting')
         );""")
         
         with DatabaseSession(logger) as session:
