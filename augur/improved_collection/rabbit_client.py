@@ -87,7 +87,7 @@ class RabbitClient:
 
         def _on_message(ch, method, properties, body):
             try:
-                event = from_http(body, properties.headers or {})
+                event = from_http(properties.headers or {}, body)
                 handler(event._attributes, event.data)
                 if not auto_ack:
                     ch.basic_ack(method.delivery_tag)

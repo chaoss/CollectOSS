@@ -330,6 +330,16 @@ def improved_scheduler(interval):
     run_scheduler(interval)
 
 
+@improved.command("worker")
+@click.argument("task_type", type=click.Choice(["core", "secondary", "facade"]))
+def improved_worker(task_type):
+    """Start an improved collection worker for the given queue (core, secondary, or facade)."""
+    print(f"Starting improved collection worker for queue: {task_type}", flush=True)
+    from augur.improved_collection.worker import run_worker
+    from augur.improved_collection.models import TaskType
+    run_worker(TaskType(task_type))
+
+
 def assign_orphan_repos_to_default_user(session):
     query = s.sql.text("""
         SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.user_repos)

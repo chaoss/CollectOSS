@@ -126,16 +126,7 @@ class AugurCollection:
         """
         self.rabbit_client = rabbit_client
         self.source = "augur.collection.scheduler"
-        self._topology_initialized = False
-    
-    def _ensure_topology_setup(self):
-        """
-        Ensure RabbitMQ topology is set up (called once on first publish).
-        """
-        if not self._topology_initialized:
-            self.setup_collection_topology()
-            self._topology_initialized = True
-    
+
     def _publish_task_event(self, event_type: str, task_run_id: int, collection_id: int,
                            repo_id: str, task_name: str, task_type: TaskType, state: str):
         """
@@ -156,9 +147,6 @@ class AugurCollection:
             task_type: Type of task (determines which exchange to publish to)
             state: Current state of the task
         """
-        # Ensure topology is set up
-        self._ensure_topology_setup()
-        
         # Determine exchange based on task type
         exchange = self.get_queue_name(task_type)
         
@@ -192,52 +180,6 @@ class AugurCollection:
                 logger.error(f"Failed to publish {event_type}: {e}")
         else:
             logger.debug(f"No RabbitClient configured, skipping event publish: {event_type}")
-    
-    def setup_collection_topology(self):
-        """
-        Declare RabbitMQ exchanges, queues, and bindings for the collection system.
-        
-        Creates:
-        - Core exchange (topic) with Core queue bound to it
-        - Secondary exchange (topic) with Secondary queue bound to it
-        - Facade exchange (topic) with Facade queue bound to it
-        
-        Each queue is bound to its respective exchange with a wildcard routing key '#'
-        to receive all messages published to that exchange.
-        """
-        if not self.rabbit_client:
-            print("No RabbitClient configured, skipping topology setup")
-            return
-
-        print("Setting up rabbit queues")
-        
-        try:
-            # Core exchange and queue
-            logger.info("Declaring Core exchange and queue")
-            core_queue = self.get_queue_name(TaskType.CORE)
-            self.rabbit_client.configure_exchange(exchange=core_queue, exchange_type="topic", durable=True)
-            self.rabbit_client.configure_queue(queue=core_queue, durable=True)
-            self.rabbit_client.bind_queue(queue=core_queue, exchange=core_queue, routing_key="#")
-            
-            # Secondary exchange and queue
-            logger.info("Declaring Secondary exchange and queue")
-            secondary_queue = self.get_queue_name(TaskType.SECONDARY)
-            self.rabbit_client.configure_exchange(exchange=secondary_queue, exchange_type="topic", durable=True)
-            self.rabbit_client.configure_queue(queue=secondary_queue, durable=True)
-            self.rabbit_client.bind_queue(queue=secondary_queue, exchange=secondary_queue, routing_key="#")
-            
-            # Facade exchange and queue
-            logger.info("Declaring Facade exchange and queue")
-            facade_queue = self.get_queue_name(TaskType.FACADE)
-            self.rabbit_client.configure_exchange(exchange=facade_queue, exchange_type="topic", durable=True)
-            self.rabbit_client.configure_queue(queue=facade_queue, durable=True)
-            self.rabbit_client.bind_queue(queue=facade_queue, exchange=facade_queue, routing_key="#")
-            
-            print("Collection topology setup complete")
-            
-        except Exception as e:
-            print(f"Failed to setup collection topology: {e}")
-            raise
     
     @staticmethod
     def get_queue_name(task_type: TaskType) -> str:

@@ -37,5 +37,14 @@ config["vhosts"][0]["name"] = rabbit_vhost
 config["permissions"][0]["user"] = rabbit_user
 config["permissions"][0]["vhost"] = rabbit_vhost
 
+for exchange in config.get("exchanges", []):
+    exchange["vhost"] = rabbit_vhost
+
+for queue in config.get("queues", []):
+    queue["vhost"] = rabbit_vhost
+
+for binding in config.get("bindings", []):
+    binding["vhost"] = rabbit_vhost
+
 with config_file.open("w") as file:
     json.dump(config, file)

@@ -24,7 +24,85 @@
     ],
     "parameters": [],
     "policies": [],
-    "queues": [],
-    "exchanges": [],
-    "bindings": []
+    "exchanges": [
+        {
+            "name": "augur.collection.core",
+            "vhost": "",
+            "type": "topic",
+            "durable": true,
+            "auto_delete": false,
+            "internal": false,
+            "arguments": {}
+        },
+        {
+            "name": "augur.collection.secondary",
+            "vhost": "",
+            "type": "topic",
+            "durable": true,
+            "auto_delete": false,
+            "internal": false,
+            "arguments": {}
+        },
+        {
+            "name": "augur.collection.facade",
+            "vhost": "",
+            "type": "topic",
+            "durable": true,
+            "auto_delete": false,
+            "internal": false,
+            "arguments": {}
+        }
+    ],
+    "queues": [
+        {
+            "name": "augur.collection.core",
+            "vhost": "",
+            "durable": true,
+            "auto_delete": false,
+            "exclusive": false,
+            "arguments": {}
+        },
+        {
+            "name": "augur.collection.secondary",
+            "vhost": "",
+            "durable": true,
+            "auto_delete": false,
+            "exclusive": false,
+            "arguments": {}
+        },
+        {
+            "name": "augur.collection.facade",
+            "vhost": "",
+            "durable": true,
+            "auto_delete": false,
+            "exclusive": false,
+            "arguments": {}
+        }
+    ],
+    "bindings": [
+        {
+            "source": "augur.collection.core",
+            "vhost": "",
+            "destination": "augur.collection.core",
+            "destination_type": "queue",
+            "routing_key": "#",
+            "arguments": {}
+        },
+        {
+            "source": "augur.collection.secondary",
+            "vhost": "",
+            "destination": "augur.collection.secondary",
+            "destination_type": "queue",
+            "routing_key": "#",
+            "arguments": {}
+        },
+        {
+            "source": "augur.collection.facade",
+            "vhost": "",
+            "destination": "augur.collection.facade",
+            "destination_type": "queue",
+            "routing_key": "#",
+            "arguments": {}
+        }
+    ]
 }
