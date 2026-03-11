@@ -1,0 +1,60 @@
+<div class="container-fluid mt-5 pt-3">
+    <h2>Repo Collections</h2>
+    <table class="table table-hover" id="collections-table">
+        <thead class="table-dark">
+            <tr>
+                <th>Repo Name</th>
+                <th>Repo Git URL</th>
+                <th>State</th>
+                <th>Type</th>
+                <th>Origin</th>
+                <th>Started</th>
+                <th>Completed</th>
+            </tr>
+        </thead>
+        <tbody id="collections-body" style="color: var(--color-fg);">
+            <tr><td colspan="7">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function stateBadge(state) {
+        if (!state) return '<span class="badge bg-secondary">Unknown</span>';
+        const s = state.toLowerCase();
+        if (s === 'complete') return '<span class="badge bg-success">' + state + '</span>';
+        if (s === 'collecting') return '<span class="badge bg-warning text-dark">' + state + '</span>';
+        if (s === 'failed') return '<span class="badge bg-danger">' + state + '</span>';
+        return '<span class="badge bg-secondary">' + state + '</span>';
+    }
+
+    function fmtDate(ts) {
+        if (!ts) return '';
+        return new Date(ts).toLocaleString();
+    }
+
+    fetch('/api/unstable/collections')
+        .then(r => r.json())
+        .then(data => {
+            const tbody = document.getElementById('collections-body');
+            if (!data.length) {
+                tbody.innerHTML = '<tr><td colspan="7">No collections found.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(row => `
+                <tr style="cursor:pointer; color: var(--color-fg);" onclick="window.location.href='/collections/${row.id}'">
+                    <td>${row.repo_name || ''}</td>
+                    <td><a href="${row.repo_git || '#'}" target="_blank" onclick="event.stopPropagation()">${row.repo_git || ''}</a></td>
+                    <td>${stateBadge(row.state)}</td>
+                    <td>${row.collection_type || ''}</td>
+                    <td>${row.origin || ''}</td>
+                    <td>${fmtDate(row.started_on)}</td>
+                    <td>${fmtDate(row.completed_on)}</td>
+                </tr>
+            `).join('');
+        })
+        .catch(err => {
+            document.getElementById('collections-body').innerHTML =
+                '<tr><td colspan="7" class="text-danger">Error loading collections: ' + err + '</td></tr>';
+        });
+</script>

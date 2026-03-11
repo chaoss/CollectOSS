@@ -98,6 +98,64 @@ def issue_collection_status():  # TODO: make this name automatic - wrapper?
                     status=200,
                     mimetype="application/json")
 
+@app.route('/{}/collections'.format(AUGUR_API_VERSION))
+def collections_list():
+    sql = s.sql.text("""
+        SELECT
+            rc.id,
+            rc.repo_id,
+            r.repo_git,
+            r.repo_name,
+            rc.state::TEXT AS state,
+            rc.collection_type::TEXT AS collection_type,
+            rc.origin::TEXT AS origin,
+            rc.started_on,
+            rc.completed_on
+        FROM repo_collections rc
+        JOIN augur_data.repo r ON r.repo_id = rc.repo_id
+        ORDER BY rc.started_on DESC
+    """)
+
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(sql, conn)
+    data = results.to_json(orient="records", date_format='iso', date_unit='ms')
+    return Response(response=data, status=200, mimetype="application/json")
+
+
+@app.route('/{}/collections/<int:collection_id>/tasks'.format(AUGUR_API_VERSION))
+def collection_tasks(collection_id):
+    # Check if collection exists
+    check_sql = s.sql.text("SELECT id FROM repo_collections WHERE id = :collection_id")
+    with current_app.engine.connect() as conn:
+        check = pd.read_sql(check_sql, conn, params={"collection_id": collection_id})
+    if check.empty:
+        return Response(response='{"error": "Collection not found"}', status=404, mimetype="application/json")
+
+    sql = s.sql.text("""
+        SELECT
+            tr.id,
+            wt.task_name,
+            wt.task_type::TEXT AS task_type,
+            tr.state::TEXT AS state,
+            tr.start_date,
+            tr.completed_date,
+            tr.stacktrace,
+            STRING_AGG(dep_wt.task_name, ', ') AS depends_on
+        FROM task_runs tr
+        JOIN workflow_tasks wt ON wt.id = tr.workflow_task_id
+        LEFT JOIN workflow_dependencies wd ON wd.workflow_task_id = wt.id
+        LEFT JOIN workflow_tasks dep_wt ON dep_wt.id = wd.depends_on_workflow_task_id
+        WHERE tr.collection_record_id = :collection_id
+        GROUP BY tr.id, wt.task_name, wt.task_type, tr.state, tr.start_date, tr.completed_date, tr.stacktrace
+        ORDER BY wt.task_type, wt.task_name
+    """)
+
+    with current_app.engine.connect() as conn:
+        results = pd.read_sql(sql, conn, params={"collection_id": collection_id})
+    data = results.to_json(orient="records", date_format='iso', date_unit='ms')
+    return Response(response=data, status=200, mimetype="application/json")
+
+
 @app.route('/{}/collection_status/pull_requests'.format(AUGUR_API_VERSION))
 def pull_request_collection_status():  # TODO: make this name automatic - wrapper?
     pull_request_collection_sql = s.sql.text("""

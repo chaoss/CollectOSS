@@ -317,6 +317,14 @@ def user_group_view(group = None):
 
     return render_module("user-group-repos-table", title="Repos", repos=data, query_key=query, activePage=params["page"], pages=page_count, offset=pagination_offset, PS="user_group_view", reverse = rev, sorting = params.get("sort"), group=group)
 
+@app.route('/collections')
+def collections_view():
+    return render_module("collections", title="Collections")
+
+@app.route('/collections/<int:collection_id>')
+def collection_detail_view(collection_id):
+    return render_module("collection-detail", title="Collection Detail", collection_id=collection_id)
+
 @app.route('/error')
 def throw_exception():
     raise Exception("This Exception intentionally raised")

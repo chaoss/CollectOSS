@@ -1,0 +1,79 @@
+<div class="container-fluid mt-5 pt-3">
+    <a href="/collections" class="btn btn-secondary mb-3">&larr; Back to Collections</a>
+    <h2>Collection #{{ collection_id }} Tasks</h2>
+    <table class="table" id="tasks-table">
+        <thead class="table-dark">
+            <tr>
+                <th>Task Name</th>
+                <th>Type</th>
+                <th>State</th>
+                <th>Depends On</th>
+                <th>Started</th>
+                <th>Completed</th>
+            </tr>
+        </thead>
+        <tbody id="tasks-body" style="color: var(--color-fg);">
+            <tr><td colspan="6">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function stateBadge(state) {
+        if (!state) return '<span class="badge bg-secondary">Unknown</span>';
+        const s = state.toLowerCase();
+        if (s === 'complete') return '<span class="badge bg-success">' + state + '</span>';
+        if (s === 'collecting') return '<span class="badge bg-warning text-dark">' + state + '</span>';
+        if (s === 'failed') return '<span class="badge bg-danger">' + state + '</span>';
+        return '<span class="badge bg-secondary">' + state + '</span>';
+    }
+
+    function fmtDate(ts) {
+        if (!ts) return '';
+        return new Date(ts).toLocaleString();
+    }
+
+    fetch('/api/unstable/collections/{{ collection_id }}/tasks')
+        .then(r => {
+            if (r.status === 404) throw new Error('Collection not found');
+            return r.json();
+        })
+        .then(data => {
+            const tbody = document.getElementById('tasks-body');
+            if (!data.length) {
+                tbody.innerHTML = '<tr><td colspan="6">No tasks found for this collection.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map((row, i) => {
+                const rowStyle = 'color: var(--color-fg);';
+                const stacktraceId = 'stacktrace-' + i;
+                const stacktraceRow = (row.state && row.state.toLowerCase() === 'failed' && row.stacktrace)
+                    ? `<tr id="${stacktraceId}" style="${rowStyle}">
+                        <td colspan="6">
+                            <div class="collapse" id="collapse-${i}">
+                                <pre class="bg-light p-2" style="max-height:200px;overflow:auto;">${row.stacktrace}</pre>
+                            </div>
+                        </td>
+                       </tr>`
+                    : '';
+                const stateCell = (row.state && row.state.toLowerCase() === 'failed' && row.stacktrace)
+                    ? `${stateBadge(row.state)} <button class="btn btn-sm btn-outline-danger ms-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${i}">Details</button>`
+                    : stateBadge(row.state);
+                return `
+                    <tr style="${rowStyle}">
+                        <td>${row.task_name || ''}</td>
+                        <td>${row.task_type || ''}</td>
+                        <td>${stateCell}</td>
+                        <td>${row.depends_on || ''}</td>
+                        <td>${fmtDate(row.start_date)}</td>
+                        <td>${fmtDate(row.completed_date)}</td>
+                    </tr>
+                    ${stacktraceRow}
+                `;
+            }).join('');
+        })
+        .catch(err => {
+            document.getElementById('tasks-body').innerHTML =
+                '<tr><td colspan="6" class="text-danger">Error loading tasks: ' + err + '</td></tr>';
+        });
+</script>
