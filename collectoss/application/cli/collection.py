@@ -201,7 +201,7 @@ def repo_reset(ctx):
     """
     Refresh repo collection to force data collection
     """
-    with ctx.obj.engine.connect() as connection:
+    with ctx.obj.engine.begin() as connection:
         connection.execute(s.sql.text("""
             UPDATE operations.collection_status 
             SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
