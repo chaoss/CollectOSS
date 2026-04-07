@@ -33,4 +33,4 @@ def write_settings(current_settings):
 # Initialize logging
 def init_logging():
     global logger
-    logger = SystemLogger("augur_view", reset_logfiles=False).get_logger()
+    logger = SystemLogger("api_view", reset_logfiles=False).get_logger()
