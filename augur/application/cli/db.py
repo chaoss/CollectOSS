@@ -495,12 +495,12 @@ def run_psql_command_in_database(target_type, target):
         logger.error("Invalid target type. Exiting...")
         exit(1)
 
-    augur_db_environment_var = getenv("AUGUR_DB")
+    db_environment_var = getenv("AUGUR_DB")
 
     # db_json_file_location = os.getcwd() + "/db.config.json"
     # db_json_exists = os.path.exists(db_json_file_location)
 
-    if augur_db_environment_var:
+    if db_environment_var:
         pass
         # TODO: Add functionality for environment variable
     else:

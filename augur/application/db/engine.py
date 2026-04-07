@@ -61,7 +61,7 @@ def get_database_string() -> str:
         postgres database string
     """
 
-    augur_db_environment_var = os.getenv("AUGUR_DB")
+    db_environment_var = os.getenv("AUGUR_DB")
 
     try:
         current_dir = os.getcwd()
@@ -72,13 +72,13 @@ def get_database_string() -> str:
     db_json_file_location = current_dir + "/db.config.json"
     db_json_exists = os.path.exists(db_json_file_location)
 
-    if not augur_db_environment_var and not db_json_exists:
+    if not db_environment_var and not db_json_exists:
 
         print("ERROR no way to get connection to the database. \n\t\t\t\t\t\t    There is no db.config.json and the AUGUR_DB environment variable is not set\n\t\t\t\t\t\t    Please run make install or set the AUGUR_DB environment then run make install")
         sys.exit()
 
-    if augur_db_environment_var:
-        return augur_db_environment_var
+    if db_environment_var:
+        return db_environment_var
 
 
     with open("db.config.json", 'r') as f:
