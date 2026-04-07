@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.util.worker_util import remove_duplicate_dicts
@@ -22,7 +22,7 @@ from typing import List
 
 platform_id = 1
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
 
     logger = logging.getLogger(collect_pull_requests.__name__)

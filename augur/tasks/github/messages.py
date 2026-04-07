@@ -2,7 +2,7 @@ import logging
 from datetime import timedelta, timezone
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
@@ -17,7 +17,7 @@ from sqlalchemy.sql import text
 
 platform_id = 1
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_github_messages(repo_git: str, full_collection: bool) -> None:
 
     logger = logging.getLogger(collect_github_messages.__name__)

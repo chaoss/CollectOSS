@@ -74,7 +74,7 @@ BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 
 
 #Classes for tasks that take a repo_git as an argument.
-class AugurCoreRepoCollectionTask(celery.Task):
+class CoreRepoCollectionTask(celery.Task):
 
     def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core',after_fail=CollectionState.ERROR.value):
             
@@ -121,25 +121,25 @@ class AugurCoreRepoCollectionTask(celery.Task):
 
         return None 
 
-class AugurSecondaryRepoCollectionTask(AugurCoreRepoCollectionTask):
+class AugurSecondaryRepoCollectionTask(CoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         
         repo_git = self._extract_repo_git(args, kwargs)
         self.augur_handle_task_failure(exc, task_id, repo_git, "secondary_task_failure",collection_hook='secondary')
 
-class AugurFacadeRepoCollectionTask(AugurCoreRepoCollectionTask):
+class AugurFacadeRepoCollectionTask(CoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         repo_git = self._extract_repo_git(args, kwargs)
         self.augur_handle_task_failure(exc, task_id, repo_git, "facade_task_failure",collection_hook='facade')
 
-class AugurMlRepoCollectionTask(AugurCoreRepoCollectionTask):
+class AugurMlRepoCollectionTask(CoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args,kwargs,einfo):
         repo_git = self._extract_repo_git(args, kwargs)
         self.augur_handle_task_failure(exc,task_id,repo_git, "ml_task_failure", collection_hook='ml')
 
 
 
-#task_cls='augur.tasks.init.celery_app:AugurCoreRepoCollectionTask'
+#task_cls='augur.tasks.init.celery_app:CoreRepoCollectionTask'
 celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)
 
 # define the queues that tasks will be put in (by default tasks are put in celery queue)

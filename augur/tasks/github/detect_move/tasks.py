@@ -2,14 +2,14 @@ import logging
 
 from augur.tasks.github.detect_move.core import ping_github_for_repo_move, RepoMovedException, RepoGoneException
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
 from augur.application.db.lib import get_repo_by_repo_git, get_session
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 from celery.exceptions import Retry, Reject
 
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def detect_github_repo_move_core(repo_git : str) -> None:
 
     logger = logging.getLogger(detect_github_repo_move_core.__name__)

@@ -4,7 +4,7 @@ Module to define the task methods to collect gitlab event data for augur
 import logging
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.application.db.data_parse import extract_gitlab_mr_event_data, extract_gitlab_issue_event_data
 from augur.tasks.github.util.util import get_gitlab_repo_identifier
@@ -15,7 +15,7 @@ from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 
 platform_id = 2
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_gitlab_issue_events(repo_git) -> int:
     """
     Retrieve and parse gitlab events for the desired repo
@@ -43,7 +43,7 @@ def collect_gitlab_issue_events(repo_git) -> int:
             logger.info(f"{owner}/{repo} has no gitlab issue events")
 
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_gitlab_merge_request_events(repo_git) -> int:
     """
     Retrieve and parse gitlab mrs for the desired repo

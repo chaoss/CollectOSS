@@ -3,14 +3,14 @@ import logging
 from augur.application.db.session import DatabaseSession
 from augur.tasks.github.repo_info.core import *
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask
 from augur.application.db.lib import get_repo_by_repo_git
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.application.db import get_engine
 
 
 #Task to get regular misc github info
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_repo_info(repo_git: str):
 
     logger = logging.getLogger(collect_repo_info.__name__)
@@ -23,7 +23,7 @@ def collect_repo_info(repo_git: str):
 
 
 #Task to get CII api data for linux badge info using github data.
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_linux_badge_info(repo_git: str):
 
     engine = get_engine()

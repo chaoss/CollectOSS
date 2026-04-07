@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_data_access import GithubDataAccess
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
@@ -20,7 +20,7 @@ from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, ge
 
 development = get_development_flag()
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_issues(repo_git: str, full_collection: bool) -> int:
     """
     Collect all issues (excluding pull requests) for a repository.

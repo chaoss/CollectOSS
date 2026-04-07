@@ -5,7 +5,7 @@ import logging
 import traceback
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.application.db.data_parse import extract_needed_issue_data_from_gitlab_issue, extract_needed_gitlab_issue_label_data, extract_needed_gitlab_issue_assignee_data, extract_needed_gitlab_issue_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
 from augur.tasks.github.util.util import get_gitlab_repo_identifier, add_key_value_pair_to_dicts
@@ -16,7 +16,7 @@ from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 
 platform_id = 2
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_gitlab_issues(repo_git : str) -> int:
     """
     Retrieve and parse gitlab issues for the desired repo
@@ -199,7 +199,7 @@ def process_issue_contributors(issue, tool_source, tool_version, data_source):
 
     return issue, contributors
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_gitlab_issue_comments(issue_ids, repo_git) -> int:
     """
     Retrieve and parse gitlab events for the desired repo
