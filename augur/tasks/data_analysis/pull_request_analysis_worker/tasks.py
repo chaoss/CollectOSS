@@ -11,7 +11,7 @@ from augur.tasks.data_analysis.message_insights.message_sentiment import get_sen
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.lib import get_value, get_session, get_repo_by_repo_git
 from augur.application.db.models import PullRequestAnalysis
-from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
+from augur.tasks.init.celery_app import MLRepoCollectionTask
 
 
 # from sklearn.metrics import (confusion_matrix, f1_score, precision_score, recall_score)
@@ -20,7 +20,7 @@ from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
-@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+@celery.task(base=MLRepoCollectionTask, bind=True)
 def pull_request_analysis_task(self, repo_git):
 
     logger = logging.getLogger(pull_request_analysis_task.__name__)

@@ -14,13 +14,13 @@ from augur.tasks.data_analysis.message_insights.message_sentiment import get_sen
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.lib import get_value, get_repo_by_repo_git, get_session
 from augur.application.db.models import MessageAnalysis, MessageAnalysisSummary
-from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
+from augur.tasks.init.celery_app import MLRepoCollectionTask
 
 #SPDX-License-Identifier: MIT
 
 ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
-@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+@celery.task(base=MLRepoCollectionTask, bind=True)
 def message_insight_task(self, repo_git):
 
     logger = logging.getLogger(message_insight_task.__name__)

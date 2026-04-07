@@ -22,14 +22,14 @@ from collections import Counter
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.lib import get_value, get_session, get_repo_by_repo_git
 from augur.application.db.models import RepoClusterMessage, RepoTopic, TopicWord
-from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
+from augur.tasks.init.celery_app import MLRepoCollectionTask
 
 
 MODEL_FILE_NAME = "kmeans_repo_messages"
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
 
 
-@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+@celery.task(base=MLRepoCollectionTask, bind=True)
 def clustering_task(self, repo_git):
 
     logger = logging.getLogger(clustering_model.__name__)
