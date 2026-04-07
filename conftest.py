@@ -244,18 +244,3 @@ def test_db_session(test_db_engine):
 @pytest.fixture
 def test_db_config(test_db_session):
     return SystemConfig(logger, test_db_session)
-
-
-# @pytest.fixture(scope="session")
-# def augur_app():
-#     augur_app = Application(disable_logs=True)
-#     return augur_app
-
-# @pytest.fixture(scope="session")
-# def metrics(augur_app):
-#     return augur_app.metrics
-
-# @pytest.fixture(scope="session")
-# def client(augur_app):
-#     flask_client = initialize_components(augur_app, disable_housekeeper=True).load()
-#     return flask_client.test_client()

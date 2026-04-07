@@ -372,11 +372,11 @@ def export_env(config):
 @cli.command('repo-reset')
 @test_connection
 @test_db_connection
-def repo_reset(augur_app):
+def repo_reset(backend_app):
     """
     Refresh repo collection to force data collection
     """
-    augur_app.database.execute(s.sql.text("""
+    backend_app.database.execute(s.sql.text("""
         UPDATE augur_operations.collection_status 
         SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
 
