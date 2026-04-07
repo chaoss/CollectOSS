@@ -379,14 +379,14 @@ def get_api_key(ctx):
     short_help="Check the ~/.pgpass file for Augur's database credentials",
 )
 def check_pgpass():
-    augur_db_env_var = getenv("AUGUR_DB")
-    if augur_db_env_var:
+    db_environment_var = getenv("AUGUR_DB")
+    if db_environment_var:
         # gets the user, passowrd, host, port, and database_name out of environment variable
         # assumes database string of structure <beginning_of_db_string>//<user>:<password>@<host>:<port>/<database_name>
         # it returns a tuple like (<user>, <password>, <host>, <port>, <database_name)
         db_string_parsed = re.search(
             r"^.+:\/\/([a-zA-Z0-9_]+):(.+)@([a-zA-Z0-9-_~\.]+):(\d{1,5})\/([a-zA-Z0-9_-]+)",
-            augur_db_env_var,
+            db_environment_var,
         ).groups()
 
         if db_string_parsed:
