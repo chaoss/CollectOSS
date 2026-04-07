@@ -265,9 +265,9 @@ def setup_loggers(*args,**kwargs):
 
     all_celery_tasks = list(current_app.tasks.keys())
 
-    augur_tasks = [task for task in all_celery_tasks if 'celery.' not in task]
+    tasks = [task for task in all_celery_tasks if 'celery.' not in task]
     
-    TaskLogConfig(split_tasks_into_groups(augur_tasks))
+    TaskLogConfig(split_tasks_into_groups(tasks))
 
 
 #engine = None
