@@ -263,9 +263,9 @@ def add_standard_metric(function: Any, endpoint: str) -> None:
         function: the function that needs to be mapped to the routes
         endpoint: the path that the endpoint should be defined as
     """
-    repo_endpoint = f'/{app.augur_api_version}/repos/<repo_id>/{endpoint}'
-    repo_group_endpoint = f'/{app.augur_api_version}/repo-groups/<repo_group_id>/{endpoint}'
-    deprecated_repo_endpoint = f'/{app.augur_api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
+    repo_endpoint = f'/{app.api_version}/repos/<repo_id>/{endpoint}'
+    repo_group_endpoint = f'/{app.api_version}/repo-groups/<repo_group_id>/{endpoint}'
+    deprecated_repo_endpoint = f'/{app.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
 
     
     # These three lines are defining routes on the flask app, and passing a function.
@@ -287,7 +287,7 @@ def add_toss_metric(function: Any, endpoint: str) -> None:
         function: the function that needs to be mapped to the routes
         endpoint: the path that the endpoint should be defined as
     """
-    repo_endpoint = f'/{app.augur_api_version}/repos/<repo_id>/{endpoint}'
+    repo_endpoint = f'/{app.api_version}/repos/<repo_id>/{endpoint}'
     app.route(repo_endpoint)(routify(function, 'repo'))
 
 def create_cache_manager() -> CacheManager:
@@ -671,7 +671,7 @@ logger.debug("Created Flask app")
 # defines the api version on the flask app, 
 # so when we pass the flask app to the routes files we 
 # know can access the api version via the app variable
-app.augur_api_version = API_VERSION
+app.api_version = API_VERSION
 app.engine = engine
 
 CORS(app)
@@ -690,10 +690,10 @@ def index():
     """
     Redirects to health check route
     """
-    return redirect(app.augur_api_version)
+    return redirect(app.api_version)
 
-@app.route(f'/{app.augur_api_version}/')
-@app.route(f'/{app.augur_api_version}/status')
+@app.route(f'/{app.api_version}/')
+@app.route(f'/{app.api_version}/status')
 def status():
     """
     Health check route
@@ -723,7 +723,7 @@ class AuthenticatedGraphQLView(GraphQLView):
 
 schema = graphene.Schema(query=Query)
 
-app.add_url_rule(f'/{app.augur_api_version}/graphql', view_func=AuthenticatedGraphQLView.as_view('graphql', schema=schema, graphiql=True))
+app.add_url_rule(f'/{app.api_version}/graphql', view_func=AuthenticatedGraphQLView.as_view('graphql', schema=schema, graphiql=True))
 
 from .routes import *
 
