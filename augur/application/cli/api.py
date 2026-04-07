@@ -106,7 +106,7 @@ def kill(ctx):
 def processes():
     """
     Outputs the name/PID of all Augur api process"""
-    augur_processes = get_augur_api_processes()
+    augur_processes = get_api_processes()
     for process in augur_processes:
         logger.info(f"Found process {process.pid}")
 
@@ -116,7 +116,7 @@ def augur_stop(signal, logger, engine):
     and cleans up the api
     """
 
-    augur_processes = get_augur_api_processes()
+    augur_processes = get_api_processes()
  
     _broadcast_signal_to_processes(augur_processes, logger=logger, broadcast_signal=signal)
 
@@ -131,7 +131,7 @@ def cleanup_after_api_halt(logger, engine):
     clear_rabbitmq_messages(connection_string, queues, logger)
     clear_redis_caches(logger)
 
-def get_augur_api_processes():
+def get_api_processes():
     augur_api_processes = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
