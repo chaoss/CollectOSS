@@ -185,7 +185,7 @@ logger = logging.getLogger(__name__)
 #     self.db = database_connection
 #     ## added for keys
 #     self._root_augur_dir = Repo_insertion_manager.ROOT_AUGUR_DIR
-#     self.augur_config = SystemConfig(self._root_augur_dir)
+#     self.system_config = SystemConfig(self._root_augur_dir)
 #     ##########
 
 
@@ -213,7 +213,7 @@ logger = logging.getLogger(__name__)
 # def group_exists_gh(self):
 #     url = url = "https://api.github.com/orgs/{}".format(self.org)
 #     ## attempting to add key due to rate limiting
-#     gh_api_key = self.augur_config.get_value('Database', 'key')
+#     gh_api_key = self.system_config.get_value('Database', 'key')
 #     self.headers = {'Authorization': 'token %s' % gh_api_key}
 #     #r = requests.get(url=cntrb_url, headers=self.headers)
 # ####### Original request code
@@ -271,7 +271,7 @@ logger = logging.getLogger(__name__)
 
 # def fetch_repos(self):
 #     """uses the github api to return repos belonging to the given organization"""
-#     gh_api_key = self.augur_config.get_value('Database', 'key')
+#     gh_api_key = self.system_config.get_value('Database', 'key')
 #     self.headers = {'Authorization': 'token %s' % gh_api_key} 
 #     repos = []
 #     page = 1
@@ -287,7 +287,7 @@ logger = logging.getLogger(__name__)
 # ## Modified pagination to account for github orgs that look like orgs but are actually users. 
 # def paginate(self, page):
 # ### Modified here to incorporate the use of a GitHub API Key
-#     gh_api_key = self.augur_config.get_value('Database', 'key')
+#     gh_api_key = self.system_config.get_value('Database', 'key')
 #     self.headers = {'Authorization': 'token %s' % gh_api_key}    
 #     url = "https://api.github.com/orgs/{}/repos?per_page=100&page={}"
 #     res = requests.get(url, headers=self.headers).json()

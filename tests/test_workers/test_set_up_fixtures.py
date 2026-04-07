@@ -128,15 +128,15 @@ class DummyFullWorker(ContributorInterfaceable):
         self.platform = "github"
         # first set up logging.
         self._root_augur_dir = Persistent.ROOT_AUGUR_DIR
-        self.augur_config = SystemConfig(self._root_augur_dir)
+        self.system_config = SystemConfig(self._root_augur_dir)
 
         # Get default logging settings
         self.config = config
 
         self.config.update({
-            'gh_api_key': self.augur_config.get_value('Database', 'key'),
-            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
-            # 'port': self.augur_config.get_value('Workers', 'contributor_interface')
+            'gh_api_key': self.system_config.get_value('Database', 'key'),
+            'gitlab_api_key': self.system_config.get_value('Database', 'gitlab_api_key')
+            # 'port': self.system_config.get_value('Workers', 'contributor_interface')
         })
 
         # Use a special method overwrite to initialize the values for docker connection.

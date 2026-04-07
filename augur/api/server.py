@@ -320,7 +320,7 @@ def get_server_cache(cache_manager) -> Cache:
         server cache
     """
 
-    expire = int(augur_config.get_value('Server', 'cache_expire'))
+    expire = int(system_config.get_value('Server', 'cache_expire'))
     server_cache = cache_manager.get_cache('server', expire=expire)
     server_cache.clear()
 
@@ -331,7 +331,7 @@ logger = SystemLogger("server").get_logger()
 url = get_database_string()
 engine = create_database_engine(url, poolclass=StaticPool)
 db_session = DatabaseSession(logger, engine)
-augur_config = SystemConfig(logger, db_session)
+system_config = SystemConfig(logger, db_session)
 
 
 def get_connection(table, cursor_field_name, connection_class, after, limit, extra_condition=False):
