@@ -24,7 +24,7 @@ from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_wo
 from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
 from augur.application.logs import SystemLogger
-from augur.application.service_manager import AugurServiceManager, cleanup_collection_status_and_rabbit, clean_collection_status
+from augur.application.service_manager import SystemServiceManager, cleanup_collection_status_and_rabbit, clean_collection_status
 from augur.application.db.lib import get_value
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 import sqlalchemy as s
@@ -54,7 +54,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     with open(pidfile, "w") as pidfile_io:
         pidfile_io.write(str(os.getpid()))
 
-    manager = AugurServiceManager(ctx, pidfile, disable_collection)
+    manager = SystemServiceManager(ctx, pidfile, disable_collection)
 
     # Register signal handlers for graceful shutdown
     signal.signal(signal.SIGTERM, manager.shutdown_signal_handler)
