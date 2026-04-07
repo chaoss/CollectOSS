@@ -533,8 +533,8 @@ class CollectionTaskRoutine:
 
                 #collection_sequence.append(core_task_success_util.si(repo_git))
                 #Link all phases in a chain and send to celery
-                augur_collection_chain = chain(*collection_sequence)
-                task_id = augur_collection_chain.apply_async().task_id
+                collection_chain = chain(*collection_sequence)
+                task_id = collection_chain.apply_async().task_id
 
                 self.logger.info(f"Setting {platform_name} repo {col_hook.name} status to collecting for repo: {repo_git}")
 
