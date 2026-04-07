@@ -24,7 +24,7 @@ from flask_graphql import GraphQLView
 from graphene_sqlalchemy import SQLAlchemyObjectType
 
 
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 from augur.application.db.session import DatabaseSession
 from augur.application.config import SystemConfig
 from augur.application.db.engine import get_database_string, create_database_engine
@@ -327,7 +327,7 @@ def get_server_cache(cache_manager) -> Cache:
     return server_cache
 
 
-logger = AugurLogger("server").get_logger()
+logger = SystemLogger("server").get_logger()
 url = get_database_string()
 engine = create_database_engine(url, poolclass=StaticPool)
 db_session = DatabaseSession(logger, engine)

@@ -2,13 +2,13 @@ import sys
 import os
 import subprocess
 import sqlalchemy as s
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 from augur.application.db.session import DatabaseSession
 from augur.application.db.lib import get_value
 from augur.tasks.init.redis_connection import get_redis_connection
 from urllib.parse import urlparse
 
-logger = AugurLogger("augur_servicemanager").get_logger()
+logger = SystemLogger("augur_servicemanager").get_logger()
 
 
 class AugurServiceManager:

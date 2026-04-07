@@ -12,14 +12,14 @@ import time
 # from redis.exceptions import ConnectionError as RedisConnectionError
 
 from augur import instance_id
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 from augur.application.config import SystemConfig
 from augur.application.db.session import DatabaseSession
 from augur.application.cli import test_connection, test_db_connection
 from augur.application.cli._cli_util import clear_rabbitmq_messages, raise_open_file_limit
 
 
-logger = AugurLogger("augur", reset_logfiles=False).get_logger()
+logger = SystemLogger("augur", reset_logfiles=False).get_logger()
 
 @click.group('celery', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():

@@ -13,12 +13,12 @@ import uuid
 import traceback
 
 from augur.application.db.session import DatabaseSession
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 from augur.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
 from augur.application.db.lib import get_value
 
-logger = AugurLogger("augur", reset_logfiles=False).get_logger()
+logger = SystemLogger("augur", reset_logfiles=False).get_logger()
 
 @click.group('api', short_help='Commands for controlling the backend API server')
 @click.pass_context

@@ -11,7 +11,7 @@ from augur.tasks.git.util.facade_worker.facade_worker.rebuildcache import invali
 @celery.task(bind=True)
 def refresh_materialized_views(self):
 
-    #self.logger = AugurLogger("data_collection_jobs").get_logger()
+    #self.logger = SystemLogger("data_collection_jobs").get_logger()
 
     engine = self.app.engine
 

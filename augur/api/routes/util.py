@@ -8,9 +8,9 @@ import json
 from flask import Response, current_app, jsonify
 
 from augur.application.db.lib import get_value
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 
-logger = AugurLogger("augur").get_logger()
+logger = SystemLogger("augur").get_logger()
 
 @app.route("/api")
 def get_api_version():

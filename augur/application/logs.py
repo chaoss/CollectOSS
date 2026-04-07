@@ -187,7 +187,7 @@ class TaskLogConfig():
         return self.logger_names
 
 
-class AugurLogger():
+class SystemLogger():
     def __init__(self, logger_name, disable_log_files=False,reset_logfiles=False,base_log_dir=ROOT_AUGUR_DIRECTORY + "/logs/"):
         
         log_config = get_log_config()

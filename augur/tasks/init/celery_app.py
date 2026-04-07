@@ -12,7 +12,7 @@ from celery import current_app
 from celery.signals import after_setup_logger
 
 
-from augur.application.logs import TaskLogConfig, AugurLogger
+from augur.application.logs import TaskLogConfig, SystemLogger
 from augur.application.db.session import DatabaseSession
 from augur.application.db import get_engine
 from augur.application.db.lib import get_session
@@ -81,7 +81,7 @@ class AugurCoreRepoCollectionTask(celery.Task):
         # Note: I think self.app.engine would work but leaving it to try later
         engine = get_engine()
 
-        logger = AugurLogger(logger_name).get_logger()
+        logger = SystemLogger(logger_name).get_logger()
 
         logger.error(f"Task {task_id} raised exception: {exc}\n Traceback: {''.join(traceback.format_exception(None, exc, exc.__traceback__))}")
 

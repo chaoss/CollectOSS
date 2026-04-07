@@ -6,7 +6,7 @@ import datetime
 from celery import chain
 import sqlalchemy as s
 from sqlalchemy import or_, update
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
@@ -422,12 +422,12 @@ class AugurCollectionTotalRepoWeight:
 
 
     Attributes:
-        logger (Logger): Get logger from AugurLogger
+        logger (Logger): Get logger from SystemLogger
         value (int): current value of the collection weight
         value_weight_calculation (function): Function to use on repo to determine weight
     """
     def __init__(self,starting_value: int, weight_calculation=get_repo_weight_core):
-        self.logger = AugurLogger("data_collection_jobs").get_logger()
+        self.logger = SystemLogger("data_collection_jobs").get_logger()
         self.value = starting_value
         self.value_weight_calculation = weight_calculation
     
@@ -463,7 +463,7 @@ class AugurTaskRoutine:
 
 
     Attributes:
-        logger (Logger): Get logger from AugurLogger
+        logger (Logger): Get logger from SystemLogger
         repos (List[str]): List of repo_ids to run collection on.
         collection_phases (List[str]): List of phases to run in augur collection.
         collection_hook (str): String determining the attributes to update when collection for a repo starts. e.g. core

@@ -1,5 +1,5 @@
 from keyman.KeyClient import KeyClient, KeyPublisher
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 
 from multiprocessing import Process, current_process
 from subprocess import Popen, PIPE
@@ -31,7 +31,7 @@ def mp_consumer(platform):
     if platform not in keys:
         raise ValueError(f"Platform not valid for testing keys dict: {platform}")
     
-    logger = AugurLogger(f"Keyman_test_consumer").get_logger()
+    logger = SystemLogger(f"Keyman_test_consumer").get_logger()
     logger.setLevel(1)
     client = KeyClient(platform, logger)
     
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     if not publisher.wait():
         raise AssertionError("Orchestrator did not ACK within the time limit")
     
-    logger = AugurLogger("Keyman_test").get_logger()
+    logger = SystemLogger("Keyman_test").get_logger()
     logger.info("Keys loaded")
     
     platforms = publisher.list_platforms()

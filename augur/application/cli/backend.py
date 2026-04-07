@@ -23,7 +23,7 @@ from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 from augur.application.service_manager import AugurServiceManager, cleanup_collection_status_and_rabbit, clean_collection_status
 from augur.application.db.lib import get_value
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
@@ -33,7 +33,7 @@ from keyman.KeyClient import KeyClient, KeyPublisher
 
 reset_logs = os.getenv("AUGUR_RESET_LOGS", 'True').lower() in ('true', '1', 't', 'y', 'yes')
 
-logger = AugurLogger("augur", reset_logfiles=reset_logs).get_logger()
+logger = SystemLogger("augur", reset_logfiles=reset_logs).get_logger()
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 @click.pass_context
