@@ -270,7 +270,7 @@ def stop_collection(ctx):
     """
     Stop collection tasks if they are running, block until complete
     """
-    processes = get_augur_processes()
+    processes = get_backend_processes()
     
     stopped = []
     
@@ -328,7 +328,7 @@ def augur_stop(signal, logger, engine):
     and cleans up collection if it was running
     """
 
-    augur_processes = get_augur_processes()
+    augur_processes = get_backend_processes()
     # if celery is running, run the cleanup function
     process_names = [process.name() for process in augur_processes]
 
@@ -395,11 +395,11 @@ def repo_reset(augur_app):
 def processes():
     """
     Outputs the name/PID of all Augur server & worker processes"""
-    augur_processes = get_augur_processes()
+    augur_processes = get_backend_processes()
     for process in augur_processes:
         logger.info(f"Found process {process.pid} [{process.name()}] -> Parent: {process.parent().pid}")
 
-def get_augur_processes():
+def get_backend_processes():
     augur_processes = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
