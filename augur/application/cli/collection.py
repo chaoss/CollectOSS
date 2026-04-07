@@ -220,11 +220,11 @@ def repo_reset(ctx):
 def processes():
     """
     Outputs the name/PID of all Augur server & worker processes"""
-    augur_processes = get_augur_collection_processes()
+    augur_processes = get_collection_processes()
     for process in augur_processes:
         logger.info(f"Found process {process.pid}")
 
-def get_augur_collection_processes():
+def get_collection_processes():
     augur_processes = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
@@ -261,7 +261,7 @@ def augur_stop(stop_signal, logger_instance, engine):
     and cleans up collection if it was running
     """
 
-    augur_collection_processes = get_augur_collection_processes()
+    augur_collection_processes = get_collection_processes()
 
     _broadcast_signal_to_processes(augur_collection_processes, logger=logger_instance, broadcast_signal=stop_signal)
 
