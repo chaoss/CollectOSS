@@ -286,11 +286,11 @@ def collection_monitor(self):
 
 
 @celery.task(bind=True)
-def augur_collection_update_weights(self):
+def collection_update_weights(self):
 
     engine = self.app.engine
 
-    logger = logging.getLogger(augur_collection_update_weights.__name__)
+    logger = logging.getLogger(collection_update_weights.__name__)
 
     logger.info("Updating stale collection weights")
 
