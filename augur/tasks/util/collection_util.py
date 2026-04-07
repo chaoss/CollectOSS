@@ -503,9 +503,7 @@ class CollectionTaskRoutine:
             for repo_git, task_id, hook_name in self.send_messages():
                 self.update_status_and_id(repo_git,task_id,hook_name, session)
     
-    def send_messages(self):
-        augur_collection_list = []
-        
+    def send_messages(self):        
         for col_hook in self.collection_hooks:
 
             self.logger.info(f"Starting collection on {len(col_hook.repo_list)} {col_hook.name} repos")
