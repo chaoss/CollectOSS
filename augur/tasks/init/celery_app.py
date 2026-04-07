@@ -121,7 +121,7 @@ class CoreRepoCollectionTask(celery.Task):
 
         return None 
 
-class AugurSecondaryRepoCollectionTask(CoreRepoCollectionTask):
+class SecondaryRepoCollectionTask(CoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         
         repo_git = self._extract_repo_git(args, kwargs)

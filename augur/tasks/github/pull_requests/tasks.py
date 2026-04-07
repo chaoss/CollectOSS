@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import CoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask, SecondaryRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.util.worker_util import remove_duplicate_dicts
@@ -197,7 +197,7 @@ def process_pull_request_review_contributor(pr_review: dict, tool_source: str, t
 
     return pr_review_cntrb
 
-@celery.task(base=AugurSecondaryRepoCollectionTask)
+@celery.task(base=SecondaryRepoCollectionTask)
 def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -> None:
     """
     Collect pull request review comments for a repository from the GitHub API.
@@ -216,7 +216,7 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
         None. Data is inserted directly into the database.
 
     Note:
-        - Inherits error handling from AugurSecondaryRepoCollectionTask base class.
+        - Inherits error handling from SecondaryRepoCollectionTask base class.
         - Contributors are deduplicated within each batch before insertion.
         - Uses ON CONFLICT upsert logic to handle duplicate messages gracefully.
     """
@@ -438,7 +438,7 @@ def _flush_pr_review_comment_batch(
     return len(pr_review_message_ref_insert_data)
 
 
-@celery.task(base=AugurSecondaryRepoCollectionTask)
+@celery.task(base=SecondaryRepoCollectionTask)
 def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
     """
     Collect pull request reviews for a repository from the GitHub API.
@@ -457,7 +457,7 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
         None. Data is inserted directly into the database.
 
     Note:
-        - Inherits error handling from AugurSecondaryRepoCollectionTask base class.
+        - Inherits error handling from SecondaryRepoCollectionTask base class.
         - Contributors are deduplicated within each batch before insertion.
         - Uses ON CONFLICT upsert logic to handle duplicate reviews gracefully.
     """
