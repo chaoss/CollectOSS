@@ -22,7 +22,7 @@ services:
     networks:
       - augur
 
-  augur-keyman:
+  keyman:
     image: augur-keyman
     restart: unless-stopped
     build:
@@ -82,7 +82,7 @@ services:
     depends_on:
       - database
       - redis
-      - augur-keyman
+      - keyman
       - rabbitmq
     networks:
       - augur
