@@ -13,7 +13,7 @@ from pathlib import Path
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='AUGUR')
 
-class AugurMultiCommand(click.MultiCommand):
+class CLIMultiCommand(click.MultiCommand):
     def __commands_folder(self):
         return os.path.abspath(os.path.dirname(__file__))
 
@@ -36,7 +36,7 @@ class AugurMultiCommand(click.MultiCommand):
         module = importlib.import_module('.' + name, 'augur.application.cli')
         return module.cli
 
-@click.command(cls=AugurMultiCommand, context_settings=CONTEXT_SETTINGS)
+@click.command(cls=CLIMultiCommand, context_settings=CONTEXT_SETTINGS)
 @click.pass_context
 def run(ctx):
     """
