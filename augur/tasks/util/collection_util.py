@@ -412,7 +412,7 @@ def facade_clone_success_util(self, repo_git):
         session.commit()
 
 
-class AugurCollectionTotalRepoWeight:
+class CollectionTotalRepoWeight:
     """
         small class to encapsulate the weight calculation of each repo that is
         being scheduled. Intended to be used as a counter where while it is greater than
@@ -437,7 +437,7 @@ class AugurCollectionTotalRepoWeight:
 
         if isinstance(other, int):
             self.value -= other
-        elif isinstance(other, AugurCollectionTotalRepoWeight):
+        elif isinstance(other, CollectionTotalRepoWeight):
             self.value -= other.value
         elif isinstance(other, Repo):
             repo_weight = self.value_weight_calculation(self.logger,other.repo_git)
