@@ -260,9 +260,7 @@ def augur_stop(stop_signal, logger_instance, engine):
     and cleans up collection if it was running
     """
 
-    augur_collection_processes = get_collection_processes()
-
-    _broadcast_signal_to_processes(augur_collection_processes, logger=logger_instance, broadcast_signal=stop_signal)
+    _broadcast_signal_to_processes(get_collection_processes(), logger=logger_instance, broadcast_signal=stop_signal)
 
     cleanup_after_collection_halt(logger, engine)
 
