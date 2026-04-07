@@ -226,11 +226,11 @@ class SystemLogger():
 
         #Don't bother if file logs are disabled.
         if not self.disable_log_files:
-           self.initialize_augur_logger_file_logging(self.lg)
+           self.initialize_file_logging(self.lg)
 
         self.lg.propagate = False
 
-    def initialize_augur_logger_file_logging(self, logger):
+    def initialize_file_logging(self, logger):
 
         file = str(self.base_log_dir) + "/" + str(self.logger_name)
 
