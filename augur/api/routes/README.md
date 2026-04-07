@@ -13,21 +13,21 @@ The routes directory contains basic routes that are defined using the `@app.rout
 ```python
 def create_routes(app):
 
-    @app.route('/{}/route_1'.format(AUGUR_API_VERSION), methods=["GET"])
+    @app.route('/{}/route_1'.format(API_VERSION), methods=["GET"])
     def first_route():
 
         # code to get data
        
         return Response(response=data, status=200, mimetype="application/json")
 
-    @app.route('/{}/route_2'.format(AUGUR_API_VERSION), methods=["GET", "POST"])
+    @app.route('/{}/route_2'.format(API_VERSION), methods=["GET", "POST"])
     def route_2():
         
         # code to get data
 
         return Response(response=data, status=200, mimetype="application/json")
 
-    @app.route('/{}/route_3'.format(AUGUR_API_VERSION), methods=["GET"])
+    @app.route('/{}/route_3'.format(API_VERSION), methods=["GET"])
     def route_3():
         
         # code to get data

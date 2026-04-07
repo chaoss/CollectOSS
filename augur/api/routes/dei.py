@@ -20,10 +20,10 @@ from ..server import app
 
 logger = logging.getLogger(__name__)
 
-from augur.api.routes import AUGUR_API_VERSION
+from augur.api.routes import API_VERSION
 from augur.application.db.models.augur_operations import FRONTEND_REPO_GROUP_NAME
 
-@app.route(f"/{AUGUR_API_VERSION}/dei/repo/add", methods=['POST'])
+@app.route(f"/{API_VERSION}/dei/repo/add", methods=['POST'])
 @ssl_required
 @api_key_required
 def dei_track_repo(application: ClientApplication):
@@ -101,7 +101,7 @@ def dei_track_repo(application: ClientApplication):
 
     return jsonify({"status": "Success"})
 
-@app.route(f"/{AUGUR_API_VERSION}/dei/report", methods=['POST'])
+@app.route(f"/{API_VERSION}/dei/report", methods=['POST'])
 @ssl_required
 @api_key_required
 def dei_report(application: ClientApplication):

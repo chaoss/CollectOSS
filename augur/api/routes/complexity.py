@@ -6,11 +6,11 @@ from augur.api.util import metric_metadata
 import os
 import requests
 
-from augur.api.routes import AUGUR_API_VERSION
+from augur.api.routes import API_VERSION
 from ..server import app
 
 
-@app.route('/{}/complexity/project_languages'.format(AUGUR_API_VERSION), methods=["GET"])
+@app.route('/{}/complexity/project_languages'.format(API_VERSION), methods=["GET"])
 def get_project_languages():
 
     repo_id = request.args.get('repo_id')
@@ -57,7 +57,7 @@ def get_project_languages():
                 status=200,
                 mimetype="application/json")
 
-@app.route('/{}/complexity/project_files'.format(AUGUR_API_VERSION), methods=["GET"])
+@app.route('/{}/complexity/project_files'.format(API_VERSION), methods=["GET"])
 def get_project_files():
     project_files_sql = s.sql.text("""
         SELECT
@@ -96,7 +96,7 @@ def get_project_files():
                 status=200,
                 mimetype="application/json")
 
-@app.route('/{}/complexity/project_lines'.format(AUGUR_API_VERSION), methods=["GET"])
+@app.route('/{}/complexity/project_lines'.format(API_VERSION), methods=["GET"])
 def get_project_lines():
     
     repo_id = request.args.get('repo_id')
@@ -140,7 +140,7 @@ def get_project_lines():
                 status=200,
                 mimetype="application/json")
 
-@app.route('/{}/complexity/project_comment_lines'.format(AUGUR_API_VERSION), methods=["GET"])
+@app.route('/{}/complexity/project_comment_lines'.format(API_VERSION), methods=["GET"])
 def get_project_comment_lines():
 
     repo_id = request.args.get('repo_id')
@@ -185,7 +185,7 @@ def get_project_comment_lines():
                 status=200,
                 mimetype="application/json")
 
-@app.route('/{}/complexity/project_blank_lines'.format(AUGUR_API_VERSION), methods=["GET"])
+@app.route('/{}/complexity/project_blank_lines'.format(API_VERSION), methods=["GET"])
 def get_project_blank_lines():
 
     repo_id = request.args.get('repo_id')
@@ -231,7 +231,7 @@ def get_project_blank_lines():
                 mimetype="application/json")
     
 
-@app.route('/{}/complexity/project_file_complexity'.format(AUGUR_API_VERSION), methods=["GET"])
+@app.route('/{}/complexity/project_file_complexity'.format(API_VERSION), methods=["GET"])
 def get_project_file_complexity():
     project_file_complexity_sql = s.sql.text("""
         SELECT

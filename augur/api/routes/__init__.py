@@ -1,4 +1,4 @@
-AUGUR_API_VERSION = 'api/unstable'
+API_VERSION = 'api/unstable'
 
 from .application import *
 from .batch import *

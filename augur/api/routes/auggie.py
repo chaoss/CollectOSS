@@ -17,7 +17,7 @@ import slack
 from ..server import app
 
 
-AUGUR_API_VERSION = 'api/unstable'
+API_VERSION = 'api/unstable'
 
 
 # def annotate(metadata=None, **kwargs):

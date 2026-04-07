@@ -2,7 +2,7 @@
 """
 Creates routes for user functionality
 """
-from augur.api.routes import AUGUR_API_VERSION
+from augur.api.routes import API_VERSION
 
 import logging
 import secrets
@@ -23,7 +23,7 @@ from ..server import app
 logger = logging.getLogger(__name__)
 current_user: User = current_user
 
-@app.route(f"/{AUGUR_API_VERSION}/user/validate", methods=['POST'])
+@app.route(f"/{API_VERSION}/user/validate", methods=['POST'])
 @ssl_required
 def validate_user():
     username = request.args.get("username")
@@ -48,7 +48,7 @@ def validate_user():
     return jsonify({"status": "Validated"})
 
 
-@app.route(f"/{AUGUR_API_VERSION}/user/logout", methods=['POST'])
+@app.route(f"/{API_VERSION}/user/logout", methods=['POST'])
 @ssl_required
 @login_required
 def logout_user_func():
@@ -58,7 +58,7 @@ def logout_user_func():
     return jsonify({"status": "Error when logging out"})
 
 
-@app.route(f"/{AUGUR_API_VERSION}/user/authorize", methods=['POST', 'GET'])
+@app.route(f"/{API_VERSION}/user/authorize", methods=['POST', 'GET'])
 @ssl_required
 @login_required
 def user_authorize():
@@ -71,7 +71,7 @@ def user_authorize():
 
     return jsonify({"status": "Validated", "code": code})
 
-@app.route(f"/{AUGUR_API_VERSION}/user/session/generate", methods=['POST'])
+@app.route(f"/{API_VERSION}/user/session/generate", methods=['POST'])
 @ssl_required
 @api_key_required
 def generate_session(application):
@@ -115,7 +115,7 @@ def generate_session(application):
 
     return response
 
-@app.route(f"/{AUGUR_API_VERSION}/user/session/refresh", methods=["GET", "POST"])
+@app.route(f"/{API_VERSION}/user/session/refresh", methods=["GET", "POST"])
 @ssl_required
 @api_key_required
 def refresh_session(application):
@@ -151,7 +151,7 @@ def refresh_session(application):
 
     return response
 
-@app.route(f"/{AUGUR_API_VERSION}/user/query", methods=['POST'])
+@app.route(f"/{API_VERSION}/user/query", methods=['POST'])
 @ssl_required
 def query_user():
     username = request.args.get("username")
@@ -163,7 +163,7 @@ def query_user():
 
     return jsonify({"status": True})
 
-@app.route(f"/{AUGUR_API_VERSION}/user/create", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/create", methods=['GET', 'POST'])
 @ssl_required
 def create_user():
     username = request.args.get("username")
@@ -178,7 +178,7 @@ def create_user():
     return jsonify(result[1])
 
 
-@app.route(f"/{AUGUR_API_VERSION}/user/remove", methods=['POST', 'DELETE'])
+@app.route(f"/{API_VERSION}/user/remove", methods=['POST', 'DELETE'])
 @ssl_required
 @login_required
 def delete_user():
@@ -186,7 +186,7 @@ def delete_user():
     return jsonify(status)
 
 
-@app.route(f"/{AUGUR_API_VERSION}/user/update", methods=['POST'])
+@app.route(f"/{API_VERSION}/user/update", methods=['POST'])
 @ssl_required
 @login_required
 def update_user():
@@ -222,7 +222,7 @@ def update_user():
     return jsonify({"status": "Missing argument"}), 400
 
 
-@app.route(f"/{AUGUR_API_VERSION}/user/repo/add", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/repo/add", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def add_user_repo():
@@ -234,7 +234,7 @@ def add_user_repo():
     return jsonify(result[1])
 
 
-@app.route(f"/{AUGUR_API_VERSION}/user/group/add", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/group/add", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def add_user_group():
@@ -244,7 +244,7 @@ def add_user_group():
 
     return jsonify(result[1])
 
-@app.route(f"/{AUGUR_API_VERSION}/user/group/remove", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/group/remove", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def remove_user_group():
@@ -255,7 +255,7 @@ def remove_user_group():
     return jsonify(result[1])
 
 
-@app.route(f"/{AUGUR_API_VERSION}/user/org/add", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/org/add", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def add_user_org():
@@ -267,7 +267,7 @@ def add_user_org():
     return jsonify(result[1])
 
 
-@app.route(f"/{AUGUR_API_VERSION}/user/repo/remove", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/repo/remove", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def remove_user_repo():
@@ -282,7 +282,7 @@ def remove_user_repo():
 
     return jsonify(result[1])
 
-@app.route(f"/{AUGUR_API_VERSION}/user/group/repos/", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/group/repos/", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def group_repos():
@@ -325,7 +325,7 @@ def group_repos():
 
     return jsonify(result_dict)
 
-@app.route(f"/{AUGUR_API_VERSION}/user/group/repos/count", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/group/repos/count", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def group_repo_count():
@@ -353,7 +353,7 @@ def group_repo_count():
 
     return jsonify(result_dict)
 
-@app.route(f"/{AUGUR_API_VERSION}/user/groups/names", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/groups/names", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def get_user_groups():
@@ -373,7 +373,7 @@ def get_user_groups():
 
     return jsonify({"status": "success", "group_names": result[0]})
 
-@app.route(f"/{AUGUR_API_VERSION}/user/groups/repos/", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/groups/repos/", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def get_user_groups_and_repos():
@@ -417,7 +417,7 @@ def get_user_groups_and_repos():
     return jsonify({"status": "success", "data": data})
 
 
-@app.route(f"/{AUGUR_API_VERSION}/user/group/favorite/toggle", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/group/favorite/toggle", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def toggle_user_group_favorite():
@@ -434,7 +434,7 @@ def toggle_user_group_favorite():
 
     return jsonify(result[1])
 
-@app.route(f"/{AUGUR_API_VERSION}/user/groups/favorites", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/user/groups/favorites", methods=['GET', 'POST'])
 @ssl_required
 @login_required
 def get_favorite_groups():

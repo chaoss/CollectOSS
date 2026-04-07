@@ -34,8 +34,8 @@ from metadata import __version__ as augur_code_version
 
 
 
-# from augur.api.routes import AUGUR_API_VERSION
-AUGUR_API_VERSION = "api/unstable"
+# from augur.api.routes import API_VERSION
+API_VERSION = "api/unstable"
 
 show_metadata = False
 
@@ -671,7 +671,7 @@ logger.debug("Created Flask app")
 # defines the api version on the flask app, 
 # so when we pass the flask app to the routes files we 
 # know can access the api version via the app variable
-app.augur_api_version = AUGUR_API_VERSION
+app.augur_api_version = API_VERSION
 app.engine = engine
 
 CORS(app)

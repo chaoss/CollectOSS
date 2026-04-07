@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-from augur.api.routes import AUGUR_API_VERSION
+from augur.api.routes import API_VERSION
 from ..server import app
 import base64
 import sqlalchemy as s
@@ -16,10 +16,10 @@ logger = SystemLogger("augur").get_logger()
 def get_api_version():
     return jsonify({
         "status": "up",
-        "route": AUGUR_API_VERSION
+        "route": API_VERSION
     })
 
-@app.route('/{}/repo-groups'.format(AUGUR_API_VERSION))
+@app.route('/{}/repo-groups'.format(API_VERSION))
 def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
     repoGroupsSQL = s.sql.text("""
         SELECT *
@@ -34,7 +34,7 @@ def get_all_repo_groups(): #TODO: make this name automatic - wrapper?
                     status=200,
                     mimetype="application/json")
 
-@app.route('/{}/repos'.format(AUGUR_API_VERSION))
+@app.route('/{}/repos'.format(API_VERSION))
 def get_all_repos():
 
     get_all_repos_sql = s.sql.text("""
@@ -78,7 +78,7 @@ def get_all_repos():
                     status=200,
                     mimetype="application/json")
 
-@app.route('/{}/repo-groups/<repo_group_id>/repos'.format(AUGUR_API_VERSION))
+@app.route('/{}/repo-groups/<repo_group_id>/repos'.format(API_VERSION))
 def get_repos_in_repo_group(repo_group_id):
     repos_in_repo_groups_SQL = s.sql.text("""
         SELECT
@@ -114,7 +114,7 @@ def get_repos_in_repo_group(repo_group_id):
                     status=200,
                     mimetype="application/json")
 
-@app.route('/{}/repos/<repo_id>'.format(AUGUR_API_VERSION))
+@app.route('/{}/repos/<repo_id>'.format(API_VERSION))
 def get_repo_by_id(repo_id: int) -> Response:
     repo_by_id_SQL = s.sql.text("""
         SELECT
@@ -157,7 +157,7 @@ def get_repo_by_id(repo_id: int) -> Response:
                     status=200,
                     mimetype="application/json")
 
-@app.route('/{}/owner/<owner>/repo/<repo>'.format(AUGUR_API_VERSION))
+@app.route('/{}/owner/<owner>/repo/<repo>'.format(API_VERSION))
 def get_repo_by_git_name(owner, repo):
 
     get_repo_by_git_name_sql = s.sql.text("""
@@ -174,7 +174,7 @@ def get_repo_by_git_name(owner, repo):
                     status=200,
                     mimetype="application/json")
 
-@app.route('/{}/rg-name/<rg_name>/repo-name/<repo_name>'.format(AUGUR_API_VERSION))
+@app.route('/{}/rg-name/<rg_name>/repo-name/<repo_name>'.format(API_VERSION))
 def get_repo_by_name(rg_name, repo_name):
 
     get_repo_by_name_sql = s.sql.text("""
@@ -193,7 +193,7 @@ def get_repo_by_name(rg_name, repo_name):
                     status=200,
                     mimetype="application/json")
 
-@app.route('/{}/rg-name/<rg_name>'.format(AUGUR_API_VERSION))
+@app.route('/{}/rg-name/<rg_name>'.format(API_VERSION))
 def get_group_by_name(rg_name):
     groupSQL = s.sql.text("""
         SELECT repo_group_id, rg_name
@@ -208,7 +208,7 @@ def get_group_by_name(rg_name):
                     status=200,
                     mimetype="application/json")
 
-@app.route('/{}/dosocs/repos'.format(AUGUR_API_VERSION))
+@app.route('/{}/dosocs/repos'.format(API_VERSION))
 def get_repos_for_dosocs():
     get_repos_for_dosocs_SQL = s.sql.text("""
         SELECT b.repo_id, CONCAT(a.value || b.repo_group_id || chr(47) || b.repo_path || b.repo_name) AS path
@@ -223,8 +223,8 @@ def get_repos_for_dosocs():
                     status=200,
                     mimetype='application/json')
 
-@app.route('/{}/repo-groups/<repo_group_id>/get-issues'.format(AUGUR_API_VERSION))
-@app.route('/{}/repos/<repo_id>/get-issues'.format(AUGUR_API_VERSION))
+@app.route('/{}/repo-groups/<repo_group_id>/get-issues'.format(API_VERSION))
+@app.route('/{}/repos/<repo_id>/get-issues'.format(API_VERSION))
 def get_issues(repo_group_id, repo_id=None):
     if not repo_id:
         get_issues_sql = s.sql.text("""
@@ -275,7 +275,7 @@ def get_issues(repo_group_id, repo_id=None):
                     status=200,
                     mimetype='application/json')
 
-@app.route('/{}/api-port'.format(AUGUR_API_VERSION))
+@app.route('/{}/api-port'.format(API_VERSION))
 def api_port():
 
     response = {'port': get_value('Server', 'port')}

@@ -17,7 +17,7 @@ from ..server import app
 logger = logging.getLogger(__name__)
 development = get_development_flag()
 
-from augur.api.routes import AUGUR_API_VERSION
+from augur.api.routes import API_VERSION
 
 def generate_upgrade_request():
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/426
@@ -27,7 +27,7 @@ def generate_upgrade_request():
 
     return response, 426
 
-@app.route(f"/{AUGUR_API_VERSION}/config/get", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/config/get", methods=['GET', 'POST'])
 def get_config():
     if not development and not request.is_secure:
         return generate_upgrade_request()
@@ -39,7 +39,7 @@ def get_config():
     return jsonify(config_dict), 200
 
 
-@app.route(f"/{AUGUR_API_VERSION}/config/update", methods=['POST'])
+@app.route(f"/{API_VERSION}/config/update", methods=['POST'])
 def update_config():
     if not development and not request.is_secure:
         return generate_upgrade_request()

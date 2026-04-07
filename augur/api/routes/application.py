@@ -12,9 +12,9 @@ from ..server import app
 
 logger = logging.getLogger(__name__)
 
-from augur.api.routes import AUGUR_API_VERSION
+from augur.api.routes import API_VERSION
 
-@app.route(f"/{AUGUR_API_VERSION}/application", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/application", methods=['GET', 'POST'])
 @ssl_required
 @api_key_required
 def get_application_info(application: ClientApplication):
@@ -29,7 +29,7 @@ def get_application_info(application: ClientApplication):
 
     return info
 
-@app.route(f"/{AUGUR_API_VERSION}/application/group/repos", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/application/group/repos", methods=['GET', 'POST'])
 @ssl_required
 @api_key_required
 def get_application_group_repos(application: ClientApplication):
@@ -71,7 +71,7 @@ def get_application_group_repos(application: ClientApplication):
 
     return jsonify(result_dict)
 
-@app.route(f"/{AUGUR_API_VERSION}/application/group/repos/count", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/application/group/repos/count", methods=['GET', 'POST'])
 @ssl_required
 @api_key_required
 def get_application_group_repo_count(application: ClientApplication):
@@ -99,7 +99,7 @@ def get_application_group_repo_count(application: ClientApplication):
 
     return jsonify(result_dict)
 
-@app.route(f"/{AUGUR_API_VERSION}/application/groups/names", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/application/groups/names", methods=['GET', 'POST'])
 @ssl_required
 @api_key_required
 def get_application_groups(application: ClientApplication):
@@ -108,7 +108,7 @@ def get_application_groups(application: ClientApplication):
 
     return jsonify({"status": "success", "group_names": result[0]})
 
-@app.route(f"/{AUGUR_API_VERSION}/application/groups/repos/", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/application/groups/repos/", methods=['GET', 'POST'])
 @ssl_required
 @api_key_required
 def get_application_groups_and_repos(application: ClientApplication):
