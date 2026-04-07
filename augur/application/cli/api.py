@@ -106,8 +106,7 @@ def kill(ctx):
 def processes():
     """
     Outputs the name/PID of all Augur api process"""
-    augur_processes = get_api_processes()
-    for process in augur_processes:
+    for process in get_api_processes():
         logger.info(f"Found process {process.pid}")
 
 def augur_stop(signal, logger, engine):
@@ -116,9 +115,7 @@ def augur_stop(signal, logger, engine):
     and cleans up the api
     """
 
-    augur_processes = get_api_processes()
- 
-    _broadcast_signal_to_processes(augur_processes, logger=logger, broadcast_signal=signal)
+    _broadcast_signal_to_processes(get_api_processes(), logger=logger, broadcast_signal=signal)
 
     cleanup_after_api_halt(logger, engine)
 

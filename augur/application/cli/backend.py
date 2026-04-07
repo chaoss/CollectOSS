@@ -328,11 +328,11 @@ def augur_stop(signal, logger, engine):
     and cleans up collection if it was running
     """
 
-    augur_processes = get_backend_processes()
+    backend_processes = get_backend_processes()
     # if celery is running, run the cleanup function
-    process_names = [process.name() for process in augur_processes]
+    process_names = [process.name() for process in backend_processes]
 
-    _broadcast_signal_to_processes(augur_processes, broadcast_signal=signal, given_logger=logger)
+    _broadcast_signal_to_processes(backend_processes, broadcast_signal=signal, given_logger=logger)
 
     if "celery" in process_names:
         cleanup_collection_status_and_rabbit(logger, engine)
@@ -395,21 +395,20 @@ def repo_reset(augur_app):
 def processes():
     """
     Outputs the name/PID of all Augur server & worker processes"""
-    augur_processes = get_backend_processes()
-    for process in augur_processes:
+    for process in get_backend_processes():
         logger.info(f"Found process {process.pid} [{process.name()}] -> Parent: {process.parent().pid}")
 
 def get_backend_processes():
-    augur_processes = []
+    process_list = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
             try:
                 if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in ''.join(process.info['cmdline'][:]).lower():
                     if process.pid != os.getpid():
-                        augur_processes.append(process)
+                        process_list.append(process)
             except (KeyError, FileNotFoundError):
                 pass
-    return augur_processes
+    return process_list
 
 def _broadcast_signal_to_processes(processes, broadcast_signal=signal.SIGTERM, given_logger=None):
     if given_logger is None:
