@@ -16,10 +16,10 @@ from sklearn import utils as skl_utils
 from augur.tasks.data_analysis.message_insights.preprocess_text import \
     normalize_corpus as normalize_corpus
 
-ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 
-train_path = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", "train_data")
+train_path = os.path.join(ROOT_PROJECT_REPO_DIRECTORY, "tasks", "data_analysis", "message_insights", "train_data")
 
 # ''' Doc2Vec model training
 

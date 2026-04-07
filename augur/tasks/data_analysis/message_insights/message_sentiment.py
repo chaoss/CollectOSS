@@ -30,11 +30,11 @@ from augur.tasks.data_analysis.message_insights.preprocess_text import \
 
 warnings.filterwarnings('ignore')
 
-ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 CONTRACTION_MAP = contraction_map
 
-train_path = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", "train_data")
+train_path = os.path.join(ROOT_PROJECT_REPO_DIRECTORY, "tasks", "data_analysis", "message_insights", "train_data")
 
 def replace_all(text, dic):
     if(sys.version_info[0] < 3):

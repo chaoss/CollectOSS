@@ -12,7 +12,7 @@ from augur.application.db.session import DatabaseSession
 from augur.application.config import SystemConfig, redact_setting_value
 from augur.application.cli import DatabaseContext, test_connection, test_db_connection, with_database
 from augur.util.inspect_without_import import get_phase_names_without_import
-ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redi
 
         augmented_config["Facade"]["repo_directory"] = facade_repo_directory
 
-        augmented_config["Logging"]["logs_directory"] = logs_directory or (ROOT_AUGUR_DIRECTORY + "/logs/")
+        augmented_config["Logging"]["logs_directory"] = logs_directory or (ROOT_PROJECT_REPO_DIRECTORY + "/logs/")
 
         config.load_config_from_dict(augmented_config)
 

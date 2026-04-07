@@ -151,11 +151,11 @@ Set ``ELASTIC_SEARCH_PATH`` and ``LOGSTASH_PATH`` variables to point to elastics
   # If not specified, defaults to /usr/local/bin/logstash
   $ export LOGSTASH_PATH=<path_to_logstash_binary>
 
-  $ export ROOT_AUGUR_DIRECTORY=<path_to_augur>
+  $ export ROOT_PROJECT_REPO_DIRECTORY=<path_to_augur>
 
 Start the http server with::
 
-  $ cd $ROOT_AUGUR_DIRECTORY/log_analysis/http
+  $ cd $ROOT_PROJECT_REPO_DIRECTORY/log_analysis/http
   $ python http_server.py
 
 Then start Augur with ``logstash`` flag::
