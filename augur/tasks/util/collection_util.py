@@ -454,7 +454,7 @@ class AugurCollectionTotalRepoWeight:
         return self
 
 
-class AugurTaskRoutine:
+class CollectionTaskRoutine:
     """
         class to keep track of various groups of collection tasks for a group of repos.
         Simple version to just schedule a number of repos not worrying about repo weight.

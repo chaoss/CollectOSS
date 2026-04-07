@@ -278,7 +278,7 @@ def augur_collection_monitor(self):
         
         logger.info(f"Starting collection phases: {[h.name for h in enabled_collection_hooks]}")
 
-        main_routine = AugurTaskRoutine(logger, enabled_collection_hooks)
+        main_routine = CollectionTaskRoutine(logger, enabled_collection_hooks)
 
         main_routine.start_data_collection()
 

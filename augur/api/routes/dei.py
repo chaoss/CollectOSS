@@ -12,7 +12,7 @@ from augur.api.util import api_key_required, ssl_required
 from augur.application.db.models import ClientApplication, CollectionStatus, Repo, RepoGroup, BadgingDEI
 from augur.application.db.session import DatabaseSession
 
-from augur.tasks.util.collection_util import CollectionRequest,AugurTaskRoutine, get_enabled_phase_names_from_config_session, core_task_success_util
+from augur.tasks.util.collection_util import CollectionRequest,CollectionTaskRoutine, get_enabled_phase_names_from_config_session, core_task_success_util
 from augur.tasks.start_tasks import prelim_phase, primary_repo_collect_phase
 from augur.tasks.github.util.util import get_repo_weight_by_issue
 
@@ -95,7 +95,7 @@ def dei_track_repo(application: ClientApplication):
         deiHook = CollectionRequest("core",primary_enabled_phases)
         deiHook.repo_list = [repo_url]
 
-        singleRoutine = AugurTaskRoutine(logger, session,[deiHook])
+        singleRoutine = CollectionTaskRoutine(logger, session,[deiHook])
         singleRoutine.start_data_collection()
         #start_block_of_repos(logger, session, [repo_url], primary_enabled_phases, "new")
 

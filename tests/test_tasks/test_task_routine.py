@@ -8,7 +8,7 @@
 
 
 # def test_augur_task_routine_no_dependencies(celery_instance):
-#     routine = AugurTaskRoutine()
+#     routine = CollectionTaskRoutine()
 
 #     routine['facade'] = facade_commits_model.si()
 
@@ -22,7 +22,7 @@
 
 
 # def test_augur_task_routine_with_dependencies(celery_instance):
-#     routine = AugurTaskRoutine()
+#     routine = CollectionTaskRoutine()
 
 #     routine['facade'] = facade_commits_model.si()
 
