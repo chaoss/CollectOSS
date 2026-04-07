@@ -76,7 +76,7 @@ BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 #Classes for tasks that take a repo_git as an argument.
 class CoreRepoCollectionTask(celery.Task):
 
-    def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core',after_fail=CollectionState.ERROR.value):
+    def handle_celery_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core',after_fail=CollectionState.ERROR.value):
             
         # Note: I think self.app.engine would work but leaving it to try later
         engine = get_engine()
@@ -104,7 +104,7 @@ class CoreRepoCollectionTask(celery.Task):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         repo_git = self._extract_repo_git(args, kwargs)
         # log traceback to error file
-        self.augur_handle_task_failure(exc, task_id, repo_git, "core_task_failure")
+        self.handle_celery_task_failure(exc, task_id, repo_git, "core_task_failure")
 
     def _extract_repo_git(self, args, kwargs):
         if 'repo_git' in kwargs:
@@ -125,17 +125,17 @@ class SecondaryRepoCollectionTask(CoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         
         repo_git = self._extract_repo_git(args, kwargs)
-        self.augur_handle_task_failure(exc, task_id, repo_git, "secondary_task_failure",collection_hook='secondary')
+        self.handle_celery_task_failure(exc, task_id, repo_git, "secondary_task_failure",collection_hook='secondary')
 
 class FacadeRepoCollectionTask(CoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         repo_git = self._extract_repo_git(args, kwargs)
-        self.augur_handle_task_failure(exc, task_id, repo_git, "facade_task_failure",collection_hook='facade')
+        self.handle_celery_task_failure(exc, task_id, repo_git, "facade_task_failure",collection_hook='facade')
 
 class MLRepoCollectionTask(CoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args,kwargs,einfo):
         repo_git = self._extract_repo_git(args, kwargs)
-        self.augur_handle_task_failure(exc,task_id,repo_git, "ml_task_failure", collection_hook='ml')
+        self.handle_celery_task_failure(exc,task_id,repo_git, "ml_task_failure", collection_hook='ml')
 
 
 
