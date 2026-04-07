@@ -238,11 +238,11 @@ def build_ml_repo_collect_request(session, logger, enabled_phase_names, days_unt
     return request
 
 @celery.task(bind=True)
-def augur_collection_monitor(self):     
+def collection_monitor(self):     
 
     engine = self.app.engine
 
-    logger = logging.getLogger(augur_collection_monitor.__name__)
+    logger = logging.getLogger(collection_monitor.__name__)
 
     logger.info("Checking for repos to collect")
 

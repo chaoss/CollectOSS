@@ -15,7 +15,7 @@ import traceback
 import requests
 from redis.exceptions import ConnectionError as RedisConnectionError
 
-from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
+from augur.tasks.start_tasks import collection_monitor, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
 from augur.tasks.github.contributors import process_contributors
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
@@ -180,7 +180,7 @@ def start(ctx, disable_collection, development, pidfile, port):
 
         process_contributors.si().apply_async()
 
-        augur_collection_monitor.si().apply_async()
+        collection_monitor.si().apply_async()
         
     else:
         logger.info("Collection disabled")

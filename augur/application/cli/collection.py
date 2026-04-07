@@ -14,7 +14,7 @@ import uuid
 import traceback
 import sqlalchemy as s
 
-from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
+from augur.tasks.start_tasks import collection_monitor, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
@@ -107,7 +107,7 @@ def start(ctx, development):
     # start cloning repos when augur starts
     clone_repos.si().apply_async()
 
-    augur_collection_monitor.si().apply_async()
+    collection_monitor.si().apply_async()
 
     
     try:

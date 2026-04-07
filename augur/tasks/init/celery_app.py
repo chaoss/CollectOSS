@@ -218,7 +218,7 @@ def setup_periodic_tasks(sender, **kwargs):
         The tasks so that they are grouped by the module they are defined in
     """
     from celery.schedules import crontab
-    from augur.tasks.start_tasks import augur_collection_monitor
+    from augur.tasks.start_tasks import collection_monitor
     from augur.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos, create_collection_status_records
     from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.github.contributors import process_contributors
@@ -233,7 +233,7 @@ def setup_periodic_tasks(sender, **kwargs):
 
         collection_interval = config.get_value('Tasks', 'collection_interval')
         logger.info(f"Scheduling collection every {collection_interval/60} minutes")
-        sender.add_periodic_task(collection_interval, augur_collection_monitor.s())
+        sender.add_periodic_task(collection_interval, collection_monitor.s())
 
         #Do longer tasks less often
         logger.info(f"Scheduling data analysis every 30 days")
