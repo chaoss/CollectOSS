@@ -127,7 +127,7 @@ class SecondaryRepoCollectionTask(CoreRepoCollectionTask):
         repo_git = self._extract_repo_git(args, kwargs)
         self.augur_handle_task_failure(exc, task_id, repo_git, "secondary_task_failure",collection_hook='secondary')
 
-class AugurFacadeRepoCollectionTask(CoreRepoCollectionTask):
+class FacadeRepoCollectionTask(CoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         repo_git = self._extract_repo_git(args, kwargs)
         self.augur_handle_task_failure(exc, task_id, repo_git, "facade_task_failure",collection_hook='facade')

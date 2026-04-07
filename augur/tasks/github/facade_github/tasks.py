@@ -2,7 +2,7 @@ import logging
 
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
+from augur.tasks.init.celery_app import FacadeRepoCollectionTask
 from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from augur.tasks.github.facade_github.core import *
@@ -181,7 +181,7 @@ def link_commits_to_contributor(logger, facade_helper, contributorQueue):
 
 
 # Update the contributors table from the data facade has gathered.
-@celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
+@celery.task(base=FacadeRepoCollectionTask, bind=True)
 def insert_facade_contributors(self, repo_git):
 
     tool_source = "Insert Contributors task"
