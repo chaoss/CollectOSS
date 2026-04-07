@@ -13,7 +13,7 @@ import time
 
 from augur import instance_id
 from augur.application.logs import AugurLogger
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 from augur.application.db.session import DatabaseSession
 from augur.application.cli import test_connection, test_db_connection
 from augur.application.cli._cli_util import clear_rabbitmq_messages, raise_open_file_limit
@@ -39,7 +39,7 @@ def start():
     
     
     with DatabaseSession(logger) as session:
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
         core_count = config.get_value("Celery", "core_worker_count")
         secondary_count = config.get_value("Celery", "secondary_worker_count")
        

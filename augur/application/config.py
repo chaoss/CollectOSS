@@ -17,7 +17,7 @@ def get_development_flag_from_config():
     logger = getLogger(__name__)
     with DatabaseSession(logger) as session:
 
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
 
         section = "Augur"
         setting = "developer"
@@ -127,7 +127,7 @@ default_config = {
         }
 
 
-class AugurConfig():
+class SystemConfig():
 
     from augur.application.db.session import DatabaseSession
 
@@ -136,7 +136,7 @@ class AugurConfig():
     @property
     def base_config(self):
         """Return the "base" config - either the default config or a default config with user modifications on top
-        This is used as a base upon which the Augur CLI injects values, such as API keys, connection strings, 
+        This is used as a base upon which the CLI injects values, such as API keys, connection strings, 
         and other values passed in via environment variables.
         This config is then modified and passed into `load_config_from_dict`.
         """
@@ -148,7 +148,7 @@ class AugurConfig():
         return config
 
     def __init__(self, logger, session: DatabaseSession, config_sources: list = None):
-        """Create a new AugurConfig class
+        """Create a new SystemConfig class
 
         Args:
             logger (_type_): The logger instance to use for logging
@@ -386,7 +386,7 @@ class AugurConfig():
             return
 
 class NotWriteableException(Exception):
-    """Custom Augur exception class to be used when trying to modify a config that is not writeable
+    """Custom exception class to be used when trying to modify a config that is not writeable
     """
     pass
 

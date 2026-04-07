@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 def upgrade():
 
     with DatabaseSession(logger) as session:
-        config = AugurConfig(logger,session)
+        config = SystemConfig(logger,session)
         config_dict = config.load_config()
         
         #Update the missing fields of the celery section in the config

@@ -12,7 +12,7 @@ import requests
 import sqlalchemy as s
 from sqlalchemy import exc
 from flask import request, Response
-# from augur.config import AugurConfig
+# from augur.config import SystemConfig
 import os 
 import traceback 
 
@@ -185,7 +185,7 @@ logger = logging.getLogger(__name__)
 #     self.db = database_connection
 #     ## added for keys
 #     self._root_augur_dir = Repo_insertion_manager.ROOT_AUGUR_DIR
-#     self.augur_config = AugurConfig(self._root_augur_dir)
+#     self.augur_config = SystemConfig(self._root_augur_dir)
 #     ##########
 
 

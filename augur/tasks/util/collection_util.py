@@ -16,7 +16,7 @@ from augur.application.db.lib import execute_sql, get_session, get_active_repo_c
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 from augur.tasks.util.collection_state import CollectionState
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 
 
 class CollectionRequest:
@@ -117,7 +117,7 @@ def get_enabled_phase_names_from_config(engine, logger):
 
 def get_enabled_phase_names_from_config_session(session, logger):
 
-    config = AugurConfig(logger, session)
+    config = SystemConfig(logger, session)
     return get_enabled_phase_names_from_config_object(config)
 
 

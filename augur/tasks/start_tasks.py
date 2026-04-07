@@ -30,7 +30,7 @@ from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 from augur.application.db.lib import execute_sql, get_session
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 
 RUNNING_DOCKER = os.environ.get('AUGUR_DOCKER_DEPLOY') == "1"
 
@@ -255,7 +255,7 @@ def augur_collection_monitor(self):
     with DatabaseSession(logger, self.app.engine) as session:
 
         # Get config values for collection intervals
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
         core_interval = config.get_value('Tasks', 'core_collection_interval_days') or 15
         secondary_interval = config.get_value('Tasks', 'secondary_collection_interval_days') or 10
         facade_interval = config.get_value('Tasks', 'facade_collection_interval_days') or 10

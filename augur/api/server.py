@@ -26,7 +26,7 @@ from graphene_sqlalchemy import SQLAlchemyObjectType
 
 from augur.application.logs import AugurLogger
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 from augur.application.db.engine import get_database_string, create_database_engine
 from augur.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
 
@@ -331,7 +331,7 @@ logger = AugurLogger("server").get_logger()
 url = get_database_string()
 engine = create_database_engine(url, poolclass=StaticPool)
 db_session = DatabaseSession(logger, engine)
-augur_config = AugurConfig(logger, db_session)
+augur_config = SystemConfig(logger, db_session)
 
 
 def get_connection(table, cursor_field_name, connection_class, after, limit, extra_condition=False):

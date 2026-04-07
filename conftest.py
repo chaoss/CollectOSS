@@ -11,7 +11,7 @@ from sqlalchemy.pool import StaticPool
 
 
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 from augur.application.db.engine import get_database_string, create_database_engine, parse_database_string, execute_sql_file
 
 
@@ -243,7 +243,7 @@ def test_db_session(test_db_engine):
 
 @pytest.fixture
 def test_db_config(test_db_session):
-    return AugurConfig(logger, test_db_session)
+    return SystemConfig(logger, test_db_session)
 
 
 # @pytest.fixture(scope="session")

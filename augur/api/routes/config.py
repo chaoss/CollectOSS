@@ -10,7 +10,7 @@ import sqlalchemy as s
 from augur.application.config import get_development_flag
 from augur.application.db.lib import get_session
 from augur.application.db.models import Config
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 from augur.application.db.session import DatabaseSession
 from ..server import app
 
@@ -34,7 +34,7 @@ def get_config():
 
     with DatabaseSession(logger, engine=current_app.engine) as session:
         
-        config_dict = AugurConfig(logger, session).config.load_config()
+        config_dict = SystemConfig(logger, session).config.load_config()
 
     return jsonify(config_dict), 200
 

@@ -16,7 +16,7 @@ from augur.application.logs import TaskLogConfig, AugurLogger
 from augur.application.db.session import DatabaseSession
 from augur.application.db import get_engine
 from augur.application.db.lib import get_session
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
 from augur.application.db.models import Repo
 from augur.tasks.util.collection_state import CollectionState
@@ -229,7 +229,7 @@ def setup_periodic_tasks(sender, **kwargs):
     # Need to engine to be temporary so that there isn't an engine defined when the parent is forked to create worker processes
     with temporary_database_engine() as engine, DatabaseSession(logger, engine) as session:
 
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
 
         collection_interval = config.get_value('Tasks', 'collection_interval')
         logger.info(f"Scheduling collection every {collection_interval/60} minutes")

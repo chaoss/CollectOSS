@@ -9,7 +9,7 @@ from alembic import op
 from sqlalchemy.sql import text
 import pathlib
 import shutil
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 from augur.application.db.lib import get_value
 import logging
 

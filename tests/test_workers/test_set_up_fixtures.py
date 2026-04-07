@@ -128,7 +128,7 @@ class DummyFullWorker(ContributorInterfaceable):
         self.platform = "github"
         # first set up logging.
         self._root_augur_dir = Persistent.ROOT_AUGUR_DIR
-        self.augur_config = AugurConfig(self._root_augur_dir)
+        self.augur_config = SystemConfig(self._root_augur_dir)
 
         # Get default logging settings
         self.config = config
