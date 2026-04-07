@@ -180,18 +180,18 @@ celery_app.conf.worker_pool_restarts = True
 
 
 
-def split_tasks_into_groups(augur_tasks: List[str]) -> Dict[str, List[str]]:
+def split_tasks_into_groups(task_list: List[str]) -> Dict[str, List[str]]:
     """Split tasks on the celery app into groups.
 
     Args:
-        augur_tasks: list of tasks specified in augur
+        task_list: list of tasks specified in augur
 
     Returns
         The tasks so that they are grouped by the module they are defined in
     """
     grouped_tasks = {}
 
-    for task in augur_tasks: 
+    for task in task_list: 
         task_divided = task.split(".")
 
         try:
