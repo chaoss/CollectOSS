@@ -177,15 +177,15 @@ logger = logging.getLogger(__name__)
 #     return inserted_repo
 
 # class Repo_insertion_manager():
-# ROOT_AUGUR_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+# ROOT_PROJECT_REPO_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 # def __init__(self, organization_name, database_connection):
 #     #self.initialize_logging()
 #     self.org = organization_name
 #     self.db = database_connection
 #     ## added for keys
-#     self._root_augur_dir = Repo_insertion_manager.ROOT_AUGUR_DIR
-#     self.system_config = SystemConfig(self._root_augur_dir)
+#     self._root_project_repo_dir = Repo_insertion_manager.ROOT_PROJECT_REPO_DIR
+#     self.system_config = SystemConfig(self._root_project_repo_dir)
 #     ##########
 
 

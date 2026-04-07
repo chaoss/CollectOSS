@@ -58,15 +58,15 @@ def database_connection():
     cwd = os.getcwd()
     # Build the test database from the dockerfile and download
     # Postgres docker image if it doesn't exist.
-    ROOT_AUGUR_DIR = os.path.dirname(
+    ROOT_PROJECT_REPO_DIR = os.path.dirname(
         os.path.dirname(os.path.realpath(__file__)))
-    ROOT_AUGUR_DIR = str(ROOT_AUGUR_DIR).split("augur")
-    ROOT_AUGUR_DIR = ROOT_AUGUR_DIR[0] + "augur"
+    ROOT_PROJECT_REPO_DIR = str(ROOT_PROJECT_REPO_DIR).split("augur")
+    ROOT_PROJECT_REPO_DIR = ROOT_PROJECT_REPO_DIR[0] + "augur"
 
-    buildString = ROOT_AUGUR_DIR
+    buildString = ROOT_PROJECT_REPO_DIR
 
     # change to root augur directory
-    os.chdir(ROOT_AUGUR_DIR)
+    os.chdir(ROOT_PROJECT_REPO_DIR)
 
     print(os.getcwd())
 
@@ -127,8 +127,8 @@ class DummyFullWorker(ContributorInterfaceable):
 
         self.platform = "github"
         # first set up logging.
-        self._root_augur_dir = Persistent.ROOT_AUGUR_DIR
-        self.system_config = SystemConfig(self._root_augur_dir)
+        self._root_project_repo_dir = Persistent.ROOT_PROJECT_REPO_DIR
+        self.system_config = SystemConfig(self._root_project_repo_dir)
 
         # Get default logging settings
         self.config = config
