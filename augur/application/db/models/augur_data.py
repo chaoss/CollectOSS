@@ -273,7 +273,7 @@ class Contributor(Base):
 
     @classmethod
     def from_github(cls, contributor, tool_source, tool_version, data_source):
-        from augur.tasks.util.AugurUUID import GithubUUID
+        from augur.tasks.util.ContributorUUID import GithubUUID
 
         cntrb_id = GithubUUID()   
         cntrb_id["user"] = contributor["id"]

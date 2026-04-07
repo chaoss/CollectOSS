@@ -7,7 +7,7 @@ from sqlalchemy.sql import text
 from augur.tasks.github.pull_requests.core import *
 from augur.application.db.session import DatabaseSession
 from augur.application.db.models import Config 
-from augur.tasks.util.AugurUUID import GithubUUID
+from augur.tasks.util.ContributorUUID import GithubUUID
 from augur.application.db.data_parse import extract_needed_contributor_data
 
 logger = logging.getLogger(__name__)

@@ -2,7 +2,7 @@ from augur.tasks.github.facade_github.contributor_interfaceable.contributor_inte
 from augur.tasks.github.util.util import get_owner_repo
 from augur.tasks.github.util.github_task_session import *
 from augur.application.db.models import *
-from augur.tasks.util.AugurUUID import GithubUUID
+from augur.tasks.util.ContributorUUID import GithubUUID
 from augur.application.db.lib import bulk_insert_dicts, batch_insert_contributors
 from augur.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
 from augur.tasks.github.util.github_data_access import GithubDataAccess
