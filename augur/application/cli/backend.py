@@ -259,7 +259,7 @@ def stop(ctx):
     """
     logger = logging.getLogger("augur.cli")
 
-    augur_stop(signal.SIGTERM, logger, ctx.obj.engine)
+    stop_processes(signal.SIGTERM, logger, ctx.obj.engine)
 
 @cli.command('stop-collection-blocking')
 @test_connection
@@ -319,10 +319,10 @@ def kill(ctx):
     Sends SIGKILL to all Augur server & worker processes
     """
     logger = logging.getLogger("augur.cli")
-    augur_stop(signal.SIGKILL, logger, ctx.obj.engine)
+    stop_processes(signal.SIGKILL, logger, ctx.obj.engine)
 
 
-def augur_stop(signal, logger, engine):
+def stop_processes(signal, logger, engine):
     """
     Stops augur with the given signal, 
     and cleans up collection if it was running

@@ -90,7 +90,7 @@ def stop(ctx):
     """
     logger = logging.getLogger("augur.cli")
 
-    augur_stop(signal.SIGTERM, logger, ctx.obj.engine)
+    stop_processes(signal.SIGTERM, logger, ctx.obj.engine)
 
 @cli.command('kill')
 @with_database
@@ -100,7 +100,7 @@ def kill(ctx):
     Sends SIGKILL to all Augur api processes
     """
     logger = logging.getLogger("augur.cli")
-    augur_stop(signal.SIGKILL, logger, ctx.obj.engine)
+    stop_processes(signal.SIGKILL, logger, ctx.obj.engine)
 
 @cli.command('processes')
 def processes():
@@ -109,7 +109,7 @@ def processes():
     for process in get_api_processes():
         logger.info(f"Found process {process.pid}")
 
-def augur_stop(signal, logger, engine):
+def stop_processes(signal, logger, engine):
     """
     Stops augur with the given signal, 
     and cleans up the api

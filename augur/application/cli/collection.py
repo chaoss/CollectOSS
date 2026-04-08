@@ -179,7 +179,7 @@ def stop(ctx):
     """
     cli_logger = logging.getLogger("augur.cli")
 
-    augur_stop(signal.SIGTERM, cli_logger, ctx.obj.engine)
+    stop_processes(signal.SIGTERM, cli_logger, ctx.obj.engine)
 
 @cli.command('kill')
 @with_database
@@ -189,7 +189,7 @@ def kill(ctx):
     Sends SIGKILL to all Augur server & worker processes
     """
     cli_logger = logging.getLogger("augur.cli")
-    augur_stop(signal.SIGKILL, cli_logger, ctx.obj.engine)
+    stop_processes(signal.SIGKILL, cli_logger, ctx.obj.engine)
 
 @cli.command('repo-reset')
 @test_connection
@@ -254,7 +254,7 @@ def is_collection_process(process):
     return False
 
 
-def augur_stop(stop_signal, logger_instance, engine):
+def stop_processes(stop_signal, logger_instance, engine):
     """
     Stops augur with the given signal, 
     and cleans up collection if it was running
