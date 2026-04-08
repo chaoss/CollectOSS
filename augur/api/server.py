@@ -30,7 +30,7 @@ from augur.application.config import SystemConfig
 from augur.application.db.engine import get_database_string, create_database_engine
 from augur.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
 
-from metadata import __version__ as augur_code_version
+from metadata import __version__ as code_version
 
 
 
@@ -700,7 +700,7 @@ def status():
     """
     status = {
         'status': 'OK',
-        'version': augur_code_version
+        'version': code_version
     }
     return Response(response=json.dumps(status),
                     status=200,
