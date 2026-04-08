@@ -416,13 +416,13 @@ def _flush_pr_review_comment_batch(
         github_pr_review_id = comment["pull_request_review_id"]
 
         try:
-            augur_pr_review_id = pr_review_id_mapping[github_pr_review_id]
+            pr_review_id = pr_review_id_mapping[github_pr_review_id]
         except KeyError:
             logger.warning(f"{owner}/{repo}: Could not find related pr review. We were searching for pr review with id: {github_pr_review_id}")
             continue
 
         pr_review_message_ref = extract_pr_review_message_ref_data(
-            comment, augur_pr_review_id, github_pr_review_id, repo_id, tool_version, data_source
+            comment, pr_review_id, github_pr_review_id, repo_id, tool_version, data_source
         )
         pr_review_message_ref_insert_data.append(pr_review_message_ref)
 
