@@ -24,7 +24,7 @@ def collect_github_messages(repo_git: str, full_collection: bool) -> None:
 
     with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
+        augur_db = manifest.db_session
             
         repo_id = augur_db.session.query(Repo).filter(
             Repo.repo_git == repo_git).one().repo_id

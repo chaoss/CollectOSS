@@ -29,7 +29,7 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
 
     with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
+        augur_db = manifest.db_session
 
         repo_id = augur_db.session.query(Repo).filter(
         Repo.repo_git == repo_git).one().repo_id
@@ -471,7 +471,7 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
     with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
+        augur_db = manifest.db_session
 
         query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id

@@ -11,7 +11,7 @@ def process_pull_request_files(repo_git: str, full_collection: bool) -> None:
     logger = logging.getLogger(process_pull_request_files.__name__)
 
     with GithubTaskManifest(logger) as manifest:
-        augur_db = manifest.augur_db
+        augur_db = manifest.db_session
         query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo = execute_session_query(query, 'one')
 
