@@ -2206,13 +2206,13 @@ class RepoInsightsRecord(Base):
         String,
         comment='A confidence interval or other expression of the type of threshold and the value of a threshold met in order for it to be "an insight". Example. "95% confidence interval". ',
     )
-    tool_source = Column(String, comment="Standard Augur Metadata")
-    tool_version = Column(String, comment="Standard Augur Metadata")
-    data_source = Column(String, comment="Standard Augur Metadata")
+    tool_source = Column(String, comment="Standard Collection Metadata")
+    tool_version = Column(String, comment="Standard Collection Metadata")
+    data_source = Column(String, comment="Standard Collection Metadata")
     data_collection_date = Column(
         TIMESTAMP(precision=6),
         server_default=text("CURRENT_TIMESTAMP"),
-        comment="Standard Augur Metadata",
+        comment="Standard Collection Metadata",
     )
 
     repo = relationship("Repo")
@@ -3795,9 +3795,9 @@ class TopicModelMeta(Base):
         nullable=False,
         comment="When training ended"
     )
-    tool_source = Column(String, comment="Standard Augur Metadata")
-    tool_version = Column(String, comment="Standard Augur Metadata")
-    data_source = Column(String, comment="Standard Augur Metadata")
+    tool_source = Column(String, comment="Standard Collection Metadata")
+    tool_version = Column(String, comment="Standard Collection Metadata")
+    data_source = Column(String, comment="Standard Collection Metadata")
     data_collection_date = Column(
         TIMESTAMP(timezone=True, precision=0),
         server_default=text("CURRENT_TIMESTAMP")
