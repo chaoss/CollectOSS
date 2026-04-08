@@ -6,7 +6,7 @@ import json
 
 # from augur.application import Application
 
-# def test_init_augur_regular():
+# def test_init_regular():
 #     test_app = Application(disable_logs=True)
 #     assert test_app is not None
 
