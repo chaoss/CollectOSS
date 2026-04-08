@@ -93,7 +93,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[
         if since and datetime.fromisoformat(pr["updated_at"].replace("Z", "+00:00")).replace(tzinfo=timezone.utc) < since:
             return 
 
-def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
+def process_pull_requests(pull_requests, task_name, repo_id, logger, db_session):
     """
     Parse and insert all retrieved PR data.
 
@@ -102,7 +102,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
         task_name: Name of the calling task and the repo
         repo_id: augur id of the repository
         logger: logging object
-        augur_db: sqlalchemy db object
+        db_session: sqlalchemy db object
     """
     tool_source = "Pr Task"
     tool_version = "2.0"
@@ -115,7 +115,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
 
     # insert contributors from these prs
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+    db_session.insert_data(contributors, Contributor, ["cntrb_id"])
 
 
     # insert the prs into the pull_requests table. 
@@ -125,7 +125,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
     pr_natural_keys = ["repo_id", "pr_src_id"]
     pr_return_columns = ["pull_request_id", "pr_url"]
     pr_string_fields = ["pr_src_title", "pr_body"]
-    pr_return_data = augur_db.insert_data(pr_dicts, PullRequest, pr_natural_keys, 
+    pr_return_data = db_session.insert_data(pr_dicts, PullRequest, pr_natural_keys, 
                             return_columns=pr_return_columns, string_fields=pr_string_fields)
 
     if pr_return_data is None:
@@ -164,24 +164,24 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
     pr_label_string_fields = ["pr_src_description"]
-    augur_db.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys, string_fields=pr_label_string_fields)
+    db_session.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys, string_fields=pr_label_string_fields)
 
     # inserting pr assignees
     # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
     pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    augur_db.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
+    db_session.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
 
 
     # inserting pr requested reviewers
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
-    augur_db.insert_data(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
+    db_session.insert_data(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
     
     # inserting pr metadata
     # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
     pr_metadata_string_fields = ["pr_src_meta_label"]
-    augur_db.insert_data(pr_metadata_dicts, PullRequestMeta,
+    db_session.insert_data(pr_metadata_dicts, PullRequestMeta,
                         pr_metadata_natural_keys, string_fields=pr_metadata_string_fields)
 
 
@@ -324,7 +324,7 @@ def _flush_contributors(logger, contributors: list, owner: str, repo: str, conte
         batch_insert_contributors(logger, unique_contributors)
 
 
-def _flush_pr_review_batch(augur_db, contributors: list, pr_reviews: list, logger, owner: str, repo: str) -> None:
+def _flush_pr_review_batch(db_session, contributors: list, pr_reviews: list, logger, owner: str, repo: str) -> None:
     """
     Insert accumulated PR review batch data into the database.
 
@@ -332,7 +332,7 @@ def _flush_pr_review_batch(augur_db, contributors: list, pr_reviews: list, logge
     contributors and PR reviews. Uses ON CONFLICT upsert logic via insert_data().
 
     Args:
-        augur_db: DatabaseSession instance for database operations.
+        db_session: DatabaseSession instance for database operations.
         contributors: List of contributor dicts to insert. Will be deduplicated
             using remove_duplicate_dicts() before insertion.
         pr_reviews: List of PR review dicts to insert.
@@ -349,7 +349,7 @@ def _flush_pr_review_batch(augur_db, contributors: list, pr_reviews: list, logge
         logger.info(f"{owner}/{repo}: Inserting {len(pr_reviews)} pr reviews")
         pr_review_natural_keys = ["pr_review_src_id"]
         pr_review_string_fields = ["pr_review_body"]
-        augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys, string_fields=pr_review_string_fields)
+        db_session.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys, string_fields=pr_review_string_fields)
 
 
 def _flush_pr_review_comment_batch(
