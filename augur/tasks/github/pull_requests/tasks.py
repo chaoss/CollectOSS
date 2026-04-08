@@ -29,9 +29,9 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
 
     with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.db_session
+        db_session = manifest.db_session
 
-        repo_id = augur_db.session.query(Repo).filter(
+        repo_id = db_session.session.query(Repo).filter(
         Repo.repo_git == repo_git).one().repo_id
 
         owner, repo = get_owner_repo(repo_git)
@@ -51,12 +51,12 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
             all_data.append(pr)
 
             if len(all_data) >= pr_batch_size:
-                process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, augur_db)
+                process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, db_session)
                 total_count += len(all_data)
                 all_data.clear()
 
         if all_data:
-            process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, augur_db)
+            process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, db_session)
             total_count += len(all_data)
 
         if total_count > 0:
@@ -471,13 +471,13 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
     with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.db_session
+        db_session = manifest.db_session
 
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
+        query = db_session.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id
 
         if full_collection:
-            query = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
+            query = db_session.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
             prs = execute_session_query(query, 'all')
         else:
             last_collected = get_secondary_data_last_collected(repo_id).date()
@@ -530,14 +530,14 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
             # Flush batch when threshold reached
             if len(pr_review_dicts) >= pr_review_batch_size:
-                _flush_pr_review_batch(augur_db, contributors, pr_review_dicts, logger, owner, repo)
+                _flush_pr_review_batch(db_session, contributors, pr_review_dicts, logger, owner, repo)
                 total_reviews_collected += len(pr_review_dicts)
                 contributors.clear()
                 pr_review_dicts.clear()
 
         # Flush any remaining data
         if pr_review_dicts:
-            _flush_pr_review_batch(augur_db, contributors, pr_review_dicts, logger, owner, repo)
+            _flush_pr_review_batch(db_session, contributors, pr_review_dicts, logger, owner, repo)
             total_reviews_collected += len(pr_review_dicts)
 
         if total_reviews_collected == 0:
