@@ -32,7 +32,7 @@ def insight_model(repo_git: str,logger,engine) -> None:
 
     tool_source = 'Insight Worker'
     tool_version = '1.0.0'
-    data_source = 'Augur API'
+    data_source = 'Built-in API'
 
     metrics = {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
                 "reviews": "pull_requests", "contributors-new": "new_contributors"}

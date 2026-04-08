@@ -51,7 +51,7 @@ def clustering_model(repo_git: str,logger,engine) -> None:
 
     tool_source = 'Clustering Worker'
     tool_version = '0.2.0'
-    data_source = 'Augur Collected Messages'
+    data_source = 'Collected Messages'
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
