@@ -337,12 +337,12 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, session):
     issue_message_ref_dicts = []
     for data in message_return_data:
 
-        augur_msg_id = data["msg_id"]
+        msg_id = data["msg_id"]
         platform_message_id = data["platform_msg_id"]
 
         ref = message_ref_mapping_data[platform_message_id]
         message_ref_data = ref["msg_ref_data"]
-        message_ref_data["msg_id"] = augur_msg_id
+        message_ref_data["msg_id"] = msg_id
 
         issue_message_ref_dicts.append(message_ref_data)
 

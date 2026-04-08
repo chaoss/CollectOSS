@@ -407,11 +407,11 @@ def _flush_pr_review_comment_batch(
 
     pr_review_message_ref_insert_data = []
     for data in message_return_data:
-        augur_msg_id = data["msg_id"]
+        msg_id = data["msg_id"]
         github_msg_id = data["platform_msg_id"]
 
         comment = pr_review_msg_mapping_data[github_msg_id]
-        comment["msg_id"] = augur_msg_id
+        comment["msg_id"] = msg_id
 
         github_pr_review_id = comment["pull_request_review_id"]
 
