@@ -129,15 +129,15 @@ def cleanup_after_api_halt(logger, engine):
     clear_redis_caches(logger)
 
 def get_api_processes():
-    augur_api_processes = []
+    api_processes = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
             try:
                 if is_api_process(process):
-                    augur_api_processes.append(process)
+                    api_processes.append(process)
             except (KeyError, FileNotFoundError):
                 pass
-    return augur_api_processes
+    return api_processes
 
 def is_api_process(process):
 
