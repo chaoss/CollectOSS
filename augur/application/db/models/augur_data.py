@@ -193,13 +193,13 @@ class Contributor(Base):
     )
     cntrb_email = Column(
         String,
-        comment="This needs to be here for matching contributor ids, which are augur, to the commit information. ",
+        comment="This needs to be here for matching contributor ids to the commit information. ",
     )
     cntrb_full_name = Column(String)
     cntrb_company = Column(String)
     cntrb_created_at = Column(TIMESTAMP(precision=0))
     cntrb_type = Column(
-        String, comment="Present in another models. It is not currently used in Augur. "
+        String, comment="Present in another models. It is not currently used. "
     )
     cntrb_fake = Column(SmallInteger, server_default=text("0"))
     cntrb_deleted = Column(SmallInteger, server_default=text("0"))
@@ -1774,7 +1774,7 @@ class PullRequest(Base):
     pr_patch_url = Column(String)
     pr_issue_url = Column(String)
     pr_augur_issue_id = Column(
-        BigInteger, comment="This is to link to the augur stored related issue"
+        BigInteger, comment="This is to link to the internal ID for the related issue"
     )
     pr_src_number = Column(
         BigInteger, comment="The pr_src_number is unique within a repository."
@@ -1786,7 +1786,7 @@ class PullRequest(Base):
         ForeignKey(
             "augur_data.contributors.cntrb_id", ondelete="RESTRICT", onupdate="CASCADE"
         ),
-        comment="This is to link to the augur contributor record. ",
+        comment="This is to link to the contributor record. ",
     )
     pr_body = Column(Text)
     pr_created_at = Column(TIMESTAMP(precision=0))
