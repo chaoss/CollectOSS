@@ -37,7 +37,7 @@ class SpdxAnnotationType(Base):
     name = Column(String(255), nullable=False, unique=True)
 
 
-class SpdxAugurRepoMap(Base):
+class SpdxRepoMap(Base):
     __tablename__ = "augur_repo_map"
     __table_args__ = {"schema": "spdx"}
 
