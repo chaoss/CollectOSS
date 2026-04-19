@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """
-Runs Augur with Gunicorn when called
+Runs CollectOSS with Gunicorn when called
 """
 
 import os
@@ -40,6 +40,6 @@ class CLIMultiCommand(click.MultiCommand):
 @click.pass_context
 def run(ctx):
     """
-    Augur is an application for open source community health analytics
+    CollectOSS is an application for open source community health analytics
     """
     return ctx

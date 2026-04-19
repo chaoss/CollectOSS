@@ -45,7 +45,7 @@ def cli(ctx):
 @with_database
 @click.pass_context
 def add_repos(ctx: click.Context, filename: str) -> None:
-    """Add repositories to Augur's database from a CSV file.
+    """Add repositories to CollectOSS's database from a CSV file.
 
     The CSV file can have headers (recommended):
         repo_url,repo_group_id
@@ -156,7 +156,7 @@ def get_repo_groups(ctx: click.Context) -> pd.DataFrame:
 @with_database
 @click.pass_context
 def add_repo_groups(ctx: click.Context, filename: str) -> None:
-    """Create new repo groups in Augur's database from a CSV file.
+    """Create new repo groups in CollectOSS's database from a CSV file.
 
     Args:
         ctx: Click context object containing the database engine
@@ -247,7 +247,7 @@ def add_repo_groups(ctx: click.Context, filename: str) -> None:
 @click.pass_context
 def add_github_org(ctx, organization_name):
     """
-    Create new repo groups in Augur's database
+    Create new repo groups in CollectOSS's database
     """
     from collectoss.tasks.github.util.github_task_session import GithubTaskSession
     from collectoss.util.repo_load_controller import RepoLoadController
@@ -323,7 +323,7 @@ def generate_key(length):
 @click.pass_context
 def generate_api_key(ctx):
     """
-    Generate and set a new Augur API key
+    Generate and set a new CollectOSS API key
     """
     key = generate_key(32)
     ctx.invoke(update_api_key, api_key=key)
@@ -352,7 +352,7 @@ def update_api_key(ctx, api_key):
 
     with ctx.obj.engine.begin() as connection:
         connection.execute(update_api_key_sql, api_key=api_key)
-        logger.info(f"Updated Augur API key to: {api_key}")
+        logger.info(f"Updated CollectOSS API key to: {api_key}")
 
 
 @cli.command("get-api-key")
@@ -371,12 +371,12 @@ def get_api_key(ctx):
         with ctx.obj.engine.connect() as connection:
             print(connection.execute(get_api_key_sql).fetchone()[0])
     except TypeError:
-        print("No Augur API key found.")
+        print("No CollectOSS API key found.")
 
 
 @cli.command(
     "check-pgpass",
-    short_help="Check the ~/.pgpass file for Augur's database credentials",
+    short_help="Check the ~/.pgpass file for CollectOSS's database credentials",
 )
 def check_pgpass():
     db_environment_var = getenv("AUGUR_DB")

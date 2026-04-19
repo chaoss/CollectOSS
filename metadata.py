@@ -7,7 +7,7 @@ __short_description__ = "Python 3 package for free/libre and open-source softwar
 
 __version__ = "0.92.0"
 __release__ = "v0.92.0 (Paladin Penguin)"
-__author__ = "Augur Team"
+__author__ = "CollectOSS Team"
 __author_email__ = "outdoors@acm.org"
 
 __license__ = "MIT"

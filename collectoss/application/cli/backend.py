@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """
-Augur library commands for controlling the backend components
+CollectOSS library commands for controlling the backend components
 """
 import resource
 import os
@@ -50,7 +50,7 @@ def cli(ctx):
 @with_database
 @click.pass_context
 def start(ctx, disable_collection, development, pidfile, port):
-    """Start Augur's backend server."""
+    """Start CollectOSS's backend server."""
     with open(pidfile, "w") as pidfile_io:
         pidfile_io.write(str(os.getpid()))
 
@@ -124,7 +124,7 @@ def start(ctx, disable_collection, development, pidfile, port):
         exit(247)
     
     logger.info('Gunicorn webserver started...')
-    logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
+    logger.info(f'CollectOSS is running at: {"http" if development else "https"}://{host}:{port}')
     logger.info(f"The API is available at '{api_response.json()['route']}'")
 
     processes = start_celery_worker_processes((core_worker_count, secondary_worker_count, facade_worker_count), disable_collection)
@@ -255,7 +255,7 @@ def start_celery_worker_processes(worker_counts: tuple[int, int, int], disable_c
 @click.pass_context
 def stop(ctx):
     """
-    Sends SIGTERM to all Augur server & worker processes
+    Sends SIGTERM to all CollectOSS server & worker processes
     """
     logger = logging.getLogger("collectoss.cli")
 
@@ -316,7 +316,7 @@ def stop_collection(ctx):
 @click.pass_context
 def kill(ctx):
     """
-    Sends SIGKILL to all Augur server & worker processes
+    Sends SIGKILL to all CollectOSS server & worker processes
     """
     logger = logging.getLogger("collectoss.cli")
     stop_processes(signal.SIGKILL, logger, ctx.obj.engine)
@@ -394,7 +394,7 @@ def repo_reset(backend_app):
 @cli.command('processes')
 def processes():
     """
-    Outputs the name/PID of all Augur server & worker processes"""
+    Outputs the name/PID of all CollectOSS server & worker processes"""
     for process in get_backend_processes():
         logger.info(f"Found process {process.pid} [{process.name()}] -> Parent: {process.parent().pid}")
 

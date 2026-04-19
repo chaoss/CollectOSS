@@ -37,7 +37,7 @@ def test_connection(function_internet_connection):
                     f"""
                     \n\n{usage} command setup failed.
                     There was an error while testing for network connectivity
-                    Please check your connection to the internet to run Augur
+                    Please check your connection to the internet to run CollectOSS
                     Consider setting http_proxy variables for limited access installations."""
                 )
                 sys.exit(-1)

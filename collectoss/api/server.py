@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-"""Creates a WSGI server that serves the Augur REST API."""
+"""Creates a WSGI server that serves the CollectOSS REST API."""
 
 import glob
 import sys

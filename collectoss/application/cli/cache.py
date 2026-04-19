@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """
-Augur library commands redis
+CollectOSS library commands redis
 """
 import click
 

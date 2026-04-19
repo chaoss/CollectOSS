@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """
-Augur library commands for controlling the backend components
+CollectOSS library commands for controlling the backend components
 """
 import os
 import time
@@ -33,7 +33,7 @@ def cli(ctx):
 @with_database
 @click.pass_context
 def start(ctx, development, port):
-    """Start Augur's backend server."""
+    """Start CollectOSS's backend server."""
 
     try:
         if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
@@ -64,7 +64,7 @@ def start(ctx, development, port):
 
     time.sleep(3)
     logger.info('Gunicorn webserver started...')
-    logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
+    logger.info(f'CollectOSS is running at: {"http" if development else "https"}://{host}:{port}')
 
     frontend_worker = f"celery -A collectoss.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n frontend:{uuid.uuid4().hex}@%h -Q frontend"
     frontend_worker_process = subprocess.Popen(frontend_worker.split(" "))
@@ -86,7 +86,7 @@ def start(ctx, development, port):
 @click.pass_context
 def stop(ctx):
     """
-    Sends SIGTERM to all Augur api processes
+    Sends SIGTERM to all CollectOSS api processes
     """
     logger = logging.getLogger("collectoss.cli")
 
@@ -97,7 +97,7 @@ def stop(ctx):
 @click.pass_context
 def kill(ctx):
     """
-    Sends SIGKILL to all Augur api processes
+    Sends SIGKILL to all CollectOSS api processes
     """
     logger = logging.getLogger("collectoss.cli")
     stop_processes(signal.SIGKILL, logger, ctx.obj.engine)
@@ -105,7 +105,7 @@ def kill(ctx):
 @cli.command('processes')
 def processes():
     """
-    Outputs the name/PID of all Augur api process"""
+    Outputs the name/PID of all CollectOSS api process"""
     for process in get_api_processes():
         logger.info(f"Found process {process.pid}")
 

@@ -19,7 +19,7 @@ def get_development_flag_from_config():
 
         config = SystemConfig(logger, session)
 
-        section = "Augur"
+        section = "CollectOSS"
         setting = "developer"
 
         flag = config.get_value(section, setting)
@@ -34,7 +34,7 @@ def redact_setting_value(section_name, setting_name, value):
     return value_redacted
 
 default_config = {
-            "Augur": {
+            "CollectOSS": {
                 "developer": 0,
                 "version": 1
             },
