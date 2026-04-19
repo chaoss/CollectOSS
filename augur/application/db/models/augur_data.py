@@ -64,7 +64,7 @@ class ChaossMetricStatus(Base):
     __tablename__ = "chaoss_metric_status"
     __table_args__ = {
         "schema": "augur_data",
-        "comment": "This table used to track CHAOSS Metric implementations in Augur, but due to the constantly changing location of that information, it is for the moment not actively populated. ",
+        "comment": "This table used to track CHAOSS Metric implementations, but due to the constantly changing location of that information, it is for the moment not actively populated. ",
     }
 
     cms_id = Column(
@@ -123,7 +123,7 @@ class ContributorAffiliation(Base):
     __tablename__ = "contributor_affiliations"
     __table_args__ = {
         "schema": "augur_data",
-        "comment": "This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when Augur is finished counting commits using the Facade Worker. ",
+        "comment": "This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when CollectOSS is finished counting commits using the Facade Worker. ",
     }
 
     ca_id = Column(
@@ -783,7 +783,7 @@ class ContributorsAlias(Base):
         UniqueConstraint("alias_email"),
         {
             "schema": "augur_data",
-            "comment": "Every open source user may have more than one email used to make contributions over time. Augur selects the first email it encounters for a user as its “canonical_email”. \n\nThe canonical_email is also added to the contributors_aliases table, with the canonical_email and alias_email being identical.  Using this strategy, an email search will only need to join the alias table for basic email information, and can then more easily map the canonical email from each alias row to the same, more detailed information in the contributors table for a user. ",
+            "comment": "Every open source user may have more than one email used to make contributions over time. CollectOSS selects the first email it encounters for a user as its “canonical_email”. \n\nThe canonical_email is also added to the contributors_aliases table, with the canonical_email and alias_email being identical.  Using this strategy, an email search will only need to join the alias table for basic email information, and can then more easily map the canonical email from each alias row to the same, more detailed information in the contributors table for a user. ",
         },
     )
 
@@ -1232,7 +1232,7 @@ class RepoGroupInsight(Base):
     __tablename__ = "repo_group_insights"
     __table_args__ = {
         "schema": "augur_data",
-        "comment": 'This table is output from an analytical worker inside of Augur. It runs through the different metrics on a REPOSITORY_GROUP and identifies the five to ten most “interesting” metrics as defined by some kind of delta or other factor. The algorithm is going to evolve. \n\nWorker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. ',
+        "comment": 'This table is output from an analytical worker. It runs through the different metrics on a REPOSITORY_GROUP and identifies the five to ten most “interesting” metrics as defined by some kind of delta or other factor. The algorithm is going to evolve. \n\nWorker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. ',
     }
 
     rgi_id = Column(
@@ -2144,7 +2144,7 @@ class RepoInsight(Base):
     __tablename__ = "repo_insights"
     __table_args__ = {
         "schema": "augur_data",
-        "comment": 'This table is output from an analytical worker inside of Augur. It runs through the different metrics on a repository and identifies the five to ten most “interesting” metrics as defined by some kind of delta or other factor. The algorithm is going to evolve. \n\nWorker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. ',
+        "comment": 'This table is output from an analytical worker. It runs through the different metrics on a repository and identifies the five to ten most “interesting” metrics as defined by some kind of delta or other factor. The algorithm is going to evolve. \n\nWorker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. ',
     }
 
     ri_id = Column(
