@@ -33,7 +33,7 @@ class CLIMultiCommand(click.MultiCommand):
             return
 
         # Prefer to raise exception instead of silcencing it
-        module = importlib.import_module('.' + name, 'augur.application.cli')
+        module = importlib.import_module('.' + name, 'collectoss.application.cli')
         return module.cli
 
 @click.command(cls=CLIMultiCommand, context_settings=CONTEXT_SETTINGS)
