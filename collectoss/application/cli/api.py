@@ -59,7 +59,7 @@ def start(ctx, development, port):
     if not port:
         port = get_value("Server", "port")
         
-    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file gunicorn.log"
+    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} collectoss.api.server:app --log-file gunicorn.log"
     server = subprocess.Popen(gunicorn_command.split(" "))
 
     time.sleep(3)
@@ -146,7 +146,7 @@ def is_api_process(process):
                     
         if process.pid != os.getpid():
             
-            if ("augur.api.server:app" in command or 
+            if ("collectoss.api.server:app" in command or 
                 "augurbackendapi" in command or 
                ("collectoss.tasks.init.celery_app.celery_app" in command and "frontend" in command)):
                 return True

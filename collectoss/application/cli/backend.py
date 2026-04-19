@@ -103,7 +103,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     log_dir = get_value("Logging", "logs_directory") or "."
     gunicorn_log_file = os.path.join(log_dir, "gunicorn.log")
 
-    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} augur.api.server:app --log-file {gunicorn_log_file}"
+    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} collectoss.api.server:app --log-file {gunicorn_log_file}"
     server = subprocess.Popen(gunicorn_command.split(" "))
     manager.server = server
 

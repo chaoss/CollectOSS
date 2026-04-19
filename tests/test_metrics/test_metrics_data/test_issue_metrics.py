@@ -2,7 +2,7 @@
 
 import pytest
 import pandas as pd
-from  augur.api.metrics.issue import *
+from  collectoss.api.metrics.issue import *
 
 def test_issues_new():
     #repo_id

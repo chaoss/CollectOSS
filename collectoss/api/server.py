@@ -62,8 +62,8 @@ def create_metrics() -> None:
 
     # import the metric modules and add them to the flask app using add_metrics
     for file in metric_files:
-        importlib.import_module(f"augur.api.metrics.{file}")
-        add_metrics(f"augur.api.metrics.{file}")
+        importlib.import_module(f"collectoss.api.metrics.{file}")
+        add_metrics(f"collectoss.api.metrics.{file}")
 
 
 def add_metrics(module_name: str) -> None:

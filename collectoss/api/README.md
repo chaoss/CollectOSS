@@ -9,7 +9,7 @@
 
 ### Starting API
 
-The api is started using a subprocess.Popen() on this command gunicorn -c `<gunicorn_location>` -b `<bind>` --preload augur.api.server:app. This loads the gunicorn configuration from the location specified in the variable `<guicorn_location>`, and binds the gunicorn process to the ip and port specified in the `<bind>` variable. The gunicorn_location is a path to the `gunicorn_config.py` file in the `augur/api` directory. Then is tries to find the app variable in augur.api.server so it can use this as the Flask app. This cases these three lines of code to execute at the bottom of server.py: 
+The api is started using a subprocess.Popen() on this command gunicorn -c `<gunicorn_location>` -b `<bind>` --preload collectoss.api.server:app. This loads the gunicorn configuration from the location specified in the variable `<guicorn_location>`, and binds the gunicorn process to the ip and port specified in the `<bind>` variable. The gunicorn_location is a path to the `gunicorn_config.py` file in the `augur/api` directory. Then is tries to find the app variable in collectoss.api.server so it can use this as the Flask app. This cases these three lines of code to execute at the bottom of server.py: 
 ```python
 server = Server()
 server.create_app()
