@@ -8,7 +8,7 @@ Before getting started, please make sure you've read the [README](README.md) to 
 
 ## Join the Community
 
-We encourage all contributors to join the [CHAOSS Slack workspace](https://chaoss.community/kb-getting-started/) and participate in the `#wg-augur-8knot` channel. This is a great place to ask questions, get help with issues, participate in discussions, and stay updated on community meetings and planning. Don't hesitate to introduce yourself and ask for help if you get stuck!
+We encourage all contributors to join the [CHAOSS Slack workspace](https://chaoss.community/kb-getting-started/) and participate in the `#wg-collectoss-8knot` channel. This is a great place to ask questions, get help with issues, participate in discussions, and stay updated on community meetings and planning. Don't hesitate to introduce yourself and ask for help if you get stuck!
 
 ## Opening an issue
 If you're experiencing an issue with Augur or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/augur/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our [issues](https://github.com/chaoss/augur/issues) before opening a new one.
@@ -101,7 +101,7 @@ git push origin master
 ### CHAOSS
 - [Website](https://chaoss.community/)
 - [Get Involved](https://chaoss.community/participate)
-- [Join the CHAOSS Slack](https://chaoss.community/kb-getting-started/) - Join the `#wg-augur-8knot` channel to participate in discussions, meetings, and planning
+- [Join the CHAOSS Slack](https://chaoss.community/kb-getting-started/) - Join the `#wg-collectoss-8knot` channel to participate in discussions, meetings, and planning
 - [Metrics](https://github.com/chaoss/metrics)
 - [Evolution Metrics Working Group](https://github.com/chaoss/wg-evolution)
 - [Common Metrics Working Group](https://github.com/chaoss/wg-common)
