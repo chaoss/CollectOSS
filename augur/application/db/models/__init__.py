@@ -96,7 +96,6 @@ from augur.application.db.models.spdx import (
 )
 
 from augur.application.db.models.augur_operations import (
-    AugurSetting,
     WorkerHistory,
     WorkerJob,
     WorkerOauth,
