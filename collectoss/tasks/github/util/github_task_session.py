@@ -1,8 +1,8 @@
 from logging import Logger
 
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.application.db.session import DatabaseSession
-from augur.application.db import get_engine
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db import get_engine
 
 class GithubTaskManifest:
 

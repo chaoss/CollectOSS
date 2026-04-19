@@ -6,17 +6,17 @@ import datetime
 from celery import chain
 import sqlalchemy as s
 from sqlalchemy import or_, update
-from augur.application.logs import SystemLogger
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.models import CollectionStatus, Repo
-from augur.application.db.util import execute_session_query
-from augur.tasks.github.util.util import get_repo_weight_core, get_repo_weight_by_issue
-from augur.application.db import get_engine
-from augur.application.db.lib import execute_sql, get_session, get_active_repo_count, get_repo_by_repo_git
-from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
-from augur.tasks.util.collection_state import CollectionState
-from augur.application.db.session import DatabaseSession
-from augur.application.config import SystemConfig
+from collectoss.application.logs import SystemLogger
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.application.db.models import CollectionStatus, Repo
+from collectoss.application.db.util import execute_session_query
+from collectoss.tasks.github.util.util import get_repo_weight_core, get_repo_weight_by_issue
+from collectoss.application.db import get_engine
+from collectoss.application.db.lib import execute_sql, get_session, get_active_repo_count, get_repo_by_repo_git
+from collectoss.tasks.util.worker_util import calculate_date_weight_from_timestamps
+from collectoss.tasks.util.collection_state import CollectionState
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.config import SystemConfig
 
 
 class CollectionRequest:

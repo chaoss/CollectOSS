@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import text
-from augur.tasks.util.ContributorUUID import ContributorUUID, GithubUUID, UnresolvableUUID
+from collectoss.tasks.util.ContributorUUID import ContributorUUID, GithubUUID, UnresolvableUUID
 
 
 # revision identifiers, used by Alembic.

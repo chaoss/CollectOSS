@@ -4,15 +4,15 @@ Defines the set of tasks used to retrieve GitLab issue data.
 import logging
 import traceback
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import CoreRepoCollectionTask
-from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
-from augur.application.db.data_parse import extract_needed_issue_data_from_gitlab_issue, extract_needed_gitlab_issue_label_data, extract_needed_gitlab_issue_assignee_data, extract_needed_gitlab_issue_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
-from augur.tasks.github.util.util import get_gitlab_repo_identifier, add_key_value_pair_to_dicts
-from augur.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Contributor, Repo
-from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session, batch_insert_contributors
-from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
+from collectoss.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
+from collectoss.application.db.data_parse import extract_needed_issue_data_from_gitlab_issue, extract_needed_gitlab_issue_label_data, extract_needed_gitlab_issue_assignee_data, extract_needed_gitlab_issue_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
+from collectoss.tasks.github.util.util import get_gitlab_repo_identifier, add_key_value_pair_to_dicts
+from collectoss.application.db.models import Issue, IssueLabel, IssueAssignee, IssueMessageRef, Message, Contributor, Repo
+from collectoss.tasks.util.worker_util import remove_duplicate_dicts
+from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session, batch_insert_contributors
+from collectoss.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 
 platform_id = 2
 

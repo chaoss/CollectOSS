@@ -4,8 +4,8 @@ import random
 import time
 import logging
 
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.application.db.session import DatabaseSession
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from collectoss.application.db.session import DatabaseSession
 
 logger = logging.getLogger(__name__)
 

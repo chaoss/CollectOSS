@@ -5,8 +5,8 @@ import random
 from typing import List
 from sqlalchemy.orm import Session
 
-from augur.tasks.util.redis_list import RedisList
-from augur.application.db.lib import get_value, get_worker_oauth_keys
+from collectoss.tasks.util.redis_list import RedisList
+from collectoss.application.db.lib import get_value, get_worker_oauth_keys
 from sqlalchemy import func 
 
 RATE_LIMIT_URL = "https://api.github.com/rate_limit"

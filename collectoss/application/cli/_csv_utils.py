@@ -25,7 +25,7 @@ def validate_git_url(value: str) -> bool:
     Returns:
         True if the value is a valid GitHub or GitLab URL, False otherwise
     """
-    from augur.application.db.models import Repo
+    from collectoss.application.db.models import Repo
 
     value = value.strip()
     github_parse = Repo.parse_github_repo_url(value)

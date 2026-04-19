@@ -1,9 +1,9 @@
 import dateutil.parser
 import os
-from augur.tasks.git.dependency_libyear_tasks.libyear_util.pypi_parser import parse_conda, parse_pipfile,parse_pipfile_lock,parse_poetry,parse_poetry_lock,parse_requirement_txt,parse_setup_py
-from augur.tasks.git.dependency_libyear_tasks.libyear_util.npm_parser import parse_package_json
-from augur.tasks.git.dependency_libyear_tasks.libyear_util.pypi_libyear_util import sort_dependency_requirement,get_pypi_data,get_latest_version,get_release_date
-from augur.tasks.git.dependency_libyear_tasks.libyear_util.npm_libyear_utils import get_NPM_data, get_npm_release_date, get_npm_latest_version,get_npm_current_version
+from collectoss.tasks.git.dependency_libyear_tasks.libyear_util.pypi_parser import parse_conda, parse_pipfile,parse_pipfile_lock,parse_poetry,parse_poetry_lock,parse_requirement_txt,parse_setup_py
+from collectoss.tasks.git.dependency_libyear_tasks.libyear_util.npm_parser import parse_package_json
+from collectoss.tasks.git.dependency_libyear_tasks.libyear_util.pypi_libyear_util import sort_dependency_requirement,get_pypi_data,get_latest_version,get_release_date
+from collectoss.tasks.git.dependency_libyear_tasks.libyear_util.npm_libyear_utils import get_NPM_data, get_npm_release_date, get_npm_latest_version,get_npm_current_version
 
 #Files That would be parsed should be added here
 file_list = [

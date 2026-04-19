@@ -5,8 +5,8 @@ import os
 from pathlib import Path
 from glob import glob
 
-from augur.application.db.lib import get_value
-from augur.application.db import dispose_database_engine
+from collectoss.application.db.lib import get_value
+from collectoss.application.db import dispose_database_engine
 
 logger = logging.getLogger(__name__)
 

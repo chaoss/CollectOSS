@@ -32,9 +32,9 @@ import json
 import urllib.parse
 
 
-from augur.application.db.models.base import Base
-from augur.application.db.util import execute_session_query
-from augur.application.db import get_session
+from collectoss.application.db.models.base import Base
+from collectoss.application.db.util import execute_session_query
+from collectoss.application.db import get_session
 
 DEFAULT_REPO_GROUP_ID = 1
 
@@ -273,7 +273,7 @@ class Contributor(Base):
 
     @classmethod
     def from_github(cls, contributor, tool_source, tool_version, data_source):
-        from augur.tasks.util.ContributorUUID import GithubUUID
+        from collectoss.tasks.util.ContributorUUID import GithubUUID
 
         cntrb_id = GithubUUID()   
         cntrb_id["user"] = contributor["id"]
@@ -921,7 +921,7 @@ class Repo(Base):
         Returns
             True if repo url is valid and False if not
         """
-        from augur.tasks.github.util.github_paginator import hit_api
+        from collectoss.tasks.github.util.github_paginator import hit_api
 
         REPO_ENDPOINT = "https://api.github.com/repos/{}/{}"
 
@@ -981,7 +981,7 @@ class Repo(Base):
         Returns:
             True if repo URL is valid, False otherwise
         """
-        from augur.tasks.github.util.github_paginator import hit_api
+        from collectoss.tasks.github.util.github_paginator import hit_api
 
         REPO_ENDPOINT = "https://gitlab.com/api/v4/projects/{}/"
 

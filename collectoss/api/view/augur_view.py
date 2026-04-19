@@ -7,9 +7,9 @@ from .url_converters import *
 
 # from .server import User
 from ..server import app, db_session
-from augur.application.db.models import User, UserSessionToken
-from augur.api.routes import API_VERSION
-from augur.api.util import get_bearer_token
+from collectoss.application.db.models import User, UserSessionToken
+from collectoss.api.routes import API_VERSION
+from collectoss.api.util import get_bearer_token
 
 import time, traceback
 

@@ -8,8 +8,8 @@ Add Admin command: augur user add <username> <email> <firstname> <lastname> --ad
 import os
 import click
 import logging
-from augur.application.db.models import User
-from augur.application.db.engine import DatabaseEngine
+from collectoss.application.db.models import User
+from collectoss.application.db.engine import DatabaseEngine
 from sqlalchemy.orm import sessionmaker
 
 # TODO: Update these commands to use cli DatabaseContext so this engine is cleaned up

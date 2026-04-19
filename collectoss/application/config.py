@@ -4,15 +4,15 @@ import json
 import copy
 from typing import List, Any, Optional
 import os
-from augur.application.db.models import Config 
-from augur.application.db.util import execute_session_query, convert_type_of_value
+from collectoss.application.db.models import Config 
+from collectoss.application.db.util import execute_session_query, convert_type_of_value
 from pathlib import Path
 import logging
 
 def get_development_flag_from_config():
     
     from logging import getLogger
-    from augur.application.db.session import DatabaseSession
+    from collectoss.application.db.session import DatabaseSession
 
     logger = getLogger(__name__)
     with DatabaseSession(logger) as session:
@@ -129,7 +129,7 @@ default_config = {
 
 class SystemConfig():
 
-    from augur.application.db.session import DatabaseSession
+    from collectoss.application.db.session import DatabaseSession
 
     session: DatabaseSession
 
@@ -649,7 +649,7 @@ class JsonConfig(ConfigStore):
 class DatabaseConfig(ConfigStore):
     """A ConfigStore for handling JSON data
     """
-    from augur.application.db.session import DatabaseSession
+    from collectoss.application.db.session import DatabaseSession
 
     def __init__(self, session: DatabaseSession, logger: logging.Logger):
         super().__init__(logger)

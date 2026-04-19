@@ -9,8 +9,8 @@ import random
 
 from typing import List
 
-from augur.tasks.util.redis_list import RedisList
-from augur.application.db.lib import get_value, get_worker_oauth_keys
+from collectoss.tasks.util.redis_list import RedisList
+from collectoss.application.db.lib import get_value, get_worker_oauth_keys
 
 
 class NoValidKeysError(Exception):

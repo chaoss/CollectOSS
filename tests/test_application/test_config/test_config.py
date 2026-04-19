@@ -1,4 +1,4 @@
-from augur.application.config import SystemConfig
+from collectoss.application.config import SystemConfig
 import logging
 import os
 import json

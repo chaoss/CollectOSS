@@ -24,17 +24,17 @@ from flask_graphql import GraphQLView
 from graphene_sqlalchemy import SQLAlchemyObjectType
 
 
-from augur.application.logs import SystemLogger
-from augur.application.db.session import DatabaseSession
-from augur.application.config import SystemConfig
-from augur.application.db.engine import get_database_string, create_database_engine
-from augur.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
+from collectoss.application.logs import SystemLogger
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.config import SystemConfig
+from collectoss.application.db.engine import get_database_string, create_database_engine
+from collectoss.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
 
 from metadata import __version__ as code_version
 
 
 
-# from augur.api.routes import API_VERSION
+# from collectoss.api.routes import API_VERSION
 API_VERSION = "api/unstable"
 
 show_metadata = False

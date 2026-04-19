@@ -1,11 +1,11 @@
 #SPDX-License-Identifier: MIT
-from augur.tasks.github.util.github_task_session import *
-from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
-from augur.application.db.models import *
-from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.github.util.gh_graphql_entities import request_graphql_dict
-from augur.application.db.util import execute_session_query
-from augur.application.db.lib import bulk_insert_dicts
+from collectoss.tasks.github.util.github_task_session import *
+from collectoss.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
+from collectoss.application.db.models import *
+from collectoss.tasks.github.util.util import get_owner_repo
+from collectoss.tasks.github.util.gh_graphql_entities import request_graphql_dict
+from collectoss.application.db.util import execute_session_query
+from collectoss.application.db.lib import bulk_insert_dicts
 
 
 def get_release_inf(repo_id, release, tag_only):

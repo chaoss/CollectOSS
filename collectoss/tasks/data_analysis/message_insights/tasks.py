@@ -8,13 +8,13 @@ import sqlalchemy as s
 from skimage.filters import threshold_otsu
 from sklearn.ensemble import IsolationForest
 
-from augur.tasks.data_analysis.message_insights.message_novelty import novelty_analysis
-from augur.tasks.data_analysis.message_insights.message_sentiment import get_senti_score
+from collectoss.tasks.data_analysis.message_insights.message_novelty import novelty_analysis
+from collectoss.tasks.data_analysis.message_insights.message_sentiment import get_senti_score
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.lib import get_value, get_repo_by_repo_git, get_session
-from augur.application.db.models import MessageAnalysis, MessageAnalysisSummary
-from augur.tasks.init.celery_app import MLRepoCollectionTask
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.application.db.lib import get_value, get_repo_by_repo_git, get_session
+from collectoss.application.db.models import MessageAnalysis, MessageAnalysisSummary
+from collectoss.tasks.init.celery_app import MLRepoCollectionTask
 
 #SPDX-License-Identifier: MIT
 

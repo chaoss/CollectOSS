@@ -1,16 +1,16 @@
-from augur.tasks.git.dependency_tasks.dependency_util import python_deps
-from augur.tasks.git.dependency_tasks.dependency_util import ruby_deps
-from augur.tasks.git.dependency_tasks.dependency_util import php_deps
-from augur.tasks.git.dependency_tasks.dependency_util import javascript_deps
-from augur.tasks.git.dependency_tasks.dependency_util import vb_deps
-from augur.tasks.git.dependency_tasks.dependency_util import csharp_deps
-from augur.tasks.git.dependency_tasks.dependency_util import java_deps
-from augur.tasks.git.dependency_tasks.dependency_util import cpp_deps
-from augur.tasks.git.dependency_tasks.dependency_util import c_deps
-from augur.tasks.git.dependency_tasks.dependency_util import go_deps
-from augur.tasks.git.dependency_tasks.dependency_util import kotlin_deps
-from augur.tasks.git.dependency_tasks.dependency_util import rust_deps
-from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator
+from collectoss.tasks.git.dependency_tasks.dependency_util import python_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import ruby_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import php_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import javascript_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import vb_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import csharp_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import java_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import cpp_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import c_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import go_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import kotlin_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import rust_deps
+from collectoss.tasks.git.dependency_tasks.dependency_util import dependency_calculator
 
 #Returns generator iterable to tuples of modules and their names
 def get_dependency_analysis_module_tuples():

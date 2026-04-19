@@ -1,7 +1,7 @@
 """Defines the GithubRandomKeyAuth class"""
 
-from augur.tasks.util.random_key_auth import RandomKeyAuth
-from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
+from collectoss.tasks.util.random_key_auth import RandomKeyAuth
+from collectoss.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from sqlalchemy.orm import Session
 
 class GithubRandomKeyAuth(RandomKeyAuth):

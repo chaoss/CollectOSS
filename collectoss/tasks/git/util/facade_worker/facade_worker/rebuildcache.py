@@ -26,7 +26,7 @@
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
 import sqlalchemy as s
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text
+from collectoss.application.db.lib import execute_sql, fetchall_data_from_sql_text
 from .utilitymethods import store_working_author, trim_author
 # if platform.python_implementation() == 'PyPy':
 #   import pymysql

@@ -4,10 +4,10 @@ import sqlalchemy as s
 import pandas as pd
 from flask import Response
 
-from augur.api.metrics.repo_meta import license_files
-from augur.api.metrics.insight import top_insights
+from collectoss.api.metrics.repo_meta import license_files
+from collectoss.api.metrics.insight import top_insights
 
-from augur.api.routes import API_VERSION
+from collectoss.api.routes import API_VERSION
 from ..server import app, route_transform
 
 

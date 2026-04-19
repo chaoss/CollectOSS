@@ -3,9 +3,9 @@ Defines a GitLab-specific session and manifest object for use in GitLab tasks
 """
 from logging import Logger
 
-from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
-from augur.application.db.session import DatabaseSession
-from augur.application.db import get_engine
+from collectoss.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db import get_engine
 
 class GitlabTaskSession(DatabaseSession):
     """ORM session used in gitlab tasks.

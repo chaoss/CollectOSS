@@ -32,7 +32,7 @@ from .config import FacadeHelper as FacadeHelper
 
 #from contributor_interfaceable.facade08contributorinterfaceable import ContributorInterfaceable
 
-from augur.tasks.github.facade_github.contributor_interfaceable.contributor_interface import *
+from collectoss.tasks.github.facade_github.contributor_interfaceable.contributor_interface import *
 
 
 

@@ -1,5 +1,5 @@
 #SPDX-License-Identifier: MIT
-from augur.api.routes import API_VERSION
+from collectoss.api.routes import API_VERSION
 from ..server import app
 import base64
 import sqlalchemy as s
@@ -7,8 +7,8 @@ import pandas as pd
 import json
 from flask import Response, current_app, jsonify
 
-from augur.application.db.lib import get_value
-from augur.application.logs import SystemLogger
+from collectoss.application.db.lib import get_value
+from collectoss.application.logs import SystemLogger
 
 logger = SystemLogger("augur").get_logger()
 

@@ -8,7 +8,7 @@ import sqlalchemy as s
 import pandas as pd
 from flask import current_app
 
-from augur.api.util import register_metric
+from collectoss.api.util import register_metric
 
 @register_metric()
 def committers(repo_group_id, repo_id=None, begin_date=None, end_date=None, period='month'):

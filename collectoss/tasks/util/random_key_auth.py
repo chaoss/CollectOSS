@@ -4,7 +4,7 @@ from typing import List, Optional, Generator
 from httpx import Auth, Request, Response
 from random import choice
 import hashlib
-from augur.util.keys import mask_key
+from collectoss.util.keys import mask_key
 
 
 class RandomKeyAuth(Auth):

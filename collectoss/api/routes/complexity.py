@@ -2,11 +2,11 @@
 from flask import Response, current_app, request
 import pandas as pd
 import sqlalchemy as s
-from augur.api.util import metric_metadata
+from collectoss.api.util import metric_metadata
 import os
 import requests
 
-from augur.api.routes import API_VERSION
+from collectoss.api.routes import API_VERSION
 from ..server import app
 
 

@@ -1,9 +1,9 @@
 from datetime import datetime
 import os
-from augur.application.db.models import *
-from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value
-from augur.tasks.util.worker_util import parse_json_from_subprocess_call
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
+from collectoss.application.db.models import *
+from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value
+from collectoss.tasks.util.worker_util import parse_json_from_subprocess_call
+from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 
 def value_model(logger,repo_git):
     """Runs scc on repo and stores data in database

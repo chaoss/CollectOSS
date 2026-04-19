@@ -4,7 +4,7 @@ import random
 import time
 import logging
 
-from augur.tasks.util.random_key_auth import RandomKeyAuth
+from collectoss.tasks.util.random_key_auth import RandomKeyAuth
 
 logger = logging.getLogger(__name__)
 

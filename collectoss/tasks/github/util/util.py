@@ -4,10 +4,10 @@ import logging
 import urllib.parse
 import json
 import httpx
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
-from augur.application.db.lib import get_repo_by_repo_git
-from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from collectoss.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
+from collectoss.application.db.lib import get_repo_by_repo_git
+from collectoss.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
 def get_repo_src_id(owner, repo, logger):
     
@@ -99,7 +99,7 @@ def get_repo_weight_by_issue(logger,repo_git):
         Sum of issues and prs for that repo
     """
 
-    from augur.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
+    from collectoss.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
 
     owner,name = get_owner_repo(repo_git)
 

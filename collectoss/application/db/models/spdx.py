@@ -17,7 +17,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.ext.associationproxy import association_proxy
 
-from augur.application.db.models.base import Base
+from collectoss.application.db.models.base import Base
 
 metadata = Base.metadata
 

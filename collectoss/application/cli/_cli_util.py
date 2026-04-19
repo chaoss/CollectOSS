@@ -5,7 +5,7 @@ import psutil
 import signal
 from urllib.parse import urlparse
 
-from augur.tasks.init.redis_connection import get_redis_connection
+from collectoss.tasks.init.redis_connection import get_redis_connection
 
 def clear_redis_caches(logger):
     """Clears the redis databases that celery and redis use."""
@@ -23,7 +23,7 @@ def clear_rabbitmq_messages(connection_string, queues, logger):
     #virtual_host_string = connection_string.split("/")[-1]
 
     logger.info("Clearing all messages from celery queue in rabbitmq")
-    from augur.tasks.init.celery_app import celery_app
+    from collectoss.tasks.init.celery_app import celery_app
     celery_app.control.purge()
 
     clear_message_queues(connection_string, queues)

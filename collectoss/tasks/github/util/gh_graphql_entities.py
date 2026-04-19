@@ -1,4 +1,4 @@
-from augur.tasks.github.util.github_task_session import *
+from collectoss.tasks.github.util.github_task_session import *
 #from gql import gql, Client
 #from gql.transport.aiohttp import AIOHTTPTransport
 import httpx
@@ -6,7 +6,7 @@ import json
 import collections
 import time
 import traceback
-from augur.tasks.github.util.github_paginator import GithubApiResult, process_dict_response
+from collectoss.tasks.github.util.github_paginator import GithubApiResult, process_dict_response
 
 """
     Should be designed on a per entity basis that has attributes that call 

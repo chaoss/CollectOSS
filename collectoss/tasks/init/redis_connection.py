@@ -1,6 +1,6 @@
 """Defines the redis connection."""
 import redis
-from augur.tasks.init import get_redis_conn_values
+from collectoss.tasks.init import get_redis_conn_values
 
 
 def get_redis_connection():

@@ -1,9 +1,9 @@
 import logging
 import traceback
-from augur.tasks.git.dependency_tasks.core import *
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import FacadeRepoCollectionTask, SecondaryRepoCollectionTask
-from augur.tasks.util.metadata_exception import MetadataException 
+from collectoss.tasks.git.dependency_tasks.core import *
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import FacadeRepoCollectionTask, SecondaryRepoCollectionTask
+from collectoss.tasks.util.metadata_exception import MetadataException 
 
 
 @celery.task(base=FacadeRepoCollectionTask)

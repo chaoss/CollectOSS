@@ -5,7 +5,7 @@ Metrics that provide data about with insight detection and reporting
 
 import sqlalchemy as s
 import pandas as pd
-from augur.api.util import register_metric
+from collectoss.api.util import register_metric
 
 from flask import current_app
 

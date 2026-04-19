@@ -4,7 +4,7 @@ It imports the redis_connection as redis which is a connection to a redis cahce
 from typing import Iterable, Any, Union
 
 from collections.abc import MutableSequence
-from augur.tasks.init.redis_connection import get_redis_connection
+from collectoss.tasks.init.redis_connection import get_redis_connection
 from augur import instance_id
 
 

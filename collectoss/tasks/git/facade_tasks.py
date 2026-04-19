@@ -5,32 +5,32 @@ import datetime
 from celery import group, chain
 
 from subprocess import check_output
-from augur.application.db.lib import get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id, facade_bulk_insert_commits, bulk_insert_dicts, get_missing_commit_message_hashes
+from collectoss.application.db.lib import get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id, facade_bulk_insert_commits, bulk_insert_dicts, get_missing_commit_message_hashes
 
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
-from augur.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
+from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
+from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
+from collectoss.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
+from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
 
-from augur.tasks.github.facade_github.tasks import *
-from augur.tasks.git.util.facade_worker.facade_worker.config import FacadeHelper
-from augur.tasks.util.collection_state import CollectionState
-from augur.tasks.util.collection_util import get_collection_status_repo_git_from_filter
-from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneError, git_repo_initialize, git_repo_updates
-
-
-
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import FacadeRepoCollectionTask
+from collectoss.tasks.github.facade_github.tasks import *
+from collectoss.tasks.git.util.facade_worker.facade_worker.config import FacadeHelper
+from collectoss.tasks.util.collection_state import CollectionState
+from collectoss.tasks.util.collection_util import get_collection_status_repo_git_from_filter
+from collectoss.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneError, git_repo_initialize, git_repo_updates
 
 
-from augur.application.db.models import Repo, CollectionStatus, CommitMessage
 
-from augur.tasks.git.dependency_tasks.tasks import process_dependency_metrics
-from augur.tasks.git.dependency_libyear_tasks.tasks import process_libyear_dependency_metrics
-from augur.tasks.git.scc_value_tasks.tasks import process_scc_value_metrics
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import FacadeRepoCollectionTask
 
-from augur.tasks.github.util.github_task_session import *
+
+from collectoss.application.db.models import Repo, CollectionStatus, CommitMessage
+
+from collectoss.tasks.git.dependency_tasks.tasks import process_dependency_metrics
+from collectoss.tasks.git.dependency_libyear_tasks.tasks import process_libyear_dependency_metrics
+from collectoss.tasks.git.scc_value_tasks.tasks import process_scc_value_metrics
+
+from collectoss.tasks.github.util.github_task_session import *
 
 def filter_null_repo_id(records, logger, context=""):
     """Remove and log records with null/None repo_id."""

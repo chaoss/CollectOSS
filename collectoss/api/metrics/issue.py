@@ -8,7 +8,7 @@ import sqlalchemy as s
 import pandas as pd
 from flask import current_app
 
-from augur.api.util import register_metric
+from collectoss.api.util import register_metric
 
 
 @register_metric()

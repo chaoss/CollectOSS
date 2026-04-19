@@ -2,16 +2,16 @@ import time
 import logging
 import traceback 
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import CoreRepoCollectionTask
-from augur.tasks.github.util.github_paginator import hit_api
-from augur.tasks.github.facade_github.tasks import *
-from augur.application.db.models import Contributor
-from augur.application.db.util import execute_session_query
-from augur.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
+from collectoss.tasks.github.util.github_paginator import hit_api
+from collectoss.tasks.github.facade_github.tasks import *
+from collectoss.application.db.models import Contributor
+from collectoss.application.db.util import execute_session_query
+from collectoss.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
 
-from augur.application.db.lib import bulk_insert_dicts, get_session, batch_insert_contributors
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from collectoss.application.db.lib import bulk_insert_dicts, get_session, batch_insert_contributors
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 import json
 
 

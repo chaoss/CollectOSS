@@ -1,9 +1,9 @@
 import logging
-from augur.tasks.github.pull_requests.files_model.core import *
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import SecondaryRepoCollectionTask
-from augur.application.db.util import execute_session_query
+from collectoss.tasks.github.pull_requests.files_model.core import *
+from collectoss.tasks.github.util.github_task_session import GithubTaskManifest
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import SecondaryRepoCollectionTask
+from collectoss.application.db.util import execute_session_query
 
 @celery.task(base=SecondaryRepoCollectionTask)
 def process_pull_request_files(repo_git: str, full_collection: bool) -> None:

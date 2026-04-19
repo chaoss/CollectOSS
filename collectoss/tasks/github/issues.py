@@ -5,16 +5,16 @@ from datetime import timedelta, timezone, datetime
 from sqlalchemy.exc import IntegrityError
 
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import CoreRepoCollectionTask
-from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_data_access import GithubDataAccess
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
-from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.models import Issue, IssueLabel, IssueAssignee
-from augur.application.config import get_development_flag
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected, batch_insert_contributors, get_batch_size
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
+from collectoss.application.db.data_parse import *
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from collectoss.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
+from collectoss.tasks.util.worker_util import remove_duplicate_dicts
+from collectoss.application.db.models import Issue, IssueLabel, IssueAssignee
+from collectoss.application.config import get_development_flag
+from collectoss.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_core_data_last_collected, batch_insert_contributors, get_batch_size
 
 
 

@@ -19,10 +19,10 @@ from collections import OrderedDict
 from textblob import TextBlob
 from collections import Counter
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.lib import get_value, get_session, get_repo_by_repo_git
-from augur.application.db.models import RepoClusterMessage, RepoTopic, TopicWord
-from augur.tasks.init.celery_app import MLRepoCollectionTask
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.application.db.lib import get_value, get_session, get_repo_by_repo_git
+from collectoss.application.db.models import RepoClusterMessage, RepoTopic, TopicWord
+from collectoss.tasks.init.celery_app import MLRepoCollectionTask
 
 
 MODEL_FILE_NAME = "kmeans_repo_messages"

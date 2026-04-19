@@ -9,7 +9,7 @@ import pandas as pd
 import logging
 from flask import current_app
 
-from augur.api.util import register_metric
+from collectoss.api.util import register_metric
 
 
 logger = logging.getLogger("augur")

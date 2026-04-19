@@ -5,16 +5,16 @@ from sqlalchemy.sql import text
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import CoreRepoCollectionTask
-from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
-from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.models import PullRequestEvent, IssueEvent, Contributor, Repo
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id, update_issue_closed_cntrbs_by_repo_id, get_session, get_engine, get_core_data_last_collected, batch_insert_contributors, get_batch_size
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
+from collectoss.application.db.data_parse import *
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from collectoss.tasks.github.util.github_task_session import GithubTaskManifest
+from collectoss.tasks.github.util.util import get_owner_repo
+from collectoss.tasks.util.worker_util import remove_duplicate_dicts
+from collectoss.application.db.models import PullRequestEvent, IssueEvent, Contributor, Repo
+from collectoss.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_issues_by_repo_id, get_pull_requests_by_repo_id, update_issue_closed_cntrbs_by_repo_id, get_session, get_engine, get_core_data_last_collected, batch_insert_contributors, get_batch_size
 
 
 

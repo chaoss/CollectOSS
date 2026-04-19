@@ -8,7 +8,7 @@ import sqlalchemy as s
 import pandas as pd
 from flask import current_app
 
-from augur.api.util import register_metric
+from collectoss.api.util import register_metric
 
 @register_metric()
 def pull_requests_new(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=None):

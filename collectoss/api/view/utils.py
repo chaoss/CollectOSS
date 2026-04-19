@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from flask import render_template, flash, url_for
 from .init import init_logging
 from .init import *
-from augur.application.db.lib import get_value
+from collectoss.application.db.lib import get_value
 import urllib.error, math, yaml, urllib3, time, math
 
 

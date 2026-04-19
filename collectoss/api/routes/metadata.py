@@ -4,7 +4,7 @@ import sqlalchemy as s
 import pandas as pd
 import json
 
-from augur.api.routes import API_VERSION
+from collectoss.api.routes import API_VERSION
 from ..server import app
 
 @app.route('/{}/metadata/repo_info'.format(API_VERSION), methods=["GET"])

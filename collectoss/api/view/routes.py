@@ -7,10 +7,10 @@ from flask import render_template, request, redirect, url_for, session, flash
 from .utils import *
 from flask_login import login_user, logout_user, current_user, login_required
 
-from augur.application.db.models import User, Repo, ClientApplication
+from collectoss.application.db.models import User, Repo, ClientApplication
 from .server import LoginException
-from augur.application.util import *
-from augur.application.db.lib import get_value
+from collectoss.application.util import *
+from collectoss.application.db.lib import get_value
 from ..server import app, db_session
 
 logger = logging.getLogger(__name__)

@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from .server import Environment
-from augur.application.logs import SystemLogger
+from collectoss.application.logs import SystemLogger
 import secrets, yaml
 
 env = Environment()

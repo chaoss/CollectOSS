@@ -3,14 +3,14 @@ Module to define the task methods to collect gitlab event data for augur
 """
 import logging
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import CoreRepoCollectionTask
-from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
-from augur.application.db.data_parse import extract_gitlab_mr_event_data, extract_gitlab_issue_event_data
-from augur.tasks.github.util.util import get_gitlab_repo_identifier
-from augur.application.db.models import Issue, IssueEvent, PullRequest, PullRequestEvent, Repo
-from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session
-from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
+from collectoss.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
+from collectoss.application.db.data_parse import extract_gitlab_mr_event_data, extract_gitlab_issue_event_data
+from collectoss.tasks.github.util.util import get_gitlab_repo_identifier
+from collectoss.application.db.models import Issue, IssueEvent, PullRequest, PullRequestEvent, Repo
+from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session
+from collectoss.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
 
 
 platform_id = 2

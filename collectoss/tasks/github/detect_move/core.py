@@ -1,13 +1,13 @@
-from augur.tasks.github.util.github_task_session import *
-from augur.application.db.models import Repo, CollectionStatus
-from augur.tasks.github.util.github_paginator import hit_api
-from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.github.util.util import parse_json_response
+from collectoss.tasks.github.util.github_task_session import *
+from collectoss.application.db.models import Repo, CollectionStatus
+from collectoss.tasks.github.util.github_paginator import hit_api
+from collectoss.tasks.github.util.util import get_owner_repo
+from collectoss.tasks.github.util.util import parse_json_response
 from datetime import datetime
-from augur.tasks.util.collection_state import CollectionState
-from augur.application.db.util import execute_session_query
-from augur.application.db.lib import bulk_insert_dicts
-from augur.application.db.models import HistoricalRepoURLs
+from collectoss.tasks.util.collection_state import CollectionState
+from collectoss.application.db.util import execute_session_query
+from collectoss.application.db.lib import bulk_insert_dicts
+from collectoss.application.db.models import HistoricalRepoURLs
 from sqlalchemy.exc import IntegrityError
 
 

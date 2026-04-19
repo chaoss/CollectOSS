@@ -11,9 +11,9 @@ import logging
 import secrets
 import traceback
 
-from augur.application.db.models import Repo, RepoGroup
-from augur.application.db.session import DatabaseSession
-from augur.application.db.models.base import Base
+from collectoss.application.db.models import Repo, RepoGroup
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db.models.base import Base
 
 FRONTEND_REPO_GROUP_NAME = "Frontend Repos"
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def retrieve_owner_repos(session, owner: str) -> List[str]:
     Returns
         List of valid repo urls or empty list if invalid org
     """
-    from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+    from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 
     OWNER_INFO_ENDPOINT = f"https://api.github.com/users/{owner}"
     ORG_REPOS_ENDPOINT = f"https://api.github.com/orgs/{owner}/repos?per_page=100"
@@ -435,8 +435,8 @@ class User(Base):
 
     def add_github_repo(self, group_name, repo_url):
 
-        from augur.tasks.github.util.github_task_session import GithubTaskSession
-        from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
+        from collectoss.tasks.github.util.github_task_session import GithubTaskSession
+        from collectoss.tasks.github.util.github_api_key_handler import NoValidKeysError
         try:
             with GithubTaskSession(logger) as session:
                 result = UserRepo.add_github_repo(session, repo_url, self.user_id, group_name)
@@ -447,8 +447,8 @@ class User(Base):
     
     def add_gitlab_repo(self, group_name, repo_url):
         
-        from augur.tasks.gitlab.gitlab_task_session import GitlabTaskSession
-        from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
+        from collectoss.tasks.gitlab.gitlab_task_session import GitlabTaskSession
+        from collectoss.tasks.github.util.github_api_key_handler import NoValidKeysError
         try:
             with GitlabTaskSession(logger) as session:
                 result = UserRepo.add_gitlab_repo(session, repo_url, self.user_id, group_name)
@@ -467,8 +467,8 @@ class User(Base):
 
     def add_github_org(self, group_name, org_url):
 
-        from augur.tasks.github.util.github_task_session import GithubTaskSession
-        from augur.tasks.github.util.github_api_key_handler import NoValidKeysError
+        from collectoss.tasks.github.util.github_task_session import GithubTaskSession
+        from collectoss.tasks.github.util.github_api_key_handler import NoValidKeysError
 
         try:
             with GithubTaskSession(logger) as session:
@@ -519,7 +519,7 @@ class User(Base):
 
     def get_repos(self, page=0, page_size=25, sort="repo_id", direction="ASC", search=None):
 
-        from augur.util.repo_load_controller import RepoLoadController
+        from collectoss.util.repo_load_controller import RepoLoadController
 
         with DatabaseSession(logger) as session:
             result = RepoLoadController(session).paginate_repos("user", page, page_size, sort, direction, user=self, search=search)
@@ -527,7 +527,7 @@ class User(Base):
         return result
 
     def get_repo_count(self, search = None):
-        from augur.util.repo_load_controller import RepoLoadController
+        from collectoss.util.repo_load_controller import RepoLoadController
 
         with DatabaseSession(logger) as session:
             result = RepoLoadController(session).get_repo_count(source="user", user=self, search = search)
@@ -536,7 +536,7 @@ class User(Base):
 
 
     def get_group_repos(self, group_name, page=0, page_size=25, sort="repo_id", direction="ASC", search=None):
-        from augur.util.repo_load_controller import RepoLoadController
+        from collectoss.util.repo_load_controller import RepoLoadController
 
         with DatabaseSession(logger) as session:
             result = RepoLoadController(session).paginate_repos("group", page, page_size, sort, direction, user=self, group_name=group_name, search=search)
@@ -545,7 +545,7 @@ class User(Base):
 
 
     def get_group_repo_count(self, group_name, search = None):
-        from augur.util.repo_load_controller import RepoLoadController
+        from collectoss.util.repo_load_controller import RepoLoadController
 
         with DatabaseSession(logger) as session:
             result = RepoLoadController(session).get_repo_count(source="group", group_name=group_name, user=self, search=search)
@@ -1199,8 +1199,8 @@ class CollectionStatus(Base):
 
     @staticmethod
     def insert(session, logger, repo_id):
-        from augur.tasks.github.util.util import get_repo_weight_by_issue
-        from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
+        from collectoss.tasks.github.util.util import get_repo_weight_by_issue
+        from collectoss.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
         repo = Repo.get_by_id(session, repo_id)
         repo_git = repo.repo_git

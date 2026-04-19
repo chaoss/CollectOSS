@@ -2,12 +2,12 @@ import logging
 
 from typing import Dict, List, Tuple, Optional
 
-from augur.application.db.data_parse import *
-from augur.application.db.session import DatabaseSession
-from augur.application.db.lib import bulk_insert_dicts, batch_insert_contributors
-from augur.tasks.github.util.util import add_key_value_pair_to_dicts
-from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.models import PullRequest, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, Contributor
+from collectoss.application.db.data_parse import *
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db.lib import bulk_insert_dicts, batch_insert_contributors
+from collectoss.tasks.github.util.util import add_key_value_pair_to_dicts
+from collectoss.tasks.util.worker_util import remove_duplicate_dicts
+from collectoss.application.db.models import PullRequest, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, Contributor
 
 PLATFORM_ID = 1
 

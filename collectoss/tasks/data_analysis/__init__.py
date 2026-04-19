@@ -2,11 +2,11 @@ from celery import chain
 import logging 
 
 def machine_learning_phase(repo_git, full_collection):
-    from augur.tasks.data_analysis.clustering_worker.tasks import clustering_task
-    from augur.tasks.data_analysis.discourse_analysis.tasks import discourse_analysis_task
-    from augur.tasks.data_analysis.insight_worker.tasks import insight_task
-    from augur.tasks.data_analysis.message_insights.tasks import message_insight_task
-    from augur.tasks.data_analysis.pull_request_analysis_worker.tasks import pull_request_analysis_task
+    from collectoss.tasks.data_analysis.clustering_worker.tasks import clustering_task
+    from collectoss.tasks.data_analysis.discourse_analysis.tasks import discourse_analysis_task
+    from collectoss.tasks.data_analysis.insight_worker.tasks import insight_task
+    from collectoss.tasks.data_analysis.message_insights.tasks import message_insight_task
+    from collectoss.tasks.data_analysis.pull_request_analysis_worker.tasks import pull_request_analysis_task
 
     logger = logging.getLogger(machine_learning_phase.__name__)
 

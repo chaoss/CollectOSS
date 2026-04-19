@@ -15,18 +15,18 @@ import traceback
 import requests
 from redis.exceptions import ConnectionError as RedisConnectionError
 
-from augur.tasks.start_tasks import collection_monitor, create_collection_status_records
-from augur.tasks.git.facade_tasks import clone_repos
-from augur.tasks.github.contributors import process_contributors
-from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
-from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
-from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
-from augur.application.db.models import UserRepo
-from augur.application.db.session import DatabaseSession
-from augur.application.logs import SystemLogger
-from augur.application.service_manager import SystemServiceManager, cleanup_collection_status_and_rabbit, clean_collection_status
-from augur.application.db.lib import get_value
-from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
+from collectoss.tasks.start_tasks import collection_monitor, create_collection_status_records
+from collectoss.tasks.git.facade_tasks import clone_repos
+from collectoss.tasks.github.contributors import process_contributors
+from collectoss.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
+from collectoss.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
+from collectoss.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
+from collectoss.application.db.models import UserRepo
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.logs import SystemLogger
+from collectoss.application.service_manager import SystemServiceManager, cleanup_collection_status_and_rabbit, clean_collection_status
+from collectoss.application.db.lib import get_value
+from collectoss.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 import sqlalchemy as s
 
 from keyman.KeyClient import KeyClient, KeyPublisher

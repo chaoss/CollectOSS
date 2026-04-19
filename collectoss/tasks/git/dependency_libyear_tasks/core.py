@@ -1,8 +1,8 @@
 from datetime import datetime
-from augur.application.db.models import *
-from augur.application.db.lib import get_value, bulk_insert_dicts, get_repo_by_repo_git
-from augur.tasks.git.dependency_libyear_tasks.libyear_util.util import get_deps_libyear_data
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
+from collectoss.application.db.models import *
+from collectoss.application.db.lib import get_value, bulk_insert_dicts, get_repo_by_repo_git
+from collectoss.tasks.git.dependency_libyear_tasks.libyear_util.util import get_deps_libyear_data
+from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 
 def deps_libyear_model(logger,repo_git):
         """ Data collection and storage method

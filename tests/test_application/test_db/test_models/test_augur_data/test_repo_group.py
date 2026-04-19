@@ -2,9 +2,9 @@ import logging
 import pytest
 import sqlalchemy as s
 
-from augur.application.db.session import DatabaseSession
+from collectoss.application.db.session import DatabaseSession
 from tests.test_application.test_repo_load_controller.helper import *
-from augur.application.db.models import RepoGroup
+from collectoss.application.db.models import RepoGroup
 
 logger = logging.getLogger(__name__)
 

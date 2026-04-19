@@ -1,16 +1,16 @@
 import logging
 from datetime import timedelta, timezone
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import CoreRepoCollectionTask
-from augur.application.db.data_parse import *
-from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
-from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.models import PullRequest, Message, Issue, PullRequestMessageRef, IssueMessageRef, Contributor, Repo, CollectionStatus
-from augur.application.db import get_engine, get_session
-from augur.application.db.lib import get_core_data_last_collected, get_batch_size
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
+from collectoss.application.db.data_parse import *
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from collectoss.tasks.github.util.github_task_session import GithubTaskManifest
+from collectoss.tasks.util.worker_util import remove_duplicate_dicts
+from collectoss.tasks.github.util.util import get_owner_repo
+from collectoss.application.db.models import PullRequest, Message, Issue, PullRequestMessageRef, IssueMessageRef, Contributor, Repo, CollectionStatus
+from collectoss.application.db import get_engine, get_session
+from collectoss.application.db.lib import get_core_data_last_collected, get_batch_size
 from sqlalchemy.sql import text
 
 

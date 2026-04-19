@@ -1,13 +1,13 @@
 from datetime import datetime
 import os
-from augur.application.db.models import *
-from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value, get_session
-from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
-from augur.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
-from augur.tasks.util.worker_util import parse_json_from_subprocess_call
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.tasks.util.metadata_exception import MetadataException
+from collectoss.application.db.models import *
+from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value, get_session
+from collectoss.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
+from collectoss.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
+from collectoss.tasks.util.worker_util import parse_json_from_subprocess_call
+from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from collectoss.tasks.util.metadata_exception import MetadataException
 
 
 def generate_deps_data(logger, repo_git):

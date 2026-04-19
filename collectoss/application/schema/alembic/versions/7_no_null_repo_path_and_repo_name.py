@@ -7,7 +7,7 @@ Create Date: 2023-02-23 10:14:08.787528
 """
 from alembic import op
 from sqlalchemy.sql import text
-from augur.application.db.models import Repo
+from collectoss.application.db.models import Repo
 
 
 # revision identifiers, used by Alembic.

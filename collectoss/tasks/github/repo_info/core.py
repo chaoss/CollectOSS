@@ -1,15 +1,15 @@
 #SPDX-License-Identifier: MIT
 import json
 import sqlalchemy as s
-from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
-from augur.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
-from augur.tasks.github.util.github_paginator import hit_api
-from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.github.util.gh_graphql_entities import request_graphql_dict
-from augur.application.db.models import *
-from augur.application.db.lib import execute_sql
-from augur.tasks.github.util.github_task_session import *
-from augur.application.db.models.augur_data import RepoBadging
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from collectoss.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
+from collectoss.tasks.github.util.github_paginator import hit_api
+from collectoss.tasks.github.util.util import get_owner_repo
+from collectoss.tasks.github.util.gh_graphql_entities import request_graphql_dict
+from collectoss.application.db.models import *
+from collectoss.application.db.lib import execute_sql
+from collectoss.tasks.github.util.github_task_session import *
+from collectoss.application.db.models.augur_data import RepoBadging
 from urllib.parse import quote
 
 def query_committers_count(key_auth, logger, owner, repo):

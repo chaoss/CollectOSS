@@ -4,9 +4,9 @@ Augur library commands redis
 """
 import click
 
-from augur.tasks.init.redis_connection import get_redis_connection
-from augur.application.logs import SystemLogger
-from augur.application.cli import test_connection, test_db_connection 
+from collectoss.tasks.init.redis_connection import get_redis_connection
+from collectoss.application.logs import SystemLogger
+from collectoss.application.cli import test_connection, test_db_connection 
 
 logger = SystemLogger("augur").get_logger()
 

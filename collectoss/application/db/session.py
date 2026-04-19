@@ -8,8 +8,8 @@ from sqlalchemy import func
 from typing import Optional, List, Union
 from psycopg2.errors import DeadlockDetected
 
-# from augur.tasks.util.random_key_auth import RandomKeyAuth
-from augur.tasks.util.worker_util import remove_duplicates_by_uniques
+# from collectoss.tasks.util.random_key_auth import RandomKeyAuth
+from collectoss.tasks.util.worker_util import remove_duplicates_by_uniques
 
 
 def remove_null_characters_from_string(string):
@@ -54,7 +54,7 @@ class DatabaseSession(Session):
 
         if self.engine is None:
             self.logger.debug("Passing engine will be required soon")
-            from augur.application.db.engine import DatabaseEngine
+            from collectoss.application.db.engine import DatabaseEngine
 
             self.engine_created = True
 

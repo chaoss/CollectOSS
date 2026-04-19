@@ -8,7 +8,7 @@ Create Date: 2025-06-06
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import text
-from augur.application.db import create_database_engine, get_database_string
+from collectoss.application.db import create_database_engine, get_database_string
 
 
 # revision identifiers, used by Alembic.

@@ -1,16 +1,16 @@
 import logging
 
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import FacadeRepoCollectionTask
-from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-from augur.tasks.github.facade_github.core import *
-from augur.application.db.lib import execute_sql, get_contributor_aliases_by_email, get_unresolved_commit_emails_by_email, get_repo_by_repo_git, batch_insert_contributors, get_batch_size
-from augur.application.db.lib import get_session, execute_session_query
-from augur.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
-from augur.application.db.lib import bulk_insert_dicts
-from augur.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import FacadeRepoCollectionTask
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from collectoss.tasks.github.facade_github.core import *
+from collectoss.application.db.lib import execute_sql, get_contributor_aliases_by_email, get_unresolved_commit_emails_by_email, get_repo_by_repo_git, batch_insert_contributors, get_batch_size
+from collectoss.application.db.lib import get_session, execute_session_query
+from collectoss.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
+from collectoss.application.db.lib import bulk_insert_dicts
+from collectoss.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
 
 
 

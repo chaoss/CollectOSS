@@ -10,8 +10,8 @@ from typing import List, Optional, Generator, Tuple
 from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
 from enum import Enum
 
-from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
-from augur.tasks.github.util.util import parse_json_response
+from collectoss.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
+from collectoss.tasks.github.util.util import parse_json_response
 
 class GitlabApiResult(Enum):
     """All the different results of querying the Gitlab API."""

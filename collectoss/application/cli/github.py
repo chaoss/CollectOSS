@@ -6,10 +6,10 @@ from datetime import datetime
 import httpx
 from collections import Counter
 
-from augur.application.cli import test_connection, test_db_connection 
+from collectoss.application.cli import test_connection, test_db_connection 
 
-from augur.application.db.engine import DatabaseEngine
-from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
+from collectoss.application.db.engine import DatabaseEngine
+from collectoss.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 
 
 logger = logging.getLogger(__name__)

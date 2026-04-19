@@ -6,12 +6,12 @@ import joblib
 import pandas as pd
 import sqlalchemy as s
 
-from augur.tasks.data_analysis.message_insights.message_sentiment import get_senti_score
+from collectoss.tasks.data_analysis.message_insights.message_sentiment import get_senti_score
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.lib import get_value, get_session, get_repo_by_repo_git
-from augur.application.db.models import PullRequestAnalysis
-from augur.tasks.init.celery_app import MLRepoCollectionTask
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.application.db.lib import get_value, get_session, get_repo_by_repo_git
+from collectoss.application.db.models import PullRequestAnalysis
+from collectoss.tasks.init.celery_app import MLRepoCollectionTask
 
 
 # from sklearn.metrics import (confusion_matrix, f1_score, precision_score, recall_score)

@@ -2,7 +2,7 @@
 """
 Creates routes for user functionality
 """
-from augur.api.routes import API_VERSION
+from collectoss.api.routes import API_VERSION
 
 import logging
 import secrets
@@ -11,12 +11,12 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash
 from sqlalchemy.orm import object_session
 
-from augur.application.db import get_session
-from augur.api.util import api_key_required
-from augur.api.util import ssl_required
+from collectoss.application.db import get_session
+from collectoss.api.util import api_key_required
+from collectoss.api.util import ssl_required
 
-from augur.application.db.models import User, UserSessionToken, RefreshToken
-from augur.tasks.init.redis_connection import get_redis_connection
+from collectoss.application.db.models import User, UserSessionToken, RefreshToken
+from collectoss.tasks.init.redis_connection import get_redis_connection
 
 from ..server import app
 

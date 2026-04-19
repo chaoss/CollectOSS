@@ -4,7 +4,7 @@ import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, RetryError
 from urllib.parse import urlparse, parse_qs, urlencode
 from keyman.KeyClient import KeyClient
-from augur.util.keys import mask_key
+from collectoss.util.keys import mask_key
 
 GITHUB_RATELIMIT_REMAINING_CAP = 50
 

@@ -9,11 +9,11 @@ import requests
 import sqlalchemy as s
 from sqlalchemy import exc
 from flask import request, Response
-from augur.api.util import metric_metadata
+from collectoss.api.util import metric_metadata
 import json
 from ..server import app
 
-from augur.api.routes import API_VERSION
+from collectoss.api.routes import API_VERSION
 
 logger = logging.getLogger(__name__)
 

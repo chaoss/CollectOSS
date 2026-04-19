@@ -7,11 +7,11 @@ import click
 import json
 import logging
 
-from augur.application.db.models import Config
-from augur.application.db.session import DatabaseSession
-from augur.application.config import SystemConfig, redact_setting_value
-from augur.application.cli import DatabaseContext, test_connection, test_db_connection, with_database
-from augur.util.inspect_without_import import get_phase_names_without_import
+from collectoss.application.db.models import Config
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.config import SystemConfig, redact_setting_value
+from collectoss.application.cli import DatabaseContext, test_connection, test_db_connection, with_database
+from collectoss.util.inspect_without_import import get_phase_names_without_import
 ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 logger = logging.getLogger(__name__)

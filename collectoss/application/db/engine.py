@@ -7,7 +7,7 @@ import subprocess
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
-from augur.application.db.util import catch_operational_error
+from collectoss.application.db.util import catch_operational_error
 
 
 def parse_database_string(db_string: str) -> tuple[str,str, str, str, str]:

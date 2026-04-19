@@ -6,8 +6,8 @@ Create Date: 2023-05-15 12:03:57.171011
 
 """
 from alembic import op
-from augur.application.db.session import DatabaseSession
-from augur.application.config import *
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.config import *
 from sqlalchemy.sql import text
 import logging
 

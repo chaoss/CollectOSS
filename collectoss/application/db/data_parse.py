@@ -2,7 +2,7 @@
 This file contains functions that take the api response 
 and return only the data that the database needs
 """
-from augur.tasks.util.ContributorUUID import GithubUUID, GitlabUUID
+from collectoss.tasks.util.ContributorUUID import GithubUUID, GitlabUUID
 import sqlalchemy as s
 
 from typing import List

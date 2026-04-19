@@ -11,7 +11,7 @@ from datetime import datetime
 import json
 import subprocess
 
-from augur.tasks.util.metadata_exception import MetadataException
+from collectoss.tasks.util.metadata_exception import MetadataException
 
 
 def create_grouped_task_load(*args,processes=8,dataList=[],task=None):

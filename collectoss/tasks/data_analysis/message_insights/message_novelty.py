@@ -13,7 +13,7 @@ from keras.models import Model, load_model
 from skimage.filters import threshold_otsu
 from sklearn import utils as skl_utils
 
-from augur.tasks.data_analysis.message_insights.preprocess_text import \
+from collectoss.tasks.data_analysis.message_insights.preprocess_text import \
     normalize_corpus as normalize_corpus
 
 ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))

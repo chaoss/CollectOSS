@@ -7,30 +7,30 @@ from sqlalchemy import and_,update
 import sqlalchemy as s
 
 
-from augur.tasks.github import *
+from collectoss.tasks.github import *
 if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
-    from augur.tasks.data_analysis import *
-from augur.tasks.github.detect_move.tasks import detect_github_repo_move_core, detect_github_repo_move_secondary
-from augur.tasks.github.releases.tasks import collect_releases
-from augur.tasks.github.repo_info.tasks import collect_repo_info, collect_linux_badge_info
-from augur.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
-from augur.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
-from augur.tasks.github.util.populate_repo_src_id import populate_repo_src_id_task
-from augur.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
-from augur.tasks.github.traffic import collect_github_repo_clones_data
-from augur.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests, collect_merge_request_metadata, collect_merge_request_commits, collect_merge_request_files, collect_merge_request_comments
-from augur.tasks.gitlab.issues_task import collect_gitlab_issues, collect_gitlab_issue_comments
-from augur.tasks.gitlab.events_task import collect_gitlab_issue_events, collect_gitlab_merge_request_events
-from augur.tasks.git.facade_tasks import *
-from augur.tasks.db.refresh_materialized_views import *
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.session import DatabaseSession
-from augur.application.db.models import CollectionStatus, Repo
-from augur.tasks.util.collection_state import CollectionState
-from augur.tasks.util.collection_util import *
-from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
-from augur.application.db.lib import execute_sql, get_session
-from augur.application.config import SystemConfig
+    from collectoss.tasks.data_analysis import *
+from collectoss.tasks.github.detect_move.tasks import detect_github_repo_move_core, detect_github_repo_move_secondary
+from collectoss.tasks.github.releases.tasks import collect_releases
+from collectoss.tasks.github.repo_info.tasks import collect_repo_info, collect_linux_badge_info
+from collectoss.tasks.github.pull_requests.files_model.tasks import process_pull_request_files
+from collectoss.tasks.github.pull_requests.commits_model.tasks import process_pull_request_commits
+from collectoss.tasks.github.util.populate_repo_src_id import populate_repo_src_id_task
+from collectoss.tasks.git.dependency_tasks.tasks import process_ossf_dependency_metrics
+from collectoss.tasks.github.traffic import collect_github_repo_clones_data
+from collectoss.tasks.gitlab.merge_request_task import collect_gitlab_merge_requests, collect_merge_request_metadata, collect_merge_request_commits, collect_merge_request_files, collect_merge_request_comments
+from collectoss.tasks.gitlab.issues_task import collect_gitlab_issues, collect_gitlab_issue_comments
+from collectoss.tasks.gitlab.events_task import collect_gitlab_issue_events, collect_gitlab_merge_request_events
+from collectoss.tasks.git.facade_tasks import *
+from collectoss.tasks.db.refresh_materialized_views import *
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db.models import CollectionStatus, Repo
+from collectoss.tasks.util.collection_state import CollectionState
+from collectoss.tasks.util.collection_util import *
+from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
+from collectoss.application.db.lib import execute_sql, get_session
+from collectoss.application.config import SystemConfig
 
 RUNNING_DOCKER = os.environ.get('AUGUR_DOCKER_DEPLOY') == "1"
 
@@ -148,7 +148,7 @@ def non_repo_domain_tasks(self):
 
     if not RUNNING_DOCKER and machine_learning_phase.__name__ in enabled_phase_names:
         #enabled_tasks.extend(machine_learning_phase())
-        from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
+        from collectoss.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
         enabled_tasks.append(contributor_breadth_model.si())
 
     tasks = chain(

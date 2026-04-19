@@ -1,4 +1,4 @@
-from augur.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import celery_app as celery
 
 @celery.task()
 def successful_task():

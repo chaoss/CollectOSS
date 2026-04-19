@@ -2,7 +2,7 @@ from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 
-from augur.application.db.engine import create_database_engine, get_database_string
+from collectoss.application.db.engine import create_database_engine, get_database_string
 
 engine = None
 Session = None

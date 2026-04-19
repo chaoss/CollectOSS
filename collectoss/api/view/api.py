@@ -4,9 +4,9 @@ import re
 from flask import flash, current_app, jsonify, redirect, request, url_for
 from flask_login import current_user, login_required
 
-from augur.application.db.models import Repo, RepoGroup, UserGroup, UserRepo
-from augur.application.db.session import DatabaseSession
-from augur.tasks.frontend import (
+from collectoss.application.db.models import Repo, RepoGroup, UserGroup, UserRepo
+from collectoss.application.db.session import DatabaseSession
+from collectoss.tasks.frontend import (
     add_github_orgs_and_repos,
     add_gitlab_repos,
     parse_org_and_repo_name,

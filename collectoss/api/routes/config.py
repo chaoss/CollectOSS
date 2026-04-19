@@ -7,17 +7,17 @@ from flask import request, jsonify, current_app
 import sqlalchemy as s
 
 # Disable the requirement for SSL by setting env["AUGUR_DEV"] = True
-from augur.application.config import get_development_flag
-from augur.application.db.lib import get_session
-from augur.application.db.models import Config
-from augur.application.config import SystemConfig
-from augur.application.db.session import DatabaseSession
+from collectoss.application.config import get_development_flag
+from collectoss.application.db.lib import get_session
+from collectoss.application.db.models import Config
+from collectoss.application.config import SystemConfig
+from collectoss.application.db.session import DatabaseSession
 from ..server import app
 
 logger = logging.getLogger(__name__)
 development = get_development_flag()
 
-from augur.api.routes import API_VERSION
+from collectoss.api.routes import API_VERSION
 
 def generate_upgrade_request():
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/426

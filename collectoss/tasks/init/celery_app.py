@@ -12,14 +12,14 @@ from celery import current_app
 from celery.signals import after_setup_logger
 
 
-from augur.application.logs import TaskLogConfig, SystemLogger
-from augur.application.db.session import DatabaseSession
-from augur.application.db import get_engine
-from augur.application.db.lib import get_session
-from augur.application.config import SystemConfig
-from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
-from augur.application.db.models import Repo
-from augur.tasks.util.collection_state import CollectionState
+from collectoss.application.logs import TaskLogConfig, SystemLogger
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db import get_engine
+from collectoss.application.db.lib import get_session
+from collectoss.application.config import SystemConfig
+from collectoss.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
+from collectoss.application.db.models import Repo
+from collectoss.tasks.util.collection_state import CollectionState
 
 logger = logging.getLogger(__name__)
 
@@ -218,13 +218,13 @@ def setup_periodic_tasks(sender, **kwargs):
         The tasks so that they are grouped by the module they are defined in
     """
     from celery.schedules import crontab
-    from augur.tasks.start_tasks import collection_monitor
-    from augur.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos, create_collection_status_records
-    from augur.tasks.git.facade_tasks import clone_repos
-    from augur.tasks.github.contributors import process_contributors
-    from augur.tasks.db.refresh_materialized_views import refresh_materialized_views
-    from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
-    from augur.application.db import temporary_database_engine
+    from collectoss.tasks.start_tasks import collection_monitor
+    from collectoss.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos, create_collection_status_records
+    from collectoss.tasks.git.facade_tasks import clone_repos
+    from collectoss.tasks.github.contributors import process_contributors
+    from collectoss.tasks.db.refresh_materialized_views import refresh_materialized_views
+    from collectoss.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
+    from collectoss.application.db import temporary_database_engine
 
     # Need to engine to be temporary so that there isn't an engine defined when the parent is forked to create worker processes
     with temporary_database_engine() as engine, DatabaseSession(logger, engine) as session:
@@ -278,7 +278,7 @@ def init_worker(**kwargs):
 
     # global engine
 
-    # from augur.application.db.engine import DatabaseEngine
+    # from collectoss.application.db.engine import DatabaseEngine
     # from sqlalchemy.pool import NullPool, StaticPool
 
     # engine = DatabaseEngine(poolclass=StaticPool).engine
@@ -287,7 +287,7 @@ def init_worker(**kwargs):
 @worker_process_shutdown.connect
 def shutdown_worker(**kwargs):
 
-    from augur.application.db import dispose_database_engine
+    from collectoss.application.db import dispose_database_engine
     dispose_database_engine()
 
     # global engine

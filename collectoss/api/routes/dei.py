@@ -7,21 +7,21 @@ import logging, subprocess
 from flask import request, jsonify, render_template, send_file, current_app
 from pathlib import Path
 
-from augur.api.util import api_key_required, ssl_required
+from collectoss.api.util import api_key_required, ssl_required
 
-from augur.application.db.models import ClientApplication, CollectionStatus, Repo, RepoGroup, BadgingDEI
-from augur.application.db.session import DatabaseSession
+from collectoss.application.db.models import ClientApplication, CollectionStatus, Repo, RepoGroup, BadgingDEI
+from collectoss.application.db.session import DatabaseSession
 
-from augur.tasks.util.collection_util import CollectionRequest,CollectionTaskRoutine, get_enabled_phase_names_from_config_session, core_task_success_util
-from augur.tasks.start_tasks import prelim_phase, primary_repo_collect_phase
-from augur.tasks.github.util.util import get_repo_weight_by_issue
+from collectoss.tasks.util.collection_util import CollectionRequest,CollectionTaskRoutine, get_enabled_phase_names_from_config_session, core_task_success_util
+from collectoss.tasks.start_tasks import prelim_phase, primary_repo_collect_phase
+from collectoss.tasks.github.util.util import get_repo_weight_by_issue
 
 from ..server import app
 
 logger = logging.getLogger(__name__)
 
-from augur.api.routes import API_VERSION
-from augur.application.db.models.augur_operations import FRONTEND_REPO_GROUP_NAME
+from collectoss.api.routes import API_VERSION
+from collectoss.application.db.models.augur_operations import FRONTEND_REPO_GROUP_NAME
 
 @app.route(f"/{API_VERSION}/dei/repo/add", methods=['POST'])
 @ssl_required

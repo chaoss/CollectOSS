@@ -13,18 +13,18 @@ import json
 import re
 import stat as stat_module
 
-from augur.application.cli import (
+from collectoss.application.cli import (
     test_connection,
     test_db_connection,
     with_database,
     DatabaseContext,
 )
 
-from augur.application.db.session import DatabaseSession
+from collectoss.application.db.session import DatabaseSession
 from sqlalchemy import update
 from datetime import datetime
-from augur.application.db.models import Repo
-from augur.application.cli._csv_utils import (
+from collectoss.application.db.models import Repo
+from collectoss.application.cli._csv_utils import (
     process_repo_csv,
     process_repo_group_csv,
 )
@@ -68,8 +68,8 @@ def add_repos(ctx: click.Context, filename: str) -> None:
         If you want to add an entire GitHub organization, refer to the
         command: augur db add-github-org
     """
-    from augur.tasks.github.util.github_task_session import GithubTaskSession
-    from augur.util.repo_load_controller import RepoLoadController
+    from collectoss.tasks.github.util.github_task_session import GithubTaskSession
+    from collectoss.util.repo_load_controller import RepoLoadController
 
     with GithubTaskSession(logger, engine=ctx.obj.engine) as session:
         controller = RepoLoadController(session)
@@ -249,8 +249,8 @@ def add_github_org(ctx, organization_name):
     """
     Create new repo groups in Augur's database
     """
-    from augur.tasks.github.util.github_task_session import GithubTaskSession
-    from augur.util.repo_load_controller import RepoLoadController
+    from collectoss.tasks.github.util.github_task_session import GithubTaskSession
+    from collectoss.util.repo_load_controller import RepoLoadController
 
     with GithubTaskSession(logger, engine=ctx.obj.engine) as session:
         controller = RepoLoadController(session)

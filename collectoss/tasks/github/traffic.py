@@ -1,12 +1,12 @@
 import logging
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.data_parse import extract_needed_clone_history_data
-from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.tasks.github.util.util import get_owner_repo
-from augur.application.db.models import RepoClone
-from augur.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.application.db.data_parse import extract_needed_clone_history_data
+from collectoss.tasks.util.worker_util import remove_duplicate_dicts
+from collectoss.tasks.github.util.util import get_owner_repo
+from collectoss.application.db.models import RepoClone
+from collectoss.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
 @celery.task

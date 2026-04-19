@@ -3,11 +3,11 @@ import logging
 import sqlalchemy as s
 from datetime import datetime
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
-from augur.application.db.models import ContributorRepo
-from augur.application.db.lib import bulk_insert_dicts
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from collectoss.application.db.models import ContributorRepo
+from collectoss.application.db.lib import bulk_insert_dicts
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 ### This worker scans all the platform users in Augur, and pulls their platform activity 
 ### logs. Those are then used to analyze what repos each is working in (which will include repos not

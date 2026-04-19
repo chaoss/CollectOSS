@@ -29,12 +29,12 @@ import subprocess
 from subprocess import check_output, CalledProcessError
 import os
 import sqlalchemy as s
-from augur.application.db.models import *
+from collectoss.application.db.models import *
 from .config import FacadeHelper as FacadeHelper
-from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_working_commits_by_repo_id_and_hashes, remove_commits_by_repo_id_and_hashes, get_repo_by_repo_git, get_session
-from augur.application.db.util import execute_session_query
-#from augur.tasks.git.util.facade_worker.facade
+from collectoss.tasks.util.worker_util import calculate_date_weight_from_timestamps
+from collectoss.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_working_commits_by_repo_id_and_hashes, remove_commits_by_repo_id_and_hashes, get_repo_by_repo_git, get_session
+from collectoss.application.db.util import execute_session_query
+#from collectoss.tasks.git.util.facade_worker.facade
 
 def update_repo_log(logger, facade_helper, repos_id,status):
 

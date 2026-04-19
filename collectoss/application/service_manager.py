@@ -2,10 +2,10 @@ import sys
 import os
 import subprocess
 import sqlalchemy as s
-from augur.application.logs import SystemLogger
-from augur.application.db.session import DatabaseSession
-from augur.application.db.lib import get_value
-from augur.tasks.init.redis_connection import get_redis_connection
+from collectoss.application.logs import SystemLogger
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db.lib import get_value
+from collectoss.tasks.init.redis_connection import get_redis_connection
 from urllib.parse import urlparse
 
 logger = SystemLogger("augur_servicemanager").get_logger()
@@ -145,7 +145,7 @@ def clear_rabbitmq_messages(connection_string):
     #virtual_host_string = connection_string.split("/")[-1]
 
     logger.info("Clearing all messages from celery queue in rabbitmq")
-    from augur.tasks.init.celery_app import celery_app
+    from collectoss.tasks.init.celery_app import celery_app
     celery_app.control.purge()
 
     clear_all_message_queues(connection_string)

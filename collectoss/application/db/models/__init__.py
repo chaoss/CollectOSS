@@ -1,4 +1,4 @@
-from augur.application.db.models.augur_data import (
+from collectoss.application.db.models.augur_data import (
     ChaossMetricStatus,
     ChaossUser,
     ContributorAffiliation,
@@ -69,7 +69,7 @@ from augur.application.db.models.augur_data import (
     RepoClone,
 )
 
-from augur.application.db.models.spdx import (
+from collectoss.application.db.models.spdx import (
     SpdxAnnotationType,
     SpdxRepoMap,
     SpdxCreatorType,
@@ -95,7 +95,8 @@ from augur.application.db.models.spdx import (
     SpdxIdentifier,
 )
 
-from augur.application.db.models.augur_operations import (
+from collectoss.application.db.models.augur_operations import (
+    AugurSetting,
     WorkerHistory,
     WorkerJob,
     WorkerOauth,

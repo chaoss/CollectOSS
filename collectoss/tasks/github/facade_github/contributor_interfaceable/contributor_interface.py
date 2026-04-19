@@ -1,13 +1,13 @@
-from augur.tasks.github.util.github_task_session import *
+from collectoss.tasks.github.util.github_task_session import *
 import json
 import time
 import sqlalchemy as s
-from augur.application.db.models import *
-from augur.tasks.github.util.github_paginator import hit_api, process_dict_response
-from augur.tasks.github.util.github_data_access import GithubDataAccess
+from collectoss.application.db.models import *
+from collectoss.tasks.github.util.github_paginator import hit_api, process_dict_response
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess
 # Debugger
-from augur.tasks.github.util.github_paginator import GithubApiResult
-from augur.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts, execute_sql, get_contributors_by_github_user_id
+from collectoss.tasks.github.util.github_paginator import GithubApiResult
+from collectoss.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts, execute_sql, get_contributors_by_github_user_id
 
 
 ##TODO: maybe have a TaskSession class that holds information about the database, logger, config, etc.

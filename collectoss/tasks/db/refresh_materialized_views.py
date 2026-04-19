@@ -2,10 +2,10 @@ from __future__ import annotations
 import logging
 import sqlalchemy as s
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.lib import execute_sql
-from augur.tasks.git.util.facade_worker.facade_worker.config import FacadeHelper
-from augur.tasks.git.util.facade_worker.facade_worker.rebuildcache import invalidate_caches, rebuild_unknown_affiliation_and_web_caches
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.application.db.lib import execute_sql
+from collectoss.tasks.git.util.facade_worker.facade_worker.config import FacadeHelper
+from collectoss.tasks.git.util.facade_worker.facade_worker.rebuildcache import invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 
 
 @celery.task(bind=True)

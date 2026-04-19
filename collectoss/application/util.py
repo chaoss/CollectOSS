@@ -1,8 +1,8 @@
 import logging
 
-from augur.application.db.session import DatabaseSession
-from augur.application.db.engine import DatabaseEngine
-from augur.util.repo_load_controller import RepoLoadController
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db.engine import DatabaseEngine
+from collectoss.util.repo_load_controller import RepoLoadController
 
 logger = logging.getLogger(__name__)
 

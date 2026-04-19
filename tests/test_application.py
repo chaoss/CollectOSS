@@ -4,7 +4,7 @@ import augur.application
 import sqlalchemy as s
 import json
 
-# from augur.application import Application
+# from collectoss.application import Application
 
 # def test_init_regular():
 #     test_app = Application(disable_logs=True)

@@ -4,7 +4,7 @@ import pandas as pd
 import json
 from flask import Response, current_app
 
-from augur.api.routes import API_VERSION
+from collectoss.api.routes import API_VERSION
 from ..server import app
 
 

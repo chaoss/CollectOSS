@@ -9,7 +9,7 @@ import logging
 
 from alembic import op
 import sqlalchemy as sa
-from augur.application.db.session import DatabaseSession
+from collectoss.application.db.session import DatabaseSession
 
 CLI_USER_ID = 1
 

@@ -8,8 +8,8 @@ import json
 import httpx
 import traceback
 
-from augur.application.db.engine import DatabaseEngine
-from augur.application.db import get_engine, dispose_database_engine
+from collectoss.application.db.engine import DatabaseEngine
+from collectoss.application.db import get_engine, dispose_database_engine
 from sqlalchemy.exc import OperationalError 
 
 

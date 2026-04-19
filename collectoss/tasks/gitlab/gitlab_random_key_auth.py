@@ -1,6 +1,6 @@
 """Defines the GitlabRandomKeyAuth class"""
-from augur.tasks.util.random_key_auth import RandomKeyAuth
-from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
+from collectoss.tasks.util.random_key_auth import RandomKeyAuth
+from collectoss.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
 
 
 class GitlabRandomKeyAuth(RandomKeyAuth):

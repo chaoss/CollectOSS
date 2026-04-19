@@ -45,8 +45,8 @@ import os
 import sqlalchemy as s
 from typing import Optional, List, Tuple, Dict, Any
 
-from augur.application.db.lib import execute_sql, fetchall_data_from_sql_text
-from augur.tasks.init import get_rabbitmq_conn_string
+from collectoss.application.db.lib import execute_sql, fetchall_data_from_sql_text
+from collectoss.tasks.init import get_rabbitmq_conn_string
 
 def check_swapped_emails(name: str, email: str) -> Tuple[str, str]:
     if name.find('@') >= 0 and email.find('@') == -1:

@@ -40,7 +40,7 @@ All "Standard Metrics" files generally share a set of imports
    import datetime
    import sqlalchemy as s
    import pandas as pd
-   from augur.util import register_metric
+   from collectoss.util import register_metric
 
 You can see that one of the imports is our standard metric import from the util file, which is located in:
 

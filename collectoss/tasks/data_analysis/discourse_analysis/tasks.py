@@ -7,11 +7,11 @@ import nltk
 import os
 from collections import Counter
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.lib import get_session, get_repo_by_repo_git
-from augur.application.db.models import Repo, DiscourseInsight
-from augur.application.db.util import execute_session_query
-from augur.tasks.init.celery_app import MLRepoCollectionTask
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.application.db.lib import get_session, get_repo_by_repo_git
+from collectoss.application.db.models import Repo, DiscourseInsight
+from collectoss.application.db.util import execute_session_query
+from collectoss.tasks.init.celery_app import MLRepoCollectionTask
 
 #import os, sys, time, requests, json
 # from sklearn.model_selection import train_test_split

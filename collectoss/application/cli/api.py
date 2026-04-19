@@ -12,11 +12,11 @@ import signal
 import uuid
 import traceback
 
-from augur.application.db.session import DatabaseSession
-from augur.application.logs import SystemLogger
-from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
-from augur.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
-from augur.application.db.lib import get_value
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.logs import SystemLogger
+from collectoss.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
+from collectoss.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
+from collectoss.application.db.lib import get_value
 
 logger = SystemLogger("augur", reset_logfiles=False).get_logger()
 

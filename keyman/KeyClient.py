@@ -4,7 +4,7 @@ import json
 from logging import Logger
 from redis.client import PubSub
 
-from augur.tasks.init.redis_connection import get_redis_connection
+from collectoss.tasks.init.redis_connection import get_redis_connection
 from keyman.KeyOrchestrationAPI import spec, WaitKeyTimeout
 
 class KeyClient:

@@ -5,14 +5,14 @@ Creates routes for user functionality
 
 import logging
 from flask import request, jsonify
-from augur.api.util import api_key_required, ssl_required
+from collectoss.api.util import api_key_required, ssl_required
 
-from augur.application.db.models import User, ClientApplication
+from collectoss.application.db.models import User, ClientApplication
 from ..server import app
 
 logger = logging.getLogger(__name__)
 
-from augur.api.routes import API_VERSION
+from collectoss.api.routes import API_VERSION
 
 @app.route(f"/{API_VERSION}/application", methods=['GET', 'POST'])
 @ssl_required

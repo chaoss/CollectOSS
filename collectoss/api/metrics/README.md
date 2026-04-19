@@ -13,7 +13,7 @@ Metrics are standardized endpoints that take a repo_id or a repo_group_id, as pa
 import datetime
 import sqlalchemy as s
 import pandas as pd
-from augur.api.util import register_metric
+from collectoss.api.util import register_metric
 ```
 3. Defining the function
     1. Add the decorator @register_metric to the function

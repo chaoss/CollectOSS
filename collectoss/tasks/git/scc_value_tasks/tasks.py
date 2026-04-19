@@ -1,8 +1,8 @@
 import logging
-from augur.application.db.lib import get_session
-from augur.tasks.git.scc_value_tasks.core import *
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import FacadeRepoCollectionTask
+from collectoss.application.db.lib import get_session
+from collectoss.tasks.git.scc_value_tasks.core import *
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import FacadeRepoCollectionTask
 
 
 @celery.task(base=FacadeRepoCollectionTask)

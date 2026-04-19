@@ -1,14 +1,14 @@
 import logging
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import CoreRepoCollectionTask
-from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
-from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_mr_reviewer_data, extract_needed_mr_commit_data, extract_needed_mr_file_data, extract_needed_mr_metadata, extract_needed_gitlab_mr_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
-from augur.tasks.github.util.util import get_gitlab_repo_identifier, add_key_value_pair_to_dicts
-from augur.application.db.models import PullRequest, PullRequestLabel, PullRequestMeta, PullRequestCommit, PullRequestFile, PullRequestMessageRef, Repo, Message, Contributor, PullRequestAssignee
-from augur.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
-from augur.tasks.util.worker_util import remove_duplicate_dicts
-from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session, batch_insert_contributors
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
+from collectoss.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
+from collectoss.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_mr_reviewer_data, extract_needed_mr_commit_data, extract_needed_mr_file_data, extract_needed_mr_metadata, extract_needed_gitlab_mr_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
+from collectoss.tasks.github.util.util import get_gitlab_repo_identifier, add_key_value_pair_to_dicts
+from collectoss.application.db.models import PullRequest, PullRequestLabel, PullRequestMeta, PullRequestCommit, PullRequestFile, PullRequestMessageRef, Repo, Message, Contributor, PullRequestAssignee
+from collectoss.tasks.gitlab.gitlab_random_key_auth import GitlabRandomKeyAuth
+from collectoss.tasks.util.worker_util import remove_duplicate_dicts
+from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_session, batch_insert_contributors
 
 platform_id = 2
 

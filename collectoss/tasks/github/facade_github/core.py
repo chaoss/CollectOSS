@@ -1,11 +1,11 @@
-from augur.tasks.github.facade_github.contributor_interfaceable.contributor_interface import * 
-from augur.tasks.github.util.util import get_owner_repo
-from augur.tasks.github.util.github_task_session import *
-from augur.application.db.models import *
-from augur.tasks.util.ContributorUUID import GithubUUID
-from augur.application.db.lib import bulk_insert_dicts, batch_insert_contributors
-from augur.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
-from augur.tasks.github.util.github_data_access import GithubDataAccess
+from collectoss.tasks.github.facade_github.contributor_interfaceable.contributor_interface import * 
+from collectoss.tasks.github.util.util import get_owner_repo
+from collectoss.tasks.github.util.github_task_session import *
+from collectoss.application.db.models import *
+from collectoss.tasks.util.ContributorUUID import GithubUUID
+from collectoss.application.db.lib import bulk_insert_dicts, batch_insert_contributors
+from collectoss.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess
 
 
 

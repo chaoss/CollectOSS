@@ -35,9 +35,9 @@ import sqlalchemy as s
 from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 
-from augur.application.db.session import DatabaseSession
-from augur.application.config import SystemConfig
-from augur.application.db.lib import execute_sql
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.config import SystemConfig
+from collectoss.application.db.lib import execute_sql
 from logging import Logger
 
 logger = logging.getLogger(__name__)
@@ -104,7 +104,7 @@ class FacadeHelper():
     """
     def __init__(self,logger: Logger):
 
-        from augur.application.db import get_engine
+        from collectoss.application.db import get_engine
         engine = get_engine()
         self.repos_processed = 0
         # super().__init__(logger=logger, engine=engine)

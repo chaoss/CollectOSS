@@ -10,9 +10,9 @@ import shutil
 import coloredlogs
 from sqlalchemy.orm import Session
 
-from augur.application.db.models import Config 
-from augur.application.config import convert_type_of_value
-from augur.application.db.util import execute_session_query
+from collectoss.application.db.models import Config 
+from collectoss.application.config import convert_type_of_value
+from collectoss.application.db.util import execute_session_query
 
 ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -87,7 +87,7 @@ def initialize_stream_handler(logger, log_level):
 
 def get_log_config():
     
-    from augur.application.db.engine import DatabaseEngine
+    from collectoss.application.db.engine import DatabaseEngine
 
     # we are using this session instead of the 
     # DatabaseSession class because the DatabaseSession 

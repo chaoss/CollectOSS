@@ -1,8 +1,8 @@
 import logging
 
-from augur.application.db.session import DatabaseSession
-from augur.application.db.engine import DatabaseEngine
-from augur.application.config import SystemConfig
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db.engine import DatabaseEngine
+from collectoss.application.config import SystemConfig
 
 def get_redis_conn_values():
 

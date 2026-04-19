@@ -1,10 +1,10 @@
 import logging
 
-from augur.tasks.github.releases.core import *
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import CoreRepoCollectionTask
-from augur.application.db.lib import get_repo_by_repo_git, get_session
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+from collectoss.tasks.github.releases.core import *
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
+from collectoss.application.db.lib import get_repo_by_repo_git, get_session
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 
 @celery.task(base=CoreRepoCollectionTask)

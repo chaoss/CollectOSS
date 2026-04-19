@@ -1,9 +1,9 @@
 import logging 
-from augur.tasks.github.pull_requests.commits_model.core import *
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import SecondaryRepoCollectionTask
-from augur.tasks.github.util.github_task_session import GithubTaskManifest
-from augur.application.db.lib import get_repo_by_repo_git
+from collectoss.tasks.github.pull_requests.commits_model.core import *
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.tasks.init.celery_app import SecondaryRepoCollectionTask
+from collectoss.tasks.github.util.github_task_session import GithubTaskManifest
+from collectoss.application.db.lib import get_repo_by_repo_git
 
 
 

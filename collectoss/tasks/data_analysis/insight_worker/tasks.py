@@ -9,10 +9,10 @@ import datetime
 from sklearn.ensemble import IsolationForest
 import warnings
 
-from augur.tasks.init.celery_app import celery_app as celery
-from augur.application.db.lib import get_value, get_repo_by_repo_git, get_session
-from augur.application.db.models import ChaossMetricStatus, RepoInsight, RepoInsightsRecord
-from augur.tasks.init.celery_app import MLRepoCollectionTask
+from collectoss.tasks.init.celery_app import celery_app as celery
+from collectoss.application.db.lib import get_value, get_repo_by_repo_git, get_session
+from collectoss.application.db.models import ChaossMetricStatus, RepoInsight, RepoInsightsRecord
+from collectoss.tasks.init.celery_app import MLRepoCollectionTask
 
 warnings.filterwarnings('ignore')
 
