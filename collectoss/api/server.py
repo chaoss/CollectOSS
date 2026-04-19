@@ -47,7 +47,7 @@ def get_file_id(path: str) -> str:
         path: file path
     
     Examples: 
-        If the path /augur/best_routes.py is given it will return "best_routes"
+        If the path /collectoss/best_routes.py is given it will return "best_routes"
 
     Returns:
         the filename as a string

@@ -11,13 +11,13 @@ JSON Metrics are here:
 
 .. code-block:: bash
 
-   $ AUGUR_HOME/augur/metrics
+   $ AUGUR_HOME/collectoss/metrics
 
 Visualization Metrics are here:
 
 .. code-block:: bash
 
-   $ AUGUR_HOME/augur/routes
+   $ AUGUR_HOME/collectoss/routes
 
 
 Existing metrics files (JSON Metric) "Standard Metrics":
@@ -46,7 +46,7 @@ You can see that one of the imports is our standard metric import from the util 
 
 .. code-block:: python
 
-   AUGUR_HOME/augur/routes/util.py
+   AUGUR_HOME/collectoss/routes/util.py
 
 
 All "Standard Metrics" share declaration and a method signature

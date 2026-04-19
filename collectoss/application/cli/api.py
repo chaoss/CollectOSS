@@ -50,7 +50,7 @@ def start(ctx, development, port):
         logger.info("Starting in development mode")
 
     try:
-        gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
+        gunicorn_location = os.getcwd() + "/collectoss/api/gunicorn_conf.py"
     except FileNotFoundError:
         logger.error("\n\nPlease run augur commands in the root directory\n\n")
 

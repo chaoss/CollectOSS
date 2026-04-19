@@ -77,7 +77,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     os.environ["AUGUR_PIDFILE"] = pidfile
 
     try:
-        gunicorn_location = os.getcwd() + "/augur/api/gunicorn_conf.py"
+        gunicorn_location = os.getcwd() + "/collectoss/api/gunicorn_conf.py"
     except FileNotFoundError:
         logger.error("\n\nPlease run augur commands in the root directory\n\n")
 

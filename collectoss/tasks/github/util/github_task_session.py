@@ -53,10 +53,10 @@ class GithubTaskSession(DatabaseSession):
             File "/home/ubuntu/github/virtualenvs/hosted/lib/python3.11/site-packages/celery/app/trace.py", line 734, in __protected_call__
                 return self.run(*args, **kwargs)
                     ^^^^^^^^^^^^^^^^^^^^^^^^^
-            File "/home/ubuntu/github/augur/augur/tasks/frontend.py", line 24, in add_org_repo_list
+            File "/home/ubuntu/github/collectoss/augur/tasks/frontend.py", line 24, in add_org_repo_list
                 with GithubTaskSession(logger) as session:
                     ^^^^^^^^^^^^^^^^^^^^^^^^^
-            File "/home/ubuntu/github/augur/augur/tasks/github/util/github_task_session.py", line 44, in __init__
+            File "/home/ubuntu/github/collectoss/augur/tasks/github/util/github_task_session.py", line 44, in __init__
                 self.oauths = GithubRandomKeyAuth(self, logger)
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             TypeError: GithubRandomKeyAuth.__init__() takes 2 positional arguments but 3 were given

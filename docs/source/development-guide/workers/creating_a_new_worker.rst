@@ -132,7 +132,7 @@ In the Worker block you need to add something like this:
 
 There should NOT be a comma after the final entry in each block.
 
-ALSO, if you wanted to have those blocks installed with auger itself when you do the PR, you need to add them to the `$AUGUR_ROOT/augur/config.py` file. The recommended way is to set a port range not already in use and assign a random variable range with the others, like this `your_new_worker_p = randint(56500, 56999)` ... its totally ok to compress a couple other port ranges for this process.
+ALSO, if you wanted to have those blocks installed with auger itself when you do the PR, you need to add them to the `$AUGUR_ROOT/collectoss/config.py` file. The recommended way is to set a port range not already in use and assign a random variable range with the others, like this `your_new_worker_p = randint(56500, 56999)` ... its totally ok to compress a couple other port ranges for this process.
 
 You can copy the housekeeper block verbatim from what you added to your own `augur.config.json`. For the worker block, in the `config.py` it would look like this:
 

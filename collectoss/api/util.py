@@ -38,7 +38,7 @@ def get_cache(namespace, cache_manager=None):
         if __memory_cache is None:
             cache_opts = beaker.util.parse_cache_config_options({
                 'cache.type': 'memory',
-                'cache.lock_dir': '/tmp/augur/'
+                'cache.lock_dir': '/tmp/collectoss/'
             })
             __memory_cache = beaker.cache.CacheManager(**cache_opts)
         cache_manager = __memory_cache

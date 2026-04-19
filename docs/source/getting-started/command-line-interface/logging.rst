@@ -17,7 +17,7 @@ Example usage::
   $ uv run augur logging directory
 
   # successful output looks like:
-  > /Users/carter/projects/work/augur/logs/
+  > /Users/carter/projects/work/collectoss/logs/
 
 
 ``tail``
