@@ -3,20 +3,19 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "augur"
+name = "collectoss"
 requires-python = ">=3.10"
 dynamic = ["version"]
 description = "Python 3 package for free/libre and open-source software community metrics, models & data collection"
 readme = "README.md"
-authors = [
-    { name = "Derek Howard", email = "derek@howderek.com" }
-]
+authors = [{ name = "CHAOSS" }]
 license = "MIT"
 license-files = ["LICENSE"]
 classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Version Control",
-    "Programming Language :: Python :: 3.10"
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
     "alembic>=1.17.1",
@@ -128,10 +127,7 @@ version = { attr = "metadata.__version__" }
 # dynamic version lookup to work. `uv lock` will fail with:
 #   ModuleNotFoundError: metadata
 where = ["."]
-include = [
-    "augur*",
-    "keyman*",
-]
+include = ["augur*", "keyman*"]
 
 [tool.uv]
 # Constraint dependencies are used to limit the versions of dependencies
@@ -143,7 +139,6 @@ constraint-dependencies = [
     # https://docs.python.org/3.10/whatsnew/3.10.html#removed
     "graphql-server-core>1.1.1",
 ]
-
 
 
 [tool.pytest.ini_options]
