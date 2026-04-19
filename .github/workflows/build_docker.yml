@@ -181,8 +181,8 @@ jobs:
         # Always run this step to get logs, even if the previous step fails
         if: always()
         # We use tail so that we can see the name of each file as it's printed
-        run: "docker run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs
-          tail -n +0'"
+        run: "docker run -t --rm -v logs:/logs bash -c 'find /logs -type f | xargs tail
+          -n +0'"
 
   test-e2e-podman:
     name: End-to-end test (Podman)
