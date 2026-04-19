@@ -66,7 +66,7 @@ def start(ctx, development, port):
     logger.info('Gunicorn webserver started...')
     logger.info(f'Augur is running at: {"http" if development else "https"}://{host}:{port}')
 
-    frontend_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n frontend:{uuid.uuid4().hex}@%h -Q frontend"
+    frontend_worker = f"celery -A collectoss.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n frontend:{uuid.uuid4().hex}@%h -Q frontend"
     frontend_worker_process = subprocess.Popen(frontend_worker.split(" "))
 
     try:
@@ -148,7 +148,7 @@ def is_api_process(process):
             
             if ("augur.api.server:app" in command or 
                 "augurbackendapi" in command or 
-               ("augur.tasks.init.celery_app.celery_app" in command and "frontend" in command)):
+               ("collectoss.tasks.init.celery_app.celery_app" in command and "frontend" in command)):
                 return True
             
     return False

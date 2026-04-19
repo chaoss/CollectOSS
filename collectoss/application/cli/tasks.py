@@ -44,9 +44,9 @@ def start():
         secondary_count = config.get_value("Celery", "secondary_worker_count")
        
 
-    scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
-    core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_count} -n core:{uuid.uuid4().hex}@%h"
-    secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_count} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+    scheduling_worker = f"celery -A collectoss.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+    core_worker = f"celery -A collectoss.tasks.init.celery_app.celery_app worker -l info --concurrency={core_count} -n core:{uuid.uuid4().hex}@%h"
+    secondary_worker = f"celery -A collectoss.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_count} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
 
     
     scheduling_worker_process = subprocess.Popen(scheduling_worker.split(" "))
@@ -92,7 +92,7 @@ def clear():
         
         if user_input in ("y", "Y", "Yes", "yes"):
             logger.info("Removing all tasks")
-            celery_purge_command = "celery -A augur.tasks.init.celery_app.celery_app purge -f"
+            celery_purge_command = "celery -A collectoss.tasks.init.celery_app.celery_app purge -f"
             subprocess.call(celery_purge_command.split(" "))
             return
 

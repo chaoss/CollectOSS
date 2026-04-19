@@ -11,7 +11,7 @@ def clear_redis_caches(logger):
     """Clears the redis databases that celery and redis use."""
 
     logger.info("Flushing all redis databases this instance was using")
-    celery_purge_command = "celery -A augur.tasks.init.celery_app.celery_app purge -f"
+    celery_purge_command = "celery -A collectoss.tasks.init.celery_app.celery_app purge -f"
     subprocess.call(celery_purge_command.split(" "))
 
 

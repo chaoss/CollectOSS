@@ -39,13 +39,13 @@ The ``augur_data`` schema contains *most* of the information analyzed
 and constructed by Augur. The origin’s of the data inside of augur are
 from data collection tasks and populate this schema.:
 
-1. ``augur.tasks.github.*``: Tasks that pull data from the GitHub API.
+1. ``collectoss.tasks.github.*``: Tasks that pull data from the GitHub API.
 Primarily, pull requests and issues are collected before more complicated
 data. Note that all messages are stored in Augur in the ``messages`` table.
 This is to facilitate easy analysis of the tone and characteristics of text
 communication in a project from one place.
 
-2. ``augur.tasks.git.facade_tasks``: Based on
+2. ``collectoss.tasks.git.facade_tasks``: Based on
 http://www.github.com/brianwarner/facade, but substantially modified in
 the fork located at http://github.com/sgoggins/facade. The modifications
 include modularization of code, connections to Postgresql data instead
@@ -53,10 +53,10 @@ of MySQL and other changes noted in the commit logs. Further modifications
 have been made to work with augur as well as seemlessly integrate it into
 data collection.
 
-3. ``augur.tasks.data_analysis.insight_worker.tasks``: Generates summarizations from raw data
+3. ``collectoss.tasks.data_analysis.insight_worker.tasks``: Generates summarizations from raw data
 gathered from commits, issues, and other info.
 
-4. ``augur.tasks.github.pull_requests.tasks``: Collects Pull Request related data such as commits, contributors,assignees, etc. from the Github API and stores it in the Augur database.
+4. ``collectoss.tasks.github.pull_requests.tasks``: Collects Pull Request related data such as commits, contributors,assignees, etc. from the Github API and stores it in the Augur database.
 
 Augur Operations
 -------------------------------------------------------

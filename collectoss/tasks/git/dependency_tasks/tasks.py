@@ -41,6 +41,6 @@ def process_ossf_dependency_metrics(self, repo_git):
                             ^^^^^^^^^^^^^^^^^^^^^^^^^
         File "/home/ubuntu/github/virtualenvs/hosted/lib/python3.11/site-packages/billiard/reduction.py", line 56, in dumps
             cls(buf, protocol).dump(obj)
-        billiard.pool.MaybeEncodingError: Error sending result: ''(1, <ExceptionInfo: MetadataException("\'checks\' | Additional metadata: required_output: {}")>, None)''. Reason: ''PicklingError("Can\'t pickle <class \'augur.tasks.util.metadata_exception.MetadataException\'>: it\'s not the same object as augur.tasks.util.metadata_exception.MetadataException")''.
+        billiard.pool.MaybeEncodingError: Error sending result: ''(1, <ExceptionInfo: MetadataException("\'checks\' | Additional metadata: required_output: {}")>, None)''. Reason: ''PicklingError("Can\'t pickle <class \'collectoss.tasks.util.metadata_exception.MetadataException\'>: it\'s not the same object as collectoss.tasks.util.metadata_exception.MetadataException")''.
         ```
     """

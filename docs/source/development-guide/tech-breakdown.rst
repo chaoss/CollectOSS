@@ -107,7 +107,7 @@ report any failed processes as issues on the Augur GitHub site. The
 error rate for tasks is currently 0.04%, and most errors involve
 unhandled platform API timeouts. We continue to identify and add fixes
 to handle these errors through additional retries. Starting Flower:
-``(nohup celery -A augur.tasks.init.celery_app.celery_app flower --port=8400 --max-tasks=1000000 &)``
+``(nohup celery -A collectoss.tasks.init.celery_app.celery_app flower --port=8400 --max-tasks=1000000 &)``
 NOTE: You can use any open port on your server, and access the dashboard
 in a browser with http://servername-or-ip:8400 in the example above
 (assuming you have access to that port, and its open on your network.)

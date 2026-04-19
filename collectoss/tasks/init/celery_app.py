@@ -23,43 +23,43 @@ from collectoss.tasks.util.collection_state import CollectionState
 
 logger = logging.getLogger(__name__)
 
-start_tasks = ['augur.tasks.start_tasks',
-                'augur.tasks.data_analysis',
-                'augur.tasks.util.collection_util']
+start_tasks = ['collectoss.tasks.start_tasks',
+                'collectoss.tasks.data_analysis',
+                'collectoss.tasks.util.collection_util']
 
-github_tasks = ['augur.tasks.github.contributors',
-                'augur.tasks.github.issues',
-                'augur.tasks.github.pull_requests.tasks',
-                'augur.tasks.github.events',
-                'augur.tasks.github.messages',
-                'augur.tasks.github.facade_github.tasks',
-                'augur.tasks.github.releases.tasks',
-                'augur.tasks.github.repo_info.tasks',
-                'augur.tasks.github.detect_move.tasks',
-                'augur.tasks.github.pull_requests.files_model.tasks',
-                'augur.tasks.github.pull_requests.commits_model.tasks',
-                'augur.tasks.github.traffic', 
-                'augur.tasks.github.util.populate_repo_src_id']
+github_tasks = ['collectoss.tasks.github.contributors',
+                'collectoss.tasks.github.issues',
+                'collectoss.tasks.github.pull_requests.tasks',
+                'collectoss.tasks.github.events',
+                'collectoss.tasks.github.messages',
+                'collectoss.tasks.github.facade_github.tasks',
+                'collectoss.tasks.github.releases.tasks',
+                'collectoss.tasks.github.repo_info.tasks',
+                'collectoss.tasks.github.detect_move.tasks',
+                'collectoss.tasks.github.pull_requests.files_model.tasks',
+                'collectoss.tasks.github.pull_requests.commits_model.tasks',
+                'collectoss.tasks.github.traffic', 
+                'collectoss.tasks.github.util.populate_repo_src_id']
 
-gitlab_tasks = ['augur.tasks.gitlab.merge_request_task',
-                'augur.tasks.gitlab.issues_task',
-                'augur.tasks.gitlab.events_task']
+gitlab_tasks = ['collectoss.tasks.gitlab.merge_request_task',
+                'collectoss.tasks.gitlab.issues_task',
+                'collectoss.tasks.gitlab.events_task']
 
-git_tasks = ['augur.tasks.git.facade_tasks',
-            'augur.tasks.git.dependency_tasks.tasks',
-            'augur.tasks.git.dependency_libyear_tasks.tasks',
-            'augur.tasks.git.scc_value_tasks.tasks']
+git_tasks = ['collectoss.tasks.git.facade_tasks',
+            'collectoss.tasks.git.dependency_tasks.tasks',
+            'collectoss.tasks.git.dependency_libyear_tasks.tasks',
+            'collectoss.tasks.git.scc_value_tasks.tasks']
 
-data_analysis_tasks = ['augur.tasks.data_analysis.message_insights.tasks',
-                       'augur.tasks.data_analysis.clustering_worker.tasks',
-                       'augur.tasks.data_analysis.discourse_analysis.tasks',
-                       'augur.tasks.data_analysis.pull_request_analysis_worker.tasks',
-                       'augur.tasks.data_analysis.insight_worker.tasks',
-                       'augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker']
+data_analysis_tasks = ['collectoss.tasks.data_analysis.message_insights.tasks',
+                       'collectoss.tasks.data_analysis.clustering_worker.tasks',
+                       'collectoss.tasks.data_analysis.discourse_analysis.tasks',
+                       'collectoss.tasks.data_analysis.pull_request_analysis_worker.tasks',
+                       'collectoss.tasks.data_analysis.insight_worker.tasks',
+                       'collectoss.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker']
 
-materialized_view_tasks = ['augur.tasks.db.refresh_materialized_views']
+materialized_view_tasks = ['collectoss.tasks.db.refresh_materialized_views']
 
-frontend_tasks = ['augur.tasks.frontend']
+frontend_tasks = ['collectoss.tasks.frontend']
 
 tasks = start_tasks + github_tasks + gitlab_tasks + git_tasks + materialized_view_tasks + frontend_tasks
 
@@ -139,25 +139,25 @@ class MLRepoCollectionTask(CoreRepoCollectionTask):
 
 
 
-#task_cls='augur.tasks.init.celery_app:CoreRepoCollectionTask'
+#task_cls='collectoss.tasks.init.celery_app:CoreRepoCollectionTask'
 celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)
 
 # define the queues that tasks will be put in (by default tasks are put in celery queue)
 celery_app.conf.task_routes = {
-    'augur.tasks.start_tasks.*': {'queue': 'scheduling'},
-    'augur.tasks.util.collection_util.*': {'queue': 'scheduling'},
-    'augur.tasks.git.facade_tasks.*': {'queue': 'facade'},
-    'augur.tasks.github.facade_github.tasks.*': {'queue': 'facade'},
-    'augur.tasks.github.pull_requests.commits_model.tasks.*': {'queue': 'secondary'},
-    'augur.tasks.github.pull_requests.files_model.tasks.*': {'queue': 'secondary'},
-    'augur.tasks.github.pull_requests.tasks.collect_pull_request_reviews': {'queue': 'secondary'},
-    'augur.tasks.github.pull_requests.tasks.collect_pull_request_review_comments': {'queue': 'secondary'},
-    'augur.tasks.git.dependency_tasks.tasks.process_ossf_dependency_metrics': {'queue': 'secondary'},
-    'augur.tasks.git.dependency_tasks.tasks.process_dependency_metrics': {'queue': 'facade'},
-    'augur.tasks.git.scc_value_tasks.tasks.process_scc_value_metrics' : {'queue': 'facade'},
-    'augur.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'},
-    'augur.tasks.frontend.*': {'queue': 'frontend'},
-    'augur.tasks.data_analysis.contributor_breadth_worker.*': {'queue': 'secondary'},
+    'collectoss.tasks.start_tasks.*': {'queue': 'scheduling'},
+    'collectoss.tasks.util.collection_util.*': {'queue': 'scheduling'},
+    'collectoss.tasks.git.facade_tasks.*': {'queue': 'facade'},
+    'collectoss.tasks.github.facade_github.tasks.*': {'queue': 'facade'},
+    'collectoss.tasks.github.pull_requests.commits_model.tasks.*': {'queue': 'secondary'},
+    'collectoss.tasks.github.pull_requests.files_model.tasks.*': {'queue': 'secondary'},
+    'collectoss.tasks.github.pull_requests.tasks.collect_pull_request_reviews': {'queue': 'secondary'},
+    'collectoss.tasks.github.pull_requests.tasks.collect_pull_request_review_comments': {'queue': 'secondary'},
+    'collectoss.tasks.git.dependency_tasks.tasks.process_ossf_dependency_metrics': {'queue': 'secondary'},
+    'collectoss.tasks.git.dependency_tasks.tasks.process_dependency_metrics': {'queue': 'facade'},
+    'collectoss.tasks.git.scc_value_tasks.tasks.process_scc_value_metrics' : {'queue': 'facade'},
+    'collectoss.tasks.git.dependency_libyear_tasks.tasks.process_libyear_dependency_metrics': {'queue': 'facade'},
+    'collectoss.tasks.frontend.*': {'queue': 'frontend'},
+    'collectoss.tasks.data_analysis.contributor_breadth_worker.*': {'queue': 'secondary'},
 }
 
 #Setting to be able to see more detailed states of running tasks

@@ -137,7 +137,7 @@ def start(ctx, disable_collection, development, pidfile, port):
 
     log_level = get_value("Logging", "log_level")
     celery_beat_process = None
-    celery_command = f"celery -A augur.tasks.init.celery_app.celery_app beat -l {log_level.lower()} -s {celery_beat_schedule_db}"
+    celery_command = f"celery -A collectoss.tasks.init.celery_app.celery_app beat -l {log_level.lower()} -s {celery_beat_schedule_db}"
     celery_beat_process = subprocess.Popen(celery_command.split(" "))
     manager.celery_beat_process = celery_beat_process    
     keypub = KeyPublisher()
@@ -217,28 +217,28 @@ def start_celery_worker_processes(worker_counts: tuple[int, int, int], disable_c
 
     sleep_time = 0
     
-    frontend_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n frontend:{uuid.uuid4().hex}@%h -Q frontend"
+    frontend_worker = f"celery -A collectoss.tasks.init.celery_app.celery_app worker -l info --concurrency=1 -n frontend:{uuid.uuid4().hex}@%h -Q frontend"
     process_list.append(subprocess.Popen(frontend_worker.split(" ")))
     sleep_time += 6
 
     if not disable_collection:
 
         #2 processes are always reserved as a baseline.
-        scheduling_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
+        scheduling_worker = f"celery -A collectoss.tasks.init.celery_app.celery_app worker -l info --concurrency=2 -n scheduling:{uuid.uuid4().hex}@%h -Q scheduling"
         process_list.append(subprocess.Popen(scheduling_worker.split(" ")))
         sleep_time += 6
         logger.info(f"Starting core worker processes with concurrency={core_worker_count}")
-        core_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={core_worker_count} -n core:{uuid.uuid4().hex}@%h"
+        core_worker = f"celery -A collectoss.tasks.init.celery_app.celery_app worker -l info --concurrency={core_worker_count} -n core:{uuid.uuid4().hex}@%h"
         process_list.append(subprocess.Popen(core_worker.split(" ")))
         sleep_time += 6
 
         logger.info(f"Starting secondary worker processes with concurrency={secondary_worker_count}")
-        secondary_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_worker_count} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
+        secondary_worker = f"celery -A collectoss.tasks.init.celery_app.celery_app worker -l info --concurrency={secondary_worker_count} -n secondary:{uuid.uuid4().hex}@%h -Q secondary"
         process_list.append(subprocess.Popen(secondary_worker.split(" ")))
         sleep_time += 6
 
         logger.info(f"Starting facade worker processes with concurrency={facade_worker_count}")
-        facade_worker = f"celery -A augur.tasks.init.celery_app.celery_app worker -l info --concurrency={facade_worker_count} -n facade:{uuid.uuid4().hex}@%h -Q facade"
+        facade_worker = f"celery -A collectoss.tasks.init.celery_app.celery_app worker -l info --concurrency={facade_worker_count} -n facade:{uuid.uuid4().hex}@%h -Q facade"
         
         process_list.append(subprocess.Popen(facade_worker.split(" ")))
         sleep_time += 6

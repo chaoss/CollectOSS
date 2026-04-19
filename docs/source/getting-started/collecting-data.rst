@@ -75,13 +75,13 @@ Configuring Collection
 
 There are many collection jobs that ship ready to collect out of the box:
 
-- ``augur.tasks.git.facade_taks`` (collects raw commit and contributor data by parsing Git logs)
-- ``augur.tasks.github`` (parent module of all github specific collection jobs)
-- ``augur.tasks.github.contributors.tasks`` (collects contributor data from the GitHub API)
-- ``augur.tasks.github.pull_requests.tasks`` (collects pull request data from the GitHub API)
-- ``augur.tasks.github.repo_info.tasks`` (collects repository statistics from the GitHub API)
-- ``augur.tasks.github.releases.tasks`` (collects release data from the GitHub API)
-- ``augur.tasks.data_analysis.insight_worker.tasks`` (queries Augur's metrics API to find interesting anomalies in the collected data)
+- ``collectoss.tasks.git.facade_taks`` (collects raw commit and contributor data by parsing Git logs)
+- ``collectoss.tasks.github`` (parent module of all github specific collection jobs)
+- ``collectoss.tasks.github.contributors.tasks`` (collects contributor data from the GitHub API)
+- ``collectoss.tasks.github.pull_requests.tasks`` (collects pull request data from the GitHub API)
+- ``collectoss.tasks.github.repo_info.tasks`` (collects repository statistics from the GitHub API)
+- ``collectoss.tasks.github.releases.tasks`` (collects release data from the GitHub API)
+- ``collectoss.tasks.data_analysis.insight_worker.tasks`` (queries Augur's metrics API to find interesting anomalies in the collected data)
 
 All worker configuration options are found in the config table generated when augur was installed. The config table is located in the augur_operations schema of your postgresql database. Each configurable data collection job set has its subsection with the same or similar title as the task's name. We recommend leaving the defaults and only changing them when explicitly necessary, as the default parameters will work for most use cases. Read on for more on how to make sure your workers are properly configured.
 

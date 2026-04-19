@@ -89,7 +89,7 @@ services:
   #  image: augur-new:latest
   #  restart: unless-stopped
   #  command:
-  #    [ "celery", "-A", "augur.tasks.init.celery_app.celery_app", "flower", "--max-tasks=1000000" ]
+  #    [ "celery", "-A", "collectoss.tasks.init.celery_app.celery_app", "flower", "--max-tasks=1000000" ]
   #  ports:
   #    - 5555:5555
   #  environment:
