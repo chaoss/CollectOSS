@@ -41,7 +41,7 @@ jobs:
         run: uv sync --all-groups
 
       - name: Install workers
-        run: uv run scripts/install/workers.sh dev
+        run: uv run scripts/ci/workers.sh dev
 
       - name: Install nltk
         run: |
