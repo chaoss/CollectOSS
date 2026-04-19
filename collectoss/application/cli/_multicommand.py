@@ -9,7 +9,7 @@ import importlib
 import traceback
 
 from pathlib import Path
-# import augur.application
+# import collectoss.application
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='AUGUR')
 

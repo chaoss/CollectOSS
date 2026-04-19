@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 import pytest
-import augur.application
+import collectoss.application
 import sqlalchemy as s
 import json
 
