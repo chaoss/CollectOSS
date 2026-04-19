@@ -177,7 +177,7 @@ def stop(ctx):
     """
     Sends SIGTERM to all Augur server & worker processes
     """
-    cli_logger = logging.getLogger("augur.cli")
+    cli_logger = logging.getLogger("collectoss.cli")
 
     stop_processes(signal.SIGTERM, cli_logger, ctx.obj.engine)
 
@@ -188,7 +188,7 @@ def kill(ctx):
     """
     Sends SIGKILL to all Augur server & worker processes
     """
-    cli_logger = logging.getLogger("augur.cli")
+    cli_logger = logging.getLogger("collectoss.cli")
     stop_processes(signal.SIGKILL, cli_logger, ctx.obj.engine)
 
 @cli.command('repo-reset')

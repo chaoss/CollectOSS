@@ -88,7 +88,7 @@ def stop(ctx):
     """
     Sends SIGTERM to all Augur api processes
     """
-    logger = logging.getLogger("augur.cli")
+    logger = logging.getLogger("collectoss.cli")
 
     stop_processes(signal.SIGTERM, logger, ctx.obj.engine)
 
@@ -99,7 +99,7 @@ def kill(ctx):
     """
     Sends SIGKILL to all Augur api processes
     """
-    logger = logging.getLogger("augur.cli")
+    logger = logging.getLogger("collectoss.cli")
     stop_processes(signal.SIGKILL, logger, ctx.obj.engine)
 
 @cli.command('processes')
