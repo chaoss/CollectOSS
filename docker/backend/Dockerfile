@@ -88,7 +88,7 @@ RUN find scripts -exec chmod u=rwx,go=rx {} +
 
 # Install the main project
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --no-dev --no-editable
+    uv sync --no-dev --no-editable --no-build-isolation
 
 # We aren't going to activate the virtualenv (manually or via uv run), so we
 # need adjust the PATH
