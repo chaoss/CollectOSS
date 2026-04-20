@@ -127,7 +127,7 @@ version = { attr = "metadata.__version__" }
 # dynamic version lookup to work. `uv lock` will fail with:
 #   ModuleNotFoundError: metadata
 where = ["."]
-include = ["augur*", "keyman*"]
+include = ["collectoss*", "keyman*"]
 
 [tool.uv]
 # Constraint dependencies are used to limit the versions of dependencies
