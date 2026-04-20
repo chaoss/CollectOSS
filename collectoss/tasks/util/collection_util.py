@@ -465,7 +465,7 @@ class CollectionTaskRoutine:
     Attributes:
         logger (Logger): Get logger from SystemLogger
         repos (List[str]): List of repo_ids to run collection on.
-        collection_phases (List[str]): List of phases to run in augur collection.
+        collection_phases (List[str]): List of phases to run in collectoss collection.
         collection_hook (str): String determining the attributes to update when collection for a repo starts. e.g. core
         session: Database session to use
     """

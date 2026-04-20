@@ -76,12 +76,11 @@ services:
       - redis
       - keyman
       - rabbitmq
-    user: 2345:2345  # Run as an arbitrary non-root user
+    user: 2345:2345 # Run as an arbitrary non-root user
     post_start:
       # Make sure the user has access to the volumes
       - command: chmod 777 /facade /logs /config /cache
         user: root
-  
   # Flower is a UI that helps more easily monitor running tasks for celery workers.
   # This wont show you every error from the entire augur system, but it should show most of them.
   # uncomment the section below to use flower
@@ -101,7 +100,7 @@ services:
   #    - database
   #    - redis
   #    - rabbitmq
-  
+
 volumes:
   postgres:
   cache:

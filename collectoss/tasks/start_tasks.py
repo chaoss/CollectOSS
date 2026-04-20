@@ -60,7 +60,7 @@ def prelim_phase_secondary(repo_git, full_collection):
     return detect_github_repo_move_secondary.si(repo_git)
 
 
-#This is the phase that defines the message for core augur collection
+#This is the phase that defines the message for core collectoss collection
 #A chain is needed for each repo.
 def primary_repo_collect_phase(repo_git, full_collection):
     logger = logging.getLogger(primary_repo_collect_phase.__name__)

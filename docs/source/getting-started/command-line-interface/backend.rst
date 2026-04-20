@@ -2,11 +2,11 @@
 Backend Commands
 =================
 
-``augur backend``
+``collectoss backend``
 ====================
-The ``augur backend`` CLI group is for controlling Augur's API server & data collection workers. All commands are invoked like::
+The ``collectoss backend`` CLI group is for controlling Augur's API server & data collection workers. All commands are invoked like::
 
-  $ augur backend <command name>
+  $ collectoss backend <command name>
 
 ``start``
 ============
@@ -20,7 +20,7 @@ This command is for starting Augur's API server & (optionally) data collection w
 
 .. code-block::
 
-  uv run augur backend start
+  uv run collectoss backend start
 
   # successful output looks like:
   >[43389] augur [INFO] Augur application initialized
@@ -56,7 +56,7 @@ To start the backend as a background process:
 
 .. code-block:: bash
 
-  uv run nohup augur backend start >logs/base.log 2>logs/base.err &
+  uv run nohup collectoss backend start >logs/base.log 2>logs/base.err &
 
 Successful output looks like the generation of standard Augur logfiles in the logs/ directory.
 
@@ -64,7 +64,7 @@ To start the backend server without the housekeeper:
 
 .. code-block:: bash
 
-  uv run augur backend start --disable-housekeeper
+  uv run collectoss backend start --disable-housekeeper
 
 Successful output looks like:
 
@@ -85,7 +85,7 @@ Example usage:
 
 .. code-block:: bash
 
-  uv run augur backend stop
+  uv run collectoss backend stop
 
 Successful output looks like:
 
@@ -99,13 +99,13 @@ Successful output looks like:
 ``kill``
 ---------
 **Forcefully** terminates (using ``SIGKILL``) all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
-Should only be used when ``uv run augur backend stop`` is not working.
+Should only be used when ``uv run collectoss backend stop`` is not working.
 
 Example usage:
 
 .. code-block:: bash
 
-  uv run augur backend kill
+  uv run collectoss backend kill
 
   # successful output looks like:
   > CLI: [backend.kill] [INFO] Killing process 87340
@@ -123,7 +123,7 @@ Example usage:
 
 .. code-block:: bash
 
-  uv run augur backend processes
+  uv run collectoss backend processes
 
 Successful output looks like:
 
@@ -160,11 +160,11 @@ Start the http server with::
 
 Then start Augur with ``logstash`` flag::
 
-  $ uv run augur backend start --logstash
+  $ uv run collectoss backend start --logstash
 
 If you'd like to clean all previously collected errors, run::
 
-  $ uv run augur backend start --logstash-with-cleanup
+  $ uv run collectoss backend start --logstash-with-cleanup
 
 Open http://localhost:8003 and select workers to check for errors.
 
@@ -178,7 +178,7 @@ Example usage:
 .. code-block:: bash
 
   # to export your environment
-  $ uv run augur util export-env
+  $ uv run collectoss util export-env
 
 Successful output looks like:
 
@@ -218,7 +218,7 @@ Example usage:
 .. code-block:: bash
 
   # to reset the repo collection status to "New"
-  $ uv run augur util repo-reset
+  $ uv run collectoss util repo-reset
 
   # successful output looks like:
   > CLI: [util.repo_reset] [INFO] Repos successfully reset

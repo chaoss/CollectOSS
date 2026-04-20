@@ -1,8 +1,8 @@
 '''
 CollectOSS commands for adding regular users or administrative users
 Running the script:
-Add Regular user command: augur user add <username> <email> <firstname> <lastname>
-Add Admin command: augur user add <username> <email> <firstname> <lastname> --admin 
+Add Regular user command: collectoss user add <username> <email> <firstname> <lastname>
+Add Admin command: collectoss user add <username> <email> <firstname> <lastname> --admin 
 '''
 
 import os

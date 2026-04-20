@@ -1,5 +1,5 @@
 """
-Defines utility functions used by the augur api views
+Defines utility functions used by the collectoss api views
 """
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
