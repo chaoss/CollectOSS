@@ -111,7 +111,7 @@ augur = "augur.application.cli._multicommand:run"
 
 [project.urls]
 Homepage = "https://github.com/chaoss/augur"
-Documentation = "https://oss-augur.readthedocs.io/en/main/"
+Documentation = "https://collectoss.readthedocs.io/en/main/"
 
 
 ############################################################

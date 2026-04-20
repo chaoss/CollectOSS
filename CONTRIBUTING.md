@@ -4,7 +4,7 @@ We love to pull requests from everyone! We follow the standard Git workflow of `
 
 If you are new to open source, we recommend GitHub's excellent guide on "[How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)". In addition, please feel free to reach out to any of the maintainers or other community members if you are struggling as we are here to help you learn!
 
-Before getting started, please make sure you've read the [README](README.md) to get a primer on our project. Augur's documentation can be found [here](https://oss-augur.readthedocs.io/en/main/).
+Before getting started, please make sure you've read the [README](README.md) to get a primer on our project. Augur's documentation can be found [here](https://collectoss.readthedocs.io/en/main/).
 
 ## Join the Community
 
@@ -94,8 +94,8 @@ git push origin master
 ## Community Resources
 
 ### Augur
-- [Stable documentation (`release` branch)](https://oss-augur.readthedocs.io/en/release/)
-- [Nightly/developer build documentation (`main` branch)](https://oss-augur.readthedocs.io/en/main/) (warning: this is should be considered an unstable branch and should not be used for production)
+- [Stable documentation (`release` branch)](https://collectoss.readthedocs.io/en/release/)
+- [Nightly/developer build documentation (`main` branch)](https://collectoss.readthedocs.io/en/main/) (warning: this is should be considered an unstable branch and should not be used for production)
 - [Live Augur demo](https://ai.chaoss.io)
 
 ### CHAOSS
