@@ -127,9 +127,9 @@ instance. You can accomplish this by running the below commands:
 
    rabbitmq-plugins enable rabbitmq_management;
    rabbitmqctl add_user augur password123;
-   rabbitmqctl add_vhost augur_vhost;
+   rabbitmqctl add_vhost collectoss_vhost;
    rabbitmqctl set_user_tags augur augurTag administrator;
-   rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*";
+   rabbitmqctl set_permissions -p collectoss_vhost augur ".*" ".*" ".*";
 
 -  We need rabbitmq_management so we can purge our own queues with an
    API call
@@ -143,11 +143,11 @@ it uses hostname to communicate with nodes.
 If your setup of rabbitmq is successful your broker url should look like
 this:
 
-**broker_url = ``amqp://augur:password123@localhost:5672/augur_vhost``**
+**broker_url = ``amqp://augur:password123@localhost:5672/collectoss_vhost``**
 
 You will be asked for the broker URL on install of Augur. You can copy
 and paste the line above
-(``amqp://augur:password123@localhost:5672/augur_vhost``) if you created
+(``amqp://augur:password123@localhost:5672/collectoss_vhost``) if you created
 the users and virtual hosts under “Broker Configuration”, above.
 
 Things to start before augur later
@@ -244,11 +244,11 @@ The endpoints to hit to purge queues on exit are:
 
 ::
 
-   curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/augur_vhost/celery
+   curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/collectoss_vhost/celery
 
-   curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/augur_vhost/secondary
+   curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/collectoss_vhost/secondary
 
-   curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/augur_vhost/scheduling
+   curl -i -u augur:password123 -XDELETE http://localhost:15672/api/queues/collectoss_vhost/scheduling
 
 We provide this functionality to limit, as far as possible, the need for
 sudo privileges on the Augur operating system user. With sudo, you can
@@ -266,11 +266,11 @@ sensitive]):
 
 ::
 
-   rabbitmqctl purge_queue celery -p augur_vhost
-   rabbitmqctl purge_queue secondary -p augur_vhost
-   rabbitmqctl purge_queue scheduling -p augur_vhost
+   rabbitmqctl purge_queue celery -p collectoss_vhost
+   rabbitmqctl purge_queue secondary -p collectoss_vhost
+   rabbitmqctl purge_queue scheduling -p collectoss_vhost
 
-Where augur_vhost is the vhost. The management API at port 15672 will
+Where collectoss_vhost is the vhost. The management API at port 15672 will
 only exist if you have already installed the rabbitmq_management plugin.
 
 **During Augur installation, you will be prompted for this broker_url**

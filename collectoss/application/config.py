@@ -83,7 +83,7 @@ default_config = {
                 "connection_string": "redis://127.0.0.1:6379/"
             },
             "RabbitMQ": {
-                "connection_string": "amqp://augur:password123@localhost:5672/augur_vhost"
+                "connection_string": "amqp://augur:password123@localhost:5672/collectoss_vhost"
             },
             "Tasks": {
                 "collection_interval": 30,

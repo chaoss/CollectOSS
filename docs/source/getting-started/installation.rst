@@ -62,11 +62,11 @@ After installation, you must also set up your rabbitmq instance by running the b
 
 	sudo rabbitmqctl add_user augur password123
 
-	sudo rabbitmqctl add_vhost augur_vhost
+	sudo rabbitmqctl add_vhost collectoss_vhost
 
 	sudo rabbitmqctl set_user_tags augur augurTag
 
-	sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
+	sudo rabbitmqctl set_permissions -p collectoss_vhost augur ".*" ".*" ".*"
 
 .. note::
 	it is important to have a static hostname when using rabbitmq as it uses hostname
@@ -81,7 +81,7 @@ Then, start rabbitmq server with
 
 If your setup of rabbitmq is successful your broker url should look like this:
 
-``broker_url = 'amqp://augur:password123@localhost:5672/augur_vhost'``
+``broker_url = 'amqp://augur:password123@localhost:5672/collectoss_vhost'``
 
 During installation you will be prompted for this broker url.
 

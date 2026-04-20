@@ -135,9 +135,9 @@ instance. You can accomplish this by running the below commands:
 
    sudo rabbitmq-plugins enable rabbitmq_management &&
    sudo rabbitmqctl add_user augur password123 &&
-   sudo rabbitmqctl add_vhost augur_vhost &&
+   sudo rabbitmqctl add_vhost collectoss_vhost &&
    sudo rabbitmqctl set_user_tags augur augurTag administrator &&
-   sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
+   sudo rabbitmqctl set_permissions -p collectoss_vhost augur ".*" ".*" ".*"
 
 -  We need rabbitmq_management so we can purge our own queues with an
    API call
@@ -157,7 +157,7 @@ RabbitMQ’s server can then be started from systemd:
 If your setup of rabbitmq is successful your broker url should look like
 this:
 
-**broker_url = ``amqp://augur:password123@localhost:5672/augur_vhost``**
+**broker_url = ``amqp://augur:password123@localhost:5672/collectoss_vhost``**
 
 RabbitMQ Developer Note:
 ~~~~~~~~~~~~~~~~~~~~~~~~

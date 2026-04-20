@@ -7,7 +7,7 @@ LABEL version=${VERSION}
 
 ARG RABBIT_MQ_DEFAULT_USER=collectoss
 ARG RABBIT_MQ_DEFAULT_PASSWORD=password123
-ARG RABBIT_MQ_DEFAULT_VHOST=augur_vhost
+ARG RABBIT_MQ_DEFAULT_VHOST=collectoss_vhost
 
 COPY --chown=rabbitmq:rabbitmq ./docker/rabbitmq/collectoss.conf /etc/rabbitmq/conf.d/
 
