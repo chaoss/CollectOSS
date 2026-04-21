@@ -52,7 +52,7 @@ Git Platform Requirements (Things to have setup prior to initiating installation
 Fork and Clone Augur
 ~~~~~~~~~~~~~~~~~~~~
 
-1. Fork https://github.com/chaoss/augur
+1. Fork https://github.com/chaoss/collectoss
 2. Clone your fork. We recommend creating a ``github`` directory in your
    user’s base directory.
 

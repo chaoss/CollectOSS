@@ -34,7 +34,7 @@ Kindly replace the descriptions with your comments to the best of your ability, 
 ```bash
 $ git clone github.com:your-username/augur.git
 $ cd collectoss/
-$ git remote add upstream https://github.com/chaoss/augur.git
+$ git remote add upstream https://github.com/chaoss/collectoss.git
 ```
 
 2. Follow the [development installation instructions](https://github.com/chaoss/collectoss/blob/main/docs/new-install.md).
@@ -78,11 +78,11 @@ To ensure all your commits are signed, you may choose to [configure git](https:/
 
 Remember to sync your fork with the ```main``` branch regularly, by taking the following steps:
 
-- Setup your upstream branch to point to the URL of the main CollectOSS repo ```https://github.com/chaoss/augur.git```.
+- Setup your upstream branch to point to the URL of the main CollectOSS repo ```https://github.com/chaoss/collectoss.git```.
 
 - Next, in the root folder of the project, on the ```main``` branch, run:
 ```
-git remote add upstream https://github.com/chaoss/augur.git
+git remote add upstream https://github.com/chaoss/collectoss.git
 ```
 Whenever you need to make changes, make sure your ```main``` branch is in sync with the main repository, by checking out to the ```main``` branch and running:
 ```

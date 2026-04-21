@@ -109,7 +109,7 @@ docs = [
 augur = "collectoss.application.cli._multicommand:run"
 
 [project.urls]
-Homepage = "https://github.com/chaoss/augur"
+Homepage = "https://github.com/chaoss/collectoss"
 Documentation = "https://collectoss.readthedocs.io/en/main/"
 
 

@@ -66,7 +66,7 @@ The ``.csv`` file must have the following format:
   <git_repo_url>,<repo_group_id>,
   ...
 
-where ``<repo_group_id>`` is an **existing** repository group ID, and ``<git_repo_url>`` is the url to the repository's Git repository, e.g. ``https://github.com/chaoss/augur.git``.
+where ``<repo_group_id>`` is an **existing** repository group ID, and ``<git_repo_url>`` is the url to the repository's Git repository, e.g. ``https://github.com/chaoss/collectoss.git``.
 Each pair of values should be on its own line (indicated by the ...), without quotes, and there should be no column headers.
 
 .. note::
@@ -78,7 +78,7 @@ Example usage\:
 .. code-block:: bash
 
   # contents of repos.csv
-  https://github.com/chaoss/augur.git,10
+  https://github.com/chaoss/collectoss.git,10
   https://github.com/chaoss/grimoirelab.git,10
   https://github.com/chaoss/wg-evolution.git,20
   https://github.com/chaoss/wg-risk.git,20
@@ -91,7 +91,7 @@ Example usage\:
   $ augur db add-repos repos.csv
 
   # successful output looks like
-  > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/augur.git` into repo group 10
+  > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/collectoss.git` into repo group 10
   > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/grimoirelab.git` into repo group 10
   > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/wg-evolution.git` into repo group 20
   > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/wg-risk.git` into repo group 20

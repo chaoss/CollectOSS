@@ -7,7 +7,7 @@ the following resources (or more).
 - 100 GB disk
 - 10 GB RAM
 
-1. Clone the Augur repository https://github.com/chaoss/augur
+1. Clone the Augur repository https://github.com/chaoss/collectoss
 
 
 2. Create a ``.env`` file in the top level directory with the following fields (don't remove any variable, keep placeholder values if you don't need some of them):

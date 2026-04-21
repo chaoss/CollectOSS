@@ -17,7 +17,7 @@ def test_is_valid_repo_group_id(test_db_engine):
     try:
 
         data = {"rg_ids": [1, 2, 3], "repo_id": 1, "tool_source": "Frontend",
-                "repo_url": "https://github.com/chaoss/augur"}
+                "repo_url": "https://github.com/chaoss/collectoss"}
 
         with test_db_engine.connect() as connection:
 

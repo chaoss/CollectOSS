@@ -1,7 +1,7 @@
 {% if not d %}
     <h1>Uh oh, Something went wrong!</h1>
     <p>You were sent to this page because we were loading something for you, but we didn't catch your destination.</p>
-    <p>Go back to the previous page and try again. If that doesn't help, submit an issue to https://github.com/chaoss/augur .</p>
+    <p>Go back to the previous page and try again. If that doesn't help, submit an issue to https://github.com/chaoss/collectoss .</p>
 {% else %}
     <meta http-equiv="refresh" content="5; URL={{url_for('root', path=d)}}"/>
     <h1>Give us a moment!</h1>

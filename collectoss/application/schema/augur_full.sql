@@ -4691,7 +4691,7 @@ COPY augur_data.repo (repo_id, repo_group_id, repo_git, repo_path, repo_name, re
 24441	10	https://github.com/operate-first/operate-first-twitter	\N	\N	2021-08-25 16:47:47	New		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-08-25 16:47:47
 24442	10	https://github.com/operate-first/blueprint	\N	\N	2021-08-25 16:47:47	New		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-08-25 16:47:47
 25445	10	https://github.com/chaoss/grimoirelab-perceval-opnfv	\N	\N	2020-04-17 21:40:39	New		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:39
-1	1	https://github.com/chaoss/augur	\N	\N	2021-08-10 14:28:44	New		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	data load	one	git	2021-06-05 18:41:14
+1	1	https://github.com/chaoss/collectoss	\N	\N	2021-08-10 14:28:44	New		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	data load	one	git	2021-06-05 18:41:14
 25430	10	https://github.com/SociallyCompute/update-test	\N	\N	2021-10-07 08:50:13	New		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	\N	\N	\N	\N
 25450	10	https://github.com/chaoss/grimoirelab-hatstall	\N	\N	2021-04-17 21:40:42	New		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:42
 \.

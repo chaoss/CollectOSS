@@ -1,7 +1,7 @@
 Docker Quick Start
 ==================================
 Before you get off to such a quick start, go ahead and
-  1. Create a fork from augur starting at https://github.com/chaoss/augur
+  1. Create a fork from augur starting at https://github.com/chaoss/collectoss
   2. Clone that fork locally
   3. Checkout the appropriate branch to work on (see notes below):
 
