@@ -11,7 +11,7 @@ import uuid
 import time
 # from redis.exceptions import ConnectionError as RedisConnectionError
 
-from augur import instance_id
+from collectoss import instance_id
 from collectoss.application.logs import SystemLogger
 from collectoss.application.config import SystemConfig
 from collectoss.application.db.session import DatabaseSession

@@ -5,7 +5,7 @@ from typing import Iterable, Any, Union
 
 from collections.abc import MutableSequence
 from collectoss.tasks.init.redis_connection import get_redis_connection
-from augur import instance_id
+from collectoss import instance_id
 from redis import exceptions
 import numbers
 

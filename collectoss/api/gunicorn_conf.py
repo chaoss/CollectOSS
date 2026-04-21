@@ -1,4 +1,4 @@
-# from augur import ROOT_PROJECT_REPO_DIRECTORY
+# from collectoss import ROOT_PROJECT_REPO_DIRECTORY
 import multiprocessing
 import logging
 import os
