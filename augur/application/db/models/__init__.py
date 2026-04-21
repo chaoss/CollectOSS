@@ -71,7 +71,7 @@ from augur.application.db.models.augur_data import (
 
 from augur.application.db.models.spdx import (
     SpdxAnnotationType,
-    SpdxAugurRepoMap,
+    SpdxRepoMap,
     SpdxCreatorType,
     SpdxDocumentNamespace,
     SpdxFileType,
@@ -96,7 +96,6 @@ from augur.application.db.models.spdx import (
 )
 
 from augur.application.db.models.augur_operations import (
-    AugurSetting,
     WorkerHistory,
     WorkerJob,
     WorkerOauth,
