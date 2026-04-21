@@ -10,8 +10,8 @@ class GithubTaskManifest:
 
         engine = get_engine()
 
-        self.augur_db = DatabaseSession(logger, engine)
-        #self.key_auth = GithubRandomKeyAuth(self.augur_db.session, logger)
+        self.db_session = DatabaseSession(logger, engine)
+        #self.key_auth = GithubRandomKeyAuth(self.db_session.session, logger)
         #totalHack
         self.key_auth = GithubRandomKeyAuth(logger)
         self.logger = logger
@@ -23,7 +23,7 @@ class GithubTaskManifest:
 
     def __exit__(self, exception_type, exception_value, exception_traceback):
 
-        self.augur_db.close()
+        self.db_session.close()
 
 
 class GithubTaskSession(DatabaseSession):

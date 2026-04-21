@@ -15,7 +15,7 @@ import traceback
 import requests
 from redis.exceptions import ConnectionError as RedisConnectionError
 
-from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
+from augur.tasks.start_tasks import collection_monitor, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
 from augur.tasks.github.contributors import process_contributors
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
@@ -23,8 +23,8 @@ from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
-from augur.application.logs import AugurLogger
-from augur.application.service_manager import AugurServiceManager, cleanup_collection_status_and_rabbit, clean_collection_status
+from augur.application.logs import SystemLogger
+from augur.application.service_manager import SystemServiceManager, cleanup_collection_status_and_rabbit, clean_collection_status
 from augur.application.db.lib import get_value
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 import sqlalchemy as s
@@ -33,7 +33,7 @@ from keyman.KeyClient import KeyClient, KeyPublisher
 
 reset_logs = os.getenv("AUGUR_RESET_LOGS", 'True').lower() in ('true', '1', 't', 'y', 'yes')
 
-logger = AugurLogger("augur", reset_logfiles=reset_logs).get_logger()
+logger = SystemLogger("augur", reset_logfiles=reset_logs).get_logger()
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 @click.pass_context
@@ -54,7 +54,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     with open(pidfile, "w") as pidfile_io:
         pidfile_io.write(str(os.getpid()))
 
-    manager = AugurServiceManager(ctx, pidfile, disable_collection)
+    manager = SystemServiceManager(ctx, pidfile, disable_collection)
 
     # Register signal handlers for graceful shutdown
     signal.signal(signal.SIGTERM, manager.shutdown_signal_handler)
@@ -180,7 +180,7 @@ def start(ctx, disable_collection, development, pidfile, port):
 
         process_contributors.si().apply_async()
 
-        augur_collection_monitor.si().apply_async()
+        collection_monitor.si().apply_async()
         
     else:
         logger.info("Collection disabled")
@@ -259,7 +259,7 @@ def stop(ctx):
     """
     logger = logging.getLogger("augur.cli")
 
-    augur_stop(signal.SIGTERM, logger, ctx.obj.engine)
+    stop_processes(signal.SIGTERM, logger, ctx.obj.engine)
 
 @cli.command('stop-collection-blocking')
 @test_connection
@@ -270,7 +270,7 @@ def stop_collection(ctx):
     """
     Stop collection tasks if they are running, block until complete
     """
-    processes = get_augur_processes()
+    processes = get_backend_processes()
     
     stopped = []
     
@@ -319,20 +319,20 @@ def kill(ctx):
     Sends SIGKILL to all Augur server & worker processes
     """
     logger = logging.getLogger("augur.cli")
-    augur_stop(signal.SIGKILL, logger, ctx.obj.engine)
+    stop_processes(signal.SIGKILL, logger, ctx.obj.engine)
 
 
-def augur_stop(signal, logger, engine):
+def stop_processes(signal, logger, engine):
     """
     Stops augur with the given signal, 
     and cleans up collection if it was running
     """
 
-    augur_processes = get_augur_processes()
+    backend_processes = get_backend_processes()
     # if celery is running, run the cleanup function
-    process_names = [process.name() for process in augur_processes]
+    process_names = [process.name() for process in backend_processes]
 
-    _broadcast_signal_to_processes(augur_processes, broadcast_signal=signal, given_logger=logger)
+    _broadcast_signal_to_processes(backend_processes, broadcast_signal=signal, given_logger=logger)
 
     if "celery" in process_names:
         cleanup_collection_status_and_rabbit(logger, engine)
@@ -372,11 +372,11 @@ def export_env(config):
 @cli.command('repo-reset')
 @test_connection
 @test_db_connection
-def repo_reset(augur_app):
+def repo_reset(backend_app):
     """
     Refresh repo collection to force data collection
     """
-    augur_app.database.execute(s.sql.text("""
+    backend_app.database.execute(s.sql.text("""
         UPDATE augur_operations.collection_status 
         SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
 
@@ -395,21 +395,20 @@ def repo_reset(augur_app):
 def processes():
     """
     Outputs the name/PID of all Augur server & worker processes"""
-    augur_processes = get_augur_processes()
-    for process in augur_processes:
+    for process in get_backend_processes():
         logger.info(f"Found process {process.pid} [{process.name()}] -> Parent: {process.parent().pid}")
 
-def get_augur_processes():
-    augur_processes = []
+def get_backend_processes():
+    process_list = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
             try:
                 if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in ''.join(process.info['cmdline'][:]).lower():
                     if process.pid != os.getpid():
-                        augur_processes.append(process)
+                        process_list.append(process)
             except (KeyError, FileNotFoundError):
                 pass
-    return augur_processes
+    return process_list
 
 def _broadcast_signal_to_processes(processes, broadcast_signal=signal.SIGTERM, given_logger=None):
     if given_logger is None:
@@ -442,43 +441,3 @@ def raise_open_file_limit(num_files):
     resource.setrlimit(resource.RLIMIT_NOFILE, (num_files, current_hard))
 
     return
-
-# def initialize_components(augur_app, disable_housekeeper):
-#     master = None
-#     manager = None
-#     broker = None
-#     housekeeper = None
-#     worker_processes = []
-#     mp.set_start_method('forkserver', force=True)
-
-#     if not disable_housekeeper:
-
-#         manager = mp.Manager()
-#         broker = manager.dict()
-#         housekeeper = Housekeeper(broker=broker, augur_app=augur_app)
-
-#         controller = augur_app.config.get_section('Workers')
-#         for worker in controller.keys():
-#             if controller[worker]['switch']:
-#                 for i in range(controller[worker]['workers']):
-#                     logger.info("Booting {} #{}".format(worker, i + 1))
-#                     worker_process = mp.Process(target=worker_start, name=f"{worker}_{i}", kwargs={'worker_name': worker, 'instance_number': i, 'worker_port': controller[worker]['port']}, daemon=True)
-#                     worker_processes.append(worker_process)
-#                     worker_process.start()
-
-#     augur_app.manager = manager
-#     augur_app.broker = broker
-#     augur_app.housekeeper = housekeeper
-
-#     atexit._clear()
-#     atexit.register(exit, augur_app, worker_processes, master)
-#     return AugurGunicornApp(augur_app.gunicorn_options, augur_app=augur_app)
-
-# def worker_start(worker_name=None, instance_number=0, worker_port=None):
-#     try:
-#         time.sleep(30 * instance_number)
-#         destination = subprocess.DEVNULL
-#         process = subprocess.Popen("cd workers/{} && {}_start".format(worker_name,worker_name), shell=True, stdout=destination, stderr=subprocess.STDOUT)
-#         logger.info("{} #{} booted.".format(worker_name,instance_number+1))
-#     except KeyboardInterrupt as e:
-#         pass

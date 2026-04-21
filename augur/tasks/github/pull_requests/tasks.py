@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from augur.tasks.github.pull_requests.core import extract_data_from_pr_list
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask, AugurSecondaryRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask, SecondaryRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.util.worker_util import remove_duplicate_dicts
@@ -22,16 +22,16 @@ from typing import List
 
 platform_id = 1
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
 
     logger = logging.getLogger(collect_pull_requests.__name__)
 
     with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
+        db_session = manifest.db_session
 
-        repo_id = augur_db.session.query(Repo).filter(
+        repo_id = db_session.session.query(Repo).filter(
         Repo.repo_git == repo_git).one().repo_id
 
         owner, repo = get_owner_repo(repo_git)
@@ -51,12 +51,12 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
             all_data.append(pr)
 
             if len(all_data) >= pr_batch_size:
-                process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, augur_db)
+                process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, db_session)
                 total_count += len(all_data)
                 all_data.clear()
 
         if all_data:
-            process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, augur_db)
+            process_pull_requests(all_data, f"{owner}/{repo}: Github Pr task", repo_id, logger, db_session)
             total_count += len(all_data)
 
         if total_count > 0:
@@ -93,7 +93,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[
         if since and datetime.fromisoformat(pr["updated_at"].replace("Z", "+00:00")).replace(tzinfo=timezone.utc) < since:
             return 
 
-def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
+def process_pull_requests(pull_requests, task_name, repo_id, logger, db_session):
     """
     Parse and insert all retrieved PR data.
 
@@ -102,7 +102,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
         task_name: Name of the calling task and the repo
         repo_id: augur id of the repository
         logger: logging object
-        augur_db: sqlalchemy db object
+        db_session: sqlalchemy db object
     """
     tool_source = "Pr Task"
     tool_version = "2.0"
@@ -115,7 +115,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
 
     # insert contributors from these prs
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+    db_session.insert_data(contributors, Contributor, ["cntrb_id"])
 
 
     # insert the prs into the pull_requests table. 
@@ -125,7 +125,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
     pr_natural_keys = ["repo_id", "pr_src_id"]
     pr_return_columns = ["pull_request_id", "pr_url"]
     pr_string_fields = ["pr_src_title", "pr_body"]
-    pr_return_data = augur_db.insert_data(pr_dicts, PullRequest, pr_natural_keys, 
+    pr_return_data = db_session.insert_data(pr_dicts, PullRequest, pr_natural_keys, 
                             return_columns=pr_return_columns, string_fields=pr_string_fields)
 
     if pr_return_data is None:
@@ -164,24 +164,24 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, augur_db):
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     pr_label_natural_keys = ['pr_src_id', 'pull_request_id']
     pr_label_string_fields = ["pr_src_description"]
-    augur_db.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys, string_fields=pr_label_string_fields)
+    db_session.insert_data(pr_label_dicts, PullRequestLabel, pr_label_natural_keys, string_fields=pr_label_string_fields)
 
     # inserting pr assignees
     # we are using pr_assignee_src_id and pull_request_id to determine if the label is already in the database.
     pr_assignee_natural_keys = ['pr_assignee_src_id', 'pull_request_id']
-    augur_db.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
+    db_session.insert_data(pr_assignee_dicts, PullRequestAssignee, pr_assignee_natural_keys)
 
 
     # inserting pr requested reviewers
     # we are using pr_src_id and pull_request_id to determine if the label is already in the database.
     pr_reviewer_natural_keys = ["pull_request_id", "pr_reviewer_src_id"]
-    augur_db.insert_data(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
+    db_session.insert_data(pr_reviewer_dicts, PullRequestReviewer, pr_reviewer_natural_keys)
     
     # inserting pr metadata
     # we are using pull_request_id, pr_head_or_base, and pr_sha to determine if the label is already in the database.
     pr_metadata_natural_keys = ['pull_request_id', 'pr_head_or_base', 'pr_sha']
     pr_metadata_string_fields = ["pr_src_meta_label"]
-    augur_db.insert_data(pr_metadata_dicts, PullRequestMeta,
+    db_session.insert_data(pr_metadata_dicts, PullRequestMeta,
                         pr_metadata_natural_keys, string_fields=pr_metadata_string_fields)
 
 
@@ -197,7 +197,7 @@ def process_pull_request_review_contributor(pr_review: dict, tool_source: str, t
 
     return pr_review_cntrb
 
-@celery.task(base=AugurSecondaryRepoCollectionTask)
+@celery.task(base=SecondaryRepoCollectionTask)
 def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -> None:
     """
     Collect pull request review comments for a repository from the GitHub API.
@@ -216,7 +216,7 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
         None. Data is inserted directly into the database.
 
     Note:
-        - Inherits error handling from AugurSecondaryRepoCollectionTask base class.
+        - Inherits error handling from SecondaryRepoCollectionTask base class.
         - Contributors are deduplicated within each batch before insertion.
         - Uses ON CONFLICT upsert logic to handle duplicate messages gracefully.
     """
@@ -324,7 +324,7 @@ def _flush_contributors(logger, contributors: list, owner: str, repo: str, conte
         batch_insert_contributors(logger, unique_contributors)
 
 
-def _flush_pr_review_batch(augur_db, contributors: list, pr_reviews: list, logger, owner: str, repo: str) -> None:
+def _flush_pr_review_batch(db_session, contributors: list, pr_reviews: list, logger, owner: str, repo: str) -> None:
     """
     Insert accumulated PR review batch data into the database.
 
@@ -332,7 +332,7 @@ def _flush_pr_review_batch(augur_db, contributors: list, pr_reviews: list, logge
     contributors and PR reviews. Uses ON CONFLICT upsert logic via insert_data().
 
     Args:
-        augur_db: DatabaseSession instance for database operations.
+        db_session: DatabaseSession instance for database operations.
         contributors: List of contributor dicts to insert. Will be deduplicated
             using remove_duplicate_dicts() before insertion.
         pr_reviews: List of PR review dicts to insert.
@@ -349,7 +349,7 @@ def _flush_pr_review_batch(augur_db, contributors: list, pr_reviews: list, logge
         logger.info(f"{owner}/{repo}: Inserting {len(pr_reviews)} pr reviews")
         pr_review_natural_keys = ["pr_review_src_id"]
         pr_review_string_fields = ["pr_review_body"]
-        augur_db.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys, string_fields=pr_review_string_fields)
+        db_session.insert_data(pr_reviews, PullRequestReview, pr_review_natural_keys, string_fields=pr_review_string_fields)
 
 
 def _flush_pr_review_comment_batch(
@@ -407,22 +407,22 @@ def _flush_pr_review_comment_batch(
 
     pr_review_message_ref_insert_data = []
     for data in message_return_data:
-        augur_msg_id = data["msg_id"]
+        msg_id = data["msg_id"]
         github_msg_id = data["platform_msg_id"]
 
         comment = pr_review_msg_mapping_data[github_msg_id]
-        comment["msg_id"] = augur_msg_id
+        comment["msg_id"] = msg_id
 
         github_pr_review_id = comment["pull_request_review_id"]
 
         try:
-            augur_pr_review_id = pr_review_id_mapping[github_pr_review_id]
+            pr_review_id = pr_review_id_mapping[github_pr_review_id]
         except KeyError:
             logger.warning(f"{owner}/{repo}: Could not find related pr review. We were searching for pr review with id: {github_pr_review_id}")
             continue
 
         pr_review_message_ref = extract_pr_review_message_ref_data(
-            comment, augur_pr_review_id, github_pr_review_id, repo_id, tool_version, data_source
+            comment, pr_review_id, github_pr_review_id, repo_id, tool_version, data_source
         )
         pr_review_message_ref_insert_data.append(pr_review_message_ref)
 
@@ -438,7 +438,7 @@ def _flush_pr_review_comment_batch(
     return len(pr_review_message_ref_insert_data)
 
 
-@celery.task(base=AugurSecondaryRepoCollectionTask)
+@celery.task(base=SecondaryRepoCollectionTask)
 def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
     """
     Collect pull request reviews for a repository from the GitHub API.
@@ -457,7 +457,7 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
         None. Data is inserted directly into the database.
 
     Note:
-        - Inherits error handling from AugurSecondaryRepoCollectionTask base class.
+        - Inherits error handling from SecondaryRepoCollectionTask base class.
         - Contributors are deduplicated within each batch before insertion.
         - Uses ON CONFLICT upsert logic to handle duplicate reviews gracefully.
     """
@@ -471,13 +471,13 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
     with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
+        db_session = manifest.db_session
 
-        query = augur_db.session.query(Repo).filter(Repo.repo_git == repo_git)
+        query = db_session.session.query(Repo).filter(Repo.repo_git == repo_git)
         repo_id = execute_session_query(query, 'one').repo_id
 
         if full_collection:
-            query = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
+            query = db_session.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).order_by(PullRequest.pr_src_number)
             prs = execute_session_query(query, 'all')
         else:
             last_collected = get_secondary_data_last_collected(repo_id).date()
@@ -530,14 +530,14 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
             # Flush batch when threshold reached
             if len(pr_review_dicts) >= pr_review_batch_size:
-                _flush_pr_review_batch(augur_db, contributors, pr_review_dicts, logger, owner, repo)
+                _flush_pr_review_batch(db_session, contributors, pr_review_dicts, logger, owner, repo)
                 total_reviews_collected += len(pr_review_dicts)
                 contributors.clear()
                 pr_review_dicts.clear()
 
         # Flush any remaining data
         if pr_review_dicts:
-            _flush_pr_review_batch(augur_db, contributors, pr_review_dicts, logger, owner, repo)
+            _flush_pr_review_batch(db_session, contributors, pr_review_dicts, logger, owner, repo)
             total_reviews_collected += len(pr_review_dicts)
 
         if total_reviews_collected == 0:

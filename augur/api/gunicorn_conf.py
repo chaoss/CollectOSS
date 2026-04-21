@@ -1,4 +1,4 @@
-# from augur import ROOT_AUGUR_DIRECTORY
+# from augur import ROOT_PROJECT_REPO_DIRECTORY
 import multiprocessing
 import logging
 import os
@@ -11,9 +11,9 @@ from augur.application.db import dispose_database_engine
 logger = logging.getLogger(__name__)
 
 
-# ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+# ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-# base_log_dir = ROOT_AUGUR_DIRECTORY + "/logs/"
+# base_log_dir = ROOT_PROJECT_REPO_DIRECTORY + "/logs/"
 
 # Path(base_log_dir).mkdir(exist_ok=True)
 

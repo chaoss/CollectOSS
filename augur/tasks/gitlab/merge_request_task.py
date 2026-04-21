@@ -1,7 +1,7 @@
 import logging
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask
 from augur.tasks.gitlab.gitlab_api_handler import GitlabApiHandler
 from augur.application.db.data_parse import extract_needed_pr_data_from_gitlab_merge_request, extract_needed_merge_request_assignee_data, extract_needed_mr_label_data, extract_needed_mr_reviewer_data, extract_needed_mr_commit_data, extract_needed_mr_file_data, extract_needed_mr_metadata, extract_needed_gitlab_mr_message_ref_data, extract_needed_gitlab_message_data, extract_needed_gitlab_contributor_data
 from augur.tasks.github.util.util import get_gitlab_repo_identifier, add_key_value_pair_to_dicts
@@ -12,7 +12,7 @@ from augur.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, ge
 
 platform_id = 2
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_gitlab_merge_requests(repo_git: str) -> int:
     """
     Retrieve and parse gitlab MRs for the desired repo
@@ -163,7 +163,7 @@ def process_merge_requests(data, task_name, repo_id, logger):
 
 
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_merge_request_comments(mr_ids, repo_git) -> int:
     """
     Retrieve and parse gitlab events for the desired repo
@@ -262,12 +262,12 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, session):
     mr_message_ref_dicts = []
     for data in message_return_data:
 
-        augur_msg_id = data["msg_id"]
+        msg_id = data["msg_id"]
         platform_message_id = data["platform_msg_id"]
 
         ref = message_ref_mapping_data[platform_message_id]
         message_ref_data = ref["msg_ref_data"]
-        message_ref_data["msg_id"] = augur_msg_id
+        message_ref_data["msg_id"] = msg_id
 
         mr_message_ref_dicts.append(message_ref_data)
 
@@ -276,7 +276,7 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, session):
     bulk_insert_dicts(logger, mr_message_ref_dicts, PullRequestMessageRef, mr_message_ref_natural_keys)
 
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_merge_request_metadata(mr_ids, repo_git) -> int:
     """
     Retrieve and parse gitlab events for the desired repo
@@ -343,7 +343,7 @@ def process_mr_metadata(data, task_name, repo_id, logger, session):
     bulk_insert_dicts(logger, all_metadata, PullRequestMeta, pr_metadata_natural_keys)
     
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_merge_request_reviewers(mr_ids, repo_git) -> int:
     """
     Retrieve and parse mr reviewers for the desired repo
@@ -412,7 +412,7 @@ def process_mr_reviewers(data, task_name, repo_id, logger, session):
 
 
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_merge_request_commits(mr_ids, repo_git) -> int:
     """
     Retrieve and parse mr commits for the desired repo
@@ -482,7 +482,7 @@ def process_mr_commits(data, task_name, repo_id, logger, session):
             
 
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_merge_request_files(mr_ids, repo_git) -> int:
     """
     Retrieve and parse gitlab events for the desired repo

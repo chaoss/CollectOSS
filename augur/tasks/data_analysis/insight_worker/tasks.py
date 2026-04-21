@@ -12,12 +12,12 @@ import warnings
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.lib import get_value, get_repo_by_repo_git, get_session
 from augur.application.db.models import ChaossMetricStatus, RepoInsight, RepoInsightsRecord
-from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
+from augur.tasks.init.celery_app import MLRepoCollectionTask
 
 warnings.filterwarnings('ignore')
 
 
-@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+@celery.task(base=MLRepoCollectionTask, bind=True)
 def insight_task(self, repo_git):
 
     logger = logging.getLogger(insight_task.__name__)
@@ -32,7 +32,7 @@ def insight_model(repo_git: str,logger,engine) -> None:
 
     tool_source = 'Insight Worker'
     tool_version = '1.0.0'
-    data_source = 'Augur API'
+    data_source = 'Built-in API'
 
     metrics = {"issues-new": "issues", "code-changes": "commit_count", "code-changes-lines": "added",
                 "reviews": "pull_requests", "contributors-new": "new_contributors"}

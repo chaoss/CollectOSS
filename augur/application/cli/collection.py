@@ -14,21 +14,21 @@ import uuid
 import traceback
 import sqlalchemy as s
 
-from augur.tasks.start_tasks import augur_collection_monitor, create_collection_status_records
+from augur.tasks.start_tasks import collection_monitor, create_collection_status_records
 from augur.tasks.git.facade_tasks import clone_repos
 from augur.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from augur.tasks.gitlab.gitlab_api_key_handler import GitlabApiKeyHandler
 from augur.tasks.data_analysis.contributor_breadth_worker.contributor_breadth_worker import contributor_breadth_model
 from augur.application.db.models import UserRepo
 from augur.application.db.session import DatabaseSession
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 from augur.application.db.lib import get_value
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 from augur.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
 
 from keyman.KeyClient import KeyPublisher
 
-logger = AugurLogger("augur", reset_logfiles=False).get_logger()
+logger = SystemLogger("augur", reset_logfiles=False).get_logger()
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 @click.pass_context
@@ -107,7 +107,7 @@ def start(ctx, development):
     # start cloning repos when augur starts
     clone_repos.si().apply_async()
 
-    augur_collection_monitor.si().apply_async()
+    collection_monitor.si().apply_async()
 
     
     try:
@@ -179,7 +179,7 @@ def stop(ctx):
     """
     cli_logger = logging.getLogger("augur.cli")
 
-    augur_stop(signal.SIGTERM, cli_logger, ctx.obj.engine)
+    stop_processes(signal.SIGTERM, cli_logger, ctx.obj.engine)
 
 @cli.command('kill')
 @with_database
@@ -189,7 +189,7 @@ def kill(ctx):
     Sends SIGKILL to all Augur server & worker processes
     """
     cli_logger = logging.getLogger("augur.cli")
-    augur_stop(signal.SIGKILL, cli_logger, ctx.obj.engine)
+    stop_processes(signal.SIGKILL, cli_logger, ctx.obj.engine)
 
 @cli.command('repo-reset')
 @test_connection
@@ -220,20 +220,19 @@ def repo_reset(ctx):
 def processes():
     """
     Outputs the name/PID of all Augur server & worker processes"""
-    augur_processes = get_augur_collection_processes()
-    for process in augur_processes:
+    for process in get_collection_processes():
         logger.info(f"Found process {process.pid}")
 
-def get_augur_collection_processes():
-    augur_processes = []
+def get_collection_processes():
+    process_list = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
             try:
                 if is_collection_process(process):
-                        augur_processes.append(process)
+                        process_list.append(process)
             except (KeyError, FileNotFoundError):
                 pass
-    return augur_processes
+    return process_list
 
 def is_collection_process(process):
 
@@ -255,15 +254,13 @@ def is_collection_process(process):
     return False
 
 
-def augur_stop(stop_signal, logger_instance, engine):
+def stop_processes(stop_signal, logger_instance, engine):
     """
     Stops augur with the given signal, 
     and cleans up collection if it was running
     """
 
-    augur_collection_processes = get_augur_collection_processes()
-
-    _broadcast_signal_to_processes(augur_collection_processes, logger=logger_instance, broadcast_signal=stop_signal)
+    _broadcast_signal_to_processes(get_collection_processes(), logger=logger_instance, broadcast_signal=stop_signal)
 
     cleanup_after_collection_halt(logger, engine)
 

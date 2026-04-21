@@ -57,10 +57,10 @@ def test_db_connection(function_db_connection):
             return ctx.invoke(function_db_connection, *args, **kwargs)
         except OperationalError as e:
 
-            augur_db_environment_var = os.getenv("AUGUR_DB")
+            db_environment_var = os.getenv("AUGUR_DB")
 
             # determine the location to print in error string
-            if augur_db_environment_var:
+            if db_environment_var:
                 location = f"the AUGUR_DB environment variable\nAUGUR_DB={os.getenv('AUGUR_DB')}"
             else:
                 with open("db.config.json", 'r') as f:
@@ -120,18 +120,4 @@ def with_database(f):
 #     def new_func(ctx, *args, **kwargs):
 #         ctx.obj = Application(offline_mode=True).config
 #         return ctx.invoke(f, ctx.obj, *args, **kwargs)
-#     return update_wrapper(new_func, f)
-
-# def pass_logs_dir(f):
-#     @click.pass_context
-#     def new_func(ctx, *args, **kwargs):
-#         config = AugurConfig(ROOT_AUGUR_DIRECTORY)
-#         ctx.obj = AugurLogging.get_log_directories(config, reset_logfiles=False)
-#         return ctx.invoke(f, ctx.obj, *args, **kwargs)
-#     return update_wrapper(new_func, f)
-
-# def initialize_logging(f):
-#     def new_func(*args, **kwargs):
-#         AugurLogging(reset_logfiles=False)
-#         return f(*args, **kwargs)
 #     return update_wrapper(new_func, f)

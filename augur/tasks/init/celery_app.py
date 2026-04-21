@@ -12,11 +12,11 @@ from celery import current_app
 from celery.signals import after_setup_logger
 
 
-from augur.application.logs import TaskLogConfig, AugurLogger
+from augur.application.logs import TaskLogConfig, SystemLogger
 from augur.application.db.session import DatabaseSession
 from augur.application.db import get_engine
 from augur.application.db.lib import get_session
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 from augur.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
 from augur.application.db.models import Repo
 from augur.tasks.util.collection_state import CollectionState
@@ -74,14 +74,14 @@ BACKEND_URL = f'{redis_conn_string}{redis_db_number+1}'
 
 
 #Classes for tasks that take a repo_git as an argument.
-class AugurCoreRepoCollectionTask(celery.Task):
+class CoreRepoCollectionTask(celery.Task):
 
-    def augur_handle_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core',after_fail=CollectionState.ERROR.value):
+    def handle_celery_task_failure(self,exc,task_id,repo_git,logger_name,collection_hook='core',after_fail=CollectionState.ERROR.value):
             
         # Note: I think self.app.engine would work but leaving it to try later
         engine = get_engine()
 
-        logger = AugurLogger(logger_name).get_logger()
+        logger = SystemLogger(logger_name).get_logger()
 
         logger.error(f"Task {task_id} raised exception: {exc}\n Traceback: {''.join(traceback.format_exception(None, exc, exc.__traceback__))}")
 
@@ -104,7 +104,7 @@ class AugurCoreRepoCollectionTask(celery.Task):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         repo_git = self._extract_repo_git(args, kwargs)
         # log traceback to error file
-        self.augur_handle_task_failure(exc, task_id, repo_git, "core_task_failure")
+        self.handle_celery_task_failure(exc, task_id, repo_git, "core_task_failure")
 
     def _extract_repo_git(self, args, kwargs):
         if 'repo_git' in kwargs:
@@ -121,25 +121,25 @@ class AugurCoreRepoCollectionTask(celery.Task):
 
         return None 
 
-class AugurSecondaryRepoCollectionTask(AugurCoreRepoCollectionTask):
+class SecondaryRepoCollectionTask(CoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         
         repo_git = self._extract_repo_git(args, kwargs)
-        self.augur_handle_task_failure(exc, task_id, repo_git, "secondary_task_failure",collection_hook='secondary')
+        self.handle_celery_task_failure(exc, task_id, repo_git, "secondary_task_failure",collection_hook='secondary')
 
-class AugurFacadeRepoCollectionTask(AugurCoreRepoCollectionTask):
+class FacadeRepoCollectionTask(CoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args, kwargs, einfo):
         repo_git = self._extract_repo_git(args, kwargs)
-        self.augur_handle_task_failure(exc, task_id, repo_git, "facade_task_failure",collection_hook='facade')
+        self.handle_celery_task_failure(exc, task_id, repo_git, "facade_task_failure",collection_hook='facade')
 
-class AugurMlRepoCollectionTask(AugurCoreRepoCollectionTask):
+class MLRepoCollectionTask(CoreRepoCollectionTask):
     def on_failure(self,exc,task_id,args,kwargs,einfo):
         repo_git = self._extract_repo_git(args, kwargs)
-        self.augur_handle_task_failure(exc,task_id,repo_git, "ml_task_failure", collection_hook='ml')
+        self.handle_celery_task_failure(exc,task_id,repo_git, "ml_task_failure", collection_hook='ml')
 
 
 
-#task_cls='augur.tasks.init.celery_app:AugurCoreRepoCollectionTask'
+#task_cls='augur.tasks.init.celery_app:CoreRepoCollectionTask'
 celery_app = Celery('tasks', broker=BROKER_URL, backend=BACKEND_URL, include=tasks)
 
 # define the queues that tasks will be put in (by default tasks are put in celery queue)
@@ -180,18 +180,18 @@ celery_app.conf.worker_pool_restarts = True
 
 
 
-def split_tasks_into_groups(augur_tasks: List[str]) -> Dict[str, List[str]]:
+def split_tasks_into_groups(task_list: List[str]) -> Dict[str, List[str]]:
     """Split tasks on the celery app into groups.
 
     Args:
-        augur_tasks: list of tasks specified in augur
+        task_list: list of tasks specified in augur
 
     Returns
         The tasks so that they are grouped by the module they are defined in
     """
     grouped_tasks = {}
 
-    for task in augur_tasks: 
+    for task in task_list: 
         task_divided = task.split(".")
 
         try:
@@ -218,7 +218,7 @@ def setup_periodic_tasks(sender, **kwargs):
         The tasks so that they are grouped by the module they are defined in
     """
     from celery.schedules import crontab
-    from augur.tasks.start_tasks import augur_collection_monitor
+    from augur.tasks.start_tasks import collection_monitor
     from augur.tasks.start_tasks import non_repo_domain_tasks, retry_errored_repos, create_collection_status_records
     from augur.tasks.git.facade_tasks import clone_repos
     from augur.tasks.github.contributors import process_contributors
@@ -229,11 +229,11 @@ def setup_periodic_tasks(sender, **kwargs):
     # Need to engine to be temporary so that there isn't an engine defined when the parent is forked to create worker processes
     with temporary_database_engine() as engine, DatabaseSession(logger, engine) as session:
 
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
 
         collection_interval = config.get_value('Tasks', 'collection_interval')
         logger.info(f"Scheduling collection every {collection_interval/60} minutes")
-        sender.add_periodic_task(collection_interval, augur_collection_monitor.s())
+        sender.add_periodic_task(collection_interval, collection_monitor.s())
 
         #Do longer tasks less often
         logger.info(f"Scheduling data analysis every 30 days")
@@ -248,7 +248,7 @@ def setup_periodic_tasks(sender, **kwargs):
             logger.info(f"Refresh materialized view task is disabled.")
 
         # logger.info(f"Scheduling update of collection weights on midnight each day")
-        # sender.add_periodic_task(crontab(hour=0, minute=0),augur_collection_update_weights.s())
+        # sender.add_periodic_task(crontab(hour=0, minute=0),collection_update_weights.s())
 
         logger.info(f"Setting 404 repos to be marked for retry on midnight each day")
         sender.add_periodic_task(crontab(hour=0, minute=0),retry_errored_repos.s())
@@ -265,9 +265,9 @@ def setup_loggers(*args,**kwargs):
 
     all_celery_tasks = list(current_app.tasks.keys())
 
-    augur_tasks = [task for task in all_celery_tasks if 'celery.' not in task]
+    tasks = [task for task in all_celery_tasks if 'celery.' not in task]
     
-    TaskLogConfig(split_tasks_into_groups(augur_tasks))
+    TaskLogConfig(split_tasks_into_groups(tasks))
 
 
 #engine = None

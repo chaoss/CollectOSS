@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from .server import Environment
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 import secrets, yaml
 
 env = Environment()
@@ -33,4 +33,4 @@ def write_settings(current_settings):
 # Initialize logging
 def init_logging():
     global logger
-    logger = AugurLogger("augur_view", reset_logfiles=False).get_logger()
+    logger = SystemLogger("api_view", reset_logfiles=False).get_logger()

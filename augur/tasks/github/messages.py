@@ -2,7 +2,7 @@ import logging
 from datetime import timedelta, timezone
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask
 from augur.application.db.data_parse import *
 from augur.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from augur.tasks.github.util.github_task_session import GithubTaskManifest
@@ -17,16 +17,16 @@ from sqlalchemy.sql import text
 
 platform_id = 1
 
-@celery.task(base=AugurCoreRepoCollectionTask)
+@celery.task(base=CoreRepoCollectionTask)
 def collect_github_messages(repo_git: str, full_collection: bool) -> None:
 
     logger = logging.getLogger(collect_github_messages.__name__)
 
     with GithubTaskManifest(logger) as manifest:
 
-        augur_db = manifest.augur_db
+        db_session = manifest.db_session
             
-        repo_id = augur_db.session.query(Repo).filter(
+        repo_id = db_session.session.query(Repo).filter(
             Repo.repo_git == repo_git).one().repo_id
 
         owner, repo = get_owner_repo(repo_git)
@@ -43,13 +43,13 @@ def collect_github_messages(repo_git: str, full_collection: bool) -> None:
             message_data = fast_retrieve_all_pr_and_issue_messages(repo_git, logger, manifest.key_auth, task_name, core_data_last_collected)
             
             if message_data:
-                process_messages(message_data, task_name, repo_id, logger, augur_db)
+                process_messages(message_data, task_name, repo_id, logger, db_session)
 
             else:
                 logger.info(f"{owner}/{repo} has no messages")
 
         else:
-            process_large_issue_and_pr_message_collection(repo_id, repo_git, logger, manifest.key_auth, task_name, augur_db, core_data_last_collected)
+            process_large_issue_and_pr_message_collection(repo_id, repo_git, logger, manifest.key_auth, task_name, db_session, core_data_last_collected)
 
 
 def is_repo_small(repo_id):
@@ -82,7 +82,7 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
     return list(github_data_access.paginate_resource(url))
 
 
-def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger, key_auth, task_name, augur_db, since) -> None:
+def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger, key_auth, task_name, db_session, since) -> None:
 
     message_batch_size = get_batch_size("message")
 
@@ -129,16 +129,16 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
             skipped_urls += 1
 
         if len(all_data) >= message_batch_size:
-            process_messages(all_data, task_name, repo_id, logger, augur_db)
+            process_messages(all_data, task_name, repo_id, logger, db_session)
             all_data.clear()
 
     if len(all_data) > 0:
-        process_messages(all_data, task_name, repo_id, logger, augur_db)
+        process_messages(all_data, task_name, repo_id, logger, db_session)
 
     logger.info(f"{task_name}: Finished. Skipped {skipped_urls} comment URLs due to 404.")
         
 
-def process_messages(messages, task_name, repo_id, logger, augur_db):
+def process_messages(messages, task_name, repo_id, logger, db_session):
 
     tool_version = "2.0"
     data_source = "Github API"
@@ -156,13 +156,13 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
 
     # create mapping from issue url to issue id of current issues
     issue_url_to_id_map = {}
-    issues = augur_db.session.query(Issue).filter(Issue.repo_id == repo_id).all()
+    issues = db_session.session.query(Issue).filter(Issue.repo_id == repo_id).all()
     for issue in issues:
         issue_url_to_id_map[issue.issue_url] = issue.issue_id
 
     # create mapping from pr url to pr id of current pull requests
     pr_issue_url_to_id_map = {}
-    prs = augur_db.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
+    prs = db_session.session.query(PullRequest).filter(PullRequest.repo_id == repo_id).all()
     for pr in prs:
         pr_issue_url_to_id_map[pr.pr_issue_url] = pr.pull_request_id
 
@@ -239,13 +239,13 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
     contributors = remove_duplicate_dicts(contributors)
 
     logger.info(f"{task_name}: Inserting {len(contributors)} contributors")
-    augur_db.insert_data(contributors, Contributor, ["cntrb_id"])
+    db_session.insert_data(contributors, Contributor, ["cntrb_id"])
 
     logger.info(f"{task_name}: Inserting {len(message_dicts)} messages")
     message_natural_keys = ["platform_msg_id", "pltfrm_id"]
     message_return_columns = ["msg_id", "platform_msg_id"]
     message_string_fields = ["msg_text"]
-    message_return_data = augur_db.insert_data(message_dicts, Message, message_natural_keys, 
+    message_return_data = db_session.insert_data(message_dicts, Message, message_natural_keys, 
                                                 return_columns=message_return_columns, string_fields=message_string_fields)
     if message_return_data is None:
         return
@@ -254,12 +254,12 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
     issue_message_ref_dicts = []
     for data in message_return_data:
 
-        augur_msg_id = data["msg_id"]
+        msg_id = data["msg_id"]
         platform_message_id = data["platform_msg_id"]
 
         ref = message_ref_mapping_data[platform_message_id]
         message_ref_data = ref["msg_ref_data"]
-        message_ref_data["msg_id"] = augur_msg_id
+        message_ref_data["msg_id"] = msg_id
 
         if ref["is_issue"] is True:
             issue_message_ref_dicts.append(message_ref_data)
@@ -268,11 +268,11 @@ def process_messages(messages, task_name, repo_id, logger, augur_db):
 
     logger.info(f"{task_name}: Inserting {len(pr_message_ref_dicts)} pr messages ref rows")
     pr_message_ref_natural_keys = ["pull_request_id", "pr_message_ref_src_comment_id"]
-    augur_db.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
+    db_session.insert_data(pr_message_ref_dicts, PullRequestMessageRef, pr_message_ref_natural_keys)
 
     logger.info(f"{task_name}: Inserting {len(issue_message_ref_dicts)} issue messages ref rows")
     issue_message_ref_natural_keys = ["issue_id", "issue_msg_ref_src_comment_id"]
-    augur_db.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
+    db_session.insert_data(issue_message_ref_dicts, IssueMessageRef, issue_message_ref_natural_keys)
 
     logger.info(f"{task_name}: Inserted {len(message_dicts)} messages. {len(issue_message_ref_dicts)} from issues and {len(pr_message_ref_dicts)} from prs")
 

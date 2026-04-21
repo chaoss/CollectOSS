@@ -10,14 +10,14 @@ import sqlalchemy as s
 from augur.application.config import get_development_flag
 from augur.application.db.lib import get_session
 from augur.application.db.models import Config
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 from augur.application.db.session import DatabaseSession
 from ..server import app
 
 logger = logging.getLogger(__name__)
 development = get_development_flag()
 
-from augur.api.routes import AUGUR_API_VERSION
+from augur.api.routes import API_VERSION
 
 def generate_upgrade_request():
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/426
@@ -27,19 +27,19 @@ def generate_upgrade_request():
 
     return response, 426
 
-@app.route(f"/{AUGUR_API_VERSION}/config/get", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/config/get", methods=['GET', 'POST'])
 def get_config():
     if not development and not request.is_secure:
         return generate_upgrade_request()
 
     with DatabaseSession(logger, engine=current_app.engine) as session:
         
-        config_dict = AugurConfig(logger, session).config.load_config()
+        config_dict = SystemConfig(logger, session).config.load_config()
 
     return jsonify(config_dict), 200
 
 
-@app.route(f"/{AUGUR_API_VERSION}/config/update", methods=['POST'])
+@app.route(f"/{API_VERSION}/config/update", methods=['POST'])
 def update_config():
     if not development and not request.is_secure:
         return generate_upgrade_request()

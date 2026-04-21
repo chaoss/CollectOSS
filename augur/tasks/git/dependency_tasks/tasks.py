@@ -2,11 +2,11 @@ import logging
 import traceback
 from augur.tasks.git.dependency_tasks.core import *
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask, AugurSecondaryRepoCollectionTask
+from augur.tasks.init.celery_app import FacadeRepoCollectionTask, SecondaryRepoCollectionTask
 from augur.tasks.util.metadata_exception import MetadataException 
 
 
-@celery.task(base=AugurFacadeRepoCollectionTask)
+@celery.task(base=FacadeRepoCollectionTask)
 def process_dependency_metrics(repo_git):
 
     logger = logging.getLogger(process_dependency_metrics.__name__)
@@ -14,7 +14,7 @@ def process_dependency_metrics(repo_git):
     generate_deps_data(logger, repo_git)
 
 
-@celery.task(base=AugurSecondaryRepoCollectionTask, bind=True)
+@celery.task(base=SecondaryRepoCollectionTask, bind=True)
 def process_ossf_dependency_metrics(self, repo_git):
 
     engine = self.app.engine

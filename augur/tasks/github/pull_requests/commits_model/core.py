@@ -8,7 +8,7 @@ from augur.application.db.lib import get_secondary_data_last_collected, get_upda
 
 
 
-def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collection=False):
+def pull_request_commits_model(repo_id,logger, db_session, key_auth, full_collection=False):
 
     pr_commit_batch_size = get_batch_size()
 
@@ -22,7 +22,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
         pr_urls = []
         #pd.read_sql(pr_number_sql, self.db, params={})
 
-        pr_urls = augur_db.fetchall_data_from_sql_text(pr_url_sql)#session.execute_sql(pr_number_sql).fetchall()
+        pr_urls = db_session.fetchall_data_from_sql_text(pr_url_sql)#session.execute_sql(pr_number_sql).fetchall()
     
     else:
         last_collected = get_secondary_data_last_collected(repo_id).date()
@@ -37,7 +37,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
             })
 
     
-    query = augur_db.session.query(Repo).filter(Repo.repo_id == repo_id)
+    query = db_session.session.query(Repo).filter(Repo.repo_id == repo_id)
     repo = execute_session_query(query, 'one')
 
     owner, name = get_owner_repo(repo.repo_git)
@@ -78,7 +78,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
 
                 if len(all_data) >= pr_commit_batch_size:
                     logger.info(f"{task_name}: Inserting {len(all_data)} rows")
-                    augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
+                    db_session.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
                     all_data.clear()
         except UrlNotFoundException:
             logger.info(f"{task_name}: PR with url of {pr_info['pr_url']} returned 404 on commit data. Skipping.")
@@ -86,7 +86,7 @@ def pull_request_commits_model(repo_id,logger, augur_db, key_auth, full_collecti
 
     if len(all_data) > 0:
         logger.info(f"{task_name}: Inserting {len(all_data)} rows")
-        augur_db.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
+        db_session.insert_data(all_data,PullRequestCommit,pr_commits_natural_keys)
             
 
 

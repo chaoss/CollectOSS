@@ -3,7 +3,7 @@ import logging
 import traceback 
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurCoreRepoCollectionTask
+from augur.tasks.init.celery_app import CoreRepoCollectionTask
 from augur.tasks.github.util.github_paginator import hit_api
 from augur.tasks.github.facade_github.tasks import *
 from augur.application.db.models import Contributor
@@ -121,7 +121,7 @@ def retrieve_dict_data(url: str, key_auth, logger):
     return None
 
 
-@celery.task(base=AugurCoreRepoCollectionTask, bind=True)
+@celery.task(base=CoreRepoCollectionTask, bind=True)
 def grab_comitters(self, repo_git,platform="github"):
 
     tool_source = "Committers task"

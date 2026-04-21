@@ -24,18 +24,18 @@ from flask_graphql import GraphQLView
 from graphene_sqlalchemy import SQLAlchemyObjectType
 
 
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 from augur.application.db.engine import get_database_string, create_database_engine
 from augur.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
 
-from metadata import __version__ as augur_code_version
+from metadata import __version__ as code_version
 
 
 
-# from augur.api.routes import AUGUR_API_VERSION
-AUGUR_API_VERSION = "api/unstable"
+# from augur.api.routes import API_VERSION
+API_VERSION = "api/unstable"
 
 show_metadata = False
 
@@ -263,9 +263,9 @@ def add_standard_metric(function: Any, endpoint: str) -> None:
         function: the function that needs to be mapped to the routes
         endpoint: the path that the endpoint should be defined as
     """
-    repo_endpoint = f'/{app.augur_api_version}/repos/<repo_id>/{endpoint}'
-    repo_group_endpoint = f'/{app.augur_api_version}/repo-groups/<repo_group_id>/{endpoint}'
-    deprecated_repo_endpoint = f'/{app.augur_api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
+    repo_endpoint = f'/{app.api_version}/repos/<repo_id>/{endpoint}'
+    repo_group_endpoint = f'/{app.api_version}/repo-groups/<repo_group_id>/{endpoint}'
+    deprecated_repo_endpoint = f'/{app.api_version}/repo-groups/<repo_group_id>/repos/<repo_id>/{endpoint}'
 
     
     # These three lines are defining routes on the flask app, and passing a function.
@@ -287,7 +287,7 @@ def add_toss_metric(function: Any, endpoint: str) -> None:
         function: the function that needs to be mapped to the routes
         endpoint: the path that the endpoint should be defined as
     """
-    repo_endpoint = f'/{app.augur_api_version}/repos/<repo_id>/{endpoint}'
+    repo_endpoint = f'/{app.api_version}/repos/<repo_id>/{endpoint}'
     app.route(repo_endpoint)(routify(function, 'repo'))
 
 def create_cache_manager() -> CacheManager:
@@ -320,18 +320,18 @@ def get_server_cache(cache_manager) -> Cache:
         server cache
     """
 
-    expire = int(augur_config.get_value('Server', 'cache_expire'))
+    expire = int(system_config.get_value('Server', 'cache_expire'))
     server_cache = cache_manager.get_cache('server', expire=expire)
     server_cache.clear()
 
     return server_cache
 
 
-logger = AugurLogger("server").get_logger()
+logger = SystemLogger("server").get_logger()
 url = get_database_string()
 engine = create_database_engine(url, poolclass=StaticPool)
 db_session = DatabaseSession(logger, engine)
-augur_config = AugurConfig(logger, db_session)
+system_config = SystemConfig(logger, db_session)
 
 
 def get_connection(table, cursor_field_name, connection_class, after, limit, extra_condition=False):
@@ -671,7 +671,7 @@ logger.debug("Created Flask app")
 # defines the api version on the flask app, 
 # so when we pass the flask app to the routes files we 
 # know can access the api version via the app variable
-app.augur_api_version = AUGUR_API_VERSION
+app.api_version = API_VERSION
 app.engine = engine
 
 CORS(app)
@@ -690,17 +690,17 @@ def index():
     """
     Redirects to health check route
     """
-    return redirect(app.augur_api_version)
+    return redirect(app.api_version)
 
-@app.route(f'/{app.augur_api_version}/')
-@app.route(f'/{app.augur_api_version}/status')
+@app.route(f'/{app.api_version}/')
+@app.route(f'/{app.api_version}/status')
 def status():
     """
     Health check route
     """
     status = {
         'status': 'OK',
-        'version': augur_code_version
+        'version': code_version
     }
     return Response(response=json.dumps(status),
                     status=200,
@@ -723,7 +723,7 @@ class AuthenticatedGraphQLView(GraphQLView):
 
 schema = graphene.Schema(query=Query)
 
-app.add_url_rule(f'/{app.augur_api_version}/graphql', view_func=AuthenticatedGraphQLView.as_view('graphql', schema=schema, graphiql=True))
+app.add_url_rule(f'/{app.api_version}/graphql', view_func=AuthenticatedGraphQLView.as_view('graphql', schema=schema, graphiql=True))
 
 from .routes import *
 

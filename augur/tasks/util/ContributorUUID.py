@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 import typing
 
-class AugurUUID:
+class ContributorUUID:
     struct = {
         "platform": {"start": 0, "size": 1}
     }
@@ -89,13 +89,13 @@ class AugurUUID:
         self.write_int(value, structure["start"], structure["size"])
 
     # Referencing a class type within itself like this requies the annotations import from above
-    def __eq__(self, other: AugurUUID)-> bool:
+    def __eq__(self, other: ContributorUUID)-> bool:
         return self.bytes == other.bytes
 
-    def __lt__(self, other: AugurUUID)-> bool:
+    def __lt__(self, other: ContributorUUID)-> bool:
         return int(self) < int(other)
 
-    def __gt__(self, other: AugurUUID)-> bool:
+    def __gt__(self, other: ContributorUUID)-> bool:
         return int(self) > int(other)
 
     def __len__(self)-> int:
@@ -116,7 +116,7 @@ class AugurUUID:
     def __iter__(self):
         return (byte for byte in self.bytes)
 
-class GithubUUID(AugurUUID):
+class GithubUUID(ContributorUUID):
     struct = {
         "platform": {"start": 0, "size": 1},
         "user": {"start": 1, "size": 4},
@@ -129,7 +129,7 @@ class GithubUUID(AugurUUID):
     def __init__(self):
         super().__init__(platform = 1)
 
-class GitlabUUID(AugurUUID):
+class GitlabUUID(ContributorUUID):
     struct = {
         "platform": {"start": 0, "size": 1},
         "user": {"start": 1, "size": 4},
@@ -161,7 +161,7 @@ if __name__ == "__main__":
 
     # print(uid)
 
-    # id = AugurUUID()
+    # id = ContributorUUID()
     #
     # print(id)
     #
@@ -176,4 +176,4 @@ if __name__ == "__main__":
     #
     # print(id[0])
     #
-    # print(AugurUUID(17, 1, 1).bytes)
+    # print(ContributorUUID(17, 1, 1).bytes)

@@ -6,7 +6,7 @@ import datetime
 from celery import chain
 import sqlalchemy as s
 from sqlalchemy import or_, update
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.models import CollectionStatus, Repo
 from augur.application.db.util import execute_session_query
@@ -16,7 +16,7 @@ from augur.application.db.lib import execute_sql, get_session, get_active_repo_c
 from augur.tasks.util.worker_util import calculate_date_weight_from_timestamps
 from augur.tasks.util.collection_state import CollectionState
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 
 
 class CollectionRequest:
@@ -117,7 +117,7 @@ def get_enabled_phase_names_from_config(engine, logger):
 
 def get_enabled_phase_names_from_config_session(session, logger):
 
-    config = AugurConfig(logger, session)
+    config = SystemConfig(logger, session)
     return get_enabled_phase_names_from_config_object(config)
 
 
@@ -412,7 +412,7 @@ def facade_clone_success_util(self, repo_git):
         session.commit()
 
 
-class AugurCollectionTotalRepoWeight:
+class CollectionTotalRepoWeight:
     """
         small class to encapsulate the weight calculation of each repo that is
         being scheduled. Intended to be used as a counter where while it is greater than
@@ -422,12 +422,12 @@ class AugurCollectionTotalRepoWeight:
 
 
     Attributes:
-        logger (Logger): Get logger from AugurLogger
+        logger (Logger): Get logger from SystemLogger
         value (int): current value of the collection weight
         value_weight_calculation (function): Function to use on repo to determine weight
     """
     def __init__(self,starting_value: int, weight_calculation=get_repo_weight_core):
-        self.logger = AugurLogger("data_collection_jobs").get_logger()
+        self.logger = SystemLogger("data_collection_jobs").get_logger()
         self.value = starting_value
         self.value_weight_calculation = weight_calculation
     
@@ -437,7 +437,7 @@ class AugurCollectionTotalRepoWeight:
 
         if isinstance(other, int):
             self.value -= other
-        elif isinstance(other, AugurCollectionTotalRepoWeight):
+        elif isinstance(other, CollectionTotalRepoWeight):
             self.value -= other.value
         elif isinstance(other, Repo):
             repo_weight = self.value_weight_calculation(self.logger,other.repo_git)
@@ -454,7 +454,7 @@ class AugurCollectionTotalRepoWeight:
         return self
 
 
-class AugurTaskRoutine:
+class CollectionTaskRoutine:
     """
         class to keep track of various groups of collection tasks for a group of repos.
         Simple version to just schedule a number of repos not worrying about repo weight.
@@ -463,7 +463,7 @@ class AugurTaskRoutine:
 
 
     Attributes:
-        logger (Logger): Get logger from AugurLogger
+        logger (Logger): Get logger from SystemLogger
         repos (List[str]): List of repo_ids to run collection on.
         collection_phases (List[str]): List of phases to run in augur collection.
         collection_hook (str): String determining the attributes to update when collection for a repo starts. e.g. core
@@ -503,9 +503,7 @@ class AugurTaskRoutine:
             for repo_git, task_id, hook_name in self.send_messages():
                 self.update_status_and_id(repo_git,task_id,hook_name, session)
     
-    def send_messages(self):
-        augur_collection_list = []
-        
+    def send_messages(self):        
         for col_hook in self.collection_hooks:
 
             self.logger.info(f"Starting collection on {len(col_hook.repo_list)} {col_hook.name} repos")
@@ -527,16 +525,16 @@ class AugurTaskRoutine:
                         continue
                     phases = col_hook.gitlab_phases
            
-                augur_collection_sequence = []
+                collection_sequence = []
                 for job in phases:
                     #Add the phase to the sequence in order as a celery task.
                     #The preliminary task creates the larger task chain 
-                    augur_collection_sequence.append(job(repo_git, full_collection))
+                    collection_sequence.append(job(repo_git, full_collection))
 
-                #augur_collection_sequence.append(core_task_success_util.si(repo_git))
+                #collection_sequence.append(core_task_success_util.si(repo_git))
                 #Link all phases in a chain and send to celery
-                augur_collection_chain = chain(*augur_collection_sequence)
-                task_id = augur_collection_chain.apply_async().task_id
+                collection_chain = chain(*collection_sequence)
+                task_id = collection_chain.apply_async().task_id
 
                 self.logger.info(f"Setting {platform_name} repo {col_hook.name} status to collecting for repo: {repo_git}")
 

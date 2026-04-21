@@ -13,12 +13,12 @@ from augur.api.util import metric_metadata
 import json
 from ..server import app
 
-from augur.api.routes import AUGUR_API_VERSION
+from augur.api.routes import API_VERSION
 
 logger = logging.getLogger(__name__)
 
 
-@app.route('/{}/batch'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
+@app.route('/{}/batch'.format(API_VERSION), methods=['GET', 'POST'])
 def batch():
     """
     Execute multiple requests, submitted as a batch.
@@ -101,7 +101,7 @@ def batch():
 @apiDescription Returns metadata of batch requests
 POST JSON of API requests metadata
 """
-@app.route('/{}/batch/metadata'.format(AUGUR_API_VERSION), methods=['GET', 'POST'])
+@app.route('/{}/batch/metadata'.format(API_VERSION), methods=['GET', 'POST'])
 def batch_metadata():
     """
     Returns endpoint metadata in batch format

@@ -13,12 +13,12 @@ import uuid
 import traceback
 
 from augur.application.db.session import DatabaseSession
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 from augur.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 from augur.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
 from augur.application.db.lib import get_value
 
-logger = AugurLogger("augur", reset_logfiles=False).get_logger()
+logger = SystemLogger("augur", reset_logfiles=False).get_logger()
 
 @click.group('api', short_help='Commands for controlling the backend API server')
 @click.pass_context
@@ -90,7 +90,7 @@ def stop(ctx):
     """
     logger = logging.getLogger("augur.cli")
 
-    augur_stop(signal.SIGTERM, logger, ctx.obj.engine)
+    stop_processes(signal.SIGTERM, logger, ctx.obj.engine)
 
 @cli.command('kill')
 @with_database
@@ -100,25 +100,22 @@ def kill(ctx):
     Sends SIGKILL to all Augur api processes
     """
     logger = logging.getLogger("augur.cli")
-    augur_stop(signal.SIGKILL, logger, ctx.obj.engine)
+    stop_processes(signal.SIGKILL, logger, ctx.obj.engine)
 
 @cli.command('processes')
 def processes():
     """
     Outputs the name/PID of all Augur api process"""
-    augur_processes = get_augur_api_processes()
-    for process in augur_processes:
+    for process in get_api_processes():
         logger.info(f"Found process {process.pid}")
 
-def augur_stop(signal, logger, engine):
+def stop_processes(signal, logger, engine):
     """
     Stops augur with the given signal, 
     and cleans up the api
     """
 
-    augur_processes = get_augur_api_processes()
- 
-    _broadcast_signal_to_processes(augur_processes, logger=logger, broadcast_signal=signal)
+    _broadcast_signal_to_processes(get_api_processes(), logger=logger, broadcast_signal=signal)
 
     cleanup_after_api_halt(logger, engine)
 
@@ -131,16 +128,16 @@ def cleanup_after_api_halt(logger, engine):
     clear_rabbitmq_messages(connection_string, queues, logger)
     clear_redis_caches(logger)
 
-def get_augur_api_processes():
-    augur_api_processes = []
+def get_api_processes():
+    api_processes = []
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
             try:
                 if is_api_process(process):
-                    augur_api_processes.append(process)
+                    api_processes.append(process)
             except (KeyError, FileNotFoundError):
                 pass
-    return augur_api_processes
+    return api_processes
 
 def is_api_process(process):
 

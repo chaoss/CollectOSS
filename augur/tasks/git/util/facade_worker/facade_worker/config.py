@@ -36,7 +36,7 @@ from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
 
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 from augur.application.db.lib import execute_sql
 from logging import Logger
 
@@ -112,7 +112,7 @@ class FacadeHelper():
         self.logger = logger
         
         with DatabaseSession(logger, engine) as session:
-            config = AugurConfig(logger, session)
+            config = SystemConfig(logger, session)
         
             worker_options = config.get_section("Facade")
 

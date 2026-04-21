@@ -24,9 +24,9 @@ if os.environ.get("KEYMAN_DOCKER"):
     logger.setLevel(logging.DEBUG)
 else:
     from augur.tasks.init.redis_connection import get_redis_connection
-    from augur.application.logs import AugurLogger
+    from augur.application.logs import SystemLogger
 
-    logger = AugurLogger("KeyOrchestrator").get_logger()
+    logger = SystemLogger("KeyOrchestrator").get_logger()
     conn = get_redis_connection()
 
 class KeyOrchestrator:

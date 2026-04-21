@@ -21,7 +21,7 @@ from augur.tasks.git.util.facade_worker.facade_worker.repofetch import GitCloneE
 
 
 from augur.tasks.init.celery_app import celery_app as celery
-from augur.tasks.init.celery_app import AugurFacadeRepoCollectionTask
+from augur.tasks.init.celery_app import FacadeRepoCollectionTask
 
 
 from augur.application.db.models import Repo, CollectionStatus, CommitMessage
@@ -65,7 +65,7 @@ def facade_error_handler(request,exc,traceback):
 
 
 #Predefine facade collection with tasks
-@celery.task(base=AugurFacadeRepoCollectionTask)
+@celery.task(base=FacadeRepoCollectionTask)
 def facade_analysis_init_facade_task(repo_git):
 
     logger = logging.getLogger(facade_analysis_init_facade_task.__name__)
@@ -75,7 +75,7 @@ def facade_analysis_init_facade_task(repo_git):
     facade_helper.log_activity('Info',f"Beginning analysis.")
 
 
-@celery.task(base=AugurFacadeRepoCollectionTask)
+@celery.task(base=FacadeRepoCollectionTask)
 def trim_commits_facade_task(repo_git):
 
     logger = logging.getLogger(trim_commits_facade_task.__name__)
@@ -102,7 +102,7 @@ def trim_commits_facade_task(repo_git):
     facade_helper.update_analysis_log(repo_id,'Collecting data')
     logger.info(f"Got past repo {repo_id}")
 
-@celery.task(base=AugurFacadeRepoCollectionTask)
+@celery.task(base=FacadeRepoCollectionTask)
 def trim_commits_post_analysis_facade_task(repo_git):
 
     logger = logging.getLogger(trim_commits_post_analysis_facade_task.__name__)
@@ -168,7 +168,7 @@ def facade_start_contrib_analysis_task():
     facade_helper.update_status('Updating Contributors')
     facade_helper.log_activity('Info', 'Updating Contributors with commits')
 
-@celery.task(base=AugurFacadeRepoCollectionTask)
+@celery.task(base=FacadeRepoCollectionTask)
 def facade_fetch_missing_commit_messages(repo_git):
     logger = logging.getLogger(facade_fetch_missing_commit_messages.__name__)
     facade_helper = FacadeHelper(logger)
@@ -223,7 +223,7 @@ def facade_fetch_missing_commit_messages(repo_git):
 
 
 #enable celery multithreading
-@celery.task(base=AugurFacadeRepoCollectionTask)
+@celery.task(base=FacadeRepoCollectionTask)
 def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     """Take a large list of commit data to analyze and store in the database. Meant to be run in parallel with other instances of this task.
     """
@@ -397,7 +397,7 @@ def clone_repos():
 #    facade_helper = FacadeHelper(logger)
 #        check_for_repo_updates(session, repo_git)
 
-@celery.task(base=AugurFacadeRepoCollectionTask, bind=True)
+@celery.task(base=FacadeRepoCollectionTask, bind=True)
 def git_update_commit_count_weight(self, repo_git):
 
     engine = self.app.engine
@@ -412,7 +412,7 @@ def git_update_commit_count_weight(self, repo_git):
     update_facade_scheduling_fields(repo_git, facade_weight, commit_count)
 
 
-@celery.task(base=AugurFacadeRepoCollectionTask)
+@celery.task(base=FacadeRepoCollectionTask)
 def git_repo_updates_facade_task(repo_git):
 
     logger = logging.getLogger(git_repo_updates_facade_task.__name__)

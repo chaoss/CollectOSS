@@ -2,7 +2,7 @@
 This file contains functions that take the api response 
 and return only the data that the database needs
 """
-from augur.tasks.util.AugurUUID import GithubUUID, GitlabUUID
+from augur.tasks.util.ContributorUUID import GithubUUID, GitlabUUID
 import sqlalchemy as s
 
 from typing import List
@@ -214,12 +214,12 @@ def extract_needed_pr_metadata(metadata_list: List[dict], repo_id: int, tool_sou
     return metadata_dicts
 
 
-def extract_pr_review_message_ref_data(comment: dict, augur_pr_review_id, github_pr_review_id, repo_id: int, tool_version: str, data_source: str) -> dict:
+def extract_pr_review_message_ref_data(comment: dict, pr_review_id, github_pr_review_id, repo_id: int, tool_version: str, data_source: str) -> dict:
 
     pr_review_comment_message_ref = {
         # msg_id turned up null when I removed the cast to int ..
         'msg_id': comment["msg_id"],
-        'pr_review_id': augur_pr_review_id,
+        'pr_review_id': pr_review_id,
         'pr_review_msg_url': comment['url'],
         'pr_review_src_id': int(github_pr_review_id),
         'pr_review_msg_src_id': int(comment['id']),

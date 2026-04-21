@@ -8,7 +8,7 @@ fi
 
 
 if [ ! -v AUGUR_NO_CONFIG ]; then
-	./scripts/install/config.sh docker
+	./scripts/docker/config.sh docker
 fi
 
 if [[ -f /repo_groups.csv ]]; then

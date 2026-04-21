@@ -14,13 +14,13 @@ from augur.tasks.data_analysis.message_insights.message_sentiment import get_sen
 from augur.tasks.init.celery_app import celery_app as celery
 from augur.application.db.lib import get_value, get_repo_by_repo_git, get_session
 from augur.application.db.models import MessageAnalysis, MessageAnalysisSummary
-from augur.tasks.init.celery_app import AugurMlRepoCollectionTask
+from augur.tasks.init.celery_app import MLRepoCollectionTask
 
 #SPDX-License-Identifier: MIT
 
-ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
-@celery.task(base=AugurMlRepoCollectionTask, bind=True)
+@celery.task(base=MLRepoCollectionTask, bind=True)
 def message_insight_task(self, repo_git):
 
     logger = logging.getLogger(message_insight_task.__name__)
@@ -45,7 +45,7 @@ def message_insight_model(repo_git: str,logger,engine) -> None:
     repo = get_repo_by_repo_git(repo_git)
     repo_id = repo.repo_id
 
-    models_dir = os.path.join(ROOT_AUGUR_DIRECTORY, "tasks", "data_analysis", "message_insights", get_value("Message_Insights", 'models_dir'))
+    models_dir = os.path.join(ROOT_PROJECT_REPO_DIRECTORY, "tasks", "data_analysis", "message_insights", get_value("Message_Insights", 'models_dir'))
     insight_days = get_value("Message_Insights", 'insight_days')
 
     # Any initial database instructions, like finding the last tuple inserted or generate the next ID value

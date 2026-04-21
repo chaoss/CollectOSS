@@ -17,7 +17,7 @@ jobs:
     name: Test on macOS
     runs-on: macos-latest
     env:
-      UV_LOCKED: true  # Assert that uv.lock is up-to-date
+      UV_LOCKED: true # Assert that uv.lock is up-to-date
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
         run: uv sync --all-groups
 
       - name: Install workers
-        run: uv run scripts/install/workers.sh dev
+        run: uv run scripts/ci/workers.sh dev
 
       - name: Install nltk
         run: |
@@ -49,7 +49,6 @@ jobs:
           uv run python -m nltk.downloader punkt
           uv run python -m nltk.downloader popular
           uv run python -m nltk.downloader universal_tagset
-
 
   test-e2e:
     name: End-to-end test (Docker)
@@ -59,7 +58,7 @@ jobs:
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -124,17 +123,17 @@ jobs:
 
       - name: Prepare compose file
         run: |
-          yq eval -i '.services.augur.image = "ghcr.io/${{ github.repository_owner }}/augur_backend:test"' docker-compose.yml
-          yq eval -i '.services.augur.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur.restart = "no"' docker-compose.yml
+          yq eval -i '.services.core.image = "ghcr.io/${{ github.repository_owner }}/augur_backend:test"' docker-compose.yml
+          yq eval -i '.services.core.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.core.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.augur-db.image = "ghcr.io/${{ github.repository_owner }}/augur_database:test"' docker-compose.yml
-          yq eval -i '.services.augur-db.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur-db.restart = "no"' docker-compose.yml
+          yq eval -i '.services.database.image = "ghcr.io/${{ github.repository_owner }}/augur_database:test"' docker-compose.yml
+          yq eval -i '.services.database.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.database.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.augur-keyman.image = "ghcr.io/${{ github.repository_owner }}/augur_keyman:test"' docker-compose.yml
-          yq eval -i '.services.augur-keyman.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur-keyman.restart = "no"' docker-compose.yml
+          yq eval -i '.services.keyman.image = "ghcr.io/${{ github.repository_owner }}/augur_keyman:test"' docker-compose.yml
+          yq eval -i '.services.keyman.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.keyman.restart = "no"' docker-compose.yml
 
           yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test"' docker-compose.yml
           yq eval -i '.services.rabbitmq.pull_policy = "never"' docker-compose.yml
@@ -182,7 +181,8 @@ jobs:
         # Always run this step to get logs, even if the previous step fails
         if: always()
         # We use tail so that we can see the name of each file as it's printed
-        run: "docker run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs tail -n +0'"
+        run: "docker run -t --rm -v logs:/logs bash -c 'find /logs -type f | xargs tail
+          -n +0'"
 
   test-e2e-podman:
     name: End-to-end test (Podman)
@@ -297,9 +297,8 @@ jobs:
         # Always run this step to get logs, even if the previous step fails
         if: always()
         # We use tail so that we can see the name of each file as it's printed
-        run: "podman run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs tail -n +0'"
-
-
+        run: "podman run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs
+          tail -n +0'"
 
   push-image:
     name: Push image

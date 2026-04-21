@@ -5,10 +5,10 @@ Augur library commands redis
 import click
 
 from augur.tasks.init.redis_connection import get_redis_connection
-from augur.application.logs import AugurLogger
+from augur.application.logs import SystemLogger
 from augur.application.cli import test_connection, test_db_connection 
 
-logger = AugurLogger("augur").get_logger()
+logger = SystemLogger("augur").get_logger()
 
 @click.group('redis', short_help='Commands for managing redis cache')
 def cli():

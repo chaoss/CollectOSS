@@ -23,16 +23,16 @@ def key_auth():
 
 def test_github_paginator_get_item(key_auth):
 
-    first_augur_pr_id = 102777299
+    first_chaosscommunity_pr_id = 148367018
 
-    url = "https://api.github.com/repos/chaoss/augur/pulls?state=all&direction=asc&per_page=100"
+    url = "https://api.github.com/repos/chaoss/community/pulls?state=all&direction=asc&per_page=10"
 
     prs = GithubPaginator(url, key_auth, logger)
 
     assert prs is not None
     assert prs[0] is not None
 
-    assert first_augur_pr_id == prs[0]["id"]
+    assert first_chaosscommunity_pr_id == prs[0]["id"]
 
 
 def test_github_paginator_retrieve_data_valid_url(key_auth):

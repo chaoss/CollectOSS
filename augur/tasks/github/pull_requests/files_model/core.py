@@ -8,7 +8,7 @@ from augur.application.db.lib import get_secondary_data_last_collected, get_upda
 
 
 
-def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection=False):
+def pull_request_files_model(repo_id,logger, db_session, key_auth, full_collection=False):
 
     pr_file_batch_size = get_batch_size()
 
@@ -22,7 +22,7 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
         pr_numbers = []
         #pd.read_sql(pr_number_sql, self.db, params={})
 
-        result = augur_db.execute_sql(pr_number_sql)#.fetchall()
+        result = db_session.execute_sql(pr_number_sql)#.fetchall()
         pr_numbers = [dict(row) for row in result.mappings()]
 
     else:
@@ -36,7 +36,7 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
                 'pull_request_id': pr.pull_request_id
             })
 
-    query = augur_db.session.query(Repo).filter(Repo.repo_id == repo_id)
+    query = db_session.session.query(Repo).filter(Repo.repo_id == repo_id)
     repo = execute_session_query(query, 'one')
     owner, name = get_owner_repo(repo.repo_git)
 
@@ -100,7 +100,7 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
 
                 if len(pr_file_rows) >= pr_file_batch_size:
                     logger.info(f"{task_name}: Inserting {len(pr_file_rows)} rows")
-                    augur_db.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)
+                    db_session.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)
                     pr_file_rows.clear()
         except NotFoundException as e:
             logger.info(f"{task_name}: PR with number of {pr_info['pr_src_number']} returned 404 on file data. Skipping.")
@@ -112,4 +112,4 @@ def pull_request_files_model(repo_id,logger, augur_db, key_auth, full_collection
 
     if len(pr_file_rows) > 0:
         logger.info(f"{task_name}: Inserting {len(pr_file_rows)} rows")
-        augur_db.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)
+        db_session.insert_data(pr_file_rows, PullRequestFile, pr_file_natural_keys)

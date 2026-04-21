@@ -9,10 +9,10 @@ import logging
 
 from augur.application.db.models import Config
 from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig, redact_setting_value
+from augur.application.config import SystemConfig, redact_setting_value
 from augur.application.cli import DatabaseContext, test_connection, test_db_connection, with_database
 from augur.util.inspect_without_import import get_phase_names_without_import
-ROOT_AUGUR_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redi
 
     with DatabaseSession(logger, engine=ctx.obj.engine) as session:
 
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
 
         augmented_config = config.base_config
 
@@ -100,7 +100,7 @@ def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redi
 
         augmented_config["Facade"]["repo_directory"] = facade_repo_directory
 
-        augmented_config["Logging"]["logs_directory"] = logs_directory or (ROOT_AUGUR_DIRECTORY + "/logs/")
+        augmented_config["Logging"]["logs_directory"] = logs_directory or (ROOT_PROJECT_REPO_DIRECTORY + "/logs/")
 
         config.load_config_from_dict(augmented_config)
 
@@ -114,7 +114,7 @@ def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redi
 def load_config(ctx, file):
 
     with DatabaseSession(logger, engine=ctx.obj.engine) as session:
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
 
         print("WARNING: This will override your current config")
         response = str(input("Would you like to continue: [y/N]: ")).lower()
@@ -139,7 +139,7 @@ def load_config(ctx, file):
 def add_section(ctx, section_name, file):
 
     with DatabaseSession(logger, engine=ctx.obj.engine) as session:
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
 
         if config.is_section_in_config(section_name):
 
@@ -169,7 +169,7 @@ def add_section(ctx, section_name, file):
 def config_set(ctx, section, setting, value):
 
     with DatabaseSession(logger, engine=ctx.obj.engine) as session:
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
 
         config.add_value(section, setting, value)
         print(f"{setting} in {section} section set to {redact_setting_value(section, setting, value)}")
@@ -184,7 +184,7 @@ def config_set(ctx, section, setting, value):
 def config_get(ctx, section, setting):
 
     with DatabaseSession(logger, engine=ctx.obj.engine) as session:
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
 
         if setting:
             config_value = config.get_value(section_name=section, setting_name=setting)
@@ -232,7 +232,7 @@ def config_get_all_json():
 def clear_config(ctx):
 
     with DatabaseSession(logger, ctx.obj.engine) as session:
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
 
         if not config.empty():
 

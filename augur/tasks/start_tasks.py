@@ -30,7 +30,7 @@ from augur.tasks.util.collection_state import CollectionState
 from augur.tasks.util.collection_util import *
 from augur.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 from augur.application.db.lib import execute_sql, get_session
-from augur.application.config import AugurConfig
+from augur.application.config import SystemConfig
 
 RUNNING_DOCKER = os.environ.get('AUGUR_DOCKER_DEPLOY') == "1"
 
@@ -238,11 +238,11 @@ def build_ml_repo_collect_request(session, logger, enabled_phase_names, days_unt
     return request
 
 @celery.task(bind=True)
-def augur_collection_monitor(self):     
+def collection_monitor(self):     
 
     engine = self.app.engine
 
-    logger = logging.getLogger(augur_collection_monitor.__name__)
+    logger = logging.getLogger(collection_monitor.__name__)
 
     logger.info("Checking for repos to collect")
 
@@ -255,7 +255,7 @@ def augur_collection_monitor(self):
     with DatabaseSession(logger, self.app.engine) as session:
 
         # Get config values for collection intervals
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
         core_interval = config.get_value('Tasks', 'core_collection_interval_days') or 15
         secondary_interval = config.get_value('Tasks', 'secondary_collection_interval_days') or 10
         facade_interval = config.get_value('Tasks', 'facade_collection_interval_days') or 10
@@ -278,7 +278,7 @@ def augur_collection_monitor(self):
         
         logger.info(f"Starting collection phases: {[h.name for h in enabled_collection_hooks]}")
 
-        main_routine = AugurTaskRoutine(logger, enabled_collection_hooks)
+        main_routine = CollectionTaskRoutine(logger, enabled_collection_hooks)
 
         main_routine.start_data_collection()
 
@@ -286,11 +286,11 @@ def augur_collection_monitor(self):
 
 
 @celery.task(bind=True)
-def augur_collection_update_weights(self):
+def collection_update_weights(self):
 
     engine = self.app.engine
 
-    logger = logging.getLogger(augur_collection_update_weights.__name__)
+    logger = logging.getLogger(collection_update_weights.__name__)
 
     logger.info("Updating stale collection weights")
 
