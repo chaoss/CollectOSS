@@ -91,7 +91,7 @@ class AugurSetting(Base):
     __tablename__ = "augur_settings"
     __table_args__ = {
         "schema": "augur_operations",
-        "comment": "Augur settings include the schema version, and the Augur API Key as of 10/25/2020. Future augur settings may be stored in this table, which has the basic structure of a name-value pair. ",
+        "comment": "CollectOSS settings include the schema version, and the CollectOSS API Key as of 10/25/2020. Future augur settings may be stored in this table, which has the basic structure of a name-value pair. ",
     }
 
     id = Column(
