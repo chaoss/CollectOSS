@@ -12,7 +12,7 @@
 
 #     routine['facade'] = facade_commits_model.si()
 
-#     repo_git = 'https://github.com/chaoss/augur/'
+#     repo_git = 'https://github.com/chaoss/collectoss/'
 #     task_list = []
 #     task_list.append(collect_pull_requests.si(repo_git))
 #     task_list.append(collect_issues.si(repo_git))
@@ -26,7 +26,7 @@
 
 #     routine['facade'] = facade_commits_model.si()
 
-#     repo_git = 'https://github.com/chaoss/augur/'
+#     repo_git = 'https://github.com/chaoss/collectoss/'
 #     task_list = []
 #     task_list.append(collect_pull_requests.si(repo_git))
 #     task_list.append(collect_issues.si(repo_git))

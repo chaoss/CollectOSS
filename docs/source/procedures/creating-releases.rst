@@ -2,7 +2,7 @@ The Augur Release Process
 =========================
 
 The first step to releasing any changes is to have changes in the first place.
-Augur's `CONTRIBUTING.md <https://github.com/chaoss/augur/blob/main/CONTRIBUTING.md>`__ file
+Augur's `CONTRIBUTING.md <https://github.com/chaoss/collectoss/blob/main/CONTRIBUTING.md>`__ file
 contains all the information that is needed to get started with topics like
 reporting issues, contributing code, and understanding the code review process.
 
