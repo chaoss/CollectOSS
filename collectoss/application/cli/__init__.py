@@ -13,35 +13,43 @@ from collectoss.application.db import get_engine, dispose_database_engine
 from sqlalchemy.exc import OperationalError 
 
 
+def check_connectivity(urls=["http://chaoss.community", "http://github.com", "http://gitlab.com"], timeout=10.0):
+    """
+    Checks connectivity against a list of URLs. 
+    Returns True if at least one URL is reachable, False otherwise.
+    """
+    with httpx.Client(timeout=timeout/len(urls), follow_redirects=True) as client:
+        for i, url in enumerate(urls):
+            try:
+                # Use HEAD request for speed if the server supports it, 
+                # otherwise stick with GET.
+                response = client.request("GET", url)
+                if response.is_success:
+                    return True
+            except (TimeoutError, httpx.TimeoutException):
+                print(f"Connectivity test Request {i} timed out.")
+            except httpx.NetworkError as e:
+                print(f"Connectivity test Request {i} Network Error: {httpx.NetworkError}")
+                print(traceback.format_exc())
+            except httpx.ProtocolError as e:
+                print(f"Connectivity test Request {i} Protocol Error: {httpx.ProtocolError}")
+                print(traceback.format_exc())
+    return False
+
 def test_connection(function_internet_connection):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
         usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
-        success = False
-        with httpx.Client() as client:
-            try:
-                _ = client.request(
-                    method="GET", url="http://chaoss.community", timeout=10, follow_redirects=True)
-                success = True
-            except (TimeoutError, httpx.TimeoutException):
-                print("Request timed out.")
-            except httpx.NetworkError as e:
-                print(f"Network Error: {httpx.NetworkError}")
-                print(traceback.format_exc())
-            except httpx.ProtocolError as e:
-                print(f"Protocol Error: {httpx.ProtocolError}")
-                print(traceback.format_exc())
+        if not check_connectivity():
+            print(
+                f"""
+                \n\n{usage} command setup failed.
+                There was an error while testing for network connectivity
+                Please check your connection to the internet to run CollectOSS
+                Consider setting http_proxy variables for limited access installations."""
+            )
+            sys.exit(-1)
 
-            if not success:
-                print(
-                    f"""
-                    \n\n{usage} command setup failed.
-                    There was an error while testing for network connectivity
-                    Please check your connection to the internet to run CollectOSS
-                    Consider setting http_proxy variables for limited access installations."""
-                )
-                sys.exit(-1)
-        
         return ctx.invoke(function_internet_connection, *args, **kwargs)
         
     return update_wrapper(new_func, function_internet_connection)
