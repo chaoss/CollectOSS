@@ -1,21 +1,21 @@
 # API
-/augur/api/ @sgoggins
+/collectoss/api/ @sgoggins
 
-/augur/api/view @Ulincsys 
-/augur/api/routes/user.py @Ulincsys 
+/collectoss/api/view @Ulincsys 
+/collectoss/api/routes/user.py @Ulincsys 
 
 # CLI
-/augur/cli/ @sgoggins
+/collectoss/cli/ @sgoggins
 
 # Frontend
-/augur/templates/ @sgoggins
+/collectoss/templates/ @sgoggins
 
 # Schema
-/augur/application/db/ @sgoggins
-/augur/application/schema/ @sgoggins
+/collectoss/application/db/ @sgoggins
+/collectoss/application/schema/ @sgoggins
 
 # Workers
-/augur/tasks @sgoggins
+/collectoss/tasks @sgoggins
 
 # Repo and Community Infrastructure
 /README.md @sgoggins @MoralCode
@@ -54,7 +54,7 @@ pyproject.toml @sgoggins
 *compose.yml @MoralCode
 
 # Misc
-/augur/metrics/ @sgoggins
-/augur/server.py @sgoggins
-/augur/application.py @sgoggins
-/augur/application/config.py @MoralCode
+/collectoss/metrics/ @sgoggins
+/collectoss/server.py @sgoggins
+/collectoss/application.py @sgoggins
+/collectoss/application/config.py @MoralCode

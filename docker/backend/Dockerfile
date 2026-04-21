@@ -57,13 +57,13 @@ ENV UV_LINK_MODE=copy
 # manually if this fails the container build.
 ENV UV_LOCKED=1
 
-WORKDIR /augur
+WORKDIR /collectoss
 
 COPY pyproject.toml .
 COPY uv.lock .
 COPY .python-version .
 
-# Install augur's dependencies early to take advantage of build cache
+# Install collectoss's dependencies early to take advantage of build cache
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-install-project --no-dev
 
@@ -76,12 +76,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY README.md .
 COPY LICENSE .
 COPY alembic.ini .
-COPY augur/ augur/
+COPY collectoss/ collectoss/
 COPY metadata.py .
 COPY scripts/ scripts/
 COPY keyman/ keyman/
 
-RUN find augur -type d -exec chmod u=rwx,go=rx {} + && find augur -type f -exec chmod u=rw,go=r {} +
+RUN find collectoss -type d -exec chmod u=rwx,go=rx {} + && find collectoss -type f -exec chmod u=rw,go=r {} +
 RUN find keyman -type d -exec chmod u=rwx,go=rx {} + && find keyman -type f -exec chmod u=rw,go=r {} +
 RUN find scripts -exec chmod u=rwx,go=rx {} +
 
@@ -92,7 +92,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # We aren't going to activate the virtualenv (manually or via uv run), so we
 # need adjust the PATH
-ENV PATH="/augur/.venv/bin:${PATH}"
+ENV PATH="/collectoss/.venv/bin:${PATH}"
 
 ENV SCC_DIR=/scc
 COPY --from=golang-builder --chmod=755 "/scc" "/scc/scc"
@@ -102,8 +102,8 @@ COPY --from=golang-builder --chmod=755 "/scorecard" "/scorecard/scorecard"
 RUN ${SCC_DIR}/scc --version
 RUN ${SCORECARD_DIR}/scorecard version
 
-RUN mkdir -p repos/ logs/ /augur/facade/
-RUN ln -s /cache /augur/augur/static/cache
+RUN mkdir -p repos/ logs/ /collectoss/facade/
+RUN ln -s /cache /collectoss/collectoss/static/cache
 
 # Copy in the entrypoint and init scripts, ensuring they are executable
 COPY --chmod=755 ./docker/backend/entrypoint.sh /

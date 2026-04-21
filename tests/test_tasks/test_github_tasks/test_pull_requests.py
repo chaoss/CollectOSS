@@ -4,11 +4,11 @@ import logging
 
 from sqlalchemy.sql import text
 
-from augur.tasks.github.pull_requests.core import *
-from augur.application.db.session import DatabaseSession
-from augur.application.db.models import Config 
-from augur.tasks.util.ContributorUUID import GithubUUID
-from augur.application.db.data_parse import extract_needed_contributor_data
+from collectoss.tasks.github.pull_requests.core import *
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db.models import Config 
+from collectoss.tasks.util.ContributorUUID import GithubUUID
+from collectoss.application.db.data_parse import extract_needed_contributor_data
 
 logger = logging.getLogger(__name__)
 not_provided_cntrb_id = '00000000-0000-0000-0000-000000000000'

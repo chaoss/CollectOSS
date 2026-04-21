@@ -1,12 +1,12 @@
 import sqlalchemy as s
 import logging
 
-from augur.util.repo_load_controller import ORG_REPOS_ENDPOINT
+from collectoss.util.repo_load_controller import ORG_REPOS_ENDPOINT
 
-from augur.application.db.session import DatabaseSession
-from augur.application.db.models import Config, User
-from augur.tasks.github.util.github_paginator import hit_api
-from augur.application.db.util import execute_session_query
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db.models import Config, User
+from collectoss.tasks.github.util.github_paginator import hit_api
+from collectoss.application.db.util import execute_session_query
 
 
 logger = logging.getLogger(__name__)

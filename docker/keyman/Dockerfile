@@ -19,4 +19,4 @@ COPY ./keyman keyman/
 RUN find . -type d -exec chmod u=rwx,go=rx {} + && find . -type f -exec chmod u=rw,go=r {} +
 
 
-ENTRYPOINT [ "python", "/augur/keyman/Orchestrator.py" ]
+ENTRYPOINT [ "python", "/collectoss/keyman/Orchestrator.py" ]

@@ -23,8 +23,8 @@ if os.environ.get("KEYMAN_DOCKER"):
     logger.addHandler(handler)  # Attach the handler to the logger
     logger.setLevel(logging.DEBUG)
 else:
-    from augur.tasks.init.redis_connection import get_redis_connection
-    from augur.application.logs import SystemLogger
+    from collectoss.tasks.init.redis_connection import get_redis_connection
+    from collectoss.application.logs import SystemLogger
 
     logger = SystemLogger("KeyOrchestrator").get_logger()
     conn = get_redis_connection()

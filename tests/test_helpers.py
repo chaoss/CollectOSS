@@ -1,7 +1,7 @@
 import pytest
 import sqlalchemy as s
 import logging
-from augur.application.db.session import DatabaseSession
+from collectoss.application.db.session import DatabaseSession
 
 TEST_DB_STRING = "postgresql+psycopg2://augur:mcguire18@chaoss.tv:5432/augur-test"
 

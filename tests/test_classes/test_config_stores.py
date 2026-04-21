@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import Mock
 
-from augur.application.config import JsonConfig, DatabaseConfig, NotWriteableException, SystemConfig, default_config
+from collectoss.application.config import JsonConfig, DatabaseConfig, NotWriteableException, SystemConfig, default_config
 
 
 @pytest.fixture

@@ -1,5 +1,5 @@
 from keyman.KeyClient import KeyClient, KeyPublisher
-from augur.application.logs import SystemLogger
+from collectoss.application.logs import SystemLogger
 
 from multiprocessing import Process, current_process
 from subprocess import Popen, PIPE

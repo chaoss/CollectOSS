@@ -1,10 +1,10 @@
 # #SPDX-License-Identifier: MIT
-# from augur.tasks.init.celery_app import celery_app as celery
-# from augur.tasks.github import *
+# from collectoss.tasks.init.celery_app import celery_app as celery
+# from collectoss.tasks.github import *
 # import pytest
 # from tests.test_tasks.runner import *
-# from augur.tasks.start_tasks import *
-# from augur.tasks.git.facade_tasks import *
+# from collectoss.tasks.start_tasks import *
+# from collectoss.tasks.git.facade_tasks import *
 
 
 # def test_task_routine_no_dependencies(celery_instance):

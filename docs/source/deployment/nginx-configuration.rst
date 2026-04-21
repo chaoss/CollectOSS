@@ -199,7 +199,7 @@ Fixing the Backend
 
 Now our server is configured properly and our frontend is being served over HTTPS, but there's an extra problem: the backend APIs are still being served over HTTP resulting in a ``blocked loading mixed active content`` error. This issue is a deep rooted issue and several files need to be modified to accomodate HTTPS.
 
-First, we will start with lines 29, 33, & 207 of ``augur/frontend/src/AugurAPI.ts`` and rewrite the URL to use the HTTPS protocol instead of HTTP. We will then do this again in ``augur/frontend/src/common/index.tx`` & ``augur/frontend/src/compare/index.ts`` where the ``AugurAPI`` constructor was called and passed an HTTP protocol. Next we need to configure gunicorn in the backend to support our SSL certificates, but by default certbot places these in a directory that requires root access. Copy these files by running ``sudo cp /etc/letsencrypt/live/<server name here>/fullchain.pem /home/ubuntu/augur/fullchain.pem`` and ``sudo cp /etc/letsencrypt/live/<server name here>/privkey.pem /home/ubuntu/augur/privkey.pem`` into augur's root directory, then change the user and group permissions with ``sudo chown ubuntu <filename.pem>`` and ``sudo chgrp ubuntu <filename.pem`` for both pem files. Now that the user permissions are set properly, gunicorn should be able to access them but we still need to add them to our gunicorn configuration document in ``augur/application.py``. Change the corresponding code block to look like this:
+First, we will start with lines 29, 33, & 207 of ``augur/frontend/src/AugurAPI.ts`` and rewrite the URL to use the HTTPS protocol instead of HTTP. We will then do this again in ``augur/frontend/src/common/index.tx`` & ``augur/frontend/src/compare/index.ts`` where the ``AugurAPI`` constructor was called and passed an HTTP protocol. Next we need to configure gunicorn in the backend to support our SSL certificates, but by default certbot places these in a directory that requires root access. Copy these files by running ``sudo cp /etc/letsencrypt/live/<server name here>/fullchain.pem /home/ubuntu/collectoss/fullchain.pem`` and ``sudo cp /etc/letsencrypt/live/<server name here>/privkey.pem /home/ubuntu/collectoss/privkey.pem`` into augur's root directory, then change the user and group permissions with ``sudo chown ubuntu <filename.pem>`` and ``sudo chgrp ubuntu <filename.pem`` for both pem files. Now that the user permissions are set properly, gunicorn should be able to access them but we still need to add them to our gunicorn configuration document in ``augur/application.py``. Change the corresponding code block to look like this:
 
 .. code-block:: python
 
@@ -207,6 +207,6 @@ First, we will start with lines 29, 33, & 207 of ``augur/frontend/src/AugurAPI.t
             'bind': '%s:%s' % (self.config.get_value("Server", "host"), self.config.get_value("Server", "port")),
             'workers': int(self.config.get_value('Server', 'workers')),
             'timeout': int(self.config.get_value('Server', 'timeout')),
-            'certfile': '/home/ubuntu/augur/fullchain.pem',
-            'keyfile': '/home/ubuntu/augur/privkey.pem'
+            'certfile': '/home/ubuntu/collectoss/fullchain.pem',
+            'keyfile': '/home/ubuntu/collectoss/privkey.pem'
         }

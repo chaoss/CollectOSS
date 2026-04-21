@@ -3,8 +3,8 @@ import pytest
 import uuid
 import sqlalchemy as s
 
-from augur.application.db.session import DatabaseSession
-from augur.application.db.models import Contributor, Issue
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db.models import Contributor, Issue
 
 logger = logging.getLogger(__name__)
 not_provided_cntrb_id = '00000000-0000-0000-0000-000000000000'

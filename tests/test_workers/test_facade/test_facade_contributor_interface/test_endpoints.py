@@ -1,8 +1,8 @@
 #SPDX-License-Identifier: MIT
 from tests.test_workers.worker_persistence.util_persistence import *
 import pandas as pd
-#from augur.cli import add_repos
-#from augur.cli import add_repo_groups
+#from collectoss.cli import add_repos
+#from collectoss.cli import add_repo_groups
 
 
 #Function to add repo_groups without starting an augur app instance
