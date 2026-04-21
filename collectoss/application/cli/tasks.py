@@ -19,7 +19,7 @@ from collectoss.application.cli import test_connection, test_db_connection
 from collectoss.application.cli._cli_util import clear_rabbitmq_messages, raise_open_file_limit
 
 
-logger = SystemLogger("augur", reset_logfiles=False).get_logger()
+logger = SystemLogger("collectoss", reset_logfiles=False).get_logger()
 
 @click.group('celery', short_help='Commands for controlling the backend API server & data collection workers')
 def cli():

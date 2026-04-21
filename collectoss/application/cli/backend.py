@@ -33,7 +33,7 @@ from keyman.KeyClient import KeyClient, KeyPublisher
 
 reset_logs = os.getenv("AUGUR_RESET_LOGS", 'True').lower() in ('true', '1', 't', 'y', 'yes')
 
-logger = SystemLogger("augur", reset_logfiles=reset_logs).get_logger()
+logger = SystemLogger("collectoss", reset_logfiles=reset_logs).get_logger()
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 @click.pass_context
@@ -79,7 +79,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     try:
         gunicorn_location = os.getcwd() + "/collectoss/api/gunicorn_conf.py"
     except FileNotFoundError:
-        logger.error("\n\nPlease run augur commands in the root directory\n\n")
+        logger.error("\n\nPlease run collectoss commands in the root directory\n\n")
 
     host = get_value("Server", "host")
 
@@ -175,7 +175,7 @@ def start(ctx, disable_collection, development, pidfile, port):
         #put contributor breadth back in. Not sure why it was commented out
         contributor_breadth_model.si().apply_async()
 
-        # start cloning repos when augur starts
+        # start cloning repos when collectoss starts
         clone_repos.si().apply_async()
 
         process_contributors.si().apply_async()
@@ -324,7 +324,7 @@ def kill(ctx):
 
 def stop_processes(signal, logger, engine):
     """
-    Stops augur with the given signal, 
+    Stops collectoss with the given signal, 
     and cleans up collection if it was running
     """
 
