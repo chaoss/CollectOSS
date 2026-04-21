@@ -19,7 +19,7 @@ services:
     image: "redis:alpine"
 
   keyman:
-    image: augur-keyman
+    image: collectoss-keyman
     restart: unless-stopped
     build:
       context: .
@@ -31,7 +31,7 @@ services:
     user: 3456:3456 # Run as an arbitrary non-root user
 
   rabbitmq:
-    image: augur-rabbitmq
+    image: collectoss-rabbitmq
     build:
       context: .
       dockerfile: ./docker/rabbitmq/Dockerfile
@@ -41,7 +41,7 @@ services:
         - RABBIT_MQ_DEFAULT_VHOST=${AUGUR_RABBITMQ_VHOST:-collectoss_vhost}
 
   core:
-    image: augur-new:latest
+    image: collectoss:latest
     build:
       context: .
       dockerfile: ./docker/backend/${AUGUR_TARGET:-Dockerfile}
@@ -82,10 +82,10 @@ services:
       - command: chmod 777 /facade /logs /config /cache
         user: root
   # Flower is a UI that helps more easily monitor running tasks for celery workers.
-  # This wont show you every error from the entire augur system, but it should show most of them.
+  # This wont show you every error from the entire collectoss system, but it should show most of them.
   # uncomment the section below to use flower
   #flower:
-  #  image: augur-new:latest
+  #  image: collectoss:latest
   #  restart: unless-stopped
   #  command:
   #    [ "celery", "-A", "collectoss.tasks.init.celery_app.celery_app", "flower", "--max-tasks=1000000" ]
