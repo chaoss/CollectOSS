@@ -12,11 +12,11 @@ import requests
 import sqlalchemy as s
 from sqlalchemy import exc
 from flask import request, Response
-# from augur.config import SystemConfig
+# from collectoss.config import SystemConfig
 import os 
 import traceback 
 
-from augur.api.routes import API_VERSION
+from collectoss.api.routes import API_VERSION
 from ..server import app
 
 logger = logging.getLogger(__name__)
