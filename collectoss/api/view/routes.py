@@ -38,8 +38,8 @@ logo:
 @app.route('/logo/<string:brand>')
 def logo(brand=None):
     if brand is None:
-        return redirect(url_for('static', filename='img/augur_logo.png'))
-    if "augur" in brand:
+        return redirect(url_for('static', filename='img/collectoss_logo.png'))
+    if "collectoss" in brand:
         return logo(None)
     if "chaoss" in brand:
         return redirect(url_for('static', filename='img/Chaoss_Logo_white.png'))
