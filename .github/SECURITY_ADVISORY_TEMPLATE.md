@@ -8,7 +8,7 @@ What kind of damage could this cause? (e.g., unauthorized data access, service d
 Please provide a proof-of-concept or clear, step-by-step instructions to reproduce the issue.
 
 ### Affected Versions
-Which versions of Augur are confirmed to be affected?
+Which versions of CollectOSS are confirmed to be affected?
 
 ### AI Disclosure
 **Did you use Artificial Intelligence (AI) tools to identify or document this vulnerability?**

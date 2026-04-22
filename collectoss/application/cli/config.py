@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """
-Augur library script for generating a config file
+CollectOSS library script for generating a config file
 """
 import os
 import click

@@ -91,7 +91,7 @@ First, you'll need to clone the repository. In your terminal, run:
 .. code-block:: bash
 
     $ git clone https://github.com/chaoss/augur.git
-    $ cd augur/
+    $ cd collectoss/
 
 
 Now that you've got your external database credentials (if you are using one) and your access token, we'll need to set environment variables manually.

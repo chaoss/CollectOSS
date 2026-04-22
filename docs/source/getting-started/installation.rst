@@ -183,7 +183,7 @@ General Augur Installation Steps (Irrespective of Operating System)
 .. code-block:: bash
 
    $ git clone 'https://github.com/chaoss/augur.git'
-   $ cd augur/
+   $ cd collectoss/
 
 2. Install ``uv`` via pip:
 
@@ -231,7 +231,7 @@ If you want to test new code you have written, you can rebuild Augur using:
 
 .. note::
 
-  If you chose to install Augur's frontend dependencies, you might see a bunch of ``canvas@1.6.x`` and ``canvas-prebuilt@1.6.x`` errors in the installation logs. These are harmless and caused by a few of our dependencies having *optional* requirements for old versions of these libraries. If they seem to be causing you trouble, feel free to open an `issue <https://github.com/chaoss/augur/issues>`_.
+  If you chose to install Augur's frontend dependencies, you might see a bunch of ``canvas@1.6.x`` and ``canvas-prebuilt@1.6.x`` errors in the installation logs. These are harmless and caused by a few of our dependencies having *optional* requirements for old versions of these libraries. If they seem to be causing you trouble, feel free to open an `issue <https://github.com/chaoss/collectoss/issues>`_.
 
 To enable log parsing for errors, you need to install `Elasticsearch <https://www.elastic.co/downloads/elasticsearch>`_ and `Logstash <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_.
 

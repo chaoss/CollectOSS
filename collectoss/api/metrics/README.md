@@ -55,9 +55,9 @@ app = server.get_app()
 ```
 3. Then `create_app()` calls the function `create_metrics()`
 4. Then `create_metrics()`
-    1. Gets a list of metric files from the `augur/api/metrics` directory
+    1. Gets a list of metric files from the `collectoss/api/metrics` directory
     2. Loops through the list of metric files and imports them all
-    3. As each file is getting imported all functions with the decorator `@register_metric()` are getting called and the decorator function in `augur/api/util.py` is called
+    3. As each file is getting imported all functions with the decorator `@register_metric()` are getting called and the decorator function in `collectoss/api/util.py` is called
     4. The `@register_metric()` decorator adds the attribute `is_metric` to the function so we can determine that it is a metric later 
     5. Loops through the list of metric files and calls `add_metrics(file)` method and passes the metrics file
 5. The `add_metrics(file)` method then loops through the file modules and finds the functions that are metrics using the `is_metric` attribute

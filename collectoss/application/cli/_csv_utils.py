@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 """
-CSV processing utilities for Augur CLI
+CSV processing utilities for CollectOSS CLI
 """
 import csv
 import logging

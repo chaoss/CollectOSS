@@ -4,14 +4,14 @@ We love to pull requests from everyone! We follow the standard Git workflow of `
 
 If you are new to open source, we recommend GitHub's excellent guide on "[How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)". In addition, please feel free to reach out to any of the maintainers or other community members if you are struggling as we are here to help you learn!
 
-Before getting started, please make sure you've read the [README](README.md) to get a primer on our project. Augur's documentation can be found [here](https://collectoss.readthedocs.io/en/main/).
+Before getting started, please make sure you've read the [README](README.md) to get a primer on our project. CollectOSS's documentation can be found [here](https://collectoss.readthedocs.io/en/main/).
 
 ## Join the Community
 
 We encourage all contributors to join the [CHAOSS Slack workspace](https://chaoss.community/kb-getting-started/) and participate in the `#wg-collectoss-8knot` channel. This is a great place to ask questions, get help with issues, participate in discussions, and stay updated on community meetings and planning. Don't hesitate to introduce yourself and ask for help if you get stuck!
 
 ## Opening an issue
-If you're experiencing an issue with Augur or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/augur/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our [issues](https://github.com/chaoss/augur/issues) before opening a new one.
+If you're experiencing an issue with CollectOSS or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/augur/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our [issues](https://github.com/chaoss/augur/issues) before opening a new one.
 
 Please note that if you open a bug report and your issue **does not** follow our template, we cannot help you until you have provided us all the relevant information in that format. 
 Respectfully, we do not have the time to try and recreate an error given with minimal or no context, so by providing this information you are helping us help you!
@@ -33,7 +33,7 @@ Kindly replace the descriptions with your comments to the best of your ability, 
 1. Fork and clone this repo:
 ```bash
 $ git clone github.com:your-username/augur.git
-$ cd augur/
+$ cd collectoss/
 $ git remote add upstream https://github.com/chaoss/augur.git
 ```
 
@@ -74,11 +74,11 @@ To ensure all your commits are signed, you may choose to [configure git](https:/
 
 **Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
 
-## Keeping in sync with the Augur Repository
+## Keeping in sync with the CollectOSS Repository
 
 Remember to sync your fork with the ```main``` branch regularly, by taking the following steps:
 
-- Setup your upstream branch to point to the URL of the main Augur repo ```https://github.com/chaoss/augur.git```.
+- Setup your upstream branch to point to the URL of the main CollectOSS repo ```https://github.com/chaoss/augur.git```.
 
 - Next, in the root folder of the project, on the ```main``` branch, run:
 ```
@@ -93,10 +93,10 @@ git push origin master
 
 ## Community Resources
 
-### Augur
+### CollectOSS
 - [Stable documentation (`release` branch)](https://collectoss.readthedocs.io/en/release/)
 - [Nightly/developer build documentation (`main` branch)](https://collectoss.readthedocs.io/en/main/) (warning: this is should be considered an unstable branch and should not be used for production)
-- [Live Augur demo](https://ai.chaoss.io)
+- [Live CollectOSS demo](https://ai.chaoss.io)
 
 ### CHAOSS
 - [Website](https://chaoss.community/)

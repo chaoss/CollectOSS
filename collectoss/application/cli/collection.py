@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: MIT
 """
-Augur library commands for controlling the backend components
+CollectOSS library commands for controlling the backend components
 """
 import os
 import time
@@ -42,7 +42,7 @@ def cli(ctx):
 @with_database
 @click.pass_context
 def start(ctx, development):
-    """Start Augur's backend server."""
+    """Start CollectOSS's backend server."""
 
     try:
         if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
@@ -175,7 +175,7 @@ def start_celery_collection_processes(worker_counts: tuple[int, int, int]):
 @click.pass_context
 def stop(ctx):
     """
-    Sends SIGTERM to all Augur server & worker processes
+    Sends SIGTERM to all CollectOSS server & worker processes
     """
     cli_logger = logging.getLogger("collectoss.cli")
 
@@ -186,7 +186,7 @@ def stop(ctx):
 @click.pass_context
 def kill(ctx):
     """
-    Sends SIGKILL to all Augur server & worker processes
+    Sends SIGKILL to all CollectOSS server & worker processes
     """
     cli_logger = logging.getLogger("collectoss.cli")
     stop_processes(signal.SIGKILL, cli_logger, ctx.obj.engine)
@@ -219,7 +219,7 @@ def repo_reset(ctx):
 @cli.command('processes')
 def processes():
     """
-    Outputs the name/PID of all Augur server & worker processes"""
+    Outputs the name/PID of all CollectOSS server & worker processes"""
     for process in get_collection_processes():
         logger.info(f"Found process {process.pid}")
 

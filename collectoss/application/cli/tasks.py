@@ -1,7 +1,7 @@
 #SPDX-License-Identifier: MIT
 
 """
-Augur library commands for controlling the backend components
+CollectOSS library commands for controlling the backend components
 """
 
 import os
@@ -29,7 +29,7 @@ def cli():
 @test_connection
 @test_db_connection
 def start():
-    """Start Augur's celery process."""
+    """Start CollectOSS's celery process."""
 
     raise_open_file_limit(100000)
 

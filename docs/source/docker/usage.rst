@@ -18,7 +18,7 @@ You can also step into a running container at every step of the build process an
 First, build the image to output build stages.
 
 .. code-block::bash
-    $ cd augur/
+    $ cd collectoss/
     $ docker build -t <service_name> -f util/docker/backend/Dockerfile .
 
 Then, run any stage by using the hash that the relevant stage prints out during the build process. The arguments are the same as a normal ``docker run``

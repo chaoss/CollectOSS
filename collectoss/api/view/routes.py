@@ -31,7 +31,7 @@ def root(path=""):
 """ ----------------------------------------------------------------
 logo:
     this route returns a redirect to the application logo associated
-    with the provided brand, otherwise the inverted Augur logo if no
+    with the provided brand, otherwise the inverted CollectOSS logo if no
     brand is provided.
 """
 @app.route('/logo/')
