@@ -80,12 +80,12 @@ if pub.wait(timeout_seconds=30, republish=True):
 
 ## Supported Platforms
 
-| Platform | Use Case | Rate Limit |
-|----------|----------|------------|
-| `github_rest` | GitHub REST API v3 | 5000 req/hour |
+| Platform         | Use Case              | Rate Limit       |
+| ---------------- | --------------------- | ---------------- |
+| `github_rest`    | GitHub REST API v3    | 5000 req/hour    |
 | `github_graphql` | GitHub GraphQL API v4 | 5000 points/hour |
-| `github_search` | GitHub Search API | 30 req/min |
-| `gitlab_rest` | GitLab REST API | Varies |
+| `github_search`  | GitHub Search API     | 30 req/min       |
+| `gitlab_rest`    | GitLab REST API       | Varies           |
 
 **Note**: Same GitHub token is published to all three `github_*` platforms because GitHub enforces separate rate limits for each API type.
 
@@ -107,7 +107,7 @@ Responses sent to `{channel}-{process_id}`
 The orchestrator is started automatically by Augur backend:
 
 ```python
-# In augur/application/cli/backend.py
+# In collectoss/application/cli/backend.py
 orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
 ```
 
@@ -146,11 +146,11 @@ Keys are loaded on Augur startup and published to orchestrator.
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `Orchestrator.py` | Central key manager |
-| `KeyClient.py` | Worker + admin interfaces |
-| `KeyOrchestrationAPI.py` | Protocol specification |
+| File                     | Purpose                   |
+| ------------------------ | ------------------------- |
+| `Orchestrator.py`        | Central key manager       |
+| `KeyClient.py`           | Worker + admin interfaces |
+| `KeyOrchestrationAPI.py` | Protocol specification    |
 
 ## Limitations
 

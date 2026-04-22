@@ -14,7 +14,7 @@ All ``Dockerfiles`` and other Docker-related files are located in ``docker/<serv
 
 .. code-block:: bash
 
-    # in the root augur/ directory
+    # in the root collectoss/ directory
     $ docker build -t <tag_name> -f util/docker/<service name>/Dockerfile .
 
 .. note::
@@ -40,5 +40,5 @@ To start a container, use the command below. ``<container_name>`` can be whateve
 
 .. code-block::bash
 
-    # in the root augur/ directory
+    # in the root collectoss/ directory
     $ docker run -p <host_port>:<docker_port> --name <container_name> <tag_name>

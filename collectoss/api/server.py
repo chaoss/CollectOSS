@@ -75,7 +75,7 @@ def add_metrics(module_name: str) -> None:
 
     Note: 
         The attribute is_metric and obj.metadata['type'] 
-        are set in file augur/api/routes/util.py in the function 
+        are set in file collectoss/api/routes/util.py in the function 
         register_metric(). This function is a decorator and is 
         how a function is defined as a metric.
 
@@ -102,14 +102,14 @@ def add_metrics(module_name: str) -> None:
 
 
 def get_metric_files() -> List[str]:
-    """Get list of all the metrics files in the augur/api/metrics directory,
+    """Get list of all the metrics files in the collectoss/api/metrics directory,
 
     Returns:
         list of file names
     """
     metric_files = []
 
-    for filename in glob.iglob("augur/api/metrics/**"):
+    for filename in glob.iglob("collectoss/api/metrics/**"):
         file_id = get_file_id(filename)
         
         # this filters out files like __init__ and __pycache__. And makes sure it only get py files

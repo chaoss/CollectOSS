@@ -20,7 +20,7 @@ lint-docs-missing:
 	@ pylint augur | grep docstring | wc -l
 
 lint-github-tasks-count:
-	@ pylint augur | grep augur/tasks/github/ | wc -l
+	@ pylint augur | grep collectoss/tasks/github/ | wc -l
 
 #
 # Testing

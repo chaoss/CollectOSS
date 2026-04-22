@@ -52,7 +52,7 @@ app = server.get_app()
 ```
 3. Then `create_app()` calls the function `create_all_routes(app)` and passes the Flask app
 4. Then `create_all_routes(app)`
-    1. Gets a list of route files from the `augur/api/rotues` directory
+    1. Gets a list of route files from the `collectoss/api/rotues` directory
     2. Loops through the list of route files and imports them all
     3. Loops through the list of route files and calls each files create_route(app) function and passes the Flask app
 5. The `create_route(app)` function in each file then use the `app` to define all the routes using `@app.route()`

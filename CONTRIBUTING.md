@@ -33,7 +33,7 @@ Kindly replace the descriptions with your comments to the best of your ability, 
 1. Fork and clone this repo:
 ```bash
 $ git clone github.com:your-username/augur.git
-$ cd augur/
+$ cd collectoss/
 $ git remote add upstream https://github.com/chaoss/augur.git
 ```
 

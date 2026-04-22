@@ -23,7 +23,7 @@ Building
 ~~~~~~~~
 
 To see your changes and make sure everything rendered correctly, First activate the python virtual enivroment and run ``make docs`` in the root
-``augur/`` directory, and then open ``docs/build/html/index.html`` in your web browser to view it.
+``collectoss/`` directory, and then open ``docs/build/html/index.html`` in your web browser to view it.
 
 .. code-block:: bash
 

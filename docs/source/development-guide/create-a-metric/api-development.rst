@@ -137,17 +137,17 @@ There is also, generally, a block in a standard metric for pulling data by a rep
 Existing Metrics Files:
 --------------------------------------------
 
-1. augur/metrics/commit.py
-2. augur/metrics/contributor.py
-3. augur/metrics/deps.py
-4. augur/metrics/experimental.py
-5. augur/metrics/insight.py
-6. augur/metrics/issue.py
-7. augur/metrics/message.py
-8. augur/metrics/platform.py
-9. augur/metrics/pull_request.py
-10. augur/metrics/release.py
-11. augur/metrics/repo_meta.py
+1. collectoss/metrics/commit.py
+2. collectoss/metrics/contributor.py
+3. collectoss/metrics/deps.py
+4. collectoss/metrics/experimental.py
+5. collectoss/metrics/insight.py
+6. collectoss/metrics/issue.py
+7. collectoss/metrics/message.py
+8. collectoss/metrics/platform.py
+9. collectoss/metrics/pull_request.py
+10. collectoss/metrics/release.py
+11. collectoss/metrics/repo_meta.py
 
 
 These files are not intended to be all inclusive. Rather, they are what we have developed, or imagined, based on existing CHAOSS metrics to date. New CHAOSS metrics are likely to result in the inclusion of new files under metrics, or routes, depending if they are standard metrics or not.

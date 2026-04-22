@@ -25,7 +25,7 @@ is_dev = os.getenv("AUGUR_DEV", 'False').lower() in ('true', '1', 't', 'y', 'yes
 
 if is_dev:
 
-    augur_templates_dir = Path.cwd() / "augur/templates"
+    augur_templates_dir = Path.cwd() / "collectoss/templates"
 
     if not augur_templates_dir.is_dir():
         logger.critical("Could not locate templates in Gunicorn startup")

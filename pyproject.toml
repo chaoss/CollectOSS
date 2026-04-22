@@ -156,7 +156,7 @@ testpaths = [
 ]
 
 [tool.mypy]
-files = ['augur/application/db/*.py']
+files = ['collectoss/application/db/*.py']
 ignore_missing_imports = true
 follow_imports = "skip"
 disallow_untyped_defs = false

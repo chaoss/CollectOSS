@@ -20,7 +20,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem. If your bug is related to the UI, you **must** include screenshots.
 
 **Log files**
-Attach the relevant log files here. Server and installation logs can be found in the `logs/` directory in the root `augur/` directory, and the logs for each worker are stored in their respective directories. If the logs are pretty long (> 50ish lines or just use your best judgement) please use a Gist or a [pastebin](https://pastebin.com/). **These logs file are required if you would like help solving your issue.**
+Attach the relevant log files here. Server and installation logs can be found in the `logs/` directory in the root `collectoss/` directory, and the logs for each worker are stored in their respective directories. If the logs are pretty long (> 50ish lines or just use your best judgement) please use a Gist or a [pastebin](https://pastebin.com/). **These logs file are required if you would like help solving your issue.**
 
 **Software versions:**
  - CollectOSS: (you can use `pip show augur` to find your version)
