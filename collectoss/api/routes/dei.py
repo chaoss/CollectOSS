@@ -124,7 +124,7 @@ def dei_report(application: ClientApplication):
         project_id = project.id
 
     # Session is now closed - proceed with file operations (no database access needed)
-    cachePath = Path.cwd() / "augur" / "static" / "cache"
+    cachePath = Path.cwd() / "collectoss" / "static" / "cache"
 
     source = cachePath / f"{project_id}_badging_report.md"
     report = cachePath / f"{project_id}_badging_report.pdf"
