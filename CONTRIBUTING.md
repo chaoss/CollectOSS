@@ -11,7 +11,7 @@ Before getting started, please make sure you've read the [README](README.md) to 
 We encourage all contributors to join the [CHAOSS Slack workspace](https://chaoss.community/kb-getting-started/) and participate in the `#wg-collectoss-8knot` channel. This is a great place to ask questions, get help with issues, participate in discussions, and stay updated on community meetings and planning. Don't hesitate to introduce yourself and ask for help if you get stuck!
 
 ## Opening an issue
-If you're experiencing an issue with CollectOSS or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/augur/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our [issues](https://github.com/chaoss/augur/issues) before opening a new one.
+If you're experiencing an issue with CollectOSS or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/collectoss/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our [issues](https://github.com/chaoss/collectoss/issues) before opening a new one.
 
 Please note that if you open a bug report and your issue **does not** follow our template, we cannot help you until you have provided us all the relevant information in that format. 
 Respectfully, we do not have the time to try and recreate an error given with minimal or no context, so by providing this information you are helping us help you!
@@ -34,10 +34,10 @@ Kindly replace the descriptions with your comments to the best of your ability, 
 ```bash
 $ git clone github.com:your-username/augur.git
 $ cd collectoss/
-$ git remote add upstream https://github.com/chaoss/augur.git
+$ git remote add upstream https://github.com/chaoss/collectoss.git
 ```
 
-2. Follow the [development installation instructions](https://github.com/chaoss/augur/blob/main/docs/new-install.md).
+2. Follow the [development installation instructions](https://github.com/chaoss/collectoss/blob/main/docs/new-install.md).
 
 3. Create a new branch
 ```bash
@@ -52,7 +52,7 @@ $ git add .
 $ git commit -s -m "This is my first commit"
 $ git push -u origin my-new-branch
 ```
-6. Then, [submit a pull request](https://github.com/chaoss/augur/compare).
+6. Then, [submit a pull request](https://github.com/chaoss/collectoss/compare).
 
 At this point, you're waiting on us. We like to at least comment on pull requests within three business days (and, typically, one business day).
 Once one of our maintainers has had a chance to review your PR, we will either mark it as ```needs review``` and provide specific feedback on your changes, or we will go ahead and complete the pull request.
@@ -78,11 +78,11 @@ To ensure all your commits are signed, you may choose to [configure git](https:/
 
 Remember to sync your fork with the ```main``` branch regularly, by taking the following steps:
 
-- Setup your upstream branch to point to the URL of the main CollectOSS repo ```https://github.com/chaoss/augur.git```.
+- Setup your upstream branch to point to the URL of the main CollectOSS repo ```https://github.com/chaoss/collectoss.git```.
 
 - Next, in the root folder of the project, on the ```main``` branch, run:
 ```
-git remote add upstream https://github.com/chaoss/augur.git
+git remote add upstream https://github.com/chaoss/collectoss.git
 ```
 Whenever you need to make changes, make sure your ```main``` branch is in sync with the main repository, by checking out to the ```main``` branch and running:
 ```

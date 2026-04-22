@@ -49,10 +49,10 @@ def add_repos(ctx: click.Context, filename: str) -> None:
 
     The CSV file can have headers (recommended):
         repo_url,repo_group_id
-        https://github.com/chaoss/augur.git,10
+        https://github.com/chaoss/collectoss.git,10
 
     Or no headers (backward compatible - column order will be auto-detected):
-        https://github.com/chaoss/augur.git,10
+        https://github.com/chaoss/collectoss.git,10
 
     NOTE: The Group ID must already exist in the REPO_Groups Table.
 

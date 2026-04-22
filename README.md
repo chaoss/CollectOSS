@@ -4,12 +4,12 @@ CollectOSS is primarily a data engineering tool that makes it possible for data 
 The primary way of looking at CollectOSS data is through [8Knot](https://github.com/oss-aspen/8knot), a public instance of 8Knot is available [here](https://metrix.chaoss.io) - this is tied to a public instance of [CollectOSS](https://ai.chaoss.io). 
 
 
-[![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme) [![Build Docker images](https://github.com/chaoss/augur/actions/workflows/build_docker.yml/badge.svg)](https://github.com/chaoss/augur/actions/workflows/build_docker.yml) [![Hits-of-Code](https://hitsofcode.com/github/chaoss/augur?branch=release)](https://hitsofcode.com/github/chaoss/augur/view?branch=release) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
+[![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme) [![Build Docker images](https://github.com/chaoss/collectoss/actions/workflows/build_docker.yml/badge.svg)](https://github.com/chaoss/collectoss/actions/workflows/build_docker.yml) [![Hits-of-Code](https://hitsofcode.com/github/chaoss/augur?branch=release)](https://hitsofcode.com/github/chaoss/augur/view?branch=release) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
 
 ## NEW RELEASE ALERT!
 **If you want to jump right in, the updated docker, docker-compose and bare metal installation instructions are available [here](docs/new-install.md)**.
 
-CollectOSS is now releasing a dramatically improved new version. It is also available [here](https://github.com/chaoss/augur/releases/tag/v0.92.0).
+CollectOSS is now releasing a dramatically improved new version. It is also available [here](https://github.com/chaoss/collectoss/releases/tag/v0.92.0).
 
 
 - The `release` branch is a stable version of our new architecture, which features:
@@ -63,7 +63,7 @@ We do this in a variety of ways, one of which is doing all our own data collecti
 4. [Succinct Code Counter](https://github.com/boyter/scc), a blazingly fast Sloc, Cloc, and Code tool that also performs COCOMO calculations
 
 This data is collected by dedicated data collection workers controlled by CollectOSS, each of which is responsible for querying some subset of these data sources.
-We are also hard at work building workers for new data sources. If you have an idea for a new one, [please tell us](https://github.com/chaoss/augur/issues/new?template=feature_request.md) - we'd love your input!
+We are also hard at work building workers for new data sources. If you have an idea for a new one, [please tell us](https://github.com/chaoss/collectoss/issues/new?template=feature_request.md) - we'd love your input!
 
 
 ## Getting Started
@@ -75,7 +75,7 @@ If you're looking to contribute to CollectOSS's code, you can find installation 
 Please know that while it's still rather sparse right now,
 but we are actively adding to it all the time.
 
-If you get stuck, please feel free to [ask for help](https://github.com/chaoss/augur/issues/new)!
+If you get stuck, please feel free to [ask for help](https://github.com/chaoss/collectoss/issues/new)!
 
 ## Contributing
 

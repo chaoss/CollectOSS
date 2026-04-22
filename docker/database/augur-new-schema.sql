@@ -2379,7 +2379,7 @@ COMMENT ON COLUMN augur_data.pull_request_meta.pr_src_meta_label IS 'This is a r
           "type": "Organization",
           "site_admin": false
         },
-        "html_url": "https://github.com/chaoss/augur",
+        "html_url": "https://github.com/chaoss/collectoss",
         "description": "Python library and web service for Open Source Software Health and Sustainability metrics & data collection.",
         "fork": false,
         "url": "https://api.github.com/repos/chaoss/augur",
@@ -2424,8 +2424,8 @@ COMMENT ON COLUMN augur_data.pull_request_meta.pr_src_meta_label IS 'This is a r
         "pushed_at": "2019-12-02T06:27:26Z",
         "git_url": "git://github.com/chaoss/augur.git",
         "ssh_url": "git@github.com:chaoss/augur.git",
-        "clone_url": "https://github.com/chaoss/augur.git",
-        "svn_url": "https://github.com/chaoss/augur",
+        "clone_url": "https://github.com/chaoss/collectoss.git",
+        "svn_url": "https://github.com/chaoss/collectoss",
         "homepage": "http://augur.osshealth.io/",
         "size": 82004,
         "stargazers_count": 153,
@@ -6790,7 +6790,7 @@ COPY augur_data.repo (repo_id, repo_group_id, repo_git, repo_path, repo_name, re
 24441	10	https://github.com/operate-first/operate-first-twitter	\N	\N	2024-08-05 12:20:22		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-08-25 16:47:47
 24442	10	https://github.com/operate-first/blueprint	\N	\N	2024-08-05 12:20:22		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-08-25 16:47:47
 25445	10	https://github.com/chaoss/grimoirelab-perceval-opnfv	\N	\N	2024-08-05 12:20:22		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:39
-1	1	https://github.com/chaoss/augur	\N	\N	2024-08-05 12:20:22		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	data load	one	git	2021-06-05 18:41:14
+1	1	https://github.com/chaoss/collectoss	\N	\N	2024-08-05 12:20:22		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	data load	one	git	2021-06-05 18:41:14
 25430	10	https://github.com/SociallyCompute/update-test	\N	\N	2024-08-05 12:20:22		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	\N	\N	\N	\N
 25450	10	https://github.com/chaoss/grimoirelab-hatstall	\N	\N	2024-08-05 12:20:22		\N	\N	\N	\N	\N	Parent not available	\N	\N	0	CLI	1.0	Git	2021-04-17 21:40:42
 \.

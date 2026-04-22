@@ -57,4 +57,4 @@ Related Resources
 -----------------
 
 - https://github.com/oss-aspen/infra-ansible/
-- https://github.com/chaoss/augur-utilities/
+- https://github.com/chaoss/collectoss-utilities/

@@ -1,7 +1,7 @@
 #SPDX-License-Identifier: MIT
 __name__ = "augur"
 __slug__ = "augur"
-__url__ = "https://github.com/chaoss/augur"
+__url__ = "https://github.com/chaoss/collectoss"
 
 __short_description__ = "Python 3 package for free/libre and open-source software community metrics, models & data collection"
 

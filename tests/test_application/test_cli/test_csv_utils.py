@@ -20,9 +20,9 @@ class TestValidateGitUrl:
 
     def test_valid_github_url(self):
         """Test validation of valid GitHub URLs"""
-        assert validate_git_url("https://github.com/chaoss/augur")
-        assert validate_git_url("https://github.com/chaoss/augur.git")
-        assert validate_git_url("  https://github.com/chaoss/augur  ")  # with whitespace
+        assert validate_git_url("https://github.com/chaoss/collectoss")
+        assert validate_git_url("https://github.com/chaoss/collectoss.git")
+        assert validate_git_url("  https://github.com/chaoss/collectoss  ")  # with whitespace
 
     def test_valid_gitlab_url(self):
         """Test validation of valid GitLab URLs"""
@@ -38,7 +38,7 @@ class TestValidateGitUrl:
 
     def test_whitespace_handling(self):
         """Test that whitespace is properly stripped"""
-        assert validate_git_url("  https://github.com/chaoss/augur  ")
+        assert validate_git_url("  https://github.com/chaoss/collectoss  ")
 
 
 class TestValidatePositiveInt:
@@ -78,7 +78,7 @@ class TestDetectColumnOrder:
     def test_simple_column_detection(self):
         """Test basic column order detection"""
         sample_rows = [
-            ["https://github.com/chaoss/augur", "10"],
+            ["https://github.com/chaoss/collectoss", "10"],
             ["https://github.com/user/repo", "20"],
         ]
         validators = {
@@ -92,7 +92,7 @@ class TestDetectColumnOrder:
     def test_reversed_column_order(self):
         """Test detection with reversed column order"""
         sample_rows = [
-            ["10", "https://github.com/chaoss/augur"],
+            ["10", "https://github.com/chaoss/collectoss"],
             ["20", "https://github.com/user/repo"],
         ]
         validators = {
@@ -107,7 +107,7 @@ class TestDetectColumnOrder:
         """Test that detection uses 80% threshold correctly"""
         # 8 out of 10 rows valid (80% exactly)
         sample_rows = [
-            ["https://github.com/chaoss/augur", "10"],
+            ["https://github.com/chaoss/collectoss", "10"],
             ["https://github.com/user/repo1", "20"],
             ["https://github.com/user/repo2", "30"],
             ["https://github.com/user/repo3", "40"],
@@ -160,7 +160,7 @@ class TestProcessCsv:
     def test_csv_with_headers(self, tmp_path):
         """Test processing CSV file with headers"""
         csv_file = tmp_path / "test.csv"
-        csv_file.write_text("repo_url,repo_group_id\nhttps://github.com/chaoss/augur,10\nhttps://github.com/user/repo,20")
+        csv_file.write_text("repo_url,repo_group_id\nhttps://github.com/chaoss/collectoss,10\nhttps://github.com/user/repo,20")
 
         validators = {
             "repo_url": validate_git_url,
@@ -169,13 +169,13 @@ class TestProcessCsv:
 
         result = process_csv(str(csv_file), validators)
         assert len(result) == 2
-        assert result[0] == {"repo_url": "https://github.com/chaoss/augur", "repo_group_id": "10"}
+        assert result[0] == {"repo_url": "https://github.com/chaoss/collectoss", "repo_group_id": "10"}
         assert result[1] == {"repo_url": "https://github.com/user/repo", "repo_group_id": "20"}
 
     def test_csv_without_headers(self, tmp_path):
         """Test processing CSV file without headers"""
         csv_file = tmp_path / "test.csv"
-        csv_file.write_text("https://github.com/chaoss/augur,10\nhttps://github.com/user/repo,20")
+        csv_file.write_text("https://github.com/chaoss/collectoss,10\nhttps://github.com/user/repo,20")
 
         validators = {
             "repo_url": validate_git_url,
@@ -184,13 +184,13 @@ class TestProcessCsv:
 
         result = process_csv(str(csv_file), validators)
         assert len(result) == 2
-        assert result[0] == {"repo_url": "https://github.com/chaoss/augur", "repo_group_id": "10"}
+        assert result[0] == {"repo_url": "https://github.com/chaoss/collectoss", "repo_group_id": "10"}
         assert result[1] == {"repo_url": "https://github.com/user/repo", "repo_group_id": "20"}
 
     def test_csv_with_different_column_order(self, tmp_path):
         """Test processing CSV with columns in different order"""
         csv_file = tmp_path / "test.csv"
-        csv_file.write_text("repo_group_id,repo_url\n10,https://github.com/chaoss/augur")
+        csv_file.write_text("repo_group_id,repo_url\n10,https://github.com/chaoss/collectoss")
 
         validators = {
             "repo_url": validate_git_url,
@@ -199,7 +199,7 @@ class TestProcessCsv:
 
         result = process_csv(str(csv_file), validators)
         assert len(result) == 1
-        assert result[0] == {"repo_url": "https://github.com/chaoss/augur", "repo_group_id": "10"}
+        assert result[0] == {"repo_url": "https://github.com/chaoss/collectoss", "repo_group_id": "10"}
 
     def test_empty_csv_raises_error(self, tmp_path):
         """Test that empty CSV file raises ValueError"""
@@ -214,7 +214,7 @@ class TestProcessCsv:
     def test_file_size_limit_with_mock(self, tmp_path):
         """Test file size limit enforcement using mock"""
         csv_file = tmp_path / "test.csv"
-        csv_file.write_text("repo_url,repo_group_id\nhttps://github.com/chaoss/augur,10")
+        csv_file.write_text("repo_url,repo_group_id\nhttps://github.com/chaoss/collectoss,10")
 
         validators = {
             "repo_url": validate_git_url,
@@ -242,7 +242,7 @@ class TestProcessCsv:
     def test_whitespace_in_values(self, tmp_path):
         """Test that whitespace in values is properly stripped"""
         csv_file = tmp_path / "test.csv"
-        csv_file.write_text("repo_url,repo_group_id\n  https://github.com/chaoss/augur  ,  10  ")
+        csv_file.write_text("repo_url,repo_group_id\n  https://github.com/chaoss/collectoss  ,  10  ")
 
         validators = {
             "repo_url": validate_git_url,
@@ -250,7 +250,7 @@ class TestProcessCsv:
         }
 
         result = process_csv(str(csv_file), validators)
-        assert result[0] == {"repo_url": "https://github.com/chaoss/augur", "repo_group_id": "10"}
+        assert result[0] == {"repo_url": "https://github.com/chaoss/collectoss", "repo_group_id": "10"}
 
 
 class TestProcessRepoCsv:
@@ -259,17 +259,17 @@ class TestProcessRepoCsv:
     def test_process_valid_repo_csv(self, tmp_path):
         """Test processing a valid repository CSV"""
         csv_file = tmp_path / "repos.csv"
-        csv_file.write_text("repo_url,repo_group_id\nhttps://github.com/chaoss/augur,10")
+        csv_file.write_text("repo_url,repo_group_id\nhttps://github.com/chaoss/collectoss,10")
 
         result = process_repo_csv(str(csv_file))
         assert len(result) == 1
-        assert result[0]["repo_url"] == "https://github.com/chaoss/augur"
+        assert result[0]["repo_url"] == "https://github.com/chaoss/collectoss"
         assert result[0]["repo_group_id"] == "10"
 
     def test_process_repo_csv_without_headers(self, tmp_path):
         """Test processing repository CSV without headers"""
         csv_file = tmp_path / "repos.csv"
-        csv_file.write_text("https://github.com/chaoss/augur,10\nhttps://github.com/user/repo,20")
+        csv_file.write_text("https://github.com/chaoss/collectoss,10\nhttps://github.com/user/repo,20")
 
         result = process_repo_csv(str(csv_file))
         assert len(result) == 2
@@ -316,7 +316,7 @@ class TestEdgeCases:
     def test_single_row_csv(self, tmp_path):
         """Test processing CSV with single row"""
         csv_file = tmp_path / "single.csv"
-        csv_file.write_text("https://github.com/chaoss/augur,10")
+        csv_file.write_text("https://github.com/chaoss/collectoss,10")
 
         validators = {
             "repo_url": validate_git_url,
@@ -329,7 +329,7 @@ class TestEdgeCases:
     def test_csv_with_extra_whitespace_in_headers(self, tmp_path):
         """Test CSV with whitespace in header names"""
         csv_file = tmp_path / "test.csv"
-        csv_file.write_text("  repo_url  ,  repo_group_id  \nhttps://github.com/chaoss/augur,10")
+        csv_file.write_text("  repo_url  ,  repo_group_id  \nhttps://github.com/chaoss/collectoss,10")
 
         validators = {
             "repo_url": validate_git_url,
@@ -338,7 +338,7 @@ class TestEdgeCases:
 
         result = process_csv(str(csv_file), validators)
         assert len(result) == 1
-        assert result[0]["repo_url"] == "https://github.com/chaoss/augur"
+        assert result[0]["repo_url"] == "https://github.com/chaoss/collectoss"
 
     def test_many_rows_csv(self, tmp_path):
         """Test processing CSV with many rows"""

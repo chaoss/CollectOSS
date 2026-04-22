@@ -221,7 +221,7 @@ pull_request_meta || pull_request_repo || pull_request_review_message_ref || pul
 Releases
 --------
 
- Github declared software releases or release tags. For example: https://github.com/chaoss/augur/releases
+ Github declared software releases or release tags. For example: https://github.com/chaoss/collectoss/releases
 
         * Task:
 

@@ -29,7 +29,7 @@ def collect_issues(repo_git: str, full_collection: bool) -> int:
     related labels, assignees, and contributors.
 
     Args:
-        repo_git: Full git URL (e.g., 'https://github.com/chaoss/augur')
+        repo_git: Full git URL (e.g., 'https://github.com/chaoss/collectoss')
         full_collection: True for all historical data, False for incremental (last collection - 2 days)
 
     Returns:
