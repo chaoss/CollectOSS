@@ -11,16 +11,16 @@ default:
 	@ echo "    docs-view                       Generates the documentation, then opens it for local viewing"
 
 lint:
-	@ pylint augur
+	@ pylint collcetoss
 lint-count:
-	@ pylint augur | wc -l
+	@ pylint collcetoss | wc -l
 lint-docs:
-	@ pylint augur | grep docstring
+	@ pylint collcetoss | grep docstring
 lint-docs-missing:
-	@ pylint augur | grep docstring | wc -l
+	@ pylint collcetoss | grep docstring | wc -l
 
 lint-github-tasks-count:
-	@ pylint augur | grep collectoss/tasks/github/ | wc -l
+	@ pylint collcetoss | grep collectoss/tasks/github/ | wc -l
 
 #
 # Testing
