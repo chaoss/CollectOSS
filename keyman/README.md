@@ -97,7 +97,7 @@ if pub.wait(timeout_seconds=30, republish=True):
 
 ## Redis Channels
 
-**`augur-oauth-announce`** - Admin operations (PUBLISH, UNPUBLISH, SHUTDOWN)
+**`collectoss-oauth-announce`** - Admin operations (PUBLISH, UNPUBLISH, SHUTDOWN)
 **`worker-oath-request`** - Worker operations (NEW, EXPIRE, INVALIDATE)
 
 Responses sent to `{channel}-{process_id}`

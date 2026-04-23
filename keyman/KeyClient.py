@@ -30,7 +30,7 @@ class KeyClient:
         
         # Load channel names and IDs from the spec
         for channel in spec["channels"]:
-            # IE: self.ANNOUNCE = "augur-oauth-announce"
+            # IE: self.ANNOUNCE = "collectoss-oauth-announce"
             setattr(self, channel["name"], channel["id"])
             
         if not platform:
@@ -197,7 +197,7 @@ class KeyPublisher:
     def __init__(self) -> None:
         # Load channel names and IDs from the spec
         for channel in spec["channels"]:
-            # IE: self.ANNOUNCE = "augur-oauth-announce"
+            # IE: self.ANNOUNCE = "collectoss-oauth-announce"
             setattr(self, channel["name"], channel["id"])
         self.conn = get_redis_connection()
         self.id = getpid()

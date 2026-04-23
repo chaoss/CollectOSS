@@ -50,7 +50,7 @@ class KeyOrchestrator:
 
         # Load channel names and IDs from the spec
         for channel in spec["channels"]:
-            # IE: self.ANNOUNCE = "augur-oauth-announce"
+            # IE: self.ANNOUNCE = "collectoss-oauth-announce"
             setattr(self, channel["name"], channel["id"])
             self.stdin.subscribe(channel["id"])
 
