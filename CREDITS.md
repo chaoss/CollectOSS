@@ -15,6 +15,10 @@ This file contains full attribution lists for:
 ## Augur Contributors
 The list of contributors to Augur, upon which the CollectOSS codebase is based, is included below
 
+Augur has been funded through the Alfred P. Sloan Foundation, Mozilla, The Reynolds Journalism Institute, contributions from VMWare, Red Hat Software, Grace Hopper's Open Source Day, GitHub, Microsoft, Twitter, Adobe, the Gluster Project, Open Source Summit (NA/Europe), and the Linux Foundation Compliance Summit.
+
+Significant design contributors include Kate Stewart, Dawn Foster, Duane O'Brien, Remy Decausemaker, Google Summer of Code Students, and others. 
+
 ### Maintainers
 - Sean P. Goggins — [@sgoggins](https://github.com/sgoggins)
 - Adrian Edwards — [@MoralCode](https://github.com/MoralCode)
