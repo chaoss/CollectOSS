@@ -8,14 +8,6 @@ This file contains full attribution lists for:
 - Google Summer of Code participants (by year)
 
 ---
-## Current Maintainers
-- Sean P. Goggins — [@sgoggins](https://github.com/sgoggins)
-- Adrian Edwards — [@MoralCode](https://github.com/MoralCode)
-- Andrew Brain — [@ABrain7710](https://github.com/ABrain7710)
-- Isaac Milarsky — [@IsaacMilarky](https://github.com/IsaacMilarky)
-- John McGinness — [@Ulincys](https://github.com/Ulincsys) 
-
----
 
 ## Founding Maintainers
 - Derek Howard — [@howderek](https://github.com/howderek)
