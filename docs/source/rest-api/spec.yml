@@ -5,7 +5,7 @@ externalDocs:
   url: https://chaoss.community/kb-metrics-and-metrics-models/
 host: ai.chaoss.io
 info:
-  title: Augur REST API
+  title: CollectOSS REST API
   version: 0.60.0
 openapi: 3.1.0
 paths:
@@ -98,8 +98,8 @@ paths:
         - utility
   /repos/:id:
     get:
-      description: Get a downloaded repo by its ID in Augur. The schema block below
-        says it is an array, but it is not.
+      description: Get a downloaded repo by its ID in CollectOSS. The schema block
+        below says it is an array, but it is not.
       operationId: Get Repo By ID
       responses:
         "200":
@@ -336,11 +336,12 @@ paths:
   #risk endpoints
   /metadata/repo_info:
     get:
-      description: "Returns the metadata about all repositories in an Augur instance,
-        using information from a git platform (GitHub, GitLab, etc.). Each
-        record includes the default branchttps://github.com/chaoss/collectoss,
-        forks, stars, watchers, and committers. Also includes metadata about
-        current repository issue and pull request status and counts."
+      description: "Returns the metadata about all repositories in a CollectOSS
+        instance, using information from a git platform (GitHub, GitLab, etc.).
+        Each record includes the default
+        branch, forks, stars, watchers, and
+        committers. Also includes metadata about current repository issue and
+        pull request status and counts."
       operationId: Activity Metadata (Repo)
       responses:
         "200":
@@ -405,11 +406,9 @@ paths:
   /metadata/contributions_count:
     get:
       description: "Returns a list of repositories contributed to by all the
-        contributors in an
-        Augurhttps://ghttps://github.com/chaoss/collectossctoss
-        Instancehttps://github.com/chaoss/collectossctoss a platform, *not*
-        merely those repositories in the Augur Instance. Numerical totals
-        represent total CONTRIBUTIONS."
+        contributors in a CollectOSS Instance: INCLUDING all repositories on a
+        platform, *not* merely those repositories in the CollectOSS Instance.
+        Numerical totals represent total CONTRIBUTIONS."
       externalDocs:
         description: CHAOSS Metric Definition
         url: https://chaoss.community/kb/metric-contributors/
@@ -432,8 +431,8 @@ paths:
   /metadata/contributors_count:
     get:
       description: "Returns a list of repositories contributed to by all the
-        contributors in an Augur Instance: INCLUDING all repositories on a
-        platform, *not* merely those repositories in the Augur Instance.
+        contributors in a CollectOSS Instance: INCLUDING all repositories on a
+        platform, *not* merely those repositories in the CollectOSS Instance.
         Numerical totals represent total CONTRIBUTORS."
       externalDocs:
         description: CHAOSS Metric Definition
@@ -1340,7 +1339,7 @@ paths:
         - experimental
   /repo-groups/:repo_id/annual-commit-count-ranked-by-repo-in-repo-group:
     get:
-      description: "This is an Augur-specific metric. We are currently working to
+      description: "This is a CollectOSS-specific metric. We are currently working to
         define these more formally. "
       operationId: Annual Commit Count Ranked by Repo in Repo Group (Repo)
       parameters:
@@ -1380,7 +1379,7 @@ paths:
         - experimental
   /repo-groups/:repo_group_id/annual-lines-of-code-count-ranked-by-new-repo-in-repo-group:
     get:
-      description: "This is an Augur-specific metric. We are currently working to
+      description: "This is a CollectOSS-specific metric. We are currently working to
         define these more formally. "
       operationId: Annual Lines of Code Ranked by New Repo in Repo Group (Repo Group)
       parameters:
@@ -1420,7 +1419,7 @@ paths:
         - experimental
   /repo-groups/:repo_id/annual-lines-of-code-count-ranked-by-new-repo-in-repo-group:
     get:
-      description: "This is an Augur-specific metric. We are currently working to
+      description: "This is a CollectOSS-specific metric. We are currently working to
         define these more formally. "
       operationId: Annual Lines of Code Ranked by New Repo in Repo Group (Repo)
       parameters:
@@ -1460,7 +1459,7 @@ paths:
         - experimental
   /repo-groups/:repo_group_id/annual-lines-of-code-count-ranked-by-repo-in-repo-group:
     get:
-      description: "This is an Augur-specific metric. We are currently working to
+      description: "This is a CollectOSS-specific metric. We are currently working to
         define these more formally. "
       operationId: Annual Lines of Code Ranked by Repo in Repo Group (Repo Group)
       parameters:
@@ -1500,7 +1499,7 @@ paths:
         - experimental
   /repo-groups/:repo_id/annual-lines-of-code-count-ranked-by-repo-in-repo-group:
     get:
-      description: "This is an Augur-specific metric. We are currently working to
+      description: "This is a CollectOSS-specific metric. We are currently working to
         define these more formally. "
       operationId: Annual Lines of Code Ranked by Repo in Repo Group (Repo)
       parameters:
@@ -5396,7 +5395,7 @@ paths:
         - visualizations
   /complexity/project_lines:
     get:
-      description: "Returns project line data for all repositories in an Augur
+      description: "Returns project line data for all repositories in a CollectOSS
         instance, using information from a git platform (GitHub, GitLab, etc.).
         Each record includes the total and average number of lines in the
         project repository."
@@ -5436,7 +5435,7 @@ paths:
   /complexity/project_file_complexity:
     get:
       description: "Returns project file complexity data for all repositories in an
-        Augur instance, using information from a git platform (GitHub, GitLab,
+        CollectOSS instance, using information from a git platform (GitHub, GitLab,
         etc.). Each record includes the total and average file complexity of the
         project repository."
       operationId: File Complexity (repo)
@@ -5466,7 +5465,7 @@ paths:
         - complexity
   /complexity/project_blank_lines:
     get:
-      description: "Returns project blank line data for all repositories in an Augur
+      description: "Returns project blank line data for all repositories in a CollectOSS
         instance, using information from a git platform (GitHub, GitLab, etc.).
         Each record includes the total and average number of blank lines in the
         project repository."
@@ -5505,7 +5504,7 @@ paths:
         - complexity
   /complexity/project_comment_lines:
     get:
-      description: "Returns project comment line data for all repositories in an Augur
+      description: "Returns project comment line data for all repositories in a CollectOSS
         instance, using information from a git platform (GitHub, GitLab, etc.).
         Each record includes the total and average number of comment lines in
         the project repository."
@@ -5544,7 +5543,7 @@ paths:
         - complexity
   /complexity/project_files:
     get:
-      description: "Returns project file data for all repositories in an Augur
+      description: "Returns project file data for all repositories in a CollectOSS
         instance, using information from a git platform (GitHub, GitLab, etc.).
         Each record includes the total number of files in the project
         repository."
@@ -5572,7 +5571,7 @@ paths:
         - complexity
   /complexity/project_languages:
     get:
-      description: "Returns project language data for all repositories in an Augur
+      description: "Returns project language data for all repositories in a CollectOSS
         instance, using information from a git platform (GitHub, GitLab, etc.).
         Each record includes the lines and files of a language in a repository."
       operationId: Project Languages (repo)
@@ -5700,7 +5699,7 @@ paths:
 
   /user/session/generate:
     post:
-      description: The final step in the Augur Oauth authorization process. The Client
+      description: The final step in the CollectOSS Oauth authorization process. The Client
         Application uses this endpoint to exchange a temporary authorization
         code (generated in the previous authorization step) with a valid Bearer
         token.
