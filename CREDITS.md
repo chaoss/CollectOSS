@@ -1,11 +1,6 @@
-# Contributors & Participants
+# Credits
 
-This file contains full attribution lists for:
-- Current maintainers
-- Founding Maintainers
-- Former maintainers
-- Contributors
-- Google Summer of Code participants (by year)
+This file aims to provide credit to anyone who has contributed to the CollectOSS project.
 
 
 
