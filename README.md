@@ -89,6 +89,7 @@ Copyright © 2026 University of Missouri, Sean Goggins, and Derek Howard.
 CollectOSS is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the [LICENSE](LICENSE) file for more details.
 
 
-## Maintainers & Contributors
 
-Refer to [CONTRIBUTORS.md](./CONTRIBUTORS.md) for detailed information about project maintainers, contributors, and GSoC participants.
+## Credits
+
+Refer to [CREDITS.md](./CREDITS.md) for detailed information about the people and funding that have helped make this project possible.
