@@ -6,7 +6,6 @@ We currently provide security updates for the latest tagged release of CollectOS
 
 Older versions are not actively supported. In exceptional circumstances, maintainers may choose to backport fixes on a case-by-case basis.
 
-
 ## Reporting a Vulnerability
 
 **IMPORTANT: Do not report security vulnerabilities using public GitHub Issues or public discussions.**
@@ -25,3 +24,7 @@ We do our best to follow responsible disclosure practices:
 - **No Public Issues**: Please avoid creating public GitHub issues pull requests, branches, or forks for developing fixes to security vulnerabilities unless told otherwise. All of these can leak the existence of the vulnerability before it is fully fixed.
 
 Thank you for helping keep CollectOSS secure!  
+
+## Security Response Committee
+
+The current Security Response Committee consists of the [CollectOSS Maintainers](./MAINTAINERS.md)
