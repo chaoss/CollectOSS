@@ -28,7 +28,7 @@ from collectoss.application.cli._cli_util import _broadcast_signal_to_processes,
 
 from keyman.KeyClient import KeyPublisher
 
-logger = SystemLogger("augur", reset_logfiles=False).get_logger()
+logger = SystemLogger("collectoss", reset_logfiles=False).get_logger()
 
 @click.group('server', short_help='Commands for controlling the backend API server & data collection workers')
 @click.pass_context
@@ -104,7 +104,7 @@ def start(ctx, development):
 
     contributor_breadth_model.si().apply_async()
 
-    # start cloning repos when augur starts
+    # start cloning repos when collectoss starts
     clone_repos.si().apply_async()
 
     collection_monitor.si().apply_async()
@@ -240,7 +240,7 @@ def is_collection_process(process):
     if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in command:
         if process.pid != os.getpid():
             
-            if "augurbackendcollection" in command  or "celery_app.celery_appbeat" in command:
+            if "collectossbackendcollection" in command  or "celery_app.celery_appbeat" in command:
                 return True 
             if "collectoss.tasks.init.celery_app.celery_app" in command:
                 
@@ -256,7 +256,7 @@ def is_collection_process(process):
 
 def stop_processes(stop_signal, logger_instance, engine):
     """
-    Stops augur with the given signal, 
+    Stops collectoss with the given signal, 
     and cleans up collection if it was running
     """
 

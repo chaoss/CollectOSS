@@ -219,10 +219,10 @@ function create_config() {
 
     #special case for docker entrypoint
     if [ $target = "docker" ]; then
-      cmd=( augur config init --github-api-key $github_api_key --gitlab-api-key $gitlab_api_key --facade-repo-directory $facade_repo_directory --redis-conn-string $redis_conn_string --rabbitmq-conn-string $rabbitmq_conn_string --logs-directory /logs)
+      cmd=( collectoss config init --github-api-key $github_api_key --gitlab-api-key $gitlab_api_key --facade-repo-directory $facade_repo_directory --redis-conn-string $redis_conn_string --rabbitmq-conn-string $rabbitmq_conn_string --logs-directory /logs)
       echo "init with redis $redis_conn_string"
     else
-      cmd=( augur config init --github-api-key $github_api_key --gitlab-api-key $gitlab_api_key --facade-repo-directory $facade_repo_directory --rabbitmq-conn-string $rabbitmq_conn_string )
+      cmd=( collectoss config init --github-api-key $github_api_key --gitlab-api-key $gitlab_api_key --facade-repo-directory $facade_repo_directory --rabbitmq-conn-string $rabbitmq_conn_string )
     fi
 
     #Create and cache credentials for github and gitlab

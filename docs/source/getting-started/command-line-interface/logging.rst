@@ -14,7 +14,7 @@ Prints the location of the directory to which Augur is configured to write its l
 Example usage::
 
   # to print the logs directory
-  $ uv run augur logging directory
+  $ uv run collectoss logging directory
 
   # successful output looks like:
   > /Users/carter/projects/work/collectoss/logs/
@@ -27,7 +27,7 @@ Prints the last ``n`` lines of each ``.log`` and ``.err`` file in the logs direc
 Example usage::
 
   # to print the last 20 lines of each log file
-  $ uv run augur logging tail
+  $ uv run collectoss logging tail
 
   # successful output looks like:
   > ********** Logfile: augur.log

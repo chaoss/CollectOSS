@@ -66,7 +66,7 @@ def add_repos(ctx: click.Context, filename: str) -> None:
 
     Note:
         If you want to add an entire GitHub organization, refer to the
-        command: augur db add-github-org
+        command: collectoss db add-github-org
     """
     from collectoss.tasks.github.util.github_task_session import GithubTaskSession
     from collectoss.util.repo_load_controller import RepoLoadController

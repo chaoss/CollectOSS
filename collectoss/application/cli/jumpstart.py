@@ -11,7 +11,7 @@ def cli(ctx):
     if ctx.invoked_subcommand is None:
         p = check_running()
         if not p:
-            click.echo("Jumpstart is not running. Start it with: augur jumpstart run")
+            click.echo("Jumpstart is not running. Start it with: collectoss jumpstart run")
             return
 
         click.echo(f"Connecting to Jumpstart: [{p.pid}]")

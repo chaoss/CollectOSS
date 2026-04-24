@@ -26,7 +26,7 @@ class CLIMultiCommand(click.MultiCommand):
         return rv
 
     def get_command(self, ctx, name):
-        cmdfile = "augur/application/cli" / Path(name + ".py")
+        cmdfile = Path(self.__commands_folder()).joinpath(name + ".py")
 
         # Check that the command exists before importing
         if not cmdfile.is_file():

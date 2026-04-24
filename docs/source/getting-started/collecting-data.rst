@@ -16,11 +16,11 @@ Now that you’ve installed Augur’s application server, it’s time to configu
     # Terminal Window 3
 
     # To Start Augur:
-    (uv run nohup augur backend start)
+    (uv run nohup collectoss backend start)
 
     # To Stop Augur:
-    uv run augur backend stop
-    uv run augur backend kill
+    uv run collectoss backend stop
+    uv run collectoss backend kill
 
 Now, here's a ton of brain-splitting detail about celery collection. There are 2 pieces to data collection with Augur: the celery worker processes, and the job messages passed through rabbitmq. The jobs to collect are determined by a monitor process started through the cli that starts the rest of augur. The monitor process generates the jobs messages to send to rabbitmq through the collection_status table that informs the status of jobs that have yet to be run. The celery collection workers can then accept these jobs, after which they will use the information provided in the job to find the repositories in question and collect the requested data.
 
@@ -158,7 +158,7 @@ Congratulations! At this point you (hopefully) have a fully functioning and conf
 
 After you've loaded your repos, you're ready for your first collection run. We recommend running only the default jobs first to gather the initial data.
 
-You can now run Augur and start the data collection by issuing the ``augur backend start`` command in the root ``augur`` directory. All your logs (including worker logs and error files) will be saved to a ``logs/`` subdirectory in that same folder, but this can be customized - more on that and other logging utilities `in the development guide <../development-guide/logging.html>`_.
+You can now run Augur and start the data collection by issuing the ``collectoss backend start`` command in the root ``augur`` directory. All your logs (including worker logs and error files) will be saved to a ``logs/`` subdirectory in that same folder, but this can be customized - more on that and other logging utilities `in the development guide <../development-guide/logging.html>`_.
 
 Once you've finished the initial data collection, we suggest then running the ``value_worker`` (if you have it installed) and the ``insight_worker``. This is because the ``value_worker`` depends on the source files of the repositories cloned by the ``facade_worker``, and the ``insight_worker`` uses the data from all the other workers to identify anomalies in the data by by performing statistical analysis on the data returned from Augur's metrics API.
 

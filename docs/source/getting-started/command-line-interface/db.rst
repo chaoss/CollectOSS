@@ -2,10 +2,10 @@
 Database Commands
 ====================
 
-``augur db``
+``collectoss db``
 =============
 
-The collection of ``augur db`` commands is for interacting with the database.
+The collection of ``collectoss db`` commands is for interacting with the database.
 
 ``add-repo-groups``
 --------------------
@@ -25,7 +25,7 @@ Example usage\:
 .. code-block:: bash
 
   # to add new repos to the database
-  $ uv run augur db add-repo-groups repo_groups.csv
+  $ uv run collectoss db add-repo-groups repo_groups.csv
 
   # contents of repo_groups.csv
   10,Repo Group 1
@@ -45,7 +45,7 @@ Example usage\:
 .. code-block:: bash
 
   # to retrieve the repo groups
-  $ uv run augur db get-repo-groups
+  $ uv run collectoss db get-repo-groups
 
   # successful output looks like:
   >    repo_group_id             rg_name                                     rg_description
@@ -71,7 +71,7 @@ Each pair of values should be on its own line (indicated by the ...), without qu
 
 .. note::
 
-  If you don't know what ``repo_group_id`` to use, run the ``augur db get-repo-groups`` command to view the repo groups that are currently in your DB; unless you've deleted it, there should be a default one that you can use.
+  If you don't know what ``repo_group_id`` to use, run the ``collectoss db get-repo-groups`` command to view the repo groups that are currently in your DB; unless you've deleted it, there should be a default one that you can use.
 
 Example usage\:
 
@@ -88,7 +88,7 @@ Example usage\:
   https://github.com/chaoss/wg-app-ecosystem.git,20
 
   # to add repos to the database
-  $ augur db add-repos repos.csv
+  $ collectoss db add-repos repos.csv
 
   # successful output looks like
   > CLI: [db.add_repos] [INFO] Inserting repo with Git URL `https://github.com/chaoss/collectoss.git` into repo group 10
@@ -110,7 +110,7 @@ Example usage\:
 .. code-block:: bash
 
   # to generate a key
-  $ uv run augur db generate-api-key
+  $ uv run collectoss db generate-api-key
 
   # successful output looks like (this will be an actual key):
   > CLI: [db.update_api_key] [INFO] Updated Augur API key to: new_key_abc_123
@@ -126,7 +126,7 @@ Example usage\:
 .. code-block:: bash
 
   # to retrieve the key
-  $ uv run augur db get-api-key
+  $ uv run collectoss db get-api-key
 
   # successful output looks like (this will be an actual key):
   > existing_key_def_456
@@ -141,7 +141,7 @@ Example usage\:
 .. code-block:: bash
 
   # to return the current database version
-  $ uv run augur db print-db-version
+  $ uv run collectoss db print-db-version
 
   # successful output looks like:
   > 1
@@ -156,7 +156,7 @@ Example usage\:
 .. code-block:: bash
 
   # to upgrade the user's database to the current version
-  $ uv run augur db upgrade-db-version
+  $ uv run collectoss db upgrade-db-version
 
   # successful output if your DB is already up to date
   > CLI: [db.check_pgpass_credentials] [INFO] Credentials found in $HOME/.pgpass
@@ -190,7 +190,7 @@ Example usage\:
 .. code-block:: bash
 
   # to create the schema
-  $ uv run augur db create-schema
+  $ uv run collectoss db create-schema
 
 .. note::
   If this runs successfully, you should see a bunch of schema creation commands fly by pretty fast. If everything worked you should see: ``update "augur_operations"."augur_settings" set value = xx where setting = 'augur_data_version';`` at the end.

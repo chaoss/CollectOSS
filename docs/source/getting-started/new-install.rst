@@ -135,9 +135,9 @@ instance. You can accomplish this by running the below commands:
 
    sudo rabbitmq-plugins enable rabbitmq_management &&
    sudo rabbitmqctl add_user augur password123 &&
-   sudo rabbitmqctl add_vhost augur_vhost &&
+   sudo rabbitmqctl add_vhost collectoss_vhost &&
    sudo rabbitmqctl set_user_tags augur augurTag administrator &&
-   sudo rabbitmqctl set_permissions -p augur_vhost augur ".*" ".*" ".*"
+   sudo rabbitmqctl set_permissions -p collectoss_vhost augur ".*" ".*" ".*"
 
 -  We need rabbitmq_management so we can purge our own queues with an
    API call
@@ -157,7 +157,7 @@ RabbitMQ’s server can then be started from systemd:
 If your setup of rabbitmq is successful your broker url should look like
 this:
 
-**broker_url = ``amqp://augur:password123@localhost:5672/augur_vhost``**
+**broker_url = ``amqp://augur:password123@localhost:5672/collectoss_vhost``**
 
 RabbitMQ Developer Note:
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -455,9 +455,9 @@ utility may change these characteristics.
 Augur Commands
 --------------
 
-To access command line options, use ``uv run augur --help``. To load repos from
+To access command line options, use ``uv run collectoss --help``. To load repos from
 GitHub organizations prior to collection, or in other ways, the direct
-route is ``uv run augur db --help``.
+route is ``uv run collectoss db --help``.
 
 Start a Flower Dashboard, which you can use to monitor progress, and
 report any failed processes as issues on the Augur GitHub site. The
@@ -478,7 +478,7 @@ disable Hyper-V, and afterward AVX should pass to the VM.
 Starting your Augur Instance
 ----------------------------
 
-Start Augur: ``(uv run nohup augur backend start &)``
+Start Augur: ``(uv run nohup collectoss backend start &)``
 
 When data collection is complete you will see only a single task running
 in your flower Dashboard.
@@ -497,8 +497,8 @@ change that in augur_operations.config for OSX)
 Stopping your Augur Instance
 ----------------------------
 
-You can stop augur with ``uv run augur backend stop``, followed by
-``uv run augur backend kill``. We recommend waiting 5 minutes between commands
+You can stop augur with ``uv run collectoss backend stop``, followed by
+``uv run collectoss backend kill``. We recommend waiting 5 minutes between commands
 so Augur can shutdown more gently. There is no issue with data integrity
 if you issue them seconds apart, its just that stopping is nicer than
 killing.

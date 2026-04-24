@@ -8,7 +8,7 @@ from collectoss.tasks.init.redis_connection import get_redis_connection
 from collectoss.application.logs import SystemLogger
 from collectoss.application.cli import test_connection, test_db_connection 
 
-logger = SystemLogger("augur").get_logger()
+logger = SystemLogger("collectoss").get_logger()
 
 @click.group('redis', short_help='Commands for managing redis cache')
 def cli():

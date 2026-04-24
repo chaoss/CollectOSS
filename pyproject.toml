@@ -106,7 +106,7 @@ docs = [
 ]
 
 [project.scripts]
-augur = "collectoss.application.cli._multicommand:run"
+collectoss = "collectoss.application.cli._multicommand:run"
 
 [project.urls]
 Homepage = "https://github.com/chaoss/collectoss"

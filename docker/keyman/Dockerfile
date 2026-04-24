@@ -10,11 +10,11 @@ RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir redis==4.3.3
 
 ENV KEYMAN_DOCKER=1
-ENV PYTHONPATH="${PYTHONPATH}:/augur"
+ENV PYTHONPATH="${PYTHONPATH}:/collectoss"
 # Ensure Python output is sent straight to terminal (e.g. for Docker logs)
 ENV PYTHONUMBUFFERED=1
 
-WORKDIR /augur
+WORKDIR /collectoss
 COPY ./keyman keyman/
 RUN find . -type d -exec chmod u=rwx,go=rx {} + && find . -type f -exec chmod u=rw,go=r {} +
 

@@ -18,7 +18,7 @@ from collectoss.application.cli import test_connection, test_db_connection, with
 from collectoss.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
 from collectoss.application.db.lib import get_value
 
-logger = SystemLogger("augur", reset_logfiles=False).get_logger()
+logger = SystemLogger("collectoss", reset_logfiles=False).get_logger()
 
 @click.group('api', short_help='Commands for controlling the backend API server')
 @click.pass_context
@@ -52,7 +52,7 @@ def start(ctx, development, port):
     try:
         gunicorn_location = os.getcwd() + "/collectoss/api/gunicorn_conf.py"
     except FileNotFoundError:
-        logger.error("\n\nPlease run augur commands in the root directory\n\n")
+        logger.error("\n\nPlease run collectoss commands in the root directory\n\n")
 
     host = get_value("Server", "host")
 
@@ -111,7 +111,7 @@ def processes():
 
 def stop_processes(signal, logger, engine):
     """
-    Stops augur with the given signal, 
+    Stops collectoss with the given signal, 
     and cleans up the api
     """
 
@@ -147,7 +147,7 @@ def is_api_process(process):
         if process.pid != os.getpid():
             
             if ("collectoss.api.server:app" in command or 
-                "augurbackendapi" in command or 
+                "collectossbackendapi" in command or 
                ("collectoss.tasks.init.celery_app.celery_app" in command and "frontend" in command)):
                 return True
             

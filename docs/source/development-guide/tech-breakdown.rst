@@ -100,7 +100,7 @@ Augur Commands
 
 To access command line options, use ``augur --help``. To load repos from
 GitHub organizations prior to collection, or in other ways, the direct
-route is ``augur db --help``.
+route is ``collectoss db --help``.
 
 Start a Flower Dashboard, which you can use to monitor progress, and
 report any failed processes as issues on the Augur GitHub site. The
@@ -115,7 +115,7 @@ in a browser with http://servername-or-ip:8400 in the example above
 Starting your Augur Instance
 ----------------------------
 
-Start Augur: ``(nohup augur backend start &)``
+Start Augur: ``(nohup collectoss backend start &)``
 
 When data collection is complete you will see only a single task running
 in your flower Dashboard.
@@ -134,8 +134,8 @@ change that in augur_operations.config for OSX)
 Stopping your Augur Instance
 ----------------------------
 
-You can stop augur with ``augur backend stop``, followed by
-``augur backend kill``. We recommend waiting 5 minutes between commands
+You can stop augur with ``collectoss backend stop``, followed by
+``collectoss backend kill``. We recommend waiting 5 minutes between commands
 so Augur can shutdown more gently. There is no issue with data integrity
 if you issue them seconds apart, its just that stopping is nicer than
 killing.

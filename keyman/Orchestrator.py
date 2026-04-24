@@ -10,7 +10,7 @@ if os.environ.get("KEYMAN_DOCKER"):
     import redis
     import logging
 
-    sys.path.append("/augur")
+    sys.path.append("/collectoss")
 
     conn = redis.Redis.from_url(os.environ.get("REDIS_CONN_STRING"))
 
