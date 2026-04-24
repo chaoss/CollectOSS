@@ -728,7 +728,7 @@ app.add_url_rule(f'/{app.api_version}/graphql', view_func=AuthenticatedGraphQLVi
 from .routes import *
 
 # import frontend routes
-from .view.augur_view import *
+from .view.api_view import *
 from .view.routes import *
 from .view.api import *
 
