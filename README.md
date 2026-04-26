@@ -17,8 +17,15 @@ CollectOSS is a Python project distributed via container images and aims to supp
 
 Our `main` branch is our development branch that all pull requests should be based on. The `release` branch is where we merge and tag new versions and is the branch we recommend using in production. You can see tagged versions and corresponding release notes on the [releases page](https://github.com/chaoss/collectoss/releases).
 
+## Installation
+Basic initial setup can be completed in a few minutes as follows:
 
+1. Clone the repository - `git clone https://github.com/chaoss/collectoss`
+2. (optional) if you want to build the development version, run `docker compose build`
+3. Copy the `environment.txt` file to a new file called `.env` and fill in values for the required variables
+4. Run `docker compose up` to start the containers
 
+Check out the [CollectOSS Documentation](https://collectoss.readthedocs.io) for more detailed setup instructions and troubleshooting steps.
 
 
 ## Collecting Data
