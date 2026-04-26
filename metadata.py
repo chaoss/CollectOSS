@@ -5,8 +5,8 @@ __url__ = "https://github.com/chaoss/collectoss"
 
 __short_description__ = "Python 3 package for free/libre and open-source software community metrics, models & data collection"
 
-__version__ = "0.92.0"
-__release__ = "v0.92.0 (Paladin Penguin)"
+__version__ = "1.0.0"
+__release__ = "v1.0.0"
 __author__ = "CollectOSS Community"
 
 __license__ = "MIT"

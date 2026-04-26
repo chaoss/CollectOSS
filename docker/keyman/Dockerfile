@@ -7,6 +7,8 @@ LABEL org.opencontainers.image.documentation="https://collectoss.readthedocs.io"
 
 ARG VERSION
 LABEL org.opencontainers.image.version=${VERSION}
+ARG REVISION
+LABEL org.opencontainers.image.revision=${REVISION}
 
 RUN pip install --no-cache-dir --upgrade pip
 
