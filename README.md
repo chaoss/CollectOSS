@@ -27,6 +27,14 @@ Basic initial setup can be completed in a few minutes as follows:
 
 Check out the [CollectOSS Documentation](https://collectoss.readthedocs.io) for more detailed setup instructions and troubleshooting steps.
 
+## Contributing
+We strongly believe that communities are what makes open source so impactful. We invite you to join our community, regardless of your experience level or coding abilities! 
+
+Check out the [CHAOSS Getting Started guide](https://chaoss.community/kb-getting-started/) to join Slack and learn more about CHAOSS. After you arrive, we recommend:
+- Joining the **#wg-collectoss-8knot** channel (or ask for help finding it)
+- Subscribing to the CHAOSS Software meetings in your calendar using the links on the [CHAOSS Calendar](https://chaoss.community/chaoss-calendar/) page
+
+Information about contribution guidelines, building from source, and testing can be found in our [CONTRIBUTING.md](CONTRIBUTING.md). 
 
 ## Collecting Data
 
@@ -65,11 +73,6 @@ Please know that while it's still rather sparse right now,
 but we are actively adding to it all the time.
 
 If you get stuck, please feel free to [ask for help](https://github.com/chaoss/collectoss/issues/new)!
-
-## Contributing
-
-To contribute to CollectOSS, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and the CHAOSS [Code of Conduct]([CODE_OF_CONDUCT.md](https://github.com/chaoss/.github/blob/main/CODE_OF_CONDUCT.md)). CollectOSS is a welcoming community that is open to all, regardless if you're working on your 1000th contribution to open source or your 1st.
-We strongly believe that much of what makes open source so great is the incredible communities it brings together, so we invite you to join us!
 
 ## Who uses CollectOSS?
 
