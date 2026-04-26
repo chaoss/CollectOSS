@@ -19,10 +19,13 @@ RUN go install github.com/ossf/scorecard/v5@v5.1.1 \
 ########################################
 FROM python:3.11-slim-bullseye
 
-LABEL maintainer="outdoors@acm.org"
+LABEL org.opencontainers.image.authors="CHAOSS https://chaoss.community"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.source="https://github.com/chaoss/collectoss"
+LABEL org.opencontainers.image.documentation="https://collectoss.readthedocs.io"
 
 ARG VERSION
-LABEL version=${VERSION}
+LABEL org.opencontainers.image.version=${VERSION}
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/usr/bin/:/usr/local/bin:/usr/lib:${PATH}"

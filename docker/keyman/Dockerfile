@@ -1,9 +1,12 @@
 FROM python:3.11.12-alpine
 
-LABEL maintainer="outdoors@acm.org"
+LABEL org.opencontainers.image.authors="CHAOSS https://chaoss.community"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.source="https://github.com/chaoss/collectoss"
+LABEL org.opencontainers.image.documentation="https://collectoss.readthedocs.io"
 
 ARG VERSION
-LABEL version=${VERSION}
+LABEL org.opencontainers.image.version=${VERSION}
 
 RUN pip install --no-cache-dir --upgrade pip
 
