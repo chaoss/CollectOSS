@@ -16,17 +16,6 @@ If you are new to opening issues, we recommend [opensource.guide](https://openso
 > [!TIP]
 > Filling our our issue templates will help us gather all the necessary information to troubleshoot your issue efficiently. Issues that are missing details may take longer to be fixed.
 
-### How to submit a bug report
-To see the template referred to in the above section, click on **New Issue**, then click on the **Get Started** button on the **Bug Report** option.
-A dialogue box populated with descriptions of what to put in each section, will pop up on a new page.
-Kindly replace the descriptions with your comments to the best of your ability, and please include screenshots and error logs if applicable.
-
-<img width="1563" alt="file1" src="https://github.com/user-attachments/assets/138e5c2e-2595-474c-9642-a48d4a6c5e1b">
-
-<img width="1563" alt="file2" src="https://github.com/user-attachments/assets/59604aa9-d283-4fb2-8220-f3e906e6a203">
-
-<img width="1524" alt="file3" src="https://github.com/user-attachments/assets/8f123c63-641f-4fe5-b28d-6c47ff19d1f1">
-
 
 ## Contributing to the source code
 We welcome pull requests from anyone!
