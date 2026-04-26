@@ -48,22 +48,11 @@ This can be easily done by using the `-s` flag when running the `git commit` com
 The PiHole project has more detailed guide on adding this signoff to your commits can be found on their ["How to sign-off commits"](https://docs.pi-hole.net/guides/github/how-to-signoff/) page.
 
 
-## Keeping in sync with the CollectOSS Repository
+### Keeping in sync with the CollectOSS Repository
 
-Remember to sync your fork with the ```main``` branch regularly, by taking the following steps:
+As we merge code from maintainers and other contributors, the fork that you contribute will likely start falling behind the `main` branch of CollectOSS. To make sure you are contributing on top of a new enough version of the code, make sure you are occasionally keeping your fork in sync.
 
-- Setup your upstream branch to point to the URL of the main CollectOSS repo ```https://github.com/chaoss/collectoss.git```.
-
-- Next, in the root folder of the project, on the ```main``` branch, run:
-```
-git remote add upstream https://github.com/chaoss/collectoss.git
-```
-Whenever you need to make changes, make sure your ```main``` branch is in sync with the main repository, by checking out to the ```main``` branch and running:
-```
-git pull upstream main
-git push origin master
-```
-
+Github has an article called [Syncing a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork) that walks through several different ways to keep your fork up to date.
 
 ## Community Resources
 
