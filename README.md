@@ -36,44 +36,6 @@ Check out the [CHAOSS Getting Started guide](https://chaoss.community/kb-getting
 
 Information about contribution guidelines, building from source, and testing can be found in our [CONTRIBUTING.md](CONTRIBUTING.md). 
 
-## Collecting Data
-
-CollectOSS aims to support the current officially supported Python versions (currently centered around **Python 3.11**). We use [uv](https://github.com/astral-sh/uv) to manage the Python environment because it is fast and takes care of virtual environments for you. To run a command, such as `pytest` in the python environment, you would write:
-
-```bash
-uv run pytest
-```
-
-The first time this is run, `uv` will automatically download and install the python dependencies for you.
-
-CollectOSS's main focus is to measure the overall health and sustainability of open source projects.
-
-CollectOSS collects more data about open source software projects than any other available software. 
-
-One of CollectOSS's core tenets is a desire to openly gather data that people can trust, and then provide useful and well-defined metrics that help give important context to the larger stories being told by that data.
-
-We do this in a variety of ways, one of which is doing all our own data collection in house. We currently collect data from a few main sources:
-
-1. Raw Git commit logs (commits, contributors)
-2. GitHub's API (issues, pull requests, contributors, releases, repository metadata)
-3. The Linux Foundation's [Core Infrastructure Initiative](https://www.coreinfrastructure.org/) API (repository metadata)
-4. [Succinct Code Counter](https://github.com/boyter/scc), a blazingly fast Sloc, Cloc, and Code tool that also performs COCOMO calculations
-
-This data is collected by dedicated data collection workers controlled by CollectOSS, each of which is responsible for querying some subset of these data sources.
-We are also hard at work building workers for new data sources. If you have an idea for a new one, [please tell us](https://github.com/chaoss/collectoss/issues/new?template=feature_request.md) - we'd love your input!
-
-
-## Getting Started
-
-If you're interested in collecting data with our tool, the CollectOSS team has worked hard to develop a detailed guide to get started with our project which can be found [in our documentation](https://collectoss.readthedocs.io/en/main/getting-started/toc.html).
-
-If you're looking to contribute to CollectOSS's code, you can find installation instructions, development guides, architecture references (coming soon), best practices and more in our [developer documentation](https://collectoss.readthedocs.io/en/main/development-guide/toc.html). 
-
-Please know that while it's still rather sparse right now,
-but we are actively adding to it all the time.
-
-If you get stuck, please feel free to [ask for help](https://github.com/chaoss/collectoss/issues/new)!
-
 ## Who uses CollectOSS?
 
 CollectOSS metrics are used by many other visualization and metrics projects, such as:
