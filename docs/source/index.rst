@@ -61,7 +61,7 @@ Who develops Augur
 - If you want to get involved, visit the `CHAOSS website <https://chaoss.community>`_.
 
 For the current list of Augur maintainers and contributors, please refer to the
-`CONTRIBUTORS.md <https://github.com/chaoss/collectoss/blob/main/CONTRIBUTORS.md>`_
+`CREDITS.md <https://github.com/chaoss/collectoss/blob/main/CREDITS.md>`_
 file.
 
 See it in action
