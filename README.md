@@ -12,22 +12,13 @@ The data CollectOSS collects covers more than just code contributions and extend
 
 CollectOSS is part of [CHAOSS](https://chaoss.community), which is a Linux Foundation® project. Many of our metrics are implementations of the [metrics](https://chaoss.community/metrics/) defined by the CHAOSS community.
 
+## Versions and support
+CollectOSS is a Python project distributed via container images and aims to support all currently-supported versions of Python on macOS and Linux platforms. Docker is the primary supported container runtime, but Podman is also supported and used by some maintainers, although it requires configuring some extra permissions to run correctly.
+
+Our `main` branch is our development branch that all pull requests should be based on. The `release` branch is where we merge and tag new versions and is the branch we recommend using in production. You can see tagged versions and corresponding release notes on the [releases page](https://github.com/chaoss/collectoss/releases).
 
 
-## NEW RELEASE ALERT!
-**If you want to jump right in, the updated docker, docker-compose and bare metal installation instructions are available [here](docs/new-install.md)**.
 
-
-- The `release` branch is a stable version of our new architecture, which features:
-  - Dramatic improvement in the speed of large scale data collection (100,000+ repos). All data is obtained for 100k+ repos within 2 weeks.
-  - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard.
-  - Materialized views to increase the snappiness of APIs and Frontends on large scale data.
-  - Changes to primary keys, which now employ a UUID strategy that ensures unique keys across all CollectOSS instances.
-  - Support for [8knot](https://github.com/oss-aspen/8knot) dashboards (view a sample [here](https://eightknot.osci.io/)).
-  *beautification coming soon!*
-  - Data collection completeness assurance enabled by a structured, relational data set that is easily compared with platform API Endpoints.
-- The next release of the new version will include a hosted version of CollectOSS where anyone can create an account and add repos *they care about*.
-If the hosted instance already has a requested organization or repository it will be added to a user’s view. If its a new repository or organization, the user will be notified that collection will take (time required for the scale of repositories added). 
 
 
 ## Collecting Data
