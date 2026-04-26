@@ -78,7 +78,9 @@ jobs:
         with:
           context: .
           file: ./docker/database/Dockerfile
-          build-args: VERSION=${{ steps.version.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_database:test
           cache-from: type=gha,scope=container-database
@@ -90,7 +92,9 @@ jobs:
         with:
           context: .
           file: ./docker/keyman/Dockerfile
-          build-args: VERSION=${{ steps.version.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_keyman:test
           cache-from: type=gha,scope=container-keyman
@@ -102,7 +106,9 @@ jobs:
         with:
           context: .
           file: ./docker/rabbitmq/Dockerfile
-          build-args: VERSION=${{ steps.version.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test
           cache-from: type=gha,scope=container-rabbitmq
@@ -114,7 +120,9 @@ jobs:
         with:
           context: .
           file: ./docker/backend/Dockerfile
-          build-args: VERSION=${{ steps.version.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/augur_backend:test
           cache-from: type=gha,scope=container-backend

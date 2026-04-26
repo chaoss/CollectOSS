@@ -8,6 +8,8 @@ LABEL org.opencontainers.image.documentation="https://collectoss.readthedocs.io"
 
 ARG VERSION
 LABEL org.opencontainers.image.version=${VERSION}
+ARG REVISION
+LABEL org.opencontainers.image.revision=${REVISION}
 
 ENV POSTGRES_DB="test"
 ENV POSTGRES_USER="augur"

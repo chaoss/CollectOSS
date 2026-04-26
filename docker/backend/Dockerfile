@@ -26,6 +26,9 @@ LABEL org.opencontainers.image.documentation="https://collectoss.readthedocs.io"
 
 ARG VERSION
 LABEL org.opencontainers.image.version=${VERSION}
+ARG REVISION
+LABEL org.opencontainers.image.revision=${REVISION}
+
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/usr/bin/:/usr/local/bin:/usr/lib:${PATH}"
