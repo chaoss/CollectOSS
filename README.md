@@ -1,84 +1,48 @@
 # CollectOSS
 
-CollectOSS is primarily a data engineering tool that makes it possible for data scientists to gather open source software community data - less data carpentry for everyone else! 
-The primary way of looking at CollectOSS data is through [8Knot](https://github.com/oss-aspen/8knot), a public instance of 8Knot is available [here](https://metrix.chaoss.io) - this is tied to a public instance of [CollectOSS](https://ai.chaoss.io). 
-
-
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme) [![Build Docker images](https://github.com/chaoss/collectoss/actions/workflows/build_docker.yml/badge.svg)](https://github.com/chaoss/collectoss/actions/workflows/build_docker.yml) [![Hits-of-Code](https://hitsofcode.com/github/chaoss/collectoss?branch=release)](https://hitsofcode.com/github/chaoss/collectoss/view?branch=release) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
 
-## NEW RELEASE ALERT!
-**If you want to jump right in, the updated docker, docker-compose and bare metal installation instructions are available [here](docs/new-install.md)**.
-
-
-- The `release` branch is a stable version of our new architecture, which features:
-  - Dramatic improvement in the speed of large scale data collection (100,000+ repos). All data is obtained for 100k+ repos within 2 weeks.
-  - A new job management architecture that uses Celery and Redis to manage queues, and enables users to run a Flower job monitoring dashboard.
-  - Materialized views to increase the snappiness of APIs and Frontends on large scale data.
-  - Changes to primary keys, which now employ a UUID strategy that ensures unique keys across all CollectOSS instances.
-  - Support for [8knot](https://github.com/oss-aspen/8knot) dashboards (view a sample [here](https://eightknot.osci.io/)).
-  *beautification coming soon!*
-  - Data collection completeness assurance enabled by a structured, relational data set that is easily compared with platform API Endpoints.
-- The next release of the new version will include a hosted version of CollectOSS where anyone can create an account and add repos *they care about*.
-If the hosted instance already has a requested organization or repository it will be added to a user’s view. If its a new repository or organization, the user will be notified that collection will take (time required for the scale of repositories added). 
-
 ## What is CollectOSS?
-CollectOSS is a software suite for collecting and measuring structured data
-about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities.
+CollectOSS is a software suite for collecting structured data
+about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities via git forges.
 
-We gather trace data for a group of repositories, normalize it into our data model, and provide a variety of metrics about said data. The structure of our data model enables us to synthesize data across various platforms to provide meaningful context for meaningful questions about the way these communities evolve.
+CollectOSS's main focus is to measure the overall health and sustainability of open source projects, as these types of projects are system critical for nearly every software organization or company.
 
-CollectOSS’s main focus is to measure the overall health and sustainability of open source projects, as these types of projects are system critical for nearly every software organization or company. We do this by gathering data about project repositories and normalizing that into our data model to provide useful metrics about your project’s health.
+The data CollectOSS collects covers more than just code contributions and extends to anything that can be derived from forge data, including comments, change reviews, releases, and other project activity or interactions. This data is stored in a relational database (PostgreSQL), enabling large-scale data aggregation across any number of repositories to provide context about the way these communities evolve.
 
-For example, one of our metrics is *burstiness*. Burstiness – how are short timeframes of intense activity, followed by a corresponding return to a typical pattern of activity, observed in a project? 
-This can paint a picture of a project’s focus and gain insight into the potential stability of a project and how its typical cycle of updates occurs. 
+CollectOSS is part of [CHAOSS](https://chaoss.community), which is a Linux Foundation® project. Many of our metrics are implementations of the [metrics](https://chaoss.community/metrics/) defined by the CHAOSS community.
 
-We are a [CHAOSS](https://chaoss.community) project, and many of our
-metrics are implementations of the metrics defined by our awesome community. You can find a full list of them [here](https://chaoss.community/metrics/).
+## Versions and support
+CollectOSS is a Python project distributed via container images and aims to support all currently-supported versions of Python on macOS and Linux platforms. Docker is the primary supported container runtime, but Podman is also supported and used by some maintainers, although it requires configuring some extra permissions to run correctly.
 
-For more information on [how to get involved on the CHAOSS website](https://chaoss.community/participate/).
+Our `main` branch is our development branch that all pull requests should be based on. The `release` branch is where we merge and tag new versions and is the branch we recommend using in production. You can see tagged versions and corresponding release notes on the [releases page](https://github.com/chaoss/collectoss/releases).
 
-## Collecting Data
+## Installation
+Basic initial setup can be completed in a few minutes as follows:
 
-CollectOSS aims to support the current officially supported Python versions (currently centered around **Python 3.11**). We use [uv](https://github.com/astral-sh/uv) to manage the Python environment because it is fast and takes care of virtual environments for you. To run a command, such as `pytest` in the python environment, you would write:
+1. Clone the repository - `git clone https://github.com/chaoss/collectoss`
+2. (optional) if you want to build the development version, run `docker compose build`
+3. Copy the `environment.txt` file to a new file called `.env` and fill in values for the required variables
+4. Run `docker compose up` to start the containers
 
-```bash
-uv run pytest
-```
-
-The first time this is run, `uv` will automatically download and install the python dependencies for you.
-
-CollectOSS's main focus is to measure the overall health and sustainability of open source projects.
-
-CollectOSS collects more data about open source software projects than any other available software. 
-
-One of CollectOSS's core tenets is a desire to openly gather data that people can trust, and then provide useful and well-defined metrics that help give important context to the larger stories being told by that data.
-
-We do this in a variety of ways, one of which is doing all our own data collection in house. We currently collect data from a few main sources:
-
-1. Raw Git commit logs (commits, contributors)
-2. GitHub's API (issues, pull requests, contributors, releases, repository metadata)
-3. The Linux Foundation's [Core Infrastructure Initiative](https://www.coreinfrastructure.org/) API (repository metadata)
-4. [Succinct Code Counter](https://github.com/boyter/scc), a blazingly fast Sloc, Cloc, and Code tool that also performs COCOMO calculations
-
-This data is collected by dedicated data collection workers controlled by CollectOSS, each of which is responsible for querying some subset of these data sources.
-We are also hard at work building workers for new data sources. If you have an idea for a new one, [please tell us](https://github.com/chaoss/collectoss/issues/new?template=feature_request.md) - we'd love your input!
-
-
-## Getting Started
-
-If you're interested in collecting data with our tool, the CollectOSS team has worked hard to develop a detailed guide to get started with our project which can be found [in our documentation](https://collectoss.readthedocs.io/en/main/getting-started/toc.html).
-
-If you're looking to contribute to CollectOSS's code, you can find installation instructions, development guides, architecture references (coming soon), best practices and more in our [developer documentation](https://collectoss.readthedocs.io/en/main/development-guide/toc.html). 
-
-Please know that while it's still rather sparse right now,
-but we are actively adding to it all the time.
-
-If you get stuck, please feel free to [ask for help](https://github.com/chaoss/collectoss/issues/new)!
+Check out the [CollectOSS Documentation](https://collectoss.readthedocs.io) for more detailed setup instructions and troubleshooting steps.
 
 ## Contributing
+We strongly believe that communities are what makes open source so impactful. We invite you to join our community, regardless of your experience level or coding abilities! 
 
-To contribute to CollectOSS, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and the CHAOSS [Code of Conduct]([CODE_OF_CONDUCT.md](https://github.com/chaoss/.github/blob/main/CODE_OF_CONDUCT.md)). CollectOSS is a welcoming community that is open to all, regardless if you're working on your 1000th contribution to open source or your 1st.
-We strongly believe that much of what makes open source so great is the incredible communities it brings together, so we invite you to join us!
+Check out the [CHAOSS Getting Started guide](https://chaoss.community/kb-getting-started/) to join Slack and learn more about CHAOSS. After you arrive, we recommend:
+- Joining the **#wg-collectoss-8knot** channel (or ask for help finding it)
+- Subscribing to the CHAOSS Software meetings in your calendar using the links on the [CHAOSS Calendar](https://chaoss.community/chaoss-calendar/) page
+
+Information about contribution guidelines, building from source, and testing can be found in our [CONTRIBUTING.md](CONTRIBUTING.md). 
+
+## Who uses CollectOSS?
+
+CollectOSS metrics are used by many other visualization and metrics projects, such as:
+
+- [8Knot](htps://github.com/oss-aspen/8Knot)
+
+*If you would like your project or organization listed here, please file a Pull Request!*
 
 ## License, Copyright, and Funding
 
