@@ -5,8 +5,11 @@ We have a public Slack channel in the CHAOSS workspace, as well as public meetin
 
 We encourage all contributors to join the [CHAOSS Slack workspace](https://chaoss.community/kb-getting-started/) and participate in the `#wg-collectoss-8knot` channel. Our meeting tumes are kept up to date in the Software section of the [CHAOSS Calendar](https://chaoss.community/chaoss-calendar/). We recommend subscribing to the CHAOSS Software calendar so you can automatically stay up to date with any schedule or timezone changes. If you can't attend these meetings, they are also recorded and made available on the [CHAOSS YouTube](https://www.youtube.com/@CHAOSStube).
 
-These resources are a great way to meet the people behind the project, ask questions, get help, participate in discussions, and stay updated on community meetings and planning. Everyone is welcome, so feel free to introduce yourself and ask for help if you get stuck!
+These resources are a great way to meet the people behind the project, ask questions, get help, participate in discussions, and stay updated on community meetings and planning. Everyone is welcome, so feel free to introduce yourself and ask for help if you get stuck or feel frustrated with any part of this setup process!
 
+## Learn about the project
+
+If you aren't already familiar with what CollectOSS is, please make sure you've read the [README](README.md) to get a primer on our project, and maybe take a look around the [documentation](https://collectoss.readthedocs.io/en/release/) so you know what we are about. You can also hang out in Slack or join our community meetings to learn more about what we do.
 
 ## Opening an issue
 If you're experiencing an issue with CollectOSS you can search for your problem or question on our [issues](https://github.com/chaoss/collectoss/issues) page to see if someone else has already reported it. If you cannot find your issue, please feel free to [open a new one](https://github.com/chaoss/collectoss/issues/new/choose).
