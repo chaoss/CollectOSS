@@ -1,4 +1,4 @@
-# CollectOSS NEW Release v0.92.0
+# CollectOSS
 
 CollectOSS is primarily a data engineering tool that makes it possible for data scientists to gather open source software community data - less data carpentry for everyone else! 
 The primary way of looking at CollectOSS data is through [8Knot](https://github.com/oss-aspen/8knot), a public instance of 8Knot is available [here](https://metrix.chaoss.io) - this is tied to a public instance of [CollectOSS](https://ai.chaoss.io). 
@@ -8,8 +8,6 @@ The primary way of looking at CollectOSS data is through [8Knot](https://github.
 
 ## NEW RELEASE ALERT!
 **If you want to jump right in, the updated docker, docker-compose and bare metal installation instructions are available [here](docs/new-install.md)**.
-
-CollectOSS is now releasing a dramatically improved new version. It is also available [here](https://github.com/chaoss/collectoss/releases/tag/v0.92.0).
 
 
 - The `release` branch is a stable version of our new architecture, which features:
