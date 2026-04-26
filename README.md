@@ -46,8 +46,6 @@ CollectOSS metrics are used by many other visualization and metrics projects, su
 
 ## License, Copyright, and Funding
 
-Copyright © 2026 University of Missouri, Sean Goggins, and Derek Howard.
-
 CollectOSS is free software: you can redistribute it and/or modify it under the terms of the MIT License as published by the Open Source Initiative. See the [LICENSE](LICENSE) file for more details.
 
 
