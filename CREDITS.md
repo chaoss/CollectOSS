@@ -8,11 +8,10 @@ This file aims to provide credit to anyone who has contributed to the CollectOSS
 
 
 ## Augur Contributors
-The list of contributors to Augur, upon which the CollectOSS codebase is based, is included below
 
-Augur has been funded through the Alfred P. Sloan Foundation, Mozilla, The Reynolds Journalism Institute, contributions from VMWare, Red Hat LLC, Grace Hopper's Open Source Day, GitHub, Microsoft, Twitter, Adobe, the Gluster Project, Open Source Summit (NA/Europe), and the Linux Foundation Compliance Summit.
+Augur has been supported by the University of Missouri through funding provided by the Alfred P. Sloan Foundation, Mozilla, The Reynolds Journalism Institute with contributions from VMWare, Red Hat LLC, Grace Hopper's Open Source Day, GitHub, Microsoft, Twitter, Adobe, the Gluster Project, Open Source Summit (NA/Europe), and the Linux Foundation Compliance Summit.
 
-Significant design contributors include Kate Stewart, Dawn Foster, Duane O'Brien, Remy Decausemaker, Google Summer of Code Students, and others. 
+Significant design contributors include Kate Stewart, Dawn Foster, Duane O'Brien, Remy Decausemaker, Google Summer of Code Students, and others including:
 
 ### Maintainers
 - Sean P. Goggins — [@sgoggins](https://github.com/sgoggins)
