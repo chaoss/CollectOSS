@@ -48,41 +48,25 @@ Github has an article called [Syncing a fork](https://docs.github.com/en/pull-re
 > [!TIP]
 > Making a new branch for each contribution will make it easier to keep your `main` branch in sync with the project.
 
-## Community Resources
+## Helpful Links
 
-### CollectOSS
-- [Stable documentation (`release` branch)](https://collectoss.readthedocs.io/en/release/)
-- [Nightly/developer build documentation (`main` branch)](https://collectoss.readthedocs.io/en/main/) (warning: this is should be considered an unstable branch and should not be used for production)
-- [Live CollectOSS demo](https://ai.chaoss.io)
+- [CollectOSS stable documentation](https://collectoss.readthedocs.io/en/release/)
+- [CHAOSS Getting Started page](https://chaoss.community/kb-getting-started/)
 
-### CHAOSS
-- [Website](https://chaoss.community/)
-- [Get Involved](https://chaoss.community/participate)
-- [Join the CHAOSS Slack](https://chaoss.community/kb-getting-started/) - Join the `#wg-collectoss-8knot` channel to participate in discussions, meetings, and planning
-- [Metrics](https://github.com/chaoss/metrics)
-- [Evolution Metrics Working Group](https://github.com/chaoss/wg-evolution)
-- [Common Metrics Working Group](https://github.com/chaoss/wg-common)
-- [Risk Metrics Working Group](https://github.com/chaoss/wg-risk)
-- [Value Metrics Working Group](https://github.com/chaoss/wg-value)
-- [Diversity & Inclusion Metrics Working Group](https://github.com/chaoss/wg-diversity-inclusion)
-
-## Technical Resources
-
-### Git & GitHub
+**Git & GitHub**
 - [How to contribute to Open Source](https://opensource.guide/how-to-contribute/)
 - [GitHub's Git Handbook](https://guides.github.com/introduction/git-handbook/)
 - [GitHub's "Hello World" tutorial](https://guides.github.com/activities/hello-world/)
 - [Understanding the GitHub Flow](https://guides.github.com/introduction/flow/)
-- [Commit message style guidelines](https://commit.style/)
 - [No-nonsense Git reference](https://rogerdudler.github.io/git-guide/) (best to have a cursory understanding of Git before hand)
 
-### Python guides
+**Python guides**
 - [Python's official tutorial](https://docs.python.org/3/tutorial/index.html)
 - [Python's official style guide](https://www.python.org/dev/peps/pep-0008/)
 - [Python best practices](https://gist.github.com/sloria/7001839)
 - [The Zen of Python](https://www.python.org/dev/peps/pep-0020/)
 
-### PostgreSQL guides
+**PostgreSQL guides**
 - [PostgreSQL installation guide](https://www.postgresql.org/docs/12/tutorial-install.html)
 - [PostgreSQL official tutorial](https://www.postgresql.org/docs/)
 - [PostgreSQL docker official image](https://hub.docker.com/_/postgres)
