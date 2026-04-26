@@ -1,14 +1,12 @@
 # How to Contribute
 
-We love to pull requests from everyone! We follow the standard Git workflow of `fork -> change -> pull request -> merge -> update fork -> change ... (repeat forever)`.
-
-If you are new to open source, we recommend GitHub's excellent guide on "[How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)". In addition, please feel free to reach out to any of the maintainers or other community members if you are struggling as we are here to help you learn!
-
-Before getting started, please make sure you've read the [README](README.md) to get a primer on our project. CollectOSS's documentation can be found [here](https://collectoss.readthedocs.io/en/main/).
-
 ## Join the Community
+We have a public Slack channel in the CHAOSS workspace, as well as public meetings.
 
-We encourage all contributors to join the [CHAOSS Slack workspace](https://chaoss.community/kb-getting-started/) and participate in the `#wg-collectoss-8knot` channel. This is a great place to ask questions, get help with issues, participate in discussions, and stay updated on community meetings and planning. Don't hesitate to introduce yourself and ask for help if you get stuck!
+We encourage all contributors to join the [CHAOSS Slack workspace](https://chaoss.community/kb-getting-started/) and participate in the `#wg-collectoss-8knot` channel. Our meeting tumes are kept up to date in the Software section of the [CHAOSS Calendar](https://chaoss.community/chaoss-calendar/). We recommend subscribing to the CHAOSS Software calendar so you can automatically stay up to date with any schedule or timezone changes. If you can't attend these meetings, they are also recorded and made available on the [CHAOSS YouTube](https://www.youtube.com/@CHAOSStube).
+
+These resources are a great way to meet the people behind the project, ask questions, get help, participate in discussions, and stay updated on community meetings and planning. Everyone is welcome, so feel free to introduce yourself and ask for help if you get stuck!
+
 
 ## Opening an issue
 If you're experiencing an issue with CollectOSS or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/collectoss/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our [issues](https://github.com/chaoss/collectoss/issues) before opening a new one.
