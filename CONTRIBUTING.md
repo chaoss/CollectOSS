@@ -29,33 +29,12 @@ Kindly replace the descriptions with your comments to the best of your ability, 
 
 
 ## Contributing to the source code
+We welcome pull requests from anyone!
 
-1. Fork and clone this repo:
-```bash
-$ git clone github.com:your-username/augur.git
-$ cd collectoss/
-$ git remote add upstream https://github.com/chaoss/collectoss.git
-```
+We follow the same GitHub workflow that most other projects on GitHub follow: Fork -> create a branch -> make a pull request -> repeat.
 
-2. Follow the [development installation instructions](https://github.com/chaoss/collectoss/blob/main/docs/new-install.md).
+Detailed instructions for making your contribution under this workflow can be found on the [GitHub Flow page](https://docs.github.com/en/get-started/using-github/github-flow). There is also an opensource.guide section on [making pull requests](https://opensource.guide/how-to-contribute/#opening-a-pull-request). If you get stuck, please ask for help in the project Slack.
 
-3. Create a new branch
-```bash
-$ git checkout -b my-new-branch
-```
-
-4. Make your change(s).
-
-5. Commit the change(s) and push to your fork
-```bash
-$ git add .
-$ git commit -s -m "This is my first commit"
-$ git push -u origin my-new-branch
-```
-6. Then, [submit a pull request](https://github.com/chaoss/collectoss/compare).
-
-At this point, you're waiting on us. We like to at least comment on pull requests within three business days (and, typically, one business day).
-Once one of our maintainers has had a chance to review your PR, we will either mark it as ```needs review``` and provide specific feedback on your changes, or we will go ahead and complete the pull request.
 
 ## Signing-off on Commits
 To contribute to this project, you must agree to the [Developer Certificate of Origin](https://developercertificate.org/) (DCO) by the [CHAOSS charter](https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy) for each commit you make. The DCO is a simple statement that you, as a contributor, have the legal right to make the contribution.
