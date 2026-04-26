@@ -11,10 +11,10 @@ These resources are a great way to meet the people behind the project, ask quest
 ## Opening an issue
 If you're experiencing an issue with CollectOSS you can search for your problem or question on our [issues](https://github.com/chaoss/collectoss/issues) page to see if someone else has already reported it. If you cannot find your issue, please feel free to [open a new one](https://github.com/chaoss/collectoss/issues/new/choose).
 
-Our issue templates are designed to help us gather all the necessary information that we need to help troubleshoot your issue efficiently. Issues that are missing details may take longer to be fixed.
-
 If you are new to opening issues, we recommend [opensource.guide](https://opensource.guide/how-to-contribute) and their section on [Opening Issues](https://opensource.guide/how-to-contribute/#opening-an-issue).
 
+> [!TIP]
+> Filling our our issue templates will help us gather all the necessary information to troubleshoot your issue efficiently. Issues that are missing details may take longer to be fixed.
 
 ### How to submit a bug report
 To see the template referred to in the above section, click on **New Issue**, then click on the **Get Started** button on the **Bug Report** option.
@@ -47,12 +47,17 @@ This can be easily done by using the `-s` flag when running the `git commit` com
 
 The PiHole project has more detailed guide on adding this signoff to your commits can be found on their ["How to sign-off commits"](https://docs.pi-hole.net/guides/github/how-to-signoff/) page.
 
+> [!TIP]
+> Signing off commits is slightly easier and safer if you do it before you push your changes to GitHub.
 
 ### Keeping in sync with the CollectOSS Repository
 
 As we merge code from maintainers and other contributors, the fork that you contribute will likely start falling behind the `main` branch of CollectOSS. To make sure you are contributing on top of a new enough version of the code, make sure you are occasionally keeping your fork in sync.
 
 Github has an article called [Syncing a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork) that walks through several different ways to keep your fork up to date.
+
+> [!TIP]
+> Making a new branch for each contribution will make it easier to keep your `main` branch in sync with the project.
 
 ## Community Resources
 
