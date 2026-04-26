@@ -9,10 +9,12 @@ These resources are a great way to meet the people behind the project, ask quest
 
 
 ## Opening an issue
-If you're experiencing an issue with CollectOSS or have a question you'd like help answering, please feel free to open an [issue](https://github.com/chaoss/collectoss/issues). To help us prevent duplicates, we kindly ask that you briefly search for your problem or question in our [issues](https://github.com/chaoss/collectoss/issues) before opening a new one.
+If you're experiencing an issue with CollectOSS you can search for your problem or question on our [issues](https://github.com/chaoss/collectoss/issues) page to see if someone else has already reported it. If you cannot find your issue, please feel free to [open a new one](https://github.com/chaoss/collectoss/issues/new/choose).
 
-Please note that if you open a bug report and your issue **does not** follow our template, we cannot help you until you have provided us all the relevant information in that format. 
-Respectfully, we do not have the time to try and recreate an error given with minimal or no context, so by providing this information you are helping us help you!
+Our issue templates are designed to help us gather all the necessary information that we need to help troubleshoot your issue efficiently. Issues that are missing details may take longer to be fixed.
+
+If you are new to opening issues, we recommend [opensource.guide](https://opensource.guide/how-to-contribute) and their section on [Opening Issues](https://opensource.guide/how-to-contribute/#opening-an-issue).
+
 
 ### How to submit a bug report
 To see the template referred to in the above section, click on **New Issue**, then click on the **Get Started** button on the **Bug Report** option.
