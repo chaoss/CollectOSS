@@ -1,9 +1,11 @@
 # Credits
 
-This file aims to provide credit to anyone who has contributed to the CollectOSS project.
+This file aims to provide credit to anyone who has contributed to the CollectOSS project, including financial supporters and contributors to the Augur project, upon which CollectOSS is based.
 
+## CollectOSS Contributors
 
-
+### Maintainers
+The list of current CollectOSS maintainers can be found in the [MAINTAINERS](./MAINTAINERS.md) file.
 
 
 
