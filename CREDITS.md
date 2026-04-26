@@ -41,6 +41,7 @@ The list of contributors to Augur, upon which the CollectOSS codebase is based, 
 - [Ivana Atanasova](https://github.com/ivanayov)
 - [Georg J.P. Link](https://github.com/GeorgLink)
 - [Gary P. White](https://github.com/garypwhite)
+- [Shlok Gilda](https://github.com/shlokgilda)
 
 ### GSoC 2025 Participants
 - [Akshat Baranwal](https://github.com/akshatb2006)
