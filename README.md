@@ -6,11 +6,9 @@
 CollectOSS is a software suite for collecting structured data
 about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities via git forges.
 
-The data CollectOSS collects covers more than just code contributions and extends to anything that can be derived from forge data, including comments, change reviews, releases, and other project activity or interactions.
-
-This data is stored in a relational database (PostgreSQL), enabling large-scale data aggregation across any number of repositories to provide context about the way these communities evolve.
-
 CollectOSS's main focus is to measure the overall health and sustainability of open source projects, as these types of projects are system critical for nearly every software organization or company.
+
+The data CollectOSS collects covers more than just code contributions and extends to anything that can be derived from forge data, including comments, change reviews, releases, and other project activity or interactions. This data is stored in a relational database (PostgreSQL), enabling large-scale data aggregation across any number of repositories to provide context about the way these communities evolve.
 
 CollectOSS is part of [CHAOSS](https://chaoss.community), which is a Linux Foundation® project. Many of our metrics are implementations of the [metrics](https://chaoss.community/metrics/) defined by the CHAOSS community.
 
