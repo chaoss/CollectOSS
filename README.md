@@ -75,6 +75,14 @@ If you get stuck, please feel free to [ask for help](https://github.com/chaoss/c
 To contribute to CollectOSS, please follow the guidelines found in our [CONTRIBUTING.md](CONTRIBUTING.md) and the CHAOSS [Code of Conduct]([CODE_OF_CONDUCT.md](https://github.com/chaoss/.github/blob/main/CODE_OF_CONDUCT.md)). CollectOSS is a welcoming community that is open to all, regardless if you're working on your 1000th contribution to open source or your 1st.
 We strongly believe that much of what makes open source so great is the incredible communities it brings together, so we invite you to join us!
 
+## Who uses CollectOSS?
+
+CollectOSS metrics are used by many other visualization and metrics projects, such as:
+
+- [8Knot](htps://github.com/oss-aspen/8Knot)
+
+*If you would like your project or organization listed here, please file a Pull Request!*
+
 ## License, Copyright, and Funding
 
 Copyright © 2026 University of Missouri, Sean Goggins, and Derek Howard.
