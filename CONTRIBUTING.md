@@ -35,23 +35,18 @@ We follow the same GitHub workflow that most other projects on GitHub follow: Fo
 
 Detailed instructions for making your contribution under this workflow can be found on the [GitHub Flow page](https://docs.github.com/en/get-started/using-github/github-flow). There is also an opensource.guide section on [making pull requests](https://opensource.guide/how-to-contribute/#opening-a-pull-request). If you get stuck, please ask for help in the project Slack.
 
+### Signing-off on Commits
+To contribute to this project, you must agree to the [Developer Certificate of Origin](https://developercertificate.org/) (DCO) for each commit you make. The DCO is a simple statement that you, as a contributor, have the legal right to make the contribution. It is NOT a copyright assignment or transfer. This certification is required for contributions to CHAOSS repositories by the [CHAOSS charter](https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy).
 
-## Signing-off on Commits
-To contribute to this project, you must agree to the [Developer Certificate of Origin](https://developercertificate.org/) (DCO) by the [CHAOSS charter](https://chaoss.community/about/charter/#user-content-8-intellectual-property-policy) for each commit you make. The DCO is a simple statement that you, as a contributor, have the legal right to make the contribution.
 To signify that you agree to the DCO for contributions, you simply add a line to each of your git commit messages. For example:
 ```
 Signed-off-by: Jane Smith <jane.smith@example.com>
 ```
 
-This can be easily done by using the `-s` flag when running the `git commit` command,
+This can be easily done by using the `-s` flag when running the `git commit` command: `git commit -s -m "my commit message"`
 
-```
-$ git commit -s -m “my commit message w/signoff”
-```
+The PiHole project has more detailed guide on adding this signoff to your commits can be found on their ["How to sign-off commits"](https://docs.pi-hole.net/guides/github/how-to-signoff/) page.
 
-To ensure all your commits are signed, you may choose to [configure git](https://gist.github.com/xavierfoucrier/c156027fcc6ae23bcee1204199f177da) properly by editing your global ```.gitconfig```
-
-**Any pull requests containing commits that are not signed off will not be eligible for merge until the commits have been signed off.** 
 
 ## Keeping in sync with the CollectOSS Repository
 
