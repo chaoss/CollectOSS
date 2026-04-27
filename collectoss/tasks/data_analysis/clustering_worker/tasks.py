@@ -62,7 +62,7 @@ def clustering_model(repo_git: str,logger,engine) -> None:
 
     logger.info(f"Min df: {min_df}. Max df: {max_df}")
 
-    logger.info("If you did not install NLTK libraries when you installed Augur, this will fail. ")
+    logger.info("If you did not install NLTK libraries when you installed CollectOSS, this will fail. ")
     #nltk.download('all')
 
     logger.info(f"Getting repo messages for repo_id: {repo_id}")

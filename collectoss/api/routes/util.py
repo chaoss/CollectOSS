@@ -10,7 +10,7 @@ from flask import Response, current_app, jsonify
 from collectoss.application.db.lib import get_value
 from collectoss.application.logs import SystemLogger
 
-logger = SystemLogger("augur").get_logger()
+logger = SystemLogger("collectoss").get_logger()
 
 @app.route("/api")
 def get_api_version():

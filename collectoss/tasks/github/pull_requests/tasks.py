@@ -100,7 +100,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, db_session)
     Arguments:
         pull_requests: List of paginated pr endpoint data
         task_name: Name of the calling task and the repo
-        repo_id: augur id of the repository
+        repo_id: collectoss id for the repository
         logger: logging object
         db_session: sqlalchemy db object
     """
@@ -241,7 +241,7 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
 
     pr_reviews = get_pull_request_reviews_by_repo_id(repo_id)
 
-    # Build mapping once: github pr_review_src_id -> augur pr_review_id
+    # Build mapping once: github pr_review_src_id -> collectoss pr_review_id
     pr_review_id_mapping = {review.pr_review_src_id: review.pr_review_id for review in pr_reviews}
 
     if not pr_review_id_mapping:
@@ -378,7 +378,7 @@ def _flush_pr_review_comment_batch(
         pr_review_comment_dicts: List of message dicts to insert into Message table.
         pr_review_msg_mapping_data: Dict mapping github_msg_id to raw comment data
             (needed for creating review refs after message insert).
-        pr_review_id_mapping: Dict mapping github pr_review_src_id to augur pr_review_id.
+        pr_review_id_mapping: Dict mapping github pr_review_src_id to collectoss pr_review_id.
         repo_id: The repository ID.
         tool_version: Tool version string for metadata.
         data_source: Data source string for metadata.

@@ -9,7 +9,7 @@ from collectoss.application.db.models import ContributorRepo
 from collectoss.application.db.lib import bulk_insert_dicts
 from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
-### This worker scans all the platform users in Augur, and pulls their platform activity 
+### This worker scans all the platform users in CollectOSS, and pulls their platform activity 
 ### logs. Those are then used to analyze what repos each is working in (which will include repos not
 ### tracked in the Augur instance.)
 ### Logic: For each unique platform contributor, gather non duplicate events, using the GitHub "id"

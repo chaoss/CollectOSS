@@ -339,7 +339,7 @@ def retry_errored_repos(self):
     logger = logging.getLogger(create_collection_status_records.__name__)
 
     #TODO: Isaac needs to normalize the status's to be abstract in the 
-    #collection_status table once augur dev is less unstable.
+    #collection_status table once collectoss dev is less unstable dev is less unstable.
     query = s.sql.text(f"""UPDATE collection_status SET secondary_status = '{CollectionState.PENDING.value}'"""
     f""" WHERE secondary_status = '{CollectionState.ERROR.value}' and secondary_data_last_collected is NULL;"""
     f"""UPDATE collection_status SET core_status = '{CollectionState.PENDING.value}'"""

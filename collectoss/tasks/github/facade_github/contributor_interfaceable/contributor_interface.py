@@ -16,7 +16,7 @@ from collectoss.application.db.lib import get_repo_by_repo_id, bulk_insert_dicts
 #'sqla+postgresql://scott:tiger@localhost/mydatabase'
 
 """
-A few interesting ideas: Maybe get the top committers from each repo first? curl https://api.github.com/repos/chaoss/augur/contributors
+A few interesting ideas: Maybe get the top committers from each repo first? curl https://api.github.com/repos/chaoss/collectoss/contributors
 
 """
 
@@ -122,7 +122,7 @@ def create_endpoint_from_commit_sha(logger, commit_sha, repo_id):
     logger.debug(
         f"Trying to create endpoint from commit hash: {commit_sha}")
 
-    # https://api.github.com/repos/chaoss/augur/commits/53b0cc122ac9ecc1588d76759dc2e8e437f45b48
+    # https://api.github.com/repos/chaoss/collectoss/commits/5a1f7da239555a102fc18065720ebad516691bbc
 
 
     #stmnt = s.select(Repo.repo_path, Repo.repo_name).where(Repo.repo_id == repo_id)
@@ -162,7 +162,7 @@ def insert_alias(logger, contributor, email):
         logger.debug(
             f"cntrb_id {contributor_table_data[0].cntrb_id} found in database and assigned to enriched data")
     elif len(contributor_table_data) == 0:
-        logger.error("Couldn't find contributor in database. Something has gone very wrong. Augur ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
+        logger.error("Couldn't find contributor in database. Something has gone very wrong. CollectOSS ran into a contributor whose login can be found in the contributor's table, but cannot be retrieved via the user_id that was gotten using the same login.")
         raise LookupError
     else:
         logger.warning(

@@ -44,9 +44,9 @@ def extract_needed_mr_label_data(labels: List[dict], repo_id: int, tool_source: 
 
     Arguments:
         labels: List of dictionaries of label data
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     
@@ -85,9 +85,9 @@ def extract_needed_pr_assignee_data(assignees: List[dict], repo_id: int, tool_so
 
     Arguments:
         assignees: List of dictionaries of asignee data
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectossctoss that processed the data
+        tool_version: The version of the collectossctoss task that processed the data
         data_source: The source of the data 
 
     
@@ -121,9 +121,9 @@ def extract_needed_merge_request_assignee_data(assignees: List[dict], repo_id: i
 
     Arguments:
         assignees: List of dictionaries of asignee data
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectossctoss that processed the data
+        tool_version: The version of the collectossctoss task that processed the data
         data_source: The source of the data 
 
     
@@ -158,9 +158,9 @@ def extract_needed_pr_reviewer_data(reviewers: List[dict], repo_id: int, tool_so
 
     Arguments:
         reviewers: List of dictionaries of reviewer data
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectossctossctoss that processed the data
+        tool_version: The version of the collectossctossctoss task that processed the data
         data_source: The source of the data 
 
     
@@ -357,9 +357,9 @@ def extract_needed_gitlab_issue_assignee_data(assignees: List[dict], repo_id: in
 
     Arguments:
         assignees: List of dictionaries of gitlab assignee data
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     
@@ -423,9 +423,9 @@ def extract_needed_gitlab_issue_label_data(labels: List[dict], repo_id: int, too
 
     Arguments:
         labels: List of dictionaries of gitlab issue label data
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     
@@ -464,9 +464,9 @@ def extract_needed_issue_message_ref_data(message: dict, issue_id: int, repo_id:
     Arguments:
         message: Message data dict
         issue_id: id of the issue
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     
@@ -509,9 +509,9 @@ def extract_needed_pr_data(pr, repo_id, tool_source, tool_version):
 
     Arguments:
         pr: PR data dict
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
 
     
     Returns:
@@ -580,9 +580,9 @@ def extract_needed_issue_data(issue: dict, repo_id: int, tool_source: str, tool_
 
     Arguments:
         issue: Issue data dict
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: platform source
 
     
@@ -790,9 +790,9 @@ def extract_needed_pr_data_from_gitlab_merge_request(pr, repo_id, tool_source, t
 
     Arguments:
         pr: PR data dict
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
 
     
     Returns:
@@ -854,9 +854,9 @@ def extract_needed_issue_data_from_gitlab_issue(issue: dict, repo_id: int, tool_
 
     Arguments:
         issue: Issue data dict
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: platform source
 
     
@@ -903,9 +903,9 @@ def extract_gitlab_mr_event_data(event: dict, pr_id: int, platform_id: int, repo
         event: Event data dict
         pr_id: id of the pr
         platform_id: id of the platform
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: platform source
 
     
@@ -939,9 +939,9 @@ def extract_gitlab_issue_event_data(event: dict, issue_id: int, platform_id: int
         event: Event data dict
         issue_id: id of the issue
         platform_id: id of the platform
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: platform source
 
     
@@ -975,8 +975,8 @@ def extract_needed_mr_reviewer_data(data: List[dict], pull_request_id, tool_sour
     Arguments:
         data: List of dictionaries that contain mr reviewer data to parse
         pull_request_id: id of the PR
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     
@@ -1011,10 +1011,10 @@ def extract_needed_mr_commit_data(commit, repo_id, pull_request_id, tool_source,
 
     Arguments:
         commit: commit data dictionary
-        repo_id: augur id of the repository
+        repo_id: collectoss id for the repository
         pull_request_id: id of the PR
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     
@@ -1042,10 +1042,10 @@ def extract_needed_mr_file_data(gitlab_file_data, repo_id, pull_request_id, tool
 
     Arguments:
         gitlab_file_data: file data dictionary
-        repo_id: augur id of the repository
+        repo_id: collectoss id for the repository
         pull_request_id: id of the PR
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     
@@ -1085,10 +1085,10 @@ def extract_needed_mr_metadata(mr_dict, repo_id, pull_request_id, tool_source, t
 
     Arguments:
         mr_dict: mr data dictionary
-        repo_id: augur id of the repository
+        repo_id: collectoss id for the repository
         pull_request_id: id of the PR
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     
@@ -1143,9 +1143,9 @@ def extract_needed_gitlab_issue_message_ref_data(message: dict, issue_id: int, r
     Arguments:
         message: message data dict
         issue_id: id of the issue
-        repo_id: augur id of the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     
@@ -1173,9 +1173,9 @@ def extract_needed_gitlab_message_data(comment: dict, platform_id: int, repo_id:
 
     Arguments:
         comment: comment data dict
-        platform_id: augur id of the relevant platform
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        platform_id: collectoss id of the relevant platform
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     
@@ -1204,10 +1204,10 @@ def extract_needed_gitlab_mr_message_ref_data(comment: dict, pull_request_id: in
     Arguments:
         comment: comment data dict
         pull_request_id: id of the PR
-        repo_id: augur id of the repository
-        platform_id: augur id of the relevant platform
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        repo_id: collectoss id for the repository
+        platform_id: collectoss id of the relevant platform
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     

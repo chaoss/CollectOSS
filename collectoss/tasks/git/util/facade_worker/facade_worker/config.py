@@ -48,7 +48,7 @@ def get_database_args_from_env():
     try:
         db_json_file_location = os.getcwd() + "/db.config.json"
     except FileNotFoundError:
-        logger.error("\n\nPlease run augur commands in the root directory\n\n")
+        logger.error("\n\nPlease run collcetoss commands in the root directory\n\n")
         sys.exit()
 
     db_json_exists = os.path.exists(db_json_file_location)

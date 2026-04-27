@@ -197,7 +197,7 @@ class SystemLogger():
 
         if reset_logfiles is True:
             try:
-                print("(augur) Reseting log files")
+                print("(collectoss) Reseting log files")
                 base_log_dir_path = Path(base_log_dir)
                 for item in base_log_dir_path.iterdir():
                     if item.is_dir():

@@ -184,7 +184,7 @@ def split_tasks_into_groups(task_list: List[str]) -> Dict[str, List[str]]:
     """Split tasks on the celery app into groups.
 
     Args:
-        task_list: list of tasks specified in augur
+        task_list: list of tasks specified in collectoss
 
     Returns
         The tasks so that they are grouped by the module they are defined in
