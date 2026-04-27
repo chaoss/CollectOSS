@@ -7,9 +7,7 @@ This section details describes production deployment of CollectOSS.
 .. toctree::
    :maxdepth: 1
 
-   server-deployment
-   nginx-configuration
-   how_to_run_augur_in_production
+   production
 
 **THIS SECTION IS UNDER CONSTRUCTION.**
 
