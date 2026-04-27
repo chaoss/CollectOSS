@@ -320,7 +320,7 @@ def confidence_interval_insights(logger, engine):
 
     # """ Query all endpoints """
     # endpointSQL = s.sql.text("""
-    #     SELECT * FROM chaoss_metric_status WHERE cm_source = 'augur_db'
+    #     SELECT * FROM chaoss_metric_status WHERE cm_source = 'collectoss_db'
     #     """)
     #with DatabaseEngine(connection_pool_size=1) as engine:
         # for endpoint in pd.read_sql(endpointSQL,engine, params={}).to_records():

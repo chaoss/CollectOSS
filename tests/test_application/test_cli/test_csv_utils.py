@@ -26,8 +26,8 @@ class TestValidateGitUrl:
 
     def test_valid_gitlab_url(self):
         """Test validation of valid GitLab URLs"""
-        assert validate_git_url("https://gitlab.com/chaoss/augur")
-        assert validate_git_url("https://gitlab.com/chaoss/augur.git")
+        assert validate_git_url("https://gitlab.com/chaoss/collectoss")
+        assert validate_git_url("https://gitlab.com/chaoss/collectoss.git")
 
     def test_invalid_url(self):
         """Test validation of invalid URLs"""

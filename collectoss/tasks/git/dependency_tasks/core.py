@@ -70,7 +70,7 @@ def generate_scorecard(logger, repo_git):
     repo_id = repo.repo_id
 
     logger.info('Generating scorecard data for repo')
-    # we convert relative path in the format required by scorecard like github.com/chaoss/augur
+    # we convert relative path in the format required by scorecard like github.com/chaoss/collectoss
     # raw_path,_ = path.split('-')
     # scorecard_repo_path = raw_path[2:]
     path = repo_git[8:]

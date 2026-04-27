@@ -190,7 +190,7 @@ class KeyPublisher:
     as the process ID is used for async communication between the publisher
     and the orchestrator.
 
-    Typically used during Augur startup to load keys from database.
+    Typically used during CollectOSS startup to load keys from database.
     """
     # pylint: disable=no-member
 

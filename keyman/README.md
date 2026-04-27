@@ -38,7 +38,7 @@ keyman coordinates API key distribution and rate limit tracking between a centra
 
 **KeyPublisher** (`KeyClient.py`)
 - Admin interface for publishing/unpublishing keys
-- Used during Augur startup to load keys from database
+- Used during CollectOSS startup to load keys from database
 
 ## Usage
 
@@ -104,7 +104,7 @@ Responses sent to `{channel}-{process_id}`
 
 ## Starting the Orchestrator
 
-The orchestrator is started automatically by Augur backend:
+The orchestrator is started automatically by CollectOSS backend:
 
 ```python
 # In collectoss/application/cli/backend.py
@@ -125,7 +125,7 @@ VALUES
 ('My GitHub Key', 'not_used', 'not_used', 'ghp_YOURTOKEN', 'not_used', 'github_rest');
 ```
 
-Keys are loaded on Augur startup and published to orchestrator.
+Keys are loaded on CollectOSS startup and published to orchestrator.
 
 ## Troubleshooting
 

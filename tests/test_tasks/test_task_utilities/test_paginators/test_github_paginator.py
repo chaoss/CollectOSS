@@ -37,7 +37,7 @@ def test_github_paginator_get_item(key_auth):
 
 def test_github_paginator_retrieve_data_valid_url(key_auth):
 
-    url = "https://api.github.com/repos/chaoss/augur/pulls?state=all&direction=asc&per_page=100"
+    url = "https://api.github.com/repos/chaoss/collectoss/pulls?state=all&direction=asc&per_page=100"
 
     prs, response, result = GithubPaginator(url, key_auth, logger).retrieve_data(url)
 

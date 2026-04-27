@@ -64,7 +64,7 @@ spec = {
     "commands": [
         {
             "name": "status",
-            "desc": "Display the current status of Augur processes",
+            "desc": "Display the current status of CollectOSS processes",
             "args": []
         }, {
             "name": "start",
@@ -102,7 +102,7 @@ spec = {
             ]
         }, {
             "name": "shutdown",
-            "desc": "Stop all Augur components and shut down Jumpstart",
+            "desc": "Stop all CollectOSS components and shut down Jumpstart",
             "args": []
         }
     ],
@@ -139,7 +139,7 @@ spec = {
             ]
         }, {
             "ID": "S",
-            "desc": "Status of Augur components",
+            "desc": "Status of CollectOSS components",
             "fields": [
                 {
                     "key": "frontend",

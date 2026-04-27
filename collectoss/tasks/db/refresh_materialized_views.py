@@ -187,14 +187,14 @@ def refresh_materialized_views(self):
         logger.error("Nuke stored affiliations is deprecated!")
         # deprecated because the UI component of facade where affiliations would be 
         # nuked upon change no longer exists, and this information can easily be derived 
-        # from queries and materialized views in the current version of Augur.
+        # from queries and materialized views in the current version of CollectOSS.
         # This method is also a major performance bottleneck with little value.
     
     if not facade_helper.limited_run or (facade_helper.limited_run and facade_helper.fix_affiliations):
         logger.error("Fill empty affiliations is deprecated!")
         # deprecated because the UI component of facade where affiliations would need 
         # to be fixed upon change no longer exists, and this information can easily be derived 
-        # from queries and materialized views in the current version of Augur.
+        # from queries and materialized views in the current version of CollectOSS.
         # This method is also a major performance bottleneck with little value.
 
     if facade_helper.force_invalidate_caches:

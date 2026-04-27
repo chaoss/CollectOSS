@@ -1,7 +1,7 @@
 Collecting Data
 ===============
 
-Now that you’ve installed Augur’s application server, it’s time to configure data collection if needed. If you just want to run Augur using the default repositories in the default database, and default celery collection settings, all you need to do is start the redis server in one terminal, make sure rabbitmq is running, and the augur application in the other terminal. (Don't forget that the AUGUR_DB environment variable needs to be set in the terminal, or set permanently)
+Now that you’ve installed CollectOSS’s application server, it’s time to configure data collection if needed. If you just want to run Augur using the default repositories in the default database, and default celery collection settings, all you need to do is start the redis server in one terminal, make sure rabbitmq is running, and the augur application in the other terminal. (Don't forget that the AUGUR_DB environment variable needs to be set in the terminal, or set permanently)
 
 .. code-block:: bash
 

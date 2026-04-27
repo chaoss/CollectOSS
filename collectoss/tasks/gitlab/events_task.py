@@ -1,5 +1,5 @@
 """
-Module to define the task methods to collect gitlab event data for augur
+Module to define the task methods to collect gitlab event data for collectoss
 """
 import logging
 
@@ -163,8 +163,8 @@ def process_mr_events(events, task_name, repo_id, logger, session):
     Arguments:
         labels: List of dictionaries of label data
         repo_id: collectoss id for the repository
-        tool_source: The part of augur that processed the data
-        tool_version: The version of the augur task that processed the data
+        tool_source: The part of collectoss that processed the data
+        tool_version: The version of the collectoss task that processed the data
         data_source: The source of the data 
 
     

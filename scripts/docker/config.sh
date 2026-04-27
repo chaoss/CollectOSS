@@ -33,7 +33,7 @@ function blank_confirm() {
 function get_github_username() {
     echo
     echo "Please provide your username for Github."
-    echo "** This is required for Augur to clone Github repos ***"
+    echo "** This is required for CollectOSS to clone Github repos ***"
     read -p "GitHub username: " github_username
     blank_confirm github_username
     echo
@@ -44,7 +44,7 @@ function get_github_api_key() {
     echo "Please provide a valid GitHub API key."
     echo "For more information on how to create the key, visit:"
     echo "https://collectoss.readthedocs.io/en/main/getting-started/installation.html#backend"
-    echo "** This is required for Augur to gather data ***"
+    echo "** This is required for CollectOSS to gather data ***"
     read -p "GitHub API Key: " github_api_key
     blank_confirm github_api_key
     echo
@@ -53,7 +53,7 @@ function get_github_api_key() {
 function get_gitlab_username() {
     echo
     echo "Please provide your username for GitLab."
-    echo "** This is required for Augur to clone GitLab repos ***"
+    echo "** This is required for CollectOSS to clone GitLab repos ***"
     read -p "GitLab username: " gitlab_username
     blank_confirm gitlab_username
     echo
@@ -64,7 +64,7 @@ function get_gitlab_api_key() {
     echo "Please provide a valid GitLab API key."
     echo "For more information on how to create the key, visit:"
     echo "https://collectoss.readthedocs.io/en/main/getting-started/installation.html#backend"
-    echo "** This is required for Augur to gather data ***"
+    echo "** This is required for CollectOSS to gather data ***"
     read -p "GitLab API Key: " gitlab_api_key
     blank_confirm gitlab_api_key
     echo
@@ -135,7 +135,7 @@ function get_facade_repo_path() {
 function get_rabbitmq_broker_url() {
     echo
     echo "Please provide your rabbitmq broker url."
-    echo "** This is required for Augur to run all collection tasks. ***"
+    echo "** This is required for CollectOSS to run all collection tasks. ***"
     read -p "broker_url: " rabbitmq_conn_string
     blank_confirm rabbitmq_conn_string
     echo
