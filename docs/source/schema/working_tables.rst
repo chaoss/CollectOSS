@@ -5,7 +5,7 @@ List of Working Data Tables In CollectOSS
 
     They are in lowercase to represent exactly how they look like on the actual table.
 
-    * analysis_log - this table is a record of the analysis steps the facade tasks have taken on an augur instance. A listing of all the analysis steps taken for every repository is recorded as they are completed.
+    * analysis_log - this table is a record of the analysis steps the facade tasks have taken on an collectoss instance. A listing of all the analysis steps taken for every repository is recorded as they are completed.
 
         * Tasks Associated With It?
 

@@ -36,7 +36,7 @@ CollectOSS Data
 -------------------------------------------------------
 
 The ``augur_data`` schema contains *most* of the information analyzed
-and constructed by CollectOSS. The origin’s of the data inside of augur are
+and constructed by CollectOSS. The origin’s of the data inside of collectoss are
 from data collection tasks and populate this schema.:
 
 1. ``collectoss.tasks.github.*``: Tasks that pull data from the GitHub API.
@@ -50,7 +50,7 @@ http://www.github.com/brianwarner/facade, but substantially modified in
 the fork located at http://github.com/sgoggins/facade. The modifications
 include modularization of code, connections to Postgresql data instead
 of MySQL and other changes noted in the commit logs. Further modifications
-have been made to work with augur as well as seemlessly integrate it into
+have been made to work with collectoss as well as seemlessly integrate it into
 data collection.
 
 3. ``collectoss.tasks.data_analysis.insight_worker.tasks``: Generates summarizations from raw data

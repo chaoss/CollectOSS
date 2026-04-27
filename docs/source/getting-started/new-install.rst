@@ -94,7 +94,7 @@ Then, from within the resulting postgresql shell:
 
    CREATE DATABASE augur;
    CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
-   GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
+   GRANT ALL PRIVILEGES ON DATABASE collectoss TO augur;
 
 **If you’re using PostgreSQL 15 or later**, default database permissions
 will prevent CollectOSS’s installer from configuring the database. Add one
@@ -134,10 +134,10 @@ instance. You can accomplish this by running the below commands:
 .. code:: shell
 
    sudo rabbitmq-plugins enable rabbitmq_management &&
-   sudo rabbitmqctl add_user augur password123 &&
+   sudo rabbitmqctl add_user collectoss password123 &&
    sudo rabbitmqctl add_vhost collectoss_vhost &&
-   sudo rabbitmqctl set_user_tags augur augurTag administrator &&
-   sudo rabbitmqctl set_permissions -p collectoss_vhost augur ".*" ".*" ".*"
+   sudo rabbitmqctl set_user_tags collectoss augurTag administrator &&
+   sudo rabbitmqctl set_permissions -p collectoss_vhost collectoss ".*" ".*" ".*"
 
 -  We need rabbitmq_management so we can purge our own queues with an
    API call
@@ -403,7 +403,7 @@ With virtualization there may be issues associated with redis-server
 connections exceeding available memory. In these cases, the following
 workarounds help to resolve issues.
 
-Specifically, you may find this error in your augur logs:
+Specifically, you may find this error in your collectoss logs:
 
 .. code:: shell
 
@@ -497,7 +497,7 @@ change that in augur_operations.config for OSX)
 Stopping your CollectOSS Instance
 ----------------------------
 
-You can stop augur with ``uv run collectoss backend stop``, followed by
+You can stop collectoss with ``uv run collectoss backend stop``, followed by
 ``uv run collectoss backend kill``. We recommend waiting 5 minutes between commands
 so CollectOSS can shutdown more gently. There is no issue with data integrity
 if you issue them seconds apart, its just that stopping is nicer than

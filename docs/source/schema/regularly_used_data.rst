@@ -1,7 +1,7 @@
 List of Regularly Used Data Tables In CollectOSS
 ===========================================
 
-**This is a list of data tables in augur that are regularly used and the various tasks attached to them.**
+**This is a list of data tables in collectoss that are regularly used and the various tasks attached to them.**
 
 Commits
 -------
@@ -18,7 +18,7 @@ Contributor_affiliations
 
   A list of emails and domains, with start and end dates for individuals to have an organizational affiliation.
 
-        * Populated by default when augur is installed
+        * Populated by default when collectoss is installed
         * Can be edited so that an CollectOSS instance can resolve a larger list of affiliations.
         * These mappings are summarized in the ``dm_*`` tables.
 
@@ -299,7 +299,7 @@ Repo_deps_scorecard
 Repo_groups
 -----------
 
- Reference data. The repo groups in an augur instance.
+ Reference data. The repo groups in an collectoss instance.
 
                 .. image:: images/repo_groups.png
                    :width: 200
@@ -347,7 +347,7 @@ Repo_meta
 Repo_sbom_scans
 ---------------
 
- This table links the augur_data schema to the augur_spdx schema to keep a list of repositories that need licenses scanned. (These are for file level license declarations, which are common in Linux Foundation projects, but otherwise not in wide use).
+ This table links the collectoss_data schema to the collectoss_spdx schema to keep a list of repositories that need licenses scanned. (These are for file level license declarations, which are common in Linux Foundation projects, but otherwise not in wide use).
 
                 .. image:: images/repo_sbom_scans.png
                    :width: 200
