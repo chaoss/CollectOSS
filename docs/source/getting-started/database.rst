@@ -26,9 +26,9 @@ After you set up your PostgreSQL instance, you'll need to create a database and 
 
 .. code-block:: postgresql
 
-    CREATE DATABASE augur;
-    CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
-    GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
+    CREATE DATABASE collectoss;
+    CREATE USER collectoss WITH ENCRYPTED PASSWORD 'password';
+    GRANT ALL PRIVILEGES ON DATABASE collectoss TO collectoss;
 
 For example, if you were using ``psql`` to connect to an instance on your machine ``localhost`` under the default user ``postgres`` on the default PostgreSQL port ``5432``, you might run something like this to connect to the server:
 
@@ -40,9 +40,9 @@ Then, once you've connected to your PostgreSQL instance\:
 
 .. code-block:: postgresql
 
-    postgres=# CREATE DATABASE augur;
-    postgres=# CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
-    postgres=# GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
+    postgres=# CREATE DATABASE collectoss;
+    postgres=# CREATE USER collectoss WITH ENCRYPTED PASSWORD 'password';
+    postgres=# GRANT ALL PRIVILEGES ON DATABASE collectoss TO collectoss;
 
 
 Once you've got the database setup, CollectOSS will install the schema for you. You're now ready to `install CollectOSS <installation.html>`_!

@@ -7,7 +7,7 @@ High-Level Steps to Server Installation of CollectOSS
 ------------------------------------------------
 
 1. Have a list of repositories and groups you want them to be in, following the format in the files `schema/repo_group_load_sample.csv` and `schema/repo_load_sample.csv`.
-2. Have access to a server that meets the augur installation pre-requisites (Python, NodeJS, etc).
+2. Have access to a server that meets the collectoss installation pre-requisites (Python, NodeJS, etc).
 3. Have nginx installed for front-end service. You can use another HTTP server, but we have instructions for nginx.
 4. Make sure you have a database available, owned by a user who has the right to create tables.
 5. Have a GitHub API Key handy.
@@ -23,7 +23,7 @@ Detailed Steps
 6. ``make install`` ... now is a good time to go get some tea.
 7. When you return with your tea, follow the prompts:
         - respond to the SERVER prompt with localhost.
-        - the current standard is to put the repos in a repos/ directory in the root augur directory (these will never get checked in to VC).
+        - the current standard is to put the repos in a repos/ directory in the root collectoss directory (these will never get checked in to VC).
 8. Load repos, following instructions in docs.
 9. If you have more than one instance of CollectOSS or another service on port 5000, you need to edit the ``augur.config.json`` to update the server port:
         - ``sudo lsof -i -P -n | grep LISTEN`` shows you ports in use if you are not sure.

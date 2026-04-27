@@ -27,7 +27,7 @@ To see your changes and make sure everything rendered correctly, First activate 
 
 .. code-block:: bash
 
-    $ cd augur
+    $ cd collectoss
     $ make docs
 
 Or, you can use the shortcut which does exactly this:

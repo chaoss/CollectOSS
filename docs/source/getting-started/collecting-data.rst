@@ -1,7 +1,7 @@
 Collecting Data
 ===============
 
-Now that you’ve installed CollectOSS’s application server, it’s time to configure data collection if needed. If you just want to run CollectOSS using the default repositories in the default database, and default celery collection settings, all you need to do is start the redis server in one terminal, make sure rabbitmq is running, and the augur application in the other terminal. (Don't forget that the AUGUR_DB environment variable needs to be set in the terminal, or set permanently)
+Now that you’ve installed CollectOSS’s application server, it’s time to configure data collection if needed. If you just want to run CollectOSS using the default repositories in the default database, and default celery collection settings, all you need to do is start the redis server in one terminal, make sure rabbitmq is running, and the collectoss application in the other terminal. (Don't forget that the AUGUR_DB environment variable needs to be set in the terminal, or set permanently)
 
 .. code-block:: bash
 
@@ -22,7 +22,7 @@ Now that you’ve installed CollectOSS’s application server, it’s time to co
     uv run collectoss backend stop
     uv run collectoss backend kill
 
-Now, here's a ton of brain-splitting detail about celery collection. There are 2 pieces to data collection with CollectOSS: the celery worker processes, and the job messages passed through rabbitmq. The jobs to collect are determined by a monitor process started through the cli that starts the rest of augur. The monitor process generates the jobs messages to send to rabbitmq through the collection_status table that informs the status of jobs that have yet to be run. The celery collection workers can then accept these jobs, after which they will use the information provided in the job to find the repositories in question and collect the requested data.
+Now, here's a ton of brain-splitting detail about celery collection. There are 2 pieces to data collection with CollectOSS: the celery worker processes, and the job messages passed through rabbitmq. The jobs to collect are determined by a monitor process started through the cli that starts the rest of collectoss. The monitor process generates the jobs messages to send to rabbitmq through the collection_status table that informs the status of jobs that have yet to be run. The celery collection workers can then accept these jobs, after which they will use the information provided in the job to find the repositories in question and collect the requested data.
 
 Since the default setup will work for most use cases, we'll first cover how to configure some specific data collection jobs and then briefly touch on the celery configuration options, after which we'll cover how to add repos and repo groups to the database.
 
@@ -83,7 +83,7 @@ There are many collection jobs that ship ready to collect out of the box:
 - ``collectoss.tasks.github.releases.tasks`` (collects release data from the GitHub API)
 - ``collectoss.tasks.data_analysis.insight_worker.tasks`` (queries CollectOSS's metrics API to find interesting anomalies in the collected data)
 
-All worker configuration options are found in the config table generated when augur was installed. The config table is located in the augur_operations schema of your postgresql database. Each configurable data collection job set has its subsection with the same or similar title as the task's name. We recommend leaving the defaults and only changing them when explicitly necessary, as the default parameters will work for most use cases. Read on for more on how to make sure your workers are properly configured.
+All worker configuration options are found in the config table generated when collectoss was installed. The config table is located in the augur_operations schema of your postgresql database. Each configurable data collection job set has its subsection with the same or similar title as the task's name. We recommend leaving the defaults and only changing them when explicitly necessary, as the default parameters will work for most use cases. Read on for more on how to make sure your workers are properly configured.
 
 Worker-specific configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -149,7 +149,7 @@ If you choose, you can also adjust the values in the ``Tasks`` block if you woul
 Adding repos for collection
 -----------------------------
 
-If you're using the Docker container, you can use the `provided UI <../docker/usage.html>`_ to load your repositories. Otherwise, you'll need to use the `CollectOSS CLI <command-line-interface/db.html>`_  or the augur frontend to load your repositories. Please reference the respective sections of the documentation for detailed instructions on how to accomplish both of these steps.
+If you're using the Docker container, you can use the `provided UI <../docker/usage.html>`_ to load your repositories. Otherwise, you'll need to use the `CollectOSS CLI <command-line-interface/db.html>`_  or the collectoss frontend to load your repositories. Please reference the respective sections of the documentation for detailed instructions on how to accomplish both of these steps.
 
 Running collections
 --------------------
@@ -158,7 +158,7 @@ Congratulations! At this point you (hopefully) have a fully functioning and conf
 
 After you've loaded your repos, you're ready for your first collection run. We recommend running only the default jobs first to gather the initial data.
 
-You can now run CollectOSS and start the data collection by issuing the ``collectoss backend start`` command in the root ``augur`` directory. All your logs (including worker logs and error files) will be saved to a ``logs/`` subdirectory in that same folder, but this can be customized - more on that and other logging utilities `in the development guide <../development-guide/logging.html>`_.
+You can now run CollectOSS and start the data collection by issuing the ``collectoss backend start`` command in the root ``collectoss`` directory. All your logs (including worker logs and error files) will be saved to a ``logs/`` subdirectory in that same folder, but this can be customized - more on that and other logging utilities `in the development guide <../development-guide/logging.html>`_.
 
 Once you've finished the initial data collection, we suggest then running the ``value_worker`` (if you have it installed) and the ``insight_worker``. This is because the ``value_worker`` depends on the source files of the repositories cloned by the ``facade_worker``, and the ``insight_worker`` uses the data from all the other workers to identify anomalies in the data by by performing statistical analysis on the data returned from CollectOSS's metrics API.
 

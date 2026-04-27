@@ -30,7 +30,7 @@ Then, run any stage by using the hash that the relevant stage prints out during 
 Viewing container logs
 -------------------------
 
-By default, the only logs shown by the container are the logs of CollectOSS's main data collection process. If you started your container(s) in the background, and want to view these logs again, run the following command in the root ``augur`` directory\:
+By default, the only logs shown by the container are the logs of CollectOSS's main data collection process. If you started your container(s) in the background, and want to view these logs again, run the following command in the root ``collectoss`` directory\:
 
 .. code-block:: bash
 

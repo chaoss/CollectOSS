@@ -23,7 +23,7 @@ import sphinx_rtd_theme
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-# Add the project root (two levels up: docs/source → augur)
+# Add the project root (two levels up: docs/source → collectoss)
 sys.path.insert(0, os.path.abspath(os.path.join(here, '../..')))
 
 # Now importing variables from metadata.py

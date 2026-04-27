@@ -111,7 +111,7 @@ utility may change these characteristics.
 CollectOSS Commands
 --------------
 
-To access command line options, use ``augur --help``. To load repos from
+To access command line options, use ``collectoss --help``. To load repos from
 GitHub organizations prior to collection, or in other ways, the direct
 route is ``collectoss db --help``.
 
@@ -142,12 +142,12 @@ http://hostname.io:port_number
 For example: http://chaoss.tv:5038
 
 Note: CollectOSS will run on port 5000 by default (you probably need to
-change that in augur_operations.config for OSX)
+change that in collectoss_operations.config for OSX)
 
 Stopping your CollectOSS Instance
 ----------------------------
 
-You can stop augur with ``collectoss backend stop``, followed by
+You can stop collectoss with ``collectoss backend stop``, followed by
 ``collectoss backend kill``. We recommend waiting 5 minutes between commands
 so CollectOSS can shutdown more gently. There is no issue with data integrity
 if you issue them seconds apart, its just that stopping is nicer than

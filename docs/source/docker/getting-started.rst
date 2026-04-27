@@ -56,7 +56,7 @@ or
 
     podman compose up --build
 
-And augur should be up and running!
+And collectoss should be up and running!
 
 Credentials
 ------------

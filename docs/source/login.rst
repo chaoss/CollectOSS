@@ -37,7 +37,7 @@ Initial Request
 
 The authorization flow is initiated when a user clicks a link or button which redirects the user-agent (browser) to the authorization server. This request URL must be of the following format::
 
-    https://augur.example.com/user/authorize?
+    https://collectoss.example.com/user/authorize?
         client_id=[your application ID]
         &response_type="code"
         &state=[optional value that you define]
@@ -64,7 +64,7 @@ The Client Application must make the following request in order to facilitate th
 
 .. code:: yaml
 
-    URL: https://augur.example.com/api/unstable/user/session/generate
+    URL: https://collectoss.example.com/api/unstable/user/session/generate
     arguments:
         code: [the temporary authorization code]
         grant_type: "code"
@@ -98,7 +98,7 @@ The application may also attempt automatic reauthorization using the previously 
 
 .. code:: yaml
 
-    URL: https://augur.example.com/api/unstable/user/session/refresh
+    URL: https://collectoss.example.com/api/unstable/user/session/refresh
     arguments:
         refresh_token: [the previously provided refresh token]
         grant_type: "refresh_token"

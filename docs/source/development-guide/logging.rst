@@ -11,6 +11,6 @@ The verbosity and minimum log level can be controlled with the ``verbose`` (bool
 a ``quiet`` flag that will disable all logging output entirely.
 
 If you need to change where the logs are written to, you can use the ``logs_directory`` option. If there is
-no ``/`` at the beginning, CollectOSS assumes you are specifying a path relative to the root augur directory, otherwise
+no ``/`` at the beginning, CollectOSS assumes you are specifying a path relative to the root collectoss directory, otherwise
 it will set the log location to be exactly what you configured. The log directory itself will be created if it doesn't exist,
 but only if its parent DOES already exist.

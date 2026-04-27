@@ -31,7 +31,7 @@ Server Compilation
     }
 
 2.   Compile CollectOSS (this wires the host and port into the frontend so people pulling the web pages of CollectOSS, in the `frontend/` subdirectory are referring to the right endpoints for this instance.): ``make rebuild``
-3.   Run CollectOSS: ``uv run nohup collectoss backend start >augur.log 2>augur.err &``
+3.   Run CollectOSS: ``uv run nohup collectoss backend start >collectoss.log 2>collectoss.err &``
 
 
 ------------------
@@ -123,11 +123,11 @@ This file will be located in the ``/etc/nginx/sites-enabled`` directory on most 
 		        listen 80;
 		        server_name  <<your server subdomain.domain.tld>>;
 
-		        root /home/user/.../<<augur-instance-home>>/frontend/dist;
+		        root /home/user/.../<<collectoss-instance-home>>/frontend/dist;
 		        index index.html index.htm;
 
 		        location / {
-		        root /home/user/.../<<augur-instance-home>>/frontend/dist;
+		        root /home/user/.../<<collectoss-instance-home>>/frontend/dist;
 		        try_files $uri $uri/ /index.html;
 		        }
 
@@ -137,13 +137,13 @@ This file will be located in the ``/etc/nginx/sites-enabled`` directory on most 
 		#        }
 
 		        location /api_docs/ {
-		        root /home/user/.../<<augur-instance-home>>/frontend/dist;
+		        root /home/user/.../<<collectoss-instance-home>>/frontend/dist;
 		        index index.html;
 		        }
 
 
-		        error_log /var/log/nginx/augur.censusscienceosshealth.error.log;
-		        access_log /var/log/nginx/augur.censusscienceosshealth.access.log;
+		        error_log /var/log/nginx/collectoss.censusscienceosshealth.error.log;
+		        access_log /var/log/nginx/collectoss.censusscienceosshealth.access.log;
 
 		}
 
