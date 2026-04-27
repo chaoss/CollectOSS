@@ -4,7 +4,7 @@ Getting Started
 For the Docker Savvy Who Want to Understand How the Sausage is Made:
 --------------------------------------------------------------------
 
-Augur provides several Docker images designed to get you started with our software as quickly as possible. They are:
+CollectOSS provides several Docker images designed to get you started with our software as quickly as possible. They are:
 
 - ``augurlabs/augur:backend``, our backend data collection and metrics API
 - ``augurlabs/augur:frontend``, our metrics visualization frontend (Experimental, will be replaced in the future)
@@ -12,7 +12,7 @@ Augur provides several Docker images designed to get you started with our softwa
 .. warning::
    The frontend is very out of date and will likely not work. It is still available, but it is in the process of being replaced with an entirely new frontend so the old frontend is not being actively fixed.
 
-- ``augurlabs/augur:database``, an empty PostgreSQL database with the Augur schema installed
+- ``augurlabs/augur:database``, an empty PostgreSQL database with the CollectOSS schema installed
 
 If you're not familiar with Docker, their `starting guide <https://www.docker.com/resources/what-container>`_ is a great resource.
 
@@ -30,7 +30,7 @@ the following resources (or more):
 - 100 GB disk
 - 10 GB RAM
 
-Clone the Augur repository and create a .env file in the top level directory
+Clone the CollectOSS repository and create a .env file in the top level directory
 with the following fields (don't remove any variable, keep placeholder values if you don't need some of them):
 
 .. code:: python

@@ -1,14 +1,14 @@
-Running Augur in Production
+Running CollectOSS in Production
 ===========================
 
 This page collects practical tips, configuration notes, and important considerations
-for deploying Augur in a production environment. This is a reference to help
-configure Augur effectively.
+for deploying CollectOSS in a production environment. This is a reference to help
+configure CollectOSS effectively.
 
 Environment Variables
 ---------------------
 
-Augur uses several environment variables in production. Make sure to configure the ones relevant
+CollectOSS uses several environment variables in production. Make sure to configure the ones relevant
 to your deployment:
 
 - ``AUGUR_RESET_LOGS`` : Controls automatic log reset on server startup
@@ -18,19 +18,19 @@ AUGUR_RESET_LOGS
 ----------------
 
 **Description:**  
-Controls whether Augur resets its log files every time the server starts. Useful for managing log size or integrating with external log rotation systems.
+Controls whether CollectOSS resets its log files every time the server starts. Useful for managing log size or integrating with external log rotation systems.
 
 **Type:**  
 boolean
 
 **Default:**  
-`True` : Augur clears old logs at startup.
+`True` : CollectOSS clears old logs at startup.
 
 **Environment Variable:**  
 AUGUR_RESET_LOGS
 
 **Notes:**  
-If set to `False`, Augur will not reset logs automatically. Administrators must ensure log rotation or cleanup is handled manually.
+If set to `False`, CollectOSS will not reset logs automatically. Administrators must ensure log rotation or cleanup is handled manually.
 
 **Usage Example:**
 
@@ -42,7 +42,7 @@ AUGUR_DB
 --------
 
 **Description:**  
-Specifies the connection string for the PostgreSQL database used by Augur. If omitted, the default Docker database is used.
+Specifies the connection string for the PostgreSQL database used by CollectOSS. If omitted, the default Docker database is used.
 
 **Type:**  
 string

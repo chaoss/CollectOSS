@@ -66,7 +66,7 @@ And augur should be up and running!
     AUGUR_GITLAB_API_KEY=placeholder
     AUGUR_GITLAB_USERNAME=placeholder
 
-  4. Execute the code from the base directory of the Augur repository:
+  4. Execute the code from the base directory of the CollectOSS repository:
 
   .. code-block:: bash
 

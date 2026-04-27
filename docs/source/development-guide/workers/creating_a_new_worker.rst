@@ -6,7 +6,7 @@ Worker Setup
 ---------------------
 
 1. If you are hitting an API on a platform like GitHub, or GitLab, follow the pattern in those workers.
-2. If you are analyzing Augur data, the `value_worker` provides a good example.
+2. If you are analyzing CollectOSS data, the `value_worker` provides a good example.
 
 What are the key sections?
 -----------------------------------
@@ -68,7 +68,7 @@ The key sections you can copy from any worker are illustrated in this example fr
             self.tool_version = '1.0.0'
             self.data_source = 'GitHub API'
 
-Getting Your Worker to Talk to Augur
+Getting Your Worker to Talk to CollectOSS
 ----------------------------------------
 
 In the house keeper block, you need to add something following this pattern, inside the "jobs" section:
@@ -146,6 +146,6 @@ You can copy the housekeeper block verbatim from what you added to your own `aug
 
 
 
-The `switch` variable tells Augur to run your worker. The `worker` variable tells Augur how many to run. We recommend you begin with the number `1`.
+The `switch` variable tells CollectOSS to run your worker. The `worker` variable tells CollectOSS how many to run. We recommend you begin with the number `1`.
 
 Let us know if that works.  I will add this to the documentation.

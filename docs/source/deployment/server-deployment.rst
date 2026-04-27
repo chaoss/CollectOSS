@@ -1,9 +1,9 @@
 ---------------------------
-Setting up an Augur Server
+Setting up an CollectOSS Server
 ---------------------------
 
 
-High-Level Steps to Server Installation of Augur
+High-Level Steps to Server Installation of CollectOSS
 ------------------------------------------------
 
 1. Have a list of repositories and groups you want them to be in, following the format in the files `schema/repo_group_load_sample.csv` and `schema/repo_load_sample.csv`.
@@ -16,16 +16,16 @@ Detailed Steps
 ---------------------------
 
 1. Login to your server.
-2. If you have not already done so, clone Augur.
+2. If you have not already done so, clone CollectOSS.
 3. Change into that directory.
 4. ``git checkout main``, if you want to deploy the latest features, otherwise remain in the main branch.
-5. You need a database owned by an Augur user.
+5. You need a database owned by an CollectOSS user.
 6. ``make install`` ... now is a good time to go get some tea.
 7. When you return with your tea, follow the prompts:
         - respond to the SERVER prompt with localhost.
         - the current standard is to put the repos in a repos/ directory in the root augur directory (these will never get checked in to VC).
 8. Load repos, following instructions in docs.
-9. If you have more than one instance of Augur or another service on port 5000, you need to edit the ``augur.config.json`` to update the server port:
+9. If you have more than one instance of CollectOSS or another service on port 5000, you need to edit the ``augur.config.json`` to update the server port:
         - ``sudo lsof -i -P -n | grep LISTEN`` shows you ports in use if you are not sure.
         - ``sudo ufw status`` lets you know if the port you are looking for is available as open through your firewall.
         - ``sudo ufw status | grep 5005`` checks to see if port 5005 is open, for example:

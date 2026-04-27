@@ -1,4 +1,4 @@
-List of Regularly Used Data Tables In Augur
+List of Regularly Used Data Tables In CollectOSS
 ===========================================
 
 **This is a list of data tables in augur that are regularly used and the various tasks attached to them.**
@@ -6,7 +6,7 @@ List of Regularly Used Data Tables In Augur
 Commits
 -------
 
-  This is where a record for every file in every commit in every repository in an Augur instance is kept.
+  This is where a record for every file in every commit in every repository in an CollectOSS instance is kept.
 
         * Task: Facade tasks collect, and also stores platform user information in the commits table.
 
@@ -19,7 +19,7 @@ Contributor_affiliations
   A list of emails and domains, with start and end dates for individuals to have an organizational affiliation.
 
         * Populated by default when augur is installed
-        * Can be edited so that an Augur instance can resolve a larger list of affiliations.
+        * Can be edited so that an CollectOSS instance can resolve a larger list of affiliations.
         * These mappings are summarized in the ``dm_*`` tables.
 
                 .. image:: images/contributor_affiliations.png
@@ -39,7 +39,7 @@ Contributor_repo
 Contributors
 -------------
 
-These are all the contributors to a project/repo. In Augur, all types of contributions create a contributor record. This includes issue comments, pull request comments, label addition, etc. This is different than how GitHub counts contributors; they only include committers.
+These are all the contributors to a project/repo. In CollectOSS, all types of contributions create a contributor record. This includes issue comments, pull request comments, label addition, etc. This is different than how GitHub counts contributors; they only include committers.
 
         * Tasks Adding Contributors:
 
@@ -55,7 +55,7 @@ These are all the contributors to a project/repo. In Augur, all types of contrib
 Contributors_aliases
 --------------------
 
- These are all the alternate emails that the same contributor might use. These records arise almost entirely from the commit log. For example, if I have two different emails on two different computers that I use when I make a commit, then an alias is created for whatever the 2nd to nth email Augur runs across. If a user's email cannot be resolved, it is placed in the unresolved_commit_emails table. Coverage is greater than 98% since Augur  1.2.4.
+ These are all the alternate emails that the same contributor might use. These records arise almost entirely from the commit log. For example, if I have two different emails on two different computers that I use when I make a commit, then an alias is created for whatever the 2nd to nth email CollectOSS runs across. If a user's email cannot be resolved, it is placed in the unresolved_commit_emails table. Coverage is greater than 98% since CollectOSS  1.2.4.
 
         * Tasks:
 

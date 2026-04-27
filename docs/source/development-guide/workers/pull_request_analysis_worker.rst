@@ -11,9 +11,9 @@ To kickstart the worker, it needs to receive a task from the Housekeeper, simila
 
 The standard options are:
 
-- ``switch`` - a boolean flag indicating if the worker should automatically be started with Augur. Defaults to ``0`` (false).
-- ``workers`` - the number of instances of this worker that Augur should spawn if ``switch`` is set to ``1``. Defaults to ``1``.
-- ``port`` - the TCP port the worker will use to communicate with Augur’s broker, the default being ``51400``.
+- ``switch`` - a boolean flag indicating if the worker should automatically be started with CollectOSS. Defaults to ``0`` (false).
+- ``workers`` - the number of instances of this worker that CollectOSS should spawn if ``switch`` is set to ``1``. Defaults to ``1``.
+- ``port`` - the TCP port the worker will use to communicate with CollectOSS’s broker, the default being ``51400``.
 - ``insight_days`` - open PRs created in the duration of the past ``x`` days are analyzed.
 
 .. note::

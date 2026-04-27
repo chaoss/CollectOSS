@@ -1,7 +1,7 @@
 Deployment
 ================
 
-This section details describes production deployment of Augur.
+This section details describes production deployment of CollectOSS.
 
 
 .. toctree::

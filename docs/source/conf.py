@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Augur documentation build configuration file, created by
+# CollectOSS documentation build configuration file, created by
 # sphinx-quickstart on Tue Oct 24 12:27:08 2017.
 #
 # This file is execfile()d with the current directory set to its

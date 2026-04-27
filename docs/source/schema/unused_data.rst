@@ -1,4 +1,4 @@
-List of Unused Data Tables In Augur
+List of Unused Data Tables In CollectOSS
 ===================================
 
 ** This is a list of data tables in augur that are not currently in use. **

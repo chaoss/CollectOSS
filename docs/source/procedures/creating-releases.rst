@@ -1,18 +1,18 @@
-The Augur Release Process
+The CollectOSS Release Process
 =========================
 
 The first step to releasing any changes is to have changes in the first place.
-Augur's `CONTRIBUTING.md <https://github.com/chaoss/collectoss/blob/main/CONTRIBUTING.md>`__ file
+CollectOSS's `CONTRIBUTING.md <https://github.com/chaoss/collectoss/blob/main/CONTRIBUTING.md>`__ file
 contains all the information that is needed to get started with topics like
 reporting issues, contributing code, and understanding the code review process.
 
-This document outlines how these changes end up in an Augur release after they are merged into the `main` branch.
+This document outlines how these changes end up in an CollectOSS release after they are merged into the `main` branch.
 
 Release Workflow
 ----------------
 
-Starting after version **0.89.3**, Augur follows a workflow similar to those you may already
-be familiar with (such as GitHub Flow and Git Flow). The Augur workflow has two long-lived branches,
+Starting after version **0.89.3**, CollectOSS follows a workflow similar to those you may already
+be familiar with (such as GitHub Flow and Git Flow). The CollectOSS workflow has two long-lived branches,
 `main` and `release`, and is designed such that changes only flow in one direction — from `main` into `release`.
 
 Branches
@@ -25,21 +25,21 @@ At any given point in time, this branch represents the best approximation of wha
 release will look like. Since this is the active development branch, changes happen more frequently
 and this branch should be considered to be less stable than the `release` branch due to the possibility
 of breaking changes being made (and potentially reverted) between releases. It is not recommended for
-production deployment and is primarily intended for use by Augur contributors running their own copies
+production deployment and is primarily intended for use by CollectOSS contributors running their own copies
 against test data for development purposes.
 
 **release**
 
-The `release` branch is where all Augur versions (after 0.89.3) are tagged. Each commit on this branch
+The `release` branch is where all CollectOSS versions (after 0.89.3) are tagged. Each commit on this branch
 represents either a hotfix to the prior release or a new major or minor version.
 
-Currently, Augur only officially supports the last-released version represented by the latest **release** tag.
+Currently, CollectOSS only officially supports the last-released version represented by the latest **release** tag.
 In most cases, the latest commit on the `release` branch is made immediately prior to a release, but always rely
 on the latest tagged release, not the `release` branch in production.
 
 .. note::
 
-    If future needs require supporting multiple Augur versions concurrently, individual numbered
+    If future needs require supporting multiple CollectOSS versions concurrently, individual numbered
     release branches may be made from this central `release` branch to allow any hotfixes to be applied
     to each supported version independently of the others.
 
@@ -55,7 +55,7 @@ When the next release is set to be cut, some preparation steps need to take plac
 Version Management (Updated)
 ----------------------------
 
-Starting from version **0.90.0**, Augur now uses a **single source of truth** for its version information,
+Starting from version **0.90.0**, CollectOSS now uses a **single source of truth** for its version information,
 defined in `metadata.py`.
 
 Previously, the version number needed to be manually updated in several different places during a release, including:
@@ -73,7 +73,7 @@ Now, this has been **fully centralized**:
 - A helper script ``get_version.py`` reads this value and dynamically injects it into Docker builds via a build argument.
 - The CI/CD pipeline (GitHub Actions) also reads the same version from ``metadata.py`` when tagging builds and Docker images.
 
-This ensures that all parts of Augur — including Python packaging, Docker images, and release artifacts —
+This ensures that all parts of CollectOSS — including Python packaging, Docker images, and release artifacts —
 use the **exact same version**, automatically.
 
 Therefore, before tagging a new release, only the version in ``metadata.py`` needs to be updated.

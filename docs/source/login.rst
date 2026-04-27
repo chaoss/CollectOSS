@@ -1,18 +1,18 @@
-Augur OAuth Flow
+CollectOSS OAuth Flow
 =================
 
-Augur implements the Oauth 2.0 specification, and each Augur instance is capable of acting as an authorization server for external applications.
+CollectOSS implements the Oauth 2.0 specification, and each CollectOSS instance is capable of acting as an authorization server for external applications.
 
 Prerequisites
 --------------
 
-If your Augur instance is running behind Nginx or Apache, make sure this parameter (or its Apache equivalent) is set in your ``sites-enabled`` configuration::
+If your CollectOSS instance is running behind Nginx or Apache, make sure this parameter (or its Apache equivalent) is set in your ``sites-enabled`` configuration::
 
     proxy_set_header X-Forwarded-Proto $scheme;
 
-Registering a user account on the desired Augur instance is a requirement for creating a Client Application. The developer of the application must follow the below steps:
+Registering a user account on the desired CollectOSS instance is a requirement for creating a Client Application. The developer of the application must follow the below steps:
 
-1. Navigate to the home page of the desired Augur instance.
+1. Navigate to the home page of the desired CollectOSS instance.
 2. Click "Login" on the navigation bar.
 3. Click "Register" and fill out the account details.
 

@@ -1,7 +1,7 @@
 CLI (Command Line Interface)
 ===============================
 
-To learn what's available in Augur's command line interface (CLI), simply use this set of commands:
+To learn what's available in CollectOSS's command line interface (CLI), simply use this set of commands:
 
 .. code-block:: bash
 

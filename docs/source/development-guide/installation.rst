@@ -1,7 +1,7 @@
 Installing for Development
 =============================
 
-Installing Augur for local development is pretty similar to the normal installation process. This guide will primarily detail the differences between the two instead of regurgitating all the information in the `Getting Started <../getting-started/toc.html>`_ section. If you are completely new to Augur, we recommend following the aforementioned `Getting Started <../getting-started/toc.html>`_ section first; once you feel more comfortable with Augur and how to use it, come back to this document.
+Installing CollectOSS for local development is pretty similar to the normal installation process. This guide will primarily detail the differences between the two instead of regurgitating all the information in the `Getting Started <../getting-started/toc.html>`_ section. If you are completely new to CollectOSS, we recommend following the aforementioned `Getting Started <../getting-started/toc.html>`_ section first; once you feel more comfortable with CollectOSS and how to use it, come back to this document.
 
 Setting up the Database
 ------------------------
@@ -12,12 +12,12 @@ If they so desire, developers can set up a persistent instance of PostgreSQL on 
 However, during development, you might find that you need to reset your database often, especially if you are working on the data collection components of collectoss. To this end, we recommend developers make use of our `Docker images <../docker/docker.html>`_ to quickly provision and terminate database instances in a lightweight and reproducible manner.
 
 
-More information about Augur's Docker images can be found `here <../docker/docker.html>`_. If you're new to our Docker process, we recommend following the `introduction section <../docker/toc.html>`_ first.
+More information about CollectOSS's Docker images can be found `here <../docker/docker.html>`_. If you're new to our Docker process, we recommend following the `introduction section <../docker/toc.html>`_ first.
 
 Installing from Source
 ----------------------------
 
-The process for installing Augur's source code for development is essentially the same as detailed in the `Installation <../getting-started/installation.html>`_ section of the Getting Started guide.
+The process for installing CollectOSS's source code for development is essentially the same as detailed in the `Installation <../getting-started/installation.html>`_ section of the Getting Started guide.
 
 **However**, when running the installation script, use the following command instead:
 
@@ -27,7 +27,7 @@ The process for installing Augur's source code for development is essentially th
 
 This will install a few extra dependencies for testing and documentation, as well as install all the Python packages in `editable mode <https://pip-python3.readthedocs.io/en/latest/reference/pip_install.html#editable-installs>`_. This means you will not have to reinstall the package every time you make a change to the Python source code.
 
-This command will also create your ``augur.config.json`` file in the root of your cloned source code directory **instead of** the default location in ``$HOME/.collectoss/``. This is purely for convenience's sake, as it will allow you to open this file in your text editor with all the other source code files, and also allows you to have multiple developer installations of Augur on the same machine if needed. If Augur finds a config file in both the root of the cloned directory AND in the default location, it will always use the one in the root of the cloned directory.
+This command will also create your ``augur.config.json`` file in the root of your cloned source code directory **instead of** the default location in ``$HOME/.collectoss/``. This is purely for convenience's sake, as it will allow you to open this file in your text editor with all the other source code files, and also allows you to have multiple developer installations of CollectOSS on the same machine if needed. If CollectOSS finds a config file in both the root of the cloned directory AND in the default location, it will always use the one in the root of the cloned directory.
 
 .. note::
     You can still use ``make clean`` to get rid of the installed binaries if something went wrong and you want to try again.

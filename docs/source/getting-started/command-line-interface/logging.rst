@@ -9,7 +9,7 @@ The collection of the ``augur logging`` commands is for interacting with the dat
 
 ``directory``
 --------------
-Prints the location of the directory to which Augur is configured to write its logs.
+Prints the location of the directory to which CollectOSS is configured to write its logs.
 
 Example usage::
 

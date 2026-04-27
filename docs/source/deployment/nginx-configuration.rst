@@ -1,7 +1,7 @@
 Web Server Configuration
 -------------------------------------
 
-Configuring nginx for Augur to run behind nginx requires you to have certain options available for symlinks and other basic nginx options. The `nginx.conf` file below is one example of a configuration known to work.
+Configuring nginx for CollectOSS to run behind nginx requires you to have certain options available for symlinks and other basic nginx options. The `nginx.conf` file below is one example of a configuration known to work.
 
 Once you have nginx configured, run these commands to make sure everything is loaded and configured correctly:
 
@@ -15,7 +15,7 @@ Once you have nginx configured, run these commands to make sure everything is lo
 Server Compilation
 --------------------------
 
-**Your Augur instance must compile with a publicly accessible domain that the frontend instance will be able to access.**
+**Your CollectOSS instance must compile with a publicly accessible domain that the frontend instance will be able to access.**
 
 1. Your ``augur.config.json`` server block **must** be set like this:
 
@@ -30,8 +30,8 @@ Server Compilation
 	    }
     }
 
-2.   Compile Augur (this wires the host and port into the frontend so people pulling the web pages of Augur, in the `frontend/` subdirectory are referring to the right endpoints for this instance.): ``make rebuild``
-3.   Run Augur: ``uv run nohup collectoss backend start >augur.log 2>augur.err &``
+2.   Compile CollectOSS (this wires the host and port into the frontend so people pulling the web pages of CollectOSS, in the `frontend/` subdirectory are referring to the right endpoints for this instance.): ``make rebuild``
+3.   Run CollectOSS: ``uv run nohup collectoss backend start >augur.log 2>augur.err &``
 
 
 ------------------
@@ -115,7 +115,7 @@ nginx.conf
 Site Configuration
 --------------------
 
-This file will be located in the ``/etc/nginx/sites-enabled`` directory on most Linux distributions.  Mac OSX keeps these files in the ``/usr/local/etc/nginx/sites-enabled`` directory. **Note that Augur's backend server must be running**
+This file will be located in the ``/etc/nginx/sites-enabled`` directory on most Linux distributions.  Mac OSX keeps these files in the ``/usr/local/etc/nginx/sites-enabled`` directory. **Note that CollectOSS's backend server must be running**
 
 .. code-block::
 
@@ -151,9 +151,9 @@ This file will be located in the ``/etc/nginx/sites-enabled`` directory on most 
 Enabling HTTPS
 --------------------
 
-HTTPS is an extension of HTTP. It is used for secure communications over a computer networks by encrypting your data so it is not vulnerable to MIM(Man-in-the-Middle) attacks etc. While Augur's API data might not be very sensitive, it would still be a nice feature to have so something can't interfere and provide wrong data. Additionally, the user may not feel very comfortable using an application when the browser is telling the user it is not secure. Features such as logins is an example of information that would be particularly vulnerable to attacks. Lastly, search engine optimization actually favors applications on HTTPS over HTTP.
+HTTPS is an extension of HTTP. It is used for secure communications over a computer networks by encrypting your data so it is not vulnerable to MIM(Man-in-the-Middle) attacks etc. While CollectOSS's API data might not be very sensitive, it would still be a nice feature to have so something can't interfere and provide wrong data. Additionally, the user may not feel very comfortable using an application when the browser is telling the user it is not secure. Features such as logins is an example of information that would be particularly vulnerable to attacks. Lastly, search engine optimization actually favors applications on HTTPS over HTTP.
 
-This guide will start on a fully configured EC2 Ubuntu 20.04 instance, meaning it is assumed to already have Augur installed and running with all of its dependencies(PostgreSQL, Nginx, etc).
+This guide will start on a fully configured EC2 Ubuntu 20.04 instance, meaning it is assumed to already have CollectOSS installed and running with all of its dependencies(PostgreSQL, Nginx, etc).
 
 ~~~~~~~~~~~~~~~~~~~~~
 Let's Encrypt/Certbot

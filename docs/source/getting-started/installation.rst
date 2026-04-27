@@ -1,11 +1,11 @@
 Installation Guide
 ===================
 
-This section shows how to install Augur's Python library from the source. If you don't have a required dependency, please follow the provided links to install and configure it.
+This section shows how to install CollectOSS's Python library from the source. If you don't have a required dependency, please follow the provided links to install and configure it.
 
 .. note::
 
-  There are three main issues new developers encounter when first installing Augur:
+  There are three main issues new developers encounter when first installing CollectOSS:
 
   1. The absence of a `GCC` or `Fortran` compiler; which are required by NumPy and NLTK Python libraries. Look up how to install these compilers for your local operating system. Many times they need to be updated to a more current version.
 
@@ -100,7 +100,7 @@ We use Vue.js as our frontend web framework and ``npm`` as our package manager.
 Visualization API calls
 ---------------------------
 
-On Ubuntu and other Linux flavors: if you want to use the new Augur API Calls that generate downloadable graphics developed in the `https://github.com/chaoss/collectoss-community-reports` repository, you need to install the `firefox-geckodriver` (on Ubuntu or Red Hat Fedora) or `geckodriver` on Mac OSX, at the system level. This dependency exists because the Bokeh libraries we use for these APIs require a web browser engine.
+On Ubuntu and other Linux flavors: if you want to use the new CollectOSS API Calls that generate downloadable graphics developed in the `https://github.com/chaoss/collectoss-community-reports` repository, you need to install the `firefox-geckodriver` (on Ubuntu or Red Hat Fedora) or `geckodriver` on Mac OSX, at the system level. This dependency exists because the Bokeh libraries we use for these APIs require a web browser engine.
 
 For Ubuntu you can use:
 
@@ -143,12 +143,12 @@ Now you're ready to build! The steps below outline how to create a virtual envir
   Lines that start with a ``$`` denote a command that needs to run in an interactive terminal.
 
 .. warning::
-  Do **NOT** install or run Augur using ``sudo``. It is not required, and using it will inevitably cause some permissions trouble.
+  Do **NOT** install or run CollectOSS using ``sudo``. It is not required, and using it will inevitably cause some permissions trouble.
 
 For macOS Errata
 ~~~~~~~~~~~~~~~~
 
-If you’re running Augur on macOS, we strongly suggest updating your shell’s initialization script in the following:
+If you’re running CollectOSS on macOS, we strongly suggest updating your shell’s initialization script in the following:
 
 In a terminal, open the script:
 
@@ -169,13 +169,13 @@ Check if it is updated:
 
 ``env`` should contain ``OBJC_DISABLE_INITIALIZE_FORK_SAFETY``.
 
-macOS takes "helpful" measures to prevent Python subprocesses (which Augur uses) from forking cleanly, and setting this environment variable disables these safety measures to restore regular Python functionality.
+macOS takes "helpful" measures to prevent Python subprocesses (which CollectOSS uses) from forking cleanly, and setting this environment variable disables these safety measures to restore regular Python functionality.
 
 .. warning::
   If you skip this step, you'll likely see all housekeeper jobs randomly exiting for no reason, and the Gunicorn server will not behave nicely either. Skip this step at your own risk!
 
 
-General Augur Installation Steps (Irrespective of Operating System)
+General CollectOSS Installation Steps (Irrespective of Operating System)
 -------------------------------------------------------------------
 
 1. Clone the repository and change to the newly-created directory.
@@ -202,14 +202,14 @@ General Augur Installation Steps (Irrespective of Operating System)
 
 4. Run the install script. This script will:
 
-- Install Augur’s Python library and application server
-- Install Augur's schema in the configured database
+- Install CollectOSS’s Python library and application server
+- Install CollectOSS's schema in the configured database
 - Prompt you for GitHub and GitLab keys
 - Add GitHub and GitLab keys to config table in the database
 
 .. note::
 
-  The install script will also generate an Augur API key for your database at the very end. This key will be automatically inserted into your database and printed to your terminal. It requires to use the repo & repo group creation endpoints, so **make sure you save it off somewhere!** There is only one key per database.
+  The install script will also generate an CollectOSS API key for your database at the very end. This key will be automatically inserted into your database and printed to your terminal. It requires to use the repo & repo group creation endpoints, so **make sure you save it off somewhere!** There is only one key per database.
 
 .. code-block:: bash
 
@@ -223,7 +223,7 @@ MacOS users:
 
 If your build fails and in gunicorn.log you see this error: ``Connection in use: ('0.0.0.0', 5000)``, that means port 5000 is being used by another process. To solve this issue, go to System Preferences -> Sharing -> Disable Airplay Receiver.
 
-If you want to test new code you have written, you can rebuild Augur using:
+If you want to test new code you have written, you can rebuild CollectOSS using:
 
 .. code-block:: bash
 
@@ -231,7 +231,7 @@ If you want to test new code you have written, you can rebuild Augur using:
 
 .. note::
 
-  If you chose to install Augur's frontend dependencies, you might see a bunch of ``canvas@1.6.x`` and ``canvas-prebuilt@1.6.x`` errors in the installation logs. These are harmless and caused by a few of our dependencies having *optional* requirements for old versions of these libraries. If they seem to be causing you trouble, feel free to open an `issue <https://github.com/chaoss/collectoss/issues>`_.
+  If you chose to install CollectOSS's frontend dependencies, you might see a bunch of ``canvas@1.6.x`` and ``canvas-prebuilt@1.6.x`` errors in the installation logs. These are harmless and caused by a few of our dependencies having *optional* requirements for old versions of these libraries. If they seem to be causing you trouble, feel free to open an `issue <https://github.com/chaoss/collectoss/issues>`_.
 
 To enable log parsing for errors, you need to install `Elasticsearch <https://www.elastic.co/downloads/elasticsearch>`_ and `Logstash <https://www.elastic.co/downloads/past-releases/logstash-6-8-10>`_.
 

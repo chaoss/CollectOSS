@@ -2,7 +2,7 @@
 Command Line Interface
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Augur provides a command line interface (CLI) for interacting with your Augur installation. It's broken up into a few categories: ``db``, ``backend``, ``util``, ``config``, and ``logging``.
+CollectOSS provides a command line interface (CLI) for interacting with your CollectOSS installation. It's broken up into a few categories: ``db``, ``backend``, ``util``, ``config``, and ``logging``.
 
 Each command is invoked by first specifying the category, then the command name, and then the parameters/options; e.g. the ``list`` command under ``augur util`` would be invoked as ``uv run collectoss utli list --option1 ...``.
 

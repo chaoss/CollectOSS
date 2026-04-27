@@ -4,17 +4,17 @@ Backend Commands
 
 ``collectoss backend``
 ====================
-The ``collectoss backend`` CLI group is for controlling Augur's API server & data collection workers. All commands are invoked like::
+The ``collectoss backend`` CLI group is for controlling CollectOSS's API server & data collection workers. All commands are invoked like::
 
   $ collectoss backend <command name>
 
 ``start``
 ============
-This command is for starting Augur's API server & (optionally) data collection workers. Example usages are shown below the parameters. After starting up, it will run indefinitely (but might not show any output, unless it's being queried or the data collection is working).
+This command is for starting CollectOSS's API server & (optionally) data collection workers. Example usages are shown below the parameters. After starting up, it will run indefinitely (but might not show any output, unless it's being queried or the data collection is working).
 
 --disable-collection      Flag that turns off the data collection. Useful for testing the REST API or if you want to pause data collection without editing your config.
 
---skip-cleanup      Flag that disables the old process cleanup that runs before Augur starts. Useful for Python scripts where Augur needs to be run in the background: see the `test/api/runner.py` file for an example.
+--skip-cleanup      Flag that disables the old process cleanup that runs before CollectOSS starts. Useful for Python scripts where CollectOSS needs to be run in the background: see the `test/api/runner.py` file for an example.
 
 **To start the backend normally:**
 
@@ -23,7 +23,7 @@ This command is for starting Augur's API server & (optionally) data collection w
   uv run collectoss backend start
 
   # successful output looks like:
-  >[43389] augur [INFO] Augur application initialized
+  >[43389] augur [INFO] CollectOSS application initialized
   >[43389] augur [INFO] Booting manager
   >[43389] augur [INFO] Booting broker
   >[43389] augur.housekeeper [INFO] Booting housekeeper
@@ -58,7 +58,7 @@ To start the backend as a background process:
 
   uv run nohup collectoss backend start >logs/base.log 2>logs/base.err &
 
-Successful output looks like the generation of standard Augur logfiles in the logs/ directory.
+Successful output looks like the generation of standard CollectOSS logfiles in the logs/ directory.
 
 To start the backend server without the housekeeper:
 
@@ -70,16 +70,16 @@ Successful output looks like:
 
 .. code-block:: bash
 
-  > [14467] augur [INFO] Augur application initialized
+  > [14467] augur [INFO] CollectOSS application initialized
   > [14467] augur [INFO] Using config file: /Users/carter/workspace/chaoss/augur/augur.config.json
   > [14467] augur [INFO] Starting Gunicorn webserver...
-  > [14467] augur [INFO] Augur is running at: http://0.0.0.0:5000
+  > [14467] augur [INFO] CollectOSS is running at: http://0.0.0.0:5000
   > [14467] augur [INFO] Gunicorn server logs & errors will be written to logs/gunicorn.log
 
 
 ``stop``
 ---------
-**Gracefully** attempts to stop all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
+**Gracefully** attempts to stop all currently running backend CollectOSS processes, including any workers. Will only work in a virtual environment.
 
 Example usage:
 
@@ -98,7 +98,7 @@ Successful output looks like:
 
 ``kill``
 ---------
-**Forcefully** terminates (using ``SIGKILL``) all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
+**Forcefully** terminates (using ``SIGKILL``) all currently running backend CollectOSS processes, including any workers. Will only work in a virtual environment.
 Should only be used when ``uv run collectoss backend stop`` is not working.
 
 Example usage:
@@ -117,7 +117,7 @@ Example usage:
 
 ``processes``
 --------------
-Outputs the process ID (PID) of all currently running backend Augur processes, including any workers. Will only work in a virtual environment.
+Outputs the process ID (PID) of all currently running backend CollectOSS processes, including any workers. Will only work in a virtual environment.
 
 Example usage:
 
@@ -158,7 +158,7 @@ Start the http server with::
   $ cd $ROOT_PROJECT_REPO_DIRECTORY/log_analysis/http
   $ python http_server.py
 
-Then start Augur with ``logstash`` flag::
+Then start CollectOSS with ``logstash`` flag::
 
   $ uv run collectoss backend start --logstash
 
