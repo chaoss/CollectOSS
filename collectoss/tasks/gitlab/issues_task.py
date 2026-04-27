@@ -92,7 +92,7 @@ def process_issues(issues, task_name, repo_id, logger) -> None:
     Arguments:
         issues: List of dictionaries of issue data
         task_name: name of the task as well as the repo being processed
-        repo_id: augur id of the repo
+        repo_id: collectoss id for the repo
         logger: logging object
         session: sqlalchemy db object 
     """
@@ -277,7 +277,7 @@ def process_gitlab_issue_messages(data, task_name, repo_id, logger, session):
     Arguments:
         data: List of dictionaries of issue event data
         task_name: name of the task as well as the repo being processed
-        repo_id: augur id of the repo
+        repo_id: collectoss id for the repo
         logger: logging object
         session: sqlalchemy db object 
     """

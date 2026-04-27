@@ -100,7 +100,7 @@ def process_pull_requests(pull_requests, task_name, repo_id, logger, db_session)
     Arguments:
         pull_requests: List of paginated pr endpoint data
         task_name: Name of the calling task and the repo
-        repo_id: augur id of the repository
+        repo_id: collectoss id for the repository
         logger: logging object
         db_session: sqlalchemy db object
     """

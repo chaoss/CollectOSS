@@ -87,7 +87,7 @@ def process_merge_requests(data, task_name, repo_id, logger):
     Arguments:
         data: collection of mr data
         task_name: name of the task as well as the repo being processed
-        repo_id: augur id of the repo
+        repo_id: collectoss id for the repo
         logger: logging object
     
     Returns:
@@ -202,7 +202,7 @@ def process_gitlab_mr_messages(data, task_name, repo_id, logger, session):
     Arguments:
         data: List of dictionaries of mr message data
         task_name: name of the task as well as the repo being processed
-        repo_id: augur id of the repo
+        repo_id: collectoss id for the repo
         logger: logging object
         session: sqlalchemy db object 
     """
@@ -314,7 +314,7 @@ def process_mr_metadata(data, task_name, repo_id, logger, session):
     Arguments:
         data: List of dictionaries of mr metadata
         task_name: name of the task as well as the repo being processed
-        repo_id: augur id of the repo
+        repo_id: collectoss id for the repo
         logger: logging object
         session: sqlalchemy db object 
     """
@@ -380,7 +380,7 @@ def process_mr_reviewers(data, task_name, repo_id, logger, session):
 
     Arguments:
         data: List of dictionaries of mr Reviewer data
-        repo_id: augur id of the repo
+        repo_id: collectoss id for the repo
         logger: logging object
         session: sqlalchemy db object 
     """
@@ -451,7 +451,7 @@ def process_mr_commits(data, task_name, repo_id, logger, session):
     Arguments:
         data: List of dictionaries of mr commit data
         task_name: name of the task as well as the repo being processed
-        repo_id: augur id of the repo
+        repo_id: collectoss id for the repo
         logger: logging object
         session: sqlalchemy db object 
     """

@@ -117,7 +117,7 @@ def process_issue_events(events, task_name, repo_id, logger, session):
     Arguments:
         events: List of dictionaries of issue event data
         task_name: name of the task as well as the repo being processed
-        repo_id: augur id of the repo
+        repo_id: collectoss id for the repo
         logger: logging object
         session: sqlalchemy db object 
     """
@@ -162,7 +162,7 @@ def process_mr_events(events, task_name, repo_id, logger, session):
 
     Arguments:
         labels: List of dictionaries of label data
-        repo_id: augur id of the repository
+        repo_id: collectoss id for the repository
         tool_source: The part of augur that processed the data
         tool_version: The version of the augur task that processed the data
         data_source: The source of the data 
