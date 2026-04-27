@@ -68,7 +68,7 @@ spec = {
             "args": []
         }, {
             "name": "start",
-            "desc": "Start one or more components of Augur",
+            "desc": "Start one or more components of collectoss",
             "args": [
                 {
                     "name": "component",
@@ -82,7 +82,7 @@ spec = {
             ]
         }, {
             "name": "stop",
-            "desc": "Stop one or more components of Augur",
+            "desc": "Stop one or more components of collectoss",
             "args": [
                 {
                     "name": "component",
@@ -92,7 +92,7 @@ spec = {
             ]
         }, {
             "name": "restart",
-            "desc": "restart one or more components of Augur",
+            "desc": "restart one or more components of collectoss",
             "args": [
                 {
                     "name": "component",

@@ -666,7 +666,7 @@ class DatabaseConfig(ConfigStore):
 
     @staticmethod
     def _dict_to_config_table(json_data:dict):
-        """Convert an augur settings dict into a mapping from table columns to values for insertion in bulk
+        """Convert an collectoss settings dict into a mapping from table columns to values for insertion in bulk
 
         Args:
             json_data (dict): The settings to convert, in the same format as the default_dict at the top of this file

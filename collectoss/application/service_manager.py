@@ -8,11 +8,11 @@ from collectoss.application.db.lib import get_value
 from collectoss.tasks.init.redis_connection import get_redis_connection
 from urllib.parse import urlparse
 
-logger = SystemLogger("augur_servicemanager").get_logger()
+logger = SystemLogger("collectoss_servicemanager").get_logger()
 
 
 class SystemServiceManager:
-    """ Provides a storage space for references to the various components of augur
+    """ Provides a storage space for references to the various components of collectoss
     This enables them to all be properly shut down in the event a shutdown signal (SIGINT - AKA ctrl-c, or SIGTERM) is received 
     """
     def __init__(self, ctx, pidfile, disable_collection):

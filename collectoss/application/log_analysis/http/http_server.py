@@ -19,7 +19,7 @@ class ServerHandler(http.server.SimpleHTTPRequestHandler):
 
         worker_name = re.search("[a-z_]{1,20}worker", log_file).group()
         if not worker_name:
-            print("Failed to get worker name, so cannot associate input data with any augur worker. Data: " + json_data)
+            print("Failed to get worker name, so cannot associate input data with any collectoss worker. Data: " + json_data)
             return
 
         if "error" not in json_data:

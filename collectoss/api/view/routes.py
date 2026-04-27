@@ -1,5 +1,5 @@
 """
-Defines the api routes for the augur views
+Defines the api routes for the collectoss views
 """
 import logging
 import math

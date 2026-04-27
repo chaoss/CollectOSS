@@ -3,7 +3,6 @@
 env.txt
 docker_env.txt
 pyenv.txt
-augur_export_env.sh
 *DS_Store
 *.config.json
 !docker.config.json
@@ -20,7 +19,6 @@ __pycache__/
 *.pyc
 *.rdb
 yarn.lock
-Augur_Muskellunge.egg-info/
 runtime/
 logs/
 cache/
