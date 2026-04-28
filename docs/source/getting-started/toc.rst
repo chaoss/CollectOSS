@@ -25,7 +25,5 @@ Happy hacking!
    :maxdepth: 1
 
    database
-   installation
    collecting-data
-   frontend
    command-line-interface/toc

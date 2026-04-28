@@ -11,10 +11,6 @@ PostgreSQL Installation
 
 Before you can install our schema, you will need to make sure you have **write access** to a PostgreSQL 10 or later database. If you're looking for the fastest possible way to get CollectOSS started, we recommend use our `database container <../docker/docker.html>`_. If you're looking to collect data long-term, we recommend following the rest of this tutorial and setting up a persistent PostgreSQL installation.
 
-.. warning::
-
-    If you want to collect data over the long term, we strongly advise against `using a Docker container for your database <https://vsupalov.com/database-in-docker/>`_.
-
 If you're a newcomer to PostgreSQL, you can follow their excellent instructions `here <https://www.postgresql.org/docs/12/tutorial-install.html>`_ to set it up for your machine of choice. We recommend using ``Postgres.app`` if you're on macOS, but if you're running UNIX or are looking for an alternative to ``Postgres.app`` then pgAdmin is a great open-source alternative.
 
 .. _Creating a Database:
@@ -45,4 +41,4 @@ Then, once you've connected to your PostgreSQL instance\:
     postgres=# GRANT ALL PRIVILEGES ON DATABASE collectoss TO collectoss;
 
 
-Once you've got the database setup, CollectOSS will install the schema for you. You're now ready to `install CollectOSS <installation.html>`_!
+Once you've got the database setup, CollectOSS will install the schema for you.
