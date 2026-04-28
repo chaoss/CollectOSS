@@ -319,10 +319,14 @@ jobs:
     strategy:
       matrix:
         image:
-          - backend
-          - database
-          - keyman
-          - rabbitmq
+          - name: collectoss
+            folder: backend
+          - name: collectoss-database
+            folder: database
+          - name: collectoss-keyman
+            folder: keyman
+          - name: collectoss-rabbitmq
+            folder: rabbitmq
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -346,10 +350,10 @@ jobs:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index,manifest
         with:
           annotations: |
-            org.opencontainers.image.title=augur_${{ matrix.image}}
+            org.opencontainers.image.title=${{ matrix.image.name }}
           labels: |
-            org.opencontainers.image.title=augur_${{ matrix.image}}
-          images: ghcr.io/${{ github.repository_owner }}/augur_${{ matrix.image }}
+            org.opencontainers.image.title=${{ matrix.image.name }}
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image.name }}
           # Pushes to the main branch update the *:devel-latest tag
           # Releases update the *:latest tag and the *:<version> tag
           tags: |
@@ -363,12 +367,12 @@ jobs:
         with:
           annotations: ${{ steps.meta.outputs.annotations }}
           context: .
-          file: ./docker/${{ matrix.image }}/Dockerfile
+          file: ./docker/${{ matrix.image.folder }}/Dockerfile
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
           # Only push if we've tagged the image in the metadata step
           push: ${{ steps.meta.outputs.tags != '' }}
           tags: ${{ steps.meta.outputs.tags }}
           # Use the same cache as the build step
-          cache-from: type=gha,scope=container-${{ matrix.image }}
-          cache-to: type=gha,scope=container-${{ matrix.image }},mode=min
+          cache-from: type=gha,scope=container-${{ matrix.image.name }}
+          cache-to: type=gha,scope=container-${{ matrix.image.name }},mode=min
