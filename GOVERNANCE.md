@@ -1,6 +1,6 @@
 # CollectOSS Project Governance
 
-The CollectOSS project of the CHAOSS foundation is dedicated to building and improving a data collection, transformation, and serving backend for open source contributor activity.  This governance explains how the project is run.
+CollectOSS is dedicated to building and improving a data collection, transformation, and serving backend for open source contributor activity. CollectOSS will operate as a project within the CHAOSS Organization, which is a member of the Linux Foundation. This governance explains how the project is run.
 
 - [Values](#values)
 - [Maintainers](#maintainers)
