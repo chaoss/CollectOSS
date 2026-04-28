@@ -3,7 +3,7 @@ basePath: /api/unstable/
 externalDocs:
   description: CHAOSS Metric Definitions
   url: https://chaoss.community/kb-metrics-and-metrics-models/
-host: ai.chaoss.io
+host: example.com
 info:
   title: CollectOSS REST API
   version: 0.60.0

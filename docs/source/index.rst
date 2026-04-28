@@ -63,8 +63,3 @@ Who develops CollectOSS
 For the current list of CollectOSS maintainers and contributors, please refer to the
 `CREDITS.md <https://github.com/chaoss/collectoss/blob/main/CREDITS.md>`_
 file.
-
-See it in action
--------------------
-
-- You can check out CollectOSS live on the `CHAOSS instance <https://ai.chaoss.io>`_.
