@@ -123,7 +123,7 @@ include-package-data = true
 version = { attr = "metadata.__version__" }
 
 [tool.setuptools.packages.find]
-# Note: While this should just be where = ["augur"], that doesn't allow the
+# Note: While this should just be where = ["collectoss"], that doesn't allow the
 # dynamic version lookup to work. `uv lock` will fail with:
 #   ModuleNotFoundError: metadata
 where = ["."]
