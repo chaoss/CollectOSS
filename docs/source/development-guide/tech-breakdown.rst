@@ -113,7 +113,7 @@ in a browser with http://servername-or-ip:8400 in the example above
 (assuming you have access to that port, and its open on your network.)
 
 Starting your CollectOSS Instance
-----------------------------
+---------------------------------
 
 Start CollectOSS: ``(nohup collectoss backend start &)``
 
@@ -132,7 +132,7 @@ Note: CollectOSS will run on port 5000 by default (you probably need to
 change that in augur_operations.config for OSX)
 
 Stopping your CollectOSS Instance
-----------------------------
+---------------------------------
 
 You can stop collectoss with ``collectoss backend stop``, followed by
 ``collectoss backend kill``. We recommend waiting 5 minutes between commands
