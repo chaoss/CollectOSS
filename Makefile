@@ -28,9 +28,9 @@ lint-github-tasks-count:
 .PHONY: test test-data test-application test-metric-routes test-python-versions
 
 test-data:
-	@ - docker stop augur_test_data
-	@ - docker rm augur_test_data
-	@ docker run -p 5434:5432 --name augur_test_data augurlabs/augur:test_data@sha256:71da12114bf28584a9a64ede2fac0cbc8dffc8e2f4a2c61231206e2f82201c2f
+	@ - docker stop test_data
+	@ - docker rm test_data
+	@ docker run -p 5434:5432 --name test_data augurlabs/augur:test_data@sha256:71da12114bf28584a9a64ede2fac0cbc8dffc8e2f4a2c61231206e2f82201c2f
 
 test:
 	# @ pytest tests/test_tasks/test_github_tasks/

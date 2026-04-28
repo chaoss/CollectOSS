@@ -65,7 +65,7 @@ def database_connection():
 
     buildString = ROOT_PROJECT_REPO_DIR
 
-    # change to root augur directory
+    # change to root directory
     os.chdir(ROOT_PROJECT_REPO_DIR)
 
     print(os.getcwd())
@@ -189,7 +189,7 @@ class DummyFullWorker(ContributorInterfaceable):
                 self.logger.error(
                     "Error setting attribute for table: {} : {}".format(table, e))
 
-        #looks for api keys one folder before the root augur folder.
+        #looks for api keys one folder before the root folder.
         insert_sql_file(self.db, "../oauth.sql")
 
         self.logger.info("Trying to find max id of table...")

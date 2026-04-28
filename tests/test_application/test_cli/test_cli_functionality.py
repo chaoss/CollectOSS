@@ -5,7 +5,7 @@ import subprocess
 def test_augur():
 
     FNULL = open(os.devnull, "w")
-    command = "augur --help"
+    command = "collectoss --help"
     process = subprocess.run(command.split(" "), stdout=FNULL, stderr=subprocess.STDOUT)
 
     assert process.returncode == 0

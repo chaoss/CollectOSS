@@ -5,7 +5,7 @@ import pandas as pd
 #from collectoss.cli import add_repo_groups
 
 
-#Function to add repo_groups without starting an augur app instance
+#Function to add repo_groups without starting an app instance
 @pytest.fixture
 def set_up_repo_groups(database_connection):
 

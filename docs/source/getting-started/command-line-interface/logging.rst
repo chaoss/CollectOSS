@@ -2,10 +2,10 @@
 Logging Commands
 ====================
 
-``augur logging``
+``collectoss logging``
 ==================
 
-The collection of the ``augur logging`` commands is for interacting with the database.
+The collection of the ``collectoss logging`` commands is for interacting with the database.
 
 ``directory``
 --------------
