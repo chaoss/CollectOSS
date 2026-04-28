@@ -123,7 +123,7 @@ class ContributorAffiliation(Base):
     __tablename__ = "contributor_affiliations"
     __table_args__ = {
         "schema": "augur_data",
-        "comment": "This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when CollectOSS is finished counting commits using the Facade Worker. ",
+        "comment": "This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and collectoss augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when CollectOSS is finished counting commits using the Facade Worker. ",
     }
 
     ca_id = Column(

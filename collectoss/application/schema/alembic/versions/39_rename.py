@@ -26,7 +26,7 @@ def upgrade():
     )
     op.create_table_comment(
         'contributor_affiliations',
-        'This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when CollectOSS is finished counting commits using the Facade Worker. ',
+        'This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and collectoss augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when CollectOSS is finished counting commits using the Facade Worker. ',
         existing_comment='This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when Augur is finished counting commits using the Facade Worker. ',
         schema='augur_data'
     )
@@ -255,7 +255,7 @@ def downgrade():
     )
     op.create_table_comment(
         'contributor_affiliations',
-        'This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when Augur is finished counting commits using the Facade Worker. ',
+        'This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and collectoss augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when Augur is finished counting commits using the Facade Worker. ',
         existing_comment='This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and augur augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when CollectOSS is finished counting commits using the Facade Worker. ',
         schema='augur_data'
     )
