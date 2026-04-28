@@ -1,9 +1,12 @@
 FROM rabbitmq:4.1-management-alpine
 
-LABEL maintainer="574/augur@simplelogin.com"
+LABEL org.opencontainers.image.authors="CHAOSS https://chaoss.community"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.source="https://github.com/chaoss/collectoss"
+LABEL org.opencontainers.image.documentation="https://collectoss.readthedocs.io"
 
 ARG VERSION
-LABEL version=${VERSION}
+LABEL org.opencontainers.image.version=${VERSION}
 
 ARG RABBIT_MQ_DEFAULT_USER=collectoss
 ARG RABBIT_MQ_DEFAULT_PASSWORD=password123
