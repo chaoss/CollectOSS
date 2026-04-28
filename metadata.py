@@ -10,4 +10,4 @@ __release__ = "v1.0.0"
 __author__ = "CollectOSS Community"
 
 __license__ = "MIT"
-__copyright__ = "CHAOSS and the collected contributors to the CollectOSS and Augur projects. A full listing of all contributors may be found at https://github.com/chaoss/collectoss/blob/main/CREDITS.md"
+__copyright__ = "CHAOSS and the collective contributors to the CollectOSS and Augur projects. A full listing of all contributors may be found at https://github.com/chaoss/collectoss/blob/main/CREDITS.md"
