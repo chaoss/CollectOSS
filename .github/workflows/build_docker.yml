@@ -82,7 +82,7 @@ jobs:
             VERSION=${{ steps.version.outputs.version }}
             REVISION=${{ github.sha }}
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_database:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-database:test
           cache-from: type=gha,scope=container-database
           cache-to: type=gha,scope=container-database,mode=min
           load: true
@@ -96,7 +96,7 @@ jobs:
             VERSION=${{ steps.version.outputs.version }}
             REVISION=${{ github.sha }}
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_keyman:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test
           cache-from: type=gha,scope=container-keyman
           cache-to: type=gha,scope=container-keyman,mode=min
           load: true
@@ -110,7 +110,7 @@ jobs:
             VERSION=${{ steps.version.outputs.version }}
             REVISION=${{ github.sha }}
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test
           cache-from: type=gha,scope=container-rabbitmq
           cache-to: type=gha,scope=container-rabbitmq,mode=min
           load: true
@@ -124,26 +124,26 @@ jobs:
             VERSION=${{ steps.version.outputs.version }}
             REVISION=${{ github.sha }}
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_backend:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss:test
           cache-from: type=gha,scope=container-backend
           cache-to: type=gha,scope=container-backend,mode=min
           load: true
 
       - name: Prepare compose file
         run: |
-          yq eval -i '.services.core.image = "ghcr.io/${{ github.repository_owner }}/augur_backend:test"' docker-compose.yml
+          yq eval -i '.services.core.image = "ghcr.io/${{ github.repository_owner }}/collectoss:test"' docker-compose.yml
           yq eval -i '.services.core.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.core.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.database.image = "ghcr.io/${{ github.repository_owner }}/augur_database:test"' docker-compose.yml
+          yq eval -i '.services.database.image = "ghcr.io/${{ github.repository_owner }}/collectoss-database:test"' docker-compose.yml
           yq eval -i '.services.database.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.database.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.keyman.image = "ghcr.io/${{ github.repository_owner }}/augur_keyman:test"' docker-compose.yml
+          yq eval -i '.services.keyman.image = "ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test"' docker-compose.yml
           yq eval -i '.services.keyman.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.keyman.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test"' docker-compose.yml
+          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test"' docker-compose.yml
           yq eval -i '.services.rabbitmq.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.rabbitmq.restart = "no"' docker-compose.yml
 
@@ -214,7 +214,7 @@ jobs:
           containerfiles: |
             ./docker/database/Dockerfile
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_database:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-database:test
           layers: true
 
       - name: Build keyman container
@@ -224,7 +224,7 @@ jobs:
           containerfiles: |
             ./docker/keyman/Dockerfile
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_keyman:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test
           layers: true
 
       - name: Build rabbitmq container
@@ -234,7 +234,7 @@ jobs:
           containerfiles: |
             ./docker/rabbitmq/Dockerfile
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test
           layers: true
 
       - name: Build backend container
@@ -244,24 +244,24 @@ jobs:
           containerfiles: |
             ./docker/backend/Dockerfile
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_backend:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss:test
           layers: true
 
       - name: Prepare compose file
         run: |
-          yq eval -i '.services.augur.image = "ghcr.io/${{ github.repository_owner }}/augur_backend:test"' docker-compose.yml
+          yq eval -i '.services.augur.image = "ghcr.io/${{ github.repository_owner }}/collectoss:test"' docker-compose.yml
           yq eval -i '.services.augur.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.augur.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.augur-db.image = "ghcr.io/${{ github.repository_owner }}/augur_database:test"' docker-compose.yml
+          yq eval -i '.services.augur-db.image = "ghcr.io/${{ github.repository_owner }}/collectoss-database:test"' docker-compose.yml
           yq eval -i '.services.augur-db.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.augur-db.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.augur-keyman.image = "ghcr.io/${{ github.repository_owner }}/augur_keyman:test"' docker-compose.yml
+          yq eval -i '.services.augur-keyman.image = "ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test"' docker-compose.yml
           yq eval -i '.services.augur-keyman.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.augur-keyman.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test"' docker-compose.yml
+          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test"' docker-compose.yml
           yq eval -i '.services.rabbitmq.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.rabbitmq.restart = "no"' docker-compose.yml
 
