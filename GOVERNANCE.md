@@ -1,12 +1,12 @@
 # CollectOSS Project Governance
 
-The CollectOSS project of the CHAOSS Foundation is dedicated to building and improving a data collection, transformation, and serving backend for open source contributor activity.  This governance explains how the project is run.
+The CollectOSS project of the CHAOSS foundation is dedicated to building and improving a data collection, transformation, and serving backend for open source contributor activity.  This governance explains how the project is run.
 
 - [Values](#values)
 - [Maintainers](#maintainers)
 - [Becoming a Maintainer](#becoming-a-maintainer)
 - [Meetings](#meetings)
-- [CHAOSS Foundation Resources](#CHAOSS Foundation-resources)
+- [CHAOSS Resources](#CHAOSS-resources)
 - [Code of Conduct Enforcement](#code-of-conduct)
 - [Security Response Team](#security-response-team)
 - [Voting](#voting)
@@ -32,10 +32,9 @@ The CollectOSS and its leadership embrace the following values:
 
 ## Maintainers
 
-CollectOSS Maintainers have write access to the [project GitHub repository](https://github.com/chaoss/collectoss).
+The current maintainers can be found in [MAINTAINERS.md](./MAINTAINERS.md).  Maintainers collectively manage the project's resources and contributors.
 
-They can merge their own patches or patches from others. The current maintainers
-can be found in [MAINTAINERS.md](./MAINTAINERS.md).  Maintainers collectively manage the project's resources and contributors.
+CollectOSS Maintainers have merge approval rights to the [project GitHub repository](https://github.com/chaoss/collectoss) and all other CollectOSS project repositories.
 
 This privilege is granted with some expectation of responsibility: maintainers
 are people who care about the CollectOSS project and want to help it grow and
@@ -90,18 +89,18 @@ and can be rapidly returned to Maintainer status if their availability changes.
 ## Meetings
 
 Time zones permitting, Maintainers are expected to participate in the public
-developer meeting, which occurs every two weeks according to the CHAOSS Foundation calendar.  
+developer meeting, which occurs every two weeks according to the CHAOSS calendar.  
 
 Maintainers will also have closed meetings in order to discuss security reports
 or reports from the CHAOSS Code of Conduct Committee.  Such meetings should be scheduled by any Maintainer on receipt of a security issue or CoCC message.  All current Maintainers must be invited to such closed meetings, except for any Maintainer who is accused of a CoC violation.
 
-## CHAOSS Foundation Resources
+## CHAOSS Resources
 
-Any Maintainer may suggest a request for CHAOSS Foundation resources, either in an issue, or during a meeting.  A simple majority of Maintainers approves the request.  The Maintainers may also choose to delegate working with the CHAOSS Foundation to non-Maintainer community members, who will then be added to the [MAINTAINERS.md file](./MAINTAINERS.md) with that special status.
+Any Maintainer may suggest a request for CHAOSS resources, either in an issue, or during a meeting.  A simple majority of Maintainers approves the request.  The Maintainers may also choose to delegate working with CHAOSS to non-Maintainer community members, who will then be added to the [MAINTAINERS.md file](./MAINTAINERS.md) with that special status.
 
 ## Code of Conduct Committee
 
-The Maintainers will work with the CHAOSS Foundation Code of Conduct Committee (CoCC) on any reports which require action by the project. Should a contributor to CollectOSS be suspected of violating the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/), CollectOSS project community members will report them to the CoCC.
+The Maintainers will work with the CHAOSS Code of Conduct Committee (CoCC) on any reports which require action by the project. Should a contributor to CollectOSS be suspected of violating the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/), CollectOSS project community members will report them to the CoCC.
 
 ## Security Response Team
 
