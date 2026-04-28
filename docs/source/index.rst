@@ -25,9 +25,9 @@ CollectOSS Documentation
 ..
   schema/toc
 
-.. image:: development-guide/images/augur-architecture-2.png
-  :width: 700
-  :alt: Development guide image overview of CollectOSS
+.. .. image:: development-guide/images/augur-architecture-2.png
+..   :width: 700
+..   :alt: Development guide image overview of CollectOSS
 
 
 What is CollectOSS?
