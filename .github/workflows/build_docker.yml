@@ -249,17 +249,17 @@ jobs:
 
       - name: Prepare compose file
         run: |
-          yq eval -i '.services.augur.image = "ghcr.io/${{ github.repository_owner }}/collectoss:test"' docker-compose.yml
-          yq eval -i '.services.augur.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur.restart = "no"' docker-compose.yml
+          yq eval -i '.services.core.image = "ghcr.io/${{ github.repository_owner }}/collectoss:test"' docker-compose.yml
+          yq eval -i '.services.core.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.core.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.augur-db.image = "ghcr.io/${{ github.repository_owner }}/collectoss-database:test"' docker-compose.yml
-          yq eval -i '.services.augur-db.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur-db.restart = "no"' docker-compose.yml
+          yq eval -i '.services.database.image = "ghcr.io/${{ github.repository_owner }}/collectoss-database:test"' docker-compose.yml
+          yq eval -i '.services.database.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.database.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.augur-keyman.image = "ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test"' docker-compose.yml
-          yq eval -i '.services.augur-keyman.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur-keyman.restart = "no"' docker-compose.yml
+          yq eval -i '.services.keyman.image = "ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test"' docker-compose.yml
+          yq eval -i '.services.keyman.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.keyman.restart = "no"' docker-compose.yml
 
           yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test"' docker-compose.yml
           yq eval -i '.services.rabbitmq.pull_policy = "never"' docker-compose.yml
