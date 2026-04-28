@@ -1,7 +1,7 @@
 Docker Quick Start
 ==================================
 Before you get off to such a quick start, go ahead and
-  1. Create a fork from augur starting at https://github.com/chaoss/collectoss
+  1. Create a fork from collectoss starting at https://github.com/chaoss/collectoss
   2. Clone that fork locally
   3. Checkout the appropriate branch to work on (see notes below):
 
@@ -13,8 +13,8 @@ Before you get off to such a quick start, go ahead and
 
 .. code:: python
 
-    AUGUR_DB=augur
-    AUGUR_DB_USER=augur
+    AUGUR_DB=collectoss
+    AUGUR_DB_USER=collectoss
     AUGUR_DB_PASSWORD=password_here
 
     AUGUR_GITHUB_API_KEY=ghp_value_here
@@ -34,7 +34,7 @@ or
 
     podman compose up --build
 
-And augur should be up and running!
+And collectoss should be up and running!
 
 .. note::
 
@@ -46,9 +46,9 @@ And augur should be up and running!
 
   .. code-block:: postgresql
 
-    CREATE DATABASE augur;
-    CREATE USER augur WITH ENCRYPTED PASSWORD 'password';
-    GRANT ALL PRIVILEGES ON DATABASE augur TO augur;
+    CREATE DATABASE collectoss;
+    CREATE USER collectoss WITH ENCRYPTED PASSWORD 'password';
+    GRANT ALL PRIVILEGES ON DATABASE collectoss TO collectoss;
 
 
   2. Install Docker and docker-compose. If you're not familiar with Docker, their `starting guide <https://www.docker.com/resources/what-container>`_ is a great resource.
@@ -57,8 +57,8 @@ And augur should be up and running!
 
   .. code-block::
 
-    AUGUR_DB=augur
-    AUGUR_DB_USER=augur
+    AUGUR_DB=collectoss
+    AUGUR_DB_USER=collectoss
     AUGUR_DB_PASSWORD=password_here
 
     AUGUR_GITHUB_API_KEY=ghp_value_here
@@ -66,9 +66,9 @@ And augur should be up and running!
     AUGUR_GITLAB_API_KEY=placeholder
     AUGUR_GITLAB_USERNAME=placeholder
 
-  4. Execute the code from the base directory of the Augur repository:
+  4. Execute the code from the base directory of the CollectOSS repository:
 
   .. code-block:: bash
 
-    sudo docker build -t augur-docker -f docker/backend/Dockerfile .
+    sudo docker build -t collectoss-docker -f docker/backend/Dockerfile .
     sudo docker compose up

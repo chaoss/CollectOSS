@@ -7,7 +7,7 @@ the following resources (or more).
 - 100 GB disk
 - 10 GB RAM
 
-1. Clone the Augur repository https://github.com/chaoss/collectoss
+1. Clone the CollectOSS repository https://github.com/chaoss/collectoss
 
 
 2. Create a ``.env`` file in the top level directory with the following fields (don't remove any variable, keep placeholder values if you don't need some of them):
@@ -35,11 +35,11 @@ or
 
     podman compose up --build
 
-And augur should be up and running! Over time, you may decide that you want to download and run newer releases of Augur. It is critical that your ``.env`` file remains configured to use the same database name and password; though you can change the password if you understand how to connect to a database running inside a Docker container on your computer.
+And collectoss should be up and running! Over time, you may decide that you want to download and run newer releases of CollectOSS. It is critical that your ``.env`` file remains configured to use the same database name and password; though you can change the password if you understand how to connect to a database running inside a Docker container on your computer.
 
-Rebuilding Augur in Docker
+Rebuilding CollectOSS in Docker
 ----------------------------
-We do not recommend running the augur database in a Docker container in production, though for light installations (~ < 2,000 repos) it is OK as long as you understand that your data exists inside of a Docker container, and you will **need to back that up** if you want to avoid data loss.
+We do not recommend running the collectoss database in a Docker container in production, though for light installations (~ < 2,000 repos) it is OK as long as you understand that your data exists inside of a Docker container, and you will **need to back that up** if you want to avoid data loss.
 
 You can identify the physical location of your Docker database file system using these commands:
 
@@ -70,7 +70,7 @@ For example:
         }
     ]
 
-To rebuild a fresh Augur database in Docker, follow these steps:
+To rebuild a fresh CollectOSS database in Docker, follow these steps:
 
 1. **Stop the running containers** (if any):
 

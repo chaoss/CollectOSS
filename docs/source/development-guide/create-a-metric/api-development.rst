@@ -1,4 +1,4 @@
-Parts of an Augur API Endpoint
+Parts of an CollectOSS API Endpoint
 =====================================
 
 1. Develop the query that will produce data needed to deliver the endpoint, usually parameterized by a `repo_id`.

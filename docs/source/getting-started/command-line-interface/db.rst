@@ -103,7 +103,7 @@ Example usage\:
 
 ``generate-api-key``
 -------------------------
-The ``generate-api-key`` command will generate a new Augur API key and update the database with the new key. Output is the generated key.
+The ``generate-api-key`` command will generate a new CollectOSS API key and update the database with the new key. Output is the generated key.
 
 Example usage\:
 
@@ -113,7 +113,7 @@ Example usage\:
   $ uv run collectoss db generate-api-key
 
   # successful output looks like (this will be an actual key):
-  > CLI: [db.update_api_key] [INFO] Updated Augur API key to: new_key_abc_123
+  > CLI: [db.update_api_key] [INFO] Updated CollectOSS API key to: new_key_abc_123
   > new_key_abc_123
 
 
@@ -183,7 +183,7 @@ Example usage\:
 
 ``create-schema``
 ------------------
-The ``create-schema`` command will attempt to create the Augur schema in the database defined in your config file.
+The ``create-schema`` command will attempt to create the CollectOSS schema in the database defined in your config file.
 
 Example usage\:
 

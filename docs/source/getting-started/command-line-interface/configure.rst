@@ -4,7 +4,7 @@ Configuration Commands
 
 ``collectoss config``
 ====================
-The ``collectoss config`` commands are for interacting with Augur's configuration file.
+The ``collectoss config`` commands are for interacting with CollectOSS's configuration file.
 
 ``init``
 ------------
@@ -26,7 +26,7 @@ Below is the list of available parameters, their defaults, and the corresponding
 
 --facade_repo_directory     The directory on this machine where Facade should store its cloned repos. Defaults to ``repos/``. Set by the ``AUGUR_FACADE_REPO_DIRECTORY`` environment variable
 
---rc-config-file        Path to an existing Augur config file whose values will be used as the defaults. Defaults to ``None``. This parameter does not support being set by an environment variable.
+--rc-config-file        Path to an existing CollectOSS config file whose values will be used as the defaults. Defaults to ``None``. This parameter does not support being set by an environment variable.
 
 --write-to-src          Flag for writing the generated config file to the source code tree, instead of the default ``$HOME/.augur``. For developers use only. Defaults to ``False``.
 

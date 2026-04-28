@@ -338,8 +338,7 @@ paths:
     get:
       description: "Returns the metadata about all repositories in a CollectOSS
         instance, using information from a git platform (GitHub, GitLab, etc.).
-        Each record includes the default
-        branch, forks, stars, watchers, and
+        Each record includes the default branch, forks, stars, watchers, and
         committers. Also includes metadata about current repository issue and
         pull request status and counts."
       operationId: Activity Metadata (Repo)
@@ -353,7 +352,7 @@ paths:
                   description: "Example: https://github.com/chaoss/collectoss"
                   type: string
                 repo_name:
-                  description: "Example: augur"
+                  description: "Example: collectoss"
                   type: string
                 repo_id:
                   description: "Example: 25540"
@@ -5421,7 +5420,7 @@ paths:
                   description: "Example: https://github.com/chaoss/collectoss"
                   type: string
                 repo_name:
-                  description: "Example: augur"
+                  description: "Example: collectoss"
                   type: string
                 total_lines:
                   description: "Example: 274734"
@@ -5435,9 +5434,9 @@ paths:
   /complexity/project_file_complexity:
     get:
       description: "Returns project file complexity data for all repositories in an
-        CollectOSS instance, using information from a git platform (GitHub, GitLab,
-        etc.). Each record includes the total and average file complexity of the
-        project repository."
+        CollectOSS instance, using information from a git platform (GitHub,
+        GitLab, etc.). Each record includes the total and average file
+        complexity of the project repository."
       operationId: File Complexity (repo)
       responses:
         "200":
@@ -5452,7 +5451,7 @@ paths:
                   description: "Example: https://github.com/chaoss/collectoss"
                   type: string
                 repo_name:
-                  description: "Example: augur"
+                  description: "Example: collectoss"
                   type: string
                 sum_code_complexity:
                   description: "Example: 0"
@@ -5465,10 +5464,10 @@ paths:
         - complexity
   /complexity/project_blank_lines:
     get:
-      description: "Returns project blank line data for all repositories in a CollectOSS
-        instance, using information from a git platform (GitHub, GitLab, etc.).
-        Each record includes the total and average number of blank lines in the
-        project repository."
+      description: "Returns project blank line data for all repositories in a
+        CollectOSS instance, using information from a git platform (GitHub,
+        GitLab, etc.). Each record includes the total and average number of
+        blank lines in the project repository."
       operationId: Total Blank Lines (repo)
       parameters:
         - in: query
@@ -5491,7 +5490,7 @@ paths:
                   description: "Example: https://github.com/chaoss/collectoss"
                   type: string
                 repo_name:
-                  description: "Example: augur"
+                  description: "Example: collectoss"
                   type: string
                 blank_lines:
                   description: "Example: 274734"
@@ -5504,10 +5503,10 @@ paths:
         - complexity
   /complexity/project_comment_lines:
     get:
-      description: "Returns project comment line data for all repositories in a CollectOSS
-        instance, using information from a git platform (GitHub, GitLab, etc.).
-        Each record includes the total and average number of comment lines in
-        the project repository."
+      description: "Returns project comment line data for all repositories in a
+        CollectOSS instance, using information from a git platform (GitHub,
+        GitLab, etc.). Each record includes the total and average number of
+        comment lines in the project repository."
       operationId: Total Comment Lines (repo)
       parameters:
         - in: query
@@ -5530,7 +5529,7 @@ paths:
                   description: "Example: https://github.com/chaoss/collectoss"
                   type: string
                 repo_name:
-                  description: "Example: augur"
+                  description: "Example: collectoss"
                   type: string
                 comment_lines:
                   description: "Example: 5066"
@@ -5561,7 +5560,7 @@ paths:
                   description: "Example: https://github.com/chaoss/collectoss"
                   type: string
                 repo_name:
-                  description: "Example: augur"
+                  description: "Example: collectoss"
                   type: string
                 files:
                   description: "Example: 207"
@@ -5588,7 +5587,7 @@ paths:
                   description: "Example: https://github.com/chaoss/collectoss"
                   type: string
                 repo_name:
-                  description: "Example: augur"
+                  description: "Example: collectoss"
                   type: string
                 programming_language:
                   description: "Example: Python"
@@ -5699,10 +5698,10 @@ paths:
 
   /user/session/generate:
     post:
-      description: The final step in the CollectOSS Oauth authorization process. The Client
-        Application uses this endpoint to exchange a temporary authorization
-        code (generated in the previous authorization step) with a valid Bearer
-        token.
+      description: The final step in the CollectOSS Oauth authorization process. The
+        Client Application uses this endpoint to exchange a temporary
+        authorization code (generated in the previous authorization step) with a
+        valid Bearer token.
       operationId: Generate User Session Token
       parameters:
         - description: Client [API_Key]

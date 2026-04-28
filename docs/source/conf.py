@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Augur documentation build configuration file, created by
+# CollectOSS documentation build configuration file, created by
 # sphinx-quickstart on Tue Oct 24 12:27:08 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -23,7 +23,7 @@ import sphinx_rtd_theme
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-# Add the project root (two levels up: docs/source → augur)
+# Add the project root (two levels up: docs/source → collectoss)
 sys.path.insert(0, os.path.abspath(os.path.join(here, '../..')))
 
 # Now importing variables from metadata.py

@@ -2,7 +2,7 @@
 Insight_worker
 ==============
 
-It uses Augur's metrics API to discover insights for every time_series metrics like ``issues``, ``reviews``, ``code-changes``, ``code-changes-lines`` etc.. of every repos present in the database.
+It uses CollectOSS's metrics API to discover insights for every time_series metrics like ``issues``, ``reviews``, ``code-changes``, ``code-changes-lines`` etc.. of every repos present in the database.
 
 We used BiLSTM(Bi-directional Long Short Term Memory)model as it is capable of capturing trend, long-short seasonality in the data. A bidirectional LSTM (BiLSTM) layer learns bidirectional long-term dependencies between time steps of time series or sequence data. These dependencies can be useful when you want the network to learn from the complete time series at each time step.
 
@@ -12,9 +12,9 @@ Worker has three main configurations that are standard across all workers.And it
 
 The standard options are:
 
-- ``switch``, a boolean flag indicating if the worker should automatically be started with Augur. Defaults to ``0`` (false).
-- ``workers``, the number of instances of this worker that Augur should spawn if ``switch`` is set to ``1``. Defaults to ``1``.
-- ``port``, which is the base TCP port the worker will use t0 communicate with Augur’s broker. The default is different for each worker, for the ``insight_worker`` it is ``21311``.
+- ``switch``, a boolean flag indicating if the worker should automatically be started with CollectOSS. Defaults to ``0`` (false).
+- ``workers``, the number of instances of this worker that CollectOSS should spawn if ``switch`` is set to ``1``. Defaults to ``1``.
+- ``port``, which is the base TCP port the worker will use t0 communicate with CollectOSS’s broker. The default is different for each worker, for the ``insight_worker`` it is ``21311``.
 
 Keeping workers at 1 should be fine for small collection sets, but if you have a lot of repositories to collect data for, you can raise it. We also suggest double checking that the default worker ports are free on your machine.
 

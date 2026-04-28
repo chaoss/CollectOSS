@@ -57,7 +57,7 @@ Models & Tables they populate-
 This worker has an architecture same as the Pull Request Worker. Whenever you send a task for any model, it hits the API
 endpoints to fetch the data. Duplicates are ignored and only upsert operations (Update/Insert) are performed.
 The tables in which the data is populated are common for both Github Pull Request Worker & Gitlab Merge Request Worker.
-The tables and the columns are made with respect to the Github API naming and logic as initially Augur only supported
+The tables and the columns are made with respect to the Github API naming and logic as initially CollectOSS only supported
 Github worker. But it is easy to understand the mapping between the naming conventions of Github & Gitlab API.
 
 
