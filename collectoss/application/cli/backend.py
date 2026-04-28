@@ -355,7 +355,7 @@ def export_env(config):
     Exports your GitHub key and database credentials
     """
 
-    export_file = open(os.getenv('AUGUR_EXPORT_FILE', 'augur_export_env.sh'), 'w+')
+    export_file = open(os.getenv('AUGUR_EXPORT_FILE', 'collectoss_export_env.sh'), 'w+')
     export_file.write('#!/bin/bash')
     export_file.write('\n')
     env_file = open(os.getenv('AUGUR_ENV_FILE', 'docker_env.txt'), 'w+')

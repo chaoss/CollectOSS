@@ -16,7 +16,7 @@ def init_settings():
     settings["approot"] = "/"
     settings["caching"] = "static/cache/"
     settings["cache_expiry"] = 604800
-    settings["serving"] = "http://augur.chaoss.io/api/unstable"
+    settings["serving"] = "http://example.com/api/unstable"
     settings["pagination_offset"] = 25
     settings["session_key"] = secrets.token_hex()
 

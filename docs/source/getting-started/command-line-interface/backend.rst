@@ -171,7 +171,7 @@ Open http://localhost:8003 and select workers to check for errors.
 
 ``export-env``
 ---------------
-Exports your GitHub key and database credentials to 2 files. The first is ``augur_export_env.sh`` which is an executable shell script that can be used to initialize environment variables for some of your credentials. The second is ``docker_env.txt`` which specifies each credential in a key/value pair format that is used to configure the backend Docker containers.
+Exports your GitHub key and database credentials to 2 files. The first is ``collectoss_export_env.sh`` which is an executable shell script that can be used to initialize environment variables for some of your credentials. The second is ``docker_env.txt`` which specifies each credential in a key/value pair format that is used to configure the backend Docker containers.
 
 Example usage:
 
@@ -191,7 +191,7 @@ Successful output looks like:
   > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_USER
   > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_PASSWORD
 
-  # contents of augur_export_env.sh
+  # contents of collectoss_export_env.sh
   #!/bin/bash
   export AUGUR_GITHUB_API_KEY="your_key_here"
   export AUGUR_DB_HOST="your_host"

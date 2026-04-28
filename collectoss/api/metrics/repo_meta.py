@@ -12,7 +12,7 @@ from flask import current_app
 from collectoss.api.util import register_metric
 
 
-logger = logging.getLogger("augur")
+logger = logging.getLogger("collectoss")
 
 @register_metric()
 def code_changes(repo_group_id, repo_id=None, period='week', begin_date=None, end_date=None):

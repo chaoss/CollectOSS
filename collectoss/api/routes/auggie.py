@@ -76,7 +76,7 @@ API_VERSION = 'api/unstable'
 #         print(user_response)
 #         email = user_response["user"]["email"]
 
-#         profile_name = 'augur'
+#         profile_name = 'collectoss'
 #         if os.environ.get('AUGUR_IS_PROD'):
 #             profile_name = 'default'
 #         print("Making Boto3 Session")
@@ -181,7 +181,7 @@ API_VERSION = 'api/unstable'
 
 # #@annotate(tag='update-auggie-user-tracking')
 # def update_tracking(metric, body):
-#     profile_name = 'augur'
+#     profile_name = 'collectoss'
 #     if os.environ.get('AUGUR_IS_PROD'):
 #         profile_name = 'default'
 #     client = boto3.Session(region_name='us-east-1', profile_name=profile_name).client('dynamodb')
@@ -224,7 +224,7 @@ API_VERSION = 'api/unstable'
 
 # #@annotate(tag='get-auggie-user')
 # def get_auggie_user(metric, body):
-#     profile_name = 'augur'
+#     profile_name = 'collectoss'
 #     if os.environ.get('AUGUR_IS_PROD'):
 #         profile_name = 'default'
 #     client = boto3.Session(region_name='us-east-1', profile_name=profile_name).client('dynamodb')
@@ -251,7 +251,7 @@ def get_auggie_user():
     # response = server.transform(metrics.get_auggie_user, args=arg)
     # return Response(response=response, status=200, mimetype="application/json")
     ## From Method
-    profile_name = 'augur'
+    profile_name = 'collectoss'
     if os.environ.get('AUGUR_IS_PROD'):
         profile_name = 'default'
     client = boto3.Session(region_name='us-east-1', profile_name=profile_name).client('dynamodb')
@@ -277,7 +277,7 @@ def update_auggie_user_tracking():
     # response = server.transform(metrics.update_tracking, args=arg)
     # return Response(response=response, status=200, mimetype="application/json")
     ## From Method
-    profile_name = 'augur'
+    profile_name = 'collectoss'
     if os.environ.get('AUGUR_IS_PROD'):
         profile_name = 'default'
     client = boto3.Session(region_name='us-east-1', profile_name=profile_name).client('dynamodb')
@@ -339,7 +339,7 @@ def slack_login():
         print(user_response)
         email = user_response["user"]["email"]
 
-        profile_name = 'augur'
+        profile_name = 'collectoss'
         if os.environ.get('AUGUR_IS_PROD'):
             profile_name = 'default'
         print("Making Boto3 Session")
