@@ -66,7 +66,7 @@ def get_database_string() -> str:
     try:
         current_dir = os.getcwd()
     except FileNotFoundError:
-        print("\n\nPlease run collcetoss commands in the root directory\n\n")
+        print("\n\nPlease run collectoss commands in the root directory\n\n")
         sys.exit()
 
     db_json_file_location = current_dir + "/db.config.json"
