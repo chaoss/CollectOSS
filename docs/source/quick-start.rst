@@ -6,8 +6,6 @@ Select installation instructions from those most closely related to the operatin
 .. toctree::
    :maxdepth: 2
 
-   getting-started/new-install
-   getting-started/dev-osx-install
    getting-started/using-docker
 
 
