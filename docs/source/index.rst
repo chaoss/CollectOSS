@@ -9,7 +9,7 @@ CollectOSS Documentation
 
    getting-started/Welcome
    quick-start
-   about-augur/toc
+   about/toc
    deployment/toc
    getting-started/toc
    development-guide/toc
