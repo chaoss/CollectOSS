@@ -8,7 +8,7 @@ LABEL org.opencontainers.image.documentation="https://collectoss.readthedocs.io"
 ARG VERSION
 LABEL org.opencontainers.image.version=${VERSION}
 
-ARG RABBIT_MQ_DEFAULT_USER=collectoss
+ARG RABBIT_MQ_DEFAULT_USER=augur
 ARG RABBIT_MQ_DEFAULT_PASSWORD=password123
 ARG RABBIT_MQ_DEFAULT_VHOST=collectoss_vhost
 
