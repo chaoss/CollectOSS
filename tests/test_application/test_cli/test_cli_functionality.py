@@ -2,7 +2,7 @@ import os
 import pytest
 import subprocess
 
-def test_augur():
+def test_collectoss():
 
     FNULL = open(os.devnull, "w")
     command = "collectoss --help"

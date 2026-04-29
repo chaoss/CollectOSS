@@ -10,7 +10,7 @@ from tests import server_port
 
 FNULL = open(os.devnull, "w")
 
-start = subprocess.Popen(["augur", "backend", "start", "--disable-collection", "--port", server_port])
+start = subprocess.Popen(["collectoss", "backend", "start", "--disable-collection", "--port", server_port])
 print("Waiting for the server to start...")
 time.sleep(10)
 
@@ -22,6 +22,6 @@ else:
     process = subprocess.run(["pytest", "tests/test_routes/test_api_functionality"])
     time.sleep(3)
 
-subprocess.Popen(["augur", "backend", "kill"])
+subprocess.Popen(["collectoss", "backend", "kill"])
 print("Server successfully shutdown.")
 sys.exit(process.returncode)

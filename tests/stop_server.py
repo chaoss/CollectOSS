@@ -6,5 +6,5 @@ import sys
 
 FNULL = open(os.devnull, "w")
 
-subprocess.Popen(["augur", "backend", "kill"], stdout=FNULL, stderr=subprocess.STDOUT)
+subprocess.Popen(["collectoss", "backend", "kill"], stdout=FNULL, stderr=subprocess.STDOUT)
 print("Server successfully shutdown.")

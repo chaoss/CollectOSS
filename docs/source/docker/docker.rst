@@ -19,7 +19,7 @@ All ``Dockerfiles`` and other Docker-related files are located in ``docker/<serv
 
 .. note::
 
-    You can set ``<tag_name>`` to whatever you like, we recommend something like ``local_augur_backend`` so you don't get it confused with the official images.
+    You can set ``<tag_name>`` to whatever you like, we recommend something like ``local_collectoss_backend`` so you don't get it confused with the official images.
 
 Running containers
 -------------------

@@ -119,7 +119,7 @@ In the Worker block you need to add something like this:
         },
         "facade_worker": {
             "port": 48868,
-            "repo_directory": "/Volumes/repo_two/repos/augur-prwrt/",
+            "repo_directory": "/Volumes/repo_two/repos/collectoss-prwrt/",
             "switch": 1,
             "workers": 1
         },
