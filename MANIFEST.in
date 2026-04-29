@@ -1,4 +1,0 @@
-include LICENSE
-include metadata.py
-include schema/
-include scripts/

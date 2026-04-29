@@ -1,7 +1,7 @@
 Docker Image Breakdown
 ======================
 
-Augur provides a separate Docker image for each layer of our application (database, backend, and frontend). This section details how to build and run these images locally for testing, and also describes how to set up our test environment using Docker.
+CollectOSS provides a separate Docker image for each layer of our application (database, backend, and frontend). This section details how to build and run these images locally for testing, and also describes how to set up our test environment using Docker.
 
 .. note::
 
@@ -14,12 +14,12 @@ All ``Dockerfiles`` and other Docker-related files are located in ``docker/<serv
 
 .. code-block:: bash
 
-    # in the root augur/ directory
+    # in the root collectoss/ directory
     $ docker build -t <tag_name> -f util/docker/<service name>/Dockerfile .
 
 .. note::
 
-    You can set ``<tag_name>`` to whatever you like, we recommend something like ``local_augur_backend`` so you don't get it confused with the official images.
+    You can set ``<tag_name>`` to whatever you like, we recommend something like ``local_collectoss_backend`` so you don't get it confused with the official images.
 
 Running containers
 -------------------
@@ -40,5 +40,5 @@ To start a container, use the command below. ``<container_name>`` can be whateve
 
 .. code-block::bash
 
-    # in the root augur/ directory
+    # in the root collectoss/ directory
     $ docker run -p <host_port>:<docker_port> --name <container_name> <tag_name>

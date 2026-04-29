@@ -1,18 +1,18 @@
-Augur OAuth Flow
+CollectOSS OAuth Flow
 =================
 
-Augur implements the Oauth 2.0 specification, and each Augur instance is capable of acting as an authorization server for external applications.
+CollectOSS implements the Oauth 2.0 specification, and each CollectOSS instance is capable of acting as an authorization server for external applications.
 
 Prerequisites
 --------------
 
-If your Augur instance is running behind Nginx or Apache, make sure this parameter (or its Apache equivalent) is set in your ``sites-enabled`` configuration::
+If your CollectOSS instance is running behind Nginx or Apache, make sure this parameter (or its Apache equivalent) is set in your ``sites-enabled`` configuration::
 
     proxy_set_header X-Forwarded-Proto $scheme;
 
-Registering a user account on the desired Augur instance is a requirement for creating a Client Application. The developer of the application must follow the below steps:
+Registering a user account on the desired CollectOSS instance is a requirement for creating a Client Application. The developer of the application must follow the below steps:
 
-1. Navigate to the home page of the desired Augur instance.
+1. Navigate to the home page of the desired CollectOSS instance.
 2. Click "Login" on the navigation bar.
 3. Click "Register" and fill out the account details.
 
@@ -37,7 +37,7 @@ Initial Request
 
 The authorization flow is initiated when a user clicks a link or button which redirects the user-agent (browser) to the authorization server. This request URL must be of the following format::
 
-    https://augur.example.com/user/authorize?
+    https://collectoss.example.com/user/authorize?
         client_id=[your application ID]
         &response_type="code"
         &state=[optional value that you define]
@@ -64,7 +64,7 @@ The Client Application must make the following request in order to facilitate th
 
 .. code:: yaml
 
-    URL: https://augur.example.com/api/unstable/user/session/generate
+    URL: https://collectoss.example.com/api/unstable/user/session/generate
     arguments:
         code: [the temporary authorization code]
         grant_type: "code"
@@ -98,7 +98,7 @@ The application may also attempt automatic reauthorization using the previously 
 
 .. code:: yaml
 
-    URL: https://augur.example.com/api/unstable/user/session/refresh
+    URL: https://collectoss.example.com/api/unstable/user/session/refresh
     arguments:
         refresh_token: [the previously provided refresh token]
         grant_type: "refresh_token"

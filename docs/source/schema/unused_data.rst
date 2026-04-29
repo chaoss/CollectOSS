@@ -1,7 +1,7 @@
-List of Unused Data Tables In Augur
+List of Unused Data Tables In CollectOSS
 ===================================
 
-** This is a list of data tables in augur that are not currently in use. **
+** This is a list of data tables in collectoss that are not currently in use. **
 
     * chaoss_metric_status
 

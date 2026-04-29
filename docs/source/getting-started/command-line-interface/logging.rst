@@ -2,22 +2,22 @@
 Logging Commands
 ====================
 
-``augur logging``
+``collectoss logging``
 ==================
 
-The collection of the ``augur logging`` commands is for interacting with the database.
+The collection of the ``collectoss logging`` commands is for interacting with the database.
 
 ``directory``
 --------------
-Prints the location of the directory to which Augur is configured to write its logs.
+Prints the location of the directory to which CollectOSS is configured to write its logs.
 
 Example usage::
 
   # to print the logs directory
-  $ uv run augur logging directory
+  $ uv run collectoss logging directory
 
   # successful output looks like:
-  > /Users/carter/projects/work/augur/logs/
+  > /Users/carter/projects/work/collectoss/logs/
 
 
 ``tail``
@@ -27,11 +27,11 @@ Prints the last ``n`` lines of each ``.log`` and ``.err`` file in the logs direc
 Example usage::
 
   # to print the last 20 lines of each log file
-  $ uv run augur logging tail
+  $ uv run collectoss logging tail
 
   # successful output looks like:
-  > ********** Logfile: augur.log
-    <contents of augur.log>
+  > ********** Logfile: collectoss.log
+    <contents of collectoss.log>
 
-  > ********** Logfile: augur.err
-    <contents of augur.err>
+  > ********** Logfile: collectoss.err
+    <contents of collectoss.err>

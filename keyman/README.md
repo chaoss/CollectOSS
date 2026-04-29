@@ -38,7 +38,7 @@ keyman coordinates API key distribution and rate limit tracking between a centra
 
 **KeyPublisher** (`KeyClient.py`)
 - Admin interface for publishing/unpublishing keys
-- Used during Augur startup to load keys from database
+- Used during CollectOSS startup to load keys from database
 
 ## Usage
 
@@ -80,12 +80,12 @@ if pub.wait(timeout_seconds=30, republish=True):
 
 ## Supported Platforms
 
-| Platform | Use Case | Rate Limit |
-|----------|----------|------------|
-| `github_rest` | GitHub REST API v3 | 5000 req/hour |
+| Platform         | Use Case              | Rate Limit       |
+| ---------------- | --------------------- | ---------------- |
+| `github_rest`    | GitHub REST API v3    | 5000 req/hour    |
 | `github_graphql` | GitHub GraphQL API v4 | 5000 points/hour |
-| `github_search` | GitHub Search API | 30 req/min |
-| `gitlab_rest` | GitLab REST API | Varies |
+| `github_search`  | GitHub Search API     | 30 req/min       |
+| `gitlab_rest`    | GitLab REST API       | Varies           |
 
 **Note**: Same GitHub token is published to all three `github_*` platforms because GitHub enforces separate rate limits for each API type.
 
@@ -97,17 +97,17 @@ if pub.wait(timeout_seconds=30, republish=True):
 
 ## Redis Channels
 
-**`augur-oauth-announce`** - Admin operations (PUBLISH, UNPUBLISH, SHUTDOWN)
+**`collectoss-oauth-announce`** - Admin operations (PUBLISH, UNPUBLISH, SHUTDOWN)
 **`worker-oath-request`** - Worker operations (NEW, EXPIRE, INVALIDATE)
 
 Responses sent to `{channel}-{process_id}`
 
 ## Starting the Orchestrator
 
-The orchestrator is started automatically by Augur backend:
+The orchestrator is started automatically by CollectOSS backend:
 
 ```python
-# In augur/application/cli/backend.py
+# In collectoss/application/cli/backend.py
 orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
 ```
 
@@ -125,7 +125,7 @@ VALUES
 ('My GitHub Key', 'not_used', 'not_used', 'ghp_YOURTOKEN', 'not_used', 'github_rest');
 ```
 
-Keys are loaded on Augur startup and published to orchestrator.
+Keys are loaded on CollectOSS startup and published to orchestrator.
 
 ## Troubleshooting
 
@@ -146,11 +146,11 @@ Keys are loaded on Augur startup and published to orchestrator.
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `Orchestrator.py` | Central key manager |
-| `KeyClient.py` | Worker + admin interfaces |
-| `KeyOrchestrationAPI.py` | Protocol specification |
+| File                     | Purpose                   |
+| ------------------------ | ------------------------- |
+| `Orchestrator.py`        | Central key manager       |
+| `KeyClient.py`           | Worker + admin interfaces |
+| `KeyOrchestrationAPI.py` | Protocol specification    |
 
 ## Limitations
 

@@ -17,7 +17,7 @@ jobs:
     name: Test on macOS
     runs-on: macos-latest
     env:
-      UV_LOCKED: true  # Assert that uv.lock is up-to-date
+      UV_LOCKED: true # Assert that uv.lock is up-to-date
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
         run: uv sync --all-groups
 
       - name: Install workers
-        run: uv run scripts/install/workers.sh dev
+        run: uv run scripts/ci/workers.sh dev
 
       - name: Install nltk
         run: |
@@ -49,7 +49,6 @@ jobs:
           uv run python -m nltk.downloader punkt
           uv run python -m nltk.downloader popular
           uv run python -m nltk.downloader universal_tagset
-
 
   test-e2e:
     name: End-to-end test (Docker)
@@ -59,7 +58,7 @@ jobs:
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-          
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -79,9 +78,11 @@ jobs:
         with:
           context: .
           file: ./docker/database/Dockerfile
-          build-args: VERSION=${{ steps.version.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_database:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-database:test
           cache-from: type=gha,scope=container-database
           cache-to: type=gha,scope=container-database,mode=min
           load: true
@@ -91,9 +92,11 @@ jobs:
         with:
           context: .
           file: ./docker/keyman/Dockerfile
-          build-args: VERSION=${{ steps.version.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_keyman:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test
           cache-from: type=gha,scope=container-keyman
           cache-to: type=gha,scope=container-keyman,mode=min
           load: true
@@ -103,9 +106,11 @@ jobs:
         with:
           context: .
           file: ./docker/rabbitmq/Dockerfile
-          build-args: VERSION=${{ steps.version.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test
           cache-from: type=gha,scope=container-rabbitmq
           cache-to: type=gha,scope=container-rabbitmq,mode=min
           load: true
@@ -115,28 +120,30 @@ jobs:
         with:
           context: .
           file: ./docker/backend/Dockerfile
-          build-args: VERSION=${{ steps.version.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            REVISION=${{ github.sha }}
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_backend:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss:test
           cache-from: type=gha,scope=container-backend
           cache-to: type=gha,scope=container-backend,mode=min
           load: true
 
       - name: Prepare compose file
         run: |
-          yq eval -i '.services.augur.image = "ghcr.io/${{ github.repository_owner }}/augur_backend:test"' docker-compose.yml
-          yq eval -i '.services.augur.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur.restart = "no"' docker-compose.yml
+          yq eval -i '.services.core.image = "ghcr.io/${{ github.repository_owner }}/collectoss:test"' docker-compose.yml
+          yq eval -i '.services.core.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.core.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.augur-db.image = "ghcr.io/${{ github.repository_owner }}/augur_database:test"' docker-compose.yml
-          yq eval -i '.services.augur-db.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur-db.restart = "no"' docker-compose.yml
+          yq eval -i '.services.database.image = "ghcr.io/${{ github.repository_owner }}/collectoss-database:test"' docker-compose.yml
+          yq eval -i '.services.database.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.database.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.augur-keyman.image = "ghcr.io/${{ github.repository_owner }}/augur_keyman:test"' docker-compose.yml
-          yq eval -i '.services.augur-keyman.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur-keyman.restart = "no"' docker-compose.yml
+          yq eval -i '.services.keyman.image = "ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test"' docker-compose.yml
+          yq eval -i '.services.keyman.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.keyman.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test"' docker-compose.yml
+          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test"' docker-compose.yml
           yq eval -i '.services.rabbitmq.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.rabbitmq.restart = "no"' docker-compose.yml
 
@@ -182,7 +189,8 @@ jobs:
         # Always run this step to get logs, even if the previous step fails
         if: always()
         # We use tail so that we can see the name of each file as it's printed
-        run: "docker run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs tail -n +0'"
+        run: "docker run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs
+          tail -n +0'"
 
   test-e2e-podman:
     name: End-to-end test (Podman)
@@ -206,7 +214,7 @@ jobs:
           containerfiles: |
             ./docker/database/Dockerfile
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_database:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-database:test
           layers: true
 
       - name: Build keyman container
@@ -216,7 +224,7 @@ jobs:
           containerfiles: |
             ./docker/keyman/Dockerfile
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_keyman:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test
           layers: true
 
       - name: Build rabbitmq container
@@ -226,7 +234,7 @@ jobs:
           containerfiles: |
             ./docker/rabbitmq/Dockerfile
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test
           layers: true
 
       - name: Build backend container
@@ -236,24 +244,24 @@ jobs:
           containerfiles: |
             ./docker/backend/Dockerfile
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/augur_backend:test
+          tags: ghcr.io/${{ github.repository_owner }}/collectoss:test
           layers: true
 
       - name: Prepare compose file
         run: |
-          yq eval -i '.services.augur.image = "ghcr.io/${{ github.repository_owner }}/augur_backend:test"' docker-compose.yml
-          yq eval -i '.services.augur.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur.restart = "no"' docker-compose.yml
+          yq eval -i '.services.core.image = "ghcr.io/${{ github.repository_owner }}/collectoss:test"' docker-compose.yml
+          yq eval -i '.services.core.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.core.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.augur-db.image = "ghcr.io/${{ github.repository_owner }}/augur_database:test"' docker-compose.yml
-          yq eval -i '.services.augur-db.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur-db.restart = "no"' docker-compose.yml
+          yq eval -i '.services.database.image = "ghcr.io/${{ github.repository_owner }}/collectoss-database:test"' docker-compose.yml
+          yq eval -i '.services.database.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.database.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.augur-keyman.image = "ghcr.io/${{ github.repository_owner }}/augur_keyman:test"' docker-compose.yml
-          yq eval -i '.services.augur-keyman.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.augur-keyman.restart = "no"' docker-compose.yml
+          yq eval -i '.services.keyman.image = "ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test"' docker-compose.yml
+          yq eval -i '.services.keyman.pull_policy = "never"' docker-compose.yml
+          yq eval -i '.services.keyman.restart = "no"' docker-compose.yml
 
-          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/augur_rabbitmq:test"' docker-compose.yml
+          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test"' docker-compose.yml
           yq eval -i '.services.rabbitmq.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.rabbitmq.restart = "no"' docker-compose.yml
 
@@ -297,9 +305,8 @@ jobs:
         # Always run this step to get logs, even if the previous step fails
         if: always()
         # We use tail so that we can see the name of each file as it's printed
-        run: "podman run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs tail -n +0'"
-
-
+        run: "podman run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs
+          tail -n +0'"
 
   push-image:
     name: Push image
@@ -312,10 +319,14 @@ jobs:
     strategy:
       matrix:
         image:
-          - backend
-          - database
-          - keyman
-          - rabbitmq
+          - name: collectoss
+            folder: backend
+          - name: collectoss-database
+            folder: database
+          - name: collectoss-keyman
+            folder: keyman
+          - name: collectoss-rabbitmq
+            folder: rabbitmq
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -339,10 +350,10 @@ jobs:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: index,manifest
         with:
           annotations: |
-            org.opencontainers.image.title=augur_${{ matrix.image}}
+            org.opencontainers.image.title=${{ matrix.image.name }}
           labels: |
-            org.opencontainers.image.title=augur_${{ matrix.image}}
-          images: ghcr.io/${{ github.repository_owner }}/augur_${{ matrix.image }}
+            org.opencontainers.image.title=${{ matrix.image.name }}
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image.name }}
           # Pushes to the main branch update the *:devel-latest tag
           # Releases update the *:latest tag and the *:<version> tag
           tags: |
@@ -356,12 +367,12 @@ jobs:
         with:
           annotations: ${{ steps.meta.outputs.annotations }}
           context: .
-          file: ./docker/${{ matrix.image }}/Dockerfile
+          file: ./docker/${{ matrix.image.folder }}/Dockerfile
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
           # Only push if we've tagged the image in the metadata step
           push: ${{ steps.meta.outputs.tags != '' }}
           tags: ${{ steps.meta.outputs.tags }}
           # Use the same cache as the build step
-          cache-from: type=gha,scope=container-${{ matrix.image }}
-          cache-to: type=gha,scope=container-${{ matrix.image }},mode=min
+          cache-from: type=gha,scope=container-${{ matrix.image.name }}
+          cache-to: type=gha,scope=container-${{ matrix.image.name }},mode=min

@@ -3,7 +3,7 @@
 import pytest
 import pandas as pd
 
-from augur.api.metrics.repo_meta import *
+from collectoss.api.metrics.repo_meta import *
 
 
 def test_code_changes():

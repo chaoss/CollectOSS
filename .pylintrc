@@ -51,7 +51,7 @@ ignore=CVS
 
 # Add files or directories matching the regex patterns to the ignore-list. The
 # regex matches against paths and can be in Posix or Windows format.
-ignore-paths=./augur/application.db/models/,./augur/tasks/git/util/facade_worker/,./augur/application/schema/alembic/versions/,./augur/api/routes/,./augur/api/metrics/,./augur/api/config.py, ./augur/application/log_analysis/,./augur/augurface/
+ignore-paths=./collectoss/application.db/models/,./collectoss/tasks/git/util/facade_worker/,./collectoss/application/schema/alembic/versions/,./collectoss/api/routes/,./collectoss/api/metrics/,./collectoss/api/config.py, ./collectoss/application/log_analysis/
 
 # Files or directories matching the regex patterns are skipped. The regex
 # matches against base names, not paths. The default value ignores Emacs file

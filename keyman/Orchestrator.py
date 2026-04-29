@@ -10,7 +10,7 @@ if os.environ.get("KEYMAN_DOCKER"):
     import redis
     import logging
 
-    sys.path.append("/augur")
+    sys.path.append("/collectoss")
 
     conn = redis.Redis.from_url(os.environ.get("REDIS_CONN_STRING"))
 
@@ -23,10 +23,10 @@ if os.environ.get("KEYMAN_DOCKER"):
     logger.addHandler(handler)  # Attach the handler to the logger
     logger.setLevel(logging.DEBUG)
 else:
-    from augur.tasks.init.redis_connection import get_redis_connection
-    from augur.application.logs import AugurLogger
+    from collectoss.tasks.init.redis_connection import get_redis_connection
+    from collectoss.application.logs import SystemLogger
 
-    logger = AugurLogger("KeyOrchestrator").get_logger()
+    logger = SystemLogger("KeyOrchestrator").get_logger()
     conn = get_redis_connection()
 
 class KeyOrchestrator:
@@ -50,7 +50,7 @@ class KeyOrchestrator:
 
         # Load channel names and IDs from the spec
         for channel in spec["channels"]:
-            # IE: self.ANNOUNCE = "augur-oauth-announce"
+            # IE: self.ANNOUNCE = "collectoss-oauth-announce"
             setattr(self, channel["name"], channel["id"])
             self.stdin.subscribe(channel["id"])
 

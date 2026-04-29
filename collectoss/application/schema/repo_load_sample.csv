@@ -1,0 +1,9 @@
+repo_url,repo_group_id
+https://github.com/chaoss/collectoss.git,10
+https://github.com/chaoss/grimoirelab.git,10
+https://github.com/chaoss/wg-evolution.git,20
+https://github.com/chaoss/wg-risk.git,20
+https://github.com/chaoss/wg-common.git,20
+https://github.com/chaoss/wg-value.git,20
+https://github.com/chaoss/wg-diversity-inclusion.git,20
+https://github.com/chaoss/wg-app-ecosystem.git,20

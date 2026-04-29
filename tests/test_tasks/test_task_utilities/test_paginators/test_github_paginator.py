@@ -2,10 +2,10 @@ import pytest
 import logging
 import httpx
 
-from augur.tasks.github.util.github_paginator import GithubPaginator, GithubApiResult
-from augur.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-# from augur.tasks.util.random_key_auth import RandomKeyAuth
-from augur.application.db.session import DatabaseSession
+from collectoss.tasks.github.util.github_paginator import GithubPaginator, GithubApiResult
+from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
+# from collectoss.tasks.util.random_key_auth import RandomKeyAuth
+from collectoss.application.db.session import DatabaseSession
 
 logger = logging.getLogger(__name__)
 
@@ -23,21 +23,21 @@ def key_auth():
 
 def test_github_paginator_get_item(key_auth):
 
-    first_augur_pr_id = 102777299
+    first_chaosscommunity_pr_id = 148367018
 
-    url = "https://api.github.com/repos/chaoss/augur/pulls?state=all&direction=asc&per_page=100"
+    url = "https://api.github.com/repos/chaoss/community/pulls?state=all&direction=asc&per_page=10"
 
     prs = GithubPaginator(url, key_auth, logger)
 
     assert prs is not None
     assert prs[0] is not None
 
-    assert first_augur_pr_id == prs[0]["id"]
+    assert first_chaosscommunity_pr_id == prs[0]["id"]
 
 
 def test_github_paginator_retrieve_data_valid_url(key_auth):
 
-    url = "https://api.github.com/repos/chaoss/augur/pulls?state=all&direction=asc&per_page=100"
+    url = "https://api.github.com/repos/chaoss/collectoss/pulls?state=all&direction=asc&per_page=100"
 
     prs, response, result = GithubPaginator(url, key_auth, logger).retrieve_data(url)
 

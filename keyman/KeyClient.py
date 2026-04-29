@@ -4,7 +4,7 @@ import json
 from logging import Logger
 from redis.client import PubSub
 
-from augur.tasks.init.redis_connection import get_redis_connection
+from collectoss.tasks.init.redis_connection import get_redis_connection
 from keyman.KeyOrchestrationAPI import spec, WaitKeyTimeout
 
 class KeyClient:
@@ -30,7 +30,7 @@ class KeyClient:
         
         # Load channel names and IDs from the spec
         for channel in spec["channels"]:
-            # IE: self.ANNOUNCE = "augur-oauth-announce"
+            # IE: self.ANNOUNCE = "collectoss-oauth-announce"
             setattr(self, channel["name"], channel["id"])
             
         if not platform:
@@ -190,14 +190,14 @@ class KeyPublisher:
     as the process ID is used for async communication between the publisher
     and the orchestrator.
 
-    Typically used during Augur startup to load keys from database.
+    Typically used during CollectOSS startup to load keys from database.
     """
     # pylint: disable=no-member
 
     def __init__(self) -> None:
         # Load channel names and IDs from the spec
         for channel in spec["channels"]:
-            # IE: self.ANNOUNCE = "augur-oauth-announce"
+            # IE: self.ANNOUNCE = "collectoss-oauth-announce"
             setattr(self, channel["name"], channel["id"])
         self.conn = get_redis_connection()
         self.id = getpid()

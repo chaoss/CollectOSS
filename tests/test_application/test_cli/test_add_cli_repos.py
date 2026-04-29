@@ -2,8 +2,8 @@ import pytest
 import logging
 
 from tests.test_application.test_repo_load_controller.helper import *
-from augur.tasks.github.util.github_task_session import GithubTaskSession
-from augur.util.repo_load_controller import RepoLoadController, CLI_USER_ID
+from collectoss.tasks.github.util.github_task_session import GithubTaskSession
+from collectoss.util.repo_load_controller import RepoLoadController, CLI_USER_ID
 
 DEFAULT_REPO_GROUP_ID = 1
 VALID_ORG = {"org": "CDCgov", "repo_count": 249}

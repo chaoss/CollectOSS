@@ -3,7 +3,6 @@
 env.txt
 docker_env.txt
 pyenv.txt
-augur_export_env.sh
 *DS_Store
 *.config.json
 !docker.config.json
@@ -20,7 +19,6 @@ __pycache__/
 *.pyc
 *.rdb
 yarn.lock
-Augur_Muskellunge.egg-info/
 runtime/
 logs/
 cache/
@@ -148,24 +146,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Augur-spdx
-./spdx-scanner/dosocs2.conf
-spdx-scanner/dosocs2.conf
-spdx-scanner/augur-spdx/
-workers/spdx_worker/dosocs2.conf
-workers/spdx_worker/augur-spdx/
-workers/spdx_worker/ex-raw.txt
-workers/spdx_worker/ex.json
-
 # Model files for machine learning
-workers/message_insights_worker/message_models/*.h5
 .h5
 *.h5
-workers/clustering_worker/kmeans_repo_messages
-workers/clustering_worker/lda_model
-workers/clustering_worker/vocabulary
-workers/clustering_worker/vocabulary_count
-
+*.model
 
 # compressed files
 *.gz

@@ -1,50 +1,48 @@
 # API
-/augur/api/ @sgoggins
+/collectoss/api/ @MoralCode
 
-/augur/api/view @Ulincsys 
-/augur/api/routes/user.py @Ulincsys 
+/collectoss/api/view @MoralCode @Ulincsys 
+/collectoss/api/routes/user.py @MoralCode @Ulincsys 
 
 # CLI
-/augur/cli/ @sgoggins
+/collectoss/cli/ @MoralCode
 
 # Frontend
-/augur/templates/ @sgoggins
+/collectoss/templates/ @MoralCode
 
 # Schema
-/augur/application/db/ @sgoggins
-/augur/application/schema/ @sgoggins
+/collectoss/application/db/ @MoralCode
+/collectoss/application/schema/ @MoralCode
 
 # Workers
-/augur/tasks @sgoggins
+/collectoss/tasks @MoralCode
 
 # Repo and Community Infrastructure
-/README.md @sgoggins @MoralCode
-/CONTRIBUTING.md @sgoggins @MoralCode
-/CONTRIBUTORS.md @sgoggins @MoralCode
-/MAINTAINERS.md @sgoggins @MoralCode
-/LICENSE @sgoggins
-/CODE_OF_CONDUCT.md @sgoggins
-SECURITY.md @sgoggins @MoralCode
-.github/ @sgoggins @MoralCode 
-pyproject.toml @sgoggins
+/README.md @MoralCode
+/CONTRIBUTING.md @MoralCode
+/CREDITS.md @MoralCode
+/MAINTAINERS.md @MoralCode
+SECURITY.md @MoralCode
+.github/ @MoralCode 
+pyproject.toml @MoralCode
 
 # Testing
 /tests/ @MoralCode
 /scripts/ci @MoralCode
 
 # Keyman
-/keyman @Ulincsys
-/tests/test_key_manager @Ulincsys
+/keyman @MoralCode @Ulincsys
+/tests/test_key_manager @MoralCode @Ulincsys
 
 # Docs
-/docs/ @sgoggins @MoralCode
-/readthedocs.yml @sgoggins @MoralCode
+/docs/ @MoralCode
+/readthedocs.yml @MoralCode
 
 # Install - Manual
-/Makefile @sgoggins
-/scripts/control @sgoggins
-/scripts/install @sgoggins
-/scripts/mat_view_explore @sgoggins
+/Makefile @MoralCode
+/scripts/control @MoralCode
+/scripts/install @MoralCode
+/scripts/mat_view_explore @MoralCode
 
 # Install - Containers
 /docker @MoralCode
@@ -54,7 +52,7 @@ pyproject.toml @sgoggins
 *compose.yml @MoralCode
 
 # Misc
-/augur/metrics/ @sgoggins
-/augur/server.py @sgoggins
-/augur/application.py @sgoggins
-/augur/application/config.py @MoralCode
+/collectoss/metrics/ @MoralCode
+/collectoss/server.py @MoralCode
+/collectoss/application.py @MoralCode
+/collectoss/application/config.py @MoralCode

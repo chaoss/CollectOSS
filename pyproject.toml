@@ -3,20 +3,19 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "augur"
+name = "collectoss"
 requires-python = ">=3.10"
 dynamic = ["version"]
 description = "Python 3 package for free/libre and open-source software community metrics, models & data collection"
 readme = "README.md"
-authors = [
-    { name = "Derek Howard", email = "derek@howderek.com" }
-]
+authors = [{ name = "CHAOSS" }]
 license = "MIT"
 license-files = ["LICENSE"]
 classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Version Control",
-    "Programming Language :: Python :: 3.10"
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
     "alembic>=1.17.1",
@@ -107,11 +106,11 @@ docs = [
 ]
 
 [project.scripts]
-augur = "augur.application.cli._multicommand:run"
+collectoss = "collectoss.application.cli._multicommand:run"
 
 [project.urls]
-Homepage = "https://github.com/chaoss/augur"
-Documentation = "https://oss-augur.readthedocs.io/en/main/"
+Homepage = "https://github.com/chaoss/collectoss"
+Documentation = "https://collectoss.readthedocs.io/en/main/"
 
 
 ############################################################
@@ -124,14 +123,11 @@ include-package-data = true
 version = { attr = "metadata.__version__" }
 
 [tool.setuptools.packages.find]
-# Note: While this should just be where = ["augur"], that doesn't allow the
+# Note: While this should just be where = ["collectoss"], that doesn't allow the
 # dynamic version lookup to work. `uv lock` will fail with:
 #   ModuleNotFoundError: metadata
 where = ["."]
-include = [
-    "augur*",
-    "keyman*",
-]
+include = ["collectoss*", "keyman*"]
 
 [tool.uv]
 # Constraint dependencies are used to limit the versions of dependencies
@@ -145,13 +141,12 @@ constraint-dependencies = [
 ]
 
 
-
 [tool.pytest.ini_options]
 addopts = "-ra -s"
 testpaths = [
     "tests/test_classes",
     "tests/test_application/test_cli/test_csv_utils.py",
-    # "tests/test_routes", # runs, but needs a fixture for connecting to the web interface of Augur
+    # "tests/test_routes", # runs, but needs a fixture for connecting to the web interface of CollectOSS
     # "tests/test_metrics",
     # "tests/test_tasks",
     # "tests/test_application",
@@ -161,7 +156,7 @@ testpaths = [
 ]
 
 [tool.mypy]
-files = ['augur/application/db/*.py']
+files = ['collectoss/application/db/*.py']
 ignore_missing_imports = true
 follow_imports = "skip"
 disallow_untyped_defs = false

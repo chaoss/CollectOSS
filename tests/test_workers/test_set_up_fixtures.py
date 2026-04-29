@@ -58,15 +58,15 @@ def database_connection():
     cwd = os.getcwd()
     # Build the test database from the dockerfile and download
     # Postgres docker image if it doesn't exist.
-    ROOT_AUGUR_DIR = os.path.dirname(
+    ROOT_PROJECT_REPO_DIR = os.path.dirname(
         os.path.dirname(os.path.realpath(__file__)))
-    ROOT_AUGUR_DIR = str(ROOT_AUGUR_DIR).split("augur")
-    ROOT_AUGUR_DIR = ROOT_AUGUR_DIR[0] + "augur"
+    ROOT_PROJECT_REPO_DIR = str(ROOT_PROJECT_REPO_DIR).split("augur")
+    ROOT_PROJECT_REPO_DIR = ROOT_PROJECT_REPO_DIR[0] + "augur"
 
-    buildString = ROOT_AUGUR_DIR
+    buildString = ROOT_PROJECT_REPO_DIR
 
-    # change to root augur directory
-    os.chdir(ROOT_AUGUR_DIR)
+    # change to root directory
+    os.chdir(ROOT_PROJECT_REPO_DIR)
 
     print(os.getcwd())
 
@@ -127,16 +127,16 @@ class DummyFullWorker(ContributorInterfaceable):
 
         self.platform = "github"
         # first set up logging.
-        self._root_augur_dir = Persistent.ROOT_AUGUR_DIR
-        self.augur_config = AugurConfig(self._root_augur_dir)
+        self._root_project_repo_dir = Persistent.ROOT_PROJECT_REPO_DIR
+        self.system_config = SystemConfig(self._root_project_repo_dir)
 
         # Get default logging settings
         self.config = config
 
         self.config.update({
-            'gh_api_key': self.augur_config.get_value('Database', 'key'),
-            'gitlab_api_key': self.augur_config.get_value('Database', 'gitlab_api_key')
-            # 'port': self.augur_config.get_value('Workers', 'contributor_interface')
+            'gh_api_key': self.system_config.get_value('Database', 'key'),
+            'gitlab_api_key': self.system_config.get_value('Database', 'gitlab_api_key')
+            # 'port': self.system_config.get_value('Workers', 'contributor_interface')
         })
 
         # Use a special method overwrite to initialize the values for docker connection.
@@ -189,7 +189,7 @@ class DummyFullWorker(ContributorInterfaceable):
                 self.logger.error(
                     "Error setting attribute for table: {} : {}".format(table, e))
 
-        #looks for api keys one folder before the root augur folder.
+        #looks for api keys one folder before the root folder.
         insert_sql_file(self.db, "../oauth.sql")
 
         self.logger.info("Trying to find max id of table...")

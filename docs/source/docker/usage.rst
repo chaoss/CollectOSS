@@ -18,7 +18,7 @@ You can also step into a running container at every step of the build process an
 First, build the image to output build stages.
 
 .. code-block::bash
-    $ cd augur/
+    $ cd collectoss/
     $ docker build -t <service_name> -f util/docker/backend/Dockerfile .
 
 Then, run any stage by using the hash that the relevant stage prints out during the build process. The arguments are the same as a normal ``docker run``
@@ -30,7 +30,7 @@ Then, run any stage by using the hash that the relevant stage prints out during 
 Viewing container logs
 -------------------------
 
-By default, the only logs shown by the container are the logs of Augur's main data collection process. If you started your container(s) in the background, and want to view these logs again, run the following command in the root ``augur`` directory\:
+By default, the only logs shown by the container are the logs of CollectOSS's main data collection process. If you started your container(s) in the background, and want to view these logs again, run the following command in the root ``collectoss`` directory\:
 
 .. code-block:: bash
 
@@ -47,4 +47,4 @@ As for worker logs. They are currently a work in progress to be made easier to v
 Conclusion
 -----------
 
-This wraps up the Docker section of the Augur documentation. We hope it was useful! Happy hacking!
+This wraps up the Docker section of the CollectOSS documentation. We hope it was useful! Happy hacking!

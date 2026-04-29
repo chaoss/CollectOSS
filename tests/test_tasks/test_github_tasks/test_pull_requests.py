@@ -4,11 +4,11 @@ import logging
 
 from sqlalchemy.sql import text
 
-from augur.tasks.github.pull_requests.core import *
-from augur.application.db.session import DatabaseSession
-from augur.application.db.models import Config 
-from augur.tasks.util.AugurUUID import GithubUUID
-from augur.application.db.data_parse import extract_needed_contributor_data
+from collectoss.tasks.github.pull_requests.core import *
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db.models import Config 
+from collectoss.tasks.util.ContributorUUID import GithubUUID
+from collectoss.application.db.data_parse import extract_needed_contributor_data
 
 logger = logging.getLogger(__name__)
 not_provided_cntrb_id = '00000000-0000-0000-0000-000000000000'
@@ -318,7 +318,7 @@ def test_insert_prs(github_api_key_headers, test_db_session, repo):
                         DELETE FROM "augur_data"."repo_groups";
                         INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
                         
-                        INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "repo_archived_date_collected", "repo_archived", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 1, 'https://github.com/chaoss/augur', NULL, NULL, '2022-08-15 21:08:07', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI', '1.0', 'Git', '2022-08-15 21:08:07');
+                        INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "repo_archived_date_collected", "repo_archived", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 1, 'https://github.com/chaoss/collectoss', NULL, NULL, '2022-08-15 21:08:07', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI', '1.0', 'Git', '2022-08-15 21:08:07');
                         """)
 
                         connection.execute(query, **contributor)

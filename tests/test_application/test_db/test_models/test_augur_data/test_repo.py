@@ -3,10 +3,10 @@ import logging
 import pytest
 import sqlalchemy as s
 
-from augur.application.db.session import DatabaseSession
-from augur.tasks.github.util.github_task_session import GithubTaskSession
+from collectoss.application.db.session import DatabaseSession
+from collectoss.tasks.github.util.github_task_session import GithubTaskSession
 from tests.test_application.test_repo_load_controller.helper import *
-from augur.application.db.models import Repo
+from collectoss.application.db.models import Repo
 logger = logging.getLogger(__name__)
 
 
@@ -16,13 +16,13 @@ def test_parse_github_repo_url():
 
         assert Repo.parse_github_repo_url("hello world") == (None, None)
         assert Repo.parse_github_repo_url("https://github.com/chaoss/hello") == ("chaoss", "hello")
-        assert Repo.parse_github_repo_url("https://github.com/hello124/augur") == ("hello124", "augur")
-        assert Repo.parse_github_repo_url("https://github.com//augur") == (None, None)
+        assert Repo.parse_github_repo_url("https://github.com/hello124/collectoss") == ("hello124", "collectoss")
+        assert Repo.parse_github_repo_url("https://github.com//collectoss") == (None, None)
         assert Repo.parse_github_repo_url("https://github.com/chaoss/") == (None, None)
         assert Repo.parse_github_repo_url("https://github.com//") == (None, None)
-        assert Repo.parse_github_repo_url("https://github.com/chaoss/augur") == ("chaoss", "augur")
-        assert Repo.parse_github_repo_url("https://github.com/chaoss/augur/") == ("chaoss", "augur")
-        assert Repo.parse_github_repo_url("https://github.com/chaoss/augur.git") == ("chaoss", "augur")
+        assert Repo.parse_github_repo_url("https://github.com/chaoss/collectoss") == ("chaoss", "collectoss")
+        assert Repo.parse_github_repo_url("https://github.com/chaoss/collectoss/") == ("chaoss", "collectoss")
+        assert Repo.parse_github_repo_url("https://github.com/chaoss/collectoss.git") == ("chaoss", "collectoss")
         assert Repo.parse_github_repo_url("https://github.com/chaoss/.github") == ("chaoss", ".github")
 
 def test_parse_github_org_url():
@@ -32,10 +32,10 @@ def test_parse_github_org_url():
         assert Repo.parse_github_org_url("hello world") == None, None
         assert Repo.parse_github_org_url("https://github.com/chaoss/") == "chaoss"
         assert Repo.parse_github_org_url("https://github.com/chaoss") == "chaoss"
-        assert Repo.parse_github_org_url("https://github.com/hello124/augur") == None
+        assert Repo.parse_github_org_url("https://github.com/hello124/collectoss") == None
         assert Repo.parse_github_org_url("https://github.com//augur") == None, None
         assert Repo.parse_github_org_url("https://github.com//") == None
-        assert Repo.parse_github_org_url("https://github.com/chaoss/augur") == None
+        assert Repo.parse_github_org_url("https://github.com/chaoss/collectoss") == None
 
 
 def test_is_valid_github_repo():
@@ -44,14 +44,14 @@ def test_is_valid_github_repo():
 
         assert Repo.is_valid_github_repo(session, "hello world")[0] is False
         assert Repo.is_valid_github_repo(session, "https://github.com/chaoss/hello")[0] is False
-        assert Repo.is_valid_github_repo(session, "https://github.com/hello124/augur")[0] is False
-        assert Repo.is_valid_github_repo(session, "https://github.com//augur")[0] is False
+        assert Repo.is_valid_github_repo(session, "https://github.com/hello124/collectoss")[0] is False
+        assert Repo.is_valid_github_repo(session, "https://github.com//collectoss")[0] is False
         assert Repo.is_valid_github_repo(session, "https://github.com/chaoss/")[0] is False
         assert Repo.is_valid_github_repo(session, "https://github.com//")[0] is False
-        assert Repo.is_valid_github_repo(session, "https://github.com/chaoss/augur")[0] is True
-        assert Repo.is_valid_github_repo(session, "https://github.com/chaoss/augur/")[0] is True
-        assert Repo.is_valid_github_repo(session, "https://github.com/chaoss/augur.git")[0] is True
-        assert Repo.is_valid_github_repo(session, "https://github.com/chaoss/augur/")[0] is True
+        assert Repo.is_valid_github_repo(session, "https://github.com/chaoss/collectoss")[0] is True
+        assert Repo.is_valid_github_repo(session, "https://github.com/chaoss/collectoss/")[0] is True
+        assert Repo.is_valid_github_repo(session, "https://github.com/chaoss/collectoss.git")[0] is True
+        assert Repo.is_valid_github_repo(session, "https://github.com/chaoss/collectoss/")[0] is True
 
 
 
@@ -63,7 +63,7 @@ def test_insert_repo(test_db_engine):
     try:
         data = {"rg_id": 1, 
                 "tool_source": "Frontend",
-                "repo_urls": ["https://github.com/chaoss/augur", "https://github.com/chaoss/grimoirelab-sortinghat"]
+                "repo_urls": ["https://github.com/chaoss/collectoss", "https://github.com/chaoss/grimoirelab-sortinghat"]
                 }
 
         with test_db_engine.connect() as connection:

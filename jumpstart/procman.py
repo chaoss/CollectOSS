@@ -41,7 +41,7 @@ class ProcessManager:
             client.respond(Status.error(f"Invalid component for start: {component}"))
             return
         
-        check_db = run("augur db test-connection".split())
+        check_db = run("collectoss db test-connection".split())
         
         if check_db.returncode != 0:
             client.respond(Status.error(f"Could not communicate with the database: {check_db.returncode}"))
@@ -56,7 +56,7 @@ class ProcessManager:
                         "stdout": self.frontend_stdout.open("w"),
                         "stderr": self.frontend_stderr.open("w")
                     }
-                    self._frontend["process"] = Popen("augur api start".split() + list(options),
+                    self._frontend["process"] = Popen("collectoss api start".split() + list(options),
                                         stdout=self._frontend["stdout"],
                                         stderr=self._frontend["stderr"])
         if c in (Component.collection, Component.all):
@@ -68,7 +68,7 @@ class ProcessManager:
                         "stdout": self.collection_stdout.open("w"),
                         "stderr": self.collection_stderr.open("w")
                     }
-                    self._collection["process"] = Popen("augur collection start".split() + list(options),
+                    self._collection["process"] = Popen("collectoss collection start".split() + list(options),
                                             stdout=self._collection["stdout"],
                                             stderr=self._collection["stderr"])
     
@@ -83,13 +83,13 @@ class ProcessManager:
                 client.respond(Status.information("The frontend/api is not running"))
             else:
                 self._frontend["process"].send_signal(signal.SIGINT)
-                run("augur api stop".split(), stderr=PIPE, stdout=PIPE)
+                run("collectoss api stop".split(), stderr=PIPE, stdout=PIPE)
         if c in (Component.collection, Component.all):
             if not self.collection:
                 client.respond(Status.information("The collection is not running"))
             else:
                 self._collection["process"].send_signal(signal.SIGINT)
-                run("augur collection stop".split(), stderr=PIPE, stdout=PIPE)
+                run("collectoss collection stop".split(), stderr=PIPE, stdout=PIPE)
     
     @synchronized
     def shutdown(self):

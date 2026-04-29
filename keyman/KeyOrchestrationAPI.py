@@ -7,7 +7,7 @@ spec = {
     "channels": [
         {
             "name": "ANNOUNCE",
-            "id": "augur-oauth-announce",
+            "id": "collectoss-oauth-announce",
             "message_types": {
                 "PUBLISH": {
                     "key_str": str,
