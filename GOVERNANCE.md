@@ -117,8 +117,8 @@ holes and breaches according to the [security policy](./SECURITY.md).
 
 While most business in CollectOSS is conducted by "[lazy consensus](https://community.apache.org/committers/lazyConsensus.html)", 
 periodically the Maintainers may need to vote on specific actions or changes.
-A vote can be taken on [the developer Slack channel](TODO) or
-[the private Maintainer Slack channel](TODO) for security or conduct matters.  
+A vote can be taken on the project's public Slack channel (#wg-collectoss-8knot in the [CHAOSS Slack](https://chaoss.community/kb-getting-started/)) or 
+the private Maintainer Slack channel for security or conduct matters.  
 Votes may also be taken at the biweely developer meeting.  Any Maintainer may
 demand a vote be taken.
 
