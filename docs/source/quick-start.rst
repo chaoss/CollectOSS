@@ -135,9 +135,8 @@ Accessing Repo Addition and Visualization Front End
 ---------------------------------------------------
 
 Your CollectOSS instance will now be available at
-http://hostname.io:port_number
+http://servername-or-ip:port_number
 
-For example: http://chaoss.tv:5038
 
 Note: CollectOSS will run on port 5000 by default (you probably need to
 change that in collectoss_operations.config for OSX)

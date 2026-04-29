@@ -124,9 +124,7 @@ Accessing Repo Addition and Visualization Front End
 ---------------------------------------------------
 
 Your CollectOSS instance will now be available at
-http://hostname.io:port_number
-
-For example: http://chaoss.tv:5038
+http://servername-or-ip:port_number
 
 Note: CollectOSS will run on port 5000 by default (you probably need to
 change that in augur_operations.config for OSX)
