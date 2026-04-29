@@ -1,6 +1,6 @@
 # CollectOSS
 
-[![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme) [![Build Docker images](https://github.com/chaoss/collectoss/actions/workflows/build_docker.yml/badge.svg)](https://github.com/chaoss/collectoss/actions/workflows/build_docker.yml) [![Hits-of-Code](https://hitsofcode.com/github/chaoss/collectoss?branch=release)](https://hitsofcode.com/github/chaoss/collectoss/view?branch=release) [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2788/badge)](https://bestpractices.coreinfrastructure.org/projects/2788)
+[![Build Docker images](https://github.com/chaoss/collectoss/actions/workflows/build_docker.yml/badge.svg)](https://github.com/chaoss/collectoss/actions/workflows/build_docker.yml) [![Hits-of-Code](https://hitsofcode.com/github/chaoss/collectoss?branch=release)](https://hitsofcode.com/github/chaoss/collectoss/view?branch=release)
 
 ## What is CollectOSS?
 CollectOSS is a software suite for collecting structured data
