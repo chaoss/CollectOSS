@@ -40,7 +40,7 @@ Information about contribution guidelines, building from source, and testing can
 
 CollectOSS metrics are used by many other visualization and metrics projects, such as:
 
-- [8Knot](htps://github.com/oss-aspen/8Knot)
+- [8Knot](https://github.com/oss-aspen/8Knot)
 
 *If you would like your project or organization listed here, please file a Pull Request!*
 
