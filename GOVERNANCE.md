@@ -145,3 +145,5 @@ The following will happen at the end of the Transitional Period:
 
 Changes to this Governance and its supporting documents may be approved by 
 a 2/3 vote of the Maintainers.
+
+This governance document was created based on the template available at https://github.com/cncf/project-template/blob/main/GOVERNANCE-maintainer.md
