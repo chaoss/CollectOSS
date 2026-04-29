@@ -100,7 +100,9 @@ Any Maintainer may suggest a request for CHAOSS resources, either in an issue, o
 
 ## Code of Conduct Committee
 
-The Maintainers will work with the CHAOSS Code of Conduct Committee (CoCC) on any reports which require action by the project. Should a contributor to CollectOSS be suspected of violating the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/), CollectOSS project community members will report them to the CoCC.
+The CollectOSS project adheres to the [CHAOSS Code of Conduct](https://chaoss.community/code-of-conduct/)(CoC).  As such, community members needing to report a violation of the CoC should report it directly to the CHAOSS Code Of Conduct Committee (CoCC).
+
+The Maintainers will work with the CoCC on any reports which require action by the project. 
 
 ## Security Response Team
 
