@@ -30,8 +30,8 @@ Example usage::
   $ uv run collectoss logging tail
 
   # successful output looks like:
-  > ********** Logfile: augur.log
-    <contents of augur.log>
+  > ********** Logfile: collectoss.log
+    <contents of collectoss.log>
 
-  > ********** Logfile: augur.err
-    <contents of augur.err>
+  > ********** Logfile: collectoss.err
+    <contents of collectoss.err>
