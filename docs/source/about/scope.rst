@@ -1,5 +1,5 @@
 Scope of the CollectOSS project
-==========================
+===============================
 
 CollectOSS focuses on collecting data from public git-based code hosting platforms ("Forges") such as GitHub and GitLab. This helps us produce data about the health and sustainability of software projects based on the relevant CHAOSS metrics.
 The data CollectOSS collects covers more than just code contributions and extends to anything that can be derived from forge data, including comments, change reviews, releases, and other project activity or interactions. 

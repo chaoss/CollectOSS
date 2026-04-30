@@ -3,7 +3,7 @@ Logging Commands
 ====================
 
 ``collectoss logging``
-==================
+======================
 
 The collection of the ``collectoss logging`` commands is for interacting with the database.
 

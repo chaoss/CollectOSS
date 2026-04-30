@@ -1,5 +1,5 @@
 The CollectOSS Release Process
-=========================
+==============================
 
 The first step to releasing any changes is to have changes in the first place.
 CollectOSS's `CONTRIBUTING.md <https://github.com/chaoss/collectoss/blob/main/CONTRIBUTING.md>`__ file

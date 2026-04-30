@@ -96,7 +96,7 @@ collection and analysis on the same database. Use of PGBouncer or other
 utility may change these characteristics.
 
 CollectOSS Commands
---------------
+-------------------
 
 To access command line options, use ``collectoss --help``. To load repos from
 GitHub organizations prior to collection, or in other ways, the direct

@@ -1,5 +1,5 @@
 Running CollectOSS in Production
-===========================
+================================
 
 This page collects practical tips, configuration notes, and important considerations
 for deploying CollectOSS in a production environment. This is a reference to help

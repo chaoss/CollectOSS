@@ -38,7 +38,7 @@ or
 And collectoss should be up and running! Over time, you may decide that you want to download and run newer releases of CollectOSS. It is critical that your ``.env`` file remains configured to use the same database name and password; though you can change the password if you understand how to connect to a database running inside a Docker container on your computer.
 
 Rebuilding CollectOSS in Docker
-----------------------------
+-------------------------------
 
 To rebuild a fresh CollectOSS database in Docker, follow these steps:
 

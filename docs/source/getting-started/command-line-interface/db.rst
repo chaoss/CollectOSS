@@ -3,7 +3,7 @@ Database Commands
 ====================
 
 ``collectoss db``
-=============
+=================
 
 The collection of ``collectoss db`` commands is for interacting with the database.
 
