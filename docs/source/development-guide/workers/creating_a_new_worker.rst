@@ -69,7 +69,7 @@ The key sections you can copy from any worker are illustrated in this example fr
             self.data_source = 'GitHub API'
 
 Getting Your Worker to Talk to CollectOSS
-----------------------------------------
+-----------------------------------------
 
 In the house keeper block, you need to add something following this pattern, inside the "jobs" section:
 

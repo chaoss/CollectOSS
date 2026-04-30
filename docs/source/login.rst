@@ -1,5 +1,5 @@
 CollectOSS OAuth Flow
-=================
+=====================
 
 CollectOSS implements the Oauth 2.0 specification, and each CollectOSS instance is capable of acting as an authorization server for external applications.
 

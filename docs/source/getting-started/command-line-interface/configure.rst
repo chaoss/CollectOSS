@@ -3,7 +3,7 @@ Configuration Commands
 =======================
 
 ``collectoss config``
-====================
+=====================
 The ``collectoss config`` commands are for interacting with CollectOSS's configuration file.
 
 ``init``

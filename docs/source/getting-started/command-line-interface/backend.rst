@@ -3,7 +3,7 @@ Backend Commands
 =================
 
 ``collectoss backend``
-====================
+======================
 The ``collectoss backend`` CLI group is for controlling CollectOSS's API server & data collection workers. All commands are invoked like::
 
   $ collectoss backend <command name>
