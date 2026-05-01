@@ -21,7 +21,7 @@ def upgrade():
     conn = op.get_bind()
     inspector = Inspector.from_engine(conn)
     tables = inspector.get_table_names()
-    # the db init script added in #3351 includes this table in the public schema for some reason
+    # the db init script in the container includes this table in the public schema for some reason
     # databases created after that pr was merged will have this extraneous table, so we should drop it.
     if "test" in tables: 
         op.drop_table('test')
