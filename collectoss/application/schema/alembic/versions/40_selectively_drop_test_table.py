@@ -1,7 +1,7 @@
 """selectively drop test table
 
-Revision ID: 39
-Revises: 38
+Revision ID: 40
+Revises: 39
 Create Date: 2026-02-17 16:01:29.379433
 
 """
@@ -11,8 +11,8 @@ from sqlalchemy.engine.reflection import Inspector
 
 
 # revision identifiers, used by Alembic.
-revision = '39'
-down_revision = '38'
+revision = '40'
+down_revision = '39'
 branch_labels = None
 depends_on = None
 
