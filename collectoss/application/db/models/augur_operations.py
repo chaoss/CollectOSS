@@ -87,6 +87,26 @@ t_all = Table(
 )
 
 
+class Settings(Base):
+    __tablename__ = "augur_settings"
+    __table_args__ = {
+        "schema": "augur_operations",
+        "comment": "CollectOSS settings include the schema version, and the CollectOSS API Key as of 10/25/2020. Future augur settings may be stored in this table, which has the basic structure of a name-value pair. ",
+    }
+
+    id = Column(
+        BigInteger,
+        Sequence("augur_settings_id_seq", start=1, schema="augur_operations"),
+        primary_key=True,
+        server_default=text(
+            "nextval('augur_operations.augur_settings_id_seq'::regclass)"
+        ),
+    )
+    setting = Column(String)
+    value = Column(String)
+    last_modified = Column(TIMESTAMP(precision=0), server_default=text("CURRENT_DATE"))
+
+
 t_repos_fetch_log = Table(
     "repos_fetch_log",
     metadata,
