@@ -130,7 +130,7 @@ def test_fetching_real_defaults(mock_logger, mock_session):
     assert cfg.get_value("Redis", "cache_group") == 0
 
 
-def test_load_config_utilizes_hierarchy():
+def test_load_config_utilizes_hierarchy(mock_logger):
 
     default_dict = {
         "Section1": {"alpha": 1, "beta": "x"},
@@ -154,7 +154,7 @@ def test_load_config_utilizes_hierarchy():
     assert cfg.load_config() == expected_dict
 
 
-def test_get_section_incorporates_hierarchy():
+def test_get_section_incorporates_hierarchy(mock_logger):
 
     default_dict = {
         "Section1": {"alpha": 1, "beta": "x"},
