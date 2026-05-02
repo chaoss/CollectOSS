@@ -52,17 +52,19 @@ def check_database_parity_with_versioned_model() -> list:
         return list(e.diffs)
 
 
-def output_alembic_diff(diff: list[Union[tuple, list]]):
-    """Print an alembic diff for consumption
+def humanize_alembic_diff(diff: list[Union[tuple, list]]) -> list[str]:
+    """transform an alembic diff for printing in a more intuitive way
 
     Args:
         diff (list): A diff list created by Alembic
-    """
-    if len(diff) == 0:
-        print("✅ No drift detected. Database is in sync with models.")
-        return
 
-    print(f"❌ Database drift detected:")
+    Returns:
+        list[str]: A list of findings as strings
+    """
+    output = []
+
+    if len(diff) == 0:
+        return output
 
     # Alembic diffs use their own bespoke format, documented in https://alembic.sqlalchemy.org/en/latest/api/autogenerate.html#alembic.autogenerate.compare_metadata
     for item in diff:
@@ -70,6 +72,7 @@ def output_alembic_diff(diff: list[Union[tuple, list]]):
         changes_to_process = item if isinstance(item, list) else [item]
 
         for change in changes_to_process:
+            finding = ""
             action, category = change[0].split("_")
 
             action_text = ""
@@ -84,34 +87,36 @@ def output_alembic_diff(diff: list[Union[tuple, list]]):
 
             if category == "table":
                 table_def:Table = change[1]
-                print(f"Table {table_def.name} in schema {table_def.schema}")
+                finding += f"Table {table_def.name} in schema {table_def.schema}"
                 
             elif category == "column":
                 _, _, table_name, col_def = change
-                print(f"Column {col_def.name} in table {table_name}")
+                finding += f"Column {col_def.name} in table {table_name}"
 
             elif category == "fk":
                 fk_constraint_def:ForeignKeyConstraint = change[1]
                 fk_name = f" called '{fk_constraint_def.name}'" if fk_constraint_def.name else ""
-                print(f"Foreign Key{fk_name} on `{fk_constraint_def.table.columns[0]}` linking to `{fk_constraint_def.table}`")
+                finding += f"Foreign Key{fk_name} on `{fk_constraint_def.table.columns[0]}` linking to `{fk_constraint_def.table}`"
 
                 # TODO: attributes
             elif category == "index":
                 index_def:Index = change[1]
-                print(f"Index {index_def.name}")
+                finding += f"Index {index_def.name}"
             elif category == "constraint":
                 constraint_def:Constraint = change[1]
                 constraint_name = f" called '{constraint_def.name}'" if constraint_def.name else ""
                 constraint_type = constraint_def.__class__.__name__ or "Constraint"
                 constraint_covers = [c.name for c in constraint_def.columns]
-                print(f"{constraint_type}{constraint_name} covering {','.join(constraint_covers)}")
+                finding += f"{constraint_type}{constraint_name} covering {','.join(constraint_covers)}"
 
             else:
-                print("unknown type found in alembic diff")
-                print(change)
+                finding += "unknown type found in alembic diff:\n"
+                finding += str(change)
 
-            print(f"\t{action_text}")
+            finding += f"\n\t{action_text}"
+            output.append(finding)
 
+    return output
 
 
 @cli.command("report")
@@ -138,4 +143,11 @@ def run_selftest_report(ctx):
         cmt_author_name_issue_233_count = connection.execute(cmt_author_name_issue_233_query).scalar_one()
         click.echo(f'Issue 233 count: {cmt_author_name_issue_233_count} commit changes in the `commits` table contain authors with an empty string as their name')
 
-    print(output_alembic_diff(model_diffs))
+    model_diff_findings = humanize_alembic_diff(model_diffs)
+
+    if len(model_diff_findings) == 0:
+        print("✅ No drift detected. Database is in sync with models.")
+    else:
+        print(f"❌ Database drift detected:")
+        for f in model_diff_findings:
+            print(f)
