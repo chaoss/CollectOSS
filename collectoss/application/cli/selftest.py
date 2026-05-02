@@ -94,14 +94,27 @@ def humanize_alembic_diff(diff: list[Union[tuple, list]]) -> list[str]:
                 finding += f"Column {col_def.name} in table {table_name}"
 
             elif category == "fk":
-                fk_constraint_def:ForeignKeyConstraint = change[1]
-                fk_name = f" called '{fk_constraint_def.name}'" if fk_constraint_def.name else ""
-                finding += f"Foreign Key{fk_name} on `{fk_constraint_def.table.columns[0]}` linking to `{fk_constraint_def.table}`"
+                fk_def:ForeignKeyConstraint = change[1]
+                fk_name = f" called '{fk_def.name}'" if fk_def.name else ""
+                finding += f"Foreign Key{fk_name} on `{fk_def.table.columns[0]}` linking to `{fk_def.table}`"
 
-                # TODO: attributes
+                attrs = []
+                if fk_def.onupdate:
+                    attrs.append(f"ON UPDATE {fk_def.onupdate}")
+                if fk_def.ondelete:
+                    attrs.append(f"ON DELETE {fk_def.ondelete}")
+                if fk_def.deferrable:
+                    attrs.append("DEFERRABLE")
+                if fk_def.initially:
+                    attrs.append(f"INITIALLY {fk_def.initially}")
+                
+                if attrs:
+                    finding += f"\n\tRules: {' | '.join(attrs)}"
             elif category == "index":
                 index_def:Index = change[1]
-                finding += f"Index {index_def.name}"
+                cols = [c.name for c in index_def.columns]
+                finding += f"Index {index_def.name} on '{index_def.table}' covering {','.join(cols)}"
+            
             elif category == "constraint":
                 constraint_def:Constraint = change[1]
                 constraint_name = f" called '{constraint_def.name}'" if constraint_def.name else ""
