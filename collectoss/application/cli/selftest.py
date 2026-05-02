@@ -52,7 +52,7 @@ def check_database_parity_with_versioned_model() -> list:
         return list(e.diffs)
 
 
-def humanize_alembic_diff(diff: list[Union[tuple, list]]) -> list[str]:
+def humanize_alembic_diff(diff: list[Union[tuple, list]], debug=False) -> list[str]:
     """transform an alembic diff for printing in a more intuitive way
 
     Args:
@@ -73,6 +73,15 @@ def humanize_alembic_diff(diff: list[Union[tuple, list]]) -> list[str]:
 
         for change in changes_to_process:
             finding = ""
+
+            if debug:
+                # its not the most ideal to do this here rather than bypassing the whole function,
+                # but debug mode still benefits from the type coercion above
+                finding = str(change)
+                output.append(finding)
+
+                continue
+
             action, category = change[0].split("_")
 
             action_text = ""
@@ -133,10 +142,11 @@ def humanize_alembic_diff(diff: list[Union[tuple, list]]) -> list[str]:
 
 
 @cli.command("report")
+@click.option("--debug", is_flag=True, default=False, help="Show more detailed information for debuging purposes")
 @test_db_connection
 @with_database
 @click.pass_context
-def run_selftest_report(ctx):
+def run_selftest_report(ctx, debug):
     """
     Run queries to evaluate various aspects of the collectoss system's functioning and produce a report
     """
@@ -155,7 +165,7 @@ def run_selftest_report(ctx):
         cmt_author_name_issue_233_count = connection.execute(cmt_author_name_issue_233_query).scalar_one()
         click.echo(f'Issue 233 count: {cmt_author_name_issue_233_count} commit changes in the `commits` table contain authors with an empty string as their name')
 
-    model_diff_findings = humanize_alembic_diff(model_diffs)
+    model_diff_findings = humanize_alembic_diff(model_diffs, debug=debug)
 
     if len(model_diff_findings) == 0:
         print("✅ No drift detected. Database is in sync with models.")
