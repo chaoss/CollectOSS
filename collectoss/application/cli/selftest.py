@@ -39,13 +39,13 @@ def run_selftest_report(ctx):
     """
     click.echo('Generating CollectOSS selftest report....')
 
-    cmt_author_name_issue_3740_query = (
+    cmt_author_name_issue_233_query = (
         select(func.count())
         .select_from(Commit)
         .where(Commit.cmt_author_name == '')
     )
-    cmt_author_name_issue_3740_count = None
+    cmt_author_name_issue_233_count = None
 
     with ctx.obj.engine.begin() as connection:
-        cmt_author_name_issue_3740_count = connection.execute(cmt_author_name_issue_3740_query).scalar_one()
-        click.echo(f'Issue 3740 count: {cmt_author_name_issue_3740_count} commit files in the `commits` table contain authors with an empty string as their name')
+        cmt_author_name_issue_233_count = connection.execute(cmt_author_name_issue_233_query).scalar_one()
+        click.echo(f'Issue 233 count: {cmt_author_name_issue_233_count} commit files in the `commits` table contain authors with an empty string as their name')
