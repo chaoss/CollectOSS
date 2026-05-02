@@ -64,9 +64,12 @@ def output_alembic_diff(diff: list[Union[tuple, list]]):
 
     print(f"❌ Database drift detected:")
 
+    # Alembic diffs use their own bespoke format, documented in https://alembic.sqlalchemy.org/en/latest/api/autogenerate.html#alembic.autogenerate.compare_metadata
+    for item in diff:
+        # coerce every item into a mini-diff list to make processing easier
+        changes_to_process = item if isinstance(item, list) else [item]
 
-    for change in diff:
-        if isinstance(change, tuple):
+        for change in changes_to_process:
             action, category = change[0].split("_")
 
             action_text = ""
@@ -108,12 +111,6 @@ def output_alembic_diff(diff: list[Union[tuple, list]]):
                 print(change)
 
             print(f"\t{action_text}")
-
-
-
-        elif isinstance(change, list):
-            pass
-            # TODO: probably a modify_nullable, handle this
 
 
 
