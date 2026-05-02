@@ -120,7 +120,6 @@ def humanize_alembic_diff(diff: list[Union[tuple, list]]) -> list[str]:
 
 
 @cli.command("report")
-@test_connection
 @test_db_connection
 @with_database
 @click.pass_context
