@@ -130,7 +130,11 @@ def humanize_alembic_diff(diff: list[Union[tuple, list]], debug=False) -> list[s
                 constraint_type = constraint_def.__class__.__name__ or "Constraint"
                 constraint_covers = [c.name for c in constraint_def.columns]
                 finding += f"{constraint_type}{constraint_name} covering {','.join(constraint_covers)}"
-
+            
+            elif category == "nullable":
+                _, schema, table_name, col_name, _, old, new = change
+                print(f"Column {col_name} in table {table_name} nullable changed: {old} -> {new}")
+            
             else:
                 finding += "unknown type found in alembic diff:\n"
                 finding += str(change)
