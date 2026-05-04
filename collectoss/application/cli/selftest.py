@@ -61,7 +61,7 @@ def humanize_alembic_diff(diff: list[Union[tuple, list]], debug=False) -> list[s
     Returns:
         list[str]: A list of findings as strings
     """
-    output = []
+    output: list[str] = []
 
     if len(diff) == 0:
         return output
