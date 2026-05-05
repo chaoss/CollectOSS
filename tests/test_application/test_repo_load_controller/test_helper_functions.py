@@ -3,10 +3,10 @@ import pytest
 import sqlalchemy as s
 
 
-from augur.application.db.session import DatabaseSession
-from augur.tasks.github.util.github_task_session import GithubTaskSession
+from collectoss.application.db.session import DatabaseSession
+from collectoss.tasks.github.util.github_task_session import GithubTaskSession
 from tests.test_application.test_repo_load_controller.helper import *
-from augur.application.db.models import Repo, RepoGroup, UserRepo, UserGroup
+from collectoss.application.db.models import Repo, RepoGroup, UserRepo, UserGroup
 
 logger = logging.getLogger(__name__)
 

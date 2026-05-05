@@ -22,7 +22,7 @@ The default ports for each service are\:
 Docker Compose
 ===============================
 
-This section of the documentation details how to use Augur's Docker Compose configuration to get the full stack up and running.
+This section of the documentation details how to use CollectOSS's Docker Compose configuration to get the full stack up and running.
 
 .. warning::
 
@@ -40,13 +40,13 @@ This section of the documentation details how to use Augur's Docker Compose conf
 
 
 
-To run Augur **without** the database container:
+To run CollectOSS **without** the database container:
 
 .. code-block:: bash
 
     docker compose -f docker-compose.yml up
 
-To run Augur **with** the database container:
+To run CollectOSS **with** the database container:
 
 .. code-block:: bash
 

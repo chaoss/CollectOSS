@@ -65,9 +65,9 @@ def test_enrich_data_primary_keys_standard_input(database_connection, sample_sou
     dummyPersistent = DummyPersistence(database_connection)
     
     gh_merge_fields = ['avatar_url']
-    augur_merge_fields = ['gh_avatar_url']
+    merge_fields = ['gh_avatar_url']
     
-    dummyPersistent.enrich_data_primary_keys(sample_source_data_enriched, tableDict['contributors_table'], gh_merge_fields, augur_merge_fields)
+    dummyPersistent.enrich_data_primary_keys(sample_source_data_enriched, tableDict['contributors_table'], gh_merge_fields, merge_fields)
     
     #now test each record to make sure that they have an avatar_url
     avatar_url_sql = s.sql.text("""
@@ -84,14 +84,14 @@ def test_enrich_data_primary_keys_standard_input(database_connection, sample_sou
 def test_enrich_data_primary_keys_bad_data(database_connection):
     
     gh_merge_fields = ['avatar_url']
-    augur_merge_fields = ['gh_avatar_url']
+    merge_fields = ['gh_avatar_url']
     
     #create class for enrichment
     dummyPersistent = DummyPersistence(database_connection)
     
     #Make sure that function rejects null data
-    assert dummyPersistent.enrich_data_primary_keys({}, "contributors_table", gh_merge_fields, augur_merge_fields) == {}
-    assert dummyPersistent.enrich_data_primary_keys(None, "contributors_table", gh_merge_fields, augur_merge_fields) == None
+    assert dummyPersistent.enrich_data_primary_keys({}, "contributors_table", gh_merge_fields, merge_fields) == {}
+    assert dummyPersistent.enrich_data_primary_keys(None, "contributors_table", gh_merge_fields, merge_fields) == None
 
 
 def test_enrich_data_primary_keys_redundant_enrich(database_connection,sample_source_data_enriched, sample_source_data_unenriched):
@@ -154,9 +154,9 @@ def test_enrich_data_primary_keys_redundant_enrich(database_connection,sample_so
     dummyPersistent = DummyPersistence(database_connection)
     
     gh_merge_fields = ['avatar_url']
-    augur_merge_fields = ['gh_avatar_url']
+    merge_fields = ['gh_avatar_url']
     
-    dummyPersistent.enrich_data_primary_keys(sample_source_data_enriched, tableDict['contributors_table'], gh_merge_fields, augur_merge_fields)
+    dummyPersistent.enrich_data_primary_keys(sample_source_data_enriched, tableDict['contributors_table'], gh_merge_fields, merge_fields)
     
     #now test each record to make sure that they have an avatar_url
     avatar_url_sql = s.sql.text("""
@@ -232,8 +232,8 @@ def test_enrich_data_primary_keys_standard_input(database_connection, sample_sou
     dummyPersistent = DummyPersistence(database_connection)
     
     gh_merge_fields = ['avatar_url']
-    augur_merge_fields = ['gh_avatar_url']
+    merge_fields = ['gh_avatar_url']
     
-    dummyPersistent.enrich_data_primary_keys(sample_source_data_bad_api_return, tableDict['contributors_table'], gh_merge_fields, augur_merge_fields)
+    dummyPersistent.enrich_data_primary_keys(sample_source_data_bad_api_return, tableDict['contributors_table'], gh_merge_fields, merge_fields)
     
     return

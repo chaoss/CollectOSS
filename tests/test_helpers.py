@@ -1,9 +1,9 @@
 import pytest
 import sqlalchemy as s
 import logging
-from augur.application.db.session import DatabaseSession
+from collectoss.application.db.session import DatabaseSession
 
-TEST_DB_STRING = "postgresql+psycopg2://augur:mcguire18@chaoss.tv:5432/augur-test"
+TEST_DB_STRING = "postgresql+psycopg2://augur:password@servername-or-ip:5432/test-db"
 
 @pytest.fixture
 def db_session():
@@ -53,27 +53,27 @@ def test_read_config_exception():
 def test_config_get_section_no_exception():
     test_config = default_config
     test_config['Database']['user'] = "test_user"
-    config_object = AugurConfig(temp_dir, test_config)
+    config_object = SystemConfig(temp_dir, test_config)
     assert type(config_object.get_section("Database")) == dict
 
 def test_config_get_section_exception():
     test_config = default_config
     test_config['Database']['user'] = "test_user"
-    config_object = AugurConfig(temp_dir, test_config)
+    config_object = SystemConfig(temp_dir, test_config)
     assert config_object.get_section("absent_section") == None
 
 def test_discover_config_file_env_exception():
     os.environ['AUGUR_CONFIG_FILE'] = os.path.join(temp_dir, "augur.config.json")
     test_config = default_config
     with pytest.raises(FileNotFoundError):
-        config_object = AugurConfig(temp_dir, test_config)
+        config_object = SystemConfig(temp_dir, test_config)
         assert config_object.discover_config_file()
 
 def test_discover_config_file_env_no_exception():
     test_config = default_config
     with open(os.path.join(temp_dir, "augur.config.json"), "w") as f:
         pass
-    config_object = AugurConfig(temp_dir, test_config)
+    config_object = SystemConfig(temp_dir, test_config)
     assert config_object.discover_config_file() == os.path.join(temp_dir, "augur.config.json")
 
 

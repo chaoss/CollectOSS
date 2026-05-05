@@ -1,4 +1,4 @@
-Parts of an Augur API Endpoint
+Parts of an CollectOSS API Endpoint
 =====================================
 
 1. Develop the query that will produce data needed to deliver the endpoint, usually parameterized by a `repo_id`.
@@ -11,13 +11,13 @@ JSON Metrics are here:
 
 .. code-block:: bash
 
-   $ AUGUR_HOME/augur/metrics
+   $ AUGUR_HOME/collectoss/metrics
 
 Visualization Metrics are here:
 
 .. code-block:: bash
 
-   $ AUGUR_HOME/augur/routes
+   $ AUGUR_HOME/collectoss/routes
 
 
 Existing metrics files (JSON Metric) "Standard Metrics":
@@ -40,13 +40,13 @@ All "Standard Metrics" files generally share a set of imports
    import datetime
    import sqlalchemy as s
    import pandas as pd
-   from augur.util import register_metric
+   from collectoss.util import register_metric
 
 You can see that one of the imports is our standard metric import from the util file, which is located in:
 
 .. code-block:: python
 
-   AUGUR_HOME/augur/routes/util.py
+   AUGUR_HOME/collectoss/routes/util.py
 
 
 All "Standard Metrics" share declaration and a method signature
@@ -137,17 +137,17 @@ There is also, generally, a block in a standard metric for pulling data by a rep
 Existing Metrics Files:
 --------------------------------------------
 
-1. augur/metrics/commit.py
-2. augur/metrics/contributor.py
-3. augur/metrics/deps.py
-4. augur/metrics/experimental.py
-5. augur/metrics/insight.py
-6. augur/metrics/issue.py
-7. augur/metrics/message.py
-8. augur/metrics/platform.py
-9. augur/metrics/pull_request.py
-10. augur/metrics/release.py
-11. augur/metrics/repo_meta.py
+1. collectoss/metrics/commit.py
+2. collectoss/metrics/contributor.py
+3. collectoss/metrics/deps.py
+4. collectoss/metrics/experimental.py
+5. collectoss/metrics/insight.py
+6. collectoss/metrics/issue.py
+7. collectoss/metrics/message.py
+8. collectoss/metrics/platform.py
+9. collectoss/metrics/pull_request.py
+10. collectoss/metrics/release.py
+11. collectoss/metrics/repo_meta.py
 
 
 These files are not intended to be all inclusive. Rather, they are what we have developed, or imagined, based on existing CHAOSS metrics to date. New CHAOSS metrics are likely to result in the inclusion of new files under metrics, or routes, depending if they are standard metrics or not.

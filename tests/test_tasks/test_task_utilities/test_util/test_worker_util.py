@@ -2,7 +2,7 @@ import logging
 import pytest
 import sqlalchemy as s
 
-from augur.tasks.util.worker_util import *
+from collectoss.tasks.util.worker_util import *
 
 logger = logging.getLogger(__name__)
 

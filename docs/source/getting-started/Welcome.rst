@@ -31,7 +31,7 @@ You can join using this invite link:
 
     This is a picture of my own introduction. Some parts of the image were blurred for privacy reasons
 
-3. As a follow-up for number two (2), if you're contributing from a program (e.g Outreachy, or GSOC), find the respective channel for your program and join it. It'd be easier to get questions regarding that program answered and you can see other people like you in the same program to interact with and get help from. The channel for GSOC is #gsoc, and the channel for Outreachy is #outreachy, #general is for general questions and #augur is for stuff designated to augur, (e.g Installation (i figured that last part a little later. So, you're welcome!)
+3. As a follow-up for number two (2), if you're contributing from a program (e.g Outreachy, or GSOC), find the respective channel for your program and join it. It'd be easier to get questions regarding that program answered and you can see other people like you in the same program to interact with and get help from. The channel for GSOC is #gsoc, and the channel for Outreachy is #outreachy, #general is for general questions and #wg-collectoss-8knot is for stuff designated to collectoss, (e.g Installation (i figured that last part a little later. So, you're welcome!)
 
     .. image:: images/channels.PNG
         :width: 400

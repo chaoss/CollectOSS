@@ -3,7 +3,7 @@
 import pytest
 import pandas as pd
 
-from augur.api.metrics.pull_request import *
+from collectoss.api.metrics.pull_request import *
 
 def test_pull_requests_merge_contributor_new():
     # repo id

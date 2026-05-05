@@ -10,9 +10,9 @@ import uuid
 from sqlalchemy.pool import StaticPool
 
 
-from augur.application.db.session import DatabaseSession
-from augur.application.config import AugurConfig
-from augur.application.db.engine import get_database_string, create_database_engine, parse_database_string, execute_sql_file
+from collectoss.application.db.session import DatabaseSession
+from collectoss.application.config import SystemConfig
+from collectoss.application.db.engine import get_database_string, create_database_engine, parse_database_string, execute_sql_file
 
 
 logger = logging.getLogger(__name__)
@@ -243,19 +243,4 @@ def test_db_session(test_db_engine):
 
 @pytest.fixture
 def test_db_config(test_db_session):
-    return AugurConfig(logger, test_db_session)
-
-
-# @pytest.fixture(scope="session")
-# def augur_app():
-#     augur_app = Application(disable_logs=True)
-#     return augur_app
-
-# @pytest.fixture(scope="session")
-# def metrics(augur_app):
-#     return augur_app.metrics
-
-# @pytest.fixture(scope="session")
-# def client(augur_app):
-#     flask_client = initialize_components(augur_app, disable_housekeeper=True).load()
-#     return flask_client.test_client()
+    return SystemConfig(logger, test_db_session)

@@ -23,11 +23,11 @@ Building
 ~~~~~~~~
 
 To see your changes and make sure everything rendered correctly, First activate the python virtual enivroment and run ``make docs`` in the root
-``augur/`` directory, and then open ``docs/build/html/index.html`` in your web browser to view it.
+``collectoss/`` directory, and then open ``docs/build/html/index.html`` in your web browser to view it.
 
 .. code-block:: bash
 
-    $ cd augur
+    $ cd collectoss
     $ make docs
 
 Or, you can use the shortcut which does exactly this:
@@ -49,6 +49,6 @@ Hosting
 ~~~~~~~
 Our documentation is graciously hosted by `Read the Docs <https://readthedocs.org/>`_.
 
-Enabled branches of the main ``chaoss/augur`` repository will each have their own documentation, with the
+Enabled branches of the main ``chaoss/collectoss`` repository will each have their own documentation, with the
 default ``main`` corresponding to ``main`` on the readthedocs. The documentation will automatically be
 built and deployed on a push to one of these branches or on any incoming PR, but please don't forget to check before you push!

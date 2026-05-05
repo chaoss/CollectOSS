@@ -41,7 +41,7 @@ def test_enrich_cntrb_id_standard_input(database_connection, sample_source_data_
     
     
     gh_merge_fields = ['avatar_url']
-    augur_merge_fields = ['gh_avatar_url']
+    merge_fields = ['gh_avatar_url']
     
     dummy.enrich_cntrb_id(
                     sample_source_data_standard_github_comments, 'user.login', action_map_additions={

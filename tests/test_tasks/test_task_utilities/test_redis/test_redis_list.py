@@ -1,6 +1,6 @@
 import pytest
-from augur.tasks.init.redis_connection import get_redis_connection
-from augur.tasks.util.redis_list import RedisList
+from collectoss.tasks.init.redis_connection import get_redis_connection
+from collectoss.tasks.util.redis_list import RedisList
 
 list_name = "list"
 

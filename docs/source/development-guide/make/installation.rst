@@ -5,9 +5,9 @@ Installation
 
 If you have questions or would like to help please open an issue on GitHub_.
 
-.. _GitHub: https://github.com/chaoss/augur/issues
+.. _GitHub: https://github.com/chaoss/collectoss/toss/issues
 
-This section explicitly explains the commands that are used to manage the installation of Augur locally.
+This section explicitly explains the commands that are used to manage the installation of CollectOSS locally.
 
 ---------------
 
@@ -37,7 +37,7 @@ Example\:
 
 ``make clean``
 ----------------
-Removes logs, caches, and some other cruft that can get annoying. This command is used when things aren't building properly or you think an old version of augur is getting in the way.
+Removes logs, caches, and some other cruft that can get annoying. This command is used when things aren't building properly or you think an old version of collectoss is getting in the way.
 
 Example\:
 

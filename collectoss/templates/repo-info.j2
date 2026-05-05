@@ -1,0 +1,71 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        {% if repo.repo_id %}
+        <h1 id="message">Report for: {{ repo.repo_name|title }}</h1>
+        <p><a href="{{ repo.repo_git }}" target="_blank" data-toggle="tooltip" title="opens in new tab">{{ repo.repo_git }}</a></p>
+        
+        {% else %}
+        <h1 id="message">Repository {{ repo_id }} not found<h1>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal" id="viewImg" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div id="imgViewer" style="overflow-x: scroll;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- The Modal -->
+<div id="imageModal" class="modal">
+  <h1 id="modalTitle"></h1>
+  <img class="modal-content" id="img01">
+  <div id="close-caption">press ESC to close</div>
+</div>
+
+<script>
+    function displayModal(id) {
+        // Get the modal
+        var modal = document.getElementById("imageModal");
+
+        // Get the image and compose it - use its "alt" text as a caption
+        var img = document.getElementById(id);
+        var modalImg = document.getElementById("img01");
+        var captionText = document.getElementById("modalTitle");
+        var description = document.getElementById("desc_" + id)
+
+        // Set the modal to cover the full window and show the requested image
+        modal.style.display = "block";
+        modalImg.src = img.src;
+        captionText.innerHTML = description.innerHTML;
+
+        // When the user clicks on the modal background, close the modal
+        modal.addEventListener('click', e => {
+            if(e.target !== e.currentTarget) {
+                // Do not close the modal if the image or title are clicked
+                return;
+            } else {
+                modal.style.display = "none";
+            }
+        });
+    }
+
+    // Allow the user to also close the modal by pressing ESC
+    window.addEventListener("keydown", function(event) {
+    	if(document.getElementById("imageModal").style.display == "block") {
+    	    if(event.code == "Escape") {
+    		document.getElementById("imageModal").style.display = "none"
+    	    }
+    	}
+    }, true);
+</script>

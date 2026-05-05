@@ -4,15 +4,11 @@ Getting Started
 For the Docker Savvy Who Want to Understand How the Sausage is Made:
 --------------------------------------------------------------------
 
-Augur provides several Docker images designed to get you started with our software as quickly as possible. They are:
+CollectOSS provides several Docker images designed to get you started with our software as quickly as possible. They are:
 
-- ``augurlabs/augur:backend``, our backend data collection and metrics API
-- ``augurlabs/augur:frontend``, our metrics visualization frontend (Experimental, will be replaced in the future)
+- ``chaoss/collectoss:latest``, our backend data collection and metrics API
 
-.. warning::
-   The frontend is very out of date and will likely not work. It is still available, but it is in the process of being replaced with an entirely new frontend so the old frontend is not being actively fixed.
-
-- ``augurlabs/augur:database``, an empty PostgreSQL database with the Augur schema installed
+- ``chaoss/collectoss-database``, an empty PostgreSQL database with an older version of the CollectOSS schema installed (which should be automatically updated on startup)
 
 If you're not familiar with Docker, their `starting guide <https://www.docker.com/resources/what-container>`_ is a great resource.
 
@@ -27,16 +23,16 @@ For quickest start up, set up Docker or Podman desktop with a machine with rough
 the following resources (or more):
 
 - 8 CPUs
-- 100 GB disk
-- 10 GB RAM
+- 20 GB available disk
+- 4 GB available RAM
 
-Clone the Augur repository and create a .env file in the top level directory
+Clone the CollectOSS repository and create a .env file in the top level directory
 with the following fields (don't remove any variable, keep placeholder values if you don't need some of them):
 
 .. code:: python
 
-    AUGUR_DB=augur
-    AUGUR_DB_USER=augur
+    AUGUR_DB=collectoss
+    AUGUR_DB_USER=collectoss
     AUGUR_DB_PASSWORD=password_here
 
     AUGUR_GITHUB_API_KEY=ghp_value_here
@@ -56,7 +52,7 @@ or
 
     podman compose up --build
 
-And augur should be up and running!
+And collectoss should be up and running!
 
 Credentials
 ------------
@@ -90,8 +86,8 @@ First, you'll need to clone the repository. In your terminal, run:
 
 .. code-block:: bash
 
-    $ git clone https://github.com/chaoss/augur.git
-    $ cd augur/
+    $ git clone https://github.com/chaoss/collectoss.git
+    $ cd collectoss/
 
 
 Now that you've got your external database credentials (if you are using one) and your access token, we'll need to set environment variables manually.

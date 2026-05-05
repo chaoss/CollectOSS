@@ -1,32 +1,58 @@
-/augur/cli/ @sgoggins
-/augur/metrics/ @sgoggins @sgoggins
-/augur/housekeeper/ @sgoggins
-/augur/server.py @sgoggins @sgoggins
-/augur/application.py @sgoggins @sgoggins @sgoggins
-/augur/routes/ @sgoggins @sgoggins @sgoggins
+# API
+/collectoss/api/ @MoralCode
 
-/frontend/ @sgoggins @sgoggins
+/collectoss/api/view @MoralCode @Ulincsys 
+/collectoss/api/routes/user.py @MoralCode @Ulincsys 
 
-/schema/ @sgoggins @sgoggins
+# CLI
+/collectoss/cli/ @MoralCode
 
-/schema/generate @sgoggins 
+# Frontend
+/collectoss/templates/ @MoralCode
 
-/workers/ @sgoggins @sgoggins @sgoggins
+# Schema
+/collectoss/application/db/ @MoralCode
+/collectoss/application/schema/ @MoralCode
 
-/README.md @sgoggins @sgoggins
-/CONTRIBUTING.md @sgoggins @sgoggins
-/LICENSE @sgoggins @sgoggins
-/CODE_OF_CONDUCT.md @sgoggins @sgoggins
+# Workers
+/collectoss/tasks @MoralCode
 
-/tests/ @sgoggins
-/util/docker @sgoggins
-/scripts/ @sgoggins
-/docs/ @sgoggins
-/.dockerignore @sgoggins
-/.travis.yml @sgoggins
-*compose.yml @sgoggins
-/readthedocs.yml @sgoggins
-/Makefile @sgoggins
-/tox.ini @sgoggins
-*requirements.txt @sgoggins
-/setup.py @sgoggins @sgoggins
+# Repo and Community Infrastructure
+/README.md @MoralCode
+/CONTRIBUTING.md @MoralCode
+/CREDITS.md @MoralCode
+/MAINTAINERS.md @MoralCode
+SECURITY.md @MoralCode
+.github/ @MoralCode 
+pyproject.toml @MoralCode
+
+# Testing
+/tests/ @MoralCode
+/scripts/ci @MoralCode
+
+# Keyman
+/keyman @MoralCode @Ulincsys
+/tests/test_key_manager @MoralCode @Ulincsys
+
+# Docs
+/docs/ @MoralCode
+/readthedocs.yml @MoralCode
+
+# Install - Manual
+/Makefile @MoralCode
+/scripts/control @MoralCode
+/scripts/install @MoralCode
+/scripts/mat_view_explore @MoralCode
+
+# Install - Containers
+/docker @MoralCode
+/scripts/docker @MoralCode
+
+/.dockerignore @MoralCode
+*compose.yml @MoralCode
+
+# Misc
+/collectoss/metrics/ @MoralCode
+/collectoss/server.py @MoralCode
+/collectoss/application.py @MoralCode
+/collectoss/application/config.py @MoralCode

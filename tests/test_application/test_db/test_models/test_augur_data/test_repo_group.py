@@ -2,9 +2,9 @@ import logging
 import pytest
 import sqlalchemy as s
 
-from augur.application.db.session import DatabaseSession
+from collectoss.application.db.session import DatabaseSession
 from tests.test_application.test_repo_load_controller.helper import *
-from augur.application.db.models import RepoGroup
+from collectoss.application.db.models import RepoGroup
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ def test_is_valid_repo_group_id(test_db_engine):
     try:
 
         data = {"rg_ids": [1, 2, 3], "repo_id": 1, "tool_source": "Frontend",
-                "repo_url": "https://github.com/chaoss/augur"}
+                "repo_url": "https://github.com/chaoss/collectoss"}
 
         with test_db_engine.connect() as connection:
 

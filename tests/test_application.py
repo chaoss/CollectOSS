@@ -1,14 +1,14 @@
 #SPDX-License-Identifier: MIT
 import pytest
-import augur.application
+import collectoss.application
 import sqlalchemy as s
 import json
 
-# from augur.application import Application
+# from collectoss.application import Application
 
-# def test_init_augur_regular():
-#     augur_app = Application(disable_logs=True)
-#     assert augur_app is not None
+# def test_init_regular():
+#     test_app = Application(disable_logs=True)
+#     assert test_app is not None
 
 # def test_connect_to_database(monkeypatch):
 #     def mock_fail_connection(self):
@@ -18,4 +18,4 @@ import json
 #     monkeypatch.setenv("AUGUR_LOG_QUIET", "1")
 
 #     with pytest.raises(s.exc.OperationalError):
-#         augur_app = Application(disable_logs=True)
+#         test_app = Application(disable_logs=True)

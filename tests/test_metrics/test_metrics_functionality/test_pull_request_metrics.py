@@ -2,7 +2,7 @@
 
 import pytest
 import pandas as pd
-from augur.api.metrics.pull_request import *
+from collectoss.api.metrics.pull_request import *
 
 df_type = type(pd.DataFrame())
 

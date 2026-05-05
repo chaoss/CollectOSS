@@ -1,7 +1,7 @@
 #SPDX-License-Identifier: MIT
 
 import pytest
-from augur.api.metrics.commit import *
+from collectoss.api.metrics.commit import *
 
 def test_annual_commit_count_ranked_by_repo_in_repo_group():
     assert annual_commit_count_ranked_by_repo_in_repo_group(10).iloc[0].net > 0

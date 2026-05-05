@@ -3,7 +3,7 @@
 import pytest
 import pandas as pd
 
-from augur.api.metrics.contributor import *
+from collectoss.api.metrics.contributor import *
 
 def test_contributors():
     # repo group
