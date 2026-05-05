@@ -20,6 +20,42 @@ note in collectoss/application/schema/alembic/env.py for the full post-replace
 procedure (index recreation + non-concurrent refresh).
 """
 
+from dataclasses import dataclass
+
+from alembic_utils.pg_materialized_view import PGMaterializedView
+
+
+@dataclass(frozen=True)
+class MaterializedView:
+    name: str
+    schema: str
+    sql: str
+    unique_index_columns: tuple[str, ...] = ()
+
+    @property
+    def fqn(self) -> str:
+        return f"{self.schema}.{self.name}"
+
+    def refresh_sql(self, concurrently: bool = True) -> str:
+        mode = "CONCURRENTLY " if concurrently else ""
+        return f"REFRESH MATERIALIZED VIEW {mode}{self.fqn} WITH DATA;"
+
+    def to_pg_view(self, with_data: bool = False) -> PGMaterializedView:
+        return PGMaterializedView(
+            schema=self.schema,
+            signature=self.name,
+            definition=self.sql,
+            with_data=with_data,
+        )
+
+    def __repr__(self) -> str:
+        # Default dataclass repr would dump the full SQL string (some views
+        # are 100+ lines), making logs and debug output unreadable.
+        return (
+            f"MaterializedView(name={self.name!r}, schema={self.schema!r}, "
+            f"unique_index_columns={self.unique_index_columns!r})"
+        )
+
 
 # ---------------------------------------------------------------------------
 # View 1: api_get_all_repo_prs (source: migration 4, index: migration 25)
@@ -689,118 +725,100 @@ SELECT e.repo_id,
 # Registry: single source of truth for all materialized views
 # ============================================================================
 
-MATERIALIZED_VIEWS = [
+MATERIALIZED_VIEWS: list[MaterializedView] = [
     # --- View 1: legacy DDL (augur_full.sql), no unique index ---
-    {
-        "name": "issue_reporter_created_at",
-        "schema": "augur_data",
-        "sql": _ISSUE_REPORTER_CREATED_AT,
-        "unique_index_columns": [],  # only a non-unique btree on repo_id
-    },
+    MaterializedView(
+        name="issue_reporter_created_at",
+        schema="augur_data",
+        sql=_ISSUE_REPORTER_CREATED_AT,
+        unique_index_columns=(),  # only a non-unique btree on repo_id
+    ),
     # --- Views 2-6: from migration 4, indexes from migration 25 ---
-    {
-        "name": "api_get_all_repo_prs",
-        "schema": "augur_data",
-        "sql": _API_GET_ALL_REPO_PRS,
-        "unique_index_columns": ["repo_id"],
-    },
-    {
-        "name": "explorer_entry_list",
-        "schema": "augur_data",
-        "sql": _EXPLORER_ENTRY_LIST,
-        "unique_index_columns": ["repo_id"],
-    },
-    {
-        "name": "explorer_commits_and_committers_daily_count",
-        "schema": "augur_data",
-        "sql": _EXPLORER_COMMITS_AND_COMMITTERS_DAILY_COUNT,
-        "unique_index_columns": ["repo_id", "cmt_committer_date"],
-    },
-    {
-        "name": "api_get_all_repos_commits",
-        "schema": "augur_data",
-        "sql": _API_GET_ALL_REPOS_COMMITS,
-        "unique_index_columns": ["repo_id"],
-    },
-    {
-        "name": "api_get_all_repos_issues",
-        "schema": "augur_data",
-        "sql": _API_GET_ALL_REPOS_ISSUES,
-        "unique_index_columns": ["repo_id"],
-    },
+    MaterializedView(
+        name="api_get_all_repo_prs",
+        schema="augur_data",
+        sql=_API_GET_ALL_REPO_PRS,
+        unique_index_columns=("repo_id",),
+    ),
+    MaterializedView(
+        name="explorer_entry_list",
+        schema="augur_data",
+        sql=_EXPLORER_ENTRY_LIST,
+        unique_index_columns=("repo_id",),
+    ),
+    MaterializedView(
+        name="explorer_commits_and_committers_daily_count",
+        schema="augur_data",
+        sql=_EXPLORER_COMMITS_AND_COMMITTERS_DAILY_COUNT,
+        unique_index_columns=("repo_id", "cmt_committer_date",),
+    ),
+    MaterializedView(
+        name="api_get_all_repos_commits",
+        schema="augur_data",
+        sql=_API_GET_ALL_REPOS_COMMITS,
+        unique_index_columns=("repo_id",),
+    ),
+    MaterializedView(
+        name="api_get_all_repos_issues",
+        schema="augur_data",
+        sql=_API_GET_ALL_REPOS_ISSUES,
+        unique_index_columns=("repo_id",),
+    ),
     # --- Views 6-8: from migration 25, recreated ---
-    {
-        "name": "augur_new_contributors",
-        "schema": "augur_data",
-        "sql": _AUGUR_NEW_CONTRIBUTORS,
-        "unique_index_columns": ["cntrb_id", "created_at", "repo_id", "repo_name", "login", "rank"],
-    },
-    {
-        "name": "explorer_contributor_actions",
-        "schema": "augur_data",
-        "sql": _EXPLORER_CONTRIBUTOR_ACTIONS,
-        "unique_index_columns": ["cntrb_id", "created_at", "repo_id", "action", "repo_name", "login", "rank"],
-    },
-    {
-        "name": "explorer_new_contributors",
-        "schema": "augur_data",
-        "sql": _EXPLORER_NEW_CONTRIBUTORS,
-        "unique_index_columns": ["cntrb_id", "created_at", "month", "year", "repo_id", "full_name", "repo_name", "login", "rank"],
-    },
+    MaterializedView(
+        name="augur_new_contributors",
+        schema="augur_data",
+        sql=_AUGUR_NEW_CONTRIBUTORS,
+        unique_index_columns=("cntrb_id", "created_at", "repo_id", "repo_name", "login", "rank",),
+    ),
+    MaterializedView(
+        name="explorer_contributor_actions",
+        schema="augur_data",
+        sql=_EXPLORER_CONTRIBUTOR_ACTIONS,
+        unique_index_columns=("cntrb_id", "created_at", "repo_id", "action", "repo_name", "login", "rank",),
+    ),
+    MaterializedView(
+        name="explorer_new_contributors",
+        schema="augur_data",
+        sql=_EXPLORER_NEW_CONTRIBUTORS,
+        unique_index_columns=("cntrb_id", "created_at", "month", "year", "repo_id", "full_name", "repo_name", "login", "rank",),
+    ),
     # --- Views 9-13: from migration 26 ---
-    {
-        "name": "explorer_pr_assignments",
-        "schema": "augur_data",
-        "sql": _EXPLORER_PR_ASSIGNMENTS,
-        "unique_index_columns": ["pull_request_id", "id", "node_id"],
-    },
-    {
-        "name": "explorer_pr_response",
-        "schema": "augur_data",
-        "sql": _EXPLORER_PR_RESPONSE,
-        "unique_index_columns": ["pull_request_id", "id", "cntrb_id", "msg_cntrb_id", "msg_timestamp"],
-    },
-    {
-        "name": "explorer_user_repos",
-        "schema": "augur_data",
-        "sql": _EXPLORER_USER_REPOS,
-        "unique_index_columns": ["login_name", "user_id", "group_id", "repo_id"],
-    },
-    {
-        "name": "explorer_pr_response_times",
-        "schema": "augur_data",
-        "sql": _EXPLORER_PR_RESPONSE_TIMES,
-        "unique_index_columns": ["repo_id", "pr_src_id", "pr_src_meta_label"],
-    },
-    {
-        "name": "explorer_issue_assignments",
-        "schema": "augur_data",
-        "sql": _EXPLORER_ISSUE_ASSIGNMENTS,
-        "unique_index_columns": ["issue_id", "id", "node_id"],
-    },
+    MaterializedView(
+        name="explorer_pr_assignments",
+        schema="augur_data",
+        sql=_EXPLORER_PR_ASSIGNMENTS,
+        unique_index_columns=("pull_request_id", "id", "node_id",),
+    ),
+    MaterializedView(
+        name="explorer_pr_response",
+        schema="augur_data",
+        sql=_EXPLORER_PR_RESPONSE,
+        unique_index_columns=("pull_request_id", "id", "cntrb_id", "msg_cntrb_id", "msg_timestamp",),
+    ),
+    MaterializedView(
+        name="explorer_user_repos",
+        schema="augur_data",
+        sql=_EXPLORER_USER_REPOS,
+        unique_index_columns=("login_name", "user_id", "group_id", "repo_id",),
+    ),
+    MaterializedView(
+        name="explorer_pr_response_times",
+        schema="augur_data",
+        sql=_EXPLORER_PR_RESPONSE_TIMES,
+        unique_index_columns=("repo_id", "pr_src_id", "pr_src_meta_label",),
+    ),
+    MaterializedView(
+        name="explorer_issue_assignments",
+        schema="augur_data",
+        sql=_EXPLORER_ISSUE_ASSIGNMENTS,
+        unique_index_columns=("issue_id", "id", "node_id",),
+    ),
     # --- View 15: from migration 28 ---
-    {
-        "name": "explorer_repo_languages",
-        "schema": "augur_data",
-        "sql": _EXPLORER_REPO_LANGUAGES,
-        "unique_index_columns": ["repo_id", "programming_language"],
-    },
+    MaterializedView(
+        name="explorer_repo_languages",
+        schema="augur_data",
+        sql=_EXPLORER_REPO_LANGUAGES,
+        unique_index_columns=("repo_id", "programming_language",),
+    ),
 ]
-
-
-def get_refresh_sql(view, concurrently=True):
-    """Construct a REFRESH MATERIALIZED VIEW statement.
-
-    Args:
-        view: A dict from MATERIALIZED_VIEWS.
-        concurrently: If True, use CONCURRENTLY (requires a unique index
-            and the view to have been populated at least once).
-
-    Returns:
-        SQL string ready to be wrapped in sqlalchemy.sql.text().
-    """
-    mode = "CONCURRENTLY " if concurrently else ""
-    return (
-        f"REFRESH MATERIALIZED VIEW {mode}"
-        f"{view['schema']}.{view['name']} WITH DATA;"
-    )

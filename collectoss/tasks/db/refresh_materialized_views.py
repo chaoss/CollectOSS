@@ -3,7 +3,7 @@ import logging
 import sqlalchemy as s
 
 from collectoss.tasks.init.celery_app import celery_app as celery
-from collectoss.application.db.materialized_views import MATERIALIZED_VIEWS, get_refresh_sql
+from collectoss.application.db.materialized_views import MATERIALIZED_VIEWS
 from collectoss.tasks.git.util.facade_worker.facade_worker.config import FacadeHelper
 from collectoss.tasks.git.util.facade_worker.facade_worker.rebuildcache import invalidate_caches, rebuild_unknown_affiliation_and_web_caches
 
@@ -18,17 +18,16 @@ def refresh_materialized_views(self):
     failed_views = []
     with self.app.engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         for view in MATERIALIZED_VIEWS:
-            view_fqn = f"{view['schema']}.{view['name']}"
-            logger.info(f"Refreshing materialized view: {view_fqn}")
+            logger.info(f"Refreshing materialized view: {view.fqn}")
             try:
-                conn.execute(s.sql.text(get_refresh_sql(view, concurrently=True)))
+                conn.execute(s.sql.text(view.refresh_sql(concurrently=True)))
             except Exception as e:
-                logger.warning(f"Concurrent refresh failed for {view_fqn}, trying non-concurrent: {e}")
+                logger.warning(f"Concurrent refresh failed for {view.fqn}, trying non-concurrent: {e}")
                 try:
-                    conn.execute(s.sql.text(get_refresh_sql(view, concurrently=False)))
+                    conn.execute(s.sql.text(view.refresh_sql(concurrently=False)))
                 except Exception as e2:
-                    logger.error(f"Non-concurrent refresh also failed for {view_fqn}: {e2}")
-                    failed_views.append(view_fqn)
+                    logger.error(f"Non-concurrent refresh also failed for {view.fqn}: {e2}")
+                    failed_views.append(view.fqn)
 
     if failed_views:
         raise RuntimeError(

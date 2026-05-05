@@ -30,8 +30,8 @@ target_metadata = Base.metadata
 # DROP + CREATE (replace). When a view is replaced:
 #
 #   1. ALL indexes are destroyed. Manually add CREATE UNIQUE INDEX statements
-#      after the replace op, using unique_index_columns from the registry
-#      (collectoss/application/db/materialized_views.py).
+#      after the replace op, using MaterializedView.unique_index_columns from
+#      the registry (collectoss/application/db/materialized_views.py).
 #
 #   2. The view is recreated WITH NO DATA. You CANNOT run REFRESH CONCURRENTLY
 #      immediately — it requires both a unique index and pre-existing data.
@@ -44,15 +44,7 @@ target_metadata = Base.metadata
 from alembic_utils.pg_materialized_view import PGMaterializedView
 from alembic_utils.replaceable_entity import register_entities
 from collectoss.application.db.materialized_views import MATERIALIZED_VIEWS
-_materialized_view_entities = [
-    PGMaterializedView(
-        schema=view["schema"],
-        signature=view["name"],
-        definition=view["sql"],
-        with_data=False,
-    )
-    for view in MATERIALIZED_VIEWS
-]
+_materialized_view_entities = [view.to_pg_view() for view in MATERIALIZED_VIEWS]
 register_entities(_materialized_view_entities, entity_types=[PGMaterializedView])
 
 # other values from the config, defined by the needs of env.py,
