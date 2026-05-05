@@ -26,6 +26,35 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 
+# NOTE FOR DEVELOPERS: alembic_utils manages materialized view definitions via
+# DROP + CREATE (replace). When a view is replaced:
+#
+#   1. ALL indexes are destroyed. Manually add CREATE UNIQUE INDEX statements
+#      after the replace op, using unique_index_columns from the registry
+#      (collectoss/application/db/materialized_views.py).
+#
+#   2. The view is recreated WITH NO DATA. You CANNOT run REFRESH CONCURRENTLY
+#      immediately — it requires both a unique index and pre-existing data.
+#      After recreating the index, run a non-concurrent refresh first:
+#        REFRESH MATERIALIZED VIEW augur_data.<view_name> WITH DATA;
+#      Only after that will the Celery refresh task's CONCURRENTLY succeed.
+#
+# WARNING: If MATERIALIZED_VIEWS is ever emptied, autogenerate will propose
+# dropping all registered views. Keep the list complete.
+from alembic_utils.pg_materialized_view import PGMaterializedView
+from alembic_utils.replaceable_entity import register_entities
+from collectoss.application.db.materialized_views import MATERIALIZED_VIEWS
+_materialized_view_entities = [
+    PGMaterializedView(
+        schema=view["schema"],
+        signature=view["name"],
+        definition=view["sql"],
+        with_data=False,
+    )
+    for view in MATERIALIZED_VIEWS
+]
+register_entities(_materialized_view_entities, entity_types=[PGMaterializedView])
+
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
