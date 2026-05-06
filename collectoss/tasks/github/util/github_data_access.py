@@ -36,6 +36,9 @@ class ResourceGoneException(Exception):
 
 class GithubDataAccess:
 
+    def _base_url(self):
+        return "https://api.github.com"
+
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
         self.logger = logger
@@ -61,7 +64,7 @@ class GithubDataAccess:
         if not path.startswith("/"):
             path = "/" + path
 
-        url = "https://api.github.com" + path
+        url = self._base_url() + path
 
         return self.__add_query_params(url, params or {})
 
