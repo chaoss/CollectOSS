@@ -88,10 +88,8 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
             # move on to the next contributor
             continue
 
-        url = github_data_access.endpoint_url(f"users/{login}")
-
         try:
-            user_data = github_data_access.get_resource(url)
+            user_data = github_data_access.get_user(login)
         except UrlNotFoundException as e:
             logger.warning(f"User of {login} not found on github. Skipping...")
             continue

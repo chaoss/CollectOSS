@@ -73,6 +73,11 @@ class GithubDataAccess:
 
         return self.__add_query_params(url, params or {})
 
+    def get_user(self, username:str):
+        url = self.endpoint_url(f"users/{username}")
+
+        return self.get_resource(url)
+
     def get_resource_count(self, url):
 
         # set per_page to 100 explicitly so we know each page is 100 long
