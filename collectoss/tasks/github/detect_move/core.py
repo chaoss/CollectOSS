@@ -1,6 +1,7 @@
 from collectoss.tasks.github.util.github_task_session import *
 from collectoss.application.db.models import Repo, CollectionStatus
 from collectoss.tasks.github.util.github_paginator import hit_api
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess
 from collectoss.tasks.github.util.util import get_owner_repo
 from collectoss.tasks.github.util.util import parse_json_response
 from datetime import datetime
@@ -76,7 +77,10 @@ def extract_owner_and_repo_from_endpoint(key_auth, url, logger):
 def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='core'):
 
     owner, name = get_owner_repo(repo.repo_git)
-    url = f"https://api.github.com/repos/{owner}/{name}"
+
+    github_data_access = GithubDataAccess(key_auth, logger)
+
+    url = github_data_access.endpoint_url(f"repos/{owner}/{name}")
 
     attempts = 0
     while attempts < 10:

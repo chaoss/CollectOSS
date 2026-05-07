@@ -51,7 +51,7 @@ def query_github_contributors(logger, key_auth, github_url, tool_source:str, too
             # Need to hit this single contributor endpoint to get extra data including...
             #   `created at`
             #   i think that's it
-            cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
+            cntrb_url = github_data_access.endpoint_url(f"users/{repo_contributor['login']}")
 
             
             logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
