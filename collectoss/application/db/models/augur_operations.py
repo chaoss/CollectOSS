@@ -1,5 +1,5 @@
 # encoding: utf-8
-from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey, update, CheckConstraint, Sequence
+from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey, update, CheckConstraint, Sequence, DateTime, func
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.exc import IntegrityError
@@ -1071,6 +1071,20 @@ class ClientApplication(Base):
         except Exception as e:
             session.rollback()
             raise e
+
+class ForgeInstance(Base):
+    __tablename__ = "forge_instance"
+    __table_args__ = { "schema": "augur_operations" }
+
+    id = Column(Integer, primary_key=True, nullable=False, comment="Internal unique identifier for this forge instance")
+    # platform_type stores an integer that CollectOSS maps/will map to it's internal platform 
+    # identifer Enum (as used in ContributorUUID) for identifying the API endpoints and tasks to use for collection
+    platform_type = Column(Integer, nullable=False, comment="Type specifier identifying the relevant platform API interface to CollectOSS")
+    name = Column(String, nullable=False, comment="User-specified name for this forge instance")
+    # https://stackoverflow.com/a/54800233
+    date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
+    domain_name = Column(String, nullable=False, comment="The base domain name (without the scheme) where this instance is hosted")
+    enabled = Column(Boolean, default=True, nullable=False, comment="denotes whether collection should run for this instance")
 
 
 class Subscription(Base):
