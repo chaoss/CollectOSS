@@ -227,10 +227,18 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
     """
     owner, repo = get_owner_repo(repo_git)
 
-    review_msg_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/comments"
 
     logger = logging.getLogger(collect_pull_request_review_comments.__name__)
     logger.debug(f"Collecting pull request review comments for {owner}/{repo}")
+
+    tool_source = "Pr review comment task"
+    tool_version = "2.0"
+    data_source = "Github API"
+
+    key_auth = GithubRandomKeyAuth(logger)
+    github_data_access = GithubDataAccess(key_auth, logger)
+
+    review_msg_search_args = {}
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
@@ -240,7 +248,7 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
         if last_collected_date:
             # Subtract 2 days to ensure all data is collected
             core_data_last_collected = (last_collected_date - timedelta(days=2)).replace(tzinfo=timezone.utc)
-            review_msg_url += f"?since={core_data_last_collected.isoformat()}"
+            review_msg_search_args['since'] = core_data_last_collected.isoformat()
         else:
             logger.warning(f"core_data_last_collected is NULL for recollection on repo: {repo_git}")
 
@@ -253,13 +261,6 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
         logger.debug(f"{owner}/{repo} No PR reviews to collect review comments for")
         return
 
-    tool_source = "Pr review comment task"
-    tool_version = "2.0"
-    data_source = "Github API"
-
-    key_auth = GithubRandomKeyAuth(logger)
-    github_data_access = GithubDataAccess(key_auth, logger)
-
     pr_review_comment_batch_size = get_batch_size()
 
     # Batch processing: accumulate comments until batch size reached, then flush
@@ -267,6 +268,8 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
     pr_review_comment_dicts = []
     pr_review_msg_mapping_data = {}
     total_refs_inserted = 0
+
+    review_msg_url = github_data_access.endpoint_url(f"repos/{owner}/{repo}/pulls/comments", review_msg_search_args)
 
     # Single-pass extraction: get both contributor and comment data together
     for comment in github_data_access.paginate_resource(review_msg_url):
@@ -512,7 +515,7 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
             if index % 100 == 0:
                 logger.debug(f"{owner}/{repo} Processing PR {index + 1} of {pr_count}")
 
-            pr_review_url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
+            pr_review_url = github_data_access.endpoint_url(f"repos/{owner}/{repo}/pulls/{pr_number}/reviews")
 
             try:
                 pr_reviews = list(github_data_access.paginate_resource(pr_review_url))

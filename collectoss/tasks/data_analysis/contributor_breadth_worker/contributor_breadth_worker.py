@@ -92,7 +92,7 @@ def contributor_breadth_model(self) -> None:
         logger.info(f"Processing cntrb {index} of {total}")
         index += 1
 
-        repo_cntrb_url = f"https://api.github.com/users/{cntrb['gh_login']}/events"
+        repo_cntrb_url = github_data_access.endpoint_url(f"users/{cntrb['gh_login']}/events")
 
         newest_event_in_db = datetime(1970, 1, 1)
         if cntrb["gh_login"] in cntrb_newest_events_map:

@@ -5,6 +5,7 @@ import traceback
 from collectoss.tasks.init.celery_app import celery_app as celery
 from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
 from collectoss.tasks.github.util.github_paginator import hit_api
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess
 from collectoss.tasks.github.facade_github.tasks import *
 from collectoss.application.db.models import Contributor
 from collectoss.application.db.util import execute_session_query
@@ -26,6 +27,8 @@ def process_contributors():
     data_source = "Github API"
 
     key_auth = GithubRandomKeyAuth(logger)
+
+    github_data_access = GithubDataAccess(key_auth, logger)
 
     with get_session() as session:
 
@@ -56,7 +59,7 @@ def process_contributors():
 
         del contributor_dict["_sa_instance_state"]
 
-        url = f"https://api.github.com/users/{contributor_dict['cntrb_login']}" 
+        url = github_data_access.endpoint_url(f"users/{contributor_dict['cntrb_login']}")
 
         try:
             data = retrieve_dict_data(url, key_auth, logger)
