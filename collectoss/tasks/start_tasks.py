@@ -7,7 +7,13 @@ from sqlalchemy import and_,update
 import sqlalchemy as s
 
 
-from collectoss.tasks.github import *
+from collectoss.tasks.github.contributors import *
+from collectoss.tasks.github.events import *
+from collectoss.tasks.github.issues import *
+from collectoss.tasks.github.messages import *
+from collectoss.tasks.github.pull_requests.tasks import *
+from collectoss.tasks.github.repo_info.tasks import *
+from collectoss.tasks.github.releases.tasks import *
 if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
     from collectoss.tasks.data_analysis import *
 from collectoss.tasks.github.detect_move.tasks import detect_github_repo_move_core, detect_github_repo_move_secondary
