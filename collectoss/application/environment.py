@@ -1,7 +1,7 @@
+from typing import Optional
 
-def _deprefix(key: str, prefixes: list[str], separator = "_") -> str:
-    """Remove a prefix from the provided key
-
+def extract_prefix(key: str, prefixes: list[str], separator = "_") -> Optional[str]:
+    """Detect and return the prefix present on the provided key
 
     Args:
         key (str): the key to remove the prefix from
@@ -9,18 +9,17 @@ def _deprefix(key: str, prefixes: list[str], separator = "_") -> str:
         separator (str, optional): the separator between elements of the key to also remove (if they would otherwise be dangling). Defaults to "_".
 
     Returns:
-        str: The key value with the prefix removed if possible, otherwise returns the value of `key`
+        str: The detected prefix (including any separators) if any, otherwise None
     """
-    unprefixed = None
+    prefix_len = 0
     for p in prefixes:
         p = p.upper()
         k = key.upper()
         if k.startswith(p):
-            unprefixed = key[len(p):]
-        
-            if unprefixed.startswith(separator):
-                unprefixed = unprefixed[len(separator):]
-            return unprefixed
-    return key
+            prefix_len += len(p)
 
+            if k[prefix_len] == separator:
+                prefix_len += len(separator)
+            return key[0:prefix_len]
+    return None
 
