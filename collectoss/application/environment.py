@@ -39,12 +39,12 @@ class SystemEnv:
     _separator = "_"
 
     @classmethod
-    def get(cls, key: str, default = None) -> Optional[str]:
+    def get(cls, key: str, default = None, prefixes = _prefixes) -> Optional[str]:
         # extract the suffix so we can try multiple prefixes
-        canonical_prefix = extract_prefix(key, cls._prefixes, cls._separator)
+        canonical_prefix = extract_prefix(key, prefixes, cls._separator)
         suffix = key[len(canonical_prefix):] if canonical_prefix is not None else key
         # check prefixes in order and use the first one that has a value
-        for p in cls._prefixes:
+        for p in prefixes:
             check_key = f"{p}{cls._separator}{suffix}"
             value = os.getenv(check_key, None)
 
