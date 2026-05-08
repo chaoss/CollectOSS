@@ -42,3 +42,32 @@ def test_no_known_prefix():
     os.environ["THING"] = "C"
     assert SystemEnv.get("THING", None, prefixes) == "C"
 
+
+def test_get_bool_trues():
+
+    cases = ["1", "true", "True", "TRUE", "y", "Y", "yes", "Yes"]
+
+    for case in cases:
+        os.environ["OTHER_BOOL"] = case
+        assert SystemEnv.get_bool("OTHER_BOOL", False, prefixes) == True
+        del os.environ["OTHER_BOOL"]
+
+def test_get_bool_falses():
+
+    cases = ["0", "false", "False", "FALSE", "n", "N", "no", "No"]
+
+    for case in cases:
+        os.environ["OTHER_BOOL"] = case
+        assert SystemEnv.get_bool("OTHER_BOOL", True, prefixes) == False
+        del os.environ["OTHER_BOOL"]
+
+def test_get_bool_default():
+
+    cases = ["?", "maybe", "Stuff", "333"]
+
+    for case in cases:
+        os.environ["OTHER_BOOL"] = case
+        assert SystemEnv.get_bool("OTHER_BOOL", False, prefixes) == False
+        del os.environ["OTHER_BOOL"]
+
+    
