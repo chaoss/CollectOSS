@@ -53,7 +53,7 @@ class SystemEnv:
                 if p in cls._warn_prefixes:
                     msg = (
                         f"Environment variable '{check_key}' is deprecated. "
-                        f"Use '{key}' instead. Automatic recovery may be removed in a future version"
+                        f"Use '{key}' instead. This automatic recovery may become a failure in a future version "
                     )
                     logger.warning(msg)
                     warnings.warn(msg, DeprecationWarning, stacklevel=2)
