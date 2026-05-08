@@ -1,4 +1,5 @@
 import os
+from typing_extensions import deprecated
 
 class Environment:
     """
@@ -7,16 +8,19 @@ class Environment:
     with subscript notation without needing to deal with the particularities of
     non-existent values.
     """
+    @deprecated("use collectoss.application.environment.SystemEnv instead")
     def __init__(self, **kwargs):
         for (key, value) in kwargs.items():
             self[key] = value
 
+    @deprecated("use collectoss.application.environment.SystemEnv instead")
     def setdefault(self, key, value):
         if not self[key]:
             self[key] = value
             return value
         return self[key]
 
+    @deprecated("use collectoss.application.environment.SystemEnv instead")
     def setall(self, **kwargs):
         result = {}
         for (key, value) in kwargs.items():
@@ -24,6 +28,7 @@ class Environment:
                 result[key] = self[key]
             self[key] = value
 
+    @deprecated("use collectoss.application.environment.SystemEnv instead")
     def getany(self, *args):
         result = {}
         for arg in args:
@@ -31,6 +36,7 @@ class Environment:
                 result[arg] = self[arg]
         return result
 
+    @deprecated("use collectoss.application.environment.SystemEnv instead")
     def as_type(self, type, key):
         if self[key]:
             return type(self[key])
