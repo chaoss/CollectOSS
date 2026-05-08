@@ -71,3 +71,10 @@ class SystemEnv:
         """
         raw_val = cls.get(key, None, prefixes)
         return raw_val.lower() in ('true', '1', 't', 'y', 'yes') if raw_val else default
+        
+    @classmethod
+    def set(cls, key: str, value: str, overwrite=True) -> None:
+        if os.getenv(key) is not None and not overwrite:
+            return
+        
+        os.environ[key] = value
