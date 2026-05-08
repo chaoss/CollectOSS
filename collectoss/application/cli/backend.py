@@ -62,7 +62,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     signal.signal(signal.SIGINT, manager.shutdown_signal_handler)
 
     try:
-        if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
+        if SystemEnv.get('AUGUR_DOCKER_DEPLOY') != "1":
             raise_open_file_limit(100000)
     except Exception as e:
         logger.error(
@@ -145,7 +145,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     manager.keypub = keypub
     
     if not disable_collection:
-        if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
+        if SystemEnv.get('AUGUR_DOCKER_DEPLOY') != "1":
             orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
 
         # Wait for orchestrator startup
