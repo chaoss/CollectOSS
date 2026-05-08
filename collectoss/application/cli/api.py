@@ -17,6 +17,8 @@ from collectoss.application.logs import SystemLogger
 from collectoss.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 from collectoss.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
 from collectoss.application.db.lib import get_value
+from collectoss.application.environment import SystemEnv
+
 
 logger = SystemLogger("collectoss", reset_logfiles=False).get_logger()
 
@@ -142,7 +144,7 @@ def get_api_processes():
 def is_api_process(process):
 
     command = ''.join(process.info['cmdline'][:]).lower()
-    if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in command:
+    if SystemEnv.get('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in command:
                     
         if process.pid != os.getpid():
             

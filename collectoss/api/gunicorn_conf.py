@@ -7,6 +7,7 @@ from glob import glob
 
 from collectoss.application.db.lib import get_value
 from collectoss.application.db import dispose_database_engine
+from collectoss.application.environment import SystemEnv
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +21,8 @@ logger = logging.getLogger(__name__)
 workers = multiprocessing.cpu_count() * 2 + 1
 umask = 0o007
 reload = True
-
-is_dev = os.getenv("AUGUR_DEV", 'False').lower() in ('true', '1', 't', 'y', 'yes')
+# this satisfies the type checker
+is_dev = SystemEnv.get_bool("AUGUR_DEV", False)
 
 if is_dev:
 
@@ -40,7 +41,8 @@ del is_dev
 # set the log location for gunicorn    
 logs_directory = get_value('Logging', 'logs_directory')
 
-is_docker = os.getenv("AUGUR_DOCKER_DEPLOY", 'False').lower() in ('true', '1', 't', 'y', 'yes')
+# this syntax satisfies the type checker
+is_docker = SystemEnv.get_bool("AUGUR_DOCKER_DEPLOY", False)
 accesslog = f"{logs_directory}/gunicorn.log"
 errorlog = f"{logs_directory}/gunicorn.log"
 

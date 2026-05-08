@@ -14,6 +14,7 @@ import uuid
 import traceback
 import sqlalchemy as s
 
+from collectoss.application.environment import SystemEnv
 from collectoss.tasks.start_tasks import collection_monitor, create_collection_status_records
 from collectoss.tasks.git.facade_tasks import clone_repos
 from collectoss.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
@@ -237,7 +238,7 @@ def get_collection_processes():
 def is_collection_process(process):
 
     command = ''.join(process.info['cmdline'][:]).lower()
-    if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in command:
+    if SystemEnv.get('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in command:
         if process.pid != os.getpid():
             
             if "collectossbackendcollection" in command  or "celery_app.celery_appbeat" in command:
