@@ -48,7 +48,7 @@ def start(ctx, development, port):
         raise e
     
     if development:
-        os.environ["AUGUR_DEV"] = "1"
+        SystemEnv.set("AUGUR_DEV", "1")
         logger.info("Starting in development mode")
 
     try:

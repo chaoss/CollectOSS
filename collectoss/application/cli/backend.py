@@ -72,10 +72,10 @@ def start(ctx, disable_collection, development, pidfile, port):
         raise e
 
     if development:
-        os.environ["AUGUR_DEV"] = "1"
+        SystemEnv.set("AUGUR_DEV", "1")
         logger.info("Starting in development mode")
     
-    os.environ["AUGUR_PIDFILE"] = pidfile
+    SystemEnv.set("AUGUR_PIDFILE", pidfile)
 
     try:
         gunicorn_location = os.getcwd() + "/collectoss/api/gunicorn_conf.py"
@@ -87,10 +87,10 @@ def start(ctx, disable_collection, development, pidfile, port):
     if not port:
         port = get_value("Server", "port")
     
-    os.environ["AUGUR_PORT"] = str(port)
+    SystemEnv.set("AUGUR_PORT", str(port))
     
     if disable_collection:
-        os.environ["AUGUR_DISABLE_COLLECTION"] = "1"
+        SystemEnv.set("AUGUR_DISABLE_COLLECTION", "1")
     
     core_worker_count = get_value("Celery", 'core_worker_count')
     secondary_worker_count = get_value("Celery", 'secondary_worker_count')

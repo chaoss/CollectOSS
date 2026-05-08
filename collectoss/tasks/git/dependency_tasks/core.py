@@ -80,14 +80,14 @@ def generate_scorecard(logger, repo_git):
     command = '--repo=' + path
     
     #this is path where our scorecard project is located
-    path_to_scorecard = SystemEnv.get('SCORECARD_DIR', os.environ['HOME'] + '/scorecard')
+    path_to_scorecard = SystemEnv.get('SCORECARD_DIR', (SystemEnv.get('HOME') or "~") + '/scorecard')
 
     #setting the environmental variable which is required by scorecard
 
     with get_session() as session:
         #key_handler = GithubRandomKeyAuth(logger)
         key_handler = GithubApiKeyHandler(logger)       
-        os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
+        SystemEnv.set('GITHUB_AUTH_TOKEN', key_handler.get_random_key())
 
     # This seems outdated
     #setting the environmental variable which is required by scorecard
