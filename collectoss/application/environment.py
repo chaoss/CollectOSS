@@ -67,5 +67,7 @@ class SystemEnv:
     
     @classmethod
     def get_bool(cls, key:str, default: bool, prefixes = _prefixes) -> bool:
+        """gets a value from the environment and cast it to a boolean
+        """
         raw_val = cls.get(key, None, prefixes)
         return raw_val.lower() in ('true', '1', 't', 'y', 'yes') if raw_val else default
