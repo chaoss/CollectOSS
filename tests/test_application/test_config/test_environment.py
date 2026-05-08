@@ -31,6 +31,13 @@ def test_fetching_env():
     del os.environ["COLLECTOSS_NAME"]
     del os.environ["OTHER_THING"]
 
+def test_fetching_env_backwards():
+    os.environ["COLLECTOSS_NAME"] = "A"
+    assert SystemEnv.get("OTHER_NAME", None, prefixes) == "A"
+
+    # cleanup
+    del os.environ["COLLECTOSS_NAME"]
+
 def test_fetching_env_no_value():
     assert SystemEnv.get("COLLECTOSS_MISSING", None, prefixes) is None
 
