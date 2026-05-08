@@ -59,4 +59,8 @@ class SystemEnv:
                     warnings.warn(msg, DeprecationWarning, stacklevel=2)
                 
                 return value
+
+        if not canonical_prefix:
+            return os.getenv(key, default)
+        
         return default

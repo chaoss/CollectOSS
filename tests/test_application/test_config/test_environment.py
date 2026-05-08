@@ -37,3 +37,8 @@ def test_fetching_env_no_value():
 def test_fetching_env_default():
     assert SystemEnv.get("COLLECTOSS_DEFAULT", "SOME", prefixes) == "SOME"
 
+def test_no_known_prefix():
+    # fallback handling
+    os.environ["THING"] = "C"
+    assert SystemEnv.get("THING", None, prefixes) == "C"
+
