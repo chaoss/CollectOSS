@@ -19,15 +19,19 @@ def refresh_materialized_views(self):
     with self.app.engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         for view in MATERIALIZED_VIEWS:
             logger.info(f"Refreshing materialized view: {view.fqn}")
-            try:
-                conn.execute(s.sql.text(view.refresh_sql(concurrently=True)))
-            except Exception as e:
-                logger.warning(f"Concurrent refresh failed for {view.fqn}, trying non-concurrent: {e}")
+            
+            if len(view.unique_index_columns) > 0:
                 try:
-                    conn.execute(s.sql.text(view.refresh_sql(concurrently=False)))
-                except Exception as e2:
-                    logger.error(f"Non-concurrent refresh also failed for {view.fqn}: {e2}")
-                    failed_views.append(view.fqn)
+                    conn.execute(s.sql.text(view.refresh_sql(concurrently=True)))
+                    continue
+                except Exception as e:
+                    logger.warning(f"Concurrent refresh failed for {view.fqn}, trying non-concurrent: {e}")
+ 
+            try:
+                conn.execute(s.sql.text(view.refresh_sql(concurrently=False)))
+            except Exception as e2:
+                logger.error(f"Non-concurrent refresh failed for {view.fqn}: {e2}")
+                failed_views.append(view.fqn)
 
     if failed_views:
         raise RuntimeError(
