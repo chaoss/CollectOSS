@@ -148,6 +148,7 @@ testpaths = [
     "tests/test_application/test_cli/test_csv_utils.py",
     "tests/test_tasks/test_task_utilities/test_util/test_worker_util.py",
     "tests/test_tasks/test_task_utilities/test_util/test_contributor_uuid.py",
+    "tests/test_tests/",
     # "tests/test_routes", # runs, but needs a fixture for connecting to the web interface of Augur
     # "tests/test_metrics",
     # "tests/test_tasks",
