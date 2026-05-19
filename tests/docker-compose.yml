@@ -9,9 +9,9 @@ services:
     restart: unless-stopped
     # user: 999:999
     environment:
-      - "POSTGRES_DB=augur_test"
-      - "POSTGRES_USER=augur"
-      - "POSTGRES_PASSWORD=augur"
+      - "POSTGRES_DB=collectoss_test"
+      - "POSTGRES_USER=collectoss"
+      - "POSTGRES_PASSWORD=collectoss"
       # - "PGDATA=/postgresql"
       - "PGDATA=/var/lib/postgresql/data"
     volumes:
