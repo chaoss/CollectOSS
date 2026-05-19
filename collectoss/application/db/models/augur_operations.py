@@ -1182,7 +1182,7 @@ class CollectionStatus(Base):
         #Disallow facade_data_last_collected to not be set when facade_status indicates task has been run
         #Disallow facade_data_last_collected to be set when facade_status indicates task hasn't been run
         CheckConstraint(
-            "NOT (facade_data_last_collected IS NULL AND facade_status  = 'Success' ) AND"
+            "NOT (facade_data_last_collected IS NULL AND facade_status  = 'Success' ) AND "
             "NOT (facade_data_last_collected IS NOT NULL AND facade_status IN ('Pending','Initializing', 'Update'))",
             name='facade_data_last_collected_check'
         ),
