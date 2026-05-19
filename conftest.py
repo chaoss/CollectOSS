@@ -16,7 +16,7 @@ from collectoss.application.db.session import DatabaseSession
 from collectoss.application.config import SystemConfig
 from collectoss.application.db.engine import get_database_string, create_database_engine, parse_database_string, execute_sql_file
 
-from augur.application.db.engine import create_database_engine
+from collectoss.application.db.engine import create_database_engine
 
 logger = logging.getLogger(__name__)
 
