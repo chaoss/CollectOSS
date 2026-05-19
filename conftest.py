@@ -1,145 +1,65 @@
-#SPDX-License-Identifier: MIT
 import pytest
 import re
-import os
-import logging
 import sqlalchemy as s
-import psycopg2
-from psycopg2 import sql
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-import uuid
-from sqlalchemy.pool import StaticPool
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy import text, event
 
-
-from collectoss.application.db.session import DatabaseSession
-from collectoss.application.config import SystemConfig
-from collectoss.application.db.engine import get_database_string, create_database_engine, parse_database_string, execute_sql_file
-
+from collectoss.application.db.models.base import Base
+from collectoss.application.db.models import *  # ensure all models are imported/registered
 from collectoss.application.db.engine import create_database_engine
-
-logger = logging.getLogger(__name__)
 
 default_repo_id = "25430"
 default_repo_group_id = "10"
 
-def _build_test_db_url(port=5432) -> str:
-    # Full URL override if provided
+def _build_test_db_url() -> str:
+    """Build the URL for the docker-compose test database."""
+    import os
     url = os.getenv("AUGUR_DB_TEST_URL")
     if url:
         return url
-
-    # Otherwise, construct from parts (customize the defaults as needed)
     host = os.getenv("AUGUR_TEST_DB_HOST", "127.0.0.1")
-    port = os.getenv("AUGUR_TEST_DB_PORT", str(port))  # set your specific port here or via env
-    user = os.getenv("AUGUR_TEST_DB_USER", "augur")
-    password = os.getenv("AUGUR_TEST_DB_PASSWORD", "augur")
-    database = os.getenv("AUGUR_TEST_DB_NAME", "augur_test")
+    port = os.getenv("AUGUR_TEST_DB_PORT", "5325")
+    user = os.getenv("AUGUR_TEST_DB_USER", "collectoss")
+    password = os.getenv("AUGUR_TEST_DB_PASSWORD", "collectoss")
+    database = os.getenv("AUGUR_TEST_DB_NAME", "collectoss_test")
     return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"
+
+
+SCHEMAS = ["augur_data", "augur_operations", "spdx"]
 
 
 @pytest.fixture(scope="session")
 def database_engine():
-
-    url = _build_test_db_url(port=5325)
-
-    # Get a database connection object from postgres to test connection and pass to test when ready
+    """Session-scoped engine connected to the docker-compose test DB.
+    Creates all schemas and tables from ORM metadata on first use.
+    """
+    url = _build_test_db_url()
     engine = create_database_engine(url)
-    print("yield")
 
+    # Create schemas that don't exist
+    with engine.connect() as conn:
+        for schema in SCHEMAS:
+            conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
+        conn.commit()
 
-    # create_database_from_cursor(conn, cursor, test_db_name)
+    # Create all tables from the ORM models
+    Base.metadata.create_all(engine)
 
-    # Install schema
-    # execute_sql_file(sql_file_path, test_db_name, user, password, host, port)
-
-
-    # Setup complete, return the database object
     yield engine
+
+    engine.dispose()
 
 
 @pytest.fixture(scope="session")
 def db_session(database_engine):
-    logger = logging.getLogger("tests.pg")
+    """Session-scoped ORM session for read-heavy tests."""
+    from collectoss.application.db.session import DatabaseSession
+    import logging
+    logger = logging.getLogger("tests")
     session = DatabaseSession(logger, database_engine)
     try:
         yield session
     finally:
         session.close()
-
-
-@pytest.fixture
-def new_blank_db(database_engine):
-    schemas = ["augur_data", "augur_operations", "spdx", "toss_specific"]
-    with database_engine.connect() as conn:
-        # query = s.sql.text("SELECT EXISTS(SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'augur_operations')")
-        # for schema in schemas:
-        #     query = s.sql.text(f"DROP SCHEMA IF EXISTS {schema} CASCADE;")
-        #     conn.execute(query)
-        #     conn.commit()
-        try:
-            with open("tests/entire_db.sql") as file:
-                query = s.sql.text(file.read())
-                conn.execute(query)
-            conn.commit()
-        except ProgrammingError as e:
-            conn.rollback()
-            if "already exists" in str(e)[:200]:
-                pass
-            else:
-                raise e
-
-        # truncate tables here to ensure the DB is blank but the schema is correct
-        # --- TRUNCATE LOGIC STARTS HERE ---
-        
-        # 1. Format the schema list for the SQL 'IN' clause
-        schema_list_sql = ", ".join([f"'{schema}'" for schema in schemas])
-
-        # 2. Build a dynamic SQL query for PostgreSQL to truncate all tables
-        #    in the specified schemas.
-        #    - 'TRUNCATE TABLE ...' : The command to run.
-        #    - 'string_agg(...)': Gathers all table names into a single, 
-        #                         comma-separated list.
-        #    - 'quote_ident(...)': Safely handles table/schema names.
-        #    - 'RESTART IDENTITY': Resets all auto-incrementing sequences.
-        #    - 'CASCADE': Automatically truncates tables with foreign key
-        #                 references to the target tables.
-        truncate_script = f"""
-        DO $$
-        DECLARE
-            truncate_cmd TEXT;
-        BEGIN
-            -- Build the TRUNCATE command by selecting tables from pg_tables
-            SELECT INTO truncate_cmd
-                'TRUNCATE TABLE ' || 
-                string_agg(quote_ident(schemaname) || '.' || quote_ident(tablename), ', ') ||
-                ' RESTART IDENTITY CASCADE'
-            FROM pg_tables
-            WHERE schemaname IN ({schema_list_sql});
-
-            -- Execute the command if tables were found
-            IF truncate_cmd IS NOT NULL THEN
-                EXECUTE truncate_cmd;
-            END IF;
-        END $$;
-        """
-        
-        # 3. Execute the truncation script
-        try:
-            print("\nTRUNCATING all tables to ensure a blank database...")
-            conn.execute(s.sql.text(truncate_script))
-            conn.commit()
-            print("Truncation complete.")
-        except Exception as e:
-            print(f"Error during truncation: {e}")
-            conn.rollback() # Rollback on error
-            raise e
-
-        # --- TRUNCATE LOGIC ENDS HERE ---
-
-    yield database_engine
-
-
 
 def create_full_routes(routes):
     full_routes = []
@@ -151,217 +71,34 @@ def create_full_routes(routes):
     return full_routes
 
 
-def create_connection(dbname='postgres'):
+@pytest.fixture(autouse=False)
+def clean_db(database_engine):
+    """Per-test fixture that truncates all tables before and after the test.
+    Use for integration tests that write data.
     """
-    Creates a connection to the postgres server specified in the database string and connects to the dbname specified.
-    Returns the connection and cursor objects.
+    _truncate_all(database_engine)
+    yield database_engine
+    _truncate_all(database_engine)
+
+
+def _truncate_all(engine):
+    """Truncate all tables in the known schemas."""
+    schema_list_sql = ", ".join([f"'{s}'" for s in SCHEMAS])
+    truncate_script = f"""
+    DO $$
+    DECLARE truncate_cmd TEXT;
+    BEGIN
+        SELECT INTO truncate_cmd
+            'TRUNCATE TABLE ' ||
+            string_agg(quote_ident(schemaname) || '.' || quote_ident(tablename), ', ') ||
+            ' RESTART IDENTITY CASCADE'
+        FROM pg_tables
+        WHERE schemaname IN ({schema_list_sql});
+        IF truncate_cmd IS NOT NULL THEN
+            EXECUTE truncate_cmd;
+        END IF;
+    END $$;
     """
-
-    db_string = get_database_string()
-    user, password, host, port, _ = parse_database_string(db_string)
-    conn = psycopg2.connect(
-        host=host,
-        port=port,
-        user=user,
-        password=password,
-        dbname=dbname
-    )
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    return conn, conn.cursor()
-
-
-def create_database(conn, cursor, db_name, template=None):
-    """
-    Creates a database with the name db_name. 
-    If template is specified, the database will be created with the template specified.
-    """
-
-    if template:
-        cursor.execute(sql.SQL("CREATE DATABASE {} WITH TEMPLATE {};").format(sql.Identifier(db_name), sql.Identifier(template)))
-    else:
-        cursor.execute(sql.SQL("CREATE DATABASE {};").format(sql.Identifier(db_name)))
-    conn.commit()
-
-def drop_database(cursor, db_name):
-    """
-    Drops the database with the name db_name.
-    """
-
-    # ensure connections are removed
-    cursor.execute(sql.SQL("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='{}';".format(db_name)))
-    # drop temporary database
-    cursor.execute(sql.SQL("DROP DATABASE {};").format(sql.Identifier(db_name)))
-
-
-def generate_db_from_template(template_name):
-    """
-    Generator function that creates a new database from the template specified.
-    Yields the engine object for the database created.
-    """
-
-    db_string = get_database_string()
-
-    user, password, host, port, _ = parse_database_string(db_string)
-
-    # Connect to the default 'postgres' database
-    conn = psycopg2.connect(
-        host=host,
-        port=port,
-        user=user,
-        password=password,
-        dbname='postgres'
-    )
-
-    # Set the isolation level to AUTOCOMMIT because CREATE DATABASE 
-    # cannot be executed in a transaction block
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cursor = conn.cursor()
-
-    test_db_name = "test_db_" + uuid.uuid4().hex
-
-    # remove database_name and add test_db_name
-    test_db_string = db_string[:db_string.rfind("/")+1] + test_db_name
-    
-    create_database(conn, cursor, test_db_name, template_name)
-
-    # create engine to connect to db
-    engine = create_database_engine(test_db_string, poolclass=StaticPool)
-
-    yield engine
-
-    # dispose engine
-    engine.dispose()
-
-    drop_database(cursor, test_db_name)
-
-    # Close the cursor and the connection
-    cursor.close()
-    conn.close()
-
-
-def generate_template_db(sql_file_path):
-    """
-    Generator function that creates a new database and install the sql file specified
-    Yields the name of the database created.
-    """
-
-    db_string = get_database_string()
-
-    user, password, host, port, _ = parse_database_string(db_string)
-
-    # Connect to the default 'postgres' database
-    conn = psycopg2.connect(
-        host=host,
-        port=port,
-        user=user,
-        password=password,
-        dbname='postgres'
-    )
-
-    # Set the isolation level to AUTOCOMMIT because CREATE DATABASE 
-    # cannot be executed in a transaction block
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cursor = conn.cursor()
-
-
-    test_db_name = "test_db_template_" + uuid.uuid4().hex
-    create_database(conn, cursor, test_db_name)
-
-    # Install schema
-    execute_sql_file(sql_file_path, test_db_name, user, password, host, port)
-
-
-    # ensure connections are removed
-    cursor.execute(sql.SQL("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='{}';".format(test_db_name)))
-
-    # drop temporary database
-
-    yield test_db_name
-
-    drop_database(cursor, test_db_name)
-
-    # Close the cursor and the connection
-    cursor.close()
-    conn.close()
-
-
-
-@pytest.fixture(scope='session')
-def empty_db_template():
-    """ 
-    This fixture creates a template database with the entire schema installed.
-    Returns the name of the database created.
-    """
-
-    yield from generate_template_db("tests/entire_db.sql")
-
-
-@pytest.fixture(scope='session')
-def empty_db(empty_db_template):
-    """
-    This fixture creates a database from the empty_db_template
-    """
-
-    yield from generate_db_from_template(empty_db_template)
-
-
-# TODO: Add populated db template and populated db fixtures so this fixture is more useful
-@pytest.fixture(scope='session')
-def read_only_db(empty_db):
-    """
-    This fixtture creates a read-only database from the populated_db_template.
-    Yields a read-only engine object for the populated_db.
-    """
-
-    database_name = empty_db.url.database
-    test_username = "testuser"
-    test_password = "testpass"
-    schemas = ["public", "augur_data", "augur_operations"]
-
-    # create read-only user
-    empty_db.execute(s.text(f"CREATE USER testuser WITH PASSWORD '{test_password}';"))
-    empty_db.execute(s.text(f"GRANT CONNECT ON DATABASE {database_name} TO {test_username};"))
-    for schema in schemas:
-        empty_db.execute(s.text(f"GRANT USAGE ON SCHEMA {schema} TO {test_username};"))
-        empty_db.execute(s.text(f"GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO {test_username};"))
-
-    # create engine for read-only user
-    db_string = get_database_string()
-    _, _, host, port, _ = parse_database_string(db_string)
-    read_only_engine = s.create_engine(f'postgresql+psycopg2://{test_username}:{test_password}@{host}:{port}/{database_name}')
-        
-    yield read_only_engine
-
-    read_only_engine.dispose()
-
-    # remove read-only user
-    empty_db.execute(s.text(f'REVOKE CONNECT ON DATABASE {database_name} FROM {test_username};'))
-    for schema in schemas:
-        empty_db.execute(s.text(f'REVOKE USAGE ON SCHEMA {schema} FROM {test_username};'))
-        empty_db.execute(s.text(f'REVOKE SELECT ON ALL TABLES IN SCHEMA {schema} FROM {test_username};'))
-    empty_db.execute(s.text(f'DROP USER {test_username};'))
-    
-
-@pytest.fixture
-def test_db_engine():
-
-    # creates database engine the normal way and then gets the database string
-    db_string = get_database_string()
-
-    db_string_without_db_name = re.search(r"(.+:\/\/.+\/).+", db_string).groups()[0]
-
-    testing_db_string = db_string_without_db_name + "augur-test"
-
-    yield s.create_engine(testing_db_string)
-
-@pytest.fixture
-def test_db_session(test_db_engine):
-    session = DatabaseSession(logger, test_db_engine)
-
-    yield session
-
-    session.close()
-
-@pytest.fixture
-def test_db_config(test_db_session):
-    return SystemConfig(logger, test_db_session)
+    with engine.connect() as conn:
+        conn.execute(text(truncate_script))
+        conn.commit()
