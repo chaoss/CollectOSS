@@ -16,7 +16,7 @@
 # No volume is mounted on purpose: the data dies with the container, which
 # is what you want for a scratch database.
 services:
-  postgres:
+  test-db:
     # Keep the major version in sync with docker/database/Dockerfile; the
     # live tests double as pg_get_indexdef format-drift canaries, so they
     # must run against the same major version as production.
