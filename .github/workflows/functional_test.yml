@@ -17,6 +17,20 @@ jobs:
       matrix:
         env: ["3.10", "3.11"] #, "3.12", "3.13", "3.14"
         os: [ubuntu-latest, macos-latest]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: collectoss_test
+          POSTGRES_USER: collectoss
+          POSTGRES_PASSWORD: collectoss
+        ports:
+          - 5325:5432
+        options: >-
+          --health-cmd pg_ready_check
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
