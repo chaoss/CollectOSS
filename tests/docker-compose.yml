@@ -15,8 +15,8 @@ services:
       # - "PGDATA=/postgresql"
       - "PGDATA=/var/lib/postgresql/data"
     volumes:
-      - augurpostgrestest:/var/lib/postgresql/data:Z
+      - postgrestest:/var/lib/postgresql/data:Z
     ports:
       - 5325:5432
 volumes:
-  augurpostgrestest:
+  postgrestest:
