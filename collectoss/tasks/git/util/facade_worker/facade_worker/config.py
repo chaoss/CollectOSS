@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 def get_database_args_from_env():
 
-    db_str = SystemEnv.get("AUGUR_DB")
+    db_str = SystemEnv.get("COLLECTOSS_DB")
     try:
         db_json_file_location = os.getcwd() + "/db.config.json"
     except FileNotFoundError:

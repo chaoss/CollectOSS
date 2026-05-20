@@ -63,7 +63,7 @@ frontend_tasks = ['collectoss.tasks.frontend']
 
 tasks = start_tasks + github_tasks + gitlab_tasks + git_tasks + materialized_view_tasks + frontend_tasks
 
-if SystemEnv.get('AUGUR_DOCKER_DEPLOY') != "1":
+if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
     tasks += data_analysis_tasks
 
 redis_db_number, redis_conn_string = get_redis_conn_values()

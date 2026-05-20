@@ -67,11 +67,11 @@ def test_db_connection(function_db_connection):
             return ctx.invoke(function_db_connection, *args, **kwargs)
         except OperationalError as e:
 
-            db_environment_var = SystemEnv.get("AUGUR_DB")
+            db_environment_var = SystemEnv.get("COLLECTOSS_DB")
 
             # determine the location to print in error string
             if db_environment_var:
-                location = f"the AUGUR_DB environment variable\nAUGUR_DB={SystemEnv.get('AUGUR_DB')}"
+                location = f"the AUGUR_DB environment variable\nAUGUR_DB={SystemEnv.get('COLLECTOSS_DB')}"
             else:
                 with open("db.config.json", 'r') as f:
                     db_config = json.load(f)

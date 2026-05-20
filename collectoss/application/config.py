@@ -29,7 +29,7 @@ def get_development_flag_from_config():
     return flag
 
 def get_development_flag():
-    return SystemEnv.get("AUGUR_DEV") or get_development_flag_from_config() or False
+    return SystemEnv.get("COLLECTOSS_DEV") or get_development_flag_from_config() or False
 
 def redact_setting_value(section_name, setting_name, value):
     value_redacted = value if section_name != "Keys" else "REDACTED"

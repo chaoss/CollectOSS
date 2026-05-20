@@ -62,7 +62,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     signal.signal(signal.SIGINT, manager.shutdown_signal_handler)
 
     try:
-        if SystemEnv.get('AUGUR_DOCKER_DEPLOY') != "1":
+        if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
             raise_open_file_limit(100000)
     except Exception as e:
         logger.error(
@@ -145,7 +145,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     manager.keypub = keypub
     
     if not disable_collection:
-        if SystemEnv.get('AUGUR_DOCKER_DEPLOY') != "1":
+        if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
             orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
 
         # Wait for orchestrator startup
@@ -356,10 +356,10 @@ def export_env(config):
     Exports your GitHub key and database credentials
     """
 
-    export_file = open(SystemEnv.get('AUGUR_EXPORT_FILE') or 'collectoss_export_env.sh', 'w+')
+    export_file = open(SystemEnv.get('COLLECTOSS_EXPORT_FILE') or 'collectoss_export_env.sh', 'w+')
     export_file.write('#!/bin/bash')
     export_file.write('\n')
-    env_file = open(SystemEnv.get('AUGUR_ENV_FILE') or 'docker_env.txt', 'w+')
+    env_file = open(SystemEnv.get('COLLECTOSS_ENV_FILE') or 'docker_env.txt', 'w+')
 
     for env_var in config.get_env_config().items():
         if "LOG" not in env_var[0]:
