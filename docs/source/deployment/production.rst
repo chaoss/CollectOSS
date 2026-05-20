@@ -11,10 +11,10 @@ Environment Variables
 CollectOSS uses several environment variables in production. Make sure to configure the ones relevant
 to your deployment:
 
-- ``AUGUR_RESET_LOGS`` : Controls automatic log reset on server startup
-- ``AUGUR_DB`` : PostgreSQL database connection string (used if variable not set)
+- ``COLLECTOSS_RESET_LOGS`` : Controls automatic log reset on server startup
+- ``COLLECTOSS_DB`` : PostgreSQL database connection string (used if variable not set)
 
-AUGUR_RESET_LOGS
+COLLECTOSS_RESET_LOGS
 ----------------
 
 **Description:**  
@@ -27,7 +27,7 @@ boolean
 `True` : CollectOSS clears old logs at startup.
 
 **Environment Variable:**  
-AUGUR_RESET_LOGS
+COLLECTOSS_RESET_LOGS
 
 **Notes:**  
 If set to `False`, CollectOSS will not reset logs automatically. Administrators must ensure log rotation or cleanup is handled manually.
@@ -36,9 +36,9 @@ If set to `False`, CollectOSS will not reset logs automatically. Administrators 
 
 .. code-block:: bash
 
-   export AUGUR_RESET_LOGS=False
+   export COLLECTOSS_RESET_LOGS=False
 
-AUGUR_DB
+COLLECTOSS_DB
 --------
 
 **Description:**  
@@ -48,10 +48,10 @@ Specifies the connection string for the PostgreSQL database used by CollectOSS. 
 string
 
 **Default:**  
-Docker container database (if `AUGUR_DB` is not specified)
+Docker container database (if `COLLECTOSS_DB` is not specified)
 
 **Environment Variable:**  
-AUGUR_DB
+COLLECTOSS_DB
 
 Related Resources
 -----------------
