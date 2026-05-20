@@ -14,14 +14,14 @@ the following resources (or more).
 
 .. code:: python
 
-    AUGUR_DB=augur
-    AUGUR_DB_USER=augur
-    AUGUR_DB_PASSWORD=password_here
+    COLLECTOSS_DB=augur
+    COLLECTOSS_DB_USER=augur
+    COLLECTOSS_DB_PASSWORD=password_here
 
-    AUGUR_GITHUB_API_KEY=ghp_value_here
-    AUGUR_GITHUB_USERNAME=gh_username
-    AUGUR_GITLAB_API_KEY=placeholder
-    AUGUR_GITLAB_USERNAME=placeholder
+    COLLECTOSS_GITHUB_API_KEY=ghp_value_here
+    COLLECTOSS_GITHUB_USERNAME=gh_username
+    COLLECTOSS_GITLAB_API_KEY=placeholder
+    COLLECTOSS_GITLAB_USERNAME=placeholder
 
 3. Build the container using one of the following commands:
 
