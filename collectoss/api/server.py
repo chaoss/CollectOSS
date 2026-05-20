@@ -329,7 +329,7 @@ def get_server_cache(cache_manager) -> Cache:
 
 logger = SystemLogger("server").get_logger()
 url = get_database_string()
-engine = create_database_engine(url, poolclass=StaticPool)
+engine = create_database_engine(url, poolclass=StaticPool, connect_args={"application_name": f"collectoss v{code_version} api"})
 db_session = DatabaseSession(logger, engine)
 system_config = SystemConfig(logger, db_session)
 
