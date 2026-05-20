@@ -38,7 +38,7 @@ def start(ctx, development, port):
     """Start CollectOSS's backend server."""
 
     try:
-        if SystemEnv.get('AUGUR_DOCKER_DEPLOY') != "1":
+        if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
             raise_open_file_limit(100000)
     except Exception as e: 
         logger.error(

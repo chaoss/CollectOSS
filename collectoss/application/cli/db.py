@@ -380,7 +380,7 @@ def get_api_key(ctx):
     short_help="Check the ~/.pgpass file for CollectOSS's database credentials",
 )
 def check_pgpass():
-    db_environment_var = SystemEnv.get("AUGUR_DB")
+    db_environment_var = SystemEnv.get("COLLECTOSS_DB")
     if db_environment_var:
         # gets the user, passowrd, host, port, and database_name out of environment variable
         # assumes database string of structure <beginning_of_db_string>//<user>:<password>@<host>:<port>/<database_name>
@@ -496,7 +496,7 @@ def run_psql_command_in_database(target_type, target):
         logger.error("Invalid target type. Exiting...")
         exit(1)
 
-    db_environment_var = SystemEnv.get("AUGUR_DB")
+    db_environment_var = SystemEnv.get("COLLECTOSS_DB")
 
     # db_json_file_location = os.getcwd() + "/db.config.json"
     # db_json_exists = os.path.exists(db_json_file_location)
