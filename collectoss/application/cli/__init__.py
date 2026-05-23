@@ -39,6 +39,9 @@ def check_connectivity(urls=["http://chaoss.community", "http://github.com", "ht
 def test_connection(function_internet_connection):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
+        # Skip connectivity check for --help
+        if ctx.params.get('help'):
+            return ctx.invoke(function_internet_connection, *args, **kwargs)
         usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
         if not check_connectivity():
             print(
@@ -57,6 +60,9 @@ def test_connection(function_internet_connection):
 def test_db_connection(function_db_connection):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
+        # Skip DB check for --help since help should work without database
+        if ctx.params.get('help'):
+            return ctx.invoke(function_db_connection, *args, **kwargs)
         engine = DatabaseEngine().engine
         usage = re.search(r"Usage:\s(.*)\s\[OPTIONS\]", str(ctx.get_usage())).groups()[0]
         try:
