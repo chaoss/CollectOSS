@@ -50,7 +50,7 @@ To run CollectOSS **with** the database container:
 
 .. code-block:: bash
 
-    docker compose -f docker-compose.yml -f database-compose.yml up
+    docker compose up
 
 
 Stopping the containers
