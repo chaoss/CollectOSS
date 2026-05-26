@@ -72,6 +72,9 @@ def sanity_check_email(possible_email:str) -> str | None:
     try:
         if possible_email is None:
             return None
+
+        if not isinstance(possible_email, str):
+            raise TypeError("Email address values must be strings")
         
         candidate_email = str(possible_email).strip()
 
