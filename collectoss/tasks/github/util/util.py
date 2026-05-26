@@ -85,6 +85,15 @@ def sanity_check_email(possible_email:str) -> str | None:
 
             return None
 
+        email_parts = candidate_email.split("@")
+        if len(email_parts) > 2:
+            # Emails cannot have more than one @
+            return None
+
+        if '' in email_parts:
+            # Email cant possibly be valid if there is nothing both before and after the @
+            return None
+
         return candidate_email
     except Exception:
         return None
