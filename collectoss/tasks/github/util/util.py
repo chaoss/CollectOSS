@@ -32,28 +32,7 @@ def sanity_check_email(possible_email:str) -> str | None:
         if possible_email is None:
             return None
         
-        candidate_email = str(possible_email)
-
-
-        at_pos = candidate_email.find("@")
-        if at_pos == -1:
-            # email cannot possibly be valid without an @ sign
-            return None
-
-        preceeding_space = candidate_email.rfind(" ", 0, at_pos)
-        following_space = candidate_email.find(" ", at_pos)
-        search_result = (preceeding_space != -1, following_space != -1)
-
-        if search_result == (True, True):
-            # spaces were on either side
-            candidate_email = candidate_email[preceeding_space+1:following_space]
-        elif search_result == (False, True):
-            # space after
-            candidate_email = candidate_email[:following_space + 1]
-        elif search_result == (True, False):
-            # space after
-            candidate_email = candidate_email[preceeding_space:]
-        # otherwise, there were no spaces, so the string stays the same.
+        candidate_email = str(possible_email).strip()
 
         if not candidate_email.isascii():
             # non-ascii is pretty uncommon, especially for narrow usecases like
