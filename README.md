@@ -25,7 +25,7 @@ Basic initial setup can be completed in a few minutes as follows:
 3. Copy the `environment.txt` file to a new file called `.env` and fill in values for the required variables
 4. Run `docker compose up` to start the containers
 
-Check out the [CollectOSS Documentation](https://collectoss.readthedocs.io) for more detailed setup instructions and troubleshooting steps.
+Check out the [CollectOSS Documentation](https://docs.collectoss.org) for more detailed setup instructions and troubleshooting steps.
 
 ## Contributing
 We strongly believe that communities are what makes open source so impactful. We invite you to join our community, regardless of your experience level or coding abilities! 
