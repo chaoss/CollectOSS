@@ -40,17 +40,17 @@ def sanity_check_email(possible_email:str) -> str:
             # email cannot possibly be valid without an @ sign
             return None
 
-        preceeding_space = candidate_email.rfind(" ", 0)
+        preceeding_space = candidate_email.rfind(" ", 0, at_pos)
         following_space = candidate_email.find(" ", at_pos)
         search_result = (preceeding_space != -1, following_space != -1)
 
         if search_result == (True, True):
             # spaces were on either side
-            candidate_email = candidate_email[preceeding_space, following_space + 1]
-        elif  search_result == (False, True):
+            candidate_email = candidate_email[preceeding_space+1:following_space]
+        elif search_result == (False, True):
             # space after
             candidate_email = candidate_email[:following_space + 1]
-        elif  search_result == (True, False):
+        elif search_result == (True, False):
             # space after
             candidate_email = candidate_email[preceeding_space:]
         # otherwise, there were no spaces, so the string stays the same.
