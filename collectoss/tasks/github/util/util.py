@@ -10,7 +10,7 @@ from collectoss.application.db.lib import get_repo_by_repo_git
 from collectoss.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
 
-def sanity_check_email(possible_email:str) -> str:
+def sanity_check_email(possible_email:str) -> str | None:
     """Accept a string that might contain an email and attempt to validate it
     This was built for performing some basic sanity checking before attempting to use
     the information in an email address for processing.
