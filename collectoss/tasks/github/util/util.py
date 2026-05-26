@@ -79,7 +79,12 @@ def sanity_check_email(possible_email:str) -> str | None:
         candidate_email = str(possible_email).strip()
 
         if candidate_email.count(" ") > 0:
-            candidate_email = extract_email(candidate_email)
+            extracted_email = extract_email(candidate_email)
+            if not extracted_email:
+                # could not extract
+                return None
+            else:
+                candidate_email = extracted_email
 
         if not candidate_email.isascii():
             # non-ascii is pretty uncommon, especially for narrow usecases like
