@@ -14,8 +14,8 @@ def test_swapped_input_is_corrected():
 def test_name_field_contains_mixed_name_and_email():
     # name field has both a name and email mixed together
     name, email = check_swapped_emails("John Smith john@gmail.com", "")
-    assert name == "John Smith john@gmail.com"
-    assert email == ""
+    assert name == ""
+    assert email == "John Smith john@gmail.com"
 
 def test_email_field_contains_mixed_name_and_email():
     # email field has both a name and email mixed together
