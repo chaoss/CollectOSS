@@ -9,6 +9,47 @@ from collectoss.tasks.github.util.github_graphql_data_access import GithubGraphQ
 from collectoss.application.db.lib import get_repo_by_repo_git
 from collectoss.tasks.util.worker_util import calculate_date_weight_from_timestamps
 
+def extract_email(possible_email:str) -> str | None:
+    """Accept a string that might contain an email and extract the email from it for later validation.
+    An email is searched for by looking for the first @ sign, and then looking for a space (or the end of string) on either side
+
+    If it becomes heavily used, we should defer to a well-made library
+
+    Args:
+        possible_email (str): a string that might contain an email
+
+    Returns:
+        str: a string representing a potential email address extracted from the string. None is returned if no valid email could be found.
+    """
+    try:
+
+        if possible_email is None:
+            return None
+        
+        candidate_email = str(possible_email).strip()
+
+        at_pos = candidate_email.find("@")
+        if at_pos == -1:
+            # email cannot possibly be valid without an @ sign
+            return None
+
+        preceeding_space = candidate_email.rfind(" ", 0, at_pos)
+        following_space = candidate_email.find(" ", at_pos)
+        search_result = (preceeding_space != -1, following_space != -1)
+
+        if search_result == (True, True):
+            # spaces were on either side
+            candidate_email = candidate_email[preceeding_space+1:following_space]
+        elif search_result == (False, True):
+            # space after
+            candidate_email = candidate_email[:following_space + 1]
+        elif search_result == (True, False):
+            # space after
+            candidate_email = candidate_email[preceeding_space:]
+        # otherwise, there were no spaces, so the string stays the same.
+        return candidate_email
+    except Exception:
+        return None
 
 def sanity_check_email(possible_email:str) -> str | None:
     """Accept a string that might contain an email and attempt to validate it
@@ -33,6 +74,9 @@ def sanity_check_email(possible_email:str) -> str | None:
             return None
         
         candidate_email = str(possible_email).strip()
+
+        if candidate_email.count(" ") > 0:
+            candidate_email = extract_email(candidate_email)
 
         if not candidate_email.isascii():
             # non-ascii is pretty uncommon, especially for narrow usecases like
