@@ -68,13 +68,14 @@ def sanity_check_email(possible_email:str) -> str | None:
     Returns:
         str: a string representing what should (mostly) be a valid email address. None is returned if no valid email could be found.
     """
-    
-    try:
-        if possible_email is None:
+
+    if possible_email is None:
             return None
 
-        if not isinstance(possible_email, str):
-            raise TypeError("Email address values must be strings")
+    if not isinstance(possible_email, str):
+        raise TypeError("Email address values must be strings")
+    
+    try:
         
         candidate_email = str(possible_email).strip()
 
