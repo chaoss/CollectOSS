@@ -120,7 +120,7 @@ t_repos_fetch_log = Table(
     ),
     Index("repos_id,statusops", "repos_id", "status"),
     schema="collection_operations",
-    comment="For future use when we move all working tables to the augur_operations schema. ",
+    comment="For future use when we move all working tables to the collection_operations schema. ",
 )
 
 class WorkerHistory(Base):
@@ -197,7 +197,7 @@ class WorkerSettingsFacade(Base):
     __tablename__ = "worker_settings_facade"
     __table_args__ = {
         "schema": "collection_operations",
-        "comment": "For future use when we move all working tables to the augur_operations schema. ",
+        "comment": "For future use when we move all working tables to the collection_operations schema. ",
     }
 
     id = Column(Integer, primary_key=True)
@@ -216,7 +216,7 @@ t_working_commits = Table(
         "working_commit", String(40), server_default=text("'NULL'::character varying")
     ),
     schema="collection_operations",
-    comment="For future use when we move all working tables to the augur_operations schema. ",
+    comment="For future use when we move all working tables to the collection_operations schema. ",
 )
 
 class BadgingDEI(Base):
