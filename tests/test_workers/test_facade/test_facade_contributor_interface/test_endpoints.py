@@ -13,7 +13,7 @@ def set_up_repo_groups(database_connection):
     repo_group_IDs = df['repo_group_id'].values.tolist()
 
     insert_repo_group_sql = s.sql.text("""
-    INSERT INTO "augur_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_id, :repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP);
+    INSERT INTO "collection_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_id, :repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP);
     """)
 
     with open("tests/test_workers/test_facade/test_facade_contributor_interface/test_repo_groups.csv") as create_repo_groups_file:
