@@ -99,7 +99,7 @@ class Settings(Base):
         Sequence("augur_settings_id_seq", start=1, schema="collection_operations"),
         primary_key=True,
         server_default=text(
-            "nextval('augur_operations.augur_settings_id_seq'::regclass)"
+            "nextval('collection_operations.augur_settings_id_seq'::regclass)"
         ),
     )
     setting = Column(String)
@@ -135,7 +135,7 @@ class WorkerHistory(Base):
         Sequence("gh_worker_history_history_id_seq", start=1, schema="collection_operations"),
         primary_key=True,
         server_default=text(
-            "nextval('augur_operations.gh_worker_history_history_id_seq'::regclass)"
+            "nextval('collection_operations.gh_worker_history_history_id_seq'::regclass)"
         ),
     )
     repo_id = Column(BigInteger)
@@ -181,7 +181,7 @@ class WorkerOauth(Base):
         Sequence("worker_oauth_oauth_id_seq", start=1000, schema="collection_operations"),
         primary_key=True,
         server_default=text(
-            "nextval('augur_operations.worker_oauth_oauth_id_seq'::regclass)"
+            "nextval('collection_operations.worker_oauth_oauth_id_seq'::regclass)"
         ),
     )
     name = Column(String(255), nullable=False)
@@ -639,7 +639,7 @@ class UserGroup(Base):
     
     group_id = Column(BigInteger, primary_key=True)
     user_id = Column(Integer,
-                    ForeignKey("augur_operations.users.user_id", name="user_group_user_id_fkey"), nullable=False
+                    ForeignKey("collection_operations.users.user_id", name="user_group_user_id_fkey"), nullable=False
     )
     name = Column(String, nullable=False)
     favorited = Column(Boolean, nullable=False, server_default=text("FALSE"))
@@ -746,7 +746,7 @@ class UserRepo(Base):
     __table_args__ = { "schema": "collection_operations" }
 
     group_id = Column(
-        ForeignKey("augur_operations.user_groups.group_id", name="user_repo_group_id_fkey"), primary_key=True, nullable=False
+        ForeignKey("collection_operations.user_groups.group_id", name="user_repo_group_id_fkey"), primary_key=True, nullable=False
     )
     repo_id = Column(
         ForeignKey("collection_data.repo.repo_id", name="user_repo_user_id_fkey"), primary_key=True, nullable=False
@@ -1013,9 +1013,9 @@ class UserSessionToken(Base):
     __table_args__ = { "schema": "collection_operations" }
 
     token = Column(String, primary_key=True, nullable=False)
-    user_id = Column(ForeignKey("augur_operations.users.user_id", name="user_session_token_user_id_fkey"), nullable=False)
+    user_id = Column(ForeignKey("collection_operations.users.user_id", name="user_session_token_user_id_fkey"), nullable=False)
     expiration = Column(BigInteger)
-    application_id = Column(ForeignKey("augur_operations.client_applications.id", name="user_session_token_application_id_fkey"))
+    application_id = Column(ForeignKey("collection_operations.client_applications.id", name="user_session_token_application_id_fkey"))
     created_at = Column(BigInteger)
 
     user = relationship("User", back_populates="tokens")
@@ -1051,7 +1051,7 @@ class ClientApplication(Base):
     __table_args__ = { "schema": "collection_operations" }
 
     id = Column(String, primary_key=True, nullable=False)
-    user_id = Column(ForeignKey("augur_operations.users.user_id", name="client_application_user_id_fkey"), nullable=False)
+    user_id = Column(ForeignKey("collection_operations.users.user_id", name="client_application_user_id_fkey"), nullable=False)
     name = Column(String, nullable=False)
     redirect_url = Column(String, nullable=False)
     api_key = Column(String, nullable=False)
@@ -1091,8 +1091,8 @@ class Subscription(Base):
     __tablename__ = "subscriptions"
     __table_args__ = { "schema": "collection_operations" }
 
-    application_id = Column(ForeignKey("augur_operations.client_applications.id", name="subscriptions_application_id_fkey"), primary_key=True)
-    type_id = Column(ForeignKey("augur_operations.subscription_types.id", name="subscriptions_type_id_fkey"), primary_key=True)
+    application_id = Column(ForeignKey("collection_operations.client_applications.id", name="subscriptions_application_id_fkey"), primary_key=True)
+    type_id = Column(ForeignKey("collection_operations.subscription_types.id", name="subscriptions_type_id_fkey"), primary_key=True)
 
     application = relationship("ClientApplication", back_populates="subscriptions")
     type = relationship("SubscriptionType", back_populates="subscriptions")
@@ -1119,7 +1119,7 @@ class RefreshToken(Base):
     )
 
     id = Column(String, primary_key=True)
-    user_session_token = Column(ForeignKey("augur_operations.user_session_tokens.token", name="refresh_token_session_token_id_fkey"), nullable=False)
+    user_session_token = Column(ForeignKey("collection_operations.user_session_tokens.token", name="refresh_token_session_token_id_fkey"), nullable=False)
 
     user_session = relationship("UserSessionToken", back_populates="refresh_tokens")
 
