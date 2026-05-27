@@ -12,7 +12,7 @@ def poll_database_connection(database_string):
     print("Attempting to create db engine")
 
     db = s.create_engine(database_string, poolclass=s.pool.NullPool,
-                         connect_args={'options': '-csearch_path={}'.format('augur_data')})
+                         connect_args={'options': '-csearch_path={}'.format('collection_data')})
 
     return db
 
