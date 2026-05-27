@@ -95,7 +95,7 @@ from collectoss.application.db.models.spdx import (
     SpdxIdentifier,
 )
 
-from collectoss.application.db.models.augur_operations import (
+from collectoss.application.db.models.operations import (
     Settings,
     WorkerHistory,
     WorkerJob,
