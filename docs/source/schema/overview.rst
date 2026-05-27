@@ -61,7 +61,7 @@ gathered from commits, issues, and other info.
 CollectOSS Operations
 -------------------------------------------------------
 
-The ``augur_operations`` tables are where most of the operations tables
+The ``collection_operations`` tables are where most of the operations tables
 exist. There are a few, like ``settings`` that remain in
 ``augur_data`` for now, but will be moved. They keep records related to
 analytical history and data provenance for data in the schema. They also
