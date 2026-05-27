@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 from collectoss.application.db.engine import DatabaseEngine
 from collectoss.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User, CollectionStatus
-from collectoss.application.db.models.augur_operations import retrieve_owner_repos
+from collectoss.application.db.models.operations import retrieve_owner_repos
 from collectoss.application.db.util import execute_session_query
 
 from sqlalchemy import Column, Table, MetaData, or_
