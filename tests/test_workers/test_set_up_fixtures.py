@@ -153,8 +153,8 @@ class DummyFullWorker(ContributorInterfaceable):
             "augur", "augur", "172.17.0.1", 5400, "test"
         )
 
-        self.db_schema = 'augur_data'
-        self.helper_schema = 'augur_operations'
+        self.db_schema = 'collectoss_data'
+        self.helper_schema = 'collection_operations'
 
         self.helper_db = s.create_engine(DB_STR, poolclass=s.pool.NullPool,
                                          connect_args={'options': '-csearch_path={}'.format(self.helper_schema)})
