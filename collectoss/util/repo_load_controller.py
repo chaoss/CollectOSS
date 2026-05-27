@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 with DatabaseEngine() as engine:
-    augur_data_schema = MetaData(schema = "augur_data")
+    augur_data_schema = MetaData(schema = "collection_data")
     augur_data_schema.reflect(bind = engine, views = True)
     
     commits_materialized_view: Table = augur_data_schema.tables["collection_data.api_get_all_repos_commits"]
