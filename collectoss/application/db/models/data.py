@@ -54,7 +54,7 @@ t_analysis_log = Table(
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
     ),
-    schema="augur_data",
+    schema="collection_data",
 )
 Index('repos_id', t_analysis_log.c.repos_id)
 
@@ -337,7 +337,7 @@ t_dm_repo_annual = Table(
     ),
     Index("repo_id,email_copy_1", "repo_id", "email"),
     Index("repo_id,affiliation_copy_1", "repo_id", "affiliation"),
-    schema="augur_data",
+    schema="collection_data",
 )
 
 
@@ -363,7 +363,7 @@ t_dm_repo_group_annual = Table(
     ),
     Index("projects_id,email_copy_1", "repo_group_id", "email"),
     Index("projects_id,affiliation_copy_1", "repo_group_id", "affiliation"),
-    schema="augur_data",
+    schema="collection_data",
 )
 
 
@@ -394,7 +394,7 @@ t_dm_repo_group_monthly = Table(
     Index(
         "projects_id,year,affiliation_copy_1", "repo_group_id", "year", "affiliation"
     ),
-    schema="augur_data",
+    schema="collection_data",
 )
 
 
@@ -423,7 +423,7 @@ t_dm_repo_group_weekly = Table(
     Index("projects_id,email", "repo_group_id", "email"),
     Index("projects_id,year,email", "repo_group_id", "year", "email"),
     Index("projects_id,year,affiliation", "repo_group_id", "year", "affiliation"),
-    schema="augur_data",
+    schema="collection_data",
 )
 
 
@@ -452,7 +452,7 @@ t_dm_repo_monthly = Table(
     Index("repo_id,year,affiliation_copy_1", "repo_id", "year", "affiliation"),
     Index("repo_id,affiliation_copy_2", "repo_id", "affiliation"),
     Index("repo_id,email_copy_2", "repo_id", "email"),
-    schema="augur_data",
+    schema="collection_data",
 )
 
 
@@ -481,7 +481,7 @@ t_dm_repo_weekly = Table(
     Index("repo_id,email", "repo_id", "email"),
     Index("repo_id,year,email", "repo_id", "year", "email"),
     Index("repo_id,year,affiliation", "repo_id", "year", "affiliation"),
-    schema="augur_data",
+    schema="collection_data",
 )
 
 
@@ -530,7 +530,7 @@ class Platform(Base):
 
     pltfrm_id = Column(
         BigInteger,
-        Sequence('platform_pltfrm_id_seq', start=25430, schema="augur_data"),
+        Sequence('platform_pltfrm_id_seq', start=25430, schema="collection_data"),
         primary_key=True,
         server_default=text("nextval('augur_data.platform_pltfrm_id_seq'::regclass)"),
     )
@@ -622,7 +622,7 @@ t_repos_fetch_log = Table(
     ),
     Index("repos_id,status", "repos_id", "status"),
     Index("repos_id,statusops", "repos_id", "status"),
-    schema="augur_data",
+    schema="collection_data",
 )
 
 
@@ -678,7 +678,7 @@ t_unknown_cache = Table(
         server_default=text("CURRENT_TIMESTAMP"),
     ),
     Index("type,projects_id", "type", "repo_group_id"),
-    schema="augur_data",
+    schema="collection_data",
 )
 
 
@@ -710,7 +710,7 @@ class UtilityLog(Base):
 
     id = Column(
         BigInteger,
-        Sequence('utility_log_id_seq1', start=1, schema="augur_data"),
+        Sequence('utility_log_id_seq1', start=1, schema="collection_data"),
         primary_key=True,
         server_default=text("nextval('augur_data.utility_log_id_seq1'::regclass)"),
     )
@@ -728,7 +728,7 @@ t_working_commits = Table(
     Column(
         "working_commit", String(40), server_default=text("'NULL'::character varying")
     ),
-    schema="augur_data",
+    schema="collection_data",
 )
 
 
@@ -1326,7 +1326,7 @@ class Commit(Base):
 
     cmt_id = Column(
         BigInteger,
-        Sequence('commits_cmt_id_seq', start=25430, schema="augur_data"),
+        Sequence('commits_cmt_id_seq', start=25430, schema="collection_data"),
         primary_key=True,
         server_default=text("nextval('augur_data.commits_cmt_id_seq'::regclass)"),
     )
@@ -1411,7 +1411,7 @@ class CommitMessage(Base):
 
     cmt_msg_id = Column(
         BigInteger,
-        Sequence('commits_cmt_id_seq', start=25430, schema="augur_data"),
+        Sequence('commits_cmt_id_seq', start=25430, schema="collection_data"),
         primary_key=True,
         server_default=text("nextval('augur_data.commits_cmt_id_seq'::regclass)"),
     )
@@ -1447,7 +1447,7 @@ class Issue(Base):
 
     issue_id = Column(
         BigInteger,
-        Sequence('issue_seq', start=31000, schema="augur_data"),
+        Sequence('issue_seq', start=31000, schema="collection_data"),
         primary_key=True,
         server_default=text("nextval('augur_data.issue_seq'::regclass)"),
     )
@@ -1513,7 +1513,7 @@ class Library(Base):
 
     library_id = Column(
         BigInteger,
-        Sequence('libraries_library_id_seq', start=25430, schema="augur_data"),
+        Sequence('libraries_library_id_seq', start=25430, schema="collection_data"),
         primary_key=True,
         server_default=text("nextval('augur_data.libraries_library_id_seq'::regclass)"),
     )
@@ -1597,7 +1597,7 @@ class Message(Base):
 
     msg_id = Column(
         BigInteger,
-        Sequence('message_msg_id_seq', start=25430, schema="augur_data"),
+        Sequence('message_msg_id_seq', start=25430, schema="collection_data"),
         primary_key=True,
         server_default=text("nextval('augur_data.message_msg_id_seq'::regclass)"),
     )
@@ -1887,7 +1887,7 @@ class Release(Base):
 
     release_id = Column(
         CHAR(256),
-        Sequence('releases_release_id_seq', start=1, schema="augur_data"),
+        Sequence('releases_release_id_seq', start=1, schema="collection_data"),
         primary_key=True,
         server_default=text("nextval('augur_data.releases_release_id_seq'::regclass)"),
     )
@@ -2149,7 +2149,7 @@ class RepoInsight(Base):
 
     ri_id = Column(
         BigInteger,
-        Sequence('repo_insights_ri_id_seq', start=25430, schema="augur_data"),
+        Sequence('repo_insights_ri_id_seq', start=25430, schema="collection_data"),
         primary_key=True,
         server_default=text("nextval('augur_data.repo_insights_ri_id_seq'::regclass)"),
     )
@@ -2268,7 +2268,7 @@ class RepoMeta(Base):
     )
     rmeta_id = Column(
         BigInteger,
-        Sequence('repo_meta_rmeta_id_seq', start=25430, schema="augur_data"),
+        Sequence('repo_meta_rmeta_id_seq', start=25430, schema="collection_data"),
         primary_key=True,
         nullable=False,
         server_default=text("nextval('augur_data.repo_meta_rmeta_id_seq'::regclass)"),
@@ -2312,7 +2312,7 @@ class RepoStat(Base):
     )
     rstat_id = Column(
         BigInteger,
-        Sequence('repo_stats_rstat_id_seq', start=25430, schema="augur_data"),
+        Sequence('repo_stats_rstat_id_seq', start=25430, schema="collection_data"),
         primary_key=True,
         nullable=False,
         server_default=text("nextval('augur_data.repo_stats_rstat_id_seq'::regclass)"),
