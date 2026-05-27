@@ -340,7 +340,7 @@ def stop_processes(signal, logger, engine):
 
 def assign_orphan_repos_to_default_user(session):
     query = s.sql.text("""
-        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.user_repos)
+        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM collection_operations.user_repos)
     """)
 
     repos = session.execute_sql(query).fetchall()
@@ -377,13 +377,13 @@ def repo_reset(backend_app):
     Refresh repo collection to force data collection
     """
     backend_app.database.execute(s.sql.text("""
-        UPDATE augur_operations.collection_status 
+        UPDATE collection_operations.collection_status 
         SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE collection_operations.collection_status 
         SET secondary_status='Pending',secondary_task_id = NULL, secondary_data_last_collected = NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE collection_operations.collection_status 
         SET facade_status='Pending', facade_task_id=NULL, facade_data_last_collected = NULL;
 
         TRUNCATE collection_data.commits CASCADE;

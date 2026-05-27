@@ -43,7 +43,7 @@ def test_get_config_key(key_handler, test_db_engine):
     
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM collection_operations.config""")
 
 def test_get_config_key_with_none_specified(key_handler, test_db_engine):
 
@@ -78,7 +78,7 @@ def test_get_api_keys_from_database(key_handler, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.worker_oauth""")
+            connection.execute("""DELETE FROM collection_operations.worker_oauth""")
 
 api_key_list = ["asdfdfkey", "jloire", "zdfdr", "asdrxer"]
 @pytest.mark.parametrize("api_key", api_key_list)
@@ -112,4 +112,4 @@ def test_get_api_keys(key_handler, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.worker_oauth""")
+            connection.execute("""DELETE FROM collection_operations.worker_oauth""")

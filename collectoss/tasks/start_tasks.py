@@ -383,7 +383,7 @@ def create_collection_status_records(self):
     logger = logging.getLogger(create_collection_status_records.__name__)
 
     query = s.sql.text("""
-    SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.collection_status)
+    SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM collection_operations.collection_status)
     """)
 
     repo = execute_sql(query).first()

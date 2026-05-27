@@ -74,7 +74,7 @@ def get_newly_added_repos(session, limit, hook):
 
     repo_query = s.sql.text(f"""
         select repo_git 
-        from augur_operations.collection_status x, collection_data.repo y 
+        from collection_operations.collection_status x, collection_data.repo y 
         where x.repo_id=y.repo_id 
         and {condition_string}
         order by {order_by_field}
@@ -96,7 +96,7 @@ def get_repos_for_recollection(session, limit, hook, days_until_collect_again):
 
     repo_query = s.sql.text(f"""
         select repo_git 
-        from augur_operations.collection_status x,  repo y 
+        from collection_operations.collection_status x,  repo y 
         where x.repo_id = y.repo_id
         and {condition_string}
         and {hook}_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
