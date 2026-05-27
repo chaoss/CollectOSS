@@ -15,7 +15,7 @@ def test_config_get_value(test_db_config, test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+            query = text("""INSERT INTO "collection_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
             connection.execute(query, **data)
 
@@ -43,7 +43,7 @@ def test_config_get_section(test_db_config, test_db_engine):
 
             for data in network_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "collection_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -82,7 +82,7 @@ def test_config_load_config(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "collection_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -123,7 +123,7 @@ def test_config_empty(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "collection_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -151,7 +151,7 @@ def test_config_is_section_in_config(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "collection_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -212,7 +212,7 @@ def test_config_update_settings(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "collection_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -342,7 +342,7 @@ def test_config_clear(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "collection_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -377,7 +377,7 @@ def test_remove_section(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "collection_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 

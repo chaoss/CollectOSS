@@ -33,7 +33,7 @@ def test_get_config_key(key_handler, test_db_engine):
         data = {"github_api_key": "asdfdfkey"}
         with test_db_engine.connect() as connection:
 
-            query = text("""INSERT INTO "augur_operations"."config" ("id", "section_name", "setting_name", "value", "type") VALUES (3, 'Keys', 'github_api_key', :github_api_key, 'str');""")
+            query = text("""INSERT INTO "collection_operations"."config" ("id", "section_name", "setting_name", "value", "type") VALUES (3, 'Keys', 'github_api_key', :github_api_key, 'str');""")
 
             connection.execute(query, **data)
 
@@ -64,7 +64,7 @@ def test_get_api_keys_from_database(key_handler, test_db_engine):
 
             for value in data:
 
-                query = text("""INSERT INTO "augur_operations"."worker_oauth" ("name", "consumer_key", "consumer_secret", "access_token", "access_token_secret", "repo_directory", "platform") VALUES ('test_key', '0', '0', :api_key, '0', NULL, 'github');""")
+                query = text("""INSERT INTO "collection_operations"."worker_oauth" ("name", "consumer_key", "consumer_secret", "access_token", "access_token_secret", "repo_directory", "platform") VALUES ('test_key', '0', '0', :api_key, '0', NULL, 'github');""")
 
                 connection.execute(query, **value)
 
@@ -101,7 +101,7 @@ def test_get_api_keys(key_handler, test_db_engine):
 
             for value in data:
 
-                query = text("""INSERT INTO "augur_operations"."worker_oauth" ("name", "consumer_key", "consumer_secret", "access_token", "access_token_secret", "repo_directory", "platform") VALUES ('test_key', '0', '0', :api_key, '0', NULL, 'github');""")
+                query = text("""INSERT INTO "collection_operations"."worker_oauth" ("name", "consumer_key", "consumer_secret", "access_token", "access_token_secret", "repo_directory", "platform") VALUES ('test_key', '0', '0', :api_key, '0', NULL, 'github');""")
 
                 connection.execute(query, **value)
 

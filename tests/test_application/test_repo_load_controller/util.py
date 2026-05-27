@@ -14,19 +14,19 @@ def get_repo_group_delete_statement():
 
 def get_user_delete_statement():
 
-    return get_delete_statement("augur_operations", "users")
+    return get_delete_statement("collection_operations", "users")
 
 def get_user_repo_delete_statement():
 
-    return get_delete_statement("augur_operations", "user_repos")
+    return get_delete_statement("collection_operations", "user_repos")
 
 def get_user_group_delete_statement():
 
-    return get_delete_statement("augur_operations", "user_groups")
+    return get_delete_statement("collection_operations", "user_groups")
 
 def get_config_delete_statement():
 
-    return get_delete_statement("augur_operations", "config")
+    return get_delete_statement("collection_operations", "config")
 
 def get_repo_related_delete_statements(table_list):
     """Takes a list of tables related to the RepoLoadController class and generates a delete statement.
@@ -86,14 +86,14 @@ def get_repo_group_insert_statement(rg_id):
 
 def get_user_insert_statement(user_id):
 
-    return """INSERT INTO "augur_operations"."users" ("user_id", "login_name", "login_hashword", "email", "first_name", "last_name", "admin") VALUES ({}, 'bil', 'pass', 'b@gmil.com', 'bill', 'bob', false);""".format(user_id)
+    return """INSERT INTO "collection_operations"."users" ("user_id", "login_name", "login_hashword", "email", "first_name", "last_name", "admin") VALUES ({}, 'bil', 'pass', 'b@gmil.com', 'bill', 'bob', false);""".format(user_id)
 
 def get_user_group_insert_statement(user_id, group_name, group_id=None):
 
     if group_id:
-        return """INSERT INTO "augur_operations"."user_groups" ("group_id", "user_id", "name") VALUES ({}, {}, '{}');""".format(group_id, user_id, group_name)
+        return """INSERT INTO "collection_operations"."user_groups" ("group_id", "user_id", "name") VALUES ({}, {}, '{}');""".format(group_id, user_id, group_name)
 
-    return """INSERT INTO "augur_operations"."user_groups" (user_id", "name") VALUES (1, 'default');""".format(user_id, group_name)
+    return """INSERT INTO "collection_operations"."user_groups" (user_id", "name") VALUES (1, 'default');""".format(user_id, group_name)
 
 
 ######## Helper Functions to get retrieve data from tables #################
@@ -117,7 +117,7 @@ def get_repos(connection, where_string=None):
 
 def get_user_repos(connection):
 
-    return connection.execute(s.text("""SELECT * FROM "augur_operations"."user_repos";""")).fetchall()
+    return connection.execute(s.text("""SELECT * FROM "collection_operations"."user_repos";""")).fetchall()
 
 
 ######## Helper Functions to get repos in an org #################
