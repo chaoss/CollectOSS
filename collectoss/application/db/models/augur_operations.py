@@ -221,7 +221,7 @@ t_working_commits = Table(
 
 class BadgingDEI(Base):
     __tablename__ = 'dei_badging'
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
     id = Column(Integer, primary_key=True, nullable=False)
     badging_id = Column(Integer, nullable=False)
     level = Column(String, nullable=False)

@@ -63,7 +63,7 @@ Index('repos_id', t_analysis_log.c.repos_id)
 class ChaossMetricStatus(Base):
     __tablename__ = "chaoss_metric_status"
     __table_args__ = {
-        "schema": "augur_data",
+        "schema": "collection_data",
         "comment": "This table used to track CHAOSS Metric implementations, but due to the constantly changing location of that information, it is for the moment not actively populated. ",
     }
 
@@ -97,7 +97,7 @@ class ChaossMetricStatus(Base):
 
 class ChaossUser(Base):
     __tablename__ = "chaoss_user"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     chaoss_id = Column(
         BigInteger,
@@ -122,7 +122,7 @@ class ChaossUser(Base):
 class ContributorAffiliation(Base):
     __tablename__ = "contributor_affiliations"
     __table_args__ = {
-        "schema": "augur_data",
+        "schema": "collection_data",
         "comment": "This table exists outside of relations with other tables. The purpose is to provide a dynamic, owner maintained (and collectoss augmented) list of affiliations. This table is processed in affiliation information in the DM_ tables generated when CollectOSS is finished counting commits using the Facade Worker. ",
     }
 
@@ -178,7 +178,7 @@ class Contributor(Base):
         Index("login-contributor-idx", "cntrb_login"),
 
         {
-            "schema": "augur_data",
+            "schema": "collection_data",
             "comment": "For GitHub, this should be repeated from gh_login. for other systems, it should be that systems login. \nGithub now allows a user to change their login name, but their user id remains the same in this case. So, the natural key is the combination of id and login, but there should never be repeated logins. ",
         },
     )
@@ -487,7 +487,7 @@ t_dm_repo_weekly = Table(
 
 class Exclude(Base):
     __tablename__ = "exclude"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     id = Column(Integer, primary_key=True)
     projects_id = Column(Integer, nullable=False)
@@ -497,7 +497,7 @@ class Exclude(Base):
 
 class LstmAnomalyModel(Base):
     __tablename__ = "lstm_anomaly_models"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     model_id = Column(
         BigInteger,
@@ -525,7 +525,7 @@ class Platform(Base):
     __tablename__ = "platform"
     __table_args__ = (
         Index("plat", "pltfrm_id", unique=True),
-        {"schema": "augur_data"}
+        {"schema": "collection_data"}
     )
 
     pltfrm_id = Column(
@@ -548,7 +548,7 @@ class RepoGroup(Base):
     __table_args__ = (
         Index("rgidm", "repo_group_id", unique=True),
         Index("rgnameindex", "rg_name"),
-        {"schema": "augur_data",
+        {"schema": "collection_data",
         "comment": "rg_type is intended to be either a GitHub Organization or a User Created Repo Group. "},
     )
 
@@ -628,7 +628,7 @@ t_repos_fetch_log = Table(
 
 class Settings(Base):
     __tablename__ = "settings"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     id = Column(Integer, primary_key=True)
     setting = Column(String(32), nullable=False)
@@ -640,7 +640,7 @@ class Settings(Base):
 
 class TopicWord(Base):
     __tablename__ = "topic_words"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     topic_words_id = Column(
         BigInteger,
@@ -684,7 +684,7 @@ t_unknown_cache = Table(
 
 class UnresolvedCommitEmail(Base):
     __tablename__ = "unresolved_commit_emails"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     email_unresolved_id = Column(
         BigInteger,
@@ -706,7 +706,7 @@ class UnresolvedCommitEmail(Base):
 
 class UtilityLog(Base):
     __tablename__ = "utility_log"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     id = Column(
         BigInteger,
@@ -737,7 +737,7 @@ class ContributorRepo(Base):
     __table_args__ = (
         UniqueConstraint("event_id", "tool_version"),
         {
-            "schema": "augur_data",
+            "schema": "collection_data",
             "comment": 'Developed in Partnership with Andrew Brain.',
         },
     )
@@ -782,7 +782,7 @@ class ContributorsAlias(Base):
     __table_args__ = (
         UniqueConstraint("cntrb_id","alias_email", name="cntrb-email-insert-unique"),
         {
-            "schema": "augur_data",
+            "schema": "collection_data",
             "comment": "Every open source user may have more than one email used to make contributions over time. CollectOSS selects the first email it encounters for a user as its “canonical_email”. \n\nThe canonical_email is also added to the contributors_aliases table, with the canonical_email and alias_email being identical.  Using this strategy, an email search will only need to join the alias table for basic email information, and can then more easily map the canonical email from each alias row to the same, more detailed information in the contributors table for a user. ",
         },
     )
@@ -838,7 +838,7 @@ class Repo(Base):
         Index("therepo", "repo_id", unique=True),
 
         {
-            "schema": "augur_data",
+            "schema": "collection_data",
             "comment": "This table is a combination of the columns in Facade’s repo table and GHTorrent’s projects table. ",
         },
     )
@@ -1192,7 +1192,7 @@ class HistoricalRepoURLs(Base):
     """
 
     __tablename__ = "historical_repo_urls"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     repo_id = Column(ForeignKey("augur_data.repo.repo_id"), primary_key=True)
     git_url = Column(String, primary_key=True)
@@ -1200,7 +1200,7 @@ class HistoricalRepoURLs(Base):
         
 class RepoTestCoverage(Base):
     __tablename__ = "repo_test_coverage"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     repo_id = Column(
         ForeignKey("augur_data.repo.repo_id"),
@@ -1231,7 +1231,7 @@ class RepoTestCoverage(Base):
 class RepoGroupInsight(Base):
     __tablename__ = "repo_group_insights"
     __table_args__ = {
-        "schema": "augur_data",
+        "schema": "collection_data",
         "comment": 'This table is output from an analytical worker. It runs through the different metrics on a REPOSITORY_GROUP and identifies the five to ten most “interesting” metrics as defined by some kind of delta or other factor. The algorithm is going to evolve. \n\nWorker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. ',
     }
 
@@ -1266,7 +1266,7 @@ class RepoGroupsListServe(Base):
     __table_args__ = (
         UniqueConstraint("rgls_id", "repo_group_id"),
         Index("lister", "rgls_id", "repo_group_id", unique=True),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     rgls_id = Column(
@@ -1319,7 +1319,7 @@ class Commit(Base):
         Index("repo_id,commit", "repo_id", "cmt_commit_hash"),
 
         {
-            "schema": "augur_data",
+            "schema": "collection_data",
             "comment": "Commits.\nEach row represents changes to one FILE within a single commit. So you will encounter multiple rows per commit hash in many cases. ",
         },
     )
@@ -1404,7 +1404,7 @@ class CommitMessage(Base):
     __table_args__ = (
         UniqueConstraint("repo_id","cmt_hash", name="commit-message-insert-unique"),
         { 
-            "schema": "augur_data",
+            "schema": "collection_data",
             "comment": "This table holds commit messages",
         }
     )
@@ -1442,7 +1442,7 @@ class Issue(Base):
 
         UniqueConstraint("repo_id", "gh_issue_id"),
         UniqueConstraint("issue_url", name="issue-insert-unique"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     issue_id = Column(
@@ -1509,7 +1509,7 @@ class Issue(Base):
 
 class Library(Base):
     __tablename__ = "libraries"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     library_id = Column(
         BigInteger,
@@ -1551,7 +1551,7 @@ class Library(Base):
 
 class LstmAnomalyResult(Base):
     __tablename__ = "lstm_anomaly_results"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     result_id = Column(
         BigInteger,
@@ -1592,7 +1592,7 @@ class Message(Base):
         Index("msg-cntrb-id-idx", "cntrb_id"),
         Index("platformgrouper", "msg_id", "pltfrm_id"),
         Index("messagegrouper", "msg_id", "rgls_id", unique=True),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     msg_id = Column(
@@ -1661,7 +1661,7 @@ class Message(Base):
 class MessageAnalysisSummary(Base):
     __tablename__ = "message_analysis_summary"
     __table_args__ = {
-        "schema": "augur_data",
+        "schema": "collection_data",
         "comment": "In a relationally perfect world, we would have a table called “message_analysis_run” the incremented the “worker_run_id” for both message_analysis and message_analysis_summary. For now, we decided this was overkill. ",
     }
 
@@ -1701,7 +1701,7 @@ class MessageAnalysisSummary(Base):
 class MessageSentimentSummary(Base):
     __tablename__ = "message_sentiment_summary"
     __table_args__ = {
-        "schema": "augur_data",
+        "schema": "collection_data",
         "comment": "In a relationally perfect world, we would have a table called “message_sentiment_run” the incremented the “worker_run_id” for both message_sentiment and message_sentiment_summary. For now, we decided this was overkill. ",
     }
 
@@ -1749,7 +1749,7 @@ class PullRequest(Base):
             "pull_requests_idx_repo_id_data_datex", "repo_id", "data_collection_date"
         ),
         Index("pr_ID_prs_table", "pull_request_id"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     pull_request_id = Column(
@@ -1883,7 +1883,7 @@ class PullRequest(Base):
 
 class Release(Base):
     __tablename__ = "releases"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     release_id = Column(
         CHAR(256),
@@ -1916,7 +1916,7 @@ class Release(Base):
 class RepoBadging(Base):
     __tablename__ = "repo_badging"
     __table_args__ = {
-        "schema": "augur_data",
+        "schema": "collection_data",
         "comment": "This will be collected from the LF’s Badging API\nhttps://bestpractices.coreinfrastructure.org/projects.json?pq=https%3A%2F%2Fgithub.com%2Fchaoss%2Faugur\n",
     }
 
@@ -1960,7 +1960,7 @@ class RepoBadging(Base):
 
 class RepoClusterMessage(Base):
     __tablename__ = "repo_cluster_messages"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     msg_cluster_id = Column(
         BigInteger,
@@ -1988,7 +1988,7 @@ class RepoDependency(Base):
     __table_args__ = (
         UniqueConstraint("repo_id","dep_name","data_collection_date", name="deps-insert-unique"),
         {
-            "schema": "augur_data",
+            "schema": "collection_data",
             "comment": "Contains the dependencies for a repo."
         },
     )
@@ -2021,7 +2021,7 @@ class RepoDepsLibyear(Base):
     __tablename__ = "repo_deps_libyear"
     __table_args__ = (
         UniqueConstraint("repo_id","name", "data_collection_date", name="deps-libyear-insert-unique"),
-        {"schema": "augur_data"}
+        {"schema": "collection_data"}
     )
 
     repo_deps_libyear_id = Column(
@@ -2056,7 +2056,7 @@ class RepoDepsScorecard(Base):
     __tablename__ = "repo_deps_scorecard"
     __table_args__ = (
         UniqueConstraint("repo_id","name", "data_collection_date", name="deps_scorecard_new_unique"),
-        {"schema": "augur_data"}
+        {"schema": "collection_data"}
     )
 
     repo_deps_scorecard_id = Column(
@@ -2087,7 +2087,7 @@ class RepoInfo(Base):
     __table_args__ = (
         Index("repo_info_idx_repo_id_data_date_1x", "repo_id", "data_collection_date"),
         Index("repo_info_idx_repo_id_data_datex", "repo_id", "data_collection_date"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     repo_info_id = Column(
@@ -2143,7 +2143,7 @@ class RepoInfo(Base):
 class RepoInsight(Base):
     __tablename__ = "repo_insights"
     __table_args__ = {
-        "schema": "augur_data",
+        "schema": "collection_data",
         "comment": 'This table is output from an analytical worker. It runs through the different metrics on a repository and identifies the five to ten most “interesting” metrics as defined by some kind of delta or other factor. The algorithm is going to evolve. \n\nWorker Design Notes: The idea is that the "insight worker" will scan through a bunch of active metrics or "synthetic metrics" to list the most important insights. ',
     }
 
@@ -2178,7 +2178,7 @@ class RepoInsightsRecord(Base):
     __tablename__ = "repo_insights_records"
     __table_args__ = (
         Index("dater", "ri_date"),
-        {"schema": "augur_data"}
+        {"schema": "collection_data"}
     )
 
     ri_id = Column(
@@ -2223,7 +2223,7 @@ class RepoLabor(Base):
     __table_args__ = (
         UniqueConstraint("repo_id", "rl_analysis_date", "file_path", "file_name"),
         {
-            "schema": "augur_data",
+            "schema": "collection_data",
             "comment": "repo_labor is a derivative of tables used to store scc code and complexity counting statistics that are inputs to labor analysis, which are components of CHAOSS value metric calculations. ",
         },
     )
@@ -2261,7 +2261,7 @@ class RepoLabor(Base):
 
 class RepoMeta(Base):
     __tablename__ = "repo_meta"
-    __table_args__ = {"schema": "augur_data", "comment": "Project Languages"}
+    __table_args__ = {"schema": "collection_data", "comment": "Project Languages"}
 
     repo_id = Column(
         ForeignKey("augur_data.repo.repo_id"), primary_key=True, nullable=False
@@ -2285,7 +2285,7 @@ class RepoMeta(Base):
 
 class RepoSbomScan(Base):
     __tablename__ = "repo_sbom_scans"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     rsb_id = Column(
         BigInteger,
@@ -2305,7 +2305,7 @@ class RepoSbomScan(Base):
 
 class RepoStat(Base):
     __tablename__ = "repo_stats"
-    __table_args__ = {"schema": "augur_data", "comment": "Project Watchers"}
+    __table_args__ = {"schema": "collection_data", "comment": "Project Watchers"}
 
     repo_id = Column(
         ForeignKey("augur_data.repo.repo_id"), primary_key=True, nullable=False
@@ -2329,7 +2329,7 @@ class RepoStat(Base):
 
 class RepoTopic(Base):
     __tablename__ = "repo_topic"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     repo_topic_id = Column(
         BigInteger,
@@ -2356,7 +2356,7 @@ class CommitCommentRef(Base):
     __tablename__ = "commit_comment_ref"
     __table_args__ = (
         Index("comment_id", "cmt_comment_src_id", "cmt_comment_id", "msg_id"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     cmt_comment_id = Column(
@@ -2413,7 +2413,7 @@ class CommitParent(Base):
     __table_args__ = (
         Index("commit_parents_ibfk_1", "cmt_id"),
         Index("commit_parents_ibfk_2", "parent_id"),
-        {"schema": "augur_data"}
+        {"schema": "collection_data"}
     )
 
     cmt_id = Column(
@@ -2446,7 +2446,7 @@ class CommitParent(Base):
 class DiscourseInsight(Base):
     __tablename__ = "discourse_insights"
     __table_args__ = {
-        "schema": "augur_data",
+        "schema": "collection_data",
         "comment": "This table is populated by the “Discourse_Analysis_Worker”. It examines sequential discourse, using computational linguistic methods, to draw statistical inferences regarding the discourse in a particular comment thread. ",
     }
 
@@ -2475,7 +2475,7 @@ class IssueAssignee(Base):
     __table_args__ = (
         Index("issue-cntrb-assign-idx-1", "cntrb_id"),
         UniqueConstraint("issue_assignee_src_id", "issue_id", name="issue-assignee-insert-unique"),
-        {"schema": "augur_data"}
+        {"schema": "collection_data"}
     )
 
     issue_assignee_id = Column(
@@ -2535,7 +2535,7 @@ class IssueEvent(Base):
         Index("issue_events_ibfk_1", "issue_id"),
         Index("issue_events_ibfk_2", "cntrb_id"),
 
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     event_id = Column(
@@ -2620,7 +2620,7 @@ class IssueLabel(Base):
     __tablename__ = "issue_labels"
     __table_args__ = (
         UniqueConstraint("label_src_id", "issue_id"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     issue_label_id = Column(
@@ -2677,7 +2677,7 @@ class IssueMessageRef(Base):
     __tablename__ = "issue_message_ref"
     __table_args__ = (
         UniqueConstraint("issue_msg_ref_src_comment_id", "issue_id", name="issue-message-ref-insert-unique"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     issue_msg_ref_id = Column(
@@ -2739,7 +2739,7 @@ class LibraryDependency(Base):
     __tablename__ = "library_dependencies"
     __table_args__ = (
         Index("REPO_DEP", "library_id"),
-        {"schema": "augur_data"}
+        {"schema": "collection_data"}
     )
 
     lib_dependency_id = Column(
@@ -2767,7 +2767,7 @@ class LibraryDependency(Base):
 
 class LibraryVersion(Base):
     __tablename__ = "library_version"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     library_version_id = Column(
         BigInteger,
@@ -2793,7 +2793,7 @@ class LibraryVersion(Base):
 
 class MessageAnalysis(Base):
     __tablename__ = "message_analysis"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     msg_analysis_id = Column(
         BigInteger,
@@ -2836,7 +2836,7 @@ class MessageAnalysis(Base):
 
 class MessageSentiment(Base):
     __tablename__ = "message_sentiment"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     msg_analysis_id = Column(
         BigInteger,
@@ -2915,7 +2915,7 @@ class PullRequestAnalysis(Base):
     __table_args__ = (
         Index("pr_anal_idx", pull_request_id),
         Index("probability_idx", merge_probability.desc().nullslast()),
-        {"schema": "augur_data"}
+        {"schema": "collection_data"}
     )
 
     pull_request = relationship("PullRequest")
@@ -2926,7 +2926,7 @@ class PullRequestAssignee(Base):
     __table_args__ = (
         Index("pr_meta_cntrb-idx", "contrib_id"),
         UniqueConstraint("pull_request_id", "pr_assignee_src_id", name="assigniees-unique"),
-        {"schema": "augur_data"}
+        {"schema": "collection_data"}
     )
 
     pr_assignee_map_id = Column(
@@ -2987,7 +2987,7 @@ class PullRequestCommit(Base):
     __table_args__ = (
         UniqueConstraint("pull_request_id", "repo_id", "pr_cmt_sha"),
         {
-            "schema": "augur_data",
+            "schema": "collection_data",
             "comment": "Pull request commits are an enumeration of each commit associated with a pull request. \nNot all pull requests are from a branch or fork into master. \nThe commits table intends to count only commits that end up in the master branch (i.e., part of the deployed code base for a project).\nTherefore, there will be commit “SHA”’s in this table that are no associated with a commit SHA in the commits table. \nIn cases where the PR is to the master branch of a project, you will find a match. In cases where the PR does not involve the master branch, you will not find a corresponding commit SHA in the commits table. This is expected. ",
         },
     )
@@ -3044,7 +3044,7 @@ class PullRequestEvent(Base):
         UniqueConstraint("repo_id", "issue_event_src_id", name="pr_events_repo_id_event_src_id_unique"),
         UniqueConstraint("platform_id", "node_id", name="unique-pr-event-id"),
         UniqueConstraint("node_id", name="pr-unqiue-event"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     pr_event_id = Column(
@@ -3142,7 +3142,7 @@ class PullRequestFile(Base):
         Index("pr_id_pr_files","pull_request_id"),
         UniqueConstraint("pull_request_id", "repo_id", "pr_file_path", name="prfiles_unique"),
         {
-            "schema": "augur_data",
+            "schema": "collection_data",
             "comment": "Pull request commits are an enumeration of each commit associated with a pull request. \nNot all pull requests are from a branch or fork into master. \nThe commits table intends to count only commits that end up in the master branch (i.e., part of the deployed code base for a project).\nTherefore, there will be commit “SHA”’s in this table that are no associated with a commit SHA in the commits table. \nIn cases where the PR is to the master branch of a project, you will find a match. In cases where the PR does not involve the master branch, you will not find a corresponding commit SHA in the commits table. This is expected. ",
         },
     )
@@ -3196,7 +3196,7 @@ class PullRequestLabel(Base):
     __tablename__ = "pull_request_labels"
     __table_args__ = (
         UniqueConstraint("pr_src_id", "pull_request_id"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     pr_label_id = Column(
@@ -3258,7 +3258,7 @@ class PullRequestMessageRef(Base):
     __tablename__ = "pull_request_message_ref"
     __table_args__ = (
         UniqueConstraint("pr_message_ref_src_comment_id", "pull_request_id", name="pull-request-message-ref-insert-unique"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     pr_msg_ref_id = Column(
@@ -3310,7 +3310,7 @@ class PullRequestMeta(Base):
     __table_args__ = (
         Index("pr_meta-cntrbid-idx", "cntrb_id"),
         UniqueConstraint("pull_request_id", "pr_head_or_base", 'pr_sha', name="pull-request-meta-insert-unique"),
-        {"schema": "augur_data",
+        {"schema": "collection_data",
         "comment": 'Pull requests contain referencing metadata.  There are a few columns that are discrete. There are also head and base designations for the repo on each side of the pull request. Similar functions exist in GitLab, though the language here is based on GitHub.'},
     )
 
@@ -3384,7 +3384,7 @@ class PullRequestReviewer(Base):
     __table_args__ = (
         Index("pr-reviewers-cntrb-idx1", "cntrb_id"),
         UniqueConstraint("pull_request_id", "pr_reviewer_src_id"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     pr_reviewer_map_id = Column(
@@ -3446,7 +3446,7 @@ class PullRequestReview(Base):
     __table_args__ = (
         UniqueConstraint("pr_review_src_id", name="pr_review_unique"),
         Index("pr_id_pr_reviews", "pull_request_id"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     pr_review_id = Column(
@@ -3515,7 +3515,7 @@ class PullRequestReview(Base):
 
 class PullRequestTeam(Base):
     __tablename__ = "pull_request_teams"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     pr_team_id = Column(
         BigInteger,
@@ -3557,7 +3557,7 @@ class PullRequestRepo(Base):
     __tablename__ = "pull_request_repo"
     __table_args__ = (
         Index("pr-cntrb-idx-repo", "pr_cntrb_id"),
-        {"schema": "augur_data",
+        {"schema": "collection_data",
         "comment": "This table is for storing information about forks that exist as part of a pull request. Generally we do not want to track these like ordinary repositories. "},
     )
 
@@ -3601,7 +3601,7 @@ class PullRequestReviewMessageRef(Base):
     __tablename__ = "pull_request_review_message_ref"
     __table_args__ = (
         UniqueConstraint("pr_review_msg_src_id", name="pull-request-review-message-ref-insert-unique"),
-        {"schema": "augur_data"},
+        {"schema": "collection_data"},
     )
 
     pr_review_msg_ref_id = Column(
@@ -3675,7 +3675,7 @@ class PullRequestReviewMessageRef(Base):
 
 class RepoClone(Base):
     __tablename__ = "repo_clones_data"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     repo_clone_data_id = Column(
         BigInteger,
@@ -3704,7 +3704,7 @@ class RepoClone(Base):
 
 class TopicModelMeta(Base):
     __tablename__ = "topic_model_meta"
-    __table_args__ = {"schema": "augur_data"}
+    __table_args__ = {"schema": "collection_data"}
 
     model_id = Column(
         UUID(as_uuid=True),
@@ -3811,7 +3811,7 @@ class TopicModelEvent(Base):
     __table_args__ = (
         Index("ix_tme_repo_ts", "repo_id", "ts"),
         Index("ix_tme_event", "event"),
-        {"schema": "augur_data"}
+        {"schema": "collection_data"}
     )
 
     event_id = Column(
