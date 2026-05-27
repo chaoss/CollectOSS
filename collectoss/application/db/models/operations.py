@@ -83,20 +83,20 @@ t_all = Table(
     Column("Count", String),
     Column("WeightedComplexity", String),
     Column("Files", String),
-    schema="augur_operations",
+    schema="collection_operations",
 )
 
 
 class Settings(Base):
     __tablename__ = "augur_settings"
     __table_args__ = {
-        "schema": "augur_operations",
+        "schema": "collection_operations",
         "comment": "CollectOSS settings include the schema version, and the CollectOSS API Key as of 10/25/2020. Future augur settings may be stored in this table, which has the basic structure of a name-value pair. ",
     }
 
     id = Column(
         BigInteger,
-        Sequence("augur_settings_id_seq", start=1, schema="augur_operations"),
+        Sequence("augur_settings_id_seq", start=1, schema="collection_operations"),
         primary_key=True,
         server_default=text(
             "nextval('augur_operations.augur_settings_id_seq'::regclass)"
@@ -119,20 +119,20 @@ t_repos_fetch_log = Table(
         server_default=text("CURRENT_TIMESTAMP"),
     ),
     Index("repos_id,statusops", "repos_id", "status"),
-    schema="augur_operations",
+    schema="collection_operations",
     comment="For future use when we move all working tables to the augur_operations schema. ",
 )
 
 class WorkerHistory(Base):
     __tablename__ = "worker_history"
     __table_args__ = {
-        "schema": "augur_operations",
+        "schema": "collection_operations",
         "comment": "This table stores the complete history of job execution, including success and failure. It is useful for troubleshooting. ",
     }
 
     history_id = Column(
         BigInteger,
-        Sequence("gh_worker_history_history_id_seq", start=1, schema="augur_operations"),
+        Sequence("gh_worker_history_history_id_seq", start=1, schema="collection_operations"),
         primary_key=True,
         server_default=text(
             "nextval('augur_operations.gh_worker_history_history_id_seq'::regclass)"
@@ -150,7 +150,7 @@ class WorkerHistory(Base):
 class WorkerJob(Base):
     __tablename__ = "worker_job"
     __table_args__ = {
-        "schema": "augur_operations",
+        "schema": "collection_operations",
         "comment": "This table stores the jobs workers collect data for. A job is found in the code, and in the augur.config.json under the construct of a “model”. ",
     }
 
@@ -172,13 +172,13 @@ class WorkerJob(Base):
 class WorkerOauth(Base):
     __tablename__ = "worker_oauth"
     __table_args__ = {
-        "schema": "augur_operations",
+        "schema": "collection_operations",
         "comment": "This table stores credentials for retrieving data from platform API’s. Entries in this table must comply with the terms of service for each platform. ",
     }
 
     oauth_id = Column(
         BigInteger,
-        Sequence("worker_oauth_oauth_id_seq", start=1000, schema="augur_operations"),
+        Sequence("worker_oauth_oauth_id_seq", start=1000, schema="collection_operations"),
         primary_key=True,
         server_default=text(
             "nextval('augur_operations.worker_oauth_oauth_id_seq'::regclass)"
@@ -196,7 +196,7 @@ class WorkerOauth(Base):
 class WorkerSettingsFacade(Base):
     __tablename__ = "worker_settings_facade"
     __table_args__ = {
-        "schema": "augur_operations",
+        "schema": "collection_operations",
         "comment": "For future use when we move all working tables to the augur_operations schema. ",
     }
 
@@ -215,7 +215,7 @@ t_working_commits = Table(
     Column(
         "working_commit", String(40), server_default=text("'NULL'::character varying")
     ),
-    schema="augur_operations",
+    schema="collection_operations",
     comment="For future use when we move all working tables to the augur_operations schema. ",
 )
 
@@ -237,7 +237,7 @@ class Config(Base):
     __tablename__ = 'config'
     __table_args__ = (
         UniqueConstraint('section_name', "setting_name", name='unique-config-setting'),
-        {"schema": "augur_operations"}
+        {"schema": "collection_operations"}
     )
 
     id = Column(SmallInteger, primary_key=True, nullable=False)
@@ -255,7 +255,7 @@ class User(Base):
         UniqueConstraint('email', name='user-unique-email'),
         UniqueConstraint('login_name', name='user-unique-name'),
         UniqueConstraint('text_phone', name='user-unique-phone'),
-        {"schema": "augur_operations"}
+        {"schema": "collection_operations"}
     )
 
     user_id = Column(Integer, primary_key=True)
@@ -634,7 +634,7 @@ class UserGroup(Base):
     __tablename__ = 'user_groups'
     __table_args__ = (
         UniqueConstraint('user_id', 'name', name='user_groups_user_id_name_key'),
-        {"schema": "augur_operations"}
+        {"schema": "collection_operations"}
     )
     
     group_id = Column(BigInteger, primary_key=True)
@@ -743,7 +743,7 @@ class UserGroup(Base):
 
 class UserRepo(Base):
     __tablename__ = "user_repos"
-    __table_args__ = { "schema": "augur_operations" }
+    __table_args__ = { "schema": "collection_operations" }
 
     group_id = Column(
         ForeignKey("augur_operations.user_groups.group_id", name="user_repo_group_id_fkey"), primary_key=True, nullable=False
@@ -1010,7 +1010,7 @@ class UserRepo(Base):
 
 class UserSessionToken(Base):
     __tablename__ = "user_session_tokens"
-    __table_args__ = { "schema": "augur_operations" }
+    __table_args__ = { "schema": "collection_operations" }
 
     token = Column(String, primary_key=True, nullable=False)
     user_id = Column(ForeignKey("augur_operations.users.user_id", name="user_session_token_user_id_fkey"), nullable=False)
@@ -1048,7 +1048,7 @@ class UserSessionToken(Base):
 
 class ClientApplication(Base):
     __tablename__ = "client_applications"
-    __table_args__ = { "schema": "augur_operations" }
+    __table_args__ = { "schema": "collection_operations" }
 
     id = Column(String, primary_key=True, nullable=False)
     user_id = Column(ForeignKey("augur_operations.users.user_id", name="client_application_user_id_fkey"), nullable=False)
@@ -1074,7 +1074,7 @@ class ClientApplication(Base):
 
 class ForgeInstance(Base):
     __tablename__ = "forge_instance"
-    __table_args__ = { "schema": "augur_operations" }
+    __table_args__ = { "schema": "collection_operations" }
 
     id = Column(Integer, primary_key=True, nullable=False, comment="Internal unique identifier for this forge instance")
     # platform_type stores an integer that CollectOSS maps/will map to it's internal platform identifier Enum 
@@ -1089,7 +1089,7 @@ class ForgeInstance(Base):
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
-    __table_args__ = { "schema": "augur_operations" }
+    __table_args__ = { "schema": "collection_operations" }
 
     application_id = Column(ForeignKey("augur_operations.client_applications.id", name="subscriptions_application_id_fkey"), primary_key=True)
     type_id = Column(ForeignKey("augur_operations.subscription_types.id", name="subscriptions_type_id_fkey"), primary_key=True)
@@ -1101,7 +1101,7 @@ class SubscriptionType(Base):
     __tablename__ = "subscription_types"
     __table_args__ = (
         UniqueConstraint('name', name='subscription_type_title_unique'),
-        {"schema": "augur_operations"}
+        {"schema": "collection_operations"}
     )
 
 
@@ -1115,7 +1115,7 @@ class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
     __table_args__ = (
         UniqueConstraint('user_session_token', name='refresh_token_user_session_token_id_unique'),
-        {"schema": "augur_operations"}
+        {"schema": "collection_operations"}
     )
 
     id = Column(String, primary_key=True)
@@ -1201,7 +1201,7 @@ class CollectionStatus(Base):
             "NOT (core_status = 'Pending' AND secondary_status = 'Collecting')",
             name='core_secondary_dependency_check'
         ),
-        {"schema": "augur_operations"}
+        {"schema": "collection_operations"}
     )
 
     repo_id = Column(ForeignKey("collection_data.repo.repo_id", name="collection_status_repo_id_fk"), primary_key=True)
