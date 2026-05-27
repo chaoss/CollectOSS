@@ -32,7 +32,7 @@ import pathlib
 import sqlalchemy as s
 from .utilitymethods import update_repo_log, get_absolute_repo_path
 from sqlalchemy.orm.exc import NoResultFound
-from collectoss.application.db.models.augur_data import *
+from collectoss.application.db.models.data import *
 from collectoss.application.db.models.operations import CollectionStatus
 from collectoss.application.db.util import execute_session_query, convert_orm_list_to_dict_list
 from collectoss.application.db.lib import execute_sql, get_repo_by_repo_git

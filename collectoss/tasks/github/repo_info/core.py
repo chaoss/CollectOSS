@@ -9,7 +9,7 @@ from collectoss.tasks.github.util.gh_graphql_entities import request_graphql_dic
 from collectoss.application.db.models import *
 from collectoss.application.db.lib import execute_sql
 from collectoss.tasks.github.util.github_task_session import *
-from collectoss.application.db.models.augur_data import RepoBadging
+from collectoss.application.db.models.data import RepoBadging
 from urllib.parse import quote
 
 def query_committers_count(key_auth, logger, owner, repo):
