@@ -61,10 +61,10 @@ def issue_collection_status():  # TODO: make this name automatic - wrapper?
                     (
                     CAST (( COUNT ( * )) +1 AS DOUBLE PRECISION )  / CAST ( b.issues_count + 1 AS DOUBLE PRECISION )) AS ratio_issues
                 FROM
-                    augur_data.repo A,
-                    augur_data.issues d,
-                    augur_data.repo_info b,
-                    ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM augur_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e,
+                    collection_data.repo A,
+                    collection_data.issues d,
+                    collection_data.repo_info b,
+                    ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM collection_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e,
                     ( SELECT repo_id, MAX ( data_collection_date ) AS most_recently_collected_issue FROM issues GROUP BY repo_id ORDER BY repo_id ) f
                 WHERE
                     A.repo_id = b.repo_id
@@ -135,11 +135,11 @@ def pull_request_collection_status():  # TODO: make this name automatic - wrappe
                 ABS ( CAST ( ( COUNT ( * ) ) + 1 AS DOUBLE PRECISION ) / CAST ( b.pull_request_count + 1 AS DOUBLE PRECISION ) ) AS ratio_abs,
                 ( CAST ( ( COUNT ( * ) ) + 1 AS DOUBLE PRECISION ) / CAST ( b.pull_request_count + 1 AS DOUBLE PRECISION ) ) AS ratio_issues
             FROM
-                augur_data.repo A,
-                augur_data.pull_requests d,
-                augur_data.repo_info b,
-                ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM augur_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e,
-                ( SELECT repo_id, MAX ( data_collection_date ) AS last_pr_collected FROM augur_data.pull_requests GROUP BY repo_id ORDER BY repo_id ) f
+                collection_data.repo A,
+                collection_data.pull_requests d,
+                collection_data.repo_info b,
+                ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM collection_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e,
+                ( SELECT repo_id, MAX ( data_collection_date ) AS last_pr_collected FROM collection_data.pull_requests GROUP BY repo_id ORDER BY repo_id ) f
             WHERE
                 A.repo_id = b.repo_id
                 AND LOWER ( A.repo_git ) LIKE'%github.com%'

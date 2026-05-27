@@ -9,7 +9,7 @@ import pandas as pd
 @pytest.fixture
 def set_up_repo_groups(database_connection):
 
-    df = pd.read_sql(s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"), database_connection)
+    df = pd.read_sql(s.sql.text("SELECT repo_group_id FROM collection_data.repo_groups"), database_connection)
     repo_group_IDs = df['repo_group_id'].values.tolist()
 
     insert_repo_group_sql = s.sql.text("""
@@ -31,12 +31,12 @@ def set_up_repo_groups(database_connection):
 
 
 
-    df = database_connection.execute(s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"))
+    df = database_connection.execute(s.sql.text("SELECT repo_group_id FROM collection_data.repo_groups"))
 
     repo_group_IDs = [group[0] for group in df.fetchall()]
 
     insertSQL = s.sql.text("""
-        INSERT INTO augur_data.repo(repo_group_id, repo_git,
+        INSERT INTO collection_data.repo(repo_group_id, repo_git,
         tool_source, tool_version, data_source, data_collection_date)
         VALUES (:repo_group_id, :repo_git, 'CLI', 1.0, 'Git', CURRENT_TIMESTAMP)
     """)

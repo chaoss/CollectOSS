@@ -22,8 +22,8 @@ with DatabaseEngine() as engine:
     augur_data_schema = MetaData(schema = "augur_data")
     augur_data_schema.reflect(bind = engine, views = True)
     
-    commits_materialized_view: Table = augur_data_schema.tables["augur_data.api_get_all_repos_commits"]
-    issues_materialized_view: Table = augur_data_schema.tables["augur_data.api_get_all_repos_issues"]
+    commits_materialized_view: Table = augur_data_schema.tables["collection_data.api_get_all_repos_commits"]
+    issues_materialized_view: Table = augur_data_schema.tables["collection_data.api_get_all_repos_issues"]
 
 
 class RepoLoadController:

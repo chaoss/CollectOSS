@@ -140,7 +140,7 @@ def get_repo_groups(ctx: click.Context) -> pd.DataFrame:
     with ctx.obj.engine.connect() as connection:
         df = pd.read_sql(
             s.sql.text(
-                "SELECT repo_group_id, rg_name, rg_description FROM augur_data.repo_groups"
+                "SELECT repo_group_id, rg_name, rg_description FROM collection_data.repo_groups"
             ),
             connection,
         )
@@ -179,7 +179,7 @@ def add_repo_groups(ctx: click.Context, filename: str) -> None:
         with ctx.obj.engine.begin() as connection:
             # Get existing repo group IDs
             df = pd.read_sql(
-                s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"),
+                s.sql.text("SELECT repo_group_id FROM collection_data.repo_groups"),
                 connection,
             )
             repo_group_IDs = df["repo_group_id"].values.tolist()

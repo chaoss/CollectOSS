@@ -74,7 +74,7 @@ def get_newly_added_repos(session, limit, hook):
 
     repo_query = s.sql.text(f"""
         select repo_git 
-        from augur_operations.collection_status x, augur_data.repo y 
+        from augur_operations.collection_status x, collection_data.repo y 
         where x.repo_id=y.repo_id 
         and {condition_string}
         order by {order_by_field}

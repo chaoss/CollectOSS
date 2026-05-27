@@ -263,7 +263,7 @@ def test_insert_pr_contributors(github_api_key_headers, test_db_session, pr_numb
 
         with test_db_session.engine.connect() as connection:
 
-            result = connection.execute(f"SELECT * FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
+            result = connection.execute(f"SELECT * FROM collection_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
 
             assert result is not None
             assert len(result) == len(unique_contributors)
@@ -277,7 +277,7 @@ def test_insert_pr_contributors(github_api_key_headers, test_db_session, pr_numb
 
          with test_db_session.engine.connect() as connection:
 
-                connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
+                connection.execute(f"DELETE FROM collection_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
 
 repos = []
 repos.append({"owner": "chaoss", "repo": "augur"})
@@ -336,7 +336,7 @@ def test_insert_prs(github_api_key_headers, test_db_session, repo):
 
             with test_db_session.engine.connect() as connection:
 
-                result = connection.execute(f"SELECT * FROM augur_data.pull_requests;").fetchall()
+                result = connection.execute(f"SELECT * FROM collection_data.pull_requests;").fetchall()
 
                 assert result is not None
                 assert len(result) == len(prs) == len(return_data)
@@ -353,11 +353,11 @@ def test_insert_prs(github_api_key_headers, test_db_session, repo):
 
          with test_db_session.engine.connect() as connection:
 
-            connection.execute(f"DELETE FROM augur_data.pull_requests;")
+            connection.execute(f"DELETE FROM collection_data.pull_requests;")
             connection.execute("""DELETE FROM "augur_data"."repo";
                                 DELETE FROM "augur_data"."repo_groups";
                                 """)
-            connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
+            connection.execute(f"DELETE FROM collection_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
 
 
 

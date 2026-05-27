@@ -35,7 +35,7 @@ def test_execute_sql(test_db_engine):
             with DatabaseSession(logger, engine=test_db_engine) as session:
 
                 cntrb_id = data['cntrb_id']
-                result = session.execute_sql(f"SELECT * FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
+                result = session.execute_sql(f"SELECT * FROM collection_data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
 
             assert result is not None
             assert isinstance(result[0], s.engine.result.RowProxy)
@@ -57,7 +57,7 @@ def test_execute_sql(test_db_engine):
             for data in all_data:
 
                 cntrb_id = data["cntrb_id"]
-                connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}';")
+                connection.execute(f"DELETE FROM collection_data.contributors WHERE cntrb_id='{cntrb_id}';")
 
 
 def test_insert_data_with_duplicates(test_db_engine):
@@ -79,7 +79,7 @@ def test_insert_data_with_duplicates(test_db_engine):
 
             
             cntrb_id = data_1['cntrb_id']
-            result = session.execute_sql(f"SELECT * FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
+            result = session.execute_sql(f"SELECT * FROM collection_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
 
         assert result is not None
         assert len(result) == 3
@@ -94,7 +94,7 @@ def test_insert_data_with_duplicates(test_db_engine):
             for data in duplicate_data_list:
 
                 cntrb_id = data["cntrb_id"]
-                connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}';")
+                connection.execute(f"DELETE FROM collection_data.contributors WHERE cntrb_id='{cntrb_id}';")
 
 def test_insert_data_with_updates(test_db_engine):
 
@@ -117,7 +117,7 @@ def test_insert_data_with_updates(test_db_engine):
         with test_db_engine.connect() as connection:
 
             cntrb_id = data_1['cntrb_id']
-            result = connection.execute(f"SELECT * FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
+            result = connection.execute(f"SELECT * FROM collection_data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
 
         assert result is not None
         assert dict(result[0])["gh_user_id"] == 6 
@@ -127,7 +127,7 @@ def test_insert_data_with_updates(test_db_engine):
         with test_db_engine.connect() as connection:
 
             cntrb_id = data_1["cntrb_id"]
-            connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}';")
+            connection.execute(f"DELETE FROM collection_data.contributors WHERE cntrb_id='{cntrb_id}';")
 
 
 def test_insert_data_with_bulk(test_db_engine):
@@ -145,7 +145,7 @@ def test_insert_data_with_bulk(test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            result = connection.execute(f"SELECT * FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
+            result = connection.execute(f"SELECT * FROM collection_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
 
             assert result is not None
             assert len(result) == 4
@@ -160,7 +160,7 @@ def test_insert_data_with_bulk(test_db_engine):
         with test_db_engine.connect() as connection:
 
             cntrb_id = data_1["cntrb_id"]
-            connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
+            connection.execute(f"DELETE FROM collection_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
 
 
 
@@ -183,7 +183,7 @@ def test_insert_data_partial_update(test_db_engine):
         with test_db_engine.connect() as connection:
 
             cntrb_id = data_1['cntrb_id']
-            result = connection.execute(f"SELECT * FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
+            result = connection.execute(f"SELECT * FROM collection_data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
 
         assert result is not None
         assert dict(result[0])["gh_user_id"] == 6 
@@ -193,7 +193,7 @@ def test_insert_data_partial_update(test_db_engine):
         with test_db_engine.connect() as connection:
 
             cntrb_id = data_1["cntrb_id"]
-            connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}';")
+            connection.execute(f"DELETE FROM collection_data.contributors WHERE cntrb_id='{cntrb_id}';")
 
 
 issue_data_with_null_strings = []
@@ -232,7 +232,7 @@ def test_insert_issue_data_with_invalid_strings(test_db_engine):
                                                     return_columns=issue_return_columns, string_fields=issue_string_columns)
                 
                 data_inserted_count = len(issue_data_with_null_strings)
-                result = connection.execute(f"Select * FROM augur_data.issues;").fetchall()
+                result = connection.execute(f"Select * FROM collection_data.issues;").fetchall()
 
                 assert issue_return_data is not None
                 assert len(issue_return_data) == data_inserted_count
@@ -242,7 +242,7 @@ def test_insert_issue_data_with_invalid_strings(test_db_engine):
         with test_db_engine.connect() as connection:
 
             connection.execute("""
-                                DELETE FROM augur_data.issues;
+                                DELETE FROM collection_data.issues;
                                 DELETE FROM "augur_data"."repo";
                                 DELETE FROM "augur_data"."repo_groups";
                                 """)

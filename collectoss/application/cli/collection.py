@@ -211,7 +211,7 @@ def repo_reset(ctx):
             UPDATE augur_operations.collection_status 
             SET facade_status='Pending', facade_task_id=NULL, facade_data_last_collected = NULL;
 
-            TRUNCATE augur_data.commits CASCADE;
+            TRUNCATE collection_data.commits CASCADE;
             """))
 
         logger.info("Repos successfully reset")
