@@ -167,10 +167,10 @@ Example usage\:
   > [INFO] Config file loaded successfully
   > CLI: [db.check_pgpass_credentials] [INFO] Credentials found in $HOME/.pgpass
   > CLI: [db.upgrade_db_version] [INFO] Upgrading from 16 to 17
-  > ALTER TABLE "augur_data"."repo"
+  > ALTER TABLE "collection_data"."repo"
   >   ALTER COLUMN "forked_from" TYPE varchar USING "forked_from"::varchar;
   > ALTER TABLE
-  > ALTER TABLE "augur_data"."repo"
+  > ALTER TABLE "collection_data"."repo"
   >   ADD COLUMN "repo_archived" int4,
   >   ADD COLUMN "repo_archived_date_collected" timestamptz(0),
   >   ALTER COLUMN "forked_from" TYPE varchar USING "forked_from"::varchar;
