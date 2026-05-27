@@ -227,7 +227,7 @@ class BadgingDEI(Base):
     level = Column(String, nullable=False)
 
     repo_id = Column(
-        ForeignKey("augur_data.repo.repo_id", name="user_repo_user_id_fkey"), primary_key=True, nullable=False
+        ForeignKey("collection_data.repo.repo_id", name="user_repo_user_id_fkey"), primary_key=True, nullable=False
     )
 
     repo = relationship("Repo")
@@ -749,7 +749,7 @@ class UserRepo(Base):
         ForeignKey("augur_operations.user_groups.group_id", name="user_repo_group_id_fkey"), primary_key=True, nullable=False
     )
     repo_id = Column(
-        ForeignKey("augur_data.repo.repo_id", name="user_repo_user_id_fkey"), primary_key=True, nullable=False
+        ForeignKey("collection_data.repo.repo_id", name="user_repo_user_id_fkey"), primary_key=True, nullable=False
     )
 
     repo = relationship("Repo", back_populates="user_repo")
@@ -1204,7 +1204,7 @@ class CollectionStatus(Base):
         {"schema": "augur_operations"}
     )
 
-    repo_id = Column(ForeignKey("augur_data.repo.repo_id", name="collection_status_repo_id_fk"), primary_key=True)
+    repo_id = Column(ForeignKey("collection_data.repo.repo_id", name="collection_status_repo_id_fk"), primary_key=True)
     core_data_last_collected = Column(TIMESTAMP)
     core_status = Column(String, nullable=False, server_default=text("'Pending'"))
     core_task_id = Column(String)
