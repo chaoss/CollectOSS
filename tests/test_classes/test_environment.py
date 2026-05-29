@@ -6,8 +6,7 @@ logger = logging.getLogger(__name__)
 
 prefixes = ["COLLECTOSS", "OTHER"]
 
-class TestSystemEnv:
-
+class TestExtractPrefix:
     def test_env_extract_prefix(self):
         assert extract_prefix("OTHER_DB", prefixes) == "OTHER_"
         assert extract_prefix("COLLECTOSS_DB", prefixes) == "COLLECTOSS_"
@@ -19,6 +18,8 @@ class TestSystemEnv:
 
     def test_env_extract_prefix_unprefixed(self):
         assert extract_prefix("DB", prefixes) is None
+
+class TestSystemEnv:
 
     def test_fetching_env(self):
         # plain
