@@ -58,7 +58,7 @@ class TestSystemEnv:
 
         for case in cases:
             os.environ["OTHER_BOOL"] = case
-            assert SystemEnv.get_bool("OTHER_BOOL", False, prefixes) == True
+            assert SystemEnv.get_bool("OTHER_BOOL", False, prefixes) == True, f"value '{case}' should resolve to True"
             del os.environ["OTHER_BOOL"]
 
     def test_get_bool_falses(self):
@@ -67,7 +67,7 @@ class TestSystemEnv:
 
         for case in cases:
             os.environ["OTHER_BOOL"] = case
-            assert SystemEnv.get_bool("OTHER_BOOL", True, prefixes) == False
+            assert SystemEnv.get_bool("OTHER_BOOL", True, prefixes) == False, f"value '{case}' should resolve to False"
             del os.environ["OTHER_BOOL"]
 
     def test_get_bool_default(self):
@@ -76,7 +76,7 @@ class TestSystemEnv:
 
         for case in cases:
             os.environ["OTHER_BOOL"] = case
-            assert SystemEnv.get_bool("OTHER_BOOL", False, prefixes) == False
+            assert SystemEnv.get_bool("OTHER_BOOL", False, prefixes) == False, f"value '{case}' should resolve to Default value"
             del os.environ["OTHER_BOOL"]
 
         
