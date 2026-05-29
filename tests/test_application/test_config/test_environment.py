@@ -6,75 +6,77 @@ logger = logging.getLogger(__name__)
 
 prefixes = ["COLLECTOSS", "OTHER"]
 
-def test_env_extract_prefix():
-    assert extract_prefix("OTHER_DB", prefixes) == "OTHER_"
-    assert extract_prefix("COLLECTOSS_DB", prefixes) == "COLLECTOSS_"
+class TestSystemEnv:
 
-def test_env_extract_prefix_default():
-    assert extract_prefix("SOME_DB", prefixes) is None
-    assert extract_prefix("THINGY_DB", prefixes) is None
+    def test_env_extract_prefix(self):
+        assert extract_prefix("OTHER_DB", prefixes) == "OTHER_"
+        assert extract_prefix("COLLECTOSS_DB", prefixes) == "COLLECTOSS_"
 
-
-def test_env_extract_prefix_unprefixed():
-    assert extract_prefix("DB", prefixes) is None
-
-def test_fetching_env():
-    # plain
-    os.environ["COLLECTOSS_NAME"] = "A"
-    assert SystemEnv.get("COLLECTOSS_NAME") == "A"
-
-    # fallback handling
-    os.environ["OTHER_THING"] = "B"
-    assert SystemEnv.get("COLLECTOSS_THING", None, prefixes) == "B"
-
-    # cleanup
-    del os.environ["COLLECTOSS_NAME"]
-    del os.environ["OTHER_THING"]
-
-def test_fetching_env_backwards():
-    os.environ["COLLECTOSS_NAME"] = "A"
-    assert SystemEnv.get("OTHER_NAME", None, prefixes) == "A"
-
-    # cleanup
-    del os.environ["COLLECTOSS_NAME"]
-
-def test_fetching_env_no_value():
-    assert SystemEnv.get("COLLECTOSS_MISSING", None, prefixes) is None
-
-def test_fetching_env_default():
-    assert SystemEnv.get("COLLECTOSS_DEFAULT", "SOME", prefixes) == "SOME"
-
-def test_no_known_prefix():
-    # fallback handling
-    os.environ["THING"] = "C"
-    assert SystemEnv.get("THING", None, prefixes) == "C"
+    def test_env_extract_prefix_default(self):
+        assert extract_prefix("SOME_DB", prefixes) is None
+        assert extract_prefix("THINGY_DB", prefixes) is None
 
 
-def test_get_bool_trues():
+    def test_env_extract_prefix_unprefixed(self):
+        assert extract_prefix("DB", prefixes) is None
 
-    cases = ["1", "true", "True", "TRUE", "y", "Y", "yes", "Yes"]
+    def test_fetching_env(self):
+        # plain
+        os.environ["COLLECTOSS_NAME"] = "A"
+        assert SystemEnv.get("COLLECTOSS_NAME") == "A"
 
-    for case in cases:
-        os.environ["OTHER_BOOL"] = case
-        assert SystemEnv.get_bool("OTHER_BOOL", False, prefixes) == True
-        del os.environ["OTHER_BOOL"]
+        # fallback handling
+        os.environ["OTHER_THING"] = "B"
+        assert SystemEnv.get("COLLECTOSS_THING", None, prefixes) == "B"
 
-def test_get_bool_falses():
+        # cleanup
+        del os.environ["COLLECTOSS_NAME"]
+        del os.environ["OTHER_THING"]
 
-    cases = ["0", "false", "False", "FALSE", "n", "N", "no", "No"]
+    def test_fetching_env_backwards(self):
+        os.environ["COLLECTOSS_NAME"] = "A"
+        assert SystemEnv.get("OTHER_NAME", None, prefixes) == "A"
 
-    for case in cases:
-        os.environ["OTHER_BOOL"] = case
-        assert SystemEnv.get_bool("OTHER_BOOL", True, prefixes) == False
-        del os.environ["OTHER_BOOL"]
+        # cleanup
+        del os.environ["COLLECTOSS_NAME"]
 
-def test_get_bool_default():
+    def test_fetching_env_no_value(self):
+        assert SystemEnv.get("COLLECTOSS_MISSING", None, prefixes) is None
 
-    cases = ["?", "maybe", "Stuff", "333"]
+    def test_fetching_env_default(self):
+        assert SystemEnv.get("COLLECTOSS_DEFAULT", "SOME", prefixes) == "SOME"
 
-    for case in cases:
-        os.environ["OTHER_BOOL"] = case
-        assert SystemEnv.get_bool("OTHER_BOOL", False, prefixes) == False
-        del os.environ["OTHER_BOOL"]
+    def test_no_known_prefix(self):
+        # fallback handling
+        os.environ["THING"] = "C"
+        assert SystemEnv.get("THING", None, prefixes) == "C"
 
-    
+
+    def test_get_bool_trues(self):
+
+        cases = ["1", "true", "True", "TRUE", "y", "Y", "yes", "Yes"]
+
+        for case in cases:
+            os.environ["OTHER_BOOL"] = case
+            assert SystemEnv.get_bool("OTHER_BOOL", False, prefixes) == True
+            del os.environ["OTHER_BOOL"]
+
+    def test_get_bool_falses(self):
+
+        cases = ["0", "false", "False", "FALSE", "n", "N", "no", "No"]
+
+        for case in cases:
+            os.environ["OTHER_BOOL"] = case
+            assert SystemEnv.get_bool("OTHER_BOOL", True, prefixes) == False
+            del os.environ["OTHER_BOOL"]
+
+    def test_get_bool_default(self):
+
+        cases = ["?", "maybe", "Stuff", "333"]
+
+        for case in cases:
+            os.environ["OTHER_BOOL"] = case
+            assert SystemEnv.get_bool("OTHER_BOOL", False, prefixes) == False
+            del os.environ["OTHER_BOOL"]
+
+        
