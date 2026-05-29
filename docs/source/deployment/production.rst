@@ -15,7 +15,7 @@ to your deployment:
 - ``COLLECTOSS_DB`` : PostgreSQL database connection string (used if variable not set)
 
 COLLECTOSS_RESET_LOGS
-----------------
+---------------------
 
 **Description:**  
 Controls whether CollectOSS resets its log files every time the server starts. Useful for managing log size or integrating with external log rotation systems.
@@ -39,7 +39,7 @@ If set to `False`, CollectOSS will not reset logs automatically. Administrators 
    export COLLECTOSS_RESET_LOGS=False
 
 COLLECTOSS_DB
---------
+-------------
 
 **Description:**  
 Specifies the connection string for the PostgreSQL database used by CollectOSS. If omitted, the default Docker database is used.
