@@ -7,7 +7,6 @@ This is the development guide for CollectOSS. See our `Contributing to CollectOS
    :maxdepth: 1
 
    installation
-   make/toc
    logging
    documentation
    workers/toc
