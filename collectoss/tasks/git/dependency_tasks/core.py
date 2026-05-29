@@ -80,7 +80,7 @@ def generate_scorecard(logger, repo_git):
     command = '--repo=' + path
     
     #this is path where our scorecard project is located
-    path_to_scorecard = SystemEnv.get('SCORECARD_DIR', (SystemEnv.get('HOME') or "~") + '/scorecard')
+    path_to_scorecard = SystemEnv.get('SCORECARD_DIR', os.path.expanduser('~/scorecard'))
 
     #setting the environmental variable which is required by scorecard
     key_handler = GithubApiKeyHandler(logger)       
