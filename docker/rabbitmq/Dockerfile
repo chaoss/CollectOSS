@@ -3,7 +3,7 @@ FROM rabbitmq:4.1-management-alpine
 LABEL org.opencontainers.image.authors="CHAOSS https://chaoss.community"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.source="https://github.com/chaoss/collectoss"
-LABEL org.opencontainers.image.documentation="https://collectoss.readthedocs.io"
+LABEL org.opencontainers.image.documentation="https://docs.collectoss.org"
 
 ARG VERSION
 LABEL org.opencontainers.image.version=${VERSION}

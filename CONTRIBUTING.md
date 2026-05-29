@@ -9,7 +9,7 @@ These resources are a great way to meet the people behind the project, ask quest
 
 ## Learn about the project
 
-If you aren't already familiar with what CollectOSS is, please make sure you've read the [README](README.md) to get a primer on our project, and maybe take a look around the [documentation](https://collectoss.readthedocs.io/en/release/) so you know what we are about. You can also hang out in Slack or join our community meetings to learn more about what we do.
+If you aren't already familiar with what CollectOSS is, please make sure you've read the [README](README.md) to get a primer on our project, and maybe take a look around the [documentation](https://docs.collectoss.org/en/latest/) so you know what we are about. You can also hang out in Slack or join our community meetings to learn more about what we do.
 
 ## Opening an issue
 If you're experiencing an issue with CollectOSS you can search for your problem or question on our [issues](https://github.com/chaoss/collectoss/issues) page to see if someone else has already reported it. If you cannot find your issue, please feel free to [open a new one](https://github.com/chaoss/collectoss/issues/new/choose).
@@ -53,7 +53,7 @@ Github has an article called [Syncing a fork](https://docs.github.com/en/pull-re
 
 ## Helpful Links
 
-- [CollectOSS stable documentation](https://collectoss.readthedocs.io/en/release/)
+- [CollectOSS stable documentation](https://docs.collectoss.org/en/latest/)
 - [CHAOSS Getting Started page](https://chaoss.community/kb-getting-started/)
 
 **Git & GitHub**
