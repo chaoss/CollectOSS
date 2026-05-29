@@ -16,7 +16,7 @@ ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os
 
 logger = logging.getLogger(__name__)
 
-ENVVAR_PREFIX = "AUGUR_"
+ENVVAR_PREFIX = "COLLECTOSS_"
 
 @click.group('config', short_help='Generate an augur.config.json')
 @click.pass_context
