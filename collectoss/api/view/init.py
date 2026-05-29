@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from collectoss.application.logs import SystemLogger
 import secrets, yaml

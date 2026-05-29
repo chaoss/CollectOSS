@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 from collectoss.application.db.models import *
-from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value, get_session
+from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value
 from collectoss.application.environment import SystemEnv
 from collectoss.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from collectoss.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
