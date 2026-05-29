@@ -18,18 +18,21 @@ logger = logging.getLogger(__name__)
 
 ENVVAR_PREFIX = "COLLECTOSS_"
 
+def get_transitional_envs(name: str) -> list:
+    return [ENVVAR_PREFIX + name, "AUGUR_" + name]
+
 @click.group('config', short_help='Generate an augur.config.json')
 @click.pass_context
 def cli(ctx):
     ctx.obj = DatabaseContext()
 
 @cli.command('init')
-@click.option('--github-api-key', help="GitHub API key for data collection from the GitHub API", envvar=ENVVAR_PREFIX + 'GITHUB_API_KEY')
-@click.option('--facade-repo-directory', help="Directory on the database server where Facade should clone repos", envvar=ENVVAR_PREFIX + 'FACADE_REPO_DIRECTORY')
-@click.option('--gitlab-api-key', help="GitLab API key for data collection from the GitLab API", envvar=ENVVAR_PREFIX + 'GITLAB_API_KEY')
-@click.option('--redis-conn-string', help="String to connect to redis cache", envvar=ENVVAR_PREFIX + 'REDIS_CONN_STRING')
-@click.option('--rabbitmq-conn-string', help="String to connect to rabbitmq broker", envvar=ENVVAR_PREFIX + 'RABBITMQ_CONN_STRING')
-@click.option('--logs-directory', help="Directory to store logs", envvar=ENVVAR_PREFIX + 'LOGS_DIRECTORY')
+@click.option('--github-api-key', help="GitHub API key for data collection from the GitHub API", envvar=get_transitional_envs('GITHUB_API_KEY'))
+@click.option('--facade-repo-directory', help="Directory on the database server where Facade should clone repos", envvar=get_transitional_envs('FACADE_REPO_DIRECTORY'))
+@click.option('--gitlab-api-key', help="GitLab API key for data collection from the GitLab API", envvar=get_transitional_envs('GITLAB_API_KEY'))
+@click.option('--redis-conn-string', help="String to connect to redis cache", envvar=get_transitional_envs('REDIS_CONN_STRING'))
+@click.option('--rabbitmq-conn-string', help="String to connect to rabbitmq broker", envvar=get_transitional_envs('RABBITMQ_CONN_STRING'))
+@click.option('--logs-directory', help="Directory to store logs", envvar=get_transitional_envs('LOGS_DIRECTORY'))
 @test_connection
 @test_db_connection
 @with_database
