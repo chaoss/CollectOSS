@@ -17,6 +17,7 @@ from collectoss.application.db.session import DatabaseSession
 from collectoss.application.db import get_engine
 from collectoss.application.db.lib import get_session
 from collectoss.application.config import SystemConfig
+from collectoss.application.environment import SystemEnv
 from collectoss.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
 from collectoss.application.db.models import Repo
 from collectoss.tasks.util.collection_state import CollectionState
