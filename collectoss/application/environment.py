@@ -16,16 +16,13 @@ def extract_prefix(key: str, prefixes: list[str], separator = "_") -> Optional[s
     Returns:
         str: The detected prefix (including any separators) if any, otherwise None
     """
-    prefix_len = 0
+    k = key.upper()
     for p in prefixes:
-        p = p.upper()
-        k = key.upper()
-        if k.startswith(p):
-            prefix_len += len(p)
-
-            if k[prefix_len] == separator:
-                prefix_len += len(separator)
-            return key[0:prefix_len]
+        p_up = p.upper()
+        if k == p_up:
+            return key[:len(p)]
+        if k.startswith(p_up + separator):
+            return key[:len(p) + len(separator)]
     return None
 
 
