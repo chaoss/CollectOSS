@@ -202,16 +202,16 @@ def repo_reset(ctx):
     """
     with ctx.obj.engine.connect() as connection:
         connection.execute(s.sql.text("""
-            UPDATE augur_operations.collection_status 
+            UPDATE collection_operations.collection_status 
             SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
 
-            UPDATE augur_operations.collection_status 
+            UPDATE collection_operations.collection_status 
             SET secondary_status='Pending',secondary_task_id = NULL, secondary_data_last_collected = NULL;
 
-            UPDATE augur_operations.collection_status 
+            UPDATE collection_operations.collection_status 
             SET facade_status='Pending', facade_task_id=NULL, facade_data_last_collected = NULL;
 
-            TRUNCATE augur_data.commits CASCADE;
+            TRUNCATE collection_data.commits CASCADE;
             """))
 
         logger.info("Repos successfully reset")
@@ -279,31 +279,31 @@ def cleanup_after_collection_halt(logger_instance, engine):
 #Make sure that database reflects collection status when processes are killed/stopped.
 def clean_collection_status(session):
     session.execute_sql(s.sql.text("""
-        UPDATE augur_operations.collection_status 
+        UPDATE collection_operations.collection_status 
         SET core_status='Pending',core_task_id = NULL
         WHERE core_status='Collecting' AND core_data_last_collected IS NULL;
 
-        UPDATE augur_operations.collection_status
+        UPDATE collection_operations.collection_status
         SET core_status='Success',core_task_id = NULL
         WHERE core_status='Collecting' AND core_data_last_collected IS NOT NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE collection_operations.collection_status 
         SET secondary_status='Pending',secondary_task_id = NULL
         WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE collection_operations.collection_status 
         SET secondary_status='Success',secondary_task_id = NULL
         WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NOT NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE collection_operations.collection_status 
         SET facade_status='Update', facade_task_id=NULL
         WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE collection_operations.collection_status 
         SET facade_status='Success', facade_task_id=NULL
         WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NOT NULL;
 
-        UPDATE augur_operations.collection_status
+        UPDATE collection_operations.collection_status
         SET facade_status='Pending', facade_task_id=NULL
         WHERE facade_status='Failed Clone' OR facade_status='Initializing';
     """))
@@ -311,7 +311,7 @@ def clean_collection_status(session):
 
 def assign_orphan_repos_to_default_user(session):
     query = s.sql.text("""
-        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.user_repos)
+        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM collection_operations.user_repos)
     """)
 
     repos = session.execute_sql(query).fetchall()

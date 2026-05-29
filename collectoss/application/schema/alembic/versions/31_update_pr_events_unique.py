@@ -20,7 +20,7 @@ depends_on = None
 
     # conn = op.get_bind() 
     # conn.execute(text("""
-    #     UPDATE pull_request_events
+    #     UPDATE augur_data.pull_request_events
     #     SET issue_event_src_id = substring(node_url FROM '.*/([0-9]+)$')::BIGINT;
     # """))
 
@@ -32,7 +32,7 @@ def upgrade():
 
     with engine.connect() as conn:
 
-        result = conn.execute(text("SELECT COUNT(*) FROM pull_request_events WHERE issue_event_src_id=pr_platform_event_id"))
+        result = conn.execute(text("SELECT COUNT(*) FROM augur_data.pull_request_events WHERE issue_event_src_id=pr_platform_event_id"))
         total_rows = result.scalar()
         if total_rows != 0:
             print(f"Rows needing updated: {total_rows}")
@@ -43,14 +43,14 @@ def upgrade():
                 result = conn.execute(text("""
                     WITH cte AS (
                         SELECT pr_event_id 
-                        FROM pull_request_events 
+                        FROM augur_data.pull_request_events 
                         WHERE issue_event_src_id=pr_platform_event_id 
                         LIMIT 250000
                     )
-                    UPDATE pull_request_events
+                    UPDATE augur_data.pull_request_events
                     SET issue_event_src_id = substring(node_url FROM '.*/([0-9]+)$')::BIGINT
                     FROM cte
-                    WHERE pull_request_events.pr_event_id = cte.pr_event_id
+                    WHERE augur_data.pull_request_events.pr_event_id = cte.pr_event_id
                     RETURNING 1;
                 """))
 
@@ -77,7 +77,7 @@ def downgrade():
     print("Please run in background. This downgrade will take a very *very* long time")
     conn = op.get_bind() 
     conn.execute(text("""
-        UPDATE pull_request_events
+        UPDATE augur_data.pull_request_events
         SET issue_event_src_id = pr_platform_event_id
         WHERE issue_event_src_id <> pr_platform_event_id;
     """))

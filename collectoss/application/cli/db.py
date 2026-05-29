@@ -140,7 +140,7 @@ def get_repo_groups(ctx: click.Context) -> pd.DataFrame:
     with ctx.obj.engine.connect() as connection:
         df = pd.read_sql(
             s.sql.text(
-                "SELECT repo_group_id, rg_name, rg_description FROM augur_data.repo_groups"
+                "SELECT repo_group_id, rg_name, rg_description FROM collection_data.repo_groups"
             ),
             connection,
         )
@@ -179,14 +179,14 @@ def add_repo_groups(ctx: click.Context, filename: str) -> None:
         with ctx.obj.engine.begin() as connection:
             # Get existing repo group IDs
             df = pd.read_sql(
-                s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"),
+                s.sql.text("SELECT repo_group_id FROM collection_data.repo_groups"),
                 connection,
             )
             repo_group_IDs = df["repo_group_id"].values.tolist()
 
             insert_repo_group_sql = s.sql.text(
                 """
-            INSERT INTO "augur_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_id, :repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP);
+            INSERT INTO "collection_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_id, :repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP);
             """
             )
 
@@ -262,7 +262,7 @@ def add_github_org(ctx, organization_name):
 def get_db_version(engine):
     db_version_sql = s.sql.text(
         """
-        SELECT * FROM augur_operations.augur_settings WHERE setting = 'augur_data_version'
+        SELECT * FROM collection_operations.augur_settings WHERE setting = 'augur_data_version'
         """
     )
 
@@ -342,11 +342,11 @@ def update_api_key(ctx, api_key):
     """
     update_api_key_sql = s.sql.text(
         """
-        INSERT INTO augur_operations.augur_settings (setting,VALUE) VALUES ('augur_api_key','HudMhTyPW7wiaWopUKgRoGCxlIUulw4g') ON CONFLICT (setting)
+        INSERT INTO collection_operations.augur_settings (setting,VALUE) VALUES ('augur_api_key','HudMhTyPW7wiaWopUKgRoGCxlIUulw4g') ON CONFLICT (setting)
         DO
         UPDATE
         SET VALUE='HudMhTyPW7wiaWopUKgRoGCxlIUulw4g';
-        --UPDATE augur_operations.augur_settings SET VALUE = :api_key WHERE setting='augur_api_key';
+        --UPDATE collection_operations.augur_settings SET VALUE = :api_key WHERE setting='augur_api_key';
     """
     )
 
@@ -363,7 +363,7 @@ def update_api_key(ctx, api_key):
 def get_api_key(ctx):
     get_api_key_sql = s.sql.text(
         """
-        SELECT value FROM augur_operations.augur_settings WHERE setting='augur_api_key';
+        SELECT value FROM collection_operations.augur_settings WHERE setting='augur_api_key';
     """
     )
 

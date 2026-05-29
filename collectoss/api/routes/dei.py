@@ -21,7 +21,7 @@ from ..server import app
 logger = logging.getLogger(__name__)
 
 from collectoss.api.routes import API_VERSION
-from collectoss.application.db.models.augur_operations import FRONTEND_REPO_GROUP_NAME
+from collectoss.application.db.models.operations import FRONTEND_REPO_GROUP_NAME
 
 @app.route(f"/{API_VERSION}/dei/repo/add", methods=['POST'])
 @ssl_required

@@ -105,7 +105,7 @@ def create_database_engine(url: str, **kwargs) -> Engine:
         existing_autocommit = dbapi_connection.autocommit
         dbapi_connection.autocommit = True
         cursor = dbapi_connection.cursor()
-        cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
+        cursor.execute("SET SESSION search_path=public,collection_data,collection_operations,spdx")
         cursor.close()
         dbapi_connection.autocommit = existing_autocommit
 

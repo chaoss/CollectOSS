@@ -10,7 +10,7 @@ from collectoss.tasks.github.util.github_task_session import GithubTaskSession
 from collectoss.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
 from collectoss.application.db.lib import get_group_by_name, get_repo_by_repo_git, get_github_repo_by_src_id, get_gitlab_repo_by_src_id
 from collectoss.tasks.github.util.util import get_owner_repo
-from collectoss.application.db.models.augur_operations import retrieve_owner_repos, FRONTEND_REPO_GROUP_NAME, RepoGroup, CollectionStatus
+from collectoss.application.db.models.operations import retrieve_owner_repos, FRONTEND_REPO_GROUP_NAME, RepoGroup, CollectionStatus
 from collectoss.tasks.github.util.github_paginator import hit_api
 
 from collectoss.application.db.models import UserRepo, Repo
