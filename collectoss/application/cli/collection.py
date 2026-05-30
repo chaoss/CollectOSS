@@ -14,6 +14,7 @@ import uuid
 import traceback
 import sqlalchemy as s
 
+from collectoss.application.environment import SystemEnv
 from collectoss.tasks.start_tasks import collection_monitor, create_collection_status_records
 from collectoss.tasks.git.facade_tasks import clone_repos
 from collectoss.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
@@ -45,7 +46,7 @@ def start(ctx, development):
     """Start CollectOSS's backend server."""
 
     try:
-        if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
+        if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
             raise_open_file_limit(100000)
     except Exception as e: 
         logger.error(
@@ -75,7 +76,7 @@ def start(ctx, development):
         keypub.publish(key, "gitlab_rest")
     
     if development:
-        os.environ["AUGUR_DEV"] = "1"
+        SystemEnv.set("AUGUR_DEV", "1")
         logger.info("Starting in development mode")
 
     core_worker_count = get_value("Celery", 'core_worker_count')
@@ -237,7 +238,7 @@ def get_collection_processes():
 def is_collection_process(process):
 
     command = ''.join(process.info['cmdline'][:]).lower()
-    if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in command:
+    if SystemEnv.get('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in command:
         if process.pid != os.getpid():
             
             if "collectossbackendcollection" in command  or "celery_app.celery_appbeat" in command:

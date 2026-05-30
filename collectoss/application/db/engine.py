@@ -7,6 +7,7 @@ import subprocess
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
+from collectoss.application.environment import SystemEnv
 from collectoss.application.db.util import catch_operational_error
 
 
@@ -61,7 +62,7 @@ def get_database_string() -> str:
         postgres database string
     """
 
-    db_environment_var = os.getenv("AUGUR_DB")
+    db_environment_var = SystemEnv.get("COLLECTOSS_DB")
 
     try:
         current_dir = os.getcwd()

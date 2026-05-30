@@ -13,14 +13,14 @@ Before you get off to such a quick start, go ahead and
 
 .. code:: python
 
-    AUGUR_DB=collectoss
-    AUGUR_DB_USER=collectoss
-    AUGUR_DB_PASSWORD=password_here
+    COLLECTOSS_DB=collectoss
+    COLLECTOSS_DB_USER=collectoss
+    COLLECTOSS_DB_PASSWORD=password_here
 
-    AUGUR_GITHUB_API_KEY=ghp_value_here
-    AUGUR_GITHUB_USERNAME=gh_username
-    AUGUR_GITLAB_API_KEY=placeholder
-    AUGUR_GITLAB_USERNAME=placeholder
+    COLLECTOSS_GITHUB_API_KEY=ghp_value_here
+    COLLECTOSS_GITHUB_USERNAME=gh_username
+    COLLECTOSS_GITLAB_API_KEY=placeholder
+    COLLECTOSS_GITLAB_USERNAME=placeholder
 
 5. Build the container using one of the following commands:
 
@@ -57,14 +57,14 @@ And collectoss should be up and running!
 
   .. code-block::
 
-    AUGUR_DB=collectoss
-    AUGUR_DB_USER=collectoss
-    AUGUR_DB_PASSWORD=password_here
+    COLLECTOSS_DB=collectoss
+    COLLECTOSS_DB_USER=collectoss
+    COLLECTOSS_DB_PASSWORD=password_here
 
-    AUGUR_GITHUB_API_KEY=ghp_value_here
-    AUGUR_GITHUB_USERNAME=gh_username
-    AUGUR_GITLAB_API_KEY=placeholder
-    AUGUR_GITLAB_USERNAME=placeholder
+    COLLECTOSS_GITHUB_API_KEY=ghp_value_here
+    COLLECTOSS_GITHUB_USERNAME=gh_username
+    COLLECTOSS_GITLAB_API_KEY=placeholder
+    COLLECTOSS_GITLAB_USERNAME=placeholder
 
   4. Execute the code from the base directory of the CollectOSS repository:
 

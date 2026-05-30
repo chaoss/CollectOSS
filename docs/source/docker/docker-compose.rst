@@ -27,16 +27,16 @@ This section of the documentation details how to use CollectOSS's Docker Compose
 .. warning::
 
     Don't forget to provide your external database credentials in a file called ``.env`` file. Make sure all the following environment variables are specified, keep placeholder values if you don't need some of them.
-    Don't specify AUGUR_DB if you want the docker database to be used.
+    Don't specify COLLECTOSS_DB if you want the docker database to be used.
 
     Example .env:
     .. code::
 
-        AUGUR_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
-        AUGUR_GITHUB_USERNAME=usernameGithub
-        AUGUR_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
-        AUGUR_GITLAB_USERNAME=usernameGitlab
-        AUGUR_DB=yourDBString
+        COLLECTOSS_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
+        COLLECTOSS_GITHUB_USERNAME=usernameGithub
+        COLLECTOSS_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
+        COLLECTOSS_GITLAB_USERNAME=usernameGitlab
+        COLLECTOSS_DB=yourDBString
 
 
 

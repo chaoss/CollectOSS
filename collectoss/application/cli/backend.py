@@ -15,6 +15,7 @@ import traceback
 import requests
 from redis.exceptions import ConnectionError as RedisConnectionError
 
+from collectoss.application.environment import SystemEnv
 from collectoss.tasks.start_tasks import collection_monitor, create_collection_status_records
 from collectoss.tasks.git.facade_tasks import clone_repos
 from collectoss.tasks.github.contributors import process_contributors
@@ -31,7 +32,7 @@ import sqlalchemy as s
 
 from keyman.KeyClient import KeyClient, KeyPublisher
 
-reset_logs = os.getenv("AUGUR_RESET_LOGS", 'True').lower() in ('true', '1', 't', 'y', 'yes')
+reset_logs = SystemEnv.get_bool("AUGUR_RESET_LOGS", True)
 
 logger = SystemLogger("collectoss", reset_logfiles=reset_logs).get_logger()
 
@@ -61,7 +62,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     signal.signal(signal.SIGINT, manager.shutdown_signal_handler)
 
     try:
-        if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
+        if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
             raise_open_file_limit(100000)
     except Exception as e:
         logger.error(
@@ -71,10 +72,10 @@ def start(ctx, disable_collection, development, pidfile, port):
         raise e
 
     if development:
-        os.environ["AUGUR_DEV"] = "1"
+        SystemEnv.set("AUGUR_DEV", "1")
         logger.info("Starting in development mode")
     
-    os.environ["AUGUR_PIDFILE"] = pidfile
+    SystemEnv.set("AUGUR_PIDFILE", pidfile)
 
     try:
         gunicorn_location = os.getcwd() + "/collectoss/api/gunicorn_conf.py"
@@ -86,10 +87,10 @@ def start(ctx, disable_collection, development, pidfile, port):
     if not port:
         port = get_value("Server", "port")
     
-    os.environ["AUGUR_PORT"] = str(port)
+    SystemEnv.set("AUGUR_PORT", str(port))
     
     if disable_collection:
-        os.environ["AUGUR_DISABLE_COLLECTION"] = "1"
+        SystemEnv.set("AUGUR_DISABLE_COLLECTION", "1")
     
     core_worker_count = get_value("Celery", 'core_worker_count')
     secondary_worker_count = get_value("Celery", 'secondary_worker_count')
@@ -130,7 +131,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     processes = start_celery_worker_processes((core_worker_count, secondary_worker_count, facade_worker_count), disable_collection)
     manager.processes = processes
 
-    celery_beat_schedule_db = os.getenv("CELERYBEAT_SCHEDULE_DB", "celerybeat-schedule.db")
+    celery_beat_schedule_db = SystemEnv.get("CELERYBEAT_SCHEDULE_DB", "celerybeat-schedule.db")
     if os.path.exists(celery_beat_schedule_db):
             logger.info("Deleting old task schedule")
             os.remove(celery_beat_schedule_db)
@@ -144,7 +145,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     manager.keypub = keypub
     
     if not disable_collection:
-        if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
+        if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
             orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
 
         # Wait for orchestrator startup
@@ -355,10 +356,10 @@ def export_env(config):
     Exports your GitHub key and database credentials
     """
 
-    export_file = open(os.getenv('AUGUR_EXPORT_FILE', 'collectoss_export_env.sh'), 'w+')
+    export_file = open(SystemEnv.get('COLLECTOSS_EXPORT_FILE') or 'collectoss_export_env.sh', 'w+')
     export_file.write('#!/bin/bash')
     export_file.write('\n')
-    env_file = open(os.getenv('AUGUR_ENV_FILE', 'docker_env.txt'), 'w+')
+    env_file = open(SystemEnv.get('COLLECTOSS_ENV_FILE') or 'docker_env.txt', 'w+')
 
     for env_var in config.get_env_config().items():
         if "LOG" not in env_var[0]:
@@ -403,7 +404,7 @@ def get_backend_processes():
     for process in psutil.process_iter(['cmdline', 'name', 'environ']):
         if process.info['cmdline'] is not None and process.info['environ'] is not None:
             try:
-                if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in ''.join(process.info['cmdline'][:]).lower():
+                if SystemEnv.get('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in ''.join(process.info['cmdline'][:]).lower():
                     if process.pid != os.getpid():
                         process_list.append(process)
             except (KeyError, FileNotFoundError):

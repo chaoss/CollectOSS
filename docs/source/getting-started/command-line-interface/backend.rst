@@ -145,29 +145,29 @@ Successful output looks like:
 
 .. code-block:: bash
 
-  > CLI: [util.export_env] [INFO] Exporting AUGUR_GITHUB_API_KEY
-  > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_HOST
-  > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_NAME
-  > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_PORT
-  > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_USER
-  > CLI: [util.export_env] [INFO] Exporting AUGUR_DB_PASSWORD
+  > CLI: [util.export_env] [INFO] Exporting COLLECTOSS_GITHUB_API_KEY
+  > CLI: [util.export_env] [INFO] Exporting COLLECTOSS_DB_HOST
+  > CLI: [util.export_env] [INFO] Exporting COLLECTOSS_DB_NAME
+  > CLI: [util.export_env] [INFO] Exporting COLLECTOSS_DB_PORT
+  > CLI: [util.export_env] [INFO] Exporting COLLECTOSS_DB_USER
+  > CLI: [util.export_env] [INFO] Exporting COLLECTOSS_DB_PASSWORD
 
   # contents of collectoss_export_env.sh
   #!/bin/bash
-  export AUGUR_GITHUB_API_KEY="your_key_here"
-  export AUGUR_DB_HOST="your_host"
-  export AUGUR_DB_NAME="your_db_name"
-  export AUGUR_DB_PORT="your_db_port"
-  export AUGUR_DB_USER="your_db_user"
-  export AUGUR_DB_PASSWORD="your_db_password"
+  export COLLECTOSS_GITHUB_API_KEY="your_key_here"
+  export COLLECTOSS_DB_HOST="your_host"
+  export COLLECTOSS_DB_NAME="your_db_name"
+  export COLLECTOSS_DB_PORT="your_db_port"
+  export COLLECTOSS_DB_USER="your_db_user"
+  export COLLECTOSS_DB_PASSWORD="your_db_password"
 
   # contents of docker_env.txt
-  AUGUR_GITHUB_API_KEY="your_key_here"
-  AUGUR_DB_HOST="your_host"
-  AUGUR_DB_NAME="your_db_name"
-  AUGUR_DB_PORT="your_db_port"
-  AUGUR_DB_USER="your_db_user"
-  AUGUR_DB_PASSWORD="your_db_password"
+  COLLECTOSS_GITHUB_API_KEY="your_key_here"
+  COLLECTOSS_DB_HOST="your_host"
+  COLLECTOSS_DB_NAME="your_db_name"
+  COLLECTOSS_DB_PORT="your_db_port"
+  COLLECTOSS_DB_USER="your_db_user"
+  COLLECTOSS_DB_PASSWORD="your_db_password"
 
 
 ``repo-reset``

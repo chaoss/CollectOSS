@@ -4,15 +4,16 @@ import random
 import time
 
 from keyman.KeyOrchestrationAPI import spec, WaitKeyTimeout, InvalidRequest
+from collectoss.application.environment import SystemEnv
 
-if os.environ.get("KEYMAN_DOCKER"):
+if SystemEnv.get("KEYMAN_DOCKER"):
     import sys
     import redis
     import logging
 
     sys.path.append("/collectoss")
 
-    conn = redis.Redis.from_url(os.environ.get("REDIS_CONN_STRING"))
+    conn = redis.Redis.from_url(SystemEnv.get("REDIS_CONN_STRING"))
 
     # Just log to stdout if we're running in docker
     logger = logging.Logger("KeyOrchestrator")

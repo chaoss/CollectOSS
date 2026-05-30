@@ -14,7 +14,8 @@ from collectoss.tasks.github.messages import *
 from collectoss.tasks.github.pull_requests.tasks import *
 from collectoss.tasks.github.repo_info.tasks import *
 from collectoss.tasks.github.releases.tasks import *
-if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
+from collectoss.application.environment import SystemEnv
+if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
     from collectoss.tasks.data_analysis import *
 from collectoss.tasks.github.detect_move.tasks import detect_github_repo_move_core, detect_github_repo_move_secondary
 from collectoss.tasks.github.releases.tasks import collect_releases
@@ -38,7 +39,7 @@ from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import
 from collectoss.application.db.lib import execute_sql, get_session
 from collectoss.application.config import SystemConfig
 
-RUNNING_DOCKER = os.environ.get('AUGUR_DOCKER_DEPLOY') == "1"
+RUNNING_DOCKER = SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') == "1"
 
 CELERY_GROUP_TYPE = type(group())
 CELERY_CHAIN_TYPE = type(chain())
