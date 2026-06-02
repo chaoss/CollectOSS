@@ -29,7 +29,7 @@ from collectoss.application.cli._csv_utils import (
     process_repo_group_csv,
 )
 from collectoss.application.environment import SystemEnv
-from collectoss.util.startup import check_init_schema
+from collectoss.util.startup import check_init_schema, check_update_schema
 
 logger = logging.getLogger(__name__)
 
@@ -292,7 +292,7 @@ def upgrade_db_version():
     """
     Upgrade the configured database to the latest version
     """
-    check_call(["alembic", "upgrade", "head"])
+    check_update_schema()
 
 
 @cli.command("check-for-upgrade")
