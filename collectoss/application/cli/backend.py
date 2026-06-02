@@ -71,6 +71,7 @@ def start(ctx, disable_collection, development, pidfile, port):
 
     setup_facade_directory()
 
+    merge_config(ctx.obj.engine, logger)
     try:
         if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
             raise_open_file_limit(100000)

@@ -7,8 +7,14 @@ import getpass
 import subprocess
 
 from sqlalchemy.orm.attributes import get_history
+from collectoss.application.config import SystemConfig
+from collectoss.application.db.session import DatabaseSession
 from collectoss.application.environment import SystemEnv
 from typing_extensions import deprecated
+
+from collectoss.util.inspect_without_import import get_phase_names_without_import
+
+ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 def check_init_schema():
     """Initialize the CollectOSS database schema as appropriate
@@ -133,3 +139,79 @@ def setup_facade_directory(logger):
         c.writelines(credentials)
     
     subprocess.call(["git", "config", "--global", "credential.helper", "store", "--file", str(git_credentials)])
+
+
+def merge_config(
+    engine,
+    logger,
+    github_api_key:str | None = None,
+    facade_repo_directory:str | None = None,
+    gitlab_api_key:str | None = None,
+    redis_conn_string:str | None = None,
+    rabbitmq_conn_string:str | None = None,
+    logs_directory:str | None = None
+    ):
+    """Merge config items provided via environment variables into a place where SystemConfig can pick them up.
+
+    Args:
+        engine: the database engine to connect to
+        logger: object to use for outputting logging messages
+        github_api_key (str): config value
+        facade_repo_directory (str): config value
+        gitlab_api_key (str): config value
+        redis_conn_string (str): config value
+        rabbitmq_conn_string (str): config value
+        logs_directory (str): config value
+    """
+
+    github_api_key = github_api_key or SystemEnv.get("COLLECTOSS_GITHUB_API_KEY")
+    facade_repo_directory = github_api_key or SystemEnv.get("COLLECTOSS_FACADE_REPO_DIRECTORY")
+    gitlab_api_key = github_api_key or SystemEnv.get("COLLECTOSS_GITLAB_API_KEY")
+    redis_conn_string = github_api_key or SystemEnv.get("REDIS_CONN_STRING")
+    rabbitmq_conn_string = github_api_key or SystemEnv.get("RABBITMQ_CONN_STRING")
+    logs_directory = github_api_key or SystemEnv.get("COLLECTOSS_LOGS_DIRECTORY")
+
+    keys = {}
+
+    keys["github_api_key"] = github_api_key
+    keys["gitlab_api_key"] = gitlab_api_key
+
+    with DatabaseSession(logger, engine=engine) as session:
+
+        config = SystemConfig(logger, session)
+
+        augmented_config = config.base_config
+
+        phase_names = get_phase_names_without_import()
+
+        #Add all phases as enabled by default
+        for name in phase_names:
+
+            if name not in augmented_config['Task_Routine']:
+                augmented_config['Task_Routine'].update({name : 1})
+
+        #print(default_config)
+        if redis_conn_string:
+
+            try:
+                redis_string_array = redis_conn_string.split("/")
+                cache_number = int(redis_string_array[-1])
+                digits = len(str(cache_number))
+
+                redis_conn_string = redis_conn_string[:-digits]
+            
+            except ValueError:
+                pass
+
+            augmented_config["Redis"]["connection_string"] = redis_conn_string
+
+        if rabbitmq_conn_string:
+            augmented_config["RabbitMQ"]["connection_string"] = rabbitmq_conn_string
+
+        augmented_config["Keys"] = keys
+
+        augmented_config["Facade"]["repo_directory"] = facade_repo_directory
+
+        augmented_config["Logging"]["logs_directory"] = logs_directory or (ROOT_PROJECT_REPO_DIRECTORY + "/logs/")
+
+        config.load_config_from_dict(augmented_config)

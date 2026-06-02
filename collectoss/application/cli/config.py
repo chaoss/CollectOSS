@@ -11,8 +11,7 @@ from collectoss.application.db.models import Config
 from collectoss.application.db.session import DatabaseSession
 from collectoss.application.config import SystemConfig, redact_setting_value
 from collectoss.application.cli import DatabaseContext, test_connection, test_db_connection, with_database
-from collectoss.util.inspect_without_import import get_phase_names_without_import
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+from collectoss.util.startup import merge_config
 
 logger = logging.getLogger(__name__)
 
@@ -61,52 +60,8 @@ def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redi
     if facade_repo_directory[-1] != "/":
         facade_repo_directory += "/"
             
-
-    keys = {}
-
-    keys["github_api_key"] = github_api_key
-    keys["gitlab_api_key"] = gitlab_api_key
-
-    with DatabaseSession(logger, engine=ctx.obj.engine) as session:
-
-        config = SystemConfig(logger, session)
-
-        augmented_config = config.base_config
-
-        phase_names = get_phase_names_without_import()
-
-        #Add all phases as enabled by default
-        for name in phase_names:
-
-            if name not in augmented_config['Task_Routine']:
-                augmented_config['Task_Routine'].update({name : 1})
-
-        #print(default_config)
-        if redis_conn_string:
-
-            try:
-                redis_string_array = redis_conn_string.split("/")
-                cache_number = int(redis_string_array[-1])
-                digits = len(str(cache_number))
-
-                redis_conn_string = redis_conn_string[:-digits]
-            
-            except ValueError:
-                pass
-
-            augmented_config["Redis"]["connection_string"] = redis_conn_string
-
-        if rabbitmq_conn_string:
-            augmented_config["RabbitMQ"]["connection_string"] = rabbitmq_conn_string
-
-        augmented_config["Keys"] = keys
-
-        augmented_config["Facade"]["repo_directory"] = facade_repo_directory
-
-        augmented_config["Logging"]["logs_directory"] = logs_directory or (ROOT_PROJECT_REPO_DIRECTORY + "/logs/")
-
-        config.load_config_from_dict(augmented_config)
-
+    merge_config(ctx.obj.engine, logger, github_api_key, facade_repo_directory, gitlab_api_key, redis_conn_string, rabbitmq_conn_string, logs_directory)
+   
 
 @cli.command('load')
 @click.option('--file', required=True)
