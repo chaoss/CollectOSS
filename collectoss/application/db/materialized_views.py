@@ -729,95 +729,95 @@ MATERIALIZED_VIEWS: list[MaterializedView] = [
     # --- View 1: legacy DDL (augur_full.sql), no unique index ---
     MaterializedView(
         name="issue_reporter_created_at",
-        schema="data",
+        schema="stable",
         sql=_ISSUE_REPORTER_CREATED_AT,
         unique_index_columns=(),  # only a non-unique btree on repo_id
     ),
     # --- Views 2-6: from migration 4, indexes from migration 25 ---
     MaterializedView(
         name="api_get_all_repo_prs",
-        schema="data",
+        schema="stable",
         sql=_API_GET_ALL_REPO_PRS,
         unique_index_columns=("repo_id",),
     ),
     MaterializedView(
         name="explorer_entry_list",
-        schema="data",
+        schema="stable",
         sql=_EXPLORER_ENTRY_LIST,
         unique_index_columns=("repo_id",),
     ),
     MaterializedView(
         name="explorer_commits_and_committers_daily_count",
-        schema="data",
+        schema="stable",
         sql=_EXPLORER_COMMITS_AND_COMMITTERS_DAILY_COUNT,
         unique_index_columns=("repo_id", "cmt_committer_date",),
     ),
     MaterializedView(
         name="api_get_all_repos_commits",
-        schema="data",
+        schema="stable",
         sql=_API_GET_ALL_REPOS_COMMITS,
         unique_index_columns=("repo_id",),
     ),
     MaterializedView(
         name="api_get_all_repos_issues",
-        schema="data",
+        schema="stable",
         sql=_API_GET_ALL_REPOS_ISSUES,
         unique_index_columns=("repo_id",),
     ),
     # --- Views 6-8: from migration 25, recreated ---
     MaterializedView(
         name="augur_new_contributors",
-        schema="data",
+        schema="stable",
         sql=_AUGUR_NEW_CONTRIBUTORS,
         unique_index_columns=("cntrb_id", "created_at", "repo_id", "repo_name", "login", "rank",),
     ),
     MaterializedView(
         name="explorer_contributor_actions",
-        schema="data",
+        schema="stable",
         sql=_EXPLORER_CONTRIBUTOR_ACTIONS,
         unique_index_columns=("cntrb_id", "created_at", "repo_id", "action", "repo_name", "login", "rank",),
     ),
     MaterializedView(
         name="explorer_new_contributors",
-        schema="data",
+        schema="stable",
         sql=_EXPLORER_NEW_CONTRIBUTORS,
         unique_index_columns=("cntrb_id", "created_at", "month", "year", "repo_id", "full_name", "repo_name", "login", "rank",),
     ),
     # --- Views 9-13: from migration 26 ---
     MaterializedView(
         name="explorer_pr_assignments",
-        schema="data",
+        schema="stable",
         sql=_EXPLORER_PR_ASSIGNMENTS,
         unique_index_columns=("pull_request_id", "id", "node_id",),
     ),
     MaterializedView(
         name="explorer_pr_response",
-        schema="data",
+        schema="stable",
         sql=_EXPLORER_PR_RESPONSE,
         unique_index_columns=("pull_request_id", "id", "cntrb_id", "msg_cntrb_id", "msg_timestamp",),
     ),
     MaterializedView(
         name="explorer_user_repos",
-        schema="data",
+        schema="stable",
         sql=_EXPLORER_USER_REPOS,
         unique_index_columns=("login_name", "user_id", "group_id", "repo_id",),
     ),
     MaterializedView(
         name="explorer_pr_response_times",
-        schema="data",
+        schema="stable",
         sql=_EXPLORER_PR_RESPONSE_TIMES,
         unique_index_columns=("repo_id", "pr_src_id", "pr_src_meta_label",),
     ),
     MaterializedView(
         name="explorer_issue_assignments",
-        schema="data",
+        schema="stable",
         sql=_EXPLORER_ISSUE_ASSIGNMENTS,
         unique_index_columns=("issue_id", "id", "node_id",),
     ),
     # --- View 15: from migration 28 ---
     MaterializedView(
         name="explorer_repo_languages",
-        schema="data",
+        schema="stable",
         sql=_EXPLORER_REPO_LANGUAGES,
         unique_index_columns=("repo_id", "programming_language",),
     ),
