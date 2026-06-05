@@ -5,6 +5,7 @@ from pathlib import Path
 import os
 import getpass
 import subprocess
+from subprocess import check_call
 
 from sqlalchemy.orm.attributes import get_history
 from collectoss.application.config import SystemConfig
@@ -31,7 +32,7 @@ def check_update_schema():
     """
     pass
     # alembic upgrade head, unless theres an env var preventing automatic migration
-    # check_call(["alembic", "upgrade", "head"])
+    check_call(["alembic", "upgrade", "head"])
 
 def collect_env_variables(logger):
     """convenience helper for assembling more complex environment variables out of smaller ones
