@@ -9,9 +9,4 @@ fi
 if [[ -f /repos.csv ]]; then
    collectoss db add-repos /repos.csv
 fi
-
-echo "PATH: $PATH"
-echo "Python executable: $(which python)"
-python --version
-
 exec collectoss backend start --pidfile /tmp/main.pid

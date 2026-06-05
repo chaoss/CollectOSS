@@ -30,7 +30,7 @@ from collectoss.application.db.lib import get_value
 from collectoss.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 import sqlalchemy as s
 
-from collectoss.util.startup import check_init_schema, check_update_schema, collect_env_variables, setup_facade_directory
+from collectoss.util.startup import check_init_schema, check_update_schema, collect_env_variables, print_platform_information, setup_facade_directory
 from keyman.KeyClient import KeyClient, KeyPublisher
 
 reset_logs = SystemEnv.get_bool("AUGUR_RESET_LOGS", True)
@@ -72,6 +72,9 @@ def start(ctx, disable_collection, development, pidfile, port):
     setup_facade_directory()
 
     merge_config(ctx.obj.engine, logger)
+
+    print_platform_information()
+
     try:
         if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
             raise_open_file_limit(100000)

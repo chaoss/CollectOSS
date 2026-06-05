@@ -6,6 +6,8 @@ import os
 import getpass
 import subprocess
 from subprocess import check_call
+import platform
+import sys
 
 from sqlalchemy.orm.attributes import get_history
 from collectoss.application.config import SystemConfig
@@ -216,3 +218,10 @@ def merge_config(
         augmented_config["Logging"]["logs_directory"] = logs_directory or (ROOT_PROJECT_REPO_DIRECTORY + "/logs/")
 
         config.load_config_from_dict(augmented_config)
+
+
+def print_platform_information():
+
+    print(f"PATH: {os.environ.get('PATH')}")
+    print(f"Python executable (current): {sys.executable}")
+    print(f"Python version: {platform.python_version()}")
