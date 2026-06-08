@@ -13,3 +13,12 @@ class GitRepo:
             timeout (int): how many seconds to wait before cancelling the operation
         """
         pass
+
+    @classmethod
+    def pull(cls, git_dir:str, timeout=600):
+        """Pull updates from an already-cloned git repo
+
+        Args:
+            git_dir (str): The repository directory to perform the pull in (working dir/repo dir)
+        """
+        pass

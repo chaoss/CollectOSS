@@ -306,15 +306,8 @@ def git_repo_updates(facade_helper, repo_git):
     while attempt < 2:
 
         try:
-
-            firstpull = (f"git -C {absolute_path} pull")
-
-            return_code_remote, _ = facade_helper.run_git_command(
-                firstpull,
-                timeout=600,  # 10 minutes for git pull
-                capture_output=False,
-                operation_description=f'git pull {repo.repo_git}'
-            )
+            
+            GitRepo.pull(absolute_path)
 
             facade_helper.log_activity('Verbose', 'Got to here. 1.')
 
@@ -355,14 +348,8 @@ def git_repo_updates(facade_helper, repo_git):
 
                 if return_code_remote_default_again == 0:
                     facade_helper.log_activity('Verbose', "local checkout worked.")
-                    cmd = (f"git -C {absolute_path} pull")
-
-                    return_code, _ = facade_helper.run_git_command(
-                        cmd,
-                        timeout=600,  # 10 minutes for git pull
-                        capture_output=False,
-                        operation_description=f'git pull {repo.repo_git}'
-                    )
+                    
+                    GitRepo.pull(absolute_path)
 
         except Exception as e:
             facade_helper.log_activity(
@@ -371,14 +358,7 @@ def git_repo_updates(facade_helper, repo_git):
 
         finally:
 
-            cmd = (f"git -C {absolute_path} pull")
-
-            return_code, _ = facade_helper.run_git_command(
-                cmd,
-                timeout=600,  # 10 minutes for git pull
-                capture_output=False,
-                operation_description=f'git pull {repo.repo_git}'
-            )
+            GitRepo.pull(absolute_path)
 
         # If the attempt succeeded, then don't try any further fixes. If
         # the attempt to fix things failed, give up and try next time.
@@ -445,8 +425,6 @@ def git_repo_updates(facade_helper, repo_git):
                     operation_description=f'git checkout {remotedefault}'
                 )
 
-                cmdpull2 = (f"git -C {absolute_path} pull")
-
                 cmd_reset = (f"git -C {absolute_path} reset --hard origin/{remotedefault}")
 
                 cmd_reset_wait, _ = facade_helper.run_git_command(
@@ -470,15 +448,7 @@ def git_repo_updates(facade_helper, repo_git):
                 facade_helper.log_activity('Verbose', f'Second pass failed: {e}.')
                 pass
 
-        cmdpull2 = (f"git -C {absolute_path} pull")
-
-        print(cmdpull2)
-        return_code, _ = facade_helper.run_git_command(
-            cmdpull2,
-            timeout=600,  # 10 minutes for git pull
-            capture_output=False,
-            operation_description=f'git pull {repo.repo_git}'
-        )
+        GitRepo.pull(absolute_path)
 
         attempt += 1
 
