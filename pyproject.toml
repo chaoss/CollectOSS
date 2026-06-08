@@ -163,7 +163,10 @@ markers = [
 
 
 [tool.mypy]
-files = ['collectoss/application/db/*.py']
+files = [
+    'collectoss/application/db/*.py',
+    'collectoss/application/environment.py',
+]
 ignore_missing_imports = true
 follow_imports = "skip"
 disallow_untyped_defs = false
