@@ -30,6 +30,8 @@ import subprocess
 import os
 import pathlib
 import sqlalchemy as s
+
+from collectoss.tasks.git.util.facade_worker.facade_worker.gitops import GitRepo
 from .utilitymethods import update_repo_log, get_absolute_repo_path
 from sqlalchemy.orm.exc import NoResultFound
 from collectoss.application.db.models.data import *
@@ -149,25 +151,10 @@ def git_repo_initialize(facade_helper, session, repo_git):
 
         facade_helper.log_activity('Verbose', f"Cloning: {git}")
 
-        cmd = f"git -C {repo_path} clone '{git}' {repo_name}"
-        return_code, _ = facade_helper.run_git_command(
-            cmd,
-            timeout=7200,  # 2 hours for large repos
-            capture_output=False,
-            operation_description=f'git clone {git}'
-        )
-
-        if (return_code == 0):
-            # If cloning succeeded, repo is ready for analysis
-            # Mark the entire project for an update, so that under normal
-            # circumstances caches are rebuilt only once per waiting period.
-            update_repo_log(logger, facade_helper, row.repo_id, 'Up-to-date')
+        try:
+            GitRepo.clone(git, repo_path, repo_name)
             facade_helper.log_activity('Info', f"Cloned {git}")
-
-        else:
-            # If cloning failed, log it and set the status back to new
-            update_repo_log(logger, facade_helper, row.repo_id, f"Failed ({return_code})")
-
+        except Exception as e:
             facade_helper.log_activity('Error', f"Could not clone {git}")
 
             raise GitCloneError(f"Could not clone {git}")
