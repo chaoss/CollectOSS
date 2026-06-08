@@ -52,7 +52,7 @@ def get_value(section_name: str, setting_name: str) -> Optional[Any]:
         return setting_dict["value"]
 
 
-def get_batch_size(task_type: str = None) -> int:
+def get_batch_size(task_type: str | None = None) -> int:
     """Get batch size for a task, with fallback to default.
 
     Args:
