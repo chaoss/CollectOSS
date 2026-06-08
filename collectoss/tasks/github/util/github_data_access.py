@@ -44,7 +44,7 @@ class GithubDataAccess:
         self.key = None
         self.expired_keys_for_request = []
 
-    def endpoint_url(self, path: str, params: dict = None) -> str:
+    def endpoint_url(self, path: str, params: dict = {}) -> str:
         """Build a URL for a github endpoint using the specified path and query parameters
 
         Args:

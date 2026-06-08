@@ -163,7 +163,12 @@ markers = [
 
 
 [tool.mypy]
-files = ['collectoss/application/db/*.py', 'collectoss/util/*.py']
+files = [
+    'collectoss/application/db/*.py',
+    'collectoss/util/*.py',
+    'collectoss/tasks/github/util/github_data_access.py',
+    'collectoss/tasks/github/util/github_graphql_data_access.py',
+]
 ignore_missing_imports = true
 follow_imports = "skip"
 disallow_untyped_defs = false
