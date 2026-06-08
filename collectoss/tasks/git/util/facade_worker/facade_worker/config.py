@@ -38,6 +38,7 @@ from psycopg2.errors import DeadlockDetected
 from collectoss.application.db.session import DatabaseSession
 from collectoss.application.config import SystemConfig
 from collectoss.application.db.lib import execute_sql
+from typing_extensions import deprecated
 from logging import Logger
 
 from collectoss.application.environment import SystemEnv
@@ -258,6 +259,7 @@ class FacadeHelper():
     def inc_repos_processed(self):
         self.repos_processed += 1
 
+    @deprecated("use libgit2 instead")
     def run_git_command(self, cmd: str, timeout: int, capture_output: bool = False, operation_description: str = None) -> tuple:
         """
         Execute a git command with timeout handling.
