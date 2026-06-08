@@ -220,6 +220,24 @@ def merge_config(
         config.load_config_from_dict(augmented_config)
 
 
+@deprecated("automatic import is deprecated. This is a function to warn users and help them transition")
+def warn_import_repos(logger):
+    """We are choosing not to auto import repos and repo groups automatically
+    This function detects attempts to use the automatic feature and warns users to use the CLI themselves
+
+    Args:
+        logger: the logger to use
+    """
+    
+    if Path("/repo_groups.csv").exists():
+        logger.warning("Detected /repo_groups.csv file at startup. Automatic import of repo groups is deprecated.")
+        logger.warning("To import repo groups from a CSV, use the CLI: collectoss db add-repo-groups /repo_groups.csv")
+
+    if Path("/repos.csv").exists():
+        logger.warning("Detected /repos.csv file at startup. Automatic import of repos is deprecated.")
+        logger.warning("To import repos from a CSV, use the CLI: collectoss db add-repos /repos.csv")
+
+
 def print_platform_information():
 
     print(f"PATH: {os.environ.get('PATH')}")
