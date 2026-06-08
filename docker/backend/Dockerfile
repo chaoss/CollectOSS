@@ -113,8 +113,4 @@ RUN ${SCORECARD_DIR}/scorecard version
 RUN mkdir -p repos/ logs/ /collectoss/facade/
 RUN ln -s /cache /collectoss/collectoss/static/cache
 
-# Copy in the entrypoint and init scripts, ensuring they are executable
-COPY --chmod=755 ./docker/backend/entrypoint.sh /
-COPY --chmod=755 ./docker/backend/init.sh /
-RUN chmod +x /entrypoint.sh /init.sh
 CMD ["collectoss", "backend", "start", "--pidfile", "/tmp/main.pid"]
