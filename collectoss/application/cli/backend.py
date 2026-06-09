@@ -30,7 +30,7 @@ from collectoss.application.db.lib import get_value
 from collectoss.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 import sqlalchemy as s
 
-from collectoss.util.startup import check_init_schema, check_update_schema, collect_env_variables, print_platform_information, setup_facade_directory, warn_import_repos
+from collectoss.util.startup import check_init_schema, check_update_schema, collect_env_variables, print_platform_information, setup_facade_directory, warn_import_repos, merge_config
 from keyman.KeyClient import KeyClient, KeyPublisher
 
 reset_logs = SystemEnv.get_bool("AUGUR_RESET_LOGS", True)
@@ -69,11 +69,11 @@ def start(ctx, disable_collection, development, pidfile, port):
     check_init_schema()
     check_update_schema()
 
-    setup_facade_directory()
+    setup_facade_directory(logger)
 
     merge_config(ctx.obj.engine, logger)
 
-    warn_import_repos()
+    warn_import_repos(logger)
 
     print_platform_information()
 
