@@ -168,11 +168,11 @@ def merge_config(
     """
 
     github_api_key = github_api_key or SystemEnv.get("COLLECTOSS_GITHUB_API_KEY")
-    facade_repo_directory = github_api_key or SystemEnv.get("COLLECTOSS_FACADE_REPO_DIRECTORY")
-    gitlab_api_key = github_api_key or SystemEnv.get("COLLECTOSS_GITLAB_API_KEY")
-    redis_conn_string = github_api_key or SystemEnv.get("REDIS_CONN_STRING")
-    rabbitmq_conn_string = github_api_key or SystemEnv.get("RABBITMQ_CONN_STRING")
-    logs_directory = github_api_key or SystemEnv.get("COLLECTOSS_LOGS_DIRECTORY")
+    facade_repo_directory = facade_repo_directory or SystemEnv.get("COLLECTOSS_FACADE_REPO_DIRECTORY")
+    gitlab_api_key = gitlab_api_key or SystemEnv.get("COLLECTOSS_GITLAB_API_KEY")
+    redis_conn_string = redis_conn_string or SystemEnv.get("REDIS_CONN_STRING")
+    rabbitmq_conn_string = rabbitmq_conn_string or SystemEnv.get("RABBITMQ_CONN_STRING")
+    logs_directory = logs_directory or SystemEnv.get("COLLECTOSS_LOGS_DIRECTORY")
 
     keys = {}
 
