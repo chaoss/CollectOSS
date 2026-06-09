@@ -138,7 +138,7 @@ def setup_facade_directory(logger):
         user, key = gl_values
         credentials.append(f"https://{user}:{key}@gitlab.com")
 
-    with git_credentials.open(encoding="utf-8") as c:
+    with git_credentials.open("w", encoding="utf-8") as c:
         c.writelines(credentials)
     
     subprocess.call(["git", "config", "--global", "credential.helper", "store", "--file", str(git_credentials)])
