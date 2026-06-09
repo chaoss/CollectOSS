@@ -238,8 +238,7 @@ def warn_import_repos(logger):
         logger.warning("To import repos from a CSV, use the CLI: collectoss db add-repos /repos.csv")
 
 
-def print_platform_information():
-
-    print(f"PATH: {os.environ.get('PATH')}")
-    print(f"Python executable (current): {sys.executable}")
-    print(f"Python version: {platform.python_version()}")
+def print_platform_information(logger):
+    logger.info(f"PATH: {os.environ.get('PATH')}")
+    logger.info(f"Python executable (current): {sys.executable}")
+    logger.info(f"Python version: {platform.python_version()}")

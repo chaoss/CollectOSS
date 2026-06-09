@@ -75,7 +75,7 @@ def start(ctx, disable_collection, development, pidfile, port):
 
     warn_import_repos(logger)
 
-    print_platform_information()
+    print_platform_information(logger)
 
     try:
         if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
