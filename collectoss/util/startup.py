@@ -141,7 +141,7 @@ def setup_facade_directory(logger):
     with git_credentials.open("w", encoding="utf-8") as c:
         c.writelines(credentials)
     
-    subprocess.call(["git", "config", "--global", "credential.helper", "store", "--file", str(git_credentials)])
+    subprocess.call(["git", "config", "--global", "credential.helper", f"store --file {str(git_credentials)}"])
 
 
 def merge_config(
