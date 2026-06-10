@@ -74,7 +74,7 @@ def test_add_repo_to_user_group(test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            query = s.text("""SELECT * FROM "augur_operations"."user_repos";""")
+            query = s.text("""SELECT * FROM "operations"."user_repos";""")
             # WHERE "group_id"=:user_group_id AND "repo_id"=:repo_id
 
             result = connection.execute(query).fetchall()
@@ -82,14 +82,14 @@ def test_add_repo_to_user_group(test_db_engine):
             assert len(result) == 4
 
 
-            query = s.text("""SELECT * FROM "augur_operations"."user_repos" WHERE "group_id"={};""".format(data["user_group_ids"][0]))
+            query = s.text("""SELECT * FROM "operations"."user_repos" WHERE "group_id"={};""".format(data["user_group_ids"][0]))
 
             result = connection.execute(query).fetchall()
             assert result is not None
             assert len(result) == 2
 
 
-            query = s.text("""SELECT * FROM "augur_operations"."user_repos" WHERE "group_id"={};""".format(data["user_group_ids"][0]))
+            query = s.text("""SELECT * FROM "operations"."user_repos" WHERE "group_id"={};""".format(data["user_group_ids"][0]))
 
             result = connection.execute(query).fetchall()
             assert result is not None

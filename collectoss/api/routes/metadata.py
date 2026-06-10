@@ -31,7 +31,7 @@ def get_repo_info():
         FROM
             repo_info,
             repo,
-            ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM augur_data.repo_info GROUP BY repo_id ORDER BY repo_id ) e 
+            ( SELECT repo_id, MAX ( data_collection_date ) AS last_collected FROM data.repo_info GROUP BY repo_id ORDER BY repo_id ) e 
         WHERE
             repo_info.repo_id = repo.repo_id 
             AND e.repo_id = repo_info.repo_id 

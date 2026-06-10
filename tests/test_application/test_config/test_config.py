@@ -15,7 +15,7 @@ def test_config_get_value(test_db_config, test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+            query = text("""INSERT INTO "operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
             connection.execute(query, **data)
 
@@ -26,7 +26,7 @@ def test_config_get_value(test_db_config, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 def test_config_get_section(test_db_config, test_db_engine):
 
@@ -43,7 +43,7 @@ def test_config_get_section(test_db_config, test_db_engine):
 
             for data in network_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -62,7 +62,7 @@ def test_config_get_section(test_db_config, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 
 def test_config_load_config(test_db_config, test_db_engine):
@@ -82,7 +82,7 @@ def test_config_load_config(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -102,7 +102,7 @@ def test_config_load_config(test_db_config, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 def test_config_empty(test_db_config, test_db_engine):
 
@@ -123,7 +123,7 @@ def test_config_empty(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -132,7 +132,7 @@ def test_config_empty(test_db_config, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 def test_config_is_section_in_config(test_db_config, test_db_engine):
 
@@ -151,7 +151,7 @@ def test_config_is_section_in_config(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -163,7 +163,7 @@ def test_config_is_section_in_config(test_db_config, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 def test_config_add_settings(test_db_config, test_db_engine):
 
@@ -174,7 +174,7 @@ def test_config_add_settings(test_db_config, test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            result = connection.execute("""SELECT * FROM augur_operations.config""").fetchall()
+            result = connection.execute("""SELECT * FROM operations.config""").fetchall()
 
             assert result is not None
             assert len(result) == 2
@@ -189,7 +189,7 @@ def test_config_add_settings(test_db_config, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 def test_config_update_settings(test_db_config, test_db_engine):
 
@@ -212,7 +212,7 @@ def test_config_update_settings(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -222,7 +222,7 @@ def test_config_update_settings(test_db_config, test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            result = connection.execute("""SELECT * FROM augur_operations.config""").fetchall()
+            result = connection.execute("""SELECT * FROM operations.config""").fetchall()
 
             assert len(result) == 3
 
@@ -235,7 +235,7 @@ def test_config_update_settings(test_db_config, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 
 def test_config_add_section_from_json(test_db_config, test_db_engine):
@@ -252,7 +252,7 @@ def test_config_add_section_from_json(test_db_config, test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            result = connection.execute("""SELECT * FROM augur_operations.config""")
+            result = connection.execute("""SELECT * FROM operations.config""")
 
             for row in result:
                 dict_data = dict(row)
@@ -266,7 +266,7 @@ def test_config_add_section_from_json(test_db_config, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 
 def test_load_config_file(test_db_config):
@@ -312,7 +312,7 @@ def test_config_load_config_from_dict(test_db_config, test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            result = connection.execute("""SELECT * FROM augur_operations.config""").fetchall()
+            result = connection.execute("""SELECT * FROM operations.config""").fetchall()
 
             for row in result:
                 dict_data = dict(row)
@@ -328,7 +328,7 @@ def test_config_load_config_from_dict(test_db_config, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 def test_config_clear(test_db_config, test_db_engine):
 
@@ -342,7 +342,7 @@ def test_config_clear(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -350,14 +350,14 @@ def test_config_clear(test_db_config, test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            result = connection.execute("""SELECT * FROM augur_operations.config""").fetchall()
+            result = connection.execute("""SELECT * FROM operations.config""").fetchall()
 
             assert len(result) == 0
 
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 def test_remove_section(test_db_config, test_db_engine):
 
@@ -377,7 +377,7 @@ def test_remove_section(test_db_config, test_db_engine):
 
             for data in all_data:
 
-                query = text("""INSERT INTO "augur_operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
+                query = text("""INSERT INTO "operations"."config" ("section_name", "setting_name", "value", "type") VALUES (:section_name, :setting_name, :value, 'str');""")
 
                 connection.execute(query, **data)
 
@@ -385,7 +385,7 @@ def test_remove_section(test_db_config, test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            result = connection.execute("""SELECT * FROM augur_operations.config""").fetchall()
+            result = connection.execute("""SELECT * FROM operations.config""").fetchall()
 
             for row in result:
                 dict_data = dict(row)
@@ -395,7 +395,7 @@ def test_remove_section(test_db_config, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 
 

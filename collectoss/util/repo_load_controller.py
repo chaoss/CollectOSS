@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 from collectoss.application.db.engine import DatabaseEngine
 from collectoss.application.db.models import Repo, UserRepo, RepoGroup, UserGroup, User, CollectionStatus
-from collectoss.application.db.models.augur_operations import retrieve_owner_repos
+from collectoss.application.db.models.operations import retrieve_owner_repos
 from collectoss.application.db.util import execute_session_query
 
 from sqlalchemy import Column, Table, MetaData, or_
@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 
 
 with DatabaseEngine() as engine:
-    augur_data_schema = MetaData(schema = "augur_data")
-    augur_data_schema.reflect(bind = engine, views = True)
+    data_schema = MetaData(schema = "data")
+    data_schema.reflect(bind = engine, views = True)
     
-    commits_materialized_view: Table = augur_data_schema.tables["augur_data.api_get_all_repos_commits"]
-    issues_materialized_view: Table = augur_data_schema.tables["augur_data.api_get_all_repos_issues"]
+    commits_materialized_view: Table = data_schema.tables["data.api_get_all_repos_commits"]
+    issues_materialized_view: Table = data_schema.tables["data.api_get_all_repos_issues"]
 
 
 class RepoLoadController:

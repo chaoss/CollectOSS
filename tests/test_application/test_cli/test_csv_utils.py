@@ -14,7 +14,7 @@ from collectoss.application.cli._csv_utils import (
     MAX_FILE_SIZE_BYTES,
 )
 
-
+@pytest.mark.unit
 class TestValidateGitUrl:
     """Tests for validate_git_url function"""
 
@@ -40,7 +40,7 @@ class TestValidateGitUrl:
         """Test that whitespace is properly stripped"""
         assert validate_git_url("  https://github.com/chaoss/collectoss  ")
 
-
+@pytest.mark.unit
 class TestValidatePositiveInt:
     """Tests for validate_positive_int function"""
 
@@ -71,7 +71,7 @@ class TestValidatePositiveInt:
         """Test that whitespace is properly stripped"""
         assert validate_positive_int("  42  ")
 
-
+@pytest.mark.unit
 class TestDetectColumnOrder:
     """Tests for detect_column_order function"""
 
@@ -153,7 +153,7 @@ class TestDetectColumnOrder:
         with pytest.raises(ValueError, match="Could not detect column"):
             detect_column_order(sample_rows, validators)
 
-
+@pytest.mark.unit
 class TestProcessCsv:
     """Tests for process_csv function"""
 
@@ -252,7 +252,7 @@ class TestProcessCsv:
         result = process_csv(str(csv_file), validators)
         assert result[0] == {"repo_url": "https://github.com/chaoss/collectoss", "repo_group_id": "10"}
 
-
+@pytest.mark.unit
 class TestProcessRepoCsv:
     """Tests for process_repo_csv function"""
 
@@ -275,6 +275,7 @@ class TestProcessRepoCsv:
         assert len(result) == 2
 
 
+@pytest.mark.unit
 class TestProcessRepoGroupCsv:
     """Tests for process_repo_group_csv function"""
 
@@ -310,6 +311,7 @@ class TestProcessRepoGroupCsv:
         assert len(result) >= 1
 
 
+@pytest.mark.unit
 class TestEdgeCases:
     """Tests for edge cases and error conditions"""
 

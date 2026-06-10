@@ -28,6 +28,8 @@ from collectoss.application.cli._csv_utils import (
     process_repo_csv,
     process_repo_group_csv,
 )
+from collectoss.application.environment import SystemEnv
+from collectoss.util.startup import check_init_schema, check_update_schema
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +142,7 @@ def get_repo_groups(ctx: click.Context) -> pd.DataFrame:
     with ctx.obj.engine.connect() as connection:
         df = pd.read_sql(
             s.sql.text(
-                "SELECT repo_group_id, rg_name, rg_description FROM augur_data.repo_groups"
+                "SELECT repo_group_id, rg_name, rg_description FROM data.repo_groups"
             ),
             connection,
         )
@@ -179,14 +181,14 @@ def add_repo_groups(ctx: click.Context, filename: str) -> None:
         with ctx.obj.engine.begin() as connection:
             # Get existing repo group IDs
             df = pd.read_sql(
-                s.sql.text("SELECT repo_group_id FROM augur_data.repo_groups"),
+                s.sql.text("SELECT repo_group_id FROM data.repo_groups"),
                 connection,
             )
             repo_group_IDs = df["repo_group_id"].values.tolist()
 
             insert_repo_group_sql = s.sql.text(
                 """
-            INSERT INTO "augur_data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_id, :repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP);
+            INSERT INTO "data"."repo_groups"("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (:repo_group_id, :repo_group_name, '', '', 0, CURRENT_TIMESTAMP, 'Unknown', 'Loaded by user', '1.0', 'Git', CURRENT_TIMESTAMP);
             """
             )
 
@@ -262,7 +264,7 @@ def add_github_org(ctx, organization_name):
 def get_db_version(engine):
     db_version_sql = s.sql.text(
         """
-        SELECT * FROM augur_operations.augur_settings WHERE setting = 'augur_data_version'
+        SELECT * FROM operations.augur_settings WHERE setting = 'augur_data_version'
         """
     )
 
@@ -290,7 +292,7 @@ def upgrade_db_version():
     """
     Upgrade the configured database to the latest version
     """
-    check_call(["alembic", "upgrade", "head"])
+    check_update_schema()
 
 
 @cli.command("check-for-upgrade")
@@ -310,7 +312,8 @@ def create_schema():
     """
     Create schema in the configured database
     """
-    check_call(["alembic", "upgrade", "head"])
+    # check_call(["alembic", "upgrade", "head"])
+    check_init_schema()
 
 
 def generate_key(length):
@@ -342,11 +345,11 @@ def update_api_key(ctx, api_key):
     """
     update_api_key_sql = s.sql.text(
         """
-        INSERT INTO augur_operations.augur_settings (setting,VALUE) VALUES ('augur_api_key','HudMhTyPW7wiaWopUKgRoGCxlIUulw4g') ON CONFLICT (setting)
+        INSERT INTO operations.augur_settings (setting,VALUE) VALUES ('augur_api_key','HudMhTyPW7wiaWopUKgRoGCxlIUulw4g') ON CONFLICT (setting)
         DO
         UPDATE
         SET VALUE='HudMhTyPW7wiaWopUKgRoGCxlIUulw4g';
-        --UPDATE augur_operations.augur_settings SET VALUE = :api_key WHERE setting='augur_api_key';
+        --UPDATE operations.augur_settings SET VALUE = :api_key WHERE setting='augur_api_key';
     """
     )
 
@@ -363,7 +366,7 @@ def update_api_key(ctx, api_key):
 def get_api_key(ctx):
     get_api_key_sql = s.sql.text(
         """
-        SELECT value FROM augur_operations.augur_settings WHERE setting='augur_api_key';
+        SELECT value FROM operations.augur_settings WHERE setting='augur_api_key';
     """
     )
 
@@ -379,7 +382,7 @@ def get_api_key(ctx):
     short_help="Check the ~/.pgpass file for CollectOSS's database credentials",
 )
 def check_pgpass():
-    db_environment_var = getenv("AUGUR_DB")
+    db_environment_var = SystemEnv.get("COLLECTOSS_DB")
     if db_environment_var:
         # gets the user, passowrd, host, port, and database_name out of environment variable
         # assumes database string of structure <beginning_of_db_string>//<user>:<password>@<host>:<port>/<database_name>
@@ -495,7 +498,7 @@ def run_psql_command_in_database(target_type, target):
         logger.error("Invalid target type. Exiting...")
         exit(1)
 
-    db_environment_var = getenv("AUGUR_DB")
+    db_environment_var = SystemEnv.get("COLLECTOSS_DB")
 
     # db_json_file_location = os.getcwd() + "/db.config.json"
     # db_json_exists = os.path.exists(db_json_file_location)
@@ -511,7 +514,7 @@ def run_psql_command_in_database(target_type, target):
             database_name = db_config["database_name"]
 
             db_conn_string = f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database_name']}"
-            engine = s.create_engine(db_conn_string)
+            engine = s.create_engine(db_conn_string, connect_args={"application_name": f"collectoss cli"})
 
     check_call(
         [

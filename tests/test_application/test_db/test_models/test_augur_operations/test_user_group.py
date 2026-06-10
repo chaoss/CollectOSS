@@ -73,19 +73,19 @@ def test_add_user_group(test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            query = s.text("""SELECT * FROM "augur_operations"."user_groups";""")
+            query = s.text("""SELECT * FROM "operations"."user_groups";""")
 
             result = connection.execute(query).fetchall()
             assert result is not None
             assert len(result) == 3
 
-            query = s.text("""SELECT * FROM "augur_operations"."user_groups" WHERE "user_id"={};""".format(data["users"][0]["id"]))
+            query = s.text("""SELECT * FROM "operations"."user_groups" WHERE "user_id"={};""".format(data["users"][0]["id"]))
 
             result = connection.execute(query).fetchall()
             assert result is not None
             assert len(result) == 2
 
-            query = s.text("""SELECT * FROM "augur_operations"."user_groups" WHERE "user_id"={};""".format(data["users"][1]["id"]))
+            query = s.text("""SELECT * FROM "operations"."user_groups" WHERE "user_id"={};""".format(data["users"][1]["id"]))
 
             result = connection.execute(query).fetchall()
             assert result is not None
@@ -212,7 +212,7 @@ def test_remove_user_group(test_db_engine):
 
             with test_db_engine.connect() as connection:
 
-                query = s.text("""SELECT * FROM "augur_operations"."user_groups";""")
+                query = s.text("""SELECT * FROM "operations"."user_groups";""")
 
                 result = connection.execute(query).fetchall()
                 assert result is not None
@@ -226,7 +226,7 @@ def test_remove_user_group(test_db_engine):
 
             with test_db_engine.connect() as connection:
 
-                query = s.text("""SELECT * FROM "augur_operations"."user_groups";""")
+                query = s.text("""SELECT * FROM "operations"."user_groups";""")
 
                 result = connection.execute(query).fetchall()
                 assert result is not None

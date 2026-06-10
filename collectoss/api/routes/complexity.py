@@ -17,13 +17,13 @@ def get_project_languages():
     project_languages_sql = s.sql.text("""
         SELECT
                 e.repo_id,
-                augur_data.repo.repo_git,
-                augur_data.repo.repo_name,
+                data.repo.repo_git,
+                data.repo.repo_name,
                 e.programming_language,
                 e.code_lines,
                 e.files
             FROM
-                augur_data.repo,
+                data.repo,
             (SELECT 
                 d.repo_id,
                 d.programming_language,
@@ -31,22 +31,22 @@ def get_project_languages():
                 COUNT(*)::int AS files
             FROM
                 (SELECT
-                        augur_data.repo_labor.repo_id,
-                        augur_data.repo_labor.programming_language,
-                        augur_data.repo_labor.code_lines
+                        data.repo_labor.repo_id,
+                        data.repo_labor.programming_language,
+                        data.repo_labor.code_lines
                     FROM
-                        augur_data.repo_labor,
+                        data.repo_labor,
                         ( SELECT 
-                                augur_data.repo_labor.repo_id,
+                                data.repo_labor.repo_id,
                                 MAX ( data_collection_date ) AS last_collected
                             FROM 
-                                augur_data.repo_labor
-                            GROUP BY augur_data.repo_labor.repo_id) recent 
+                                data.repo_labor
+                            GROUP BY data.repo_labor.repo_id) recent 
                     WHERE
-                        augur_data.repo_labor.repo_id = recent.repo_id
-                        AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
+                        data.repo_labor.repo_id = recent.repo_id
+                        AND data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
             GROUP BY d.repo_id, d.programming_language) e
-            WHERE augur_data.repo.repo_id = e.repo_id
+            WHERE data.repo.repo_id = e.repo_id
             ORDER BY e.repo_id
     """)
 
@@ -62,30 +62,30 @@ def get_project_files():
     project_files_sql = s.sql.text("""
         SELECT
                 e.repo_id,
-                augur_data.repo.repo_git,
-                augur_data.repo.repo_name,
+                data.repo.repo_git,
+                data.repo.repo_name,
                 e.files
             FROM
-                augur_data.repo,
+                data.repo,
             (SELECT 
                     d.repo_id,
                     count(*) AS files                        
                 FROM
                     (SELECT
-                            augur_data.repo_labor.repo_id
+                            data.repo_labor.repo_id
                         FROM
-                            augur_data.repo_labor,
+                            data.repo_labor,
                             ( SELECT 
-                                    augur_data.repo_labor.repo_id,
+                                    data.repo_labor.repo_id,
                                     MAX ( data_collection_date ) AS last_collected
                                 FROM 
-                                    augur_data.repo_labor
-                                GROUP BY augur_data.repo_labor.repo_id) recent 
+                                    data.repo_labor
+                                GROUP BY data.repo_labor.repo_id) recent 
                         WHERE
-                            augur_data.repo_labor.repo_id = recent.repo_id
-                            AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
+                            data.repo_labor.repo_id = recent.repo_id
+                            AND data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
                 GROUP BY d.repo_id) e
-            WHERE augur_data.repo.repo_id = e.repo_id
+            WHERE data.repo.repo_id = e.repo_id
             ORDER BY e.repo_id
     """)
 
@@ -103,33 +103,33 @@ def get_project_lines():
     project_lines_sql = s.sql.text("""
            SELECT
                 e.repo_id,
-                augur_data.repo.repo_git,
-                augur_data.repo.repo_name,
+                data.repo.repo_git,
+                data.repo.repo_name,
                 e.total_lines,
                 e.average_lines
             FROM
-                augur_data.repo,
+                data.repo,
             (SELECT 
                     d.repo_id,
                     SUM(d.total_lines) AS total_lines,
                     AVG(d.total_lines)::INT AS average_lines
                 FROM
                     (SELECT
-                            augur_data.repo_labor.repo_id,
-                            augur_data.repo_labor.total_lines
+                            data.repo_labor.repo_id,
+                            data.repo_labor.total_lines
                         FROM
-                            augur_data.repo_labor,
+                            data.repo_labor,
                             ( SELECT 
-                                    augur_data.repo_labor.repo_id,
+                                    data.repo_labor.repo_id,
                                     MAX ( data_collection_date ) AS last_collected
                                 FROM 
-                                    augur_data.repo_labor
-                                GROUP BY augur_data.repo_labor.repo_id) recent 
+                                    data.repo_labor
+                                GROUP BY data.repo_labor.repo_id) recent 
                         WHERE
-                            augur_data.repo_labor.repo_id = recent.repo_id
-                            AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
+                            data.repo_labor.repo_id = recent.repo_id
+                            AND data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
                 GROUP BY d.repo_id) e
-            WHERE augur_data.repo.repo_id = e.repo_id and augur_data.repo.repo_id = :repo_id_param
+            WHERE data.repo.repo_id = e.repo_id and data.repo.repo_id = :repo_id_param
             ORDER BY e.repo_id   
     """).bindparams(repo_id_param=repo_id)
 
@@ -147,33 +147,33 @@ def get_project_comment_lines():
     comment_lines_sql = s.sql.text("""
         SELECT
                 e.repo_id,
-                augur_data.repo.repo_git,
-                augur_data.repo.repo_name,
+                data.repo.repo_git,
+                data.repo.repo_name,
                 e.comment_lines,
                 e.avg_comment_lines
             FROM
-                augur_data.repo,
+                data.repo,
             (SELECT 
                     d.repo_id,
                     SUM(d.comment_lines) AS comment_lines,
                     AVG(d.comment_lines)::INT AS avg_comment_lines
                 FROM
                     (SELECT
-                            augur_data.repo_labor.repo_id,
-                            augur_data.repo_labor.comment_lines
+                            data.repo_labor.repo_id,
+                            data.repo_labor.comment_lines
                         FROM
-                            augur_data.repo_labor,
+                            data.repo_labor,
                             ( SELECT 
-                                    augur_data.repo_labor.repo_id,
+                                    data.repo_labor.repo_id,
                                     MAX ( data_collection_date ) AS last_collected
                                 FROM 
-                                    augur_data.repo_labor
-                                GROUP BY augur_data.repo_labor.repo_id) recent 
+                                    data.repo_labor
+                                GROUP BY data.repo_labor.repo_id) recent 
                         WHERE
-                            augur_data.repo_labor.repo_id = recent.repo_id
-                            AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
+                            data.repo_labor.repo_id = recent.repo_id
+                            AND data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
                 GROUP BY d.repo_id) e
-            WHERE augur_data.repo.repo_id = e.repo_id 
+            WHERE data.repo.repo_id = e.repo_id 
             AND e.repo_id = :repo_id_param
             ORDER BY e.repo_id
     """).bindparams(repo_id_param=repo_id)
@@ -192,33 +192,33 @@ def get_project_blank_lines():
     blank_lines_sql = s.sql.text("""
             SELECT
                 e.repo_id,
-                augur_data.repo.repo_git,
-                augur_data.repo.repo_name,
+                data.repo.repo_git,
+                data.repo.repo_name,
                 e.blank_lines,
                 e.avg_blank_lines
                     FROM
-                            augur_data.repo,
+                            data.repo,
                     (SELECT 
                                     d.repo_id,
                                     SUM(d.blank_lines) AS blank_lines,
                                     AVG(d.blank_lines)::int AS avg_blank_lines
                             FROM
                                     (SELECT
-                                                    augur_data.repo_labor.repo_id,
-                                                    augur_data.repo_labor.blank_lines
+                                                    data.repo_labor.repo_id,
+                                                    data.repo_labor.blank_lines
                                             FROM
-                                                            augur_data.repo_labor,
+                                                            data.repo_labor,
                                                             ( SELECT 
-                                                                            augur_data.repo_labor.repo_id,
+                                                                            data.repo_labor.repo_id,
                                                                             MAX ( data_collection_date ) AS last_collected
                                                                     FROM 
-                                                                            augur_data.repo_labor
-                                                                    GROUP BY augur_data.repo_labor.repo_id) recent 
+                                                                            data.repo_labor
+                                                                    GROUP BY data.repo_labor.repo_id) recent 
                                                     WHERE
-                                                            augur_data.repo_labor.repo_id = recent.repo_id
-                                                            AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
+                                                            data.repo_labor.repo_id = recent.repo_id
+                                                            AND data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
                                     GROUP BY d.repo_id) e
-                    WHERE augur_data.repo.repo_id = e.repo_id
+                    WHERE data.repo.repo_id = e.repo_id
                     AND e.repo_id = :repo_id_param
                     ORDER BY e.repo_id
         """).bindparams(repo_id_param=repo_id)
@@ -236,33 +236,33 @@ def get_project_file_complexity():
     project_file_complexity_sql = s.sql.text("""
         SELECT
                 e.repo_id,
-                augur_data.repo.repo_git,
-                augur_data.repo.repo_name,
+                data.repo.repo_git,
+                data.repo.repo_name,
                 e.sum_code_complexity,
                 e.average_code_complexity
             FROM
-                augur_data.repo,
+                data.repo,
             (SELECT 
                     d.repo_id,
                     SUM(d.code_complexity) AS sum_code_complexity,
                     AVG(d.code_complexity)::int AS average_code_complexity
                 FROM
                     (SELECT
-                            augur_data.repo_labor.repo_id,
-                            augur_data.repo_labor.code_complexity
+                            data.repo_labor.repo_id,
+                            data.repo_labor.code_complexity
                         FROM
-                            augur_data.repo_labor,
+                            data.repo_labor,
                             ( SELECT 
-                                    augur_data.repo_labor.repo_id,
+                                    data.repo_labor.repo_id,
                                     MAX ( data_collection_date ) AS last_collected
                                 FROM 
-                                    augur_data.repo_labor
-                                GROUP BY augur_data.repo_labor.repo_id) recent 
+                                    data.repo_labor
+                                GROUP BY data.repo_labor.repo_id) recent 
                         WHERE
-                            augur_data.repo_labor.repo_id = recent.repo_id
-                            AND augur_data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
+                            data.repo_labor.repo_id = recent.repo_id
+                            AND data.repo_labor.data_collection_date > recent.last_collected - (5 * interval '1 minute')) d
             GROUP BY d.repo_id) e
-            WHERE augur_data.repo.repo_id = e.repo_id
+            WHERE data.repo.repo_id = e.repo_id
             ORDER BY e.repo_id
         """)
     

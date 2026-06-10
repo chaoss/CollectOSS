@@ -231,7 +231,7 @@ def annual_commit_count_ranked_by_repo_in_repo_group(repo_group_id, repo_id=None
         if timeframe == 'all':
             cdRgTpRankedCommitsSQL = s.sql.text("""
                 SELECT repo.repo_id, repo_name as name, SUM(added - removed - whitespace) as net, patches
-                FROM augur_data.dm_repo_annual, repo, repo_groups
+                FROM data.dm_repo_annual, repo, repo_groups
                 WHERE repo.repo_group_id = :repo_group_id
                 AND repo.repo_group_id = repo_groups.repo_group_id
                 AND dm_repo_annual.repo_id = repo.repo_id

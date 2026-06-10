@@ -33,7 +33,7 @@ def test_get_config_key(key_handler, test_db_engine):
         data = {"github_api_key": "asdfdfkey"}
         with test_db_engine.connect() as connection:
 
-            query = text("""INSERT INTO "augur_operations"."config" ("id", "section_name", "setting_name", "value", "type") VALUES (3, 'Keys', 'github_api_key', :github_api_key, 'str');""")
+            query = text("""INSERT INTO "operations"."config" ("id", "section_name", "setting_name", "value", "type") VALUES (3, 'Keys', 'github_api_key', :github_api_key, 'str');""")
 
             connection.execute(query, **data)
 
@@ -43,7 +43,7 @@ def test_get_config_key(key_handler, test_db_engine):
     
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.config""")
+            connection.execute("""DELETE FROM operations.config""")
 
 def test_get_config_key_with_none_specified(key_handler, test_db_engine):
 
@@ -64,7 +64,7 @@ def test_get_api_keys_from_database(key_handler, test_db_engine):
 
             for value in data:
 
-                query = text("""INSERT INTO "augur_operations"."worker_oauth" ("name", "consumer_key", "consumer_secret", "access_token", "access_token_secret", "repo_directory", "platform") VALUES ('test_key', '0', '0', :api_key, '0', NULL, 'github');""")
+                query = text("""INSERT INTO "operations"."worker_oauth" ("name", "consumer_key", "consumer_secret", "access_token", "access_token_secret", "repo_directory", "platform") VALUES ('test_key', '0', '0', :api_key, '0', NULL, 'github');""")
 
                 connection.execute(query, **value)
 
@@ -78,7 +78,7 @@ def test_get_api_keys_from_database(key_handler, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.worker_oauth""")
+            connection.execute("""DELETE FROM operations.worker_oauth""")
 
 api_key_list = ["asdfdfkey", "jloire", "zdfdr", "asdrxer"]
 @pytest.mark.parametrize("api_key", api_key_list)
@@ -101,7 +101,7 @@ def test_get_api_keys(key_handler, test_db_engine):
 
             for value in data:
 
-                query = text("""INSERT INTO "augur_operations"."worker_oauth" ("name", "consumer_key", "consumer_secret", "access_token", "access_token_secret", "repo_directory", "platform") VALUES ('test_key', '0', '0', :api_key, '0', NULL, 'github');""")
+                query = text("""INSERT INTO "operations"."worker_oauth" ("name", "consumer_key", "consumer_secret", "access_token", "access_token_secret", "repo_directory", "platform") VALUES ('test_key', '0', '0', :api_key, '0', NULL, 'github');""")
 
                 connection.execute(query, **value)
 
@@ -112,4 +112,4 @@ def test_get_api_keys(key_handler, test_db_engine):
 
     finally:
         with test_db_engine.connect() as connection:
-            connection.execute("""DELETE FROM augur_operations.worker_oauth""")
+            connection.execute("""DELETE FROM operations.worker_oauth""")

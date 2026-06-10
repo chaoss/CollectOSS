@@ -347,7 +347,7 @@ Repo_meta
 Repo_sbom_scans
 ---------------
 
- This table links the collectoss_data schema to the collectoss_spdx schema to keep a list of repositories that need licenses scanned. (These are for file level license declarations, which are common in Linux Foundation projects, but otherwise not in wide use).
+ This table links the data schema to the collectoss_spdx schema to keep a list of repositories that need licenses scanned. (These are for file level license declarations, which are common in Linux Foundation projects, but otherwise not in wide use).
 
                 .. image:: images/repo_sbom_scans.png
                    :width: 200

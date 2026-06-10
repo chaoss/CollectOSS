@@ -78,10 +78,10 @@ def clustering_model(repo_git: str,logger,engine) -> None:
                 i.issue_title thread_title,
                 M.msg_id 
             FROM
-                augur_data.repo r,
-                augur_data.issues i,
-                augur_data.message M,
-                augur_data.issue_message_ref imr 
+                data.repo r,
+                data.issues i,
+                data.message M,
+                data.issue_message_ref imr 
             WHERE
                 r.repo_id = i.repo_id 
                 AND imr.issue_id = i.issue_id 
@@ -98,10 +98,10 @@ def clustering_model(repo_git: str,logger,engine) -> None:
                 pr.pr_src_title thread_title,
                 M.msg_id 
             FROM
-                augur_data.repo r,
-                augur_data.pull_requests pr,
-                augur_data.message M,
-                augur_data.pull_request_message_ref prmr 
+                data.repo r,
+                data.pull_requests pr,
+                data.message M,
+                data.pull_request_message_ref prmr 
             WHERE
                 r.repo_id = pr.repo_id 
                 AND prmr.pull_request_id = pr.pull_request_id 
@@ -289,15 +289,15 @@ def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_c
     get_messages_sql = s.sql.text(
         """
         SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, i.issue_id thread_id,m.msg_text,i.issue_title thread_title,m.msg_id
-        FROM augur_data.repo r, augur_data.issues i,
-        augur_data.message m, augur_data.issue_message_ref imr
+        FROM data.repo r, data.issues i,
+        data.message m, data.issue_message_ref imr
         WHERE r.repo_id=i.repo_id
         AND imr.issue_id=i.issue_id
         AND imr.msg_id=m.msg_id
         UNION
         SELECT r.repo_group_id, r.repo_id, r.repo_git, r.repo_name, pr.pull_request_id thread_id,m.msg_text,pr.pr_src_title thread_title,m.msg_id
-        FROM augur_data.repo r, augur_data.pull_requests pr,
-        augur_data.message m, augur_data.pull_request_message_ref prmr
+        FROM data.repo r, data.pull_requests pr,
+        data.message m, data.pull_request_message_ref prmr
         WHERE r.repo_id=pr.repo_id
         AND prmr.pull_request_id=pr.pull_request_id
         AND prmr.msg_id=m.msg_id
@@ -365,7 +365,7 @@ def train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_c
 
     # key_sequence_words_sql = s.sql.text(
     #                           """
-    #       SELECT nextval('augur_data.topic_words_topic_words_id_seq'::text)
+    #       SELECT nextval('data.topic_words_topic_words_id_seq'::text)
     #       """
     #                               )
 

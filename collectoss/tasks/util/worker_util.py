@@ -11,6 +11,7 @@ from datetime import datetime
 import json
 import subprocess
 
+from typing_extensions import deprecated
 from collectoss.tasks.util.metadata_exception import MetadataException
 
 
@@ -109,6 +110,7 @@ def remove_duplicate_naturals(data, natural_keys):
 def date_weight_factor(days_since_last_collection,domain_shift=0):
     return (days_since_last_collection - domain_shift) ** 4
 
+@deprecated("This method of scheduling is legacy and should be removed")
 def calculate_date_weight_from_timestamps(added,last_collection,domain_start_days=30):
     #Get the time since last collection as well as when the repo was added.
     if last_collection is None:

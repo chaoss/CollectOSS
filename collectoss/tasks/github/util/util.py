@@ -8,6 +8,7 @@ from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyA
 from collectoss.tasks.github.util.github_graphql_data_access import GithubGraphQlDataAccess
 from collectoss.application.db.lib import get_repo_by_repo_git
 from collectoss.tasks.util.worker_util import calculate_date_weight_from_timestamps
+from typing_extensions import deprecated
 
 def get_repo_src_id(owner, repo, logger):
     
@@ -87,6 +88,7 @@ def parse_json_response(logger: logging.Logger, response: httpx.Response) -> dic
         logger.warning(f"invalid return. Response was: {response.text}. Exception: {e}")
         return json.loads(json.dumps(response.text))
 
+@deprecated("This method of scheduling is legacy and should be removed")
 def get_repo_weight_by_issue(logger,repo_git):
     """
     Retrieve the sum of the number of issues and prs in a repository from a graphql query.
@@ -111,6 +113,7 @@ def get_repo_weight_by_issue(logger,repo_git):
     return number_of_issues_and_prs
 
 #Get the weight for each repo for the core collection hook
+@deprecated("This method of scheduling is legacy and should be removed")
 def get_repo_weight_core(logger,repo_git):
     
     repo = get_repo_by_repo_git(repo_git)

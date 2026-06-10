@@ -14,7 +14,6 @@ from collectoss.application.db.session import DatabaseSession
 from collectoss.application.config import SystemConfig
 from collectoss.application.db.engine import get_database_string, create_database_engine, parse_database_string, execute_sql_file
 
-
 logger = logging.getLogger(__name__)
 
 default_repo_id = "25430"
@@ -104,7 +103,8 @@ def generate_db_from_template(template_name):
     create_database(conn, cursor, test_db_name, template_name)
 
     # create engine to connect to db
-    engine = create_database_engine(test_db_string, poolclass=StaticPool)
+    engine = create_database_engine(test_db_string, poolclass=StaticPool, connect_args={"application_name": f"collectoss tests"})
+
 
     yield engine
 
@@ -195,7 +195,7 @@ def read_only_db(empty_db):
     database_name = empty_db.url.database
     test_username = "testuser"
     test_password = "testpass"
-    schemas = ["public", "augur_data", "augur_operations"]
+    schemas = ["public", "data", "operations"]
 
     # create read-only user
     empty_db.execute(s.text(f"CREATE USER testuser WITH PASSWORD '{test_password}';"))

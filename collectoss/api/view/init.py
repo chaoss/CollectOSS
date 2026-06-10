@@ -1,13 +1,10 @@
-import os
 from pathlib import Path
-from .server import Environment
 from collectoss.application.logs import SystemLogger
 import secrets, yaml
-
-env = Environment()
+from collectoss.application.environment import SystemEnv
 
 # load configuration files and initialize globals
-configFile = Path(env.setdefault("CONFIG_LOCATION", "config.yml"))
+configFile = Path(SystemEnv.get("CONFIG_LOCATION") or "config.yml")
 
 settings = {}
 

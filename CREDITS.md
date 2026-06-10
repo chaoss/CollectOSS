@@ -13,6 +13,8 @@ The list of current CollectOSS maintainers can be found in the [MAINTAINERS](./M
 
 Augur has been supported by the University of Missouri through funding provided by the Alfred P. Sloan Foundation, Mozilla, The Reynolds Journalism Institute with contributions from VMWare, Red Hat LLC, Grace Hopper's Open Source Day, GitHub, Microsoft, Twitter, Adobe, the Gluster Project, Open Source Summit (NA/Europe), and the Linux Foundation Compliance Summit.
 
+Augur has also been supported by the University of Nebraska at Omaha.
+
 Significant design contributors include Kate Stewart, Dawn Foster, Duane O'Brien, Remy Decausemaker, Google Summer of Code Students, and others including:
 
 ### Maintainers
@@ -42,6 +44,18 @@ Significant design contributors include Kate Stewart, Dawn Foster, Duane O'Brien
 - [Georg J.P. Link](https://github.com/GeorgLink)
 - [Gary P. White](https://github.com/garypwhite)
 - [Shlok Gilda](https://github.com/shlokgilda)
+
+### Credited Copyright Holders
+These names came from the LICENSE.md file in the Augur project:
+- Matt Germonprez
+- Sean Goggins
+- Gabe Heim
+- Derek Howard
+- Carter Landis
+- Matt Snell
+- Brian Warner
+- University of Nebraska at Omaha
+- University of Missouri
 
 ### GSoC 2025 Participants
 - [Akshat Baranwal](https://github.com/akshatb2006)

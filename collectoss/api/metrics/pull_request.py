@@ -787,8 +787,8 @@ def pull_request_average_commit_counts(repo_group_id, repo_id=None, group_by='mo
                 pr_merged_at,
                 pr_closed_at,
                 pr_created_at
-            FROM augur_data.pull_request_commits, augur_data.pull_request_meta,augur_data.repo_groups, 
-            augur_data.pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
+            FROM data.pull_request_commits, data.pull_request_meta,data.repo_groups, 
+            data.pull_requests JOIN repo ON pull_requests.repo_id = repo.repo_id
             WHERE pull_requests.repo_id IN 
                 (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
                 AND pull_requests.pull_request_id = pull_request_commits.pull_request_id
@@ -821,7 +821,7 @@ def pull_request_average_commit_counts(repo_group_id, repo_id=None, group_by='mo
             pr_merged_at,
             pr_closed_at,
             pr_created_at
-        FROM augur_data.pull_request_commits, augur_data.pull_requests, augur_data.pull_request_meta
+        FROM data.pull_request_commits, data.pull_requests, data.pull_request_meta
         WHERE pull_requests.pull_request_id = pull_request_commits.pull_request_id
             AND pull_requests.pull_request_id = pull_request_meta.pull_request_id
             AND pull_requests.repo_id = :repo_id

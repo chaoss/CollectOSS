@@ -190,7 +190,7 @@ def sbom_download(repo_group_id, repo_id=None):
     :return: dosocs sbom
     """
     dosocs_SQL = s.sql.text("""
-        select * from augur_data.repo_sbom_scans
+        select * from data.repo_sbom_scans
         where repo_id = :repo_id;
     """)
 
@@ -313,7 +313,7 @@ def cii_best_practices_badge(repo_group_id, repo_id=None):
     if not repo_id:
         cii_best_practices_badge_SQL = s.sql.text("""
             SELECT data
-            FROM augur_data.repo_badging
+            FROM data.repo_badging
             WHERE repo_id IN (SELECT repo_id FROM repo WHERE repo_group_id = :repo_group_id)
             ORDER BY created_at DESC
             LIMIT 1
@@ -321,7 +321,7 @@ def cii_best_practices_badge(repo_group_id, repo_id=None):
     else:
         cii_best_practices_badge_SQL = s.sql.text("""
             SELECT data
-            FROM augur_data.repo_badging
+            FROM data.repo_badging
             WHERE repo_id = :repo_id
             ORDER BY created_at DESC
             LIMIT 1
@@ -1270,7 +1270,7 @@ def clones(repo_group_id, repo_id=None, begin_date=None, end_date=None):
                 clone_data_timestamp AS date,
                 count_clones AS total_clones,
                 unique_clones
-            FROM augur_data.repo_clones_data
+            FROM data.repo_clones_data
             WHERE repo_id = :repo_id
               AND clone_data_timestamp BETWEEN :begin_date AND :end_date
             ORDER BY clone_data_timestamp
@@ -1289,9 +1289,9 @@ def clones(repo_group_id, repo_id=None, begin_date=None, end_date=None):
                 clone_data_timestamp AS date,
                 count_clones AS total_clones,
                 unique_clones
-            FROM augur_data.repo_clones_data
+            FROM data.repo_clones_data
             WHERE repo_id IN (
-                SELECT repo_id FROM augur_data.repo WHERE repo_group_id = :repo_group_id
+                SELECT repo_id FROM data.repo WHERE repo_group_id = :repo_group_id
             )
               AND clone_data_timestamp BETWEEN :begin_date AND :end_date
             ORDER BY repo_id, clone_data_timestamp

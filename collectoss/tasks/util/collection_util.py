@@ -17,7 +17,7 @@ from collectoss.tasks.util.worker_util import calculate_date_weight_from_timesta
 from collectoss.tasks.util.collection_state import CollectionState
 from collectoss.application.db.session import DatabaseSession
 from collectoss.application.config import SystemConfig
-
+from typing_extensions import deprecated
 
 class CollectionRequest:
     def __init__(self,name,phases,max_repo = 10,days_until_collect_again = 1, gitlab_phases=None):
@@ -74,7 +74,7 @@ def get_newly_added_repos(session, limit, hook):
 
     repo_query = s.sql.text(f"""
         select repo_git 
-        from augur_operations.collection_status x, augur_data.repo y 
+        from operations.collection_status x, data.repo y 
         where x.repo_id=y.repo_id 
         and {condition_string}
         order by {order_by_field}
@@ -96,7 +96,7 @@ def get_repos_for_recollection(session, limit, hook, days_until_collect_again):
 
     repo_query = s.sql.text(f"""
         select repo_git 
-        from augur_operations.collection_status x,  repo y 
+        from operations.collection_status x,  repo y 
         where x.repo_id = y.repo_id
         and {condition_string}
         and {hook}_data_last_collected <= NOW() - INTERVAL '{days_until_collect_again} DAYS'
@@ -252,6 +252,7 @@ def core_task_success_util(self, repo_git):
         issue_pr_task_update_weight_util([int(raw_count)],repo_git=repo_git,session=session)
 
 #Update the existing core and secondary weights as well as the raw sum of issues and prs
+@deprecated("This method of scheduling is legacy and should be removed")
 def update_issue_pr_weights(logger,session,repo_git,raw_sum):
     repo = Repo.get_by_repo_git(session, repo_git)
     status = repo.collection_status[0]

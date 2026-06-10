@@ -113,11 +113,11 @@ def contributor_breadth_model(self) -> None:
             if len(cntrb_events) == 0:
                 logger.info("There are no cntrb events, or new events for this user.\n")
                 continue
-
         except UrlNotFoundException as e:
-            logger.warning(e)
+            logger.warning(
+                f"UrlNotFoundException while processing contributor {cntrb['gh_login']}: {e}"
+            )
             continue
-
         events = process_contributor_events(cntrb, cntrb_events, logger, tool_source, tool_version, data_source)
 
         logger.info(f"Inserting {len(events)} events")

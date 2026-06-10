@@ -110,31 +110,31 @@ def clear_redis_caches():
 #Make sure that database reflects collection status when processes are killed/stopped.
 def clean_collection_status(session):
     session.execute_sql(s.sql.text("""
-        UPDATE augur_operations.collection_status 
+        UPDATE operations.collection_status 
         SET core_status='Pending',core_task_id = NULL
         WHERE core_status='Collecting' AND core_data_last_collected IS NULL;
 
-        UPDATE augur_operations.collection_status
+        UPDATE operations.collection_status
         SET core_status='Success',core_task_id = NULL
         WHERE core_status='Collecting' AND core_data_last_collected IS NOT NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE operations.collection_status 
         SET secondary_status='Pending',secondary_task_id = NULL
         WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE operations.collection_status 
         SET secondary_status='Success',secondary_task_id = NULL
         WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NOT NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE operations.collection_status 
         SET facade_status='Update', facade_task_id=NULL
         WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE operations.collection_status 
         SET facade_status='Success', facade_task_id=NULL
         WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NOT NULL;
 
-        UPDATE augur_operations.collection_status
+        UPDATE operations.collection_status
         SET facade_status='Pending', facade_task_id=NULL
         WHERE facade_status='Failed Clone' OR facade_status='Initializing';
     """))

@@ -35,6 +35,7 @@ from collectoss.tasks.util.worker_util import calculate_date_weight_from_timesta
 from collectoss.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_working_commits_by_repo_id_and_hashes, remove_commits_by_repo_id_and_hashes, get_repo_by_repo_git, get_session
 from collectoss.application.db.util import execute_session_query
 #from collectoss.tasks.git.util.facade_worker.facade
+from typing_extensions import deprecated
 
 def update_repo_log(logger, facade_helper, repos_id,status):
 
@@ -176,6 +177,7 @@ def get_repo_commit_count(logger, facade_helper, repo_git):
 
 	return commit_count
 
+@deprecated("This method of scheduling is legacy and should be removed")
 def get_facade_weight_time_factor(repo_git):
 
 	with get_session() as session:
@@ -194,15 +196,16 @@ def get_facade_weight_time_factor(repo_git):
 
 		return  time_factor
 
+@deprecated("This method of scheduling is legacy and should be removed")
 def get_facade_weight_with_commit_count(repo_git, commit_count):
 	return commit_count - get_facade_weight_time_factor(repo_git)
 
-
+@deprecated("This method of scheduling is legacy and should be removed")
 def get_repo_weight_by_commit(logger, repo_git):
 	facade_helper = FacadeHelper(logger)
 	return get_repo_commit_count(logger, facade_helper, repo_git) - get_facade_weight_time_factor(repo_git)
 	
-
+@deprecated("This method of scheduling is legacy and should be removed")
 def update_facade_scheduling_fields(repo_git, weight, commit_count):
 
 	repo = get_repo_by_repo_git(repo_git)

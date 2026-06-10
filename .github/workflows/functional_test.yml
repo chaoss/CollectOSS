@@ -27,5 +27,4 @@ jobs:
       - name: Run Tests
         run: |
           uv run --python ${{ matrix.env }} pytest \
-            tests/test_classes \
             --color=yes

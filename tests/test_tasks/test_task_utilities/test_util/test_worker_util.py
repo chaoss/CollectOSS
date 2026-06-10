@@ -2,11 +2,12 @@ import logging
 import pytest
 import sqlalchemy as s
 
-from collectoss.tasks.util.worker_util import *
+from collectoss.tasks.util.worker_util import remove_duplicates_by_uniques
 
 logger = logging.getLogger(__name__)
 
-def test_remove_duplicates_by_uniques(test_db_engine):
+@pytest.mark.unit
+def test_remove_duplicates_by_uniques():
 
     data_1 = {"cntrb_login": "Bob", "gh_user_id": 4, "gh_login": "bob", "cntrb_id": "01003f7a-8500-0000-0000-000000000000"}
     data_2 = {"cntrb_login": "amazing", "gh_user_id": 1700, "gh_login": "hello", "cntrb_id": "01003f7a-8500-0000-0000-000123002000"}

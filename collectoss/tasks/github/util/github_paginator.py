@@ -7,8 +7,9 @@ import logging
 
 from typing import Optional
 from enum import Enum
+from typing_extensions import deprecated
 
- 
+@deprecated("Deprecated. Use GithubDataAccess class instead") 
 def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, method: str = 'GET', follow_redirects=True) -> Optional[httpx.Response]:
     """Ping the api and get the data back for the page.
 

@@ -121,7 +121,7 @@ While most business in CollectOSS is conducted by "[lazy consensus](https://comm
 periodically the Maintainers may need to vote on specific actions or changes.
 A vote can be taken on the project's public Slack channel (#wg-collectoss-8knot in the [CHAOSS Slack](https://chaoss.community/kb-getting-started/)) or 
 the private Maintainer Slack channel for security or conduct matters.  
-Votes may also be taken at the biweely developer meeting.  Any Maintainer may
+Votes may also be taken at the biweekly developer meeting.  Any Maintainer may
 demand a vote be taken.
 
 Most votes require a simple majority of all Maintainers to succeed, except where

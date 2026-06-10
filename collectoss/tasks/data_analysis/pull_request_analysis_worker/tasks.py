@@ -59,8 +59,8 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
         pull_request_commits.pr_cmt_id, 
         pr_augur_contributor_id, 
         pr_src_author_association 
-        from augur_data.pull_requests
-        INNER JOIN augur_data.pull_request_commits on pull_requests.pull_request_id = pull_request_commits.pull_request_id 
+        from data.pull_requests
+        INNER JOIN data.pull_request_commits on pull_requests.pull_request_id = pull_request_commits.pull_request_id 
         where pr_created_at > :begin_date 
         and pull_requests.repo_id = :repo_id 
         and pr_src_state like 'open' 
@@ -90,13 +90,13 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
 
     # Get sentiment score of all messages relating to the PR
     messages_SQL = s.sql.text("""
-            select message.msg_id, msg_timestamp,  msg_text, message.cntrb_id from augur_data.message
-            left outer join augur_data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
-            left outer join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id where pull_request_message_ref.repo_id = :repo_id
+            select message.msg_id, msg_timestamp,  msg_text, message.cntrb_id from data.message
+            left outer join data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
+            left outer join data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id where pull_request_message_ref.repo_id = :repo_id
             UNION
-            select message.msg_id, msg_timestamp, msg_text, message.cntrb_id from augur_data.message
-            left outer join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
-            left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id where issue_message_ref.repo_id = :repo_id""")
+            select message.msg_id, msg_timestamp, msg_text, message.cntrb_id from data.message
+            left outer join data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
+            left outer join data.issues on issue_message_ref.issue_id = issues.issue_id where issue_message_ref.repo_id = :repo_id""")
     with engine.connect() as conn:
         df_message = pd.read_sql_query(messages_SQL, conn, params={'repo_id': repo_id})
 
@@ -104,7 +104,7 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
 
     # Map PR to its corresponding messages
     
-    pr_ref_sql = s.sql.text("select * from augur_data.pull_request_message_ref")
+    pr_ref_sql = s.sql.text("select * from data.pull_request_message_ref")
     with engine.connect() as conn:
         df_pr_ref = pd.read_sql_query(pr_ref_sql, conn)
     df_merge = pd.merge(df_pr, df_pr_ref, on='pull_request_id', how='left')
@@ -142,7 +142,7 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
 
     '''
     # Get cntrb info from API
-    cntrb_sql = 'SELECT cntrb_id, gh_login FROM augur_data.contributors'
+    cntrb_sql = 'SELECT cntrb_id, gh_login FROM data.contributors'
     df_ctrb = pd.read_sql_query(cntrb_SQL, create_database_engine())
     df_fin1 = pd.merge(df_fin,df_ctrb,left_on='pr_augur_contributor_id', right_on='cntrb_id', how='left')
     df_fin1 = df_fin1.drop(['cntrb_id'],axis=1)
@@ -157,7 +157,7 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
     # Get repo info
     repo_sql = s.sql.text("""
             SELECT repo_id, pull_requests_merged, pull_request_count,watchers_count, last_updated FROM 
-            augur_data.repo_info where repo_id = :repo_id
+            data.repo_info where repo_id = :repo_id
             """)
     
     with engine.connect() as conn:

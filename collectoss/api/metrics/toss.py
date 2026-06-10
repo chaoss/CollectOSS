@@ -114,7 +114,7 @@ def toss_repo_info(repo_id):
         repo_info.default_branch,
         repo.repo_git
     FROM
-        augur_data.repo_info
+        data.repo_info
         JOIN repo ON repo.repo_id = repo_info.repo_id
     WHERE
         repo_info.repo_id = :repo_id

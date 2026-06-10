@@ -31,14 +31,14 @@ with the following fields (don't remove any variable, keep placeholder values if
 
 .. code:: python
 
-    AUGUR_DB=collectoss
-    AUGUR_DB_USER=collectoss
-    AUGUR_DB_PASSWORD=password_here
+    COLLECTOSS_DB=collectoss
+    COLLECTOSS_DB_USER=collectoss
+    COLLECTOSS_DB_PASSWORD=password_here
 
-    AUGUR_GITHUB_API_KEY=ghp_value_here
-    AUGUR_GITHUB_USERNAME=gh_username
-    AUGUR_GITLAB_API_KEY=placeholder
-    AUGUR_GITLAB_USERNAME=placeholder
+    COLLECTOSS_GITHUB_API_KEY=ghp_value_here
+    COLLECTOSS_GITHUB_USERNAME=gh_username
+    COLLECTOSS_GITLAB_API_KEY=placeholder
+    COLLECTOSS_GITLAB_USERNAME=placeholder
 
 Then run:
 
@@ -98,11 +98,11 @@ You can provide your own ``.env`` file to pull from. The file should have the be
 
   .. code::
 
-    AUGUR_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
-    AUGUR_GITHUB_USERNAME=usernameGithub
-    AUGUR_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
-    AUGUR_GITLAB_USERNAME=usernameGitlab
-    AUGUR_DB=yourDBString
+    COLLECTOSS_GITHUB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
+    COLLECTOSS_GITHUB_USERNAME=usernameGithub
+    COLLECTOSS_GITLAB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxx
+    COLLECTOSS_GITLAB_USERNAME=usernameGitlab
+    COLLECTOSS_DB=yourDBString
 
 
 Now that you've created your config file or are ready to generate it yourself, you're ready to `get going <quick-start.html>`_ .

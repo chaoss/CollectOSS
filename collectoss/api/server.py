@@ -27,6 +27,7 @@ from graphene_sqlalchemy import SQLAlchemyObjectType
 from collectoss.application.logs import SystemLogger
 from collectoss.application.db.session import DatabaseSession
 from collectoss.application.config import SystemConfig
+from collectoss.application.environment import SystemEnv
 from collectoss.application.db.engine import get_database_string, create_database_engine
 from collectoss.application.db.models import Repo, Issue, PullRequest, Message, PullRequestReview, Commit, IssueAssignee, PullRequestAssignee, PullRequestCommit, PullRequestFile, Contributor, IssueLabel, PullRequestLabel, ContributorsAlias, Release, ClientApplication
 
@@ -300,8 +301,8 @@ def create_cache_manager() -> CacheManager:
     cache_config = {
         'cache.type': 'file',
         # Allow setting cache directories via environment variables
-        'cache.data_dir': Path(env.setdefault("CACHE_DATADIR", 'runtime/cache/')),
-        'cache.lock_dir': Path(env.setdefault("CACHE_LOCKDIR", 'runtime/cache/')),
+        'cache.data_dir': Path(SystemEnv.set_default("CACHE_DATADIR", 'runtime/cache/')),
+        'cache.lock_dir': Path(SystemEnv.set_default("CACHE_LOCKDIR", 'runtime/cache/')),
     }
 
     if not os.path.exists(cache_config['cache.data_dir']):
@@ -329,7 +330,7 @@ def get_server_cache(cache_manager) -> Cache:
 
 logger = SystemLogger("server").get_logger()
 url = get_database_string()
-engine = create_database_engine(url, poolclass=StaticPool)
+engine = create_database_engine(url, poolclass=StaticPool, connect_args={"application_name": f"collectoss v{code_version} api"})
 db_session = DatabaseSession(logger, engine)
 system_config = SystemConfig(logger, db_session)
 

@@ -19,78 +19,78 @@ def refresh_materialized_views(self):
     #self.logger = logging.getLogger(refresh_materialized_views.__name__)
 
     mv1_refresh = s.sql.text("""    
-                REFRESH MATERIALIZED VIEW concurrently augur_data.api_get_all_repo_prs with data;
+                REFRESH MATERIALIZED VIEW concurrently data.api_get_all_repo_prs with data;
                 COMMIT; 
     """)
 
     mv2_refresh = s.sql.text("""    
-                REFRESH MATERIALIZED VIEW concurrently augur_data.api_get_all_repos_commits with data;
+                REFRESH MATERIALIZED VIEW concurrently data.api_get_all_repos_commits with data;
                 COMMIT; 
     """)
 
     mv3_refresh = s.sql.text("""    
-                REFRESH MATERIALIZED VIEW concurrently augur_data.api_get_all_repos_issues with data;
+                REFRESH MATERIALIZED VIEW concurrently data.api_get_all_repos_issues with data;
                 COMMIT; 
     """)
 
     mv4_refresh = s.sql.text("""    
-                REFRESH MATERIALIZED VIEW concurrently augur_data.augur_new_contributors with data;
+                REFRESH MATERIALIZED VIEW concurrently data.augur_new_contributors with data;
                 COMMIT; 
     """)
     mv5_refresh = s.sql.text("""    
-                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_commits_and_committers_daily_count with data;
+                REFRESH MATERIALIZED VIEW concurrently data.explorer_commits_and_committers_daily_count with data;
                 COMMIT; 
     """)
 
     mv6_refresh = s.sql.text("""    
-                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_new_contributors with data;
+                REFRESH MATERIALIZED VIEW concurrently data.explorer_new_contributors with data;
                 COMMIT; 
     """)
 
     mv7_refresh = s.sql.text("""    
-                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_entry_list with data;
+                REFRESH MATERIALIZED VIEW concurrently data.explorer_entry_list with data;
                 COMMIT; 
     """)
 
     mv8_refresh = s.sql.text("""    
 
-                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_contributor_actions with data;
+                REFRESH MATERIALIZED VIEW concurrently data.explorer_contributor_actions with data;
                 COMMIT; 
     """)
 
     mv9_refresh = s.sql.text("""    
 
-                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_user_repos with data;
+                REFRESH MATERIALIZED VIEW concurrently data.explorer_user_repos with data;
                 COMMIT; 
     """)
 
     mv10_refresh = s.sql.text("""    
 
-                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_pr_response_times with data;
+                REFRESH MATERIALIZED VIEW concurrently data.explorer_pr_response_times with data;
                 COMMIT; 
     """)
 
     mv11_refresh = s.sql.text("""    
 
-                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_pr_assignments with data;
+                REFRESH MATERIALIZED VIEW concurrently data.explorer_pr_assignments with data;
                 COMMIT; 
     """)
 
     mv12_refresh = s.sql.text("""    
 
-                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_issue_assignments with data;
+                REFRESH MATERIALIZED VIEW concurrently data.explorer_issue_assignments with data;
                 COMMIT; 
     """)
 
     mv13_refresh = s.sql.text("""    
 
-                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_pr_response with data;
+                REFRESH MATERIALIZED VIEW concurrently data.explorer_pr_response with data;
                 COMMIT; 
     """)
 
     mv14_refresh = s.sql.text("""    
 
-                REFRESH MATERIALIZED VIEW concurrently augur_data.explorer_repo_languages with data;
+                REFRESH MATERIALIZED VIEW concurrently data.explorer_repo_languages with data;
                 COMMIT; 
     """)
 

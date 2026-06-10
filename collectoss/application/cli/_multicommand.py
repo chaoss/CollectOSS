@@ -11,7 +11,7 @@ import traceback
 from pathlib import Path
 # import collectoss.application
 
-CONTEXT_SETTINGS = dict(auto_envvar_prefix='AUGUR')
+CONTEXT_SETTINGS = dict(auto_envvar_prefix='COLLECTOSS')
 
 class CLIMultiCommand(click.MultiCommand):
     def __commands_folder(self):

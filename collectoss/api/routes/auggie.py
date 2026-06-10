@@ -14,6 +14,8 @@ import os
 import requests
 import slack
 
+from collectoss.application.environment import SystemEnv
+
 from ..server import app
 
 
@@ -252,7 +254,7 @@ def get_auggie_user():
     # return Response(response=response, status=200, mimetype="application/json")
     ## From Method
     profile_name = 'collectoss'
-    if os.environ.get('AUGUR_IS_PROD'):
+    if SystemEnv.get('COLLECTOSS_IS_PROD'):
         profile_name = 'default'
     client = boto3.Session(region_name='us-east-1', profile_name=profile_name).client('dynamodb')
     response = client.get_item(
@@ -278,7 +280,7 @@ def update_auggie_user_tracking():
     # return Response(response=response, status=200, mimetype="application/json")
     ## From Method
     profile_name = 'collectoss'
-    if os.environ.get('AUGUR_IS_PROD'):
+    if SystemEnv.get('COLLECTOSS_IS_PROD'):
         profile_name = 'default'
     client = boto3.Session(region_name='us-east-1', profile_name=profile_name).client('dynamodb')
     response = client.update_item(
@@ -326,7 +328,7 @@ def slack_login():
     print("slack_login")
 
     r = requests.get(
-        url=f'https://slack.com/api/oauth.v2.access?code={body["code"]}&client_id={os.environ["AUGGIE_CLIENT_ID"]}&client_secret={os.environ["AUGGIE_CLIENT_SECRET"]}&redirect_uri=http%3A%2F%2Flocalhost%3A8080')
+        url=f'https://slack.com/api/oauth.v2.access?code={body["code"]}&client_id={SystemEnv.get("AUGGIE_CLIENT_ID")}&client_secret={SystemEnv.get("AUGGIE_CLIENT_SECRET")}&redirect_uri=http%3A%2F%2Flocalhost%3A8080')
     data = r.json()
 
     if (data["ok"]):
@@ -340,7 +342,7 @@ def slack_login():
         email = user_response["user"]["email"]
 
         profile_name = 'collectoss'
-        if os.environ.get('AUGUR_IS_PROD'):
+        if SystemEnv.get('COLLECTOSS_IS_PROD'):
             profile_name = 'default'
         print("Making Boto3 Session")
         client = boto3.Session(region_name='us-east-1',

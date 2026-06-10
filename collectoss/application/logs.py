@@ -192,8 +192,8 @@ class SystemLogger():
         
         log_config = get_log_config()
         
-        if log_config["logs_directory"] != "":
-            base_log_dir=log_config["logs_directory"]
+        if log_config.get("logs_directory", "") != "":
+            base_log_dir=log_config.get("logs_directory")
 
         if reset_logfiles is True:
             try:

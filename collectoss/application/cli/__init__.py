@@ -10,7 +10,9 @@ import traceback
 
 from collectoss.application.db.engine import DatabaseEngine
 from collectoss.application.db import get_engine, dispose_database_engine
-from sqlalchemy.exc import OperationalError 
+from sqlalchemy.exc import OperationalError
+from collectoss.application.environment import SystemEnv
+
 
 
 def check_connectivity(urls=["http://chaoss.community", "http://github.com", "http://gitlab.com"], timeout=10.0):
@@ -65,11 +67,11 @@ def test_db_connection(function_db_connection):
             return ctx.invoke(function_db_connection, *args, **kwargs)
         except OperationalError as e:
 
-            db_environment_var = os.getenv("AUGUR_DB")
+            db_environment_var = SystemEnv.get("COLLECTOSS_DB")
 
             # determine the location to print in error string
             if db_environment_var:
-                location = f"the AUGUR_DB environment variable\nAUGUR_DB={os.getenv('AUGUR_DB')}"
+                location = f"the COLLECTOSS_DB environment variable\nCOLLECTOSS_DB={SystemEnv.get('COLLECTOSS_DB')}"
             else:
                 with open("db.config.json", 'r') as f:
                     db_config = json.load(f)

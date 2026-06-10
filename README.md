@@ -10,7 +10,7 @@ CollectOSS's main focus is to measure the overall health and sustainability of o
 
 The data CollectOSS collects covers more than just code contributions and extends to anything that can be derived from forge data, including comments, change reviews, releases, and other project activity or interactions. This data is stored in a relational database (PostgreSQL), enabling large-scale data aggregation across any number of repositories to provide context about the way these communities evolve.
 
-CollectOSS is part of [CHAOSS](https://chaoss.community), which is a Linux Foundation® project. Many of our metrics are implementations of the [metrics](https://chaoss.community/metrics/) defined by the CHAOSS community.
+CollectOSS is part of [CHAOSS](https://chaoss.community), which is a Linux Foundation® project. Many of our metrics are implementations of the [metrics](https://chaoss.community/kb-metrics-and-metrics-models/) defined by the CHAOSS community.
 
 ## Versions and support
 CollectOSS is a Python project distributed via container images and aims to support all currently-supported versions of Python on macOS and Linux platforms. Docker is the primary supported container runtime, but Podman is also supported and used by some maintainers, although it requires configuring some extra permissions to run correctly.
@@ -25,7 +25,7 @@ Basic initial setup can be completed in a few minutes as follows:
 3. Copy the `environment.txt` file to a new file called `.env` and fill in values for the required variables
 4. Run `docker compose up` to start the containers
 
-Check out the [CollectOSS Documentation](https://collectoss.readthedocs.io) for more detailed setup instructions and troubleshooting steps.
+Check out the [CollectOSS Documentation](https://docs.collectoss.org) for more detailed setup instructions and troubleshooting steps.
 
 ## Contributing
 We strongly believe that communities are what makes open source so impactful. We invite you to join our community, regardless of your experience level or coding abilities! 

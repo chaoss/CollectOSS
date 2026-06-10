@@ -60,7 +60,7 @@ There are many collection jobs that ship ready to collect out of the box:
 - ``collectoss.tasks.github.releases.tasks`` (collects release data from the GitHub API)
 - ``collectoss.tasks.data_analysis.insight_worker.tasks`` (queries CollectOSS's metrics API to find interesting anomalies in the collected data)
 
-All worker configuration options are found in the config table generated when collectoss was installed. The config table is located in the augur_operations schema of your postgresql database. Each configurable data collection job set has its subsection with the same or similar title as the task's name. We recommend leaving the defaults and only changing them when explicitly necessary, as the default parameters will work for most use cases. Read on for more on how to make sure your workers are properly configured.
+All worker configuration options are found in the config table generated when collectoss was installed. The config table is located in the operations schema of your postgresql database. Each configurable data collection job set has its subsection with the same or similar title as the task's name. We recommend leaving the defaults and only changing them when explicitly necessary, as the default parameters will work for most use cases. Read on for more on how to make sure your workers are properly configured.
 
 Worker-specific configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

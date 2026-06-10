@@ -7,6 +7,8 @@ import os
 from collectoss.application.db.models import Config 
 from collectoss.application.db.util import execute_session_query, convert_type_of_value
 from pathlib import Path
+from collectoss.application.environment import SystemEnv
+
 import logging
 
 def get_development_flag_from_config():
@@ -27,7 +29,7 @@ def get_development_flag_from_config():
     return flag
 
 def get_development_flag():
-    return os.getenv("AUGUR_DEV") or get_development_flag_from_config() or False
+    return SystemEnv.get("COLLECTOSS_DEV") or get_development_flag_from_config() or False
 
 def redact_setting_value(section_name, setting_name, value):
     value_redacted = value if section_name != "Keys" else "REDACTED"
@@ -167,7 +169,7 @@ class SystemConfig():
                 JsonConfig(default_config, logger)
             ]
 
-            config_dir = Path(os.getenv("CONFIG_DATADIR", "./"))
+            config_dir = Path(SystemEnv.get("CONFIG_DATADIR") or "./")
             config_path = config_dir.joinpath("augur.json")
             if config_path.exists():
                 config_sources.append(JsonConfig(json.loads(config_path.read_text(encoding="UTF-8")), logger))

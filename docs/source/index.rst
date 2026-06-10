@@ -44,6 +44,17 @@ How CollectOSS works
 3. It organizes this data into a standard format called a data model.
 4. Then it calculates metrics that tell you about the project’s health.
 
+Where CollectOSS gets its data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+CollectOSS collects data from a variety of sources:
+
+1. Raw Git commit logs (commits, contributors)
+2. GitHub’s API (issues, pull requests, contributors, releases, repository metadata)
+3. The Linux Foundation’s `Core Infrastructure Initiative <https://www.coreinfrastructure.org/>`_ API (repository metadata)
+4. `Succinct Code Counter <https://github.com/boyter/scc>`_, a blazingly fast Sloc, Cloc, and Code tool that also performs COCOMO calculations
+5. `OpenSSF Scorecard <https://securityscorecards.dev/>`_ analysis (security health metrics for open source projects)
+
 Example of a metric: Burstiness
 -------------------------------
 - Burstiness is one of CollectOSS’s metrics.

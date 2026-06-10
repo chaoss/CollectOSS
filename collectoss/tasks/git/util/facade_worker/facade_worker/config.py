@@ -40,11 +40,13 @@ from collectoss.application.config import SystemConfig
 from collectoss.application.db.lib import execute_sql
 from logging import Logger
 
+from collectoss.application.environment import SystemEnv
+
 logger = logging.getLogger(__name__)
 
 def get_database_args_from_env():
 
-    db_str = os.getenv("AUGUR_DB")
+    db_str = SystemEnv.get("COLLECTOSS_DB")
     try:
         db_json_file_location = os.getcwd() + "/db.config.json"
     except FileNotFoundError:
@@ -55,7 +57,7 @@ def get_database_args_from_env():
 
     if not db_str and not db_json_exists:
 
-        logger.error("ERROR no way to get connection to the database. \n\t\t\t\t\t\t    There is no db.config.json and the AUGUR_DB environment variable is not set\n\t\t\t\t\t\t    Please run make install or set the AUGUR_DB environment then run make install")
+        logger.error("ERROR no way to get connection to the database. \n\t\t\t\t\t\t    There is no db.config.json and the COLLECTOSS_DB environment variable is not set\n\t\t\t\t\t\t    Please run make install or set the COLLECTOSS_DB environment then run make install")
         sys.exit()
 
     credentials = {}

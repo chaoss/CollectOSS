@@ -20,38 +20,8 @@ depends_on = None
 logger = logging.getLogger(__name__)
 
 def upgrade():
-
-    with DatabaseSession(logger) as session:
-        config = SystemConfig(logger,session)
-        config_dict = config.load_config()
-
-        #Update the missing fields of the facade section in the config
-        section = config_dict.get("Facade")
-
-        #Just copy the default if section doesn't exist.
-        if section:
-            if 'facade_contributor_full_recollect' not in section.keys():
-                section['facade_contributor_full_recollect'] = 0
-            
-        else:
-            section = config.default_config["Facade"]
-        
-        config.add_section_from_json("Facade", section)
+    pass
 
 
 def downgrade():
-
-    conn = op.get_bind()
-
-    conn.execute(text(f"""
-        DELETE FROM augur_operations.config
-        WHERE section_name='Facade' AND (setting_name='facade_contributor_full_recollect');
-    """))
-
-    try:
-        conn.execute(text(f"""
-            DELETE FROM augur_operations.config
-            WHERE section_name='Facade' AND (setting_name='facade_contributor_full_recollect');
-        """))
-    except:
-        pass
+    pass

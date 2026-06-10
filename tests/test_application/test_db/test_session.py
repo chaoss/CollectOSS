@@ -26,7 +26,7 @@ def test_execute_sql(test_db_engine):
 
             for data in all_data:
 
-                statement = s.sql.text("""INSERT INTO "augur_data"."contributors" ("cntrb_login", "cntrb_email", "cntrb_full_name", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "cntrb_last_used", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "gl_web_url", "gl_avatar_url", "gl_state", "gl_username", "gl_full_name", "gl_id", "tool_source", "tool_version", "data_source", "data_collection_date", "cntrb_id") VALUES (:cntrb_login, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, :gh_user_id, :gh_login, 'https://api.github.com/users/ivanayov', 'https://github.com/ivanayov', 'MDQ6VXNlcjQxNjAxMzM=', 'https://avatars.githubusercontent.com/u/4160133?v=4', '', 'https://api.github.com/users/ivanayov/followers', 'https://api.github.com/users/ivanayov/following{/other_user}', 'https://api.github.com/users/ivanayov/gists{/gist_id}', 'https://api.github.com/users/ivanayov/starred{/owner}{/repo}', 'https://api.github.com/users/ivanayov/subscriptions', 'https://api.github.com/users/ivanayov/orgs', 'https://api.github.com/users/ivanayov/repos', 'https://api.github.com/users/ivanayov/events{/privacy}', 'https://api.github.com/users/ivanayov/received_events', 'User', 'false', NULL, NULL, NULL, NULL, NULL, NULL, 'Pr Task', '2.0', 'Github API', '2022-08-05 09:06:39', :cntrb_id);""")
+                statement = s.sql.text("""INSERT INTO "data"."contributors" ("cntrb_login", "cntrb_email", "cntrb_full_name", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "cntrb_last_used", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "gl_web_url", "gl_avatar_url", "gl_state", "gl_username", "gl_full_name", "gl_id", "tool_source", "tool_version", "data_source", "data_collection_date", "cntrb_id") VALUES (:cntrb_login, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, :gh_user_id, :gh_login, 'https://api.github.com/users/ivanayov', 'https://github.com/ivanayov', 'MDQ6VXNlcjQxNjAxMzM=', 'https://avatars.githubusercontent.com/u/4160133?v=4', '', 'https://api.github.com/users/ivanayov/followers', 'https://api.github.com/users/ivanayov/following{/other_user}', 'https://api.github.com/users/ivanayov/gists{/gist_id}', 'https://api.github.com/users/ivanayov/starred{/owner}{/repo}', 'https://api.github.com/users/ivanayov/subscriptions', 'https://api.github.com/users/ivanayov/orgs', 'https://api.github.com/users/ivanayov/repos', 'https://api.github.com/users/ivanayov/events{/privacy}', 'https://api.github.com/users/ivanayov/received_events', 'User', 'false', NULL, NULL, NULL, NULL, NULL, NULL, 'Pr Task', '2.0', 'Github API', '2022-08-05 09:06:39', :cntrb_id);""")
 
                 connection.execute(statement, **data)
 
@@ -35,7 +35,7 @@ def test_execute_sql(test_db_engine):
             with DatabaseSession(logger, engine=test_db_engine) as session:
 
                 cntrb_id = data['cntrb_id']
-                result = session.execute_sql(f"SELECT * FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
+                result = session.execute_sql(f"SELECT * FROM data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
 
             assert result is not None
             assert isinstance(result[0], s.engine.result.RowProxy)
@@ -57,7 +57,7 @@ def test_execute_sql(test_db_engine):
             for data in all_data:
 
                 cntrb_id = data["cntrb_id"]
-                connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}';")
+                connection.execute(f"DELETE FROM data.contributors WHERE cntrb_id='{cntrb_id}';")
 
 
 def test_insert_data_with_duplicates(test_db_engine):
@@ -79,7 +79,7 @@ def test_insert_data_with_duplicates(test_db_engine):
 
             
             cntrb_id = data_1['cntrb_id']
-            result = session.execute_sql(f"SELECT * FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
+            result = session.execute_sql(f"SELECT * FROM data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
 
         assert result is not None
         assert len(result) == 3
@@ -94,7 +94,7 @@ def test_insert_data_with_duplicates(test_db_engine):
             for data in duplicate_data_list:
 
                 cntrb_id = data["cntrb_id"]
-                connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}';")
+                connection.execute(f"DELETE FROM data.contributors WHERE cntrb_id='{cntrb_id}';")
 
 def test_insert_data_with_updates(test_db_engine):
 
@@ -106,7 +106,7 @@ def test_insert_data_with_updates(test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            statement = s.sql.text("""INSERT INTO "augur_data"."contributors" ("cntrb_login", "cntrb_email", "cntrb_full_name", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "cntrb_last_used", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "gl_web_url", "gl_avatar_url", "gl_state", "gl_username", "gl_full_name", "gl_id", "tool_source", "tool_version", "data_source", "data_collection_date", "cntrb_id") VALUES (:cntrb_login, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, :gh_user_id, :gh_login, 'https://api.github.com/users/ivanayov', 'https://github.com/ivanayov', 'MDQ6VXNlcjQxNjAxMzM=', 'https://avatars.githubusercontent.com/u/4160133?v=4', '', 'https://api.github.com/users/ivanayov/followers', 'https://api.github.com/users/ivanayov/following{/other_user}', 'https://api.github.com/users/ivanayov/gists{/gist_id}', 'https://api.github.com/users/ivanayov/starred{/owner}{/repo}', 'https://api.github.com/users/ivanayov/subscriptions', 'https://api.github.com/users/ivanayov/orgs', 'https://api.github.com/users/ivanayov/repos', 'https://api.github.com/users/ivanayov/events{/privacy}', 'https://api.github.com/users/ivanayov/received_events', 'User', 'false', NULL, NULL, NULL, NULL, NULL, NULL, 'Pr Task', '2.0', 'Github API', '2022-08-05 09:06:39', :cntrb_id);""")
+            statement = s.sql.text("""INSERT INTO "data"."contributors" ("cntrb_login", "cntrb_email", "cntrb_full_name", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "cntrb_last_used", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "gl_web_url", "gl_avatar_url", "gl_state", "gl_username", "gl_full_name", "gl_id", "tool_source", "tool_version", "data_source", "data_collection_date", "cntrb_id") VALUES (:cntrb_login, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, :gh_user_id, :gh_login, 'https://api.github.com/users/ivanayov', 'https://github.com/ivanayov', 'MDQ6VXNlcjQxNjAxMzM=', 'https://avatars.githubusercontent.com/u/4160133?v=4', '', 'https://api.github.com/users/ivanayov/followers', 'https://api.github.com/users/ivanayov/following{/other_user}', 'https://api.github.com/users/ivanayov/gists{/gist_id}', 'https://api.github.com/users/ivanayov/starred{/owner}{/repo}', 'https://api.github.com/users/ivanayov/subscriptions', 'https://api.github.com/users/ivanayov/orgs', 'https://api.github.com/users/ivanayov/repos', 'https://api.github.com/users/ivanayov/events{/privacy}', 'https://api.github.com/users/ivanayov/received_events', 'User', 'false', NULL, NULL, NULL, NULL, NULL, NULL, 'Pr Task', '2.0', 'Github API', '2022-08-05 09:06:39', :cntrb_id);""")
 
             connection.execute(statement, **data_1)
 
@@ -117,7 +117,7 @@ def test_insert_data_with_updates(test_db_engine):
         with test_db_engine.connect() as connection:
 
             cntrb_id = data_1['cntrb_id']
-            result = connection.execute(f"SELECT * FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
+            result = connection.execute(f"SELECT * FROM data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
 
         assert result is not None
         assert dict(result[0])["gh_user_id"] == 6 
@@ -127,7 +127,7 @@ def test_insert_data_with_updates(test_db_engine):
         with test_db_engine.connect() as connection:
 
             cntrb_id = data_1["cntrb_id"]
-            connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}';")
+            connection.execute(f"DELETE FROM data.contributors WHERE cntrb_id='{cntrb_id}';")
 
 
 def test_insert_data_with_bulk(test_db_engine):
@@ -145,7 +145,7 @@ def test_insert_data_with_bulk(test_db_engine):
 
         with test_db_engine.connect() as connection:
 
-            result = connection.execute(f"SELECT * FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
+            result = connection.execute(f"SELECT * FROM data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}'").fetchall()
 
             assert result is not None
             assert len(result) == 4
@@ -160,7 +160,7 @@ def test_insert_data_with_bulk(test_db_engine):
         with test_db_engine.connect() as connection:
 
             cntrb_id = data_1["cntrb_id"]
-            connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
+            connection.execute(f"DELETE FROM data.contributors WHERE cntrb_id!='{not_provided_cntrb_id}' AND cntrb_id!='{nan_cntrb_id}';")
 
 
 
@@ -172,7 +172,7 @@ def test_insert_data_partial_update(test_db_engine):
     try:
         with test_db_engine.connect() as connection:
 
-            statement = s.sql.text("""INSERT INTO "augur_data"."contributors" ("cntrb_login", "cntrb_email", "cntrb_full_name", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "cntrb_last_used", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "gl_web_url", "gl_avatar_url", "gl_state", "gl_username", "gl_full_name", "gl_id", "tool_source", "tool_version", "data_source", "data_collection_date", "cntrb_id") VALUES (:cntrb_login, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, :gh_user_id, :gh_login, 'https://api.github.com/users/ivanayov', 'https://github.com/ivanayov', 'MDQ6VXNlcjQxNjAxMzM=', 'https://avatars.githubusercontent.com/u/4160133?v=4', '', 'https://api.github.com/users/ivanayov/followers', 'https://api.github.com/users/ivanayov/following{/other_user}', 'https://api.github.com/users/ivanayov/gists{/gist_id}', 'https://api.github.com/users/ivanayov/starred{/owner}{/repo}', 'https://api.github.com/users/ivanayov/subscriptions', 'https://api.github.com/users/ivanayov/orgs', 'https://api.github.com/users/ivanayov/repos', 'https://api.github.com/users/ivanayov/events{/privacy}', 'https://api.github.com/users/ivanayov/received_events', 'User', 'false', NULL, NULL, NULL, NULL, NULL, NULL, 'Pr Task', '2.0', 'Github API', '2022-08-05 09:06:39', :cntrb_id);""")
+            statement = s.sql.text("""INSERT INTO "data"."contributors" ("cntrb_login", "cntrb_email", "cntrb_full_name", "cntrb_company", "cntrb_created_at", "cntrb_type", "cntrb_fake", "cntrb_deleted", "cntrb_long", "cntrb_lat", "cntrb_country_code", "cntrb_state", "cntrb_city", "cntrb_location", "cntrb_canonical", "cntrb_last_used", "gh_user_id", "gh_login", "gh_url", "gh_html_url", "gh_node_id", "gh_avatar_url", "gh_gravatar_id", "gh_followers_url", "gh_following_url", "gh_gists_url", "gh_starred_url", "gh_subscriptions_url", "gh_organizations_url", "gh_repos_url", "gh_events_url", "gh_received_events_url", "gh_type", "gh_site_admin", "gl_web_url", "gl_avatar_url", "gl_state", "gl_username", "gl_full_name", "gl_id", "tool_source", "tool_version", "data_source", "data_collection_date", "cntrb_id") VALUES (:cntrb_login, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, :gh_user_id, :gh_login, 'https://api.github.com/users/ivanayov', 'https://github.com/ivanayov', 'MDQ6VXNlcjQxNjAxMzM=', 'https://avatars.githubusercontent.com/u/4160133?v=4', '', 'https://api.github.com/users/ivanayov/followers', 'https://api.github.com/users/ivanayov/following{/other_user}', 'https://api.github.com/users/ivanayov/gists{/gist_id}', 'https://api.github.com/users/ivanayov/starred{/owner}{/repo}', 'https://api.github.com/users/ivanayov/subscriptions', 'https://api.github.com/users/ivanayov/orgs', 'https://api.github.com/users/ivanayov/repos', 'https://api.github.com/users/ivanayov/events{/privacy}', 'https://api.github.com/users/ivanayov/received_events', 'User', 'false', NULL, NULL, NULL, NULL, NULL, NULL, 'Pr Task', '2.0', 'Github API', '2022-08-05 09:06:39', :cntrb_id);""")
 
             connection.execute(statement, **data_1)
 
@@ -183,7 +183,7 @@ def test_insert_data_partial_update(test_db_engine):
         with test_db_engine.connect() as connection:
 
             cntrb_id = data_1['cntrb_id']
-            result = connection.execute(f"SELECT * FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
+            result = connection.execute(f"SELECT * FROM data.contributors WHERE cntrb_id='{cntrb_id}'").fetchall()
 
         assert result is not None
         assert dict(result[0])["gh_user_id"] == 6 
@@ -193,7 +193,7 @@ def test_insert_data_partial_update(test_db_engine):
         with test_db_engine.connect() as connection:
 
             cntrb_id = data_1["cntrb_id"]
-            connection.execute(f"DELETE FROM augur_data.contributors WHERE cntrb_id='{cntrb_id}';")
+            connection.execute(f"DELETE FROM data.contributors WHERE cntrb_id='{cntrb_id}';")
 
 
 issue_data_with_null_strings = []
@@ -210,11 +210,11 @@ def test_insert_issue_data_with_invalid_strings(test_db_engine):
         # insert the cntrb_id and cntrb_login into the contributors table so the contributor is present. 
         # This is so we don't get a foreign key error on the cntrb_id when we insert the prs
         query = s.sql.text("""
-        DELETE FROM "augur_data"."repo";
-        DELETE FROM "augur_data"."repo_groups";
-        INSERT INTO "augur_data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
+        DELETE FROM "data"."repo";
+        DELETE FROM "data"."repo_groups";
+        INSERT INTO "data"."repo_groups" ("repo_group_id", "rg_name", "rg_description", "rg_website", "rg_recache", "rg_last_modified", "rg_type", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 'Default Repo Group', 'The default repo group created by the schema generation script', '', 0, '2019-06-03 15:55:20', 'GitHub Organization', 'load', 'one', 'git', '2019-06-05 13:36:25');
         
-        INSERT INTO "augur_data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "repo_archived_date_collected", "repo_archived", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 1, 'https://github.com/chaoss/collectoss', NULL, NULL, '2022-08-15 21:08:07', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI', '1.0', 'Git', '2022-08-15 21:08:07');
+        INSERT INTO "data"."repo" ("repo_id", "repo_group_id", "repo_git", "repo_path", "repo_name", "repo_added", "repo_type", "url", "owner_id", "description", "primary_language", "created_at", "forked_from", "updated_at", "repo_archived_date_collected", "repo_archived", "tool_source", "tool_version", "data_source", "data_collection_date") VALUES (1, 1, 'https://github.com/chaoss/collectoss', NULL, NULL, '2022-08-15 21:08:07', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CLI', '1.0', 'Git', '2022-08-15 21:08:07');
         """)
 
         connection.execute(query)
@@ -232,7 +232,7 @@ def test_insert_issue_data_with_invalid_strings(test_db_engine):
                                                     return_columns=issue_return_columns, string_fields=issue_string_columns)
                 
                 data_inserted_count = len(issue_data_with_null_strings)
-                result = connection.execute(f"Select * FROM augur_data.issues;").fetchall()
+                result = connection.execute(f"Select * FROM data.issues;").fetchall()
 
                 assert issue_return_data is not None
                 assert len(issue_return_data) == data_inserted_count
@@ -242,9 +242,9 @@ def test_insert_issue_data_with_invalid_strings(test_db_engine):
         with test_db_engine.connect() as connection:
 
             connection.execute("""
-                                DELETE FROM augur_data.issues;
-                                DELETE FROM "augur_data"."repo";
-                                DELETE FROM "augur_data"."repo_groups";
+                                DELETE FROM data.issues;
+                                DELETE FROM "data"."repo";
+                                DELETE FROM "data"."repo_groups";
                                 """)
 
 

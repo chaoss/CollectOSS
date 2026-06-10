@@ -207,12 +207,12 @@ def insert_facade_contributors(self, repo_git):
             commits.cmt_commit_hash AS hash,
             commits.cmt_author_raw_email AS email_raw
         FROM
-            augur_data.commits
+            data.commits
         WHERE
             commits.repo_id = :repo_id AND
             commits.cmt_ght_author_id IS NULL AND
             commits.cmt_author_raw_email NOT IN (
-                SELECT email FROM augur_data.unresolved_commit_emails
+                SELECT email FROM data.unresolved_commit_emails
             )
     """).bindparams(repo_id=repo_id)
 
@@ -253,19 +253,19 @@ def insert_facade_contributors(self, repo_git):
     resolve_email_to_cntrb_id_sql = s.sql.text("""
         WITH email_to_contributor AS (
             SELECT cntrb_email AS email, cntrb_id
-            FROM augur_data.contributors
+            FROM data.contributors
             WHERE cntrb_email IS NOT NULL
 
             UNION ALL
 
             SELECT cntrb_canonical AS email, cntrb_id
-            FROM augur_data.contributors
+            FROM data.contributors
             WHERE cntrb_canonical IS NOT NULL
 
             UNION ALL
 
             SELECT alias_email AS email, cntrb_id
-            FROM augur_data.contributors_aliases
+            FROM data.contributors_aliases
             WHERE alias_email IS NOT NULL
         ),
         deduplicated AS (
@@ -277,7 +277,7 @@ def insert_facade_contributors(self, repo_git):
             d.cntrb_id,
             c.cmt_author_email AS email
         FROM
-            augur_data.commits c
+            data.commits c
         INNER JOIN
             deduplicated d
             ON c.cmt_author_email = d.email

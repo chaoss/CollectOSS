@@ -178,12 +178,12 @@ jobs:
           docker compose -f docker-compose.yml up --no-build 2>&1 \
             | (./scripts/ci/await_all.py /tmp/regex_matches.txt \
                 && docker compose -f docker-compose.yml down)
-        timeout-minutes: 3
+        timeout-minutes: 8
         env:
-          AUGUR_GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
-          AUGUR_GITHUB_USERNAME: ${{ github.repository_owner }}
-          AUGUR_GITLAB_API_KEY: dummy
-          AUGUR_GITLAB_USERNAME: dummy
+          COLLECTOSS_GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+          COLLECTOSS_GITHUB_USERNAME: ${{ github.repository_owner }}
+          COLLECTOSS_GITLAB_API_KEY: dummy
+          COLLECTOSS_GITLAB_USERNAME: dummy
 
       - name: Dump logs
         # Always run this step to get logs, even if the previous step fails
@@ -294,18 +294,19 @@ jobs:
           podman compose -f docker-compose.yml up --no-build 2>&1 \
             | (./scripts/ci/await_all.py /tmp/regex_matches.txt \
                 && podman compose -f docker-compose.yml down)
-        timeout-minutes: 3
+        timeout-minutes: 8
         env:
-          AUGUR_GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
-          AUGUR_GITHUB_USERNAME: ${{ github.repository_owner }}
-          AUGUR_GITLAB_API_KEY: dummy
-          AUGUR_GITLAB_USERNAME: dummy
+          COLLECTOSS_GITHUB_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+          COLLECTOSS_GITHUB_USERNAME: ${{ github.repository_owner }}
+          COLLECTOSS_GITLAB_API_KEY: dummy
+          COLLECTOSS_GITLAB_USERNAME: dummy
 
       - name: Dump logs
         # Always run this step to get logs, even if the previous step fails
         if: always()
         # We use tail so that we can see the name of each file as it's printed
-        run: "podman run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs
+        run:
+          "podman run -t --rm -v augur_logs:/logs bash -c 'find /logs -type f | xargs
           tail -n +0'"
 
   push-image:
@@ -358,7 +359,7 @@ jobs:
           # Releases update the *:latest tag and the *:<version> tag
           tags: |
             type=raw,value=devel-latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
             type=raw,value=${{ github.event.release.tag_name }},enable=${{ github.event_name == 'release' }}
 
       - name: Build and push

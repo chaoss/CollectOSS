@@ -110,7 +110,7 @@ def ping_github_for_repo_move(session, key_auth, repo, logger,collection_hook='c
         repo_update_dict = {
             'repo_git': f"https://github.com/{owner}/{name}",
             'repo_path': None,
-            'repo_name': None,
+            'repo_name': name,
             'description': f"(Originally hosted at {url}) {old_description}"
         }
 

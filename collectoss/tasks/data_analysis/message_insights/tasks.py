@@ -52,7 +52,7 @@ def message_insight_model(repo_git: str,logger,engine) -> None:
 
     # Check to see if repo has been analyzed previously
     repo_exists_SQL = s.sql.text("""
-        SELECT exists (SELECT 1 FROM augur_data.message_analysis_summary WHERE repo_id = :repo_id LIMIT 1)""")
+        SELECT exists (SELECT 1 FROM data.message_analysis_summary WHERE repo_id = :repo_id LIMIT 1)""")
 
     with engine.connect() as conn:
         df_rep = pd.read_sql_query(repo_exists_SQL, conn, params={'repo_id': repo_id})
@@ -66,17 +66,17 @@ def message_insight_model(repo_git: str,logger,engine) -> None:
         # Fetch the timestamp of last analyzed message for the repo
         past_SQL = s.sql.text("""
             select message_analysis.msg_id, message.msg_timestamp
-            from augur_data.message_analysis 
-            inner join augur_data.message on message.msg_id = message_analysis.msg_id
-            inner join augur_data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
-            inner join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
+            from data.message_analysis 
+            inner join data.message on message.msg_id = message_analysis.msg_id
+            inner join data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
+            inner join data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
             where message.repo_id = :repo_id
             UNION
             select message_analysis.msg_id, message.msg_timestamp
-            from augur_data.message_analysis
-            inner join augur_data.message on message.msg_id = message_analysis.msg_id
-            inner join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
-            inner join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
+            from data.message_analysis
+            inner join data.message on message.msg_id = message_analysis.msg_id
+            inner join data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
+            inner join data.issues on issue_message_ref.issue_id = issues.issue_id
             where message.repo_id = :repo_id
             """)
 
@@ -97,28 +97,28 @@ def message_insight_model(repo_git: str,logger,engine) -> None:
 
         # Fetch only recent messages
         join_SQL = s.sql.text("""
-            select message.msg_id, msg_timestamp,  msg_text from augur_data.message
-            left outer join augur_data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
-            left outer join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
+            select message.msg_id, msg_timestamp,  msg_text from data.message
+            left outer join data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
+            left outer join data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
             where message.repo_id = :repo_id and msg_timestamp > :begin_date
             UNION
-            select message.msg_id, msg_timestamp, msg_text from augur_data.message
-            left outer join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
-            left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
+            select message.msg_id, msg_timestamp, msg_text from data.message
+            left outer join data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
+            left outer join data.issues on issue_message_ref.issue_id = issues.issue_id
             where message.repo_id = :repo_id and msg_timestamp > :begin_date""")
     else:
         logger.info(f'Fetching all past messages of repo {repo_id}...')
 
         # Fetch all messages
         join_SQL = s.sql.text("""
-            select message.msg_id, msg_timestamp,  msg_text from augur_data.message
-            left outer join augur_data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
-            left outer join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
+            select message.msg_id, msg_timestamp,  msg_text from data.message
+            left outer join data.pull_request_message_ref on message.msg_id = pull_request_message_ref.msg_id 
+            left outer join data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
             where message.repo_id = :repo_id
             UNION
-            select message.msg_id, msg_timestamp, msg_text from augur_data.message
-            left outer join augur_data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
-            left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
+            select message.msg_id, msg_timestamp, msg_text from data.message
+            left outer join data.issue_message_ref on message.msg_id = issue_message_ref.msg_id 
+            left outer join data.issues on issue_message_ref.issue_id = issues.issue_id
             where message.repo_id = :repo_id""")
 
     with engine.connect() as conn:
@@ -147,14 +147,14 @@ def message_insight_model(repo_git: str,logger,engine) -> None:
 
         if not full_train:
             merge_SQL = s.sql.text("""
-            select novelty_flag, reconstruction_error from augur_data.message_analysis
-            left outer join augur_data.pull_request_message_ref on message_analysis.msg_id = pull_request_message_ref.msg_id 
-            left outer join augur_data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
+            select novelty_flag, reconstruction_error from data.message_analysis
+            left outer join data.pull_request_message_ref on message_analysis.msg_id = pull_request_message_ref.msg_id 
+            left outer join data.pull_requests on pull_request_message_ref.pull_request_id = pull_requests.pull_request_id
             where pull_request_message_ref.repo_id = :repo_id
             UNION
-            select novelty_flag, reconstruction_error from augur_data.message_analysis
-            left outer join augur_data.issue_message_ref on message_analysis.msg_id = issue_message_ref.msg_id 
-            left outer join augur_data.issues on issue_message_ref.issue_id = issues.issue_id
+            select novelty_flag, reconstruction_error from data.message_analysis
+            left outer join data.issue_message_ref on message_analysis.msg_id = issue_message_ref.msg_id 
+            left outer join data.issues on issue_message_ref.issue_id = issues.issue_id
             where issue_message_ref.repo_id = :repo_id""")
 
             with engine.connect() as conn:

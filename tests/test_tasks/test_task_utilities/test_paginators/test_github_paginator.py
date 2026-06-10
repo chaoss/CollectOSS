@@ -92,7 +92,7 @@ def test_github_paginator_len(key_auth):
 
     assert len_contributors_list == 0
 
-def test_github_paginator_get_item(key_auth):
+def test_github_paginator_get_item_2(key_auth):
 
     owner = "chaoss"
     name = "whitepaper"

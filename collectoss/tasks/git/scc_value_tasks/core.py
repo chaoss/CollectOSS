@@ -2,6 +2,7 @@ from datetime import datetime
 import os
 from collectoss.application.db.models import *
 from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value
+from collectoss.application.environment import SystemEnv
 from collectoss.tasks.util.worker_util import parse_json_from_subprocess_call
 from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
 
@@ -20,7 +21,7 @@ def value_model(logger,repo_git):
     logger.info(f"Repo ID: {repo_id}, Path: {path}")
     logger.info('Running scc...')
 
-    path_to_scc = os.getenv('SCC_DIR', os.environ['HOME'] + '/scc')
+    path_to_scc = SystemEnv.get('SCC_DIR', os.path.expanduser('~/scc'))
 
     required_output = parse_json_from_subprocess_call(logger,['./scc', '-f','json','--by-file', path], cwd=path_to_scc)
     

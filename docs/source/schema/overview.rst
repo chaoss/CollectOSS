@@ -35,7 +35,7 @@ Schema Overview
 CollectOSS Data
 -------------------------------------------------------
 
-The ``augur_data`` schema contains *most* of the information analyzed
+The ``data`` schema contains *most* of the information analyzed
 and constructed by CollectOSS. The origin’s of the data inside of collectoss are
 from data collection tasks and populate this schema.:
 
@@ -61,9 +61,9 @@ gathered from commits, issues, and other info.
 CollectOSS Operations
 -------------------------------------------------------
 
-The ``augur_operations`` tables are where most of the operations tables
+The ``operations`` tables are where most of the operations tables
 exist. There are a few, like ``settings`` that remain in
-``augur_data`` for now, but will be moved. They keep records related to
+``data`` for now, but will be moved. They keep records related to
 analytical history and data provenance for data in the schema. They also
 store information including API keys.
 

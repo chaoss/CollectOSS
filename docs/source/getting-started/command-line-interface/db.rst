@@ -167,15 +167,15 @@ Example usage\:
   > [INFO] Config file loaded successfully
   > CLI: [db.check_pgpass_credentials] [INFO] Credentials found in $HOME/.pgpass
   > CLI: [db.upgrade_db_version] [INFO] Upgrading from 16 to 17
-  > ALTER TABLE "augur_data"."repo"
+  > ALTER TABLE "data"."repo"
   >   ALTER COLUMN "forked_from" TYPE varchar USING "forked_from"::varchar;
   > ALTER TABLE
-  > ALTER TABLE "augur_data"."repo"
+  > ALTER TABLE "data"."repo"
   >   ADD COLUMN "repo_archived" int4,
   >   ADD COLUMN "repo_archived_date_collected" timestamptz(0),
   >   ALTER COLUMN "forked_from" TYPE varchar USING "forked_from"::varchar;
   > ALTER TABLE
-  > update "augur_operations"."augur_settings" set value = 17 where setting = 'augur_data_version';
+  > update "operations"."augur_settings" set value = 17 where setting = 'augur_data_version';
   > UPDATE 1
   > CLI: [db.upgrade_db_version] [INFO] Upgrading from 17 to 18
   > etc...
@@ -193,4 +193,4 @@ Example usage\:
   $ uv run collectoss db create-schema
 
 .. note::
-  If this runs successfully, you should see a bunch of schema creation commands fly by pretty fast. If everything worked you should see: ``update "augur_operations"."augur_settings" set value = xx where setting = 'augur_data_version';`` at the end.
+  If this runs successfully, you should see a bunch of schema creation commands fly by pretty fast. If everything worked you should see: ``update "operations"."augur_settings" set value = xx where setting = 'augur_data_version';`` at the end.

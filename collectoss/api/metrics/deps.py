@@ -33,13 +33,13 @@ def deps(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=No
 
         depsSQL = s.sql.text("""
             SELECT
-            augur_data.repo_dependencies.*,
-            augur_data.repo_groups.repo_group_id 
+            data.repo_dependencies.*,
+            data.repo_groups.repo_group_id 
             FROM
-            augur_data.repo_dependencies,
-            augur_data.repo_groups,
-            augur_data.repo,
-            ( SELECT MAX ( date_trunc( 'day', augur_data.repo_dependencies.data_collection_date ) ) AS data_collection_date FROM repo_dependencies WHERE repo_id = repo_id ) C 
+            data.repo_dependencies,
+            data.repo_groups,
+            data.repo,
+            ( SELECT MAX ( date_trunc( 'day', data.repo_dependencies.data_collection_date ) ) AS data_collection_date FROM repo_dependencies WHERE repo_id = repo_id ) C 
             WHERE
             repo_dependencies.repo_id = repo.repo_id 
             AND repo.repo_group_id = repo_groups.repo_group_id 
@@ -54,13 +54,13 @@ def deps(repo_group_id, repo_id=None, period='day', begin_date=None, end_date=No
 
         depsSQL = s.sql.text("""
             SELECT
-            augur_data.repo_dependencies.*,
-            augur_data.repo_groups.repo_group_id 
+            data.repo_dependencies.*,
+            data.repo_groups.repo_group_id 
             FROM
-            augur_data.repo_dependencies,
-            augur_data.repo_groups,
-            augur_data.repo,
-            ( SELECT MAX ( date_trunc( 'day', augur_data.repo_dependencies.data_collection_date ) ) AS data_collection_date 
+            data.repo_dependencies,
+            data.repo_groups,
+            data.repo,
+            ( SELECT MAX ( date_trunc( 'day', data.repo_dependencies.data_collection_date ) ) AS data_collection_date 
             FROM repo_dependencies, repo, repo_groups 
             WHERE repo.repo_group_id = repo_groups.repo_group_id and 
             repo_dependencies.repo_id = repo.repo_id and
@@ -134,8 +134,8 @@ def libyear(repo_group_id, repo_id=None, period='day', begin_date=None, end_date
                     f.libyear, 
                     f.data_collection_date
                 FROM
-                    ( SELECT repo_id, NAME, MAX ( data_collection_date ) AS data_collection_date FROM augur_data.repo_deps_libyear WHERE repo_id = :repo_id GROUP BY repo_id, NAME ORDER BY NAME ) e,
-                    augur_data.repo_deps_libyear f 
+                    ( SELECT repo_id, NAME, MAX ( data_collection_date ) AS data_collection_date FROM data.repo_deps_libyear WHERE repo_id = :repo_id GROUP BY repo_id, NAME ORDER BY NAME ) e,
+                    data.repo_deps_libyear f 
                 WHERE
                     e.data_collection_date = f.data_collection_date and 
                     e.repo_id = f.repo_id 
@@ -203,8 +203,8 @@ def libyear(repo_group_id, repo_id=None, period='day', begin_date=None, end_date
                     f.libyear, 
                     f.data_collection_date
                 FROM
-                    ( SELECT repo_id, NAME, MAX ( data_collection_date ) AS data_collection_date FROM augur_data.repo_deps_libyear GROUP BY repo_id, NAME ORDER BY NAME ) e,
-                    augur_data.repo_deps_libyear f 
+                    ( SELECT repo_id, NAME, MAX ( data_collection_date ) AS data_collection_date FROM data.repo_deps_libyear GROUP BY repo_id, NAME ORDER BY NAME ) e,
+                    data.repo_deps_libyear f 
                 WHERE
                     e.data_collection_date = f.data_collection_date and 
                     e.repo_id = f.repo_id 

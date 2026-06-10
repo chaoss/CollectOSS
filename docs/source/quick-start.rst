@@ -139,7 +139,7 @@ http://servername-or-ip:port_number
 
 
 Note: CollectOSS will run on port 5000 by default (you probably need to
-change that in collectoss_operations.config for OSX)
+change that in operations.config for OSX)
 
 Stopping your CollectOSS Instance
 ---------------------------------

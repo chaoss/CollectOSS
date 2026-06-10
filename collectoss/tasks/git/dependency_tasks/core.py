@@ -1,7 +1,8 @@
 from datetime import datetime
 import os
 from collectoss.application.db.models import *
-from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value, get_session
+from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value
+from collectoss.application.environment import SystemEnv
 from collectoss.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
 from collectoss.tasks.git.dependency_tasks.dependency_util import dependency_calculator as dep_calc
 from collectoss.tasks.util.worker_util import parse_json_from_subprocess_call
@@ -79,19 +80,11 @@ def generate_scorecard(logger, repo_git):
     command = '--repo=' + path
     
     #this is path where our scorecard project is located
-    path_to_scorecard = os.getenv('SCORECARD_DIR', os.environ['HOME'] + '/scorecard')
+    path_to_scorecard = SystemEnv.get('SCORECARD_DIR', os.path.expanduser('~/scorecard'))
 
     #setting the environmental variable which is required by scorecard
-
-    with get_session() as session:
-        #key_handler = GithubRandomKeyAuth(logger)
-        key_handler = GithubApiKeyHandler(logger)       
-        os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
-
-    # This seems outdated
-    #setting the environmental variable which is required by scorecard
-    #key_handler = GithubApiKeyHandler(session, session.logger)       
-    #os.environ['GITHUB_AUTH_TOKEN'] = key_handler.get_random_key()
+    key_handler = GithubApiKeyHandler(logger)       
+    SystemEnv.set('GITHUB_AUTH_TOKEN', key_handler.get_random_key())
     
     try: 
         required_output = parse_json_from_subprocess_call(logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)

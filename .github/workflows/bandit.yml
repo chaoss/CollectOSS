@@ -13,12 +13,12 @@
 name: Bandit
 on:
   push:
-    branches: [ "main", "release" ]
+    branches: ["main", "release"]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "main" ]
+    branches: ["main"]
   schedule:
-    - cron: '24 2 * * 2'
+    - cron: "24 2 * * 2"
 
 jobs:
   bandit:
@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Bandit Scan
-        uses: shundor/python-bandit-scan@ab1d87dfccc5a0ffab88be3aaac6ffe35c10d6cd
+        uses: reactive-firewall/python-bandit-scan@11a72c7c18aab77758bf6f5d9456f1018ec107b0
         with: # optional arguments
           # exit with 0, even with results found
           exit_zero: true # optional, default is DEFAULT
@@ -43,9 +43,9 @@ jobs:
           # Report only issues of a given confidence level or higher. Can be LOW, MEDIUM or HIGH. Default is UNDEFINED (everything)
           # confidence: # optional, default is UNDEFINED
           # comma-separated list of paths (glob patterns supported) to exclude from scan (note that these are in addition to the excluded paths provided in the config file) (default: .svn,CVS,.bzr,.hg,.git,__pycache__,.tox,.eggs,*.egg)
-          excluded_paths: tests
+          # excluded_paths:
           # comma-separated list of test IDs to skip
           # skips: # optional, default is DEFAULT
           # path to a .bandit file that supplies command line arguments
           # ini_path: # optional, default is DEFAULT
-
+          config_path: pyproject.toml

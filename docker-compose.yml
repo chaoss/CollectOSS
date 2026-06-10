@@ -7,13 +7,22 @@ services:
     restart: unless-stopped
     environment:
       - "POSTGRES_DB=augur"
-      - "POSTGRES_USER=${AUGUR_DB_USER:-augur}"
-      - "POSTGRES_PASSWORD=${AUGUR_DB_PASSWORD:-augur}"
+      - "POSTGRES_USER=${COLLECTOSS_DB_USER:-augur}"
+      - "POSTGRES_PASSWORD=${COLLECTOSS_DB_PASSWORD:-augur}"
       - "PGDATA=/var/lib/postgresql/data/pgdata"
     ports:
-      - "${AUGUR_DB_PORT:-5432}:5432"
+      - "${COLLECTOSS_DB_PORT:-5432}:5432"
     volumes:
       - augurpostgres:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${COLLECTOSS_DB_USER:-augur} -d ${COLLECTOSS_DB_NAME:-augur}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: "redis:alpine"
@@ -36,15 +45,15 @@ services:
       context: .
       dockerfile: ./docker/rabbitmq/Dockerfile
       args:
-        - RABBIT_MQ_DEFAULT_USER=${AUGUR_RABBITMQ_USERNAME:-augur}
-        - RABBIT_MQ_DEFAULT_PASSWORD=${AUGUR_RABBITMQ_PASSWORD:-password123}
-        - RABBIT_MQ_DEFAULT_VHOST=${AUGUR_RABBITMQ_VHOST:-collectoss_vhost}
+        - RABBIT_MQ_DEFAULT_USER=${COLLECTOSS_RABBITMQ_USERNAME:-augur}
+        - RABBIT_MQ_DEFAULT_PASSWORD=${COLLECTOSS_RABBITMQ_PASSWORD:-password123}
+        - RABBIT_MQ_DEFAULT_VHOST=${COLLECTOSS_RABBITMQ_VHOST:-collectoss_vhost}
 
   core:
     image: collectoss:latest
     build:
       context: .
-      dockerfile: ./docker/backend/${AUGUR_TARGET:-Dockerfile}
+      dockerfile: ./docker/backend/${COLLECTOSS_TARGET:-Dockerfile}
     volumes:
       - cache:/cache:rw
       - config:/config:rw
@@ -56,26 +65,32 @@ services:
     #extra_hosts:
     #  - "host.docker.internal:host-gateway" #Be able to ping services on the local machine
     environment:
-      - "AUGUR_DB=postgresql+psycopg2://${AUGUR_DB_USER:-augur}:${AUGUR_DB_PASSWORD:-augur}@database:5432/augur"
-      - "AUGUR_DB_SCHEMA_BUILD=1"
-      - AUGUR_FACADE_REPO_DIRECTORY=/facade
-      - "AUGUR_FLAGS=$AUGUR_FLAGS"
-      - "AUGUR_GITHUB_API_KEY=${AUGUR_GITHUB_API_KEY}"
-      - "AUGUR_GITLAB_API_KEY=${AUGUR_GITLAB_API_KEY}"
-      - "AUGUR_GITHUB_USERNAME=${AUGUR_GITHUB_USERNAME}"
-      - "AUGUR_GITLAB_USERNAME=${AUGUR_GITLAB_USERNAME}"
+      - "COLLECTOSS_DB=postgresql+psycopg2://${COLLECTOSS_DB_USER:-augur}:${COLLECTOSS_DB_PASSWORD:-augur}@database:5432/augur"
+      - "COLLECTOSS_DB_SCHEMA_BUILD=1"
+      - COLLECTOSS_FACADE_REPO_DIRECTORY=/facade
+      - COLLECTOSS_LOGS_DIRECTORY=/logs
+      - "COLLECTOSS_FLAGS=$COLLECTOSS_FLAGS"
+      - "COLLECTOSS_GITHUB_API_KEY=${COLLECTOSS_GITHUB_API_KEY}"
+      - "COLLECTOSS_GITLAB_API_KEY=${COLLECTOSS_GITLAB_API_KEY}"
+      - "COLLECTOSS_GITHUB_USERNAME=${COLLECTOSS_GITHUB_USERNAME}"
+      - "COLLECTOSS_GITLAB_USERNAME=${COLLECTOSS_GITLAB_USERNAME}"
+      - COLLECTOSS_DOCKER_DEPLOY=1
       - REDIS_CONN_STRING=redis://redis:6379
-      - RABBITMQ_CONN_STRING=amqp://${AUGUR_RABBITMQ_USERNAME:-augur}:${AUGUR_RABBITMQ_PASSWORD:-password123}@rabbitmq:5672/${AUGUR_RABBITMQ_VHOST:-collectoss_vhost}
+      - RABBITMQ_CONN_STRING=amqp://${COLLECTOSS_RABBITMQ_USERNAME:-augur}:${COLLECTOSS_RABBITMQ_PASSWORD:-password123}@rabbitmq:5672/${COLLECTOSS_RABBITMQ_VHOST:-collectoss_vhost}
       - CONFIG_LOCATION=/config/config.yml
       - CONFIG_DATADIR=/config
       - CACHE_DATADIR=/cache
       - CACHE_LOCKDIR=/cache
       - CELERYBEAT_SCHEDULE_DB=/tmp/celerybeat-schedule.db
     depends_on:
-      - database
-      - redis
-      - keyman
-      - rabbitmq
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      keyman:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
     user: 2345:2345 # Run as an arbitrary non-root user
     post_start:
       # Make sure the user has access to the volumes
@@ -92,9 +107,9 @@ services:
   #  ports:
   #    - 5555:5555
   #  environment:
-  #    - "AUGUR_DB=postgresql+psycopg2://${AUGUR_DB_USER:-augur}:${AUGUR_DB_PASSWORD:-augur}@database:5432/augur"
+  #    - "COLLECTOSS_DB=postgresql+psycopg2://${COLLECTOSS_DB_USER:-augur}:${COLLECTOSS_DB_PASSWORD:-augur}@database:5432/augur"
   #    - REDIS_CONN_STRING=redis://redis:6379
-  #    - RABBITMQ_CONN_STRING=amqp://${AUGUR_RABBITMQ_USERNAME:-augur}:${AUGUR_RABBITMQ_PASSWORD:-password123}@rabbitmq:5672/${AUGUR_RABBITMQ_VHOST:-collectoss_vhost}
+  #    - RABBITMQ_CONN_STRING=amqp://${COLLECTOSS_RABBITMQ_USERNAME:-augur}:${COLLECTOSS_RABBITMQ_PASSWORD:-password123}@rabbitmq:5672/${COLLECTOSS_RABBITMQ_VHOST:-collectoss_vhost}
   #  depends_on:
   #    - core
   #    - database

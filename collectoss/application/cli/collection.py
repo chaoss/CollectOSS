@@ -14,6 +14,7 @@ import uuid
 import traceback
 import sqlalchemy as s
 
+from collectoss.application.environment import SystemEnv
 from collectoss.tasks.start_tasks import collection_monitor, create_collection_status_records
 from collectoss.tasks.git.facade_tasks import clone_repos
 from collectoss.tasks.github.util.github_api_key_handler import GithubApiKeyHandler
@@ -45,7 +46,7 @@ def start(ctx, development):
     """Start CollectOSS's backend server."""
 
     try:
-        if os.environ.get('AUGUR_DOCKER_DEPLOY') != "1":
+        if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
             raise_open_file_limit(100000)
     except Exception as e: 
         logger.error(
@@ -75,7 +76,7 @@ def start(ctx, development):
         keypub.publish(key, "gitlab_rest")
     
     if development:
-        os.environ["AUGUR_DEV"] = "1"
+        SystemEnv.set("AUGUR_DEV", "1")
         logger.info("Starting in development mode")
 
     core_worker_count = get_value("Celery", 'core_worker_count')
@@ -202,16 +203,16 @@ def repo_reset(ctx):
     """
     with ctx.obj.engine.connect() as connection:
         connection.execute(s.sql.text("""
-            UPDATE augur_operations.collection_status 
+            UPDATE operations.collection_status 
             SET core_status='Pending',core_task_id = NULL, core_data_last_collected = NULL;
 
-            UPDATE augur_operations.collection_status 
+            UPDATE operations.collection_status 
             SET secondary_status='Pending',secondary_task_id = NULL, secondary_data_last_collected = NULL;
 
-            UPDATE augur_operations.collection_status 
+            UPDATE operations.collection_status 
             SET facade_status='Pending', facade_task_id=NULL, facade_data_last_collected = NULL;
 
-            TRUNCATE augur_data.commits CASCADE;
+            TRUNCATE data.commits CASCADE;
             """))
 
         logger.info("Repos successfully reset")
@@ -237,7 +238,7 @@ def get_collection_processes():
 def is_collection_process(process):
 
     command = ''.join(process.info['cmdline'][:]).lower()
-    if os.getenv('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in command:
+    if SystemEnv.get('VIRTUAL_ENV') in process.info['environ']['VIRTUAL_ENV'] and 'python' in command:
         if process.pid != os.getpid():
             
             if "collectossbackendcollection" in command  or "celery_app.celery_appbeat" in command:
@@ -279,31 +280,31 @@ def cleanup_after_collection_halt(logger_instance, engine):
 #Make sure that database reflects collection status when processes are killed/stopped.
 def clean_collection_status(session):
     session.execute_sql(s.sql.text("""
-        UPDATE augur_operations.collection_status 
+        UPDATE operations.collection_status 
         SET core_status='Pending',core_task_id = NULL
         WHERE core_status='Collecting' AND core_data_last_collected IS NULL;
 
-        UPDATE augur_operations.collection_status
+        UPDATE operations.collection_status
         SET core_status='Success',core_task_id = NULL
         WHERE core_status='Collecting' AND core_data_last_collected IS NOT NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE operations.collection_status 
         SET secondary_status='Pending',secondary_task_id = NULL
         WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE operations.collection_status 
         SET secondary_status='Success',secondary_task_id = NULL
         WHERE secondary_status='Collecting' AND secondary_data_last_collected IS NOT NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE operations.collection_status 
         SET facade_status='Update', facade_task_id=NULL
         WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NULL;
 
-        UPDATE augur_operations.collection_status 
+        UPDATE operations.collection_status 
         SET facade_status='Success', facade_task_id=NULL
         WHERE facade_status LIKE '%Collecting%' and facade_data_last_collected IS NOT NULL;
 
-        UPDATE augur_operations.collection_status
+        UPDATE operations.collection_status
         SET facade_status='Pending', facade_task_id=NULL
         WHERE facade_status='Failed Clone' OR facade_status='Initializing';
     """))
@@ -311,7 +312,7 @@ def clean_collection_status(session):
 
 def assign_orphan_repos_to_default_user(session):
     query = s.sql.text("""
-        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM augur_operations.user_repos)
+        SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM operations.user_repos)
     """)
 
     repos = session.execute_sql(query).fetchall()

@@ -7,6 +7,7 @@ import subprocess
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
+from collectoss.application.environment import SystemEnv
 from collectoss.application.db.util import catch_operational_error
 
 
@@ -61,7 +62,7 @@ def get_database_string() -> str:
         postgres database string
     """
 
-    db_environment_var = os.getenv("AUGUR_DB")
+    db_environment_var = SystemEnv.get("COLLECTOSS_DB")
 
     try:
         current_dir = os.getcwd()
@@ -74,7 +75,7 @@ def get_database_string() -> str:
 
     if not db_environment_var and not db_json_exists:
 
-        print("ERROR no way to get connection to the database. \n\t\t\t\t\t\t    There is no db.config.json and the AUGUR_DB environment variable is not set\n\t\t\t\t\t\t    Please run make install or set the AUGUR_DB environment then run make install")
+        print("ERROR no way to get connection to the database. \n\t\t\t\t\t\t    There is no db.config.json and the COLLECTOSS_DB environment variable is not set\n\t\t\t\t\t\t    Please run make install or set the COLLECTOSS_DB environment then run make install")
         sys.exit()
 
     if db_environment_var:
@@ -105,7 +106,7 @@ def create_database_engine(url: str, **kwargs) -> Engine:
         existing_autocommit = dbapi_connection.autocommit
         dbapi_connection.autocommit = True
         cursor = dbapi_connection.cursor()
-        cursor.execute("SET SESSION search_path=public,augur_data,augur_operations,spdx")
+        cursor.execute("SET SESSION search_path=public,data,operations,spdx")
         cursor.close()
         dbapi_connection.autocommit = existing_autocommit
 
