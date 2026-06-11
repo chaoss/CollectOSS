@@ -21,6 +21,7 @@ from collectoss.application.cli import (
 )
 
 from collectoss.application.db.session import DatabaseSession
+from collectoss.application.db.lib import merge_contributors
 from sqlalchemy import update
 from datetime import datetime
 from collectoss.application.db.models import Repo
@@ -149,6 +150,29 @@ def get_repo_groups(ctx: click.Context) -> pd.DataFrame:
     print(df)
 
     return df
+
+
+@cli.command("merge-contributors")
+@click.argument("primary_cntrb_id")
+@click.argument("duplicate_cntrb_id")
+@test_connection
+@test_db_connection
+@with_database
+@click.pass_context
+def merge_contributors_cmd(ctx: click.Context, primary_cntrb_id: str, duplicate_cntrb_id: str) -> None:
+    """Merge a duplicate contributor into the primary contributor."""
+    try:
+        merge_contributors(
+            ctx.obj.engine,
+            primary_cntrb_id,
+            duplicate_cntrb_id,
+        )
+        click.echo(
+            f"Merged duplicate contributor {duplicate_cntrb_id} into primary contributor {primary_cntrb_id}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to merge contributors: {e}")
+        raise
 
 
 @cli.command("add-repo-groups")
