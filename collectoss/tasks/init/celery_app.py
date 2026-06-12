@@ -338,11 +338,22 @@ def handle_task_revoked(request, terminated, signum, expired, **kwargs):
                 # sub-task whose ID isn't stored — nothing to clean up.
                 return
 
+            target_status = None
+            last_collected_data = getattr(CollectionStatus, f"{matched_hook}_data_last_collected")
+            if last_collected_data is None:
+                # if we have never successfully collected data, we should reset to pending
+                target_status = CollectionState.PENDING.value
+            else:
+                # if we have successfully collected data, pending isnt allowed
+                # so we just basically fall back to the last known success status
+                # by resetting to collecting but not touching the date
+                target_status = CollectionState.SUCCESS.value
+
             revoke_logger.warning(
-                f"Resetting {matched_hook} status to ERROR for repo_id "
+                f"Resetting {matched_hook} status to {target_status} for repo_id "
                 f"{matched_status.repo_id} due to task revocation (task_id={task_id})"
             )
-            setattr(matched_status, f"{matched_hook}_status", CollectionState.ERROR.value)
+            setattr(matched_status, f"{matched_hook}_status", target_status)
             setattr(matched_status, f"{matched_hook}_task_id", None)
             session.commit()
 
