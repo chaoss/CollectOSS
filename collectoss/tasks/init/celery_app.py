@@ -1,5 +1,5 @@
 """Defines the Celery app."""
-from celery.signals import worker_process_init, worker_process_shutdown
+from celery.signals import worker_process_init, worker_process_shutdown, task_revoked
 import logging
 from typing import List, Dict
 import os
@@ -19,7 +19,7 @@ from collectoss.application.db.lib import get_session
 from collectoss.application.config import SystemConfig
 from collectoss.application.environment import SystemEnv
 from collectoss.tasks.init import get_redis_conn_values, get_rabbitmq_conn_string
-from collectoss.application.db.models import Repo
+from collectoss.application.db.models import Repo, CollectionStatus
 from collectoss.tasks.util.collection_state import CollectionState
 
 logger = logging.getLogger(__name__)
@@ -295,5 +295,61 @@ def shutdown_worker(**kwargs):
     # if engine:
     #     logger.info('Closing database connectionn for worker')
     #     engine.dispose()
+
+
+_COLLECTION_HOOKS = ["core", "secondary", "facade", "ml"]
+
+@task_revoked.connect
+def handle_task_revoked(request, terminated, signum, expired, **kwargs):
+    """Reset collection status when a task is revoked/terminated to prevent repos from
+    being permanently stuck in COLLECTING state after a worker restart or crash.
+
+    This fires for every revoked task. Only the chain-head task has its ID stored in
+    collection_status, so most sub-task revocations will be no-ops.
+    """
+    task_id = request.id
+    revoke_logger = logging.getLogger("task_revoked_handler")
+    revoke_logger.warning(
+        f"Task {task_id} ({request.task}) was revoked "
+        f"(terminated={terminated}, signum={signum}, expired={expired})"
+    )
+
+    try:
+        with get_session() as session:
+            matched_status = None
+            matched_hook = None
+
+            for hook in _COLLECTION_HOOKS:
+                task_id_col = getattr(CollectionStatus, f"{hook}_task_id")
+                status_col = getattr(CollectionStatus, f"{hook}_status")
+
+                result = session.query(CollectionStatus).filter(
+                    task_id_col == task_id,
+                    status_col.in_([CollectionState.COLLECTING.value, CollectionState.INITIALIZING.value])
+                ).first()
+
+                if result is not None:
+                    matched_status = result
+                    matched_hook = hook
+                    break
+
+            if matched_status is None:
+                # Not a tracked collection task (e.g. a scheduling or utility task), or a
+                # sub-task whose ID isn't stored — nothing to clean up.
+                return
+
+            revoke_logger.warning(
+                f"Resetting {matched_hook} status to ERROR for repo_id "
+                f"{matched_status.repo_id} due to task revocation (task_id={task_id})"
+            )
+            setattr(matched_status, f"{matched_hook}_status", CollectionState.ERROR.value)
+            setattr(matched_status, f"{matched_hook}_task_id", None)
+            session.commit()
+
+    except Exception as e:
+        revoke_logger.error(
+            f"Failed to reset collection status for revoked task {task_id}: {e}\n"
+            f"{''.join(traceback.format_exc())}"
+        )
 
 
