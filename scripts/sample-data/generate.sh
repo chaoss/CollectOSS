@@ -47,6 +47,7 @@ REPO_GROUP_ID=5
 REPO_GROUP_NAME="Sample Data"
 OUTPUT_DIR="${SCRIPT_DIR}/output"
 ENV_FILE="${REPO_ROOT}/.env"
+CONTAINER_ENGINE="podman" # or "podman"
 
 # ── Usage ──────────────────────────────────────────────────────────────────────
 usage() {
@@ -136,8 +137,8 @@ done
 [[ -f "$REPOS_FILE" ]] || die "Repos file not found: $REPOS_FILE"
 [[ -f "$ENV_FILE"   ]] || die ".env file not found: $ENV_FILE\nCreate one from environment.txt or use --env to specify its location."
 
-command -v docker >/dev/null 2>&1 || die "'docker' is not installed or not in PATH."
-docker compose version >/dev/null 2>&1 || die "'docker compose' (v2) is required. Please upgrade Docker."
+command -v $CONTAINER_ENGINE >/dev/null 2>&1 || die "'$CONTAINER_ENGINE' is not installed or not in PATH."
+$CONTAINER_ENGINE compose version >/dev/null 2>&1 || die "'$CONTAINER_ENGINE compose' (v2) is required. Please upgrade Docker."
 
 # Source .env so local scripts can use the same credentials
 set -a
@@ -162,7 +163,7 @@ cleanup() {
     compose_cmd down -v --remove-orphans 2>/dev/null || true
   else
     warn "Stack '${COMPOSE_PROJECT}' left running (--keep-stack)."
-    warn "To tear it down later:  docker compose -p ${COMPOSE_PROJECT} down -v"
+    warn "To tear it down later:  $CONTAINER_ENGINE compose -p ${COMPOSE_PROJECT} down -v"
   fi
   rm -rf "$WORK_DIR"
   exit "$exit_code"
@@ -173,7 +174,7 @@ trap cleanup EXIT
 
 # Wrapper so we don't have to repeat flags everywhere
 compose_cmd() {
-  docker compose \
+  $CONTAINER_ENGINE compose \
     --project-name "$COMPOSE_PROJECT" \
     -f "${REPO_ROOT}/docker-compose.yml" \
     --env-file "$ENV_FILE" \
@@ -262,7 +263,7 @@ ok "Stack started."
 log "Waiting for database to be healthy (up to 3 minutes)..."
 DEADLINE=$(( $(date +%s) + 180 ))
 while true; do
-  DB_HEALTH="$(docker inspect \
+  DB_HEALTH="$($CONTAINER_ENGINE inspect \
     --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' \
     "$(compose_cmd ps -q database 2>/dev/null)" 2>/dev/null || echo "starting")"
   if [[ "$DB_HEALTH" == "healthy" ]]; then
@@ -452,7 +453,7 @@ DOCKERFILE
 GENERATED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 log "Building ${IMAGE_NAME}:${IMAGE_TAG} ..."
-docker build \
+$CONTAINER_ENGINE build \
   --tag "${IMAGE_NAME}:${IMAGE_TAG}" \
   --tag "${IMAGE_NAME}:latest" \
   --label "collectoss.sample-data.repos=${REPO_COUNT}" \
@@ -469,8 +470,8 @@ section "STEP 6  Push (optional)"
 
 if [[ $PUSH_IMAGE -eq 1 ]]; then
   log "Pushing ${IMAGE_NAME}:${IMAGE_TAG} ..."
-  docker push "${IMAGE_NAME}:${IMAGE_TAG}"
-  docker push "${IMAGE_NAME}:latest"
+  $CONTAINER_ENGINE push "${IMAGE_NAME}:${IMAGE_TAG}"
+  $CONTAINER_ENGINE push "${IMAGE_NAME}:latest"
   ok "Pushed ${IMAGE_NAME}:${IMAGE_TAG}"
   ok "Pushed ${IMAGE_NAME}:latest"
 else
@@ -487,7 +488,7 @@ echo -e "  Image      : ${BOLD}${IMAGE_NAME}:${IMAGE_TAG}${NC}"
 echo -e "  Dump file  : ${BOLD}${DUMP_FILE}${NC}"
 echo ""
 echo -e "${BOLD}  Run the sample container:${NC}"
-echo -e "    docker run -d -p 5432:5432 --name collectoss-sample ${IMAGE_NAME}:${IMAGE_TAG}"
+echo -e "    $CONTAINER_ENGINE run -d -p 5432:5432 --name collectoss-sample ${IMAGE_NAME}:${IMAGE_TAG}"
 echo ""
 echo -e "${BOLD}  Connect:${NC}"
 echo -e "    psql -h localhost -p 5432 -U collectoss -d collectoss_sample"
