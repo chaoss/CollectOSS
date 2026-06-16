@@ -1,0 +1,4 @@
+# Dump files produced by generate.sh — do not commit these.
+# They can be very large and contain collected repository data.
+output/
+*.sql

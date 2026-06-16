@@ -1,0 +1,26 @@
+# CollectOSS Sample Data — example input file
+#
+# One GitHub or GitLab repo URL per line.
+# Lines beginning with '#' and blank lines are ignored.
+#
+# You can also use a CSV with a 'repo_url' column (optionally 'repo_group_id'):
+#   repo_url,repo_group_id
+#   https://github.com/chaoss/augur,1
+#
+# These repos are representative CHAOSS / open-source tooling projects that
+# are small-to-medium sized and collect quickly.  Replace or extend this list
+# to suit your needs.
+
+# ── CHAOSS core projects ──────────────────────────────────────────────────────
+https://github.com/chaoss/augur
+https://github.com/chaoss/grimoirelab
+https://github.com/chaoss/wg-evolution
+https://github.com/chaoss/wg-diversity-inclusion
+https://github.com/chaoss/metrics
+
+# ── Widely-used OSS tools (good baseline variety) ─────────────────────────────
+https://github.com/pallets/flask
+https://github.com/django/django
+https://github.com/psf/requests
+https://github.com/numpy/numpy
+https://github.com/pandas-dev/pandas

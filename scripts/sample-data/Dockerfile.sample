@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: MIT
+#
+# Dockerfile.sample
+#
+# This Dockerfile is a REFERENCE TEMPLATE showing how the generate.sh script
+# builds the sample-data image.  You do not run this file directly — the script
+# generates a concrete version in a temp directory populated with the actual
+# SQL dump files.
+#
+# To build manually from a dump file you already have:
+#
+#   cp /path/to/data_dump_YYYYMMDD.sql          ./01_data_schema.sql
+#   cp /path/to/collection_status_YYYYMMDD.sql  ./02_collection_status.sql
+#   docker build -f Dockerfile.sample -t collectoss-sample-data:latest .
+
+FROM postgres:16
+
+LABEL org.opencontainers.image.title="CollectOSS Sample Data"
+LABEL org.opencontainers.image.description="Pre-collected open-source metrics from the CollectOSS 'data' schema. Ready for downstream analytics and data science without running a live CollectOSS instance."
+LABEL org.opencontainers.image.source="https://github.com/chaoss/collectoss"
+LABEL org.opencontainers.image.licenses="MIT"
+
+# Default credentials.
+# Override at runtime with: docker run -e POSTGRES_PASSWORD=mysecret ...
+ENV POSTGRES_DB=collectoss_sample
+ENV POSTGRES_USER=collectoss
+ENV POSTGRES_PASSWORD=collectoss
+
+# The postgres base image automatically executes all *.sql and *.sh files
+# placed in /docker-entrypoint-initdb.d/ in alphabetical order on first start.
+#   01_ — full 'data' schema (tables + data)
+#   02_ — operations.collection_status metadata (which repos, collection times)
+COPY 01_data_schema.sql        /docker-entrypoint-initdb.d/01_data_schema.sql
+COPY 02_collection_status.sql  /docker-entrypoint-initdb.d/02_collection_status.sql
+
+EXPOSE 5432
+
+# ── Usage ──────────────────────────────────────────────────────────────────────
+#
+#   docker run -d -p 5432:5432 --name collectoss-sample collectoss-sample-data:latest
+#
+#   # Wait ~10–30 seconds for the init scripts to load, then:
+#   psql -h localhost -p 5432 -U collectoss -d collectoss_sample
+#
+#   -- List schemas
+#   \dn
+#
+#   -- List tables
+#   \dt data.*
+#
+#   -- Check what repos were collected
+#   SELECT repo_id, repo_git, repo_name FROM data.repo;
+#
+#   -- Issues per repo
+#   SELECT r.repo_name, COUNT(*) AS issues
+#   FROM data.issues i JOIN data.repo r USING (repo_id)
+#   GROUP BY r.repo_name ORDER BY issues DESC;
+#
+#   -- Pull request summary
+#   SELECT r.repo_name, COUNT(*) AS prs
+#   FROM data.pull_requests pr JOIN data.repo r USING (repo_id)
+#   GROUP BY r.repo_name ORDER BY prs DESC;
