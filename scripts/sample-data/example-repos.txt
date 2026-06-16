@@ -12,15 +12,19 @@
 # to suit your needs.
 
 # ── CHAOSS core projects ──────────────────────────────────────────────────────
-https://github.com/chaoss/augur
-https://github.com/chaoss/grimoirelab
-https://github.com/chaoss/wg-evolution
-https://github.com/chaoss/wg-diversity-inclusion
-https://github.com/chaoss/metrics
+#https://github.com/chaoss/augur
+#https://github.com/chaoss/grimoirelab
+#https://github.com/chaoss/wg-evolution
+#https://github.com/chaoss/wg-diversity-inclusion
+#https://github.com/chaoss/metrics
 
 # ── Widely-used OSS tools (good baseline variety) ─────────────────────────────
-https://github.com/pallets/flask
-https://github.com/django/django
-https://github.com/psf/requests
-https://github.com/numpy/numpy
-https://github.com/pandas-dev/pandas
+#https://github.com/pallets/flask
+#https://github.com/django/django
+#https://github.com/psf/requests
+#https://github.com/numpy/numpy
+#https://github.com/pandas-dev/pandas
+
+https://github.com/pola-rs/polars-cli
+https://github.com/pallets/quart
+#https://github.com/litestar-org/litestar
