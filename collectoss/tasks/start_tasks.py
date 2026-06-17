@@ -359,11 +359,11 @@ def retry_errored_repos(self):
     f"""UPDATE collection_status SET secondary_status = '{CollectionState.SUCCESS.value}'"""
     f""" WHERE secondary_status = '{CollectionState.ERROR.value}' and secondary_data_last_collected is not NULL;"""
     f"""UPDATE collection_status SET core_status = '{CollectionState.SUCCESS.value}'"""
-    f""" WHERE core_status = '{CollectionState.ERROR.value}' and core_data_last_collected is not NULL;;"""
+    f""" WHERE core_status = '{CollectionState.ERROR.value}' and core_data_last_collected is not NULL;"""
     f"""UPDATE collection_status SET facade_status = '{CollectionState.SUCCESS.value}'"""
-    f""" WHERE facade_status = '{CollectionState.ERROR.value}' and facade_data_last_collected is not NULL;;"""
+    f""" WHERE facade_status = '{CollectionState.ERROR.value}' and facade_data_last_collected is not NULL;"""
     f"""UPDATE collection_status SET ml_status = '{CollectionState.SUCCESS.value}'"""
-    f""" WHERE ml_status = '{CollectionState.ERROR.value}' and ml_data_last_collected is not NULL;;"""
+    f""" WHERE ml_status = '{CollectionState.ERROR.value}' and ml_data_last_collected is not NULL;"""
     )
 
     execute_sql(query)
