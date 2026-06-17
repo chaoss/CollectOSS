@@ -254,12 +254,13 @@ def collection_monitor(self):
     logger.info("Checking for repos to collect")
 
     
-    #Get list of enabled phases 
-    enabled_phase_names = get_enabled_phase_names_from_config(engine, logger)
-
+    
     enabled_collection_hooks = []
 
     with DatabaseSession(logger, engine) as session:
+
+        #Get list of enabled phases 
+        enabled_phase_names = get_enabled_phase_names_from_config_session(session, logger)
 
         # Get config values for collection intervals
         config = SystemConfig(logger, session)
@@ -344,6 +345,12 @@ def retry_errored_repos(self):
     """
     engine = self.app.engine
     logger = logging.getLogger(create_collection_status_records.__name__)
+
+
+
+    with DatabaseSession(logger, engine) as session:
+            # get_newly_added_repos(session, logger, enabled_phase_names, days_until_collect_again = 1)
+
 
     #TODO: Isaac needs to normalize the status's to be abstract in the 
     #collection_status table once collectoss dev is less unstable dev is less unstable.
