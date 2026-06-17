@@ -259,7 +259,7 @@ def collection_monitor(self):
 
     enabled_collection_hooks = []
 
-    with DatabaseSession(logger, self.app.engine) as session:
+    with DatabaseSession(logger, engine) as session:
 
         # Get config values for collection intervals
         config = SystemConfig(logger, session)
