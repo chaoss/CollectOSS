@@ -110,6 +110,15 @@ def get_repos_for_recollection(session, limit, hook, days_until_collect_again):
     return valid_repo_git_list
 
 
+def get_phase_intervals_from_config_session(session, logger):
+    config = SystemConfig(logger, session)
+    core_interval = config.get_value('Tasks', 'core_collection_interval_days') or 15
+    secondary_interval = config.get_value('Tasks', 'secondary_collection_interval_days') or 10
+    facade_interval = config.get_value('Tasks', 'facade_collection_interval_days') or 10
+    ml_interval = config.get_value('Tasks', 'ml_collection_interval_days') or 40
+    
+    return core_interval, secondary_interval, facade_interval, ml_interval
+
 def get_enabled_phase_names_from_config(engine, logger):
     with DatabaseSession(logger, engine) as session:
         return get_enabled_phase_names_from_config_session(session, logger)

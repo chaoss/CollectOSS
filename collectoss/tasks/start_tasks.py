@@ -35,6 +35,7 @@ from collectoss.application.db.session import DatabaseSession
 from collectoss.application.db.models import CollectionStatus, Repo
 from collectoss.tasks.util.collection_state import CollectionState
 from collectoss.tasks.util.collection_util import *
+from collectoss.tasks.util.collection_util import get_phase_intervals_from_config_session
 from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_facade_weight_time_factor
 from collectoss.application.db.lib import execute_sql, get_session
 from collectoss.application.config import SystemConfig
@@ -263,11 +264,8 @@ def collection_monitor(self):
         enabled_phase_names = get_enabled_phase_names_from_config_session(session, logger)
 
         # Get config values for collection intervals
-        config = SystemConfig(logger, session)
-        core_interval = config.get_value('Tasks', 'core_collection_interval_days') or 15
-        secondary_interval = config.get_value('Tasks', 'secondary_collection_interval_days') or 10
-        facade_interval = config.get_value('Tasks', 'facade_collection_interval_days') or 10
-        ml_interval = config.get_value('Tasks', 'ml_collection_interval_days') or 40
+        core_interval, secondary_interval, facade_interval, ml_interval = get_phase_intervals_from_config_session(session, logger)
+
 
         if primary_repo_collect_phase.__name__ in enabled_phase_names:
             enabled_collection_hooks.append(build_primary_repo_collect_request(session, logger, enabled_phase_names, core_interval))
