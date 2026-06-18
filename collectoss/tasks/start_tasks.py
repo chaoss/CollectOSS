@@ -347,10 +347,25 @@ def retry_errored_repos(self):
     logger = logging.getLogger(create_collection_status_records.__name__)
 
 
-
     with DatabaseSession(logger, engine) as session:
-            # get_newly_added_repos(session, logger, enabled_phase_names, days_until_collect_again = 1)
 
+        # if we have a lot of new repos to collect, we should skip retrying repos that have errored until collection is caught up.
+        total_new_repos = 0
+
+        #Get list of enabled phases 
+        enabled_phase_names = get_enabled_phase_names_from_config_session(session, logger)
+
+        if primary_repo_collect_phase.__name__ in enabled_phase_names:
+            total_new_repos += len(get_newly_added_repos(session, logger, "core"))
+    
+        if secondary_repo_collect_phase.__name__ in enabled_phase_names:
+            total_new_repos += len(get_newly_added_repos(session, logger, "secondary"))
+
+        if facade_phase.__name__ in enabled_phase_names:
+            total_new_repos += len(get_newly_added_repos(session, logger, "facade"))
+
+        if machine_learning_phase.__name__ in enabled_phase_names:
+            total_new_repos += len(get_newly_added_repos(session, logger, "ml"))
 
     #TODO: Isaac needs to normalize the status's to be abstract in the 
     #collection_status table once collectoss dev is less unstable dev is less unstable.
