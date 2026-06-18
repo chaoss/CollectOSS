@@ -16,11 +16,13 @@ def query_committers_count(key_auth, logger, owner, repo):
 
     data = {}
     logger.info('Querying committers count\n')
-    url = f'https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100'
+
+    github_data_access = GithubDataAccess(key_auth, logger)
+
+    url = github_data_access.endpoint_url(f"/repos/{owner}/{repo}/contributors", {"per_page": 100})
     ## If the repository is empty there are zero committers, and the API returns nothing at all. Response 
     ## header of 200 along with an empty JSON. 
     try: 
-        github_data_access = GithubDataAccess(key_auth, logger)
         try: 
             data = github_data_access.get_resource_count(url) 
         except Exception as e: 
@@ -57,9 +59,10 @@ def get_repo_data(logger, url, response):
 """ 
 def get_repo_data(logger, owner, repo):
 
+    github_data_access = GithubDataAccess(None, logger)
+
     try:
-        url = f'https://api.github.com/repos/{owner}/{repo}'
-        github_data_access = GithubDataAccess(None, logger)
+        url = github_data_access.endpoint_url(f"/repos/{owner}/{repo}")
         result = github_data_access.get_resource(url)
         return result
     except UrlNotFoundException as e:

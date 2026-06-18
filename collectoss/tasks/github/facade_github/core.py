@@ -26,12 +26,6 @@ def query_github_contributors(logger, key_auth, github_url, tool_source:str, too
         logger.error(f"Encountered bad url: {github_url}")
         raise e
 
-    # Set the base of the url and place to hold contributors to insert
-    contributors_url = (
-        f"https://api.github.com/repos/{owner}/{name}/" +
-        "contributors?state=all"
-    )
-
     # Get contributors that we already have stored
     #   Set our duplicate and update column map keys (something other than PK) to
     #   check dupicates/needed column updates with
@@ -41,6 +35,9 @@ def query_github_contributors(logger, key_auth, github_url, tool_source:str, too
     duplicate_col_map = {'cntrb_login': 'login'}
 
     github_data_access = GithubDataAccess(key_auth, logger)
+
+    # Set the base of the url and place to hold contributors to insert
+    contributors_url = github_data_access.endpoint_url(f"repos/{owner}/{repo}/contributors", {"state": "all"})
 
     contributor_count = github_data_access.get_resource_count(contributors_url)
 
@@ -54,7 +51,7 @@ def query_github_contributors(logger, key_auth, github_url, tool_source:str, too
             # Need to hit this single contributor endpoint to get extra data including...
             #   `created at`
             #   i think that's it
-            cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
+            cntrb_url = github_data_access.endpoint_url(f"users/{repo_contributor['login']}")
 
             
             logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
