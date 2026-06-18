@@ -169,7 +169,7 @@ class GithubDataAccess:
                 raise UrlNotFoundException(f"Could not find {url}")
             
             if response.status_code == 401:
-                raise NotAuthorizedException(f"Could not authorize with the github api")
+                raise NotAuthorizedException(f"Could not authorize with the github api using key: {mask_key(self.key)}")
             
             if response.status_code == 410:
                 response_msg = response.json().get("message")
