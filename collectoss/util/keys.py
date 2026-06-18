@@ -4,6 +4,8 @@ def mask_key(key: str, first: int = 6, last: int = 3, stars: int = 6) -> str:
         return None
 
     if isinstance(key, str):
+        if key == "":
+            return "*" * stars + f" Type: empty string"
         if len(key) <= (first + last):
             return "*" * stars
         return f"{key[:first]}{'*' * stars}{key[-last:]}"
