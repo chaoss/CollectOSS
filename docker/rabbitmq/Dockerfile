@@ -21,9 +21,5 @@ RUN apk add --no-cache python3
 COPY docker/rabbitmq/update_config.py /
 COPY docker/rabbitmq/docker-entrypoint.sh /collectoss-rabbitmq-entrypoint.sh
 
-RUN chmod +x /collectoss-rabbitmq-entrypoint.sh
-
-RUN chown rabbitmq:rabbitmq /etc/rabbitmq/definitions.json
-
-ENTRYPOINT ["/collectoss-rabbitmq-entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "/collectoss-rabbitmq-entrypoint.sh"]
 CMD ["rabbitmq-server"]
