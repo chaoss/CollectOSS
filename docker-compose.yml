@@ -44,10 +44,10 @@ services:
     build:
       context: .
       dockerfile: ./docker/rabbitmq/Dockerfile
-      args:
-        - RABBIT_MQ_DEFAULT_USER=${COLLECTOSS_RABBITMQ_USERNAME:-augur}
-        - RABBIT_MQ_DEFAULT_PASSWORD=${COLLECTOSS_RABBITMQ_PASSWORD:-password123}
-        - RABBIT_MQ_DEFAULT_VHOST=${COLLECTOSS_RABBITMQ_VHOST:-collectoss_vhost}
+    environment:
+      - RABBIT_MQ_DEFAULT_USER=${COLLECTOSS_RABBITMQ_USERNAME:-augur}
+      - RABBIT_MQ_DEFAULT_PASSWORD=${COLLECTOSS_RABBITMQ_PASSWORD:-password123}
+      - RABBIT_MQ_DEFAULT_VHOST=${COLLECTOSS_RABBITMQ_VHOST:-collectoss_vhost}
 
   core:
     image: collectoss:latest

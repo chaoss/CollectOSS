@@ -8,13 +8,9 @@ LABEL org.opencontainers.image.documentation="https://docs.collectoss.org"
 ARG VERSION
 LABEL org.opencontainers.image.version=${VERSION}
 
-ARG RABBIT_MQ_DEFAULT_USER=augur
-ARG RABBIT_MQ_DEFAULT_PASSWORD=password123
-ARG RABBIT_MQ_DEFAULT_VHOST=collectoss_vhost
-
 COPY --chown=rabbitmq:rabbitmq ./docker/rabbitmq/collectoss.conf /etc/rabbitmq/conf.d/
 
-ADD docker/rabbitmq/definitions.json /etc/rabbitmq/
+COPY --chown=rabbitmq:rabbitmq docker/rabbitmq/definitions.json /etc/rabbitmq/
 
 ADD docker/rabbitmq/advanced.config /etc/rabbitmq/
 RUN chown rabbitmq:rabbitmq /etc/rabbitmq/advanced.config
@@ -23,7 +19,11 @@ RUN chmod 777 /etc/rabbitmq/conf.d/collectoss.conf
 
 RUN apk add --no-cache python3
 COPY docker/rabbitmq/update_config.py /
+COPY docker/rabbitmq/docker-entrypoint.sh /collectoss-rabbitmq-entrypoint.sh
 
-RUN exec python3 update_config.py
+RUN chmod +x /collectoss-rabbitmq-entrypoint.sh
 
 RUN chown rabbitmq:rabbitmq /etc/rabbitmq/definitions.json
+
+ENTRYPOINT ["/collectoss-rabbitmq-entrypoint.sh"]
+CMD ["rabbitmq-server"]
