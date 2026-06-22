@@ -26,7 +26,6 @@ def value_model(logger,repo_git):
     required_output = parse_json_from_subprocess_call(logger,['./scc', '-f','json','--by-file', path], cwd=path_to_scc)
     
     logger.info('adding scc data to database... ')
-    logger.debug(f"output: {required_output}")
 
     to_insert = []
     for record in required_output:
