@@ -75,7 +75,7 @@ def retrieve_all_pr_data(repo_git: str, logger, key_auth, since): #-> Generator[
 
     logger.debug(f"Collecting pull requests for {owner}/{repo}")
 
-    github_data_access = GithubDataAccess(key_auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     search_args = {"state": "all", "direction": "desc", "sort": "updated"}
     url = github_data_access.endpoint_url(f"repos/{owner}/{repo}/pulls", search_args)
@@ -258,7 +258,7 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
     data_source = "Github API"
 
     key_auth = GithubRandomKeyAuth(logger)
-    github_data_access = GithubDataAccess(key_auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     pr_review_comment_batch_size = get_batch_size()
 

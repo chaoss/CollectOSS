@@ -40,7 +40,7 @@ def query_github_contributors(logger, key_auth, github_url, tool_source:str, too
     update_col_map = {'cntrb_email': 'email'}
     duplicate_col_map = {'cntrb_login': 'login'}
 
-    github_data_access = GithubDataAccess(key_auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     contributor_count = github_data_access.get_resource_count(contributors_url)
 

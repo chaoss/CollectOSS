@@ -46,7 +46,7 @@ def pull_request_commits_model(repo_id,logger, db_session, key_auth, full_collec
 
     logger.info(f"Getting pull request commits for repo: {repo.repo_git}")
 
-    github_data_access = GithubDataAccess(key_auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     pr_commits_natural_keys = ["pull_request_id", "repo_id", "pr_cmt_sha"]
     all_data = []

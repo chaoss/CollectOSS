@@ -83,7 +83,7 @@ def contributor_breadth_model(self) -> None:
         
         cntrb_newest_events_map[gh_login] = newest_event_date
 
-    github_data_access = GithubDataAccess(key_auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     index = 1
     total = len(current_cntrb_logins)

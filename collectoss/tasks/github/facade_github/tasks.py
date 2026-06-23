@@ -17,7 +17,7 @@ from collectoss.application.db.data_parse import extract_needed_contributor_data
 
 def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id, tool_source:str, tool_version:str, data_source:str):
 
-    github_data_access = GithubDataAccess(auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     for contributor in contributorQueue:
         # Get the email from the commit data

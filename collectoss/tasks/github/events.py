@@ -50,7 +50,7 @@ def bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, r
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/events?per_page=100"
 
-    github_data_access = GithubDataAccess(key_auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     page_count = github_data_access.get_resource_page_count(url)
 
@@ -136,7 +136,7 @@ class BulkGithubEventCollection(GithubEventCollection):
 
         url = f"https://api.github.com/repos/{owner}/{repo}/issues/events"
             
-        github_data_access = GithubDataAccess(key_auth, self._logger)
+        github_data_access = GithubDataAccess(None, self._logger)
 
         for event in github_data_access.paginate_resource(url):
 
@@ -308,7 +308,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
         events = []
         contributors = []
-        github_data_access = GithubDataAccess(key_auth, self._logger)
+        github_data_access = GithubDataAccess(None, self._logger)
         for db_issue in issue_result:
             issue = db_issue._asdict()
 
@@ -371,7 +371,7 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
         events = []
         contributors = []
-        github_data_access = GithubDataAccess(key_auth, self._logger)
+        github_data_access = GithubDataAccess(None, self._logger)
         for db_pr in pr_result:
             pr = db_pr._asdict()
 

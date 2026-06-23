@@ -108,7 +108,7 @@ def retrieve_all_issue_data(repo_git: str, logger: logging.Logger, key_auth: Git
     if since:
         url += f"&since={since.isoformat()}"
 
-    github_data_access = GithubDataAccess(key_auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     num_pages = github_data_access.get_resource_page_count(url)
     logger.info(f"{owner}/{repo}: Retrieving {num_pages} pages of issues")
