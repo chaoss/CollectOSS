@@ -31,7 +31,7 @@ def _build_path(env_path:str, default_path:Path) -> Path:
         if env_path.is_absolute():
             return env_path
         else:
-            return _path_from_env(SystemEnv.get("HOME")) / env_path
+            return Path.home() / env_path
     else:
         return default_path
 
