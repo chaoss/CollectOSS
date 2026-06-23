@@ -60,7 +60,12 @@ class SystemPaths:
 
     def get_config_directory(self, create = True) -> Path:
         """Get the config directory"""
-        return SystemEnv.get("CONFIG_DATADIR")
+        env_path = _path_from_env(SystemEnv.get("COLLECTOSS_CONFIG_DIRECTORY") or SystemEnv.get("CONFIG_DATADIR"))
+
+        return _verify_path(
+            self._build_path(env_path, self.dirs.user_config_path),
+            create = create
+        )
 
     def get_logs_directory(self, create = True) -> Path:
         """Get the logs directory"""
