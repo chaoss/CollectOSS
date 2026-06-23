@@ -23,37 +23,12 @@ def collect_github_repo_clones_data(repo_git: str) -> None:
 
     key_auth = GithubRandomKeyAuth(logger)
 
-    clones_data = retrieve_all_clones_data(repo_git, logger, key_auth)
+    clones_data = []
 
     if clones_data:
         process_clones_data(clones_data, f"{owner}/{repo}: Traffic task", repo_id)
     else:
         logger.info(f"{owner}/{repo} has no clones")
-
-def retrieve_all_clones_data(repo_git: str, logger, key_auth):
-    # owner, repo = get_owner_repo(repo_git)
-
-    # url = f"https://api.github.com/repos/{owner}/{repo}/traffic/clones"
-    
-    # clones = GithubPaginator(url, key_auth, logger)
-
-    # num_pages = clones.get_num_pages()
-    all_data = []
-    # for page_data, page in clones.iter_pages():
-
-    #     if page_data is None:
-    #         return all_data
-            
-    #     elif len(page_data) == 0:
-    #         logger.debug(f"{repo.capitalize()} Traffic Page {page} contains no data...returning")
-    #         logger.info(f"Traffic Page {page} of {num_pages}")
-    #         return all_data
-
-    #     logger.info(f"{repo} Traffic Page {page} of {num_pages}")
-
-    #     all_data += page_data
-
-    return all_data
 
 
 def process_clones_data(clones_data, task_name, repo_id, logger) -> None:
