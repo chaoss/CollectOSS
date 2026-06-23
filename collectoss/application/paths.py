@@ -20,6 +20,21 @@ def _path_from_env(env_value: str) -> Path:
         return None
     return Path(env_value)
 
+def _build_path(env_path:str, default_path:Path) -> Path:
+    """Build a path from the environment variable or the default path.
+    
+    If the environment variable is an absolute path, return it.
+    If the environment variable is a relative path, resolve it against the home directory.
+    If the environment variable is not set, return the default path.
+    """
+    if env_path is not None:
+        if env_path.is_absolute():
+            return env_path
+        else:
+            return _path_from_env(SystemEnv.get("HOME")) / env_path
+    else:
+        return default_path
+
 class SystemPaths:
     """Enable consistent storage and retrieval of filesystem paths needed by the system
     
@@ -31,62 +46,55 @@ class SystemPaths:
     """
     app_name = "CollectOSS"
     app_org = "CHAOSS"
-    # Automatically targets the proper OS directory and handles creation
-    dirs = PlatformDirs(app_name, app_org, ensure_exists=True)
 
-    def _build_path(self, env_path:str, default_path:Path) -> Path:
-        """Build a path from the environment variable or the default path.
-        
-        If the environment variable is an absolute path, return it.
-        If the environment variable is a relative path, resolve it against the home directory.
-        If the environment variable is not set, return the default path.
-        """
-        if env_path is not None:
-            if env_path.is_absolute():
-                return env_path
-            else:
-                return _path_from_env(SystemEnv.get("HOME")) / env_path
-        else:
-            return default_path
+    @staticmethod
+    def os_defaults(create = True) -> PlatformDirs:
+        """Get the set of conventional directories for the operating system"""
+        return PlatformDirs(SystemPaths.app_name, SystemPaths.app_org, ensure_exists=create)
 
-    def get_facade_directory(self, create = True) -> Path:
+    @staticmethod
+    def get_facade_directory(create = True) -> Path:
         """Get the facade directory"""
         env_path = _path_from_env(SystemEnv.get("COLLECTOSS_FACADE_REPO_DIRECTORY"))
 
         return _verify_path(
-            self._build_path(env_path, self.dirs.user_downloads_path / "collectoss_facade"),
+            _build_path(env_path, SystemPaths.os_defaults(create).user_downloads_path / "collectoss_facade"),
             create = create
         )
 
-    def get_config_directory(self, create = True) -> Path:
+    @staticmethod
+    def get_config_directory(create = True) -> Path:
         """Get the config directory"""
         env_path = _path_from_env(SystemEnv.get("COLLECTOSS_CONFIG_DIRECTORY") or SystemEnv.get("CONFIG_DATADIR"))
 
         return _verify_path(
-            self._build_path(env_path, self.dirs.user_config_path),
+            _build_path(env_path, SystemPaths.os_defaults(create).user_config_path),
             create = create
         )
 
-    def get_logs_directory(self, create = True) -> Path:
+    @staticmethod
+    def get_logs_directory(create = True) -> Path:
         """Get the logs directory"""
         env_path = _path_from_env(SystemEnv.get("COLLECTOSS_LOGS_DIRECTORY"))
 
         return _verify_path(
-            self._build_path(env_path, self.dirs.user_log_path),
+            _build_path(env_path, SystemPaths.os_defaults(create).user_log_path),
             create = create
         )
 
-    def get_cache_directory(self, create = True) -> Path:
+    @staticmethod
+    def get_cache_directory(create = True) -> Path:
         """Get the cache directory"""
         env_path = _path_from_env(SystemEnv.get("COLLECTOSS_CACHE_DIRECTORY") or SystemEnv.get("CACHE_DATADIR"))
 
         return _verify_path(
-            self._build_path(env_path, self.dirs.user_cache_path),
+            _build_path(env_path, SystemPaths.os_defaults(create).user_cache_path),
             create = create
         )
 
-    def print_all_paths(self, logger):
-        logger.info(f"Facade directory: {self.get_facade_directory(create = False)}")
-        logger.info(f"Config directory: {self.get_config_directory(create = False)}")
-        logger.info(f"Logs directory: {self.get_logs_directory(create = False)}")
-        logger.info(f"Cache directory: {self.get_cache_directory(create = False)}")
+    @staticmethod
+    def print_all_paths(logger):
+        logger.info(f"Facade directory: {SystemPaths.get_facade_directory(create = False)}")
+        logger.info(f"Config directory: {SystemPaths.get_config_directory(create = False)}")
+        logger.info(f"Logs directory: {SystemPaths.get_logs_directory(create = False)}")
+        logger.info(f"Cache directory: {SystemPaths.get_cache_directory(create = False)}")
