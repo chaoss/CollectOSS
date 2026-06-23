@@ -206,7 +206,14 @@ class GithubDataAccess:
         try:
             return self.__make_request_with_retries(url, method, timeout)
         except RetryError as e:
-            raise e.last_attempt.exception()
+            last_exception = e.last_attempt.exception()
+
+            # https://github.com/orgs/community/discussions/101661#discussioncomment-8342211
+            # this suggests we should retry 401 exceptions at least once
+            if isinstance(last_exception, NotAuthorizedException):
+                self.expired_keys_for_request = []
+                self.__handle_github_not_authorized_response()           
+            raise last_exception
 
     def _decide_retry_policy(exception: Exception) -> bool:
         """Defines whether or not to retry a failed request based on the exception thrown
@@ -231,10 +238,6 @@ class GithubDataAccess:
             return result
         except RatelimitException as e:
             self.__handle_github_ratelimit_response(e.response)
-            raise e
-        except NotAuthorizedException as e:
-            self.expired_keys_for_request = []
-            self.__handle_github_not_authorized_response()
             raise e
 
     def __handle_github_not_authorized_response(self):
