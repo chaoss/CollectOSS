@@ -6,8 +6,6 @@ from collectoss.tasks.util.worker_util import remove_duplicate_dicts
 from collectoss.tasks.github.util.util import get_owner_repo
 from collectoss.application.db.models import RepoClone
 from collectoss.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts
-from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
-
 
 @celery.task
 def collect_github_repo_clones_data(repo_git: str) -> None:
@@ -20,8 +18,6 @@ def collect_github_repo_clones_data(repo_git: str) -> None:
     owner, repo = get_owner_repo(repo_git)
 
     logger.info(f"Collecting Github repository clone data for {owner}/{repo}")
-
-    key_auth = GithubRandomKeyAuth(logger)
 
     clones_data = []
 
