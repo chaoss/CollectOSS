@@ -31,5 +31,6 @@ if __name__ == "__main__":
     warn_import_repos(logger)
 
     print_platform_information(logger)
+    SystemPaths().print_all_paths(logger)
 
     sys.exit(0)
