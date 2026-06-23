@@ -2,6 +2,14 @@ from platformdirs import PlatformDirs
 from collectoss.application.environment import SystemEnv
 from pathlib import Path
 
+
+def _clean_path(path: Path | str) -> Path:
+    if path is None:
+        return None
+    if isinstance(path, str):
+        path = Path(path)
+    return path.expanduser().resolve()
+
 def _verify_path(path: Path, create = True) -> Path:
     """Verify the path is a valid directory"""
     if create:
@@ -9,7 +17,7 @@ def _verify_path(path: Path, create = True) -> Path:
             path.mkdir(parents=True)
         if not path.is_dir():
             raise ValueError(f"Path {path} is not a valid directory")
-    return path.resolve()
+    return _clean_path(path)
 
 
 def _path_from_env(env_value: str) -> Path:
@@ -28,10 +36,11 @@ def _build_path(env_path:str, default_path:Path) -> Path:
     If the environment variable is not set, return the default path.
     """
     if env_path is not None:
+        env_path = Path(env_path)
         if env_path.is_absolute():
-            return env_path
+            return _clean_path(env_path)
         else:
-            return Path.home() / env_path
+            return _clean_path(Path.home() / env_path)
     else:
         return default_path
 
