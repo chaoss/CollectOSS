@@ -69,7 +69,12 @@ class SystemPaths:
 
     def get_logs_directory(self, create = True) -> Path:
         """Get the logs directory"""
-        return SystemEnv.get("COLLECTOSS_LOGS_DIRECTORY")
+        env_path = _path_from_env(SystemEnv.get("COLLECTOSS_LOGS_DIRECTORY"))
+
+        return _verify_path(
+            self._build_path(env_path, self.dirs.user_log_path),
+            create = create
+        )
 
     def get_cache_directory(self, create = True) -> Path:
         """Get the cache directory"""
