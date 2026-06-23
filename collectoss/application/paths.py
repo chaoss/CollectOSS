@@ -1,3 +1,4 @@
+from platformdirs import PlatformDirs
 from collectoss.application.environment import SystemEnv
 from pathlib import Path
 
@@ -20,7 +21,18 @@ def _path_from_env(env_value: str) -> Path:
     return Path(env_value)
 
 class SystemPaths:
-    """Enable consistent storage and retrieval of filesystem paths needed by the system"""
+    """Enable consistent storage and retrieval of filesystem paths needed by the system
+    
+    The paths that are used follow the following hierarchy:
+    - Absolute path specified by an environment variable
+    - Relative path specified by an environment variable, resolved against the home directory
+    - Default path for the operating system based on accepted standards
+    
+    """
+    app_name = "CollectOSS"
+    app_org = "CHAOSS"
+    # Automatically targets the proper OS directory and handles creation
+    dirs = PlatformDirs(app_name, app_org, ensure_exists=True)
 
     def get_facade_directory(self) -> str:
         """Get the facade directory"""
