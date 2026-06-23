@@ -34,6 +34,21 @@ class SystemPaths:
     # Automatically targets the proper OS directory and handles creation
     dirs = PlatformDirs(app_name, app_org, ensure_exists=True)
 
+    def _build_path(self, env_path:str, default_path:Path) -> Path:
+        """Build a path from the environment variable or the default path.
+        
+        If the environment variable is an absolute path, return it.
+        If the environment variable is a relative path, resolve it against the home directory.
+        If the environment variable is not set, return the default path.
+        """
+        if env_path is not None:
+            if env_path.is_absolute():
+                return env_path
+            else:
+                return _path_from_env(SystemEnv.get("HOME")) / env_path
+        else:
+            return default_path
+
     def get_facade_directory(self, create = True) -> Path:
         """Get the facade directory"""
         return SystemEnv.get("COLLECTOSS_FACADE_REPO_DIRECTORY")
