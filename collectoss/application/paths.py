@@ -84,3 +84,9 @@ class SystemPaths:
             self._build_path(env_path, self.dirs.user_cache_path),
             create = create
         )
+
+    def print_all_paths(self, logger):
+        logger.info(f"Facade directory: {self.get_facade_directory(create = False)}")
+        logger.info(f"Config directory: {self.get_config_directory(create = False)}")
+        logger.info(f"Logs directory: {self.get_logs_directory(create = False)}")
+        logger.info(f"Cache directory: {self.get_cache_directory(create = False)}")
