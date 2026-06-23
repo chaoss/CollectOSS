@@ -9,7 +9,6 @@ from collectoss.tasks.init.celery_app import celery_app as celery
 from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
 from collectoss.application.db.data_parse import *
 from collectoss.tasks.github.util.github_data_access import GithubDataAccess
-from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from collectoss.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from collectoss.tasks.util.worker_util import remove_duplicate_dicts
 from collectoss.application.db.models import Issue, IssueLabel, IssueAssignee
@@ -47,12 +46,8 @@ def collect_issues(repo_git: str, full_collection: bool) -> int:
         # Subtract 2 days to ensure all data is collected
         core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
-    key_auth = GithubRandomKeyAuth(logger)
-
-    logger.info(f'this is the manifest.key_auth value: {str(key_auth)}')
-
     try:
-        issue_data_generator = retrieve_all_issue_data(repo_git, logger, key_auth, core_data_last_collected)
+        issue_data_generator = retrieve_all_issue_data(repo_git, logger, None, core_data_last_collected)
 
         issue_batch_size = get_batch_size()
 
@@ -86,7 +81,7 @@ def collect_issues(repo_git: str, full_collection: bool) -> int:
 
 
 
-def retrieve_all_issue_data(repo_git: str, logger: logging.Logger, key_auth: GithubRandomKeyAuth, since: datetime | None = None):
+def retrieve_all_issue_data(repo_git: str, logger: logging.Logger, key_auth: None, since: datetime | None = None):
     """
     Retrieve all issue data for a repository as a generator.
 
@@ -96,7 +91,7 @@ def retrieve_all_issue_data(repo_git: str, logger: logging.Logger, key_auth: Git
     Args:
         repo_git (str): The GitHub repository in "owner/repo" format.
         logger (logging.Logger): Logger for logging messages.
-        key_auth (GithubRandomKeyAuth): Auth handler for GitHub API.
+        key_auth (GithubRandomKeyAuth): Auth handler for GitHub API. unused and deprecated, use KeyClient instead.
         since (datetime, optional): Only issues updated since this datetime will be retrieved.
     """
     owner, repo = get_owner_repo(repo_git)

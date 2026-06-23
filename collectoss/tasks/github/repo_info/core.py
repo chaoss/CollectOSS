@@ -188,7 +188,7 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
     data = github_graphql_data_access.get_resource(query, variables, result_keys)
 
     # Get committers count info that requires seperate endpoint  
-    committers_count = query_committers_count(key_auth, logger, owner, repo)
+    committers_count = query_committers_count(None, logger, owner, repo)
 
     # Put all data together in format of the table
     logger.info(f'Inserting repo info for repo with id:{repo_orm_obj.repo_id}, owner:{owner}, name:{repo}\n')

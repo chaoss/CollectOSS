@@ -10,7 +10,6 @@ from collectoss.tasks.util.worker_util import remove_duplicate_dicts
 from collectoss.tasks.github.util.util import add_key_value_pair_to_dicts, get_owner_repo
 from collectoss.application.db.models import PullRequest, Message, PullRequestReview, PullRequestLabel, PullRequestReviewer, PullRequestMeta, PullRequestAssignee, PullRequestReviewMessageRef, Contributor, Repo
 from collectoss.tasks.github.util.github_task_session import GithubTaskManifest
-from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from collectoss.application.db.lib import get_repo_by_repo_git, bulk_insert_dicts, get_pull_request_reviews_by_repo_id, batch_insert_contributors, get_batch_size
 from collectoss.application.db.util import execute_session_query
 from ..messages import process_github_comment_contributors
@@ -257,7 +256,6 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
     tool_version = "2.0"
     data_source = "Github API"
 
-    key_auth = GithubRandomKeyAuth(logger)
     github_data_access = GithubDataAccess(None, logger)
 
     pr_review_comment_batch_size = get_batch_size()

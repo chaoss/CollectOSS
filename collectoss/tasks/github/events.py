@@ -39,7 +39,7 @@ def collect_events(repo_git: str, full_collection: bool):
 
     key_auth = GithubRandomKeyAuth(logger)
 
-    if bulk_events_collection_endpoint_contains_all_data(key_auth, logger, owner, repo):
+    if bulk_events_collection_endpoint_contains_all_data(None, logger, owner, repo):
         collection_strategy = BulkGithubEventCollection(logger)
     else:
         collection_strategy = ThoroughGithubEventCollection(logger)
