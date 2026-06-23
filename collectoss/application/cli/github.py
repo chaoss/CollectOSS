@@ -1,7 +1,12 @@
 # SPDX-License-Identifier: MIT
 import logging
 import click
+from collectoss.application.config import SystemConfig
+from collectoss.application.db.models.operations import WorkerOauth
+from collectoss.application.db.session import DatabaseSession
+from keyman.KeyClient import KeyPublisher
 import sqlalchemy as s
+from sqlalchemy import func
 from datetime import datetime
 import httpx
 from collections import Counter
@@ -86,6 +91,69 @@ def update_api_key():
 
                                         
     engine.dispose()
+
+
+def validate_github_token(api_key: str) -> bool:
+    """ check if a github API key is likely to be valid """
+    with httpx.Client() as client:
+        rest, gql = GithubApiKeyHandler.get_key_rate_limit(client, api_key)
+        return rest is not None and gql is not None
+
+
+@cli.command("add-key")
+@test_connection
+@test_db_connection
+def add_api_key():
+    """
+    Add a new github API key, potentially mid-collection
+    """
+    # we prompt this way so that it is provided interactively and not likely to be stored somewhere like shell history
+    incoming_api_key = click.prompt('Please enter the new API key (wont show typing)', type=str, hide_input=True)
+
+    if not incoming_api_key or len(incoming_api_key) == 0:
+        logger.error("No API key provided")
+        return
+
+    if not validate_github_token(incoming_api_key):
+        logger.error("The provided API key is not valid")
+        return
+    
+
+    with DatabaseSession(logger) as session:
+        platform = "github"
+
+        config = SystemConfig(logger, session)
+
+        config_key = config.get_value("Keys", "github_api_key")
+
+        existing_key_check = session.query(WorkerOauth).filter(WorkerOauth.platform == platform, WorkerOauth.access_token == incoming_api_key).first()
+
+        if existing_key_check or (config_key is not None and config_key == incoming_api_key):
+            logger.error("The provided API key already exists in the system")
+            return
+
+        new_key = WorkerOauth(
+            platform=platform,
+            access_token=incoming_api_key,
+            name=f"New API Key {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} added via CLI",
+            consumer_key=0,
+            consumer_secret=0,
+            access_token_secret=0,
+            )
+        session.add(new_key)
+        session.commit()
+
+        logger.info(f"The new API key has been added to the DB.")
+
+    keypub = KeyPublisher()
+
+    keypub.publish(incoming_api_key, "github_rest")
+    keypub.publish(incoming_api_key, "github_graphql")
+    keypub.publish(incoming_api_key, "github_search")
+
+    logger.info(f"The new API key has been published to the orchestrator.")
+
+    
 
 def epoch_to_local_time_with_am_pm(epoch):
     # Convert epoch to local time with timezone awareness
