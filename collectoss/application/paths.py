@@ -34,18 +34,18 @@ class SystemPaths:
     # Automatically targets the proper OS directory and handles creation
     dirs = PlatformDirs(app_name, app_org, ensure_exists=True)
 
-    def get_facade_directory(self) -> str:
+    def get_facade_directory(self, create = True) -> Path:
         """Get the facade directory"""
         return SystemEnv.get("COLLECTOSS_FACADE_REPO_DIRECTORY")
 
-    def get_config_directory(self) -> str:
+    def get_config_directory(self, create = True) -> Path:
         """Get the config directory"""
         return SystemEnv.get("CONFIG_DATADIR")
 
-    def get_logs_directory(self) -> str:
+    def get_logs_directory(self, create = True) -> Path:
         """Get the logs directory"""
         return SystemEnv.get("COLLECTOSS_LOGS_DIRECTORY")
 
-    def get_cache_directory(self) -> str:
+    def get_cache_directory(self, create = True) -> Path:
         """Get the cache directory"""
         return SystemEnv.get("CACHE_DATADIR")
