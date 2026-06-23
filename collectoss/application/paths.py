@@ -51,7 +51,12 @@ class SystemPaths:
 
     def get_facade_directory(self, create = True) -> Path:
         """Get the facade directory"""
-        return SystemEnv.get("COLLECTOSS_FACADE_REPO_DIRECTORY")
+        env_path = _path_from_env(SystemEnv.get("COLLECTOSS_FACADE_REPO_DIRECTORY"))
+
+        return _verify_path(
+            self._build_path(env_path, self.dirs.user_downloads_path / "collectoss_facade"),
+            create = create
+        )
 
     def get_config_directory(self, create = True) -> Path:
         """Get the config directory"""
