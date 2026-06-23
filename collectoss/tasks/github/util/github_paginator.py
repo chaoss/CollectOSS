@@ -16,7 +16,7 @@ def hit_api(key_manager, url: str, logger: logging.Logger, timeout: float = 10, 
     Returns:
         A httpx response that contains the data. None if a timeout occurs
     """
-    # self.logger.info(f"Hitting endpoint with {method} request: {url}...\n")
+    # self.logger.debug(f"Hitting endpoint with {method} request: {url}...\n")
 
     with httpx.Client() as client:
 

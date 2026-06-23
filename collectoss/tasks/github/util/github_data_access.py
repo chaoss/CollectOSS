@@ -192,7 +192,7 @@ class GithubDataAccess:
         
     def make_request_with_retries(self, url, method="GET", timeout=100):
         """ What method does?
-            1. Catches RetryError and rethrows a nicely formatted OutOfRetriesException that includes that last exception thrown
+            1. Catches RetryError and rethrows the last exception thrown
         """
 
         try:

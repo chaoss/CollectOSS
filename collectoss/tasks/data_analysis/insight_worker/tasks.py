@@ -64,7 +64,7 @@ def insight_model(repo_git: str,logger,engine) -> None:
     for endpoint, field in metrics.items():
         # Hit endpoint
         url = base_url + endpoint
-        logger.info("Hitting endpoint: " + url + "\n")
+        logger.debug("Hitting endpoint: " + url + "\n")
         try:
             data = requests.get(url=url).json()
         except:
@@ -341,7 +341,7 @@ def confidence_interval_insights(logger, engine):
 
         # Hit endpoint
         url = base_url + endpoint['cm_info']
-        logger.info("Hitting endpoint: " + url + "\n")
+        logger.debug("Hitting endpoint: " + url + "\n")
         r = requests.get(url=url)
         data = r.json()
 
@@ -696,7 +696,7 @@ def confidence_interval(data, logger, timeperiod='week', confidence=.95, ):
 
 def update_metrics(api_host, api_port, tool_source, tool_version, logger, session, engine):
 
-    logger.info("Preparing to update metrics ...\n\n" +
+    logger.debug("Preparing to update metrics ...\n\n" +
                  "Hitting endpoint: http://{}:{}/api/unstable/metrics/status ...\n".format(
                      api_host, api_port))
     r = requests.get(url='http://{}:{}/api/unstable/metrics/status'.format(

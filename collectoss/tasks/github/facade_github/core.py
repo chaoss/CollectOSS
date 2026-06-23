@@ -57,7 +57,7 @@ def query_github_contributors(logger, key_auth, github_url, tool_source:str, too
             cntrb_url = ("https://api.github.com/users/" + repo_contributor['login'])
 
             
-            logger.info("Hitting endpoint: " + cntrb_url + " ...\n")
+            logger.debug("Hitting endpoint: " + cntrb_url + " ...\n")
             #r = hit_api(session.oauths, cntrb_url, logger)
             #contributor = r.json()
 
