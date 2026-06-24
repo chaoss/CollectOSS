@@ -346,7 +346,7 @@ def dashboard_view():
         ]}
     ]
 
-    backend_config = AugurConfig(logger, db_session).load_config()
+    backend_config = SystemConfig(logger, db_session).load_config()
     
     with get_session() as session:
         try:
