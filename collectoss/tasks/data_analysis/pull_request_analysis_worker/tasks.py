@@ -2,6 +2,7 @@ import logging
 import os
 import datetime
 
+from collectoss.application.paths import SystemPaths
 import joblib
 import pandas as pd
 import sqlalchemy as s
@@ -17,8 +18,6 @@ from collectoss.tasks.init.celery_app import MLRepoCollectionTask
 # from sklearn.metrics import (confusion_matrix, f1_score, precision_score, recall_score)
 # from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 # from xgboost import XGBClassifier
-
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 @celery.task(base=MLRepoCollectionTask, bind=True)
 def pull_request_analysis_task(self, repo_git):
@@ -40,7 +39,7 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
 
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
-    senti_models_dir = os.path.join(ROOT_PROJECT_REPO_DIRECTORY, "tasks", "data_analysis", "message_insights", get_value("Message_Insights", 'models_dir'))
+    senti_models_dir = SystemPaths.get_models_directory()
 
     logger.info(f'Sentiment model dir located - {senti_models_dir}')
 

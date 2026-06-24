@@ -1,4 +1,5 @@
 import logging
+from collectoss.application.paths import SystemPaths
 import sqlalchemy as s
 import pandas as pd
 import pickle
@@ -29,8 +30,7 @@ from collectoss.tasks.init.celery_app import MLRepoCollectionTask
 # from os import path
 
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
-DISCOURSE_ANALYSIS_DIR = f"{ROOT_PROJECT_REPO_DIRECTORY}/tasks/data_analysis/discourse_analysis/"
+DISCOURSE_ANALYSIS_DIR = SystemPaths.get_discourse_analysis_directory()
 
 @celery.task(base=MLRepoCollectionTask, bind=True)
 def discourse_analysis_task(self, repo_git):
