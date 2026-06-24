@@ -121,9 +121,47 @@ class SystemPaths:
             create = create
         )
 
+    
+    @staticmethod
+    def get_models_directory(create = True) -> Path:
+        """Get the models directory. Requires database for historical compatibility"""
+        database_dirname = None
+
+        from collectoss.application.config import SystemConfig
+        from collectoss.application.db.session import DatabaseSession
+        from collectoss.application.db import get_engine
+        with DatabaseSession(logger, get_engine()) as session:
+            config = SystemConfig(logger, session)
+            database_dirname = config.get_value("Message_Insights", 'models_dir') or "message_models"
+        
+        return _verify_path(
+            SystemPaths.os_defaults(create).user_data_path / "tasks" / "data_analysis" / "message_insights" / database_dirname,
+            create = create
+        )
+    
+    @staticmethod
+    def get_model_training_data_directory(create = True) -> Path:
+        """Get the model training data directory"""
+        return _verify_path(
+            SystemPaths.os_defaults(create).user_data_path / "tasks" / "data_analysis" / "message_insights" / "train_data",
+            create = create
+        )
+
+    @staticmethod
+    def get_discourse_analysis_directory(create = True) -> Path:
+        """Get the discourse analysis directory"""
+
+        return _verify_path(
+            SystemPaths.os_defaults(create).user_data_path / "tasks" / "data_analysis" / "discourse_analysis",
+            create = create
+        )
+    
     @staticmethod
     def print_all_paths(logger):
         logger.info(f"Facade directory: {SystemPaths.get_facade_directory(create = False)}")
         logger.info(f"Config directory: {SystemPaths.get_config_directory(create = False)}")
         logger.info(f"Logs directory: {SystemPaths.get_logs_directory(create = False)}")
         logger.info(f"Cache directory: {SystemPaths.get_cache_directory(create = False)}")
+        logger.info(f"Models directory: {SystemPaths.get_models_directory(create = False)}")
+        logger.info(f"Model training data directory: {SystemPaths.get_model_training_data_directory(create = False)}")
+        logger.info(f"Discourse analysis directory: {SystemPaths.get_discourse_analysis_directory(create = False)}")
