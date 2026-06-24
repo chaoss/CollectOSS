@@ -66,11 +66,20 @@ class SystemPaths:
 
     @staticmethod
     def get_facade_directory(create = True) -> Path:
-        """Get the facade directory"""
+        """Get the facade directory. Requires database for historical compatibility"""
         env_path = _path_from_env(SystemEnv.get("COLLECTOSS_FACADE_REPO_DIRECTORY"))
+        database_path = None
+
+        from collectoss.application.config import SystemConfig
+        from collectoss.application.db.session import DatabaseSession
+        from collectoss.application.db import get_engine
+        with DatabaseSession(logger, get_engine()) as session:
+            config = SystemConfig(logger, session)
+            database_path = config.get_value("Facade", "repo_directory")
+
 
         return _verify_path(
-            _build_path(env_path, SystemPaths.os_defaults(create).user_downloads_path / "collectoss_facade"),
+            _build_path(env_path or database_path, SystemPaths.os_defaults(create).user_downloads_path / "collectoss_facade"),
             create = create
         )
 
@@ -86,11 +95,19 @@ class SystemPaths:
 
     @staticmethod
     def get_logs_directory(create = True) -> Path:
-        """Get the logs directory"""
+        """Get the logs directory. Requires database for historical compatibility"""
         env_path = _path_from_env(SystemEnv.get("COLLECTOSS_LOGS_DIRECTORY"))
+        database_path = None
+
+        from collectoss.application.config import SystemConfig
+        from collectoss.application.db.session import DatabaseSession
+        from collectoss.application.db import get_engine
+        with DatabaseSession(logger, get_engine()) as session:
+            config = SystemConfig(logger, session)
+            database_path = config.get_value("Logging", "logs_directory")
 
         return _verify_path(
-            _build_path(env_path, SystemPaths.os_defaults(create).user_log_path),
+            _build_path(env_path or database_path, SystemPaths.os_defaults(create).user_log_path),
             create = create
         )
 
