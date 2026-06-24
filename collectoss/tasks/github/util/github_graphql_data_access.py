@@ -12,6 +12,7 @@ class RatelimitException(Exception):
         self.response = response
 
         super().__init__(message)
+GITHUB_RATELIMIT_REMAINING_CAP = 50
 
 class NotFoundException(Exception):
     pass
