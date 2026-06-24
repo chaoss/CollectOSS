@@ -1,3 +1,4 @@
+from collectoss.application.paths import SystemPaths
 from collectoss.util.startup import collect_env_variables, check_init_schema, check_update_schema, setup_facade_directory, merge_config, warn_import_repos, print_platform_information
 from collectoss.application.logs import getFormatter
 from collectoss.application.cli import DatabaseContext
@@ -31,6 +32,6 @@ if __name__ == "__main__":
     warn_import_repos(logger)
 
     print_platform_information(logger)
-    SystemPaths().print_all_paths(logger)
+    SystemPaths.print_all_paths(logger)
 
     sys.exit(0)
