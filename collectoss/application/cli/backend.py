@@ -13,6 +13,7 @@ import signal
 import uuid
 import traceback
 import requests
+from collectoss.application.paths import SystemPaths
 from redis.exceptions import ConnectionError as RedisConnectionError
 
 from collectoss.application.environment import SystemEnv
@@ -101,7 +102,7 @@ def start(ctx, disable_collection, development, pidfile, port):
     cleanup_collection_status_and_rabbit(logger, ctx.obj.engine)
 
     # Retrieve the log directory from the configuration or default to current directory
-    log_dir = get_value("Logging", "logs_directory") or "."
+    log_dir = SystemPaths.get_logs_directory()
     gunicorn_log_file = os.path.join(log_dir, "gunicorn.log")
 
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} collectoss.api.server:app --log-file {gunicorn_log_file}"
