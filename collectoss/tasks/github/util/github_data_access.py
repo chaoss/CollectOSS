@@ -38,12 +38,8 @@ class ResourceGoneException(Exception):
 class GithubDataAccess(DataAccess):
 
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
-    
-        self.logger = logger
+        super().__init__(f"github_{feature}", logger)
         self.feature = feature
-        self.key_client = KeyClient(f"github_{feature}", logger)
-        self.key = None
-        self.expired_keys_for_request = []
 
     def endpoint_url(self, path: str, params: dict = None) -> str:
         """Build a URL for a github endpoint using the specified path and query parameters
