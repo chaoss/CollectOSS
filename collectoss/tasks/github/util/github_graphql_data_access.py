@@ -145,7 +145,7 @@ class GithubGraphQlDataAccess(DataAccess):
             # this suggests we should retry 401 exceptions at least once
             if isinstance(last_exception, NotAuthorizedException):
                 self.expired_keys_for_request = []
-                self.__handle_github_not_authorized_response()           
+                self.__handle_not_authorized_response()           
             raise last_exception
         
     @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(lambda exc: not isinstance(exc, NotFoundException)))
@@ -162,10 +162,6 @@ class GithubGraphQlDataAccess(DataAccess):
         except RatelimitException as e:
             self.__handle_github_ratelimit_response(e.response)
             raise e
-
-    def __handle_github_not_authorized_response(self):
-
-        self.key = self.key_client.invalidate(self.key)
         
     def __handle_github_ratelimit_response(self, response):
 
