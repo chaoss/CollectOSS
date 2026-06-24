@@ -9,3 +9,7 @@ class DataAccess:
         self.key_client = KeyClient(platform_name, logger) if key_client is None else key_client
         self.key = None
         self.expired_keys_for_request = []
+
+    def __handle_not_authorized_response(self):
+
+        self.key = self.key_client.invalidate(self.key)
