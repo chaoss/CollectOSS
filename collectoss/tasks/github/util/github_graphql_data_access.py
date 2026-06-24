@@ -5,16 +5,10 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, 
 from keyman.KeyClient import KeyClient
 from collectoss.tasks.github.util.github_data_access import RatelimitException, NotAuthorizedException, ResourceGoneException
 from collectoss.util.keys import mask_key
+from collectoss.tasks.github.util.data_access import DataAccess
 
 URL = "https://api.github.com/graphql"
 
-class RatelimitException(Exception):
-
-    def __init__(self, response, message="Github Rate limit exceeded") -> None:
-
-        self.response = response
-
-        super().__init__(message)
 GITHUB_RATELIMIT_REMAINING_CAP = 50
 
 class NotFoundException(Exception):
@@ -23,7 +17,7 @@ class NotFoundException(Exception):
 class InvalidDataException(Exception):
     pass
 
-class GithubGraphQlDataAccess:
+class GithubGraphQlDataAccess(DataAccess):
     """Utilities for accessing the GitHub GraphQL API
     """
     

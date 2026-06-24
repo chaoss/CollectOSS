@@ -5,6 +5,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, 
 from urllib.parse import urlparse, parse_qs, urlencode
 from keyman.KeyClient import KeyClient
 from collectoss.util.keys import mask_key
+from collectoss.tasks.github.util.data_access import DataAccess
 
 GITHUB_RATELIMIT_REMAINING_CAP = 50
 
@@ -34,7 +35,7 @@ class ResourceGoneException(Exception):
     def __init__(self, message="Resource returned HTTP 410 Gone. It is likely intentionally removed"):
         super().__init__(message)
 
-class GithubDataAccess:
+class GithubDataAccess(DataAccess):
 
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
