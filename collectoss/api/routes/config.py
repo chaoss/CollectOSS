@@ -54,7 +54,7 @@ def set_config_item():
         return jsonify({"status": "Missing argument"}), 400
     
     with get_session() as session:
-        config = AugurConfig(logger, session)
+        config = SystemConfig(logger, session)
         config.add_or_update_settings([result])
     
     return jsonify({"status": "success"})
