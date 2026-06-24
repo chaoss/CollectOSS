@@ -6,6 +6,7 @@ class DataAccess:
     def __init__(self, platform_name: str,logger: logging.Logger, key_client = None):
     
         self.logger = logger
+        self.platform_name = platform_name
         self.key_client = KeyClient(platform_name, logger) if key_client is None else key_client
         self.key = None
         self.expired_keys_for_request = []
