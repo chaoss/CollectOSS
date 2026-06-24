@@ -2,6 +2,9 @@ from platformdirs import PlatformDirs
 from collectoss.application.environment import SystemEnv
 from pathlib import Path
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 def _clean_path(path: Path | str) -> Path | None:
     if path is None:
