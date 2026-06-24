@@ -5,6 +5,7 @@
 import os
 from datetime import datetime, timedelta
 
+from collectoss.application.paths import SystemPaths
 import numpy as np
 import pandas as pd
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
@@ -16,10 +17,7 @@ from sklearn import utils as skl_utils
 from collectoss.tasks.data_analysis.message_insights.preprocess_text import \
     normalize_corpus as normalize_corpus
 
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
-
-
-train_path = os.path.join(ROOT_PROJECT_REPO_DIRECTORY, "tasks", "data_analysis", "message_insights", "train_data")
+train_path = SystemPaths.get_model_training_data_directory()
 
 # ''' Doc2Vec model training
 
