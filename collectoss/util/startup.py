@@ -9,6 +9,7 @@ from subprocess import check_call
 import platform
 import sys
 
+from collectoss.application.paths import SystemPaths
 from sqlalchemy.orm.attributes import get_history
 from collectoss.application.config import SystemConfig
 from collectoss.application.db.session import DatabaseSession
@@ -101,14 +102,7 @@ def collect_env_variables(logger):
 def setup_facade_directory(logger):
     """Perform permission checks and create the facade directory if it doesnt exist
     """
-
-    facade_directory_path = SystemEnv.get("COLLECTOSS_FACADE_REPO_DIRECTORY") or "/collectoss/facade/"
-
-    facade_directory = Path(facade_directory_path)
-
-    if not facade_directory.exists():
-        logger.debug(f"Specified facade directory {facade_directory_path} does not exist. Creating...")
-        facade_directory.mkdir()
+    facade_directory = SystemPaths.get_facade_directory()
 
     git_credentials = facade_directory.joinpath(".git-credentials")
     git_credentials.touch(exist_ok=True)
