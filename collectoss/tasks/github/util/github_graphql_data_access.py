@@ -26,13 +26,8 @@ class GithubGraphQlDataAccess(DataAccess):
         return URL
 
     def __init__(self, key_manager, logger: logging.Logger, ingore_not_found_error=False, feature="graphql"):
-    
-        self.logger = logger
+        super().__init__(f"github_{feature}", logger)
         self.feature = feature
-        # self.key_manager = key_manager
-        self.key_client = KeyClient(f"github_{feature}", logger)
-        self.key = None
-        self.expired_keys_for_request = []
         self.ingore_not_found_error = ingore_not_found_error
 
     def get_resource(self, query, variables, result_keys):
