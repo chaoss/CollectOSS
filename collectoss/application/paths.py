@@ -3,14 +3,14 @@ from collectoss.application.environment import SystemEnv
 from pathlib import Path
 
 
-def _clean_path(path: Path | str) -> Path:
+def _clean_path(path: Path | str) -> Path | None:
     if path is None:
         return None
     if isinstance(path, str):
         path = Path(path)
     return path.expanduser().resolve()
 
-def _verify_path(path: Path, create = True) -> Path:
+def _verify_path(path: Path, create = True) -> Path | None:
     """Verify the path is a valid directory"""
     if create:
         if not path.exists():
@@ -20,7 +20,7 @@ def _verify_path(path: Path, create = True) -> Path:
     return _clean_path(path)
 
 
-def _path_from_env(env_value: str) -> Path:
+def _path_from_env(env_value: str) -> Path | None:
     """Get the path from the environment variable"""
     if env_value is None:
         return None
