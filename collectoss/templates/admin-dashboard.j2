@@ -111,7 +111,6 @@
                                         </div>
                                     </div> #}
                                 </form>
-                                -->
                             </div>
                         </div>
                     </div>
@@ -198,23 +197,6 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="confirmation-modal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Are You Sure?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="modal-text"></p>
-                </div>
-                <div class="modal-footer">
-                    <button id="confirmation-button" type="button" class="btn btn-primary" data-bs-dismiss="modal">Continue</button>
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
 <script src="{{ url_for('static', filename='js/range.js') }}" charset="utf-8"></script>
 <script type="text/javascript">
@@ -250,40 +232,6 @@
         div = getDivFromNavLink(navLink);
         div.hidden = false;
     }
-</script>
-<script type="text/javascript">
-function restart_confirm() {
-    var text = document.getElementById("modal-text");
-    text.innerHTML = "Restarting Augur can take several minutes, and will interrupt collection. Do you want to continue?";
-    var confirmModal = new bootstrap.Modal(document.getElementById('confirmation-modal'));
-    var confirmButton = document.getElementById("confirmation-button");
-    confirmButton.onclick = () => {
-        fetch({{ url_for('restart_system') | quoted }}).then(response => {
-            if(response.ok) {
-                window.location.replace("{{ url_for('server_ping_frontend') }}");
-            } else {
-                flashToast("An error occurred: HTTP " + response.status)
-            }
-        });
-    }
-    confirmModal.show();
-}
-function shutdown_confirm() {
-    var text = document.getElementById("modal-text");
-    text.innerHTML = "Once shut down, Augur can only be started again from the CLI. Do you want to continue?";
-    var confirmModal = new bootstrap.Modal(document.getElementById('confirmation-modal'));
-    var confirmButton = document.getElementById("confirmation-button");
-    confirmButton.onclick = () => {
-        fetch({{ url_for('shutdown_system') | quoted }}).then(response => {
-            if(response.ok) {
-                flashToast("Shutdown request acknowledged");
-            } else {
-                flashToast("An error occurred: HTTP " + response.status)
-            }
-        });
-    }
-    confirmModal.show();
-}
 </script>
 <script type="text/javascript">
 {# document.getElementById("settings-form").addEventListener("submit", (event) => {
