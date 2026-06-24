@@ -82,6 +82,11 @@ class SystemPaths:
             _build_path(env_path or database_path, SystemPaths.os_defaults(create).user_downloads_path / "collectoss_facade"),
             create = create
         )
+    
+    @staticmethod
+    def facade_repo_path(repo) -> Path:
+        """Get the path to a specific facade repository"""
+        return SystemPaths.get_facade_directory() / f"{repo.repo_id}-{repo.repo_path}/{repo.repo_name}"
 
     @staticmethod
     def get_config_directory(create = True) -> Path:
