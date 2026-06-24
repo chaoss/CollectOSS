@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 from collectoss.application.db.models import *
-from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value
+from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git
 from collectoss.application.environment import SystemEnv
 from collectoss.application.paths import SystemPaths
 from collectoss.tasks.util.worker_util import parse_json_from_subprocess_call

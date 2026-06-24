@@ -1,6 +1,6 @@
 from datetime import datetime
 from collectoss.application.db.models import *
-from collectoss.application.db.lib import get_value, bulk_insert_dicts, get_repo_by_repo_git
+from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git
 from collectoss.application.paths import SystemPaths
 from collectoss.tasks.git.dependency_libyear_tasks.libyear_util.util import get_deps_libyear_data
 from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
