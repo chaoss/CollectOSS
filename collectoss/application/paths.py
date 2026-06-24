@@ -142,17 +142,18 @@ class SystemPaths:
     @staticmethod
     def get_model_training_data_directory(create = True) -> Path:
         """Get the model training data directory"""
+        env_path = _path_from_env(SystemEnv.get("COLLECTOSS_ANALYSIS_DIRECTORY"))
         return _verify_path(
-            SystemPaths.os_defaults(create).user_data_path / "tasks" / "data_analysis" / "message_insights" / "train_data",
+            _build_path(env_path / "message_insights" / "train_data", SystemPaths.os_defaults(create).user_data_path / "tasks" / "data_analysis" / "message_insights" / "train_data"),
             create = create
         )
 
     @staticmethod
     def get_discourse_analysis_directory(create = True) -> Path:
         """Get the discourse analysis directory"""
-
+        env_path = _path_from_env(SystemEnv.get("COLLECTOSS_ANALYSIS_DIRECTORY"))
         return _verify_path(
-            SystemPaths.os_defaults(create).user_data_path / "tasks" / "data_analysis" / "discourse_analysis",
+            _build_path(env_path / "discourse_analysis", SystemPaths.os_defaults(create).user_data_path / "tasks" / "data_analysis" / "discourse_analysis"),
             create = create
         )
 
