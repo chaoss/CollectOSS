@@ -31,6 +31,7 @@ import logging
 import random
 import subprocess
 from urllib.parse import urlparse
+from collectoss.application.paths import SystemPaths
 import sqlalchemy as s
 from sqlalchemy.exc import OperationalError
 from psycopg2.errors import DeadlockDetected
@@ -140,15 +141,12 @@ class FacadeHelper():
         self.tool_version = "1.4.4"
 
         # Get the location of the directory where git repos are stored
-        if 'repo_directory' in worker_options:
-            self.repo_base_directory = worker_options['repo_directory']
-        else:
-            self.repo_base_directory = None
+        self.repo_base_directory = SystemPaths.get_facade_directory()
 
         # Determine if it's safe to start the script
         current_status = self.get_setting('utility_status')
 
-        if len(self.repo_base_directory) == 0:
+        if len(str(self.repo_base_directory)) == 0:
             self.cfg.log_activity('Error','No base directory. It is unsafe to continue.')
             raise Exception('Failed: No base directory')
 
