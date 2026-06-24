@@ -1,5 +1,4 @@
 import logging
-import os
 import datetime
 
 from collectoss.application.paths import SystemPaths

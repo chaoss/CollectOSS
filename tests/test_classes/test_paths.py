@@ -1,4 +1,4 @@
-from collectoss.application.paths import _build_path, _clean_path
+from collectoss.application.paths import _build_path
 from pathlib import Path
 
 class TestBuildPath:
