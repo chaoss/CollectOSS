@@ -155,9 +155,17 @@ class SystemPaths:
             SystemPaths.os_defaults(create).user_data_path / "tasks" / "data_analysis" / "discourse_analysis",
             create = create
         )
+
+    @staticmethod
+    def get_install_path() -> Path:
+        """Get the path that CollectOSS is currently installed to. This should be treated as read- only."""
+        # This paths file is only one level below the root of the module.
+        # accessing above that is not possible as the module could be installed separately
+        return _verify_path(Path(__file__).parent, create = False)
     
     @staticmethod
     def print_all_paths(logger):
+        logger.info(f"Install path: {SystemPaths.get_install_path()}")
         logger.info(f"Facade directory: {SystemPaths.get_facade_directory(create = False)}")
         logger.info(f"Config directory: {SystemPaths.get_config_directory(create = False)}")
         logger.info(f"Logs directory: {SystemPaths.get_logs_directory(create = False)}")
