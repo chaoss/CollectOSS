@@ -213,9 +213,11 @@ def merge_config(
 
         augmented_config["Keys"] = keys
 
-        augmented_config["Facade"]["repo_directory"] = facade_repo_directory
-
-        augmented_config["Logging"]["logs_directory"] = logs_directory or (ROOT_PROJECT_REPO_DIRECTORY + "/logs/")
+        if facade_repo_directory and facade_repo_directory != "":
+            augmented_config["Facade"]["repo_directory"] = facade_repo_directory
+    
+        if logs_directory and logs_directory != "":
+            augmented_config["Logging"]["logs_directory"] = logs_directory
 
         config.load_config_from_dict(augmented_config)
 
