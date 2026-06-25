@@ -296,7 +296,7 @@ def fetch_username_from_email(logger, auth, commit) -> dict | None:
         return login_json
 
     try:
-        github_data_access = GithubDataAccess(auth, logger, feature="search")
+        github_data_access = GithubDataAccess(None, logger, feature="search")
         login_json = github_data_access.get_resource(url)
     except Exception as e:
         logger.error(f"Couldn't resolve email URL with given data. Reason: {e}")
@@ -328,7 +328,7 @@ def get_login_with_supplemental_data(logger, auth, commit_data):
 
     # Try to get login from all possible emails
     # Is None upon failure.
-    login_json = fetch_username_from_email(logger,auth,commit_data)
+    login_json = fetch_username_from_email(logger,None,commit_data)
 
     # total_count is the count of username's found by the endpoint.
     # This Checks if the email result got anything.
@@ -367,7 +367,7 @@ def get_login_with_commit_hash(logger, auth, commit_data, repo_id):
 
     #TODO: here.
     # Send api request
-    github_data_access = GithubDataAccess(auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
     login_json = github_data_access.get_resource(url)
 
     # TODO: Why are we returning None if 'sha' is not in response if we aren't even using it?
