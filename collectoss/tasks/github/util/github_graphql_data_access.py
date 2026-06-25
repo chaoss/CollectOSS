@@ -3,7 +3,7 @@ import time
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, RetryError
 from keyman.KeyClient import KeyClient
-from collectoss.tasks.github.util.github_data_access import RatelimitException, NotAuthorizedException
+from collectoss.tasks.github.util.github_data_access import RatelimitException, NotAuthorizedException, ResourceGoneException, UrlNotFoundException
 from collectoss.util.keys import mask_key
 
 URL = "https://api.github.com/graphql"
@@ -100,6 +100,24 @@ class GithubGraphQlDataAccess:
                 self.logger.warning(f"Github rate limit exceeded. Key: {mask_key(self.key)}. Response: {response.text}")
                 raise RatelimitException(response, self.expired_keys_for_request)
 
+            # There are cases with PR files, PR commits, and messages where the parent object is removed after 
+            # It is collected, leading the the associated URL for those objects to return a 404. 
+            # This is not an issue that is really an Exception. It is more of a nominal signal. 
+            
+            if response.status_code == 404:
+                raise UrlNotFoundException(f"Could not find {url}")
+            
+            if response.status_code == 401:
+                raise NotAuthorizedException(f"Could not authorize with the github api using key: {mask_key(self.key)}")
+            
+            if response.status_code == 410:
+                response_msg = response.json().get("message")
+                if response_msg is not None:
+                    raise ResourceGoneException(response_msg)
+                else:
+                    raise ResourceGoneException()
+        
+        
         response.raise_for_status()
 
         try:
