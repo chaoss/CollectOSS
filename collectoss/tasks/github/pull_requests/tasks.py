@@ -493,7 +493,7 @@ def collect_pull_request_reviews(repo_git: str, full_collection: bool) -> None:
 
         logger.info(f"{owner}/{repo}: Collecting reviews for {pr_count} PRs")
 
-        github_data_access = GithubDataAccess(manifest.key_auth, logger)
+        github_data_access = GithubDataAccess(None, logger)
 
         pr_review_batch_size = get_batch_size()
 

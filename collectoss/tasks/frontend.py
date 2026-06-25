@@ -200,7 +200,7 @@ def get_github_repos_data(repo_data, session, logger):
 
     repo_urls = [x[0] for x in repo_data]
 
-    github_graphql_data_access = GithubGraphQlDataAccess(session.oauths, logger, ingore_not_found_error=True)
+    github_graphql_data_access = GithubGraphQlDataAccess(None, logger, ingore_not_found_error=True)
     
     query_parts = []
     repo_map = {}

@@ -20,9 +20,7 @@ def get_repo_src_id(owner, repo, logger):
                 }
                 """
     
-    key_auth = GithubRandomKeyAuth(logger)
-    
-    github_graphql_data_access = GithubGraphQlDataAccess(key_auth, logger)
+    github_graphql_data_access = GithubGraphQlDataAccess(None, logger)
 
     variables = {
         "owner": owner,

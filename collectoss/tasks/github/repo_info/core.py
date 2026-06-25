@@ -176,7 +176,7 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
                 }
                 """
     
-    github_graphql_data_access = GithubGraphQlDataAccess(key_auth, logger)
+    github_graphql_data_access = GithubGraphQlDataAccess(None, logger)
 
     variables = {
         "owner": owner,
