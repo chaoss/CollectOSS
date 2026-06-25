@@ -45,7 +45,7 @@ def collect_pull_requests(repo_git: str, full_collection: bool) -> int:
 
         total_count = 0
         all_data = []
-        for pr in retrieve_all_pr_data(repo_git, logger, manifest.key_auth, core_data_last_collected):
+        for pr in retrieve_all_pr_data(repo_git, logger, None, core_data_last_collected):
 
             all_data.append(pr)
 

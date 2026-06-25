@@ -152,7 +152,7 @@ def get_org_repo_data(orgs, session):
 def add_new_github_repos(repo_data, group_id, session, logger):
 
       # get data for repos to determine type, src id, and if they exist
-    data = get_github_repos_data(repo_data, session, logger)
+    data = get_github_repos_data(repo_data, None, logger)
 
     for url, repo_group_id in repo_data:
 
