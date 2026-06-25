@@ -7,6 +7,7 @@ import collections
 import time
 import traceback
 from collectoss.tasks.github.util.github_paginator import GithubApiResult, process_dict_response
+from typing_extensions import deprecated
 
 """
     Should be designed on a per entity basis that has attributes that call 
@@ -21,6 +22,7 @@ from collectoss.tasks.github.util.github_paginator import GithubApiResult, proce
     PR_reviews, events, messages, pr_commits, pr_files(already done convert it)
 """
 
+@deprecated("This function is deprecated. Use the GithubGraphQlDataAccess class instead")
 def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=40):
     logger.debug(f"Sending query {query}  to github graphql")
 
@@ -65,6 +67,7 @@ def hit_api_graphql(keyAuth,url,logger,query,variables={},timeout=40):
     
     return response
 
+@deprecated("This function is deprecated. Use the GithubGraphQlDataAccess class instead")
 def request_graphql_dict(key_auth, logger, url,query,variables={},timeout_wait=10):
     attempts = 0
     response_data = None
@@ -138,6 +141,7 @@ def request_graphql_dict(key_auth, logger, url,query,variables={},timeout_wait=1
 #Get data extraction logic for nested nodes in return data.
 
 #Should keep track of embedded data that is incomplete.
+@deprecated("This class is deprecated. Use the GithubGraphQlDataAccess class instead")
 class GraphQlPageCollection(collections.abc.Sequence):
     #Bind is needed for things like query by repo. Contains bind variables for the graphql query
     def __init__(self,query,keyAuth,logger,bind={},numPerPage=100,url="https://api.github.com/graphql",repaginateIfIncomplete=[]):
@@ -401,6 +405,7 @@ class GraphQlPageCollection(collections.abc.Sequence):
 
 
 #use httpx and pass random_key_auth
+@deprecated("This class is deprecated. Use the GithubGraphQlDataAccess class instead")
 class GitHubRepo():
     def __init__(self, logger, key_auth, owner, repo):
 
@@ -534,6 +539,7 @@ class GitHubRepo():
 
 
 
+@deprecated("This class is deprecated. Use the GithubGraphQlDataAccess class instead")
 class PullRequest():
     def __init__(self, logger, key_auth, owner, repo, number):
 

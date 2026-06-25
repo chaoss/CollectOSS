@@ -6,7 +6,7 @@ from collectoss.tasks.github.util.util import get_owner_repo
 from collectoss.tasks.github.util.gh_graphql_entities import request_graphql_dict
 from collectoss.application.db.util import execute_session_query
 from collectoss.application.db.lib import bulk_insert_dicts
-
+from typing_extensions import deprecated
 
 def get_release_inf(repo_id, release, tag_only):
     if not tag_only:
@@ -153,7 +153,7 @@ def get_query(logger, owner, repo, tag_only):
     return query
 
 
-
+@deprecated("This function is deprecated. Use the GithubGraphQlDataAccess class instead")
 def fetch_data(key_auth, logger, github_url, repo_id, tag_only = False):
 
     logger.info("Beginning filling the releases model for repo: " + github_url + "\n")

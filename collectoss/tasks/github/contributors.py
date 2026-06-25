@@ -82,6 +82,7 @@ def process_contributors():
 
 
 
+@deprecated("This function is deprecated. Use the GithubDataAccess class instead")
 def retrieve_dict_data(url: str, key_auth, logger):
 
     num_attempts = 0
