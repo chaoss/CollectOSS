@@ -76,7 +76,7 @@ def query_github_contributors(logger, key_auth, github_url, tool_source:str, too
 
 # Get all the committer data for a repo.
 # Used by facade in facade03analyzecommit
-def grab_committer_list(logger, None, repo_git, tool_source: str, tool_version: str, data_source: str, platform="github" ):
+def grab_committer_list(logger, key_auth, repo_git, tool_source: str, tool_version: str, data_source: str, platform="github" ):
 
     # Create API endpoint from repo_id
     query_github_contributors(logger, None, repo_git, tool_source, tool_version, data_source)
