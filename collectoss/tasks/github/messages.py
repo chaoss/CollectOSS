@@ -40,7 +40,7 @@ def collect_github_messages(repo_git: str, full_collection: bool) -> None:
 
         
         if is_repo_small(repo_id):
-            message_data = fast_retrieve_all_pr_and_issue_messages(repo_git, logger, manifest.key_auth, task_name, core_data_last_collected)
+            message_data = fast_retrieve_all_pr_and_issue_messages(repo_git, logger, None, task_name, core_data_last_collected)
             
             if message_data:
                 process_messages(message_data, task_name, repo_id, logger, db_session)
@@ -49,7 +49,7 @@ def collect_github_messages(repo_git: str, full_collection: bool) -> None:
                 logger.info(f"{owner}/{repo} has no messages")
 
         else:
-            process_large_issue_and_pr_message_collection(repo_id, repo_git, logger, manifest.key_auth, task_name, db_session, core_data_last_collected)
+            process_large_issue_and_pr_message_collection(repo_id, repo_git, logger, None, task_name, db_session, core_data_last_collected)
 
 
 def is_repo_small(repo_id):
@@ -73,7 +73,7 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
     # define logger for task
     logger.info(f"Collecting github comments for {owner}/{repo}")
     
-    github_data_access = GithubDataAccess(key_auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     message_count = github_data_access.get_resource_count(url)
 
@@ -113,7 +113,7 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
         result = connection.execute(query).fetchall()
     comment_urls = [x[0] for x in result if x[0] is not None]
 
-    github_data_access = GithubDataAccess(key_auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     logger.info(f"{task_name}: Collecting github messages for {len(comment_urls)} prs/issues")
 

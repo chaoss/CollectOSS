@@ -40,7 +40,7 @@ def query_github_contributors(logger, key_auth, github_url, tool_source:str, too
     update_col_map = {'cntrb_email': 'email'}
     duplicate_col_map = {'cntrb_login': 'login'}
 
-    github_data_access = GithubDataAccess(key_auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     contributor_count = github_data_access.get_resource_count(contributors_url)
 
@@ -79,5 +79,5 @@ def query_github_contributors(logger, key_auth, github_url, tool_source:str, too
 def grab_committer_list(logger, key_auth, repo_git, tool_source: str, tool_version: str, data_source: str, platform="github" ):
 
     # Create API endpoint from repo_id
-    query_github_contributors(logger, key_auth, repo_git, tool_source, tool_version, data_source)
+    query_github_contributors(logger, None, repo_git, tool_source, tool_version, data_source)
     

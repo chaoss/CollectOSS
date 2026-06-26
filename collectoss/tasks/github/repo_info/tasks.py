@@ -5,7 +5,6 @@ from collectoss.tasks.github.repo_info.core import *
 from collectoss.tasks.init.celery_app import celery_app as celery
 from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
 from collectoss.application.db.lib import get_repo_by_repo_git
-from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from collectoss.application.db import get_engine
 
 
@@ -17,9 +16,7 @@ def collect_repo_info(repo_git: str):
 
     repo = get_repo_by_repo_git(repo_git)
 
-    key_auth = GithubRandomKeyAuth(logger)
-
-    repo_info_model(key_auth, repo, logger)
+    repo_info_model(None, repo, logger)
 
 
 #Task to get CII api data for linux badge info using github data.

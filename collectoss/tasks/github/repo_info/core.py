@@ -20,7 +20,7 @@ def query_committers_count(key_auth, logger, owner, repo):
     ## If the repository is empty there are zero committers, and the API returns nothing at all. Response 
     ## header of 200 along with an empty JSON. 
     try: 
-        github_data_access = GithubDataAccess(key_auth, logger)
+        github_data_access = GithubDataAccess(None, logger)
         try: 
             data = github_data_access.get_resource_count(url) 
         except Exception as e: 
@@ -176,7 +176,7 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
                 }
                 """
     
-    github_graphql_data_access = GithubGraphQlDataAccess(key_auth, logger)
+    github_graphql_data_access = GithubGraphQlDataAccess(None, logger)
 
     variables = {
         "owner": owner,
@@ -188,7 +188,7 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
     data = github_graphql_data_access.get_resource(query, variables, result_keys)
 
     # Get committers count info that requires seperate endpoint  
-    committers_count = query_committers_count(key_auth, logger, owner, repo)
+    committers_count = query_committers_count(None, logger, owner, repo)
 
     # Put all data together in format of the table
     logger.info(f'Inserting repo info for repo with id:{repo_orm_obj.repo_id}, owner:{owner}, name:{repo}\n')

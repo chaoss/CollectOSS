@@ -7,7 +7,6 @@ from collectoss.tasks.init.celery_app import celery_app as celery
 from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from collectoss.application.db.models import ContributorRepo
 from collectoss.application.db.lib import bulk_insert_dicts
-from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 
 ### This worker scans all the platform users in CollectOSS, and pulls their platform activity 
 ### logs. Those are then used to analyze what repos each is working in (which will include repos not
@@ -25,8 +24,6 @@ def contributor_breadth_model(self) -> None:
     tool_source = 'Contributor Breadth Worker'
     tool_version = '0.0.1'
     data_source = 'GitHub API'
-
-    key_auth = GithubRandomKeyAuth(logger)
 
     # This version of the query pulls contributors who have not had any data collected yet
     # To the top of the list
@@ -83,7 +80,7 @@ def contributor_breadth_model(self) -> None:
         
         cntrb_newest_events_map[gh_login] = newest_event_date
 
-    github_data_access = GithubDataAccess(key_auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     index = 1
     total = len(current_cntrb_logins)

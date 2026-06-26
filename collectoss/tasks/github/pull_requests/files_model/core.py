@@ -42,7 +42,7 @@ def pull_request_files_model(repo_id,logger, db_session, key_auth, full_collecti
 
     task_name = f"{owner}/{name} Pr files"
 
-    github_graphql_data_access = GithubGraphQlDataAccess(key_auth, logger)
+    github_graphql_data_access = GithubGraphQlDataAccess(None, logger)
 
     pr_file_natural_keys = ["pull_request_id", "repo_id", "pr_file_path"]
     pr_file_rows = []

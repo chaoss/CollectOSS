@@ -20,9 +20,7 @@ def get_repo_src_id(owner, repo, logger):
                 }
                 """
     
-    key_auth = GithubRandomKeyAuth(logger)
-    
-    github_graphql_data_access = GithubGraphQlDataAccess(key_auth, logger)
+    github_graphql_data_access = GithubGraphQlDataAccess(None, logger)
 
     variables = {
         "owner": owner,
@@ -101,13 +99,13 @@ def get_repo_weight_by_issue(logger,repo_git):
         Sum of issues and prs for that repo
     """
 
-    from collectoss.tasks.github.util.gh_graphql_entities import GitHubRepo as GitHubRepoGraphql
+    from collectoss.tasks.github.util.gh_graphql_entities import GitHubRepo
 
     owner,name = get_owner_repo(repo_git)
 
     key_auth = GithubRandomKeyAuth(logger)
 
-    repo_graphql = GitHubRepoGraphql(logger, key_auth, owner, name)
+    repo_graphql = GitHubRepo(logger, key_auth, owner, name)
     number_of_issues_and_prs = len(repo_graphql.get_issues_collection()) + len(repo_graphql.get_pull_requests_collection())
     
     return number_of_issues_and_prs

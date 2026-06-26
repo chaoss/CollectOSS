@@ -17,7 +17,7 @@ from collectoss.application.db.data_parse import extract_needed_contributor_data
 
 def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id, tool_source:str, tool_version:str, data_source:str):
 
-    github_data_access = GithubDataAccess(auth, logger)
+    github_data_access = GithubDataAccess(None, logger)
 
     for contributor in contributorQueue:
         # Get the email from the commit data
@@ -63,12 +63,12 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
 
         # Try to get the login from the commit sha
         if login == None or login == "":
-            login = get_login_with_commit_hash(logger, auth, contributor, repo_id)
+            login = get_login_with_commit_hash(logger, None, contributor, repo_id)
     
         if login == None or login == "":
             logger.warning("Failed to get login from commit hash")
             # Try to get the login from supplemental data if not found with the commit hash
-            login = get_login_with_supplemental_data(logger, auth,contributor)
+            login = get_login_with_supplemental_data(logger, None,contributor)
     
         if login == None or login == "":
             logger.error("Failed to get login from supplemental data!")
@@ -229,8 +229,6 @@ def insert_facade_contributors(self, repo_git):
     #             'repo_id': repo_id}).to_json(orient="records"))
 
 
-    key_auth = GithubRandomKeyAuth(logger)
-
     facade_batch_size = get_batch_size()
 
     # Process results in batches to reduce memory usage
@@ -240,12 +238,12 @@ def insert_facade_contributors(self, repo_git):
         batch.append(dict(row))
 
         if len(batch) >= facade_batch_size:
-            process_commit_metadata(logger, key_auth, batch, repo_id, platform_id, tool_source, tool_version, data_source)
+            process_commit_metadata(logger, None, batch, repo_id, platform_id, tool_source, tool_version, data_source)
             batch.clear()
 
     # Process remaining items in batch
     if batch:
-        process_commit_metadata(logger, key_auth, batch, repo_id, platform_id, tool_source, tool_version, data_source)
+        process_commit_metadata(logger, None, batch, repo_id, platform_id, tool_source, tool_version, data_source)
 
     logger.debug("DEBUG: Got through the new_contribs")
     
