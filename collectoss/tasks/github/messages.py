@@ -1,5 +1,6 @@
 import logging
 from datetime import timedelta, timezone
+from typing import Generator
 
 from collectoss.tasks.init.celery_app import celery_app as celery
 from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
@@ -55,7 +56,7 @@ def is_repo_small(repo_id):
 
         return result != None
 
-def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, task_name, since) -> None:
+def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, task_name, since) -> Generator:
 
     owner, repo = get_owner_repo(repo_git)
 
@@ -74,7 +75,7 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
 
     logger.info(f"{task_name}: Collecting {message_count} github messages")
 
-    return list(github_data_access.paginate_resource(url))
+    return github_data_access.paginate_resource(url)
 
 
 def process_messages(messages, task_name, repo_id, logger, db_session):
