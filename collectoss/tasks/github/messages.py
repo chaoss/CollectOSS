@@ -7,7 +7,7 @@ from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
 from collectoss.application.db.data_parse import *
 from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
 from collectoss.tasks.github.util.github_task_session import GithubTaskManifest
-from collectoss.tasks.util.worker_util import remove_duplicate_dicts
+from collectoss.tasks.util.worker_util import batched, remove_duplicate_dicts
 from collectoss.tasks.github.util.util import get_owner_repo
 from collectoss.application.db.models import PullRequest, Message, Issue, PullRequestMessageRef, IssueMessageRef, Contributor, Repo, CollectionStatus
 from collectoss.application.db import get_engine, get_session
@@ -42,7 +42,8 @@ def collect_github_messages(repo_git: str, full_collection: bool) -> None:
         message_data = fast_retrieve_all_pr_and_issue_messages(repo_git, logger, None, task_name, core_data_last_collected)
         
         if message_data:
-            process_messages(message_data, task_name, repo_id, logger, db_session)
+            for batch in batched(message_data, 1000):
+                process_messages(batch, task_name, repo_id, logger, db_session)
 
         else:
             logger.info(f"{owner}/{repo} has no messages")
