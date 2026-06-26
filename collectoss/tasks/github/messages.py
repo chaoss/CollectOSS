@@ -38,18 +38,13 @@ def collect_github_messages(repo_git: str, full_collection: bool) -> None:
             # subtract 2 days to ensure all data is collected 
             core_data_last_collected = (get_core_data_last_collected(repo_id) - timedelta(days=2)).replace(tzinfo=timezone.utc)
 
+        message_data = fast_retrieve_all_pr_and_issue_messages(repo_git, logger, None, task_name, core_data_last_collected)
         
-        if is_repo_small(repo_id):
-            message_data = fast_retrieve_all_pr_and_issue_messages(repo_git, logger, None, task_name, core_data_last_collected)
-            
-            if message_data:
-                process_messages(message_data, task_name, repo_id, logger, db_session)
-
-            else:
-                logger.info(f"{owner}/{repo} has no messages")
+        if message_data:
+            process_messages(message_data, task_name, repo_id, logger, db_session)
 
         else:
-            process_large_issue_and_pr_message_collection(repo_id, repo_git, logger, None, task_name, db_session, core_data_last_collected)
+            logger.info(f"{owner}/{repo} has no messages")
 
 
 def is_repo_small(repo_id):
@@ -81,62 +76,6 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
 
     return list(github_data_access.paginate_resource(url))
 
-
-def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger, key_auth, task_name, db_session, since) -> None:
-
-    message_batch_size = get_batch_size("message")
-
-    owner, repo = get_owner_repo(repo_git)
-
-    # define logger for task
-    logger.info(f"Collecting github comments for {owner}/{repo}")
-
-    engine = get_engine()
-
-    with engine.connect() as connection:
-
-        if since:
-             query = text(f"""
-                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_comments_url IS NOT NULL AND pr_updated_at > timestamptz(timestamp '{since}') order by pr_created_at desc)
-                UNION
-                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND comments_url IS NOT NULL AND updated_at > timestamptz(timestamp '{since}') order by created_at desc);
-            """)
-        else:
-
-            query = text(f"""
-                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_comments_url IS NOT NULL order by pr_created_at desc)
-                UNION
-                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND comments_url IS NOT NULL order by created_at desc);
-            """)
-        
-
-        result = connection.execute(query).fetchall()
-    comment_urls = [x[0] for x in result if x[0] is not None]
-
-    github_data_access = GithubDataAccess(key_auth, logger)
-
-    logger.info(f"{task_name}: Collecting github messages for {len(comment_urls)} prs/issues")
-
-    all_data = []
-    skipped_urls = 0
-
-    for comment_url in comment_urls:
-        try:
-            messages = list(github_data_access.paginate_resource(comment_url))
-            all_data += messages
-        except UrlNotFoundException:
-            logger.info(f"{task_name}: PR or issue comment url of {comment_url} returned 404. Skipping.")
-            skipped_urls += 1
-
-        if len(all_data) >= message_batch_size:
-            process_messages(all_data, task_name, repo_id, logger, db_session)
-            all_data.clear()
-
-    if len(all_data) > 0:
-        process_messages(all_data, task_name, repo_id, logger, db_session)
-
-    logger.info(f"{task_name}: Finished. Skipped {skipped_urls} comment URLs due to 404.")
-        
 
 def process_messages(messages, task_name, repo_id, logger, db_session):
 
