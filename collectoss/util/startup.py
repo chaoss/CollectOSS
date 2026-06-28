@@ -219,6 +219,23 @@ def merge_config(
 
         config.load_config_from_dict(augmented_config)
 
+def initialize_tables(engine, logger):
+    """Initialize certain tables with data that is requred for first run
+
+    This includes:
+     - populating the forge_instances table with the core forges (github, gitlab)
+     - ensuring default repos are present
+
+    Args:
+        engine (_type_): the database engine to use
+        logger (_type_): the logger instance to use
+    """
+
+    # Step 1: ensure theres at least one forge in forge_instances
+    with DatabaseSession(logger, engine=engine) as session:
+
+        
+        all_instance_count = session.query(ForgeInstance).count()
 
 @deprecated("automatic import is deprecated. This is a function to warn users and help them transition")
 def warn_import_repos(logger):
