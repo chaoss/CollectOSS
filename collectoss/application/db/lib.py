@@ -183,6 +183,7 @@ def get_missing_commit_message_hashes(repo_id):
     
     return missing_commit_hashes
 
+@deprecated("This is a legacy method. Use the ForgeInstance.api_keys relationship instead")
 def get_worker_oauth_keys(platform: str):
 
     with get_session() as session:
