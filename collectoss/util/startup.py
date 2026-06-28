@@ -9,6 +9,8 @@ from subprocess import check_call
 import platform
 import sys
 
+from collectoss.application.db.models.operations import ForgeInstance
+from collectoss.util.enums import ForgePlatformType
 from sqlalchemy.orm.attributes import get_history
 from collectoss.application.config import SystemConfig
 from collectoss.application.db.session import DatabaseSession
@@ -236,6 +238,29 @@ def initialize_tables(engine, logger):
 
         
         all_instance_count = session.query(ForgeInstance).count()
+
+        if all_instance_count == 0:
+            github_instance = ForgeInstance(
+                platform_type=ForgePlatformType.GITHUB.value,
+                name="GitHub (defualt)",
+                domain_name="github.com"
+            )
+            session.add(github_instance)
+            session.commit()
+
+            config = SystemConfig(logger, session)
+
+            if config.get_value("Keys", "gitlab_api_key") not in [None, "fake"]:
+
+                gitlab_instance = ForgeInstance(
+                    platform_type=ForgePlatformType.GITLAB.value,
+                    name="GitLab (defualt)",
+                    domain_name="gitlab.com"
+                )
+                session.add(gitlab_instance)
+                session.commit()
+        
+        # TODO: ensure default repos are present
 
 @deprecated("automatic import is deprecated. This is a function to warn users and help them transition")
 def warn_import_repos(logger):
