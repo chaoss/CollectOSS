@@ -9,7 +9,7 @@ from subprocess import check_call
 import platform
 import sys
 
-from collectoss.application.db.models.operations import ForgeInstance
+from collectoss.application.db.models.operations import ForgeInstance, WorkerOauth
 from collectoss.util.enums import ForgePlatformType
 from sqlalchemy.orm.attributes import get_history
 from collectoss.application.config import SystemConfig
@@ -221,6 +221,17 @@ def merge_config(
 
         config.load_config_from_dict(augmented_config)
 
+def _associate_instance_and_keys(session, logger, instance: ForgeInstance, platform_name:str):
+    """Associate an instance and keys with each other
+    """
+    
+    keys = session.query(WorkerOauth).filter(WorkerOauth.platform == platform_name).all()
+    for key in keys:
+        key.instance = instance.id
+        session.add(key)
+    session.commit()
+
+
 def initialize_tables(engine, logger):
     """Initialize certain tables with data that is requred for first run
 
@@ -248,6 +259,8 @@ def initialize_tables(engine, logger):
             session.add(github_instance)
             session.commit()
 
+            _associate_instance_and_keys(session, logger, github_instance, "github")
+
             config = SystemConfig(logger, session)
 
             if config.get_value("Keys", "gitlab_api_key") not in [None, "fake"]:
@@ -259,6 +272,9 @@ def initialize_tables(engine, logger):
                 )
                 session.add(gitlab_instance)
                 session.commit()
+
+                _associate_instance_and_keys(session, logger, gitlab_instance, "gitlab")
+
         
         # TODO: ensure default repos are present
 
