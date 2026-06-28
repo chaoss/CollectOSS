@@ -4,7 +4,7 @@ import uuid
 import typing
 from enum import Enum
 
-class AugurPlatformType(Enum):
+class ForgePlatformType(Enum):
     UNRESOLVEABLE = 0
     GITHUB = 1
     GITLAB = 2
@@ -13,10 +13,10 @@ class ContributorUUID:
     struct = {
         "platform": {"start": 0, "size": 1}
     }
-    def __init__(self, platform: int=AugurPlatformType.UNRESOLVEABLE.value):
+    def __init__(self, platform: int=ForgePlatformType.UNRESOLVEABLE.value):
         self.bytes = list(int(0).to_bytes(16, "big"))
 
-        if platform != AugurPlatformType.UNRESOLVEABLE.value:
+        if platform != ForgePlatformType.UNRESOLVEABLE.value:
             self.set_platform_id(platform)
 
     def is_valid_index(self, index: int)-> bool:
@@ -133,7 +133,7 @@ class GithubUUID(ContributorUUID):
     }
 
     def __init__(self):
-        super().__init__(platform = AugurPlatformType.GITHUB.value)
+        super().__init__(platform = ForgePlatformType.GITHUB.value)
 
 class GitlabUUID(ContributorUUID):
     struct = {
@@ -146,11 +146,11 @@ class GitlabUUID(ContributorUUID):
     }
 
     def __init__(self):
-        super().__init__(platform = AugurPlatformType.GITLAB.value)
+        super().__init__(platform = ForgePlatformType.GITLAB.value)
 
 class UnresolvableUUID(GithubUUID):
     def __init__(self):
-        super(GithubUUID, self).__init__(platform = AugurPlatformType.UNRESOLVEABLE.value)
+        super(GithubUUID, self).__init__(platform = ForgePlatformType.UNRESOLVEABLE.value)
 
 if __name__ == "__main__":
     pass
