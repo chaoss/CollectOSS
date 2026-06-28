@@ -4,7 +4,7 @@ import uuid
 import typing
 from enum import Enum
 
-class AugurPlatformType(Enum):
+class ForgePlatformType(Enum):
     UNRESOLVEABLE = 0
     GITHUB = 1
     GITLAB = 2
