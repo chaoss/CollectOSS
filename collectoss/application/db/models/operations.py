@@ -191,6 +191,9 @@ class WorkerOauth(Base):
     access_token_secret = Column(String(255), nullable=False)
     repo_directory = Column(String)
     platform = Column(String, server_default=text("'github'::character varying"))
+    instance = Column(
+        ForeignKey("operations.forge_instance.id", name="apikey_instance_fkey"), primary_key=False, nullable=True
+    )
 
 
 class WorkerSettingsFacade(Base):
@@ -1085,7 +1088,7 @@ class ForgeInstance(Base):
     date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
     domain_name = Column(String, nullable=False, comment="The base domain name (without the scheme) where this instance is hosted")
     enabled = Column(Boolean, default=True, nullable=False, comment="denotes whether collection should run for this instance")
-
+    api_keys = relationship("WorkerOauth")
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
