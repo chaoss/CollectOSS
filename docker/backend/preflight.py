@@ -1,4 +1,4 @@
-from collectoss.util.startup import collect_env_variables, check_init_schema, check_update_schema, setup_facade_directory, merge_config, warn_import_repos, print_platform_information
+from collectoss.util.startup import collect_env_variables, check_init_schema, check_update_schema, setup_facade_directory, merge_config, initialize_tables,  warn_import_repos, print_platform_information
 from collectoss.application.logs import getFormatter
 from collectoss.application.cli import DatabaseContext
 import sys
@@ -27,6 +27,8 @@ if __name__ == "__main__":
     setup_facade_directory(logger)
 
     merge_config(DatabaseContext().engine, logger)
+    
+    initialize_tables(DatabaseContext().engine, logger)
 
     warn_import_repos(logger)
 
