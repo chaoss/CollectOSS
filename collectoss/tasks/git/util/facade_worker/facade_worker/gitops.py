@@ -20,5 +20,6 @@ class GitRepo:
 
         Args:
             git_dir (str): The repository directory to perform the pull in (working dir/repo dir)
+            timeout (int): how many seconds to wait before cancelling the operation
         """
         pass
