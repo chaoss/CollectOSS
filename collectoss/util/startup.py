@@ -223,6 +223,11 @@ def merge_config(
 
 def _associate_instance_and_keys(session, logger, instance: ForgeInstance, platform_name:str):
     """Associate an instance and keys with each other
+
+    This was created as a helper function to bridge the association gap with existing instances
+    since we just created the association between the worker_oauth and forge_instance tables.
+    Once the worker_oauth foreignkey to forge_instance is made to prevent NULL values,
+    this function can be removed.
     """
     
     keys = session.query(WorkerOauth).filter(WorkerOauth.platform == platform_name).all()
