@@ -191,6 +191,15 @@ def analyze_commit(
         filename = '(Merge commit)'
         # here we assume that the merge commit introduces no new content
         added = removed = whitespace = 0
+
+    # decide if new file, removed file, or modified file
+
+    # add a record for each changed file
+    for file in GitRepo.diff(repo_loc, commit):
+
+        # classify diff lines as whitespace, addition, or removal
+        pass
+    
     for line in log_output.split(os.linesep):
         if len(line) == 0:
             continue

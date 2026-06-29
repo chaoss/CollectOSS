@@ -133,3 +133,18 @@ class GitRepo:
         # [f"git", "--git-dir", repo_loc, "log", "-p", "-M", commit, "-n1",
             #  f"--pretty=format:{pretty_format}"]
         pass
+
+    @classmethod
+    def diff(cls, git_dir:str, commit_hash:str, relative_to:str = None, timeout=600) -> str:
+        """Get the diff for a given commit hash. If no relative ref is provided, use the commits parent.
+        Diffs from merge commits are not supported.
+
+        Args:
+            git_dir (str): The repository directory to perform the diff in (working dir/repo dir)
+            commit_hash (str): The hash of the commit to fetch
+            relative_to (str): The hash of the commit to compare to
+            timeout (int): how many seconds to wait before cancelling the operation
+        """
+        git_repo = Repository(git_dir)
+        # inspired by https://stackoverflow.com/a/76166664/
+        pass
