@@ -249,19 +249,14 @@ def initialize_tables(engine, logger):
             session.add(github_instance)
             session.commit()
 
-            config = SystemConfig(logger, session)
-
-            if config.get_value("Keys", "gitlab_api_key") not in [None, "fake"]:
-
-                gitlab_instance = ForgeInstance(
-                    platform_type=ForgePlatformType.GITLAB.value,
-                    name="GitLab (defualt)",
-                    domain_name="gitlab.com",
-                    enabled=True
-                )
-                session.add(gitlab_instance)
-                session.commit()
-        
+            gitlab_instance = ForgeInstance(
+                platform_type=ForgePlatformType.GITLAB.value,
+                name="GitLab (defualt)",
+                domain_name="gitlab.com",
+                enabled=True
+            )
+            session.add(gitlab_instance)
+            session.commit()
         # TODO: ensure default repos are present
 
 @deprecated("automatic import is deprecated. This is a function to warn users and help them transition")
