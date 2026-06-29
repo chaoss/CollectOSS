@@ -1,5 +1,12 @@
 from pygit2 import Repository, GitError
 
+import enum
+
+class ResetType(enum.Enum):
+    HARD = "hard"
+    SOFT = "soft"
+    MERGE = "merge"
+    REBASE = "rebase"
 
 class GitRepo:
     @classmethod
@@ -55,6 +62,52 @@ class GitRepo:
             timeout (int): how many seconds to wait before cancelling the operation
         """
         # get remote default branch : "git -C {absolute_path} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
+        pass
+
+    @classmethod
+    def get_current_branch(cls, git_dir:str, timeout=60) -> str:
+        """Get the current branch for an already-cloned git repo
+
+        Args:
+            git_dir (str): The repository directory to perform the get current branch in (working dir/repo dir)
+            timeout (int): how many seconds to wait before cancelling the operation
+        """
+        # (f"git -C {absolute_path} branch")
+        pass
+
+    @classmethod
+    def reset(cls, git_dir:str, branch:str, reset_type:ResetType, timeout=300):
+        """Reset the current branch to the given branch
+
+        Args:
+            git_dir (str): The repository directory to perform the reset hard in (working dir/repo dir)
+            branch (str): The branch to reset to
+            reset_type (ResetType): The type of reset to perform
+            timeout (int): how many seconds to wait before cancelling the operation
+        """
+        # (f"git -C {absolute_path} reset --{reset_type} origin/{branch}")
+        pass
+
+    @classmethod
+    def clean(cls, git_dir:str, timeout=300):
+        """Clean the current branch
+
+        Args:
+            git_dir (str): The repository directory to perform the clean in (working dir/repo dir)
+            timeout (int): how many seconds to wait before cancelling the operation
+        """
+        # (f"git -C {absolute_path} clean -df")
+        pass
+
+    @classmethod
+    def get_parent_hash_chain(cls, git_dir:str, timeout=600) -> list[str]:
+        """Get the list of all parent hashes in the chain for the currently checked out commit
+
+        Args:
+            git_dir (str): The repository directory to perform the get parent hash chain in (working dir/repo dir)
+            timeout (int): how many seconds to wait before cancelling the operation
+        """
+        # "git --git-dir %s log --ignore-missing --pretty=format:'%%H'" % (absolute_repo_path)
         pass
 
     @classmethod
