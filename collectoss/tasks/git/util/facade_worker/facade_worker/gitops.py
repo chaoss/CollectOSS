@@ -120,3 +120,16 @@ class GitRepo:
             timeout (int): how many seconds to wait before cancelling the operation
         """
         pass
+
+    @classmethod
+    def commit_data(cls, git_dir:str, commit_hash:str, timeout=600) -> pygit2.Commit:
+        """Get the data from a single commit given the commit hash
+
+        Args:
+            git_dir (str): The repository directory to perform the commit log in (working dir/repo dir)
+            commit_hash (str): The hash of the commit to fetch
+            timeout (int): how many seconds to wait before cancelling the operation
+        """
+        # [f"git", "--git-dir", repo_loc, "log", "-p", "-M", commit, "-n1",
+            #  f"--pretty=format:{pretty_format}"]
+        pass

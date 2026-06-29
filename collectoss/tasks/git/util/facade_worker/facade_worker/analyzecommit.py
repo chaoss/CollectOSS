@@ -149,25 +149,6 @@ def analyze_commit(
     recordsToInsert: List[Dict[str, Any]] = []
 
     try:
-        pretty_format = (
-            "author_name: %an%n"
-            "author_email: %ae%n"
-            "author_date:%ai%n"
-            "committer_name: %cn%n"
-            "committer_email: %ce%n"
-            "committer_date: %ci%n"
-            "parents: %p%n"
-            "EndPatch"
-        )
-        git_log = check_output(
-            [f"git", "--git-dir", repo_loc, "log", "-p", "-M", commit, "-n1",
-             f"--pretty=format:{pretty_format}"]
-        )
-    except Exception as e:
-        logger.error(f"Failed to run git log for commit {commit}: {e}")
-        return [], {}
-
-    try:
         execute_sql(s.sql.text("""
             INSERT INTO working_commits (repos_id, working_commit)
             VALUES (:repo_id, :commit)
@@ -191,38 +172,22 @@ def analyze_commit(
         'data_collection_date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
 
-    try:
-        log_output = git_log.decode("utf-8", errors="ignore")
-    except Exception as e:
-        logger.error(f"Failed to read stdout from git process for commit {commit}: {e}")
-        return [], msg_record
-
     whitespaceCheck = []
     resetRemovals = True
 
+    commit_data = GitRepo.commit_data(repo_loc, commit)
+
+    author_name = commit_data.author.name
+    author_email = commit_data.author.email
+    author_date = commit_data.author.date
+    author_timestamp = commit_data.author.timestamp
+    committer_name = commit_data.committer.name
+    committer_email = commit_data.committer.email
+    committer_date = commit_data.committer.date
+    committer_timestamp = commit_data.committer.timestamp
+
     for line in log_output.split(os.linesep):
         if len(line) == 0:
-            continue
-
-        if line.startswith('author_name:'):
-            author_name = line[13:]
-            continue
-        if line.startswith('author_email:'):
-            author_email = line[14:]
-            continue
-        if line.startswith('author_date:'):
-            author_date = line[12:22]
-            author_timestamp = line[12:]
-            continue
-        if line.startswith('committer_name:'):
-            committer_name = line[16:]
-            continue
-        if line.startswith('committer_email:'):
-            committer_email = line[17:]
-            continue
-        if line.startswith('committer_date:'):
-            committer_date = line[16:26]
-            committer_timestamp = line[16:]
             continue
         if line.startswith('parents:'):
             if len(line[9:].split(' ')) == 2:
