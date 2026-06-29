@@ -186,13 +186,13 @@ def analyze_commit(
     committer_date = commit_data.committer.date
     committer_timestamp = commit_data.committer.timestamp
 
+
+    if len(commit_data.parents) == 2:
+        filename = '(Merge commit)'
+        # here we assume that the merge commit introduces no new content
+        added = removed = whitespace = 0
     for line in log_output.split(os.linesep):
         if len(line) == 0:
-            continue
-        if line.startswith('parents:'):
-            if len(line[9:].split(' ')) == 2:
-                filename = '(Merge commit)'
-                added = removed = whitespace = 0
             continue
         if line.startswith('--- a/'):
             if filename == '(Deleted) ':
