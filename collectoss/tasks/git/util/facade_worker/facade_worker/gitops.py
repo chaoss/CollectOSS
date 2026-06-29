@@ -36,7 +36,7 @@ class GitRepo:
         pass
 
     @classmethod
-    def get_default_remote(cls, git_dir:str, timeout=600) -> str:
+    def get_default_remote(cls, git_dir:str, timeout=60) -> str:
         """Get the default remote for an already-cloned git repo
 
         Args:
@@ -46,7 +46,7 @@ class GitRepo:
         pass
 
     @classmethod
-    def get_remote_default_branch(cls, git_dir:str, remote_name:str, timeout=600) -> str:
+    def get_remote_default_branch(cls, git_dir:str, remote_name:str, timeout=60) -> str:
         """Get the default remote branch for an already-cloned git repo
 
         Args:
