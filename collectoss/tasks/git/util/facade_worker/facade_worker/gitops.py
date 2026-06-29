@@ -14,9 +14,9 @@ class GitRepo:
         """Clone a git repo into a folder under a particular directory with a given name
 
         Args:
-            repo_url (str): The repository URL to clone to
-            into (str): the folder under/inside which to perform the clone (working dir)
-            name (str): the name of the folder the repo should be stored in
+            repo_url (str): The URL of the git repository to clone
+            into (str): the folder under/inside which to perform the clone (imagine the working dir from a regular git clone in your terminal)
+            name (str): the name of the folder the repo should be stored in (imagine providing a custom folder name arg to the git clone command)
             timeout (int): how many seconds to wait before cancelling the operation
         """
         pass
