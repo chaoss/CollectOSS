@@ -302,3 +302,24 @@ def print_platform_information(logger):
     logger.info(f"PATH: {os.environ.get('PATH')}")
     logger.info(f"Python executable (current): {sys.executable}")
     logger.info(f"Python version: {platform.python_version()}")
+
+
+def load_keys(keypub: KeyPublisher):
+    """Load keys from the database into keyman (via keypub) for each configured instance
+
+    Args:
+        keypub: the keypub instance to use to publish keys to keyman
+    """
+    
+    # # load keys
+    # ghkeyman = GithubApiKeyHandler(logger)
+    # glkeyman = GitlabApiKeyHandler(logger)
+
+    # for key in ghkeyman.keys:
+    #     keypub.publish(key, "github_rest")
+    #     keypub.publish(key, "github_graphql")
+    #     keypub.publish(key, "github_search")
+
+    # for key in glkeyman.keys:
+    #     keypub.publish(key, "gitlab_rest")
+    pass
