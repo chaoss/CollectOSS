@@ -271,15 +271,4 @@ def analyze_commit(
                     resetRemovals = False
                 whitespaceCheck.append(line[1:].strip())
 
-    try:
-        record = generate_commit_record(
-            repo_id, commit, filename,
-            author_name, author_email, author_date, author_timestamp,
-            committer_name, committer_email, committer_date, committer_timestamp,
-            added, removed, whitespace
-        )
-        recordsToInsert.append(record)
-    except Exception as e:
-        logger.error(f"Final record creation failed for commit {commit}: {e}")
-
     return recordsToInsert, msg_record
