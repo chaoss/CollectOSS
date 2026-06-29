@@ -254,7 +254,8 @@ def initialize_tables(engine, logger):
             github_instance = ForgeInstance(
                 platform_type=ForgePlatformType.GITHUB.value,
                 name="GitHub (defualt)",
-                domain_name="github.com"
+                domain_name="github.com",
+                enabled=True
             )
             session.add(github_instance)
             session.commit()
@@ -268,7 +269,8 @@ def initialize_tables(engine, logger):
                 gitlab_instance = ForgeInstance(
                     platform_type=ForgePlatformType.GITLAB.value,
                     name="GitLab (defualt)",
-                    domain_name="gitlab.com"
+                    domain_name="gitlab.com",
+                    enabled=True
                 )
                 session.add(gitlab_instance)
                 session.commit()
