@@ -198,7 +198,18 @@ def analyze_commit(
     for file in GitRepo.diff(repo_loc, commit):
 
         # classify diff lines as whitespace, addition, or removal
-        pass
+
+        try:
+            record = generate_commit_record(
+                repo_id, commit, filename,
+                author_name, author_email, author_date, author_timestamp,
+                committer_name, committer_email, committer_date, committer_timestamp,
+                added, removed, whitespace
+            )
+            recordsToInsert.append(record)
+        except ValueError as e:
+            logger.error(f"Failed to generate commit record for {commit}: {e}")
+    
     
     for line in log_output.split(os.linesep):
         if len(line) == 0:
