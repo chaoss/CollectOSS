@@ -194,10 +194,7 @@ def facade_fetch_missing_commit_messages(repo_git):
         repo_loc = (f"{absolute_path}/.git")
 
         try: 
-            commit_message = check_output(
-                f"git --git-dir {repo_loc} log --format=%B -n 1 {escaped_hash}".split()
-                #f"git --git-dir {repo_loc} log --format=%B -n 1 {hash}".split()
-            ).decode('utf-8').strip()
+            commit_message = GitRepo.commit_message(repo_loc, escaped_hash)
 
             msg_record = {
                 'repo_id' : repo.repo_id,

@@ -108,21 +108,9 @@ def get_absolute_repo_path(repo_base_dir, repo_id, repo_path,repo_name):
 
 def get_parent_commits_set(absolute_repo_path, facade_helper, logger=None):
 
-	cmd = "git --git-dir %s log --ignore-missing --pretty=format:'%%H'" % (absolute_repo_path)
+	parent_commits = GitRepo.get_parent_hash_chain(absolute_repo_path)
 
-	# Use facade_helper's unified git command runner
-	return_code, stdout = facade_helper.run_git_command(
-		cmd,
-		timeout=600,  # 10 minutes for git log
-		capture_output=True,
-		operation_description=f'git log for {absolute_repo_path}'
-	)
-
-	if return_code == 0:
-		parent_commits = set(stdout.split(os.linesep))
-	else:
-		parent_commits = set()  # Return empty set on timeout or error
-
+	parent_commits = set(parent_commits)
 	# If there are no commits in the range, we still get a blank entry in
 	# the set. Remove it, as it messes with the calculations
 

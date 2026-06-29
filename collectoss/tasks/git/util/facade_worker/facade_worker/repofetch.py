@@ -311,45 +311,17 @@ def git_repo_updates(facade_helper, repo_git):
 
             facade_helper.log_activity('Verbose', 'Got to here. 1.')
 
-            if return_code_remote == 0:
+            remotedefault = GitRepo.get_remote_default_branch(absolute_path, "origin")
 
-                #                    logremotedefault = ("git -C %s%s/%s%s remote set-head origin -a"
-                #                        % (session.repo_base_directory,row[1],row[4],row[3]))
 
-                #                    return_code_remote_default = subprocess.Popen([logremotedefault],stdout=subprocess.PIPE,shell=True).wait()
+            facade_helper.log_activity(
+                'Verbose', f'remote default getting checked out is: {remotedefault}.')
 
-                #                    session.log_activity('Verbose', f'remote default is {logremotedefault}.')
+            GitRepo.checkout(absolute_path, remotedefault)
 
-                getremotedefault = (
-                    f"git -C {absolute_path} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
-
-                return_code_remote, remotedefault = facade_helper.run_git_command(
-                    getremotedefault,
-                    timeout=60,  # 1 minute for remote query
-                    capture_output=True,
-                    operation_description='get remote default branch'
-                )
-
-                facade_helper.log_activity(
-                    'Verbose', f'remote default getting checked out is: {remotedefault}.')
-
-                getremotedefault = (
-                    f"git -C {absolute_path} checkout {remotedefault}")
-
-                facade_helper.log_activity(
-                    'Verbose', f"get remote default command is: \n \n {getremotedefault} \n \n ")
-
-                return_code_remote_default_again, _ = facade_helper.run_git_command(
-                    getremotedefault,
-                    timeout=600,  # 10 minutes for git checkout
-                    capture_output=False,
-                    operation_description=f'git checkout {remotedefault}'
-                )
-
-                if return_code_remote_default_again == 0:
-                    facade_helper.log_activity('Verbose', "local checkout worked.")
-                    
-                    GitRepo.pull(absolute_path)
+            facade_helper.log_activity('Verbose', "local checkout worked.")
+            
+            GitRepo.pull(absolute_path)
 
         except Exception as e:
             facade_helper.log_activity(
@@ -369,79 +341,25 @@ def git_repo_updates(facade_helper, repo_git):
             facade_helper.log_activity(
                 'Verbose', f"git pull failed, attempting reset and clean for {repo.repo_git}")
 
-#                remotedefault = 'main'
-
-#                logremotedefault = ("git -C %s%s/%s%s remote set-head origin -a"
-#                    % (session.repo_base_directory,row[1],row[4],row[3]))
-
-#                return_code_remote = subprocess.Popen([logremotedefault],stdout=subprocess.PIPE,shell=True).wait()
-
-#                session.log_activity('Verbose', f'remote default is {logremotedefault}.')
-
-            getremotedefault = (
-                f"git -C {absolute_path} remote show origin | sed -n '/HEAD branch/s/.*: //p'")
-
-            return_code_remote, remotedefault = facade_helper.run_git_command(
-                getremotedefault,
-                timeout=60,  # 1 minute for remote query
-                capture_output=True,
-                operation_description='get remote default branch'
-            )
+            remotedefault = GitRepo.get_remote_default_branch(absolute_path, "origin")
 
             try:
 
-                getremotedefault = (
-                    f"git -C {absolute_path} checkout {remotedefault}")
-
-                return_code_remote_default, _ = facade_helper.run_git_command(
-                    getremotedefault,
-                    timeout=600,  # 10 minutes for git checkout
-                    capture_output=False,
-                    operation_description=f'git checkout {remotedefault}'
-                )
+                GitRepo.checkout(absolute_path, remotedefault)
 
                 facade_helper.log_activity(
                     'Verbose', f'get remote default result (return code): {return_code_remote_default}')
 
-                getcurrentbranch = (f"git -C {absolute_path} branch")
-
-                return_code_local, localdefault = facade_helper.run_git_command(
-                    getcurrentbranch,
-                    timeout=60,  # 1 minute for branch query
-                    capture_output=True,
-                    operation_description='get current branch'
-                )
+                localdefault = GitRepo.get_current_branch(absolute_path)
 
                 facade_helper.log_activity(
                     'Verbose', f'remote default is: {remotedefault}, and localdefault is {localdefault}.')
 
-                cmd_checkout_default = (
-                    f"git -C {absolute_path} checkout {remotedefault}")
+                GitRepo.checkout(absolute_path, remotedefault)
 
-                cmd_checkout_default_wait, _ = facade_helper.run_git_command(
-                    cmd_checkout_default,
-                    timeout=600,  # 10 minutes for git checkout
-                    capture_output=False,
-                    operation_description=f'git checkout {remotedefault}'
-                )
+                GitRepo.reset(absolute_path, remotedefault, ResetType.HARD)
 
-                cmd_reset = (f"git -C {absolute_path} reset --hard origin/{remotedefault}")
-
-                cmd_reset_wait, _ = facade_helper.run_git_command(
-                    cmd_reset,
-                    timeout=300,  # 5 minutes for git reset
-                    capture_output=False,
-                    operation_description=f'git reset --hard origin/{remotedefault}'
-                )
-
-                cmd_clean = (f"git -C {absolute_path} clean -df")
-
-                return_code_clean, _ = facade_helper.run_git_command(
-                    cmd_clean,
-                    timeout=300,  # 5 minutes for git clean
-                    capture_output=False,
-                    operation_description='git clean -df'
-                )
+                GitRepo.clean(absolute_path)
 
             except Exception as e:
 
