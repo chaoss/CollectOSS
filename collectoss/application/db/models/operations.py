@@ -1090,6 +1090,15 @@ class ForgeInstance(Base):
     enabled = Column(Boolean, default=True, nullable=False, comment="denotes whether collection should run for this instance")
     api_keys = relationship("WorkerOauth")
 
+    @property
+    def platform(self) -> ForgePlatformType:
+        return ForgePlatformType(self.platform_type)
+
+    @property
+    def identity_name(self) -> str:
+        """return a unique name for this instance to be used for keyman and other lookups"""
+        return f"{self.platform.name.lower()}_{self.id}"
+
 class Subscription(Base):
     __tablename__ = "subscriptions"
     __table_args__ = { "schema": "operations" }
