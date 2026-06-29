@@ -23,3 +23,14 @@ class GitRepo:
             timeout (int): how many seconds to wait before cancelling the operation
         """
         pass
+        
+    @classmethod
+    def commit_message(cls, git_dir:str, commit_hash:str, timeout=600) -> str:
+        """return the commit message for a given commit hash
+
+        Args:
+            git_dir (str): The repository directory to perform the pull in (working dir/repo dir)
+            commit_hash (str): The hash of the commit to fetch
+            timeout (int): how many seconds to wait before cancelling the operation
+        """
+        pass
