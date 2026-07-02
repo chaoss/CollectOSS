@@ -101,19 +101,6 @@ jobs:
           cache-to: type=gha,scope=container-keyman,mode=min
           load: true
 
-      - name: Build rabbitmq container
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./docker/rabbitmq/Dockerfile
-          build-args: |
-            VERSION=${{ steps.version.outputs.version }}
-            REVISION=${{ github.sha }}
-          platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test
-          cache-from: type=gha,scope=container-rabbitmq
-          cache-to: type=gha,scope=container-rabbitmq,mode=min
-          load: true
 
       - name: Build backend container
         uses: docker/build-push-action@v6
@@ -142,10 +129,6 @@ jobs:
           yq eval -i '.services.keyman.image = "ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test"' docker-compose.yml
           yq eval -i '.services.keyman.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.keyman.restart = "no"' docker-compose.yml
-
-          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test"' docker-compose.yml
-          yq eval -i '.services.rabbitmq.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.rabbitmq.restart = "no"' docker-compose.yml
 
       - name: Setup Docker Compose
         uses: docker/setup-compose-action@v1
@@ -227,16 +210,6 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test
           layers: true
 
-      - name: Build rabbitmq container
-        uses: redhat-actions/buildah-build@v2
-        with:
-          context: .
-          containerfiles: |
-            ./docker/rabbitmq/Dockerfile
-          platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test
-          layers: true
-
       - name: Build backend container
         uses: redhat-actions/buildah-build@v2
         with:
@@ -260,10 +233,6 @@ jobs:
           yq eval -i '.services.keyman.image = "ghcr.io/${{ github.repository_owner }}/collectoss-keyman:test"' docker-compose.yml
           yq eval -i '.services.keyman.pull_policy = "never"' docker-compose.yml
           yq eval -i '.services.keyman.restart = "no"' docker-compose.yml
-
-          yq eval -i '.services.rabbitmq.image = "ghcr.io/${{ github.repository_owner }}/collectoss-rabbitmq:test"' docker-compose.yml
-          yq eval -i '.services.rabbitmq.pull_policy = "never"' docker-compose.yml
-          yq eval -i '.services.rabbitmq.restart = "no"' docker-compose.yml
 
       - name: Setup Podman Compose
         uses: webgtx/setup-podman-compose@v1
@@ -326,8 +295,6 @@ jobs:
             folder: database
           - name: collectoss-keyman
             folder: keyman
-          - name: collectoss-rabbitmq
-            folder: rabbitmq
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
