@@ -1098,7 +1098,7 @@ class ForgeInstance(Base):
     @property
     def identity_name(self) -> str:
         """return a unique name for this instance to be used for keyman and other lookups"""
-        return f"{self.platform_type.name.lower()}_{self.id}"
+        return f"{self.platform_type.name.lower()}_{self.domain_name}"
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
