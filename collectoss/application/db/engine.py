@@ -8,8 +8,6 @@ import subprocess
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from collectoss.application.environment import SystemEnv
-from collectoss.application.db.util import catch_operational_error
-
 
 def parse_database_string(db_string: str) -> tuple[str,str, str, str, str]:
     """Parse database string into the following components:
@@ -146,26 +144,5 @@ class DatabaseEngine():
         db_conn_string = get_database_string()
 
         return create_database_engine(db_conn_string, **kwargs)
-
-class EngineConnection():
-
-    def __init__(self, engine):
-        self.connection = self.get_connection(engine)
-
-    def __enter__(self):
-        return self.connection
-
-    def __exit__(self, exception_type, exception_value, exception_traceback):
-
-        self.connection.close()
-
-    def get_connection(self, engine):
-
-        func = engine.connect
-
-        return catch_operational_error(func)
-
-        
-
 
 

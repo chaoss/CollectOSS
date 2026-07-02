@@ -96,12 +96,6 @@ def map_dependencies_pipfile(packages, type):
         deps.append(Dict)
     return deps 
 
-
-#def parse_pipfile(file_handle):
-#    manifest = tomllib.load(file_handle)
-#    return map_dependencies_pipfile(manifest['packages'],'runtime') + #map_dependencies_pipfile(manifest['dev-packages'], 'develop')
-## Erro handling Means that the parse_pipfile(...) old function is assuming the presence of a dev-packages key in the parsed Pipfile, but that key does not exist in some cases.
-
 def parse_pipfile(file_handle):
     try:
         manifest = tomllib.load(file_handle)
