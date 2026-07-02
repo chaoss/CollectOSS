@@ -40,14 +40,13 @@ services:
     user: 3456:3456 # Run as an arbitrary non-root user
 
   rabbitmq:
-    image: collectoss-rabbitmq
-    build:
-      context: .
-      dockerfile: ./docker/rabbitmq/Dockerfile
-      args:
-        - RABBIT_MQ_DEFAULT_USER=${COLLECTOSS_RABBITMQ_USERNAME:-augur}
-        - RABBIT_MQ_DEFAULT_PASSWORD=${COLLECTOSS_RABBITMQ_PASSWORD:-password123}
-        - RABBIT_MQ_DEFAULT_VHOST=${COLLECTOSS_RABBITMQ_VHOST:-collectoss_vhost}
+    image: rabbitmq:4.1-management-alpine
+    environment:
+      - RABBITMQ_DEFAULT_USER=${COLLECTOSS_RABBITMQ_USERNAME:-augur}
+      - RABBITMQ_DEFAULT_PASS=${COLLECTOSS_RABBITMQ_PASSWORD:-password123}
+      - RABBITMQ_DEFAULT_VHOST=${COLLECTOSS_RABBITMQ_VHOST:-collectoss_vhost}
+    volumes:
+      - ./docker/rabbitmq/advanced.config:/etc/rabbitmq/advanced.config:ro
 
   core:
     image: collectoss:latest
