@@ -35,7 +35,7 @@ class ResourceGoneException(Exception):
         super().__init__(message)
 
 class GithubDataAccess:
-
+    # https://docs.github.com/en/rest/rate-limit/rate-limit?apiVersion=2026-03-10
     RATE_LIMIT_GROUPS = {
         "graphql": {"path_pattern": "^/graphql$", "test_endpoint": "/rate_limit"},
         "search": {"path_pattern": "^/search", "test_endpoint": "/rate_limit"},

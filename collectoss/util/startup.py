@@ -10,6 +10,7 @@ import platform
 import sys
 
 from collectoss.application.db.models.operations import ForgeInstance, WorkerOauth
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess
 from collectoss.util.enums import ForgePlatformType
 from sqlalchemy.orm.attributes import get_history
 from collectoss.application.config import SystemConfig
@@ -310,7 +311,10 @@ def load_keys(keypub: KeyPublisher):
     Args:
         keypub: the keypub instance to use to publish keys to keyman
     """
-    
+    platform_ratelimit_groups = {
+        ForgePlatformType.GITHUB: GithubDataAccess.RATE_LIMIT_GROUPS.keys(),
+        ForgePlatformType.GITLAB: ["rest"]
+    }
     # # load keys
     # ghkeyman = GithubApiKeyHandler(logger)
     # glkeyman = GitlabApiKeyHandler(logger)
