@@ -305,16 +305,21 @@ def print_platform_information(logger):
     logger.info(f"Python version: {platform.python_version()}")
 
 
-def load_keys(keypub: KeyPublisher):
+def load_keys(keypub: KeyPublisher, engine, logger):
     """Load keys from the database into keyman (via keypub) for each configured instance
 
     Args:
         keypub: the keypub instance to use to publish keys to keyman
+        engine: the database engine to use
+        logger: the logger to use
     """
     platform_ratelimit_groups = {
         ForgePlatformType.GITHUB: GithubDataAccess.RATE_LIMIT_GROUPS.keys(),
         ForgePlatformType.GITLAB: ["rest"]
     }
+
+    with DatabaseSession(logger, engine=engine) as session:
+        enabled_instances = session.query(ForgeInstance).filter(ForgeInstance.enabled == True).all()
     # # load keys
     # ghkeyman = GithubApiKeyHandler(logger)
     # glkeyman = GitlabApiKeyHandler(logger)
