@@ -6,7 +6,7 @@ import logging
 from flask import request, jsonify, current_app
 import sqlalchemy as s
 
-# Disable the requirement for SSL by setting env["AUGUR_DEV"] = True
+# Disable the requirement for SSL by setting env["COLLECTOSS_DEV"] = True
 from collectoss.application.config import get_development_flag
 from collectoss.application.db.lib import get_session
 from collectoss.application.db.models import Config

@@ -22,7 +22,7 @@ workers = multiprocessing.cpu_count() * 2 + 1
 umask = 0o007
 reload = True
 # this satisfies the type checker
-is_dev = SystemEnv.get_bool("AUGUR_DEV", False)
+is_dev = SystemEnv.get_bool("COLLECTOSS_DEV", False)
 
 if is_dev:
 
@@ -42,7 +42,7 @@ del is_dev
 logs_directory = get_value('Logging', 'logs_directory')
 
 # this syntax satisfies the type checker
-is_docker = SystemEnv.get_bool("AUGUR_DOCKER_DEPLOY", False)
+is_docker = SystemEnv.get_bool("COLLECTOSS_DOCKER_DEPLOY", False)
 accesslog = f"{logs_directory}/gunicorn.log"
 errorlog = f"{logs_directory}/gunicorn.log"
 

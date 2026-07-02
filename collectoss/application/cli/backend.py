@@ -32,7 +32,7 @@ import sqlalchemy as s
 
 from keyman.KeyClient import KeyClient, KeyPublisher
 
-reset_logs = SystemEnv.get_bool("AUGUR_RESET_LOGS", True)
+reset_logs = SystemEnv.get_bool("COLLECTOSS_RESET_LOGS", True)
 
 logger = SystemLogger("collectoss", reset_logfiles=reset_logs).get_logger()
 
@@ -72,10 +72,10 @@ def start(ctx, disable_collection, development, pidfile, port):
         raise e
 
     if development:
-        SystemEnv.set("AUGUR_DEV", "1")
+        SystemEnv.set("COLLECTOSS_DEV", "1")
         logger.info("Starting in development mode")
     
-    SystemEnv.set("AUGUR_PIDFILE", pidfile)
+    SystemEnv.set("COLLECTOSS_PIDFILE", pidfile)
 
     try:
         gunicorn_location = os.getcwd() + "/collectoss/api/gunicorn_conf.py"
@@ -87,10 +87,10 @@ def start(ctx, disable_collection, development, pidfile, port):
     if not port:
         port = get_value("Server", "port")
     
-    SystemEnv.set("AUGUR_PORT", str(port))
+    SystemEnv.set("COLLECTOSS_PORT", str(port))
     
     if disable_collection:
-        SystemEnv.set("AUGUR_DISABLE_COLLECTION", "1")
+        SystemEnv.set("COLLECTOSS_DISABLE_COLLECTION", "1")
     
     core_worker_count = get_value("Celery", 'core_worker_count')
     secondary_worker_count = get_value("Celery", 'secondary_worker_count')
