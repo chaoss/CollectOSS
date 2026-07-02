@@ -36,6 +36,12 @@ class ResourceGoneException(Exception):
 
 class GithubDataAccess:
 
+    RATE_LIMIT_GROUPS = {
+        "graphql": {"path_pattern": "^/graphql$", "test_endpoint": "/rate_limit"},
+        "search": {"path_pattern": "^/search", "test_endpoint": "/rate_limit"},
+        "rest": {"path_pattern": ".*", "test_endpoint": "/rate_limit"},
+    }
+
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
         self.logger = logger
