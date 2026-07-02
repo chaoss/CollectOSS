@@ -320,15 +320,10 @@ def load_keys(keypub: KeyPublisher, engine, logger):
 
     with DatabaseSession(logger, engine=engine) as session:
         enabled_instances = session.query(ForgeInstance).filter(ForgeInstance.enabled == True).all()
-    # # load keys
-    # ghkeyman = GithubApiKeyHandler(logger)
-    # glkeyman = GitlabApiKeyHandler(logger)
 
-    # for key in ghkeyman.keys:
-    #     keypub.publish(key, "github_rest")
-    #     keypub.publish(key, "github_graphql")
-    #     keypub.publish(key, "github_search")
-
-    # for key in glkeyman.keys:
-    #     keypub.publish(key, "gitlab_rest")
-    pass
+        for instance in enabled_instances:
+            if instance.platform_type in platform_ratelimit_groups:
+                keys = instance.api_keys
+                for key in keys:
+                    for ratelimit_group in platform_ratelimit_groups[instance.platform_type]:
+                        keypub.publish(key.access_token, f"{instance.identity_name}_{ratelimit_group.lower()}")
