@@ -1,4 +1,5 @@
 # encoding: utf-8
+from collectoss.util.enums import ForgePlatformType
 from sqlalchemy import BigInteger, SmallInteger, Column, Index, Integer, String, Table, text, UniqueConstraint, Boolean, ForeignKey, update, CheckConstraint, Sequence, DateTime, func
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
