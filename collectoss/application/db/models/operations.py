@@ -1083,7 +1083,7 @@ class ForgeInstance(Base):
     id = Column(Integer, primary_key=True, nullable=False, comment="Internal unique identifier for this forge instance")
     # platform_type stores an integer that CollectOSS maps/will map to it's internal platform identifier Enum 
     # (as used in ContributorUUID) for identifying the API endpoints and tasks to use for collection
-    platform_type = Column(Integer, nullable=False, comment="Type specifier identifying the relevant platform API interface to CollectOSS")
+    _platform_type = Column(Integer, name="platform_type", nullable=False, comment="Type specifier identifying the relevant platform API interface to CollectOSS")
     name = Column(String, nullable=False, comment="User-specified name for this forge instance")
     # https://stackoverflow.com/a/54800233
     date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
@@ -1092,13 +1092,13 @@ class ForgeInstance(Base):
     api_keys = relationship("WorkerOauth")
 
     @property
-    def platform(self) -> ForgePlatformType:
-        return ForgePlatformType(self.platform_type)
+    def platform_type(self) -> ForgePlatformType:
+        return ForgePlatformType(self._platform_type)
 
     @property
     def identity_name(self) -> str:
         """return a unique name for this instance to be used for keyman and other lookups"""
-        return f"{self.platform.name.lower()}_{self.id}"
+        return f"{self.platform_type.name.lower()}_{self.id}"
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
