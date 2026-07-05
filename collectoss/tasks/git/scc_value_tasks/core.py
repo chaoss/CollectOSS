@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 from collectoss.application.db.models import *
-from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value
+from collectoss.application.db.lib import bulk_insert_dicts, get_repo_by_repo_git, get_value, get_batch_size
 from collectoss.application.environment import SystemEnv
 from collectoss.tasks.util.worker_util import parse_json_from_subprocess_call
 from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path
@@ -26,11 +26,20 @@ def value_model(logger,repo_git):
     required_output = parse_json_from_subprocess_call(logger,['./scc', '-f','json','--by-file', path], cwd=path_to_scc)
     
     logger.info('adding scc data to database... ')
-    logger.debug(f"output: {required_output}")
 
+    total_records = 0
+    scc_batch_size = get_batch_size("scc")
     to_insert = []
     for record in required_output:
         for file in record['Files']:
+
+            if len(to_insert) >= scc_batch_size:
+                
+                logger.info(f"{repo_git}: Processing batch of {len(to_insert)} scc records (total completed so far: {total_records})")
+                bulk_insert_dicts(logger, to_insert, RepoLabor, ["repo_id", "rl_analysis_date", "file_path", "file_name"])
+                total_records += len(to_insert)
+                to_insert.clear()
+
             repo_labor = {
                 'repo_id': repo_id,
                 'rl_analysis_date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -49,7 +58,11 @@ def value_model(logger,repo_git):
             }
 
             to_insert.append(repo_labor)
-    
-    bulk_insert_dicts(logger, to_insert, RepoLabor, ["repo_id", "rl_analysis_date", "file_path", "file_name" ])
+   
+    if len(to_insert) > 0:
+        logger.info(f"{repo_git}: Processing final batch of {len(to_insert)} scc records")
+        bulk_insert_dicts(logger, to_insert, RepoLabor, ["repo_id", "rl_analysis_date", "file_path", "file_name"])
+        total_records += len(to_insert)
+        to_insert.clear()
 
-    logger.info(f"Done generating scc data for repo {repo_id} from path {path}")
+    logger.info(f"Done generating scc data for repo {repo_id} from path {path}. Added {total_records} scc records")
