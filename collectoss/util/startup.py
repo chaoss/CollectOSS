@@ -9,6 +9,7 @@ from subprocess import check_call
 import platform
 import sys
 
+from collectoss.application.paths import SystemPaths
 from sqlalchemy.orm.attributes import get_history
 from collectoss.application.config import SystemConfig
 from collectoss.application.db.session import DatabaseSession
@@ -16,8 +17,6 @@ from collectoss.application.environment import SystemEnv
 from typing_extensions import deprecated
 
 from collectoss.util.inspect_without_import import get_phase_names_without_import
-
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 def check_init_schema():
     """Initialize the CollectOSS database schema as appropriate
@@ -103,14 +102,7 @@ def collect_env_variables(logger):
 def setup_facade_directory(logger):
     """Perform permission checks and create the facade directory if it doesnt exist
     """
-
-    facade_directory_path = SystemEnv.get("COLLECTOSS_FACADE_REPO_DIRECTORY") or "/collectoss/facade/"
-
-    facade_directory = Path(facade_directory_path)
-
-    if not facade_directory.exists():
-        logger.debug(f"Specified facade directory {facade_directory_path} does not exist. Creating...")
-        facade_directory.mkdir()
+    facade_directory = SystemPaths.get_facade_directory()
 
     git_credentials = facade_directory.joinpath(".git-credentials")
     git_credentials.touch(exist_ok=True)
@@ -213,9 +205,11 @@ def merge_config(
 
         augmented_config["Keys"] = keys
 
-        augmented_config["Facade"]["repo_directory"] = facade_repo_directory
-
-        augmented_config["Logging"]["logs_directory"] = logs_directory or (ROOT_PROJECT_REPO_DIRECTORY + "/logs/")
+        if facade_repo_directory and facade_repo_directory != "":
+            augmented_config["Facade"]["repo_directory"] = facade_repo_directory
+    
+        if logs_directory and logs_directory != "":
+            augmented_config["Logging"]["logs_directory"] = logs_directory
 
         config.load_config_from_dict(augmented_config)
 
