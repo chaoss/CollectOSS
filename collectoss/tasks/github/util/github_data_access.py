@@ -1,5 +1,6 @@
 import logging
 import time
+import re
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, RetryError
 from urllib.parse import urlparse, parse_qs, urlencode
@@ -41,6 +42,12 @@ class GithubDataAccess:
         "search": {"path_pattern": "^/search", "test_endpoint": "/rate_limit"},
         "rest": {"path_pattern": ".*", "test_endpoint": "/rate_limit"},
     }
+
+    def _get_ratelimit_group(self, path: str) -> str:
+        for ratelimit_group, ratelimit_group_data in GithubDataAccess.RATE_LIMIT_GROUPS.items():
+            if re.match(ratelimit_group_data["path_pattern"], path):
+                return ratelimit_group
+        return self.feature
 
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     

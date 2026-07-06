@@ -55,3 +55,14 @@ class TestEndpointUrl:
         assert "q=python" in result
         assert "per_page=10" in result
         assert result.startswith("https://api.github.com/search/repositories")
+
+
+class TestGetRatelimitGroup:
+
+    def test_get_ratelimit_group(self, gda):
+        assert gda._get_ratelimit_group("/rate_limit") == "rest"
+        assert gda._get_ratelimit_group("/graphql") == "graphql"
+        assert gda._get_ratelimit_group("/search") == "search"
+        assert gda._get_ratelimit_group("/repos/test/test") == "rest"
+        assert gda._get_ratelimit_group("/repos/test/test/issues") == "rest"
+        assert gda._get_ratelimit_group("/repos/test/test?per_page=100") == "rest"
