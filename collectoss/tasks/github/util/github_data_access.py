@@ -49,12 +49,27 @@ class GithubDataAccess:
 
     @property
     def domain(self) -> str:
+        """Returns the domain for this instance of GithubDataAccess.
+        A domain is the custom part of the hostname that varies by instances.
+        For github this value is typically `github.com` or `COMPANY.ghe.com` for github enterprise instances.
+        Github domains are prefixed with `api.` to turn them into a base URL for sending requests.
+        """
         hostname = urlparse(self.endpoint_url("/")).hostname
         if hostname.startswith("api."):
             hostname = hostname[4:]
         return hostname
 
     def _get_ratelimit_group(self, url: str) -> str:
+        """Returns a string identifying the ratelimit group for a given url.
+        This is used to fetch the correct key from the key manager.
+        It needs to generate the same string as the keys that were loaded at startup
+
+        Args:
+            url (str): the URL of the request being made
+
+        Returns:
+            str: a KeyClient-compatible string uniquely identifying the ratelimit group
+        """
         ratelimit_group = None
         for group_name, ratelimit_group_data in GithubDataAccess.RATE_LIMIT_GROUPS.items():
             if re.match(ratelimit_group_data["path_pattern"], url):
