@@ -158,12 +158,14 @@ class GithubDataAccess:
         return response.json()  
     
     # TODO: Handle timeout exceptions better
-    def make_request(self, url, method="GET", timeout=100):
+    def make_request(self, url, method="GET", timeout=100, ratelimit_group:str=None):
 
         with httpx.Client() as client:
 
+            ratelimit_group = ratelimit_group or self._get_ratelimit_group(url)
+
             if not self.key:
-                self.key = self.key_client.request()
+                self.key = self.key_client.request(ratelimit_group)
 
             headers = {"Authorization": f"token {self.key}"}
 
@@ -211,13 +213,15 @@ class GithubDataAccess:
 
             return response
         
-    def make_request_with_retries(self, url, method="GET", timeout=100):
+    def make_request_with_retries(self, url, method="GET", timeout=100, ratelimit_group:str=None):
         """ What method does?
             1. Catches RetryError and rethrows a nicely formatted OutOfRetriesException that includes that last exception thrown
         """
 
+        ratelimit_group = ratelimit_group or self._get_ratelimit_group(url)
+
         try:
-            return self.__make_request_with_retries(url, method, timeout)
+            return self.__make_request_with_retries(url, method, timeout, ratelimit_group)
         except RetryError as e:
             last_exception = e.last_attempt.exception()
 
@@ -225,7 +229,7 @@ class GithubDataAccess:
             # this suggests we should retry 401 exceptions at least once
             if isinstance(last_exception, NotAuthorizedException):
                 self.expired_keys_for_request = []
-                self.__handle_github_not_authorized_response()           
+                self.__handle_github_not_authorized_response(ratelimit_group)           
             raise last_exception
 
     def _decide_retry_policy(exception: Exception) -> bool:
@@ -237,28 +241,29 @@ class GithubDataAccess:
         return not isinstance(exception, (UrlNotFoundException, ResourceGoneException))
         
     @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(_decide_retry_policy))
-    def __make_request_with_retries(self, url, method="GET", timeout=100):
+    def __make_request_with_retries(self, url, method="GET", timeout=100, ratelimit_group:str=None):
         """ What method does?
             1. Retires 10 times
             2. Waits 5 seconds between retires
             3. Does not retry any exceptions excluded by _decide_retry_policy
             4. Catches RatelimitException and waits or expires key before raising exception
         """
+        ratelimit_group = ratelimit_group or self._get_ratelimit_group(url)
 
         try:
-            result = self.make_request(url, method, timeout)
+            result = self.make_request(url, method, timeout, ratelimit_group)
             self.expired_keys_for_request = []
             return result
         except RatelimitException as e:
-            self.__handle_github_ratelimit_response(e.response)
+            self.__handle_github_ratelimit_response(e.response, ratelimit_group)
             raise e
 
-    def __handle_github_not_authorized_response(self):
+    def __handle_github_not_authorized_response(self, platform:str):
 
-        self.key = self.key_client.invalidate(self.key)
+        self.key = self.key_client.invalidate(self.key, platform)
 
         
-    def __handle_github_ratelimit_response(self, response):
+    def __handle_github_ratelimit_response(self, response, platform:str):
 
         headers = response.headers
         previous_key = self.key
@@ -267,7 +272,7 @@ class GithubDataAccess:
 
             retry_after = int(headers["Retry-After"])
             self.logger.info('\n\n\n\nEncountered secondary rate limit issue.\n\n\n\n')
-            self.key = self.key_client.expire(self.key, time.time() + retry_after)
+            self.key = self.key_client.expire(self.key, time.time() + retry_after, platform)
 
         elif "X-RateLimit-Remaining" in headers and int(headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
             current_epoch = int(time.time())
@@ -279,10 +284,10 @@ class GithubDataAccess:
                 key_reset_time = 0
                 
             self.logger.info(f"\n\n\nAPI rate limit exceeded. Key resets in {key_reset_time} seconds. Informing key manager that key is expired")
-            self.key = self.key_client.expire(self.key, epoch_when_key_resets)
+            self.key = self.key_client.expire(self.key, epoch_when_key_resets, platform)
 
         else:
-            self.key = self.key_client.expire(self.key, time.time() + 60)
+            self.key = self.key_client.expire(self.key, time.time() + 60, platform)
 
         if previous_key == self.key:
             self.logger.error(f"The same key was returned after a request to expire it was sent (key: {mask_key(self.key)})")
