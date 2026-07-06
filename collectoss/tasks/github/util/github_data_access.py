@@ -12,9 +12,10 @@ GITHUB_RATELIMIT_REMAINING_CAP = 50
 
 class RatelimitException(Exception):
 
-    def __init__(self, response, keys_used, message="Github Rate limit exceeded") -> None:
+    def __init__(self, response, keys_used=None, message="Github Rate limit exceeded") -> None:
 
         self.response = response
+        keys_used = keys_used or []
         keys_used = [ mask_key(k) for k in keys_used]
         super().__init__(f"{message}. Keys used: {keys_used}")
 
@@ -55,7 +56,6 @@ class GithubDataAccess:
         self.feature = feature
         self.key_client = KeyClient(f"github_{feature}", logger)
         self.key = None
-        self.expired_keys_for_request = []
 
     def endpoint_url(self, path: str, params: dict = None) -> str:
         """Build a URL for a github endpoint using the specified path and query parameters
@@ -172,9 +172,8 @@ class GithubDataAccess:
             response = client.request(method=method, url=url, headers=headers, timeout=timeout, follow_redirects=True)
 
             if response.status_code in [403, 429]:
-                self.expired_keys_for_request.append(self.key)
                 self.logger.warning(f"Github rate limit exceeded for group {ratelimit_group} url {url}. Key: {mask_key(self.key)}. Response: {response.text}")
-                raise RatelimitException(response, self.expired_keys_for_request)
+                raise RatelimitException(response, [self.key])
 
             # There are cases with PR files, PR commits, and messages where the parent object is removed after 
             # It is collected, leading the the associated URL for those objects to return a 404. 
@@ -205,8 +204,7 @@ class GithubDataAccess:
 
             try:
                 if self.feature == "rest" and "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
-                    self.expired_keys_for_request.append(self.key)
-                    raise RatelimitException(response, self.expired_keys_for_request)
+                    raise RatelimitException(response, [self.key])
             except ValueError:
                 self.logger.warning(f"X-RateLimit-Remaining was not an integer. Value: {response.headers['X-RateLimit-Remaining']}")
 
@@ -228,7 +226,6 @@ class GithubDataAccess:
             # https://github.com/orgs/community/discussions/101661#discussioncomment-8342211
             # this suggests we should retry 401 exceptions at least once
             if isinstance(last_exception, NotAuthorizedException):
-                self.expired_keys_for_request = []
                 self.__handle_github_not_authorized_response(ratelimit_group)           
             raise last_exception
 
@@ -252,7 +249,6 @@ class GithubDataAccess:
 
         try:
             result = self.make_request(url, method, timeout, ratelimit_group)
-            self.expired_keys_for_request = []
             return result
         except RatelimitException as e:
             self.__handle_github_ratelimit_response(e.response, ratelimit_group)
