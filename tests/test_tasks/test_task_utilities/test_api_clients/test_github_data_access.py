@@ -60,14 +60,14 @@ class TestEndpointUrl:
 class TestGetRatelimitGroup:
 
     def test_get_ratelimit_group_basic(self, gda):
-        assert gda._get_ratelimit_group("/rate_limit") == "rest"
-        assert gda._get_ratelimit_group("/graphql") == "graphql"
-        assert gda._get_ratelimit_group("/search") == "search"
-        assert gda._get_ratelimit_group("/repos/test/test") == "rest"
-        assert gda._get_ratelimit_group("/repos/test/test/issues") == "rest"
+        assert gda._get_ratelimit_group("/rate_limit") == "github_github.com_rest"
+        assert gda._get_ratelimit_group("/graphql") == "github_github.com_graphql"
+        assert gda._get_ratelimit_group("/search") == "github_github.com_search"
+        assert gda._get_ratelimit_group("/repos/test/test") == "github_github.com_rest"
+        assert gda._get_ratelimit_group("/repos/test/test/issues") == "github_github.com_rest"
 
     def test_get_ratelimit_group_with_params(self, gda):
-        assert gda._get_ratelimit_group("/repos/test/test?per_page=100") == "rest"
+        assert gda._get_ratelimit_group("/repos/test/test?per_page=100") == "github_github.com_rest"
 
     def test_get_ratelimit_group_full_url(self, gda):  
-        assert gda._get_ratelimit_group("https://api.github.com/repos/test/test?per_page=100") == "rest"
+        assert gda._get_ratelimit_group("https://api.github.com/repos/test/test?per_page=100") == "github_github.com_rest"

@@ -47,11 +47,18 @@ class GithubDataAccess:
         "rest": {"path_pattern": ".*", "test_endpoint": "/rate_limit"},
     }
 
-    def _get_ratelimit_group(self, path: str) -> str:
-        for ratelimit_group, ratelimit_group_data in GithubDataAccess.RATE_LIMIT_GROUPS.items():
-            if re.match(ratelimit_group_data["path_pattern"], path):
-                return ratelimit_group
-        return self.feature
+    @property
+    def domain(self) -> str:
+        return urlparse(self.endpoint_url("/")).hostname
+
+    def _get_ratelimit_group(self, url: str) -> str:
+        ratelimit_group = None
+        for group_name, ratelimit_group_data in GithubDataAccess.RATE_LIMIT_GROUPS.items():
+            if re.match(ratelimit_group_data["path_pattern"], url):
+                ratelimit_group = group_name
+                break
+        
+        return f"{self.PLATFORM_TYPE.name.lower()}_{self.domain}_{ratelimit_group or self.feature}"
 
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
     
