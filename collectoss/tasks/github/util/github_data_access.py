@@ -254,12 +254,12 @@ class GithubDataAccess:
             self.__handle_github_ratelimit_response(e.response, ratelimit_group)
             raise e
 
-    def __handle_github_not_authorized_response(self, platform:str):
+    def __handle_github_not_authorized_response(self, ratelimit_group:str):
 
-        self.key = self.key_client.invalidate(self.key, platform)
+        self.key = self.key_client.invalidate(self.key, ratelimit_group)
 
         
-    def __handle_github_ratelimit_response(self, response, platform:str):
+    def __handle_github_ratelimit_response(self, response, ratelimit_group:str):
 
         headers = response.headers
         previous_key = self.key
@@ -268,7 +268,7 @@ class GithubDataAccess:
 
             retry_after = int(headers["Retry-After"])
             self.logger.info('\n\n\n\nEncountered secondary rate limit issue.\n\n\n\n')
-            self.key = self.key_client.expire(self.key, time.time() + retry_after, platform)
+            self.key = self.key_client.expire(self.key, time.time() + retry_after, ratelimit_group)
 
         elif "X-RateLimit-Remaining" in headers and int(headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
             current_epoch = int(time.time())
@@ -280,10 +280,10 @@ class GithubDataAccess:
                 key_reset_time = 0
                 
             self.logger.info(f"\n\n\nAPI rate limit exceeded. Key resets in {key_reset_time} seconds. Informing key manager that key is expired")
-            self.key = self.key_client.expire(self.key, epoch_when_key_resets, platform)
+            self.key = self.key_client.expire(self.key, epoch_when_key_resets, ratelimit_group)
 
         else:
-            self.key = self.key_client.expire(self.key, time.time() + 60, platform)
+            self.key = self.key_client.expire(self.key, time.time() + 60, ratelimit_group)
 
         if previous_key == self.key:
             self.logger.error(f"The same key was returned after a request to expire it was sent (key: {mask_key(self.key)})")
