@@ -49,7 +49,10 @@ class GithubDataAccess:
 
     @property
     def domain(self) -> str:
-        return urlparse(self.endpoint_url("/")).hostname
+        hostname = urlparse(self.endpoint_url("/")).hostname
+        if hostname.startswith("api."):
+            hostname = hostname[4:]
+        return hostname
 
     def _get_ratelimit_group(self, url: str) -> str:
         ratelimit_group = None
