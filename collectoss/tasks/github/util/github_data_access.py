@@ -1,6 +1,7 @@
 import logging
 import time
 import re
+from collectoss.util.enums import ForgePlatformType
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, RetryError
 from urllib.parse import urlparse, parse_qs, urlencode
@@ -37,6 +38,8 @@ class ResourceGoneException(Exception):
         super().__init__(message)
 
 class GithubDataAccess:
+
+    PLATFORM_TYPE = ForgePlatformType.GITHUB
     # https://docs.github.com/en/rest/rate-limit/rate-limit?apiVersion=2026-03-10
     RATE_LIMIT_GROUPS = {
         "graphql": {"path_pattern": "^/graphql$", "test_endpoint": "/rate_limit"},
