@@ -173,7 +173,7 @@ class GithubDataAccess:
 
             if response.status_code in [403, 429]:
                 self.expired_keys_for_request.append(self.key)
-                self.logger.warning(f"Github rate limit exceeded. Key: {mask_key(self.key)}. Response: {response.text}")
+                self.logger.warning(f"Github rate limit exceeded for group {ratelimit_group} url {url}. Key: {mask_key(self.key)}. Response: {response.text}")
                 raise RatelimitException(response, self.expired_keys_for_request)
 
             # There are cases with PR files, PR commits, and messages where the parent object is removed after 
