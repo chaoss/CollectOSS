@@ -64,7 +64,7 @@ dependencies = [
     "sklearn-crfsuite>=0.3.6",
     "slack==0.0.2",
     "SQLAlchemy==2.0.22",
-    "six>=1.5",
+    "six>=1.16.0",
     "tenacity==8.3.0",
     "tensorflow>=2.16.1",
     "textblob==0.15.3",
