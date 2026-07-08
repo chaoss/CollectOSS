@@ -37,12 +37,8 @@ CONTRACTION_MAP = contraction_map
 train_path = os.path.join(ROOT_PROJECT_REPO_DIRECTORY, "tasks", "data_analysis", "message_insights", "train_data")
 
 def replace_all(text, dic):
-    if(sys.version_info[0] < 3):
-        for i, j in dic.iteritems():
-            text = text.replace(i, j)
-    else:
-        for i, j in dic.items():
-            text = text.replace(i, j)
+    for i, j in dic.items():
+        text = text.replace(i, j)
     return text
 
 stemmer = SnowballStemmer("english")
