@@ -1,12 +1,7 @@
 Sample Database
 ===============
 
-A ready-to-use PostgreSQL database, pre-loaded with real project data collected by CollectOSS,
-so you can run `8Knot <https://github.com/oss-aspen/8Knot>`_ — or explore the data from a
-notebook — **locally, without access to a remote CollectOSS instance**.
-
-It ships as a published container image, so there is nothing to build and no data
-file to supply. ``docker compose up`` pulls it and it should be ready in seconds.
+We have a ready-to-use PostgreSQL database that acts as a structurally-correct sample dataset. This is a postgres container image pre-loaded with data collected by CollectOSS that can be used to help you get started quickly with your downstream project that relies on CollectOSS data, whether thats running `8Knot <https://github.com/oss-aspen/8Knot>`_, using jupyter notebooks for research, or building your own dashboard.
 
 Image: ``ghcr.io/oss-aspen/sample-collected-data:latest``
 
