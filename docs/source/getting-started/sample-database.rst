@@ -5,29 +5,6 @@ We have a ready-to-use PostgreSQL database that acts as a structurally-correct s
 
 Image: ``ghcr.io/oss-aspen/sample-collected-data:latest``
 
-Quick start with 8Knot
-----------------------
-
-1. In your 8Knot checkout, point 8Knot at the local database by setting these values in your ``.env``:
-
-.. code:: shell
-
-    AUGUR_HOST=sample-collected-data
-    AUGUR_PORT=5432
-    AUGUR_DATABASE=sample_collected_data
-    AUGUR_USERNAME=sample_user
-    AUGUR_PASSWORD=sample_password
-    AUGUR_SCHEMA=data,augur_data
-
-2. Start the stack from the top level of the 8Knot repository:
-
-.. code:: shell
-
-    podman compose up --build
-
-8Knot is at http://localhost:8080 and reads from the sample database. The
-``sample-collected-data`` service pulls the image and starts instantly (the data
-is baked in, so there is no import step).
 
 Connecting directly (psql, DBeaver, notebooks)
 ----------------------------------------------
