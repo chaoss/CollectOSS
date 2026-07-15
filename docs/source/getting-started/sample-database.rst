@@ -52,11 +52,4 @@ Password  ``sample_password``
 Tables live in the ``data`` schema (the CollectOSS schema name), so qualify
 queries — for example ``data.repo``, ``data.commits``, ``data.pull_requests``.
 
-Notes
------
 
-- **Self-contained** — no CollectOSS credentials, API keys, or dump files required.
-- **Data only** — the image contains just the ``data`` schema. The operations
-  schema (user accounts, tokens, API keys) is deliberately **not** included.
-- **Sample, not live** — the data is a fixed snapshot for local development and
-  demos, not a continuously updated instance.
