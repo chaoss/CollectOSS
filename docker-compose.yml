@@ -13,7 +13,7 @@ services:
     ports:
       - "${COLLECTOSS_DB_PORT:-5432}:5432"
     volumes:
-      - augurpostgres:/var/lib/postgresql/data
+      - postgres:/var/lib/postgresql/data
     healthcheck:
       test:
         [
@@ -57,7 +57,7 @@ services:
       - cache:/cache:rw
       - config:/config:rw
       - facade:/facade:rw
-      - augur_logs:/logs:rw
+      - logs:/logs:rw
     restart: unless-stopped
     ports:
       - 5002:5000
@@ -116,8 +116,8 @@ services:
   #    - rabbitmq
 
 volumes:
-  augurpostgres:
+  postgres:
   cache:
   config:
   facade:
-  augur_logs:
+  logs:
