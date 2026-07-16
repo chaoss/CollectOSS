@@ -57,7 +57,7 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
         pr_created_at, pr_src_state, 
         pr_closed_at, pr_merged_at, 
         pull_request_commits.pr_cmt_id, 
-        pr_augur_contributor_id, 
+        pr_contributor_id, 
         pr_src_author_association 
         from data.pull_requests
         INNER JOIN data.pull_request_commits on pull_requests.pull_request_id = pull_request_commits.pull_request_id 
@@ -133,7 +133,7 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
 
     df_fin = df_merge[
         ['pull_request_id', 'pr_created_at', 'pr_closed_at', 'pr_merged_at', 'commit_counts', 'comment_counts',
-         'pr_length', 'senti_score', 'pr_augur_contributor_id', 'pr_src_author_association', 'usr_counts']]
+         'pr_length', 'senti_score', 'pr_contributor_id', 'pr_src_author_association', 'usr_counts']]
 
     # Find the mean of sentiment scores
     df_fin['comment_senti_score'] = df_fin.groupby(['pull_request_id'])['senti_score'].transform('mean')
@@ -144,7 +144,7 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
     # Get cntrb info from API
     cntrb_sql = 'SELECT cntrb_id, gh_login FROM data.contributors'
     df_ctrb = pd.read_sql_query(cntrb_SQL, create_database_engine())
-    df_fin1 = pd.merge(df_fin,df_ctrb,left_on='pr_augur_contributor_id', right_on='cntrb_id', how='left')
+    df_fin1 = pd.merge(df_fin,df_ctrb,left_on='pr_contributor_id', right_on='cntrb_id', how='left')
     df_fin1 = df_fin1.drop(['cntrb_id'],axis=1)
     # Dict for persisting user data & fast lookups
     user_info = {}
@@ -173,7 +173,7 @@ def pull_request_analysis_model(repo_git: str,logger,engine) -> None:
     df = pd.concat([df_fin, df_repo], axis=1)
     df = df.drop_duplicates()
 
-    df = df.drop(['pr_created_at', 'pr_closed_at', 'pr_merged_at', 'pr_augur_contributor_id'], axis=1)
+    df = df.drop(['pr_created_at', 'pr_closed_at', 'pr_merged_at', 'pr_contributor_id'], axis=1)
 
     logger.info(f'Process fetched features')
 

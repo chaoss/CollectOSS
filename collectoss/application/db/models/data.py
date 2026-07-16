@@ -1772,7 +1772,7 @@ class PullRequest(Base):
     pr_diff_url = Column(String)
     pr_patch_url = Column(String)
     pr_issue_url = Column(String)
-    pr_augur_issue_id = Column(
+    pr_issue_id = Column(
         BigInteger, comment="This is to link to the internal ID for the related issue"
     )
     pr_src_number = Column(
@@ -1781,7 +1781,7 @@ class PullRequest(Base):
     pr_src_state = Column(String)
     pr_src_locked = Column(Boolean)
     pr_src_title = Column(String)
-    pr_augur_contributor_id = Column(
+    pr_contributor_id = Column(
         ForeignKey(
             "data.contributors.cntrb_id", ondelete="RESTRICT", onupdate="CASCADE"
         ),
@@ -1845,12 +1845,12 @@ class PullRequest(Base):
         pr_obj.pr_diff_url = pr['diff_url'],
         pr_obj.pr_patch_url = pr['patch_url'],
         pr_obj.pr_issue_url = pr['issue_url'],
-        pr_obj.pr_augur_issue_id = None,
+        pr_obj.pr_issue_id = None,
         pr_obj.pr_src_number = pr['number'],
         pr_obj.pr_src_state = pr['state'],
         pr_obj.pr_src_locked = pr['locked'],
         pr_obj.pr_src_title = str(pr['title']),
-        pr_obj.pr_augur_contributor_id = pr["cntrb_id"],
+        pr_obj.pr_contributor_id = pr["cntrb_id"],
         pr_obj.pr_body = str(pr['body']).encode(encoding='UTF-8', errors='backslashreplace').decode(encoding='UTF-8', errors='ignore') if (pr['body']) else None,
         pr_obj.pr_created_at = pr['created_at'],
         pr_obj.pr_updated_at = pr['updated_at'],
