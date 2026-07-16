@@ -193,13 +193,13 @@ SELECT a.id AS cntrb_id,
              LEFT JOIN data.contributors ON ((contributors.cntrb_id = pull_request_reviews.cntrb_id)))
           WHERE (pull_requests.pull_request_id = pull_request_reviews.pull_request_id)
         UNION ALL
-         SELECT pull_requests.pr_augur_contributor_id AS id,
+         SELECT pull_requests.pr_contributor_id AS id,
             pull_requests.pr_created_at AS created_at,
             pull_requests.repo_id,
             'pull_request_open'::text AS action,
             contributors.cntrb_login AS login
            FROM (data.pull_requests
-             LEFT JOIN data.contributors ON ((pull_requests.pr_augur_contributor_id = contributors.cntrb_id)))
+             LEFT JOIN data.contributors ON ((pull_requests.pr_contributor_id = contributors.cntrb_id)))
         UNION ALL
          SELECT message.cntrb_id AS id,
             message.msg_timestamp AS created_at,
@@ -295,13 +295,13 @@ SELECT a.id AS cntrb_id,
              LEFT JOIN data.contributors ON ((contributors.cntrb_id = pull_request_reviews.cntrb_id)))
           WHERE (pull_requests.pull_request_id = pull_request_reviews.pull_request_id)
         UNION ALL
-         SELECT pull_requests.pr_augur_contributor_id AS id,
+         SELECT pull_requests.pr_contributor_id AS id,
             pull_requests.pr_created_at AS created_at,
             pull_requests.repo_id,
             'pull_request_open'::text AS action,
             contributors.cntrb_login AS login
            FROM (data.pull_requests
-             LEFT JOIN data.contributors ON ((pull_requests.pr_augur_contributor_id = contributors.cntrb_id)))
+             LEFT JOIN data.contributors ON ((pull_requests.pr_contributor_id = contributors.cntrb_id)))
         UNION ALL
          SELECT message.cntrb_id AS id,
             message.msg_timestamp AS created_at,
@@ -435,14 +435,14 @@ SELECT x.cntrb_id,
                           WHERE ((issues.issue_id = issue_events.issue_id) AND (issues.pull_request IS NULL) AND (issue_events.cntrb_id IS NOT NULL) AND ((issue_events.action)::text = 'closed'::text))
                           GROUP BY issue_events.cntrb_id, issues.repo_id, issue_events.created_at, contributors.cntrb_full_name, contributors.cntrb_login
                         UNION ALL
-                         SELECT pull_requests.pr_augur_contributor_id AS id,
+                         SELECT pull_requests.pr_contributor_id,
                             pull_requests.pr_created_at AS created_at,
                             pull_requests.repo_id,
                             'open_pull_request'::text AS action,
                             contributors.cntrb_full_name AS full_name,
                             contributors.cntrb_login AS login
                            FROM ((data.pull_requests
-                             LEFT JOIN data.contributors ON ((pull_requests.pr_augur_contributor_id = contributors.cntrb_id)))
+                             LEFT JOIN data.contributors ON ((pull_requests.pr_contributor_id = contributors.cntrb_id)))
                              LEFT JOIN ( SELECT DISTINCT ON (contributors_1.cntrb_canonical) contributors_1.cntrb_full_name,
                                     contributors_1.cntrb_canonical AS canonical_email,
                                     contributors_1.data_collection_date,
@@ -450,7 +450,7 @@ SELECT x.cntrb_id,
                                    FROM data.contributors contributors_1
                                   WHERE ((contributors_1.cntrb_canonical)::text = (contributors_1.cntrb_email)::text)
                                   ORDER BY contributors_1.cntrb_canonical) canonical_full_names ON (((canonical_full_names.canonical_email)::text = (contributors.cntrb_canonical)::text)))
-                          GROUP BY pull_requests.pr_augur_contributor_id, pull_requests.repo_id, pull_requests.pr_created_at, contributors.cntrb_full_name, contributors.cntrb_login
+                          GROUP BY pull_requests.pr_contributor_id, pull_requests.repo_id, pull_requests.pr_created_at, contributors.cntrb_full_name, contributors.cntrb_login
                         UNION ALL
                          SELECT message.cntrb_id AS id,
                             message.msg_timestamp AS created_at,
@@ -529,7 +529,7 @@ FROM
 _EXPLORER_PR_RESPONSE = """\
 SELECT pr.pull_request_id,
     pr.repo_id AS id,
-    pr.pr_augur_contributor_id AS cntrb_id,
+    pr.pr_contributor_id AS cntrb_id,
     m.msg_timestamp,
     m.msg_cntrb_id,
     pr.pr_created_at,
