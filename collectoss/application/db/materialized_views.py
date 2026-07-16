@@ -125,9 +125,9 @@ WHERE (issues.pull_request IS NULL)
 GROUP BY issues.repo_id"""
 
 # ---------------------------------------------------------------------------
-# View 7: augur_new_contributors (source: migration 25, recreated)
+# View 7: new_contributors (source: migration 25, recreated)
 # ---------------------------------------------------------------------------
-_AUGUR_NEW_CONTRIBUTORS = """\
+_NEW_CONTRIBUTORS = """\
 SELECT a.id AS cntrb_id,
     a.created_at,
     a.repo_id,
@@ -768,7 +768,7 @@ MATERIALIZED_VIEWS: list[MaterializedView] = [
     MaterializedView(
         name="augur_new_contributors",
         schema="data",
-        sql=_AUGUR_NEW_CONTRIBUTORS,
+        sql=_NEW_CONTRIBUTORS,
         unique_index_columns=("cntrb_id", "created_at", "repo_id", "repo_name", "login", "rank",),
     ),
     MaterializedView(
