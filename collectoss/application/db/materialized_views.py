@@ -766,7 +766,7 @@ MATERIALIZED_VIEWS: list[MaterializedView] = [
     ),
     # --- Views 6-8: from migration 25, recreated ---
     MaterializedView(
-        name="augur_new_contributors",
+        name="legacy_new_contributors",
         schema="data",
         sql=_NEW_CONTRIBUTORS,
         unique_index_columns=("cntrb_id", "created_at", "repo_id", "repo_name", "login", "rank",),
