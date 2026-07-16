@@ -88,7 +88,7 @@ t_all = Table(
 
 
 class Settings(Base):
-    __tablename__ = "augur_settings"
+    __tablename__ = "legacy_settings"
     __table_args__ = {
         "schema": "operations",
         "comment": "CollectOSS settings include the schema version, and the CollectOSS API Key as of 10/25/2020. Future augur settings may be stored in this table, which has the basic structure of a name-value pair. ",
@@ -96,10 +96,10 @@ class Settings(Base):
 
     id = Column(
         BigInteger,
-        Sequence("augur_settings_id_seq", start=1, schema="operations"),
+        Sequence("legacy_settings_id_seq", start=1, schema="operations"),
         primary_key=True,
         server_default=text(
-            "nextval('operations.augur_settings_id_seq'::regclass)"
+            "nextval('operations.legacy_settings_id_seq'::regclass)"
         ),
     )
     setting = Column(String)

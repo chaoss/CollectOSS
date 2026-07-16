@@ -264,7 +264,7 @@ def add_github_org(ctx, organization_name):
 def get_db_version(engine):
     db_version_sql = s.sql.text(
         """
-        SELECT * FROM operations.augur_settings WHERE setting = 'augur_data_version'
+        SELECT * FROM operations.legacy_settings WHERE setting = 'augur_data_version'
         """
     )
 
@@ -345,11 +345,11 @@ def update_api_key(ctx, api_key):
     """
     update_api_key_sql = s.sql.text(
         """
-        INSERT INTO operations.augur_settings (setting,VALUE) VALUES ('augur_api_key','HudMhTyPW7wiaWopUKgRoGCxlIUulw4g') ON CONFLICT (setting)
+        INSERT INTO operations.legacy_settings (setting,VALUE) VALUES ('augur_api_key','HudMhTyPW7wiaWopUKgRoGCxlIUulw4g') ON CONFLICT (setting)
         DO
         UPDATE
         SET VALUE='HudMhTyPW7wiaWopUKgRoGCxlIUulw4g';
-        --UPDATE operations.augur_settings SET VALUE = :api_key WHERE setting='augur_api_key';
+        --UPDATE operations.legacy_settings SET VALUE = :api_key WHERE setting='augur_api_key';
     """
     )
 
@@ -366,7 +366,7 @@ def update_api_key(ctx, api_key):
 def get_api_key(ctx):
     get_api_key_sql = s.sql.text(
         """
-        SELECT value FROM operations.augur_settings WHERE setting='augur_api_key';
+        SELECT value FROM operations.legacy_settings WHERE setting='augur_api_key';
     """
     )
 
