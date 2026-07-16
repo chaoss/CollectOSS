@@ -6,7 +6,7 @@ from collectoss.tasks.util.ContributorUUID import ContributorUUID, GithubUUID, G
 @pytest.mark.unit
 class TestContributorUUID:
     # this checks whether a brand new ContributorUUID object starts as 16 zero bytes
-    def test_augur_uuid_initializes_with_16_zero_bytes(self):
+    def test_contributor_uuid_initializes_with_16_zero_bytes(self):
         uid = ContributorUUID()
         assert len(uid.bytes) == 16
         assert all(b == 0 for b in uid.bytes)
