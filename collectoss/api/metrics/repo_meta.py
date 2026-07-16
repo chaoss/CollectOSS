@@ -477,7 +477,7 @@ def license_files(license_id, spdx_binary, repo_group_id, repo_id=None,):
         SELECT DISTINCT
             A.license_id as the_license_id,    b.short_name as short_name,    f.file_name
         FROM
-            files_licenses A,    licenses b,    augur_repo_map C,    packages d,    files e,
+            files_licenses A,    licenses b,    repo_map C,    packages d,    files e,
             packages_files f
         WHERE
             A.license_id = b.license_id
@@ -519,7 +519,7 @@ def license_declared(repo_group_id, repo_id=None):
         FROM
         files_licenses A,
         licenses b,
-        augur_repo_map C,
+        repo_map C,
         packages d,
         files e,
 		packages_files f
@@ -542,7 +542,7 @@ def license_declared(repo_group_id, repo_id=None):
         FROM
         files_licenses A,
         licenses b,
-        augur_repo_map C,
+        repo_map C,
         packages d,
         files e,
 		packages_files f

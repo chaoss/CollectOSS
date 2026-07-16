@@ -38,13 +38,13 @@ class SpdxAnnotationType(Base):
 
 
 class SpdxRepoMap(Base):
-    __tablename__ = "augur_repo_map"
+    __tablename__ = "repo_map"
     __table_args__ = {"schema": "spdx"}
 
     map_id = Column(
         Integer,
-        Sequence("augur_repo_map_map_id_seq", start=1, schema="spdx"),
-        server_default=text("nextval('spdx.augur_repo_map_map_id_seq'::regclass)"),
+        Sequence("repo_map_map_id_seq", start=1, schema="spdx"),
+        server_default=text("nextval('spdx.repo_map_map_id_seq'::regclass)"),
         primary_key=True
     )
     dosocs_pkg_id = Column(Integer)
