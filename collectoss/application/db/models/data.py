@@ -1783,7 +1783,7 @@ class PullRequest(Base):
     pr_src_title = Column(String)
     pr_contributor_id = Column(
         ForeignKey(
-            "data.contributors.cntrb_id", ondelete="RESTRICT", onupdate="CASCADE"
+            "data.contributors.cntrb_id", name='pull_requests_contributor_id_fkey', ondelete="RESTRICT", onupdate="CASCADE"
         ),
         comment="This is to link to the contributor record. ",
     )
