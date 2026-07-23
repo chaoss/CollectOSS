@@ -52,6 +52,9 @@ def update_api_key():
 
             valid_key_data = sorted(valid_key_data, key=lambda x: x[1]["requests_remaining"])
 
+            current_time = epoch_to_local_time_with_am_pm(datetime.now().timestamp())
+            print(f"Current Time: {current_time.strip()}")
+            print("")
             core_request_header = "Core Requests Left"
             core_reset_header = "Core Reset Time"
             graphql_request_header = "Graphql Requests Left"
