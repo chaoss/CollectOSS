@@ -548,8 +548,7 @@ class RepoGroup(Base):
     __table_args__ = (
         Index("rgidm", "repo_group_id", unique=True),
         Index("rgnameindex", "rg_name"),
-        {"schema": "data",
-        "comment": "rg_type is intended to be either a GitHub Organization or a User Created Repo Group. "},
+        {"schema": "data"}
     )
 
     repo_group_id = Column(
@@ -567,7 +566,7 @@ class RepoGroup(Base):
     rg_last_modified = Column(
         TIMESTAMP(precision=0), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
-    rg_type = Column(String)
+    rg_type = Column(String, comment="intended to be either a GitHub Organization or a User Created Repo Group.")
     tool_source = Column(String)
     tool_version = Column(String)
     data_source = Column(String)
