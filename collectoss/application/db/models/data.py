@@ -3220,7 +3220,7 @@ class PullRequestLabel(Base):
     pr_src_url = Column(String)
     pr_src_description = Column(String)
     pr_src_color = Column(String)
-    pr_src_default_bool = Column(Boolean)
+    pr_src_default_bool = Column(Boolean, comment= "this column is based on the default field from the github labels api. it is a boolean that indicates whether the label is one of GitHub's default labels for the repository")
     tool_source = Column(String)
     tool_version = Column(String)
     data_source = Column(String)
