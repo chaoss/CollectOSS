@@ -9,7 +9,7 @@ Image: ``ghcr.io/oss-aspen/sample-collected-data:latest``
 Connecting directly (psql, DBeaver, notebooks)
 ----------------------------------------------
 
-The database is also exposed on **host port 5433** (mapped from the container's
+If you are using the compose file above, the database will be exposed on port 5433 on your machine (mapped from the container's
 5432, so it won't clash with a local PostgreSQL):
 
 ========  =========================
