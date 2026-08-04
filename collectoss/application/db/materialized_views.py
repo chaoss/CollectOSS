@@ -720,6 +720,55 @@ SELECT e.repo_id,
   WHERE (repo.repo_id = e.repo_id)
   ORDER BY e.repo_id"""
 
+# ---------------------------------------------------------------------------
+# View 16: explorer_repo_files (source: migration 45)
+# Files in each repo as of that repo's most recent repo_labor analysis.
+# ---------------------------------------------------------------------------
+_EXPLORER_REPO_FILES = """\
+SELECT
+    rl.repo_id,
+    r.repo_name,
+    r.repo_path,
+    rl.rl_analysis_date,
+    rl.file_path,
+    rl.file_name
+FROM data.repo_labor rl
+INNER JOIN data.repo r ON rl.repo_id = r.repo_id
+WHERE (rl.repo_id, rl.rl_analysis_date) IN (
+    SELECT DISTINCT ON (repo_id) repo_id, rl_analysis_date
+    FROM data.repo_labor
+    ORDER BY repo_id, rl_analysis_date DESC
+)"""
+
+# ---------------------------------------------------------------------------
+# View 17: explorer_cntrb_per_file (source: migration 45)
+# Authors and reviewers of every file touched by a pull request.
+# ---------------------------------------------------------------------------
+_EXPLORER_CNTRB_PER_FILE = """\
+SELECT
+    pr.repo_id,
+    prf.pr_file_path AS file_path,
+    string_agg(DISTINCT CAST(pr.pr_augur_contributor_id AS varchar(15)), ',') AS cntrb_ids,
+    string_agg(DISTINCT CAST(prr.cntrb_id AS varchar(15)), ',') AS reviewer_ids
+FROM data.pull_requests pr
+INNER JOIN data.pull_request_files prf
+    ON pr.pull_request_id = prf.pull_request_id
+LEFT OUTER JOIN data.pull_request_reviews prr
+    ON pr.pull_request_id = prr.pull_request_id
+GROUP BY prf.pr_file_path, pr.repo_id"""
+
+# ---------------------------------------------------------------------------
+# View 18: explorer_pr_files (source: migration 45)
+# ---------------------------------------------------------------------------
+_EXPLORER_PR_FILES = """\
+SELECT
+    prf.pr_file_path AS file_path,
+    pr.pull_request_id,
+    pr.repo_id
+FROM data.pull_requests pr
+INNER JOIN data.pull_request_files prf
+    ON pr.pull_request_id = prf.pull_request_id"""
+
 
 # ============================================================================
 # Registry: single source of truth for all materialized views
@@ -820,5 +869,29 @@ MATERIALIZED_VIEWS: list[MaterializedView] = [
         schema="data",
         sql=_EXPLORER_REPO_LANGUAGES,
         unique_index_columns=("repo_id", "programming_language",),
+    ),
+    # --- Views 16-18: from migration 45 ---
+    MaterializedView(
+        name="explorer_repo_files",
+        schema="data",
+        sql=_EXPLORER_REPO_FILES,
+        # repo_labor is unique on (repo_id, rl_analysis_date, file_path, file_name)
+        # and the view pins one rl_analysis_date per repo_id.
+        unique_index_columns=("repo_id", "file_path", "file_name",),
+    ),
+    MaterializedView(
+        name="explorer_cntrb_per_file",
+        schema="data",
+        sql=_EXPLORER_CNTRB_PER_FILE,
+        unique_index_columns=("repo_id", "file_path",),
+    ),
+    MaterializedView(
+        name="explorer_pr_files",
+        schema="data",
+        sql=_EXPLORER_PR_FILES,
+        # No candidate key: repo_id here is pull_requests.repo_id, so the
+        # prfiles_unique constraint on data.pull_request_files -- which covers
+        # that table's own, nullable, repo_id -- does not carry over.
+        unique_index_columns=(),
     ),
 ]
