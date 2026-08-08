@@ -14,6 +14,15 @@ import subprocess
 from typing_extensions import deprecated
 from collectoss.tasks.util.metadata_exception import MetadataException
 
+from itertools import islice
+
+
+def batched(iterable, n):
+    """Batch items from an iterable into lists of size n"""
+    it = iter(iterable)
+    while chunk := list(islice(it, n)):
+        yield chunk
+
 
 def create_grouped_task_load(*args,processes=8,dataList=[],task=None):
     
