@@ -28,6 +28,7 @@ from collectoss.application.logs import SystemLogger
 from collectoss.application.service_manager import SystemServiceManager, cleanup_collection_status_and_rabbit, clean_collection_status
 from collectoss.application.db.lib import get_value
 from collectoss.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
+from collectoss.application.cli._gunicorn import build_gunicorn_command
 import sqlalchemy as s
 
 from keyman.KeyClient import KeyClient, KeyPublisher
@@ -104,8 +105,8 @@ def start(ctx, disable_collection, development, pidfile, port):
     log_dir = get_value("Logging", "logs_directory") or "."
     gunicorn_log_file = os.path.join(log_dir, "gunicorn.log")
 
-    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} collectoss.api.server:app --log-file {gunicorn_log_file}"
-    server = subprocess.Popen(gunicorn_command.split(" "))
+    gunicorn_command = build_gunicorn_command(gunicorn_location, host, str(port), log_file=gunicorn_log_file)
+    server = subprocess.Popen(gunicorn_command)
     manager.server = server
 
     logger.info("awaiting Gunicorn start")

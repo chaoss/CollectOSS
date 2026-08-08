@@ -46,7 +46,7 @@ is_docker = SystemEnv.get_bool("COLLECTOSS_DOCKER_DEPLOY", False)
 accesslog = f"{logs_directory}/gunicorn.log"
 errorlog = f"{logs_directory}/gunicorn.log"
 
-# If deploying via docker, include gunicorn error logs in the docker log stream by sending it to stdout
+# If deploying via Docker, include Gunicorn error logs in the Docker log stream.
 if is_docker:
     errorlog = '-'
 
@@ -69,4 +69,3 @@ else:
 def worker_exit(server, worker):
     print("Stopping gunicorn worker process")
     dispose_database_engine()
-
