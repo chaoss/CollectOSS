@@ -134,6 +134,7 @@ class FacadeHelper():
         self.multithreaded = worker_options["multithreaded"]
         self.create_xlsx_summary_files = worker_options["create_xlsx_summary_files"]
         self.commit_messages = worker_options["commit_messages"]
+        self.max_clone_size_kb = int(worker_options.get("max_clone_size_kb", 0))
 
         self.tool_source = "Facade"
         self.data_source = "Git Log"

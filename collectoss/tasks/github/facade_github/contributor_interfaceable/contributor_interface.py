@@ -261,6 +261,28 @@ def update_contributor(self, cntrb, max_attempts=3):
 
 
 
+def is_valid_searchable_email(email: str) -> bool:
+    """Check if an email address is valid and searchable via GitHub API."""
+    if not email or not isinstance(email, str):
+        return False
+    email = email.strip().lower()
+    if len(email) < 5 or "@" not in email:
+        return False
+    parts = email.rsplit("@", 1)
+    if len(parts) != 2:
+        return False
+    user, domain = parts[0], parts[1]
+    if not user or not domain or "." not in domain:
+        return False
+    invalid_domains = {"localhost", "augur", "none", "local", "internal", "test", "example", "invalid"}
+    if domain in invalid_domains:
+        return False
+    for suffix in [".local", ".internal", ".lan", ".dhcp.missouri.edu"]:
+        if domain.endswith(suffix):
+            return False
+    return True
+
+
 def fetch_username_from_email(logger, auth, commit) -> dict | None:
     """Try every distinct email found within a commit for possible username resolution.
     Add email to garbage table if can't be resolved.
@@ -283,9 +305,9 @@ def fetch_username_from_email(logger, auth, commit) -> dict | None:
     logger.info(f"Here is the commit: {commit}")
 
     email_raw = commit.get('email_raw')
-    if not email_raw or not isinstance(email_raw, str) or len(email_raw.strip()) <= 2:
-        logger.warning("Commit does not contain a valid 'email_raw' value.")
-        return login_json  # Don't bother with emails that are blank or less than 2 characters
+    if not is_valid_searchable_email(email_raw):
+        logger.warning(f"Commit contains non-searchable or local email format '{email_raw}'. Skipping API lookup.")
+        return login_json
 
     try:
         url = create_endpoint_from_email(email_raw)

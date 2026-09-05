@@ -11,6 +11,7 @@ from collectoss.application.db.lib import get_session, execute_session_query
 from collectoss.tasks.git.util.facade_worker.facade_worker.facade00mainprogram import *
 from collectoss.application.db.lib import bulk_insert_dicts
 from collectoss.application.db.data_parse import extract_needed_contributor_data as extract_github_contributor
+from collectoss.tasks.github.facade_github.contributor_interfaceable.contributor_interface import is_valid_searchable_email
 
 
 
@@ -44,6 +45,15 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
         if len(unresolved_query_result) >= 1:
 
             logger.debug(f"Commit data with email {email} has been unresolved in the past, skipping...")
+            continue
+
+        if not is_valid_searchable_email(email):
+            logger.debug(f"Email '{email}' is non-searchable or local format. Marking as unresolved and skipping...")
+            unresolved = {"email": email, "name": name}
+            try:
+                bulk_insert_dicts(logger, unresolved, UnresolvedCommitEmail, ['email'])
+            except Exception as e:
+                logger.error(f"Could not insert non-searchable email {email} into unresolved_commit_emails: {e}")
             continue
 
         login = None
