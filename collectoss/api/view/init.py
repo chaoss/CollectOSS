@@ -4,7 +4,11 @@ import secrets, yaml
 from collectoss.application.environment import SystemEnv
 
 # load configuration files and initialize globals
-configFile = Path(SystemEnv.get("CONFIG_LOCATION") or "config.yml")
+configFile = None
+if SystemEnv.get("CONFIG_DATADIR"):
+    configFile = Path(SystemEnv.get("CONFIG_DATADIR")) / "config.yml"
+else:
+    configFile = Path(SystemEnv.get("CONFIG_LOCATION") or "config.yml")
 
 settings = {}
 
