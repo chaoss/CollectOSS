@@ -10,6 +10,10 @@ from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import
 from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from collectoss.tasks.util.metadata_exception import MetadataException
 
+# scorecard clones the repo and runs every check against the forge API, so it is slow;
+# this bounds how long one repo may hold a secondary worker slot before it is given up on
+SCORECARD_TIMEOUT_SECONDS = 600
+
 
 def generate_deps_data(logger, repo_git):
         """Run dependency logic on repo and stores data in database
@@ -86,16 +90,19 @@ def generate_scorecard(logger, repo_git):
     key_handler = GithubApiKeyHandler(logger)       
     SystemEnv.set('GITHUB_AUTH_TOKEN', key_handler.get_random_key())
     
-    try: 
-        required_output = parse_json_from_subprocess_call(logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard)
-    
+    required_output = None
+    try:
+        required_output = parse_json_from_subprocess_call(logger,['./scorecard', command, '--format=json'],cwd=path_to_scorecard,timeout=SCORECARD_TIMEOUT_SECONDS)
+
         logger.info('adding to database...')
         logger.debug(f"output: {required_output}")
 
         if not required_output.get('checks'):
-            logger.info('No scorecard checks found!')
-            return
-        
+            raise MetadataException(
+                ValueError("scorecard returned no checks"),
+                f"no scorecard checks for {path}; output: {required_output}"
+            )
+
         #Store the overall score first
         to_insert = []
         overall_deps_scorecard = {
@@ -131,7 +138,11 @@ def generate_scorecard(logger, repo_git):
         
         logger.info(f"Done generating scorecard for repo {repo_id} from path {path}")
 
-    except Exception as e: 
-        
+    except MetadataException:
+        # already carries the reason scorecard failed; re-wrapping would bury it
+        raise
+
+    except Exception as e:
+
         logger.exception("Error generating scorecard", exc_info=e)
         raise MetadataException(e, f"required_output: {required_output}; error {e}")
