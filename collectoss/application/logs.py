@@ -7,15 +7,13 @@ from logging import FileHandler
 import os
 from pathlib import Path
 import shutil
+from collectoss.application.paths import SystemPaths
 import coloredlogs
 from sqlalchemy.orm import Session
 
 from collectoss.application.db.models import Config 
 from collectoss.application.config import convert_type_of_value
 from collectoss.application.db.util import execute_session_query
-
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-
 
 SIMPLE_FORMAT_STRING = "[%(process)d] %(name)s [%(levelname)s] %(message)s"
 VERBOSE_FORMAT_STRING = "%(asctime)s,%(msecs)dms [PID: %(process)d] %(name)s [%(levelname)s] %(message)s"
@@ -117,12 +115,12 @@ def get_log_config():
 
 #TODO dynamically define loggers for every task names.
 class TaskLogConfig():
-    def __init__(self, all_tasks, disable_log_files=False,reset_logfiles=False,base_log_dir=ROOT_PROJECT_REPO_DIRECTORY + "/logs/"):
+    def __init__(self, all_tasks, disable_log_files=False, reset_logfiles=False, base_log_dir=None):
         
         log_config = get_log_config()
 
-        if log_config["logs_directory"] != "":
-            base_log_dir=log_config["logs_directory"]
+        if not base_log_dir:
+            base_log_dir = SystemPaths.get_logs_directory()
 
         if reset_logfiles is True:
             try:
@@ -188,12 +186,12 @@ class TaskLogConfig():
 
 
 class SystemLogger():
-    def __init__(self, logger_name, disable_log_files=False,reset_logfiles=False,base_log_dir=ROOT_PROJECT_REPO_DIRECTORY + "/logs/"):
+    def __init__(self, logger_name, disable_log_files=False, reset_logfiles=False, base_log_dir=None):
         
         log_config = get_log_config()
         
-        if log_config.get("logs_directory", "") != "":
-            base_log_dir=log_config.get("logs_directory")
+        if not base_log_dir:
+            base_log_dir = SystemPaths.get_logs_directory()
 
         if reset_logfiles is True:
             try:

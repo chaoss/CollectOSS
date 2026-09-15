@@ -1,22 +1,15 @@
-# from collectoss import ROOT_PROJECT_REPO_DIRECTORY
 import multiprocessing
 import logging
-import os
 from pathlib import Path
 from glob import glob
 
 from collectoss.application.db.lib import get_value
 from collectoss.application.db import dispose_database_engine
 from collectoss.application.environment import SystemEnv
+from collectoss.application.paths import SystemPaths
 
 logger = logging.getLogger(__name__)
 
-
-# ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-
-# base_log_dir = ROOT_PROJECT_REPO_DIRECTORY + "/logs/"
-
-# Path(base_log_dir).mkdir(exist_ok=True)
 
 workers = multiprocessing.cpu_count() * 2 + 1
 umask = 0o007
@@ -39,7 +32,7 @@ if is_dev:
 del is_dev
 
 # set the log location for gunicorn    
-logs_directory = get_value('Logging', 'logs_directory')
+logs_directory = SystemPaths.get_logs_directory()
 
 # this syntax satisfies the type checker
 is_docker = SystemEnv.get_bool("COLLECTOSS_DOCKER_DEPLOY", False)

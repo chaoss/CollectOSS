@@ -10,6 +10,7 @@ import sys
 import warnings
 from statistics import mean
 
+from collectoss.application.paths import SystemPaths
 import emoji
 import joblib
 import nltk
@@ -30,11 +31,9 @@ from collectoss.tasks.data_analysis.message_insights.preprocess_text import \
 
 warnings.filterwarnings('ignore')
 
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
-
 CONTRACTION_MAP = contraction_map
 
-train_path = os.path.join(ROOT_PROJECT_REPO_DIRECTORY, "tasks", "data_analysis", "message_insights", "train_data")
+train_path = SystemPaths.get_model_training_data_directory()
 
 def replace_all(text, dic):
     if(sys.version_info[0] < 3):
