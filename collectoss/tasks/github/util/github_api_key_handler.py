@@ -102,8 +102,11 @@ class GithubApiKeyHandler():
                 time.sleep(5)
                 attempts += 1
 
-        if self.config_key is not None:
-            keys += [self.config_key]
+        if self.config_key is not None: # Leave out None values
+            if self.config_key.strip(): # Leave out empty strings
+                keys += [self.config_key]
+            else:
+                self.logger.warning("GitHub API key is an empty string. Please, add a valid one.")
 
         if len(keys) == 0:
             return []
