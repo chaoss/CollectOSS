@@ -20,7 +20,7 @@ from collectoss.application.db.session import remove_duplicates_by_uniques, remo
 
 logger = logging.getLogger("db_lib")
 
-@deprecated("This is a legacy method. Use AugurConfig.get_value instead")
+@deprecated("This is a legacy method. Use SystemConfig.get_value instead")
 def get_value(section_name: str, setting_name: str) -> Optional[Any]:
     """Get the value of a setting from the config.
 

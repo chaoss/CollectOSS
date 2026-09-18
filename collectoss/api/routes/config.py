@@ -9,13 +9,13 @@ import sqlalchemy as s
 # Disable the requirement for SSL by setting env["COLLECTOSS_DEV"] = True
 from collectoss.application.config import get_development_flag
 from collectoss.application.db.lib import get_session
+from collectoss.api.util import ssl_required, admin_required
 from collectoss.application.db.models import Config
 from collectoss.application.config import SystemConfig
 from collectoss.application.db.session import DatabaseSession
 from ..server import app
 
 logger = logging.getLogger(__name__)
-development = get_development_flag()
 
 from collectoss.api.routes import API_VERSION
 
@@ -28,22 +28,40 @@ def generate_upgrade_request():
     return response, 426
 
 @app.route(f"/{API_VERSION}/config/get", methods=['GET', 'POST'])
+@ssl_required
 def get_config():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     with DatabaseSession(logger, engine=current_app.engine) as session:
         
         config_dict = SystemConfig(logger, session).config.load_config()
 
     return jsonify(config_dict), 200
 
+@app.route(f"/{AUGUR_API_VERSION}/config/set", methods=['GET', 'POST'])
+@ssl_required
+@admin_required
+def set_config_item():
+    setting = request.args.get("setting")
+    section = request.args.get("section")
+    value = request.values.get("value")
+    
+    result = {
+        "section_name": section,
+        "setting_name": setting,
+        "value": value
+    }
+    
+    if not setting or not section or not value:
+        return jsonify({"status": "Missing argument"}), 400
+    
+    with get_session() as session:
+        config = SystemConfig(logger, session)
+        config.add_or_update_settings([result])
+    
+    return jsonify({"status": "success"})
 
 @app.route(f"/{API_VERSION}/config/update", methods=['POST'])
+@ssl_required
 def update_config():
-    if not development and not request.is_secure:
-        return generate_upgrade_request()
-
     update_dict = request.get_json()
 
     with get_session() as session:
@@ -64,5 +82,3 @@ def update_config():
         session.commit()
 
     return jsonify({"status": "success"}), 200
-
-
