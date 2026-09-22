@@ -127,7 +127,7 @@ def linkcode_resolve(domain, info):
     if not info['module']:
         return None
     filename = info['module'].replace('.', '/')
-    return "https://somesite/sourcerepo/%s.py" % filename
+    return f"https://github.com/chaoss/CollectOSS/tree/{git_blob}/collectoss/{filename}.py"
 
 sitemap_url_scheme = "{lang}{version}{link}"
 
