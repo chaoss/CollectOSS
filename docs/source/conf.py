@@ -120,6 +120,14 @@ redoc = [
         }
     }
 ]
+# starter function for linkcode from https://www.sphinx-doc.org/en/master/usage/extensions/linkcode.html
+def linkcode_resolve(domain, info):
+    if domain != 'py':
+        return None
+    if not info['module']:
+        return None
+    filename = info['module'].replace('.', '/')
+    return "https://somesite/sourcerepo/%s.py" % filename
 
 sitemap_url_scheme = "{lang}{version}{link}"
 
