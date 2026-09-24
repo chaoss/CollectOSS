@@ -36,6 +36,8 @@ class GithubApiKeyHandler():
         self.redis_key_list = RedisList(self.oauth_redis_key)
 
         self.config_key = self.get_config_key()
+        if self.config_key:
+            self.config_key = self.config_key.strip()
 
         self.keys = self.get_api_keys()
 
@@ -102,11 +104,10 @@ class GithubApiKeyHandler():
                 time.sleep(5)
                 attempts += 1
 
-        if self.config_key is not None: # Leave out None values
-            if self.config_key.strip(): # Leave out empty strings
-                keys += [self.config_key]
-            else:
-                self.logger.warning("GitHub API key is an empty string. Please, add a valid one.")
+        if self.config_key:
+            keys += [self.config_key]
+        elif self.config_key is not None: # None means it was never set
+            self.logger.warning("GitHub API key is an empty string. Please, add a valid one.")
 
         if len(keys) == 0:
             return []
