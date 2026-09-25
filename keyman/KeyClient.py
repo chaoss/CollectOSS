@@ -7,6 +7,30 @@ from redis.client import PubSub
 from collectoss.tasks.init.redis_connection import get_redis_connection
 from keyman.KeyOrchestrationAPI import spec, WaitKeyTimeout
 
+
+def sleep_until(epoch: float, check_interval: int = 60) -> None:
+    """Sleep until a specific wall-clock epoch time.
+
+    Unlike time.sleep(), which uses the monotonic clock (which does not
+    advance when a laptop/machine is suspended), this function periodically
+    wakes up and checks the actual wall clock time. This prevents the
+    API key expiry time drift issue that occurs when a machine sleeps
+    while a collection worker is waiting for a rate-limited key to reset.
+
+    As a bonus, this also means that if a new API key is added to keyman
+    mid-collection, workers will pick it up within check_interval seconds.
+
+    Args:
+        epoch: Unix timestamp to sleep until
+        check_interval: How often (in seconds) to wake up and check the
+            wall clock. Defaults to 60 seconds.
+    """
+    while True:
+        remaining = epoch - time.time()
+        if remaining <= 0:
+            return
+        time.sleep(min(remaining, check_interval))
+
 class KeyClient:
     """Worker-side interface for requesting API keys from the orchestrator.
 
@@ -109,7 +133,7 @@ class KeyClient:
                 raise Exception(f"Invalid response type: {msg}")
             except WaitKeyTimeout as e:
                 self.logger.debug(f"NO FRESH KEYS: sleeping for {e.timeout_seconds} seconds")
-                time.sleep(e.timeout_seconds)
+                sleep_until(time.time() + e.timeout_seconds)
             except Exception as e:
                 self.logger.exception(f"Error during key request: {e}")
                 time.sleep(20)
