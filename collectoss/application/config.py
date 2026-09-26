@@ -58,6 +58,7 @@ default_config = {
                 "run_analysis": 1,
                 "run_facade_contributors": 1,
                 "commit_messages": 1,
+                "max_clone_size_kb": 5242880,
             },
             "Server": {
                 "cache_expire": "3600",
