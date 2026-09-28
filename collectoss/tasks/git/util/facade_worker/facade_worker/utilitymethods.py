@@ -102,7 +102,8 @@ def trim_author(facade_helper, email):
 
 	facade_helper.log_activity('Debug',f"Trimmed working author: {email}")
 
-def get_absolute_repo_path(repo_base_dir, repo_id, repo_path,repo_name):
+@deprecated("This method of storing the repo path is legacy and is being replaced")
+def get_absolute_repo_path(repo_base_dir, repo_id, repo_path, repo_name):
 	
 	return f"{repo_base_dir}{repo_id}-{repo_path}/{repo_name}"
 
