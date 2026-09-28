@@ -51,7 +51,7 @@ def get_absolute_clone_path(facade_base_directory: str | Path, repo_id: int) -> 
 
     raise ValueError(f"""No valid git repo path found for repo {repo_id} ({repo.repo_git}).
     Attempted paths:
-    - {clone_path}
-    - {legacy_path}
-    - {discover_path} ({len(discovered_directories)} children)
+    - {base_dir.joinpath(clone_path)}
+    - {base_dir.joinpath(legacy_path)}
+    - {base_dir.joinpath(discover_path)} ({len(discovered_directories)} children)
     """)
