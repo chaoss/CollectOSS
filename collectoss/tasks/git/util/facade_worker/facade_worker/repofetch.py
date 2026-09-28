@@ -35,7 +35,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from collectoss.application.db.models.data import *
 from collectoss.application.db.models.operations import CollectionStatus
 from collectoss.application.db.util import execute_session_query
-from collectoss.application.db.lib import execute_sql, get_repo_by_repo_git
+from collectoss.application.db.lib import execute_sql, get_repo_by_repo_git, set_clone_path_by_repo_id
 from typing_extensions import deprecated
 
 class GitCloneError(Exception):
@@ -101,6 +101,9 @@ def git_repo_initialize(facade_helper, session, repo_git):
             """).bindparams(pathParam=path_identifier, nameParam=repo_name, idParam=row.repo_id)
 
         execute_sql(query)
+
+        set_clone_path_by_repo_id(row.repo_id, f"{row.repo_id}-{path_identifier}")
+
         # Check if there will be a storage path collision
         # If there is a collision, throw an error so that it updates the existing repo instead of trying
         # to reclone.
