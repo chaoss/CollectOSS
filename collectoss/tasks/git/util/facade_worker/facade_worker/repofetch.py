@@ -30,6 +30,8 @@ import subprocess
 import os
 import pathlib
 import sqlalchemy as s
+
+from collectoss.tasks.git.util.helpers import get_absolute_clone_path
 from .utilitymethods import update_repo_log, get_absolute_repo_path
 from sqlalchemy.orm.exc import NoResultFound
 from collectoss.application.db.models.data import *
@@ -316,8 +318,7 @@ def git_repo_updates(facade_helper, repo_git):
 
     # default_branch = ''
 
-    absolute_path = get_absolute_repo_path(
-        facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
+    absolute_path = get_absolute_clone_path(facade_helper.repo_base_directory, repo.repo_id)
 
     while attempt < 2:
 
