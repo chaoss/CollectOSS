@@ -37,7 +37,10 @@ class GithubApiKeyHandler():
 
         self.config_key = self.get_config_key()
         if self.config_key:
-            self.config_key = self.config_key.strip()
+            stripped_config_key = self.config_key.strip()
+            if stripped_config_key and stripped_config_key != self.config_key:
+                self.logger.warning("GitHub API key in config had leading or trailing whitespace. It was stripped.")
+            self.config_key = stripped_config_key
 
         self.keys = self.get_api_keys()
 

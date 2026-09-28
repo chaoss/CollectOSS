@@ -55,6 +55,15 @@ class TestConfigKeys:
         handler.redis_key_list.extend.assert_called_once_with([github_valid_api_key])
         logger.warning.assert_not_called()
 
+    def test_padded_config_key_is_stripped(self):
+        db_keys = []
+        handler, mock_is_bad_api_key, logger = build_handler(f" {github_valid_api_key}\n", db_keys)
+
+        assert handler.keys == [github_valid_api_key]
+        assert mock_is_bad_api_key.call_count == 1
+        handler.redis_key_list.extend.assert_called_once_with([github_valid_api_key])
+        logger.warning.assert_called_once()
+
     @pytest.mark.parametrize("github_whitespace_api_key", github_whitespace_api_keys_list)
     def test_whitespace_config_key_with_db_keys(self, github_whitespace_api_key):
         expected_keys = [github_valid_db_api_key]
