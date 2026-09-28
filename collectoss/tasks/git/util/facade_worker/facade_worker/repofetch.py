@@ -25,6 +25,7 @@
 # and checks for any parents of HEAD that aren't already accounted for in the
 # repos. It also rebuilds analysis data, checks any changed affiliations and
 # aliases, and caches data for display.
+import logging
 import html.parser
 import subprocess
 import os
@@ -38,8 +39,148 @@ from collectoss.application.db.util import execute_session_query
 from collectoss.application.db.lib import execute_sql, get_repo_by_repo_git
 from typing_extensions import deprecated
 
+logger = logging.getLogger(__name__)
+
 class GitCloneError(Exception):
     pass
+
+
+def _get_github_repo_size_kb(repo_git: str, logger=None):
+    """
+    Fetches the estimated size of a GitHub repository in KB.
+
+    Combines two signals:
+      1. The bare repo size from the repo metadata API (GitHub 'size' field, in KB)
+      2. The working tree blob sizes from /git/trees/HEAD?recursive=1 (in bytes)
+
+    When the tree response is truncated (more than 100,000 entries or 7 MB), GitHub
+    returns whatever entries fit and sets truncated=True. GitHub does provide a way
+    to get the full tree by fetching sub-trees individually via the non-recursive
+    endpoint, but that traversal is not implemented here — it would require multiple
+    round-trips for large repos and adds significant complexity.
+
+    Instead, the partial blob data that IS returned is counted as a lower-bound
+    estimate. Combined with the bare repo size from the metadata API, this gives a
+    reasonable estimate for typical cases. If a repo is very close to the configured
+    limit, operators should set a smaller limit to account for this potential
+    undercount.
+
+    Returns the estimated size in KB, or raises an exception if the API returns
+    unexpected data or the request fails.
+    """
+    from collectoss.tasks.github.util.util import get_owner_repo
+    from collectoss.tasks.github.util.github_data_access import GithubDataAccess
+    owner, repo = get_owner_repo(repo_git)
+    github_data_access = GithubDataAccess(None, logger)
+
+    # Part 1: bare repo size
+    repo_url = f"https://api.github.com/repos/{owner}/{repo}"
+    repo_info = github_data_access.get_resource(repo_url)
+    if not isinstance(repo_info, dict):
+        raise ValueError(
+            f"GitHub API returned unexpected response for repo metadata: {type(repo_info)}"
+        )
+    bare_size_kb = repo_info.get("size", 0) or 0
+
+    # Part 2: working tree blob sizes
+    # GitHub's recursive tree endpoint returns up to 100,000 entries (7 MB limit).
+    # When truncated=True, the entries present are still valid and are counted here
+    # as a lower-bound estimate. Full traversal via individual sub-tree requests is
+    # possible but not implemented — see function docstring for the trade-off.
+    tree_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/HEAD?recursive=1"
+    tree_data = github_data_access.get_resource(tree_url)
+    if not isinstance(tree_data, dict):
+        raise ValueError(
+            f"GitHub API returned unexpected response for tree data: {type(tree_data)}"
+        )
+    file_tree_bytes = 0
+    for item in tree_data.get("tree", []):
+        if item.get("type") == "blob" and item.get("size") is not None:
+            file_tree_bytes += item["size"]
+    if tree_data.get("truncated", False) and logger:
+        logger.warning(
+            f"Git tree response for {repo_git} was truncated — "
+            f"size estimate is a lower bound ({file_tree_bytes} bytes counted from partial tree data). "
+            f"Consider setting a smaller limit if this repo is near your threshold."
+        )
+
+    return bare_size_kb + (file_tree_bytes / 1024)
+
+
+def _get_gitlab_repo_size_kb(repo_git: str, logger=None):
+    """
+    Fetches the estimated size of a GitLab repository in KB using the statistics API.
+
+    Returns the repository size in KB, or raises an exception if the API
+    is unreachable or returns unexpected data.
+    """
+    import httpx
+    from urllib.parse import quote_plus
+    git_clean = repo_git.rstrip('/')
+    if git_clean.endswith('.git'):
+        git_clean = git_clean[:-4]
+    parts = git_clean.split("gitlab.com/")
+    if len(parts) < 2:
+        raise ValueError(f"Could not parse GitLab project path from: {repo_git}")
+    project_path = parts[1]
+    encoded_path = quote_plus(project_path)
+    url = f"https://gitlab.com/api/v4/projects/{encoded_path}?statistics=true"
+    response = httpx.get(url, timeout=10.0)
+    response.raise_for_status()
+    data = response.json()
+    stats = data.get("statistics", {})
+    bytes_size = stats.get("repository_size") or data.get("repository_size")
+    if bytes_size is None:
+        raise ValueError(f"No repository_size field in GitLab response for {repo_git}")
+    return bytes_size / 1024
+
+
+def check_repo_size_limit(repo_git: str, max_clone_size_kb: int, logger=None):
+    """
+    Checks whether cloning a repository is permitted under the configured size limit.
+
+    Retrieves the estimated repository size using forge-specific logic, then
+    compares it against max_clone_size_kb.
+
+    If the size CANNOT be determined (API error, network failure, unsupported forge),
+    cloning is BLOCKED. This is fail-closed behavior: a configured limit must not
+    be bypassed silently because of an error.
+
+    Returns:
+        (True, estimated_kb)  — clone is permitted
+        (False, estimated_kb) — clone is blocked because limit is exceeded
+        (False, None)         — clone is blocked because size could not be determined
+    """
+    if not max_clone_size_kb or max_clone_size_kb <= 0:
+        return True, None
+
+    try:
+        if "github.com" in repo_git.lower():
+            estimated_kb = _get_github_repo_size_kb(repo_git, logger)
+        elif "gitlab.com" in repo_git.lower():
+            estimated_kb = _get_gitlab_repo_size_kb(repo_git, logger)
+        else:
+            # Unsupported forge — cannot determine size, fail closed
+            if logger:
+                logger.warning(
+                    f"Cannot determine repo size for unsupported forge: {repo_git}. "
+                    f"Blocking clone to enforce configured limit of {max_clone_size_kb} KB."
+                )
+            return False, None
+
+    except Exception as e:
+        if logger:
+            logger.warning(
+                f"Could not retrieve repo size for {repo_git}: {e}. "
+                f"Blocking clone to enforce configured limit of {max_clone_size_kb} KB."
+            )
+        return False, None
+
+    if estimated_kb > max_clone_size_kb:
+        return False, estimated_kb
+
+    return True, estimated_kb
+
 
 def git_repo_initialize(facade_helper, session, repo_git):
 
@@ -124,6 +265,29 @@ def git_repo_initialize(facade_helper, session, repo_git):
 
             execute_sql(query)
             return
+
+        max_limit = getattr(facade_helper, 'max_clone_size_kb', 0)
+        if max_limit > 0:
+            allowed, estimated_kb = check_repo_size_limit(git, max_limit, logger)
+            if not allowed:
+                docs_ref = (
+                    "See max_clone_size_kb in the configuration reference: "
+                    "https://github.com/chaoss/CollectOSS/blob/main/docs/source"
+                    "/development-guide/configuration-file-reference.rst"
+                )
+                if estimated_kb is not None:
+                    msg = (
+                        f"Repo '{git}' estimated clone size ({estimated_kb:.0f} KB) "
+                        f"exceeds maximum clone size limit ({max_limit} KB). {docs_ref}"
+                    )
+                else:
+                    msg = (
+                        f"Repo '{git}' could not be size-checked; "
+                        f"blocking clone to enforce configured limit of {max_limit} KB. {docs_ref}"
+                    )
+                update_repo_log(logger, facade_helper, row.repo_id, 'Failed (size limit)')
+                facade_helper.log_activity('Error', msg)
+                raise GitCloneError(msg)
 
         # Create the prerequisite directories
         try:
