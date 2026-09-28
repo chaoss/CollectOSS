@@ -103,9 +103,6 @@ def git_repo_initialize(facade_helper, session, repo_git):
             """).bindparams(pathParam=path_identifier, nameParam=repo_name, idParam=row.repo_id)
 
         execute_sql(query)
-
-        set_clone_path_by_repo_id(row.repo_id, f"{row.repo_id}-{path_identifier}")
-
         # Check if there will be a storage path collision
         # If there is a collision, throw an error so that it updates the existing repo instead of trying
         # to reclone.
@@ -126,6 +123,8 @@ def git_repo_initialize(facade_helper, session, repo_git):
             query = s.sql.text("""UPDATE repo SET repo_path=:pathParam, 
             repo_name=:nameParam WHERE repo_id=:idParam
             """).bindparams(pathParam=path_identifier, nameParam=repo_name, idParam=row.repo_id)
+
+            set_clone_path_by_repo_id(row.repo_id, f"{row.repo_id}-{path_identifier}")
 
             execute_sql(query)
             return
@@ -167,6 +166,7 @@ def git_repo_initialize(facade_helper, session, repo_git):
             # Mark the entire project for an update, so that under normal
             # circumstances caches are rebuilt only once per waiting period.
             update_repo_log(logger, facade_helper, row.repo_id, 'Up-to-date')
+            set_clone_path_by_repo_id(row.repo_id, f"{row.repo_id}-{path_identifier}/{repo_name}")
             facade_helper.log_activity('Info', f"Cloned {git}")
 
         else:

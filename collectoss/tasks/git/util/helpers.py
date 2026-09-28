@@ -34,24 +34,26 @@ def get_absolute_clone_path(facade_base_directory: str | Path, repo_id: int) -> 
     # if not, use the current path building technique ( [configured facade base dir] + [path from db data table] + [repo name]). if success, rewrite the facade path and return it
     repo = get_repo_by_repo_id(repo_id)
     
-	# absolute_path = get_absolute_repo_path(base_dir, repo.repo_id, repo.repo_path,repo.repo_name)
+    # absolute_path = get_absolute_repo_path(base_dir, repo.repo_id, repo.repo_path,repo.repo_name)
     legacy_path = f"{repo_id}-{repo.repo_path}/{repo.repo_name}"
     if legacy_path and is_git_repo(base_dir.joinpath(legacy_path)):
         set_clone_path_by_repo_id(repo_id, legacy_path)
         return base_dir.joinpath(legacy_path)
-	
+
     # if not, discover it (check just the facade path from step 1, if it contains just one dir, use that and update the database else fail)
     discover_path = base_dir.joinpath(f"{repo_id}-{repo.repo_path}")
+    discovered_directories = []
     if discover_path.exists():
         discovered_directories = [x for x in discover_path.iterdir() if x.is_dir()]
         if len(discovered_directories) == 1 and is_git_repo(discover_path.joinpath(discovered_directories[0])):
-            set_clone_path_by_repo_id(repo_id, discover_path.joinpath(discovered_directories[0]))
-            return discover_path.joinpath(discovered_directories[0])
+            discovered_repo = discovered_directories[0]  # already an absolute Path
+            set_clone_path_by_repo_id(repo_id, str(discovered_repo.relative_to(base_dir)))
+            return discovered_repo
 
 
     raise ValueError(f"""No valid git repo path found for repo {repo_id} ({repo.repo_git}).
     Attempted paths:
-    - {base_dir.joinpath(clone_path)}
+    - {base_dir.joinpath(clone_path) if clone_path else '(not set)'}
     - {base_dir.joinpath(legacy_path)}
-    - {base_dir.joinpath(discover_path)} ({len(discovered_directories)} children)
+    - {discover_path} ({len(discovered_directories)} children)
     """)

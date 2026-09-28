@@ -115,7 +115,8 @@ def get_clone_path_by_repo_id(repo_id: int) -> Optional[str]:
     with get_session() as session:
 
         query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id)
-        return query.one_or_none().facade_clone_path
+        ops_repo = query.one_or_none()
+        return ops_repo.facade_clone_path if ops_repo else None
 
 def set_clone_path_by_repo_id(repo_id: int, clone_path: str):
 
