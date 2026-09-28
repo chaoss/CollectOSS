@@ -32,7 +32,7 @@ import pathlib
 import sqlalchemy as s
 
 from collectoss.tasks.git.util.helpers import get_absolute_clone_path
-from .utilitymethods import update_repo_log, get_absolute_repo_path
+from .utilitymethods import update_repo_log
 from sqlalchemy.orm.exc import NoResultFound
 from collectoss.application.db.models.data import *
 from collectoss.application.db.models.operations import CollectionStatus

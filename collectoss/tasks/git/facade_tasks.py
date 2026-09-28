@@ -8,10 +8,11 @@ from subprocess import check_output
 from collectoss.application.db.lib import get_session, get_repo_by_repo_git, get_repo_by_repo_id, remove_working_commits_by_repo_id_and_hashes, get_working_commits_by_repo_id, facade_bulk_insert_commits, bulk_insert_dicts, get_missing_commit_message_hashes
 
 from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import trim_commits
-from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_absolute_repo_path, get_parent_commits_set, get_existing_commits_set
+from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_parent_commits_set, get_existing_commits_set
 from collectoss.tasks.git.util.facade_worker.facade_worker.analyzecommit import analyze_commit
 from collectoss.tasks.git.util.facade_worker.facade_worker.utilitymethods import get_repo_commit_count, update_facade_scheduling_fields, get_facade_weight_with_commit_count
 
+from collectoss.tasks.git.util.helpers import get_absolute_clone_path
 from collectoss.tasks.github.facade_github.tasks import *
 from collectoss.tasks.git.util.facade_worker.facade_worker.config import FacadeHelper
 from collectoss.tasks.util.collection_state import CollectionState
@@ -117,8 +118,8 @@ def trim_commits_post_analysis_facade_task(repo_git):
     repo = get_repo_by_repo_git(repo_git)
 
     #Get the huge list of commits to process.
-    absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-    repo_loc = (f"{absolute_path}/.git")
+    absolute_path = get_absolute_clone_path(facade_helper.repo_base_directory, repo.repo_id)
+    repo_loc = absolute_path.joinpath(".git")
     # Grab the parents of HEAD
 
     parent_commits = get_parent_commits_set(repo_loc, facade_helper)
@@ -190,8 +191,8 @@ def facade_fetch_missing_commit_messages(repo_git):
         except (TypeError, IndexError):
             escaped_hash = hash
             
-        absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
-        repo_loc = (f"{absolute_path}/.git")
+        absolute_path = get_absolute_clone_path(facade_helper.repo_base_directory, repo.repo_id)
+        repo_loc = absolute_path.joinpath(".git")
 
         try: 
             commit_message = check_output(
@@ -240,8 +241,8 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     repo = get_repo_by_repo_id(repo_id)
 
     #Get the huge list of commits to process.
-    absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path, repo.repo_name)
-    repo_loc = (f"{absolute_path}/.git")
+    absolute_path = get_absolute_clone_path(facade_helper.repo_base_directory, repo.repo_id)
+    repo_loc = absolute_path.joinpath(".git")
     # Grab the parents of HEAD
 
     parent_commits = get_parent_commits_set(repo_loc, facade_helper)
@@ -262,8 +263,8 @@ def analyze_commits_in_parallel(repo_git, multithreaded: bool)-> None:
     queue = list(missing_commits)
 
     logger.info(f"Got to analysis!")
-    absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-    repo_loc = (f"{absolute_path}/.git")
+    absolute_path = get_absolute_clone_path(facade_helper.repo_base_directory, repo.repo_id)
+    repo_loc = absolute_path.joinpath(".git")
 
     pendingCommitRecordsToInsert = []
     pendingCommitMessageRecordsToInsert = []
