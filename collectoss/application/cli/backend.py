@@ -2,6 +2,7 @@
 """
 CollectOSS library commands for controlling the backend components
 """
+from pathlib import Path
 import resource
 import os
 import time
@@ -102,7 +103,7 @@ def start(ctx, disable_collection, development, pidfile, port):
 
     # Retrieve the log directory from the configuration or default to current directory
     log_dir = get_value("Logging", "logs_directory") or "."
-    gunicorn_log_file = os.path.join(log_dir, "gunicorn.log")
+    gunicorn_log_file = Path(log_dir).joinpath("gunicorn.log")
 
     gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} collectoss.api.server:app --log-file {gunicorn_log_file}"
     server = subprocess.Popen(gunicorn_command.split(" "))
@@ -132,9 +133,9 @@ def start(ctx, disable_collection, development, pidfile, port):
     manager.processes = processes
 
     celery_beat_schedule_db = SystemEnv.get("CELERYBEAT_SCHEDULE_DB", "celerybeat-schedule.db")
-    if os.path.exists(celery_beat_schedule_db):
+    if Path(celery_beat_schedule_db).exists():
             logger.info("Deleting old task schedule")
-            os.remove(celery_beat_schedule_db)
+            Path(celery_beat_schedule_db).unlink()
 
     log_level = get_value("Logging", "log_level")
     celery_beat_process = None
@@ -193,9 +194,9 @@ def start(ctx, disable_collection, development, pidfile, port):
         pass
     finally:
         # Ensure pidfile is cleaned up if we exit normally
-        if os.path.exists(pidfile):
+        if Path(pidfile).exists():
             try:
-                os.unlink(pidfile)
+                Path(pidfile).unlink()
             except OSError as e:
                 logger.error(f"Could not remove pidfile {pidfile}: {e}")
 

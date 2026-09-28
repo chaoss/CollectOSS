@@ -12,7 +12,7 @@ from collectoss.application.environment import SystemEnv
 logger = logging.getLogger(__name__)
 
 
-# ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+# ROOT_PROJECT_REPO_DIRECTORY = Path(__file__).resolve().parent.parent
 
 # base_log_dir = ROOT_PROJECT_REPO_DIRECTORY + "/logs/"
 

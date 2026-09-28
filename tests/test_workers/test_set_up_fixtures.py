@@ -1,3 +1,4 @@
+from pathlib import Path
 import pytest
 import docker
 import subprocess
@@ -58,8 +59,7 @@ def database_connection():
     cwd = os.getcwd()
     # Build the test database from the dockerfile and download
     # Postgres docker image if it doesn't exist.
-    ROOT_PROJECT_REPO_DIR = os.path.dirname(
-        os.path.dirname(os.path.realpath(__file__)))
+    ROOT_PROJECT_REPO_DIR = Path(__file__).resolve().parent.parent
     ROOT_PROJECT_REPO_DIR = str(ROOT_PROJECT_REPO_DIR).split("collectoss")
     ROOT_PROJECT_REPO_DIR = ROOT_PROJECT_REPO_DIR[0] + "collectoss"
 

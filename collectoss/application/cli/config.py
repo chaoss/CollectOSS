@@ -3,6 +3,7 @@
 CollectOSS library script for generating a config file
 """
 import os
+from pathlib import Path
 import click
 import json
 import logging
@@ -52,7 +53,7 @@ def init_config(ctx, github_api_key, facade_repo_directory, gitlab_api_key, redi
 
             facade_repo_directory = str(input("Please enter an existing facade repo directory: ")).strip()
 
-            if os.path.isdir(facade_repo_directory):
+            if Path(facade_repo_directory).is_dir():
                 break
             else:
                 print("Invalid directory")

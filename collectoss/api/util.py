@@ -3,6 +3,7 @@
 Provides shared functions that do not fit in a class of their own
 """
 import os
+from pathlib import Path
 import re
 import beaker
 
@@ -16,14 +17,14 @@ from collectoss.application.db.models import ClientApplication
 
 development = get_development_flag()
 
-__ROOT = os.path.abspath(os.path.dirname(__file__))
+__ROOT = Path(__file__).resolve().parent
 def get_data_path(path):
     """
     Returns data path of given object
 
     :param path: given path of object
     """
-    return os.path.join(__ROOT, 'data', path)
+    return Path(__ROOT).joinpath('data', path)
 
 # Default cache is in memory
 __memory_cache = None

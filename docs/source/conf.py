@@ -15,9 +15,10 @@
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
+# documentation root, use Path.resolve() to make it absolute, like shown here.
 #
 import os
+from pathlib import Path
 import sys
 import sphinx_rtd_theme
 import subprocess
@@ -70,10 +71,10 @@ else:
     except Exception:
         git_blob = 'main'
 
-here = os.path.abspath(os.path.dirname(__file__))
+here = Path(__file__).resolve().parent
 
 # Add the project root (two levels up: docs/source → collectoss)
-sys.path.insert(0, os.path.abspath(os.path.join(here, '../..')))
+sys.path.insert(0, Path(here).joinpath('..', '..').resolve())
 
 # Now importing variables from metadata.py
 from metadata import __copyright__, __release__, __version__, __author__

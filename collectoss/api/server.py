@@ -305,10 +305,12 @@ def create_cache_manager() -> CacheManager:
         'cache.lock_dir': Path(SystemEnv.set_default("CACHE_LOCKDIR", 'runtime/cache/')),
     }
 
-    if not os.path.exists(cache_config['cache.data_dir']):
-        os.makedirs(cache_config['cache.data_dir'])
-    if not os.path.exists(cache_config['cache.lock_dir']):
-        os.makedirs(cache_config['cache.lock_dir'])
+    cache_data_dir = Path(cache_config['cache.data_dir'])
+    cache_lock_dir = Path(cache_config['cache.lock_dir'])
+    if not cache_data_dir.exists():
+        cache_data_dir.mkdir(parents=True, exist_ok=True)
+    if not cache_lock_dir.exists():
+        cache_lock_dir.mkdir(parents=True, exist_ok=True)
     cache_parsed = parse_cache_config_options(cache_config)
     cache = CacheManager(**cache_parsed)
 

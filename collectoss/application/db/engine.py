@@ -69,7 +69,7 @@ def get_database_string() -> str:
         sys.exit()
 
     db_json_file_location = current_dir + "/db.config.json"
-    db_json_exists = os.path.exists(db_json_file_location)
+    db_json_exists = Path(db_json_file_location).exists()
 
     if not db_environment_var and not db_json_exists:
 

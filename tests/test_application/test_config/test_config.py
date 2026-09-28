@@ -290,8 +290,8 @@ def test_load_config_file(test_db_config):
         assert result == config_dict
 
     finally:
-        if os.path.exists(file_path):
-            os.remove(file_path)
+        if Path(file_path).exists():
+            Path(file_path).unlink()
 
 def test_config_load_config_from_dict(test_db_config, test_db_engine):
 

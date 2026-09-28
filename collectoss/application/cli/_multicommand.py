@@ -15,7 +15,7 @@ CONTEXT_SETTINGS = dict(auto_envvar_prefix='COLLECTOSS')
 
 class CLIMultiCommand(click.MultiCommand):
     def __commands_folder(self):
-        return os.path.abspath(os.path.dirname(__file__))
+        return Path(__file__).resolve().parent
 
     def list_commands(self, ctx):
         rv = []

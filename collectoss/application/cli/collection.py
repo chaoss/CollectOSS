@@ -85,9 +85,9 @@ def start(ctx, development):
 
     process_list = start_celery_collection_processes((core_worker_count, secondary_worker_count, facade_worker_count))
 
-    if os.path.exists("celerybeat-schedule.db"):
+    if Path("celerybeat-schedule.db").exists():
             logger.info("Deleting old task schedule")
-            os.remove("celerybeat-schedule.db")
+            Path("celerybeat-schedule.db").unlink()
 
     log_level = get_value("Logging", "log_level")
     celery_beat_process = None

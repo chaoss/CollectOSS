@@ -17,7 +17,7 @@ from typing_extensions import deprecated
 
 from collectoss.util.inspect_without_import import get_phase_names_without_import
 
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+ROOT_PROJECT_REPO_DIRECTORY = Path(__file__).resolve().parent.parent.parent.parent
 
 def check_init_schema():
     """Initialize the CollectOSS database schema as appropriate

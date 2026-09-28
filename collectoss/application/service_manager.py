@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 import os
 import subprocess
@@ -77,9 +78,10 @@ class SystemServiceManager:
                 logger.debug(f"Error during collection cleanup: {e}")
 
         # Remove pidfile
-        if os.path.exists(self.pidfile):
+        pidfile = Path(self.pidfile)
+        if pidfile.exists():
             try:
-                os.unlink(self.pidfile)
+                pidfile.unlink()
             except OSError as e:
                 logger.error(f"Could not remove pidfile {self.pidfile}: {e}")
 

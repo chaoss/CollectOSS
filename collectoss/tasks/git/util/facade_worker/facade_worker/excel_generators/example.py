@@ -22,6 +22,7 @@
 # also be used as a template for generating other types of Excel files. Main
 # places to be modified when creating a derivative script are marked with #-->
 
+from pathlib import Path
 import sys
 import imp
 import time
@@ -30,8 +31,8 @@ import xlsxwriter
 import os
 
 dirname = os.path.dirname
-filepath = os.path.abspath(__file__)
-sys.path.append(dirname(dirname(filepath)))
+filepath = Path(__file__).resolve().parent
+sys.path.append(Path(filepath).joinpath('..', '..').resolve())
 
 try:
 	imp.find_module('db')
@@ -70,8 +71,8 @@ get_x_axis = "SELECT name,id FROM projects"
 cursor.execute(get_x_axis)
 x_axis = list(cursor)
 
-facade_dir = dirname(dirname(dirname(filepath)))
-outfile = os.path.join(facade_dir,'files',filename)
+facade_dir = Path(filepath).joinpath('..', '..', '..').resolve()
+outfile = Path(facade_dir).joinpath('files',filename)
 
 workbook = xlsxwriter.Workbook(outfile)
 

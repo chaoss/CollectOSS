@@ -29,7 +29,7 @@ from collectoss.tasks.init.celery_app import MLRepoCollectionTask
 # from os import path
 
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+ROOT_PROJECT_REPO_DIRECTORY = Path(__file__).resolve().parent.parent.parent.parent
 DISCOURSE_ANALYSIS_DIR = f"{ROOT_PROJECT_REPO_DIRECTORY}/tasks/data_analysis/discourse_analysis/"
 
 @celery.task(base=MLRepoCollectionTask, bind=True)

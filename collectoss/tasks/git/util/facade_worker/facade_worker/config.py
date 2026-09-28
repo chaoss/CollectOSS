@@ -53,7 +53,7 @@ def get_database_args_from_env():
         logger.error("\n\nPlease run collectoss commands in the root directory\n\n")
         sys.exit()
 
-    db_json_exists = os.path.exists(db_json_file_location)
+    db_json_exists = Path(db_json_file_location).exists()
 
     if not db_str and not db_json_exists:
 

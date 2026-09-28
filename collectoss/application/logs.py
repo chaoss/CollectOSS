@@ -14,7 +14,7 @@ from collectoss.application.db.models import Config
 from collectoss.application.config import convert_type_of_value
 from collectoss.application.db.util import execute_session_query
 
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+ROOT_PROJECT_REPO_DIRECTORY = Path(__file__).resolve().parent.parent.parent
 
 
 SIMPLE_FORMAT_STRING = "[%(process)d] %(name)s [%(levelname)s] %(message)s"
@@ -46,9 +46,9 @@ def getFormatter(logLevel):
 def create_file_handler(file, formatter, level):
     try:
         # Ensure the directory exists
-        directory = os.path.dirname(file)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        directory = Path(file).parent
+        if not directory.exists():
+            directory.mkdir(parents=True, exist_ok=True)
         
         # Create the file handler
         handler = logging.FileHandler(filename=file, mode='a')

@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 import time
 import traceback
 import re
@@ -117,11 +118,11 @@ def clustering_model(repo_git: str,logger,engine) -> None:
     logger.debug(f"Repo message df size: {len(msg_df_cur_repo.index)}")
 
     # check if dumped pickle file exists, if exists no need to train the model
-    if not os.path.exists(MODEL_FILE_NAME):
+    if not Path(MODEL_FILE_NAME).exists():
         logger.info("clustering model not trained. Training the model.........")
         train_model(logger, engine, max_df, min_df, max_features, ngram_range, num_clusters, num_topics, num_words_per_topic, tool_source, tool_version, data_source)
     else:
-        model_stats = os.stat(MODEL_FILE_NAME)
+        model_stats = Path(MODEL_FILE_NAME).stat()
         model_age = (time.time() - model_stats.st_mtime)
         # if the model is more than month old, retrain it.
         logger.debug(f'model age is: {model_age}')

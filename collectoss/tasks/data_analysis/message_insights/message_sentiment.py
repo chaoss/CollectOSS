@@ -30,11 +30,11 @@ from collectoss.tasks.data_analysis.message_insights.preprocess_text import \
 
 warnings.filterwarnings('ignore')
 
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+ROOT_PROJECT_REPO_DIRECTORY = Path(__file__).resolve().parent.parent.parent.parent
 
 CONTRACTION_MAP = contraction_map
 
-train_path = os.path.join(ROOT_PROJECT_REPO_DIRECTORY, "tasks", "data_analysis", "message_insights", "train_data")
+train_path = Path(ROOT_PROJECT_REPO_DIRECTORY).joinpath("tasks", "data_analysis", "message_insights", "train_data")
 
 def replace_all(text, dic):
     if(sys.version_info[0] < 3):
@@ -85,7 +85,7 @@ emodict = []
 
 
 # Read in the words with sentiment from the dictionary
-with open(os.path.join(train_path,"EmoticonLookupTable.txt"),"r") as emotable:
+with Path(train_path).joinpath("EmoticonLookupTable.txt").open(mode="r") as emotable:
     emoticon_reader=csv.reader(emotable,delimiter='\t')
 
     #Hash words from dictionary with their values
@@ -225,7 +225,7 @@ class SentiCR:
         self.logger = logger
         if training_data is None:
             # Check if pretrained model exists, else perform training
-            if os.path.exists(f'{self.models_dir}/{self.algo}_senti.pkl'):
+            if Path(f'{self.models_dir}/{self.algo}_senti.pkl').exists():
                 self.logger.info('Using existing Trained Model')
                 self.model = joblib.load(f'{self.models_dir}/{self.algo}_senti.pkl')
                 self.vectorizer = joblib.load(f'{self.models_dir}/tfidf_vectorizer.pkl')
@@ -274,7 +274,7 @@ class SentiCR:
         return model
 
     def read_data_from_oracle(self):
-        workbook = open_workbook(os.path.join(train_path,"custom_dataset.xls"))
+        workbook = open_workbook(Path(train_path).joinpath("custom_dataset.xls"))
         sheet = workbook.sheet_by_index(0)
         oracle_data = []
         self.logger.info(f"Reading training data from 'train_data/custom_dataset.xls'...")

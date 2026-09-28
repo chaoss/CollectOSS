@@ -16,10 +16,10 @@ from sklearn import utils as skl_utils
 from collectoss.tasks.data_analysis.message_insights.preprocess_text import \
     normalize_corpus as normalize_corpus
 
-ROOT_PROJECT_REPO_DIRECTORY = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
+ROOT_PROJECT_REPO_DIRECTORY = Path(__file__).resolve().parent.parent.parent.parent
 
 
-train_path = os.path.join(ROOT_PROJECT_REPO_DIRECTORY, "tasks", "data_analysis", "message_insights", "train_data")
+train_path = Path(ROOT_PROJECT_REPO_DIRECTORY).joinpath("tasks", "data_analysis", "message_insights", "train_data")
 
 # ''' Doc2Vec model training
 
@@ -35,8 +35,8 @@ def build_model(max_epochs, vec_size, alpha, tag_data):
         model.alpha -= 0.0002
         model.min_alpha = model.alpha
 
-    #Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
-    model.save(os.path.join(train_path,"doc2vec.model"))
+    #Doc2Vec.load(Path(train_path).joinpath("doc2vec.model"))
+    model.save(Path(train_path).joinpath("doc2vec.model"))
     #logger.info("Model Saved")
     return model
 # '''
@@ -142,7 +142,7 @@ def novelty_analysis(df_message, r_id, models_dir, full_train=True):
     dvmodel = build_model(max_epochs=100, vec_size=300, alpha=0.01, tag_data=tag_data)
     dvmodel.save(f'{models_dir}/doc2vec.model')
 
-    d2v_model = Doc2Vec.load(os.path.join(train_path,"doc2vec.model"))
+    d2v_model = Doc2Vec.load(Path(train_path).joinpath("doc2vec.model"))
     doc2vec_vectors = np.array([d2v_model.infer_vector(str(row['cleaned_msg_text']).split())for index, row in df_message.iterrows()])
     #logger.info('Doc2Vec vectorization done')
     encoder_length=len(doc2vec_vectors)

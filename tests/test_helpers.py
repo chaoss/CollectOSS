@@ -27,8 +27,8 @@ def db_session():
 
 """
 
-temp_dir = os.path.join(os.getcwd(), "util")
-config_path = os.path.join(temp_dir, "test.config.json")
+temp_dir = Path(os.getcwd()).joinpath("util")
+config_path = Path(temp_dir).joinpath("test.config.json")
 def test_dump_queues():
     sample_queue = Queue()
     list_sample = ["x@x.com", "y@y.com", "z@z.com"]
@@ -39,7 +39,7 @@ def test_dump_queues():
 
 def test_read_config_no_exception():
     test_config = default_config
-    base_dir = os.path.dirname(os.path.dirname(__file__))
+    base_dir = Path(__file__).resolve().parent.parent
     print(base_dir)
     with open(config_path, "w") as f:
         json.dump(test_config, f)
@@ -63,7 +63,7 @@ def test_config_get_section_exception():
     assert config_object.get_section("absent_section") == None
 
 def test_discover_config_file_env_exception():
-    os.environ['AUGUR_CONFIG_FILE'] = os.path.join(temp_dir, "augur.config.json")
+    os.environ['AUGUR_CONFIG_FILE'] = Path(temp_dir).joinpath("augur.config.json")
     test_config = default_config
     with pytest.raises(FileNotFoundError):
         config_object = SystemConfig(temp_dir, test_config)
@@ -71,10 +71,10 @@ def test_discover_config_file_env_exception():
 
 def test_discover_config_file_env_no_exception():
     test_config = default_config
-    with open(os.path.join(temp_dir, "augur.config.json"), "w") as f:
+    with open(Path(temp_dir).joinpath("augur.config.json"), "w") as f:
         pass
     config_object = SystemConfig(temp_dir, test_config)
-    assert config_object.discover_config_file() == os.path.join(temp_dir, "augur.config.json")
+    assert config_object.discover_config_file() == Path(temp_dir).joinpath("augur.config.json")
 
 
 

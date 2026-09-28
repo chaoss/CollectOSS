@@ -501,7 +501,7 @@ def run_psql_command_in_database(target_type, target):
     db_environment_var = SystemEnv.get("COLLECTOSS_DB")
 
     # db_json_file_location = os.getcwd() + "/db.config.json"
-    # db_json_exists = os.path.exists(db_json_file_location)
+    # db_json_exists = Path(db_json_file_location).exists()
 
     if db_environment_var:
         pass

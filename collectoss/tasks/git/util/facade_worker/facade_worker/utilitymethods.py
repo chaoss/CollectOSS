@@ -161,7 +161,7 @@ def get_repo_commit_count(logger, facade_helper, repo_git):
 	logger.debug(f"path: {repo.repo_path}")
 
 	# Check if the .git directory exists
-	if not os.path.exists(repo_loc):
+	if not Path(repo_loc).exists():
 		raise FileNotFoundError(f"The directory {absolute_path} does not exist.")
 	
 	# if there are no branches then the repo is empty
