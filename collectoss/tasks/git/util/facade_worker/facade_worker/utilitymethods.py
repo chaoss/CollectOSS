@@ -36,6 +36,7 @@ from collectoss.application.db.lib import execute_sql, fetchall_data_from_sql_te
 from collectoss.application.db.util import execute_session_query
 #from collectoss.tasks.git.util.facade_worker.facade
 from typing_extensions import deprecated
+from pathlib import Path
 
 def update_repo_log(logger, facade_helper, repos_id,status):
 
@@ -143,8 +144,11 @@ def get_existing_commits_set(repo_id):
 
 
 def count_branches(git_dir):
-    branches_dir = os.path.join(git_dir, 'refs', 'heads')
-    return sum(1 for _ in os.scandir(branches_dir))
+	git_dir = Path(git_dir)
+	branches_dir = git_dir.joinpath('refs', 'heads')
+	if branches_dir.exists():
+		return sum(1 for _ in branches_dir.iterdir())
+	return 0
 
 def get_repo_commit_count(logger, facade_helper, repo_git):
 
