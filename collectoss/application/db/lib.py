@@ -109,7 +109,25 @@ def get_repo_by_repo_id(repo_id):
         repo = execute_session_query(query, 'one')
 
         return repo
-    
+
+def get_clone_path_by_repo_id(repo_id: int) -> Optional[str]:
+
+    with get_session() as session:
+
+        query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id)
+        return query.one_or_none().facade_clone_path
+
+def set_clone_path_by_repo_id(repo_id: int, clone_path: str):
+
+    with get_session() as session:
+
+        query = session.query(CollectionStatus).filter(CollectionStatus.repo_id == repo_id)
+        entry = query.one_or_none()
+        if entry:
+            entry.facade_clone_path = clone_path
+            session.commit()
+
+
 def get_github_repo_by_src_id(src_id):
     
     with get_session() as session:
