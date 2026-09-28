@@ -855,8 +855,8 @@ class Repo(Base):
     repo_git = Column(String, nullable=False)
 
     #TODO: repo_path and repo_name should be generated columns in postgresql
-    repo_path = Column(String)
-    repo_name = Column(String)
+    repo_path = Column(String, comment="deprecated by the addition of facade_clone_path in the collection_status table")
+    repo_name = Column(String, comment="the current repo name")
     repo_added = Column(
         TIMESTAMP(precision=0), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
