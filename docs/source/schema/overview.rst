@@ -69,9 +69,9 @@ store information including API keys.
 
 Some key tables in this schema include:
 
-- ``config``, which contains the config options for the application. Key options include the facade repo_directory as well as primary api key.
+- ``config``, which contains a copy of the config options for the application. Key options include the facade repo_directory as well as primary api key.
 
-- ``collection_status``, contains the status of each aspect of data collection for each repo added to CollectOSS. For example, it shows the status of the facade jobs for every repository.
+- ``collection_status``, contains the status of each aspect of data collection for each repo added to CollectOSS. For example, it shows the status of the facade jobs for every repository. It also stores the path to each repository's local clone via the ``facade_clone_path`` column, which is the canonical source for resolving where a repo lives on disk. The ``facade_clone_path`` value is a path relative to the configured ``repo_directory`` (facade base path) and is set automatically by CollectOSS when a repository is cloned.
 
 SPDX
 -------------------------------------------------------

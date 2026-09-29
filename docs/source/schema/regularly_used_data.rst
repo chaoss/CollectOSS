@@ -235,6 +235,9 @@ Repo
 
  A list of all the repositories.
 
+ .. note::
+    The ``repo_path`` column on this table is **deprecated** and will be removed in a future release. Additonally the ``repo_name`` column is not recommended for locating a repository's clone on disk. The canonical source for clone paths is now ``collection_status.facade_clone_path`` which is accessed via the ``get_absolute_clone_path`` function from ``collectoss.tasks.git.util.helpers``.
+
                 .. image:: images/repo.png
                     :width: 200
 

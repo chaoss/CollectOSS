@@ -70,7 +70,7 @@ Next up are the configuration options specific to some collection tasks (but som
 ``Facade``
 ::::::::::::::::::
 
-- ``repo_directory``, which is the local directory where the facade tasks will clone the repositories it needs to analyze. You should have been prompted for this during installation, but if you need to change it, make sure that it's an absolute path (environment variables like ``$HOME`` are not supported) and that the directory already exists. Defaults to ``repos/``, but it's highly recommended you change this.
+- ``repo_directory``, which is the local directory where the facade tasks will clone the repositories it needs to analyze. Make sure that it's an absolute path (environment variables like ``$HOME`` are not yet supported) and that the directory already exists. Defaults to ``repos/``, but it's highly recommended you change this. The exact subdirectory layout within ``repo_directory`` is managed automatically by CollectOSS.
 - ``limited_run``, toggle between 0 and 1 to determine whether to run all facade tasks or not. Runs all tasks if set to 0
 - ``pull_repos``, toggle whether to pull updates from repos after cloning them. If turned off updates to repos will not be collected.
 - ``run_analysis``, toggle whether to process commit data at all. If turned off will only clone repos and run tertiary tasks such as resolving contributors from any existing commits or collecting dependency relationships. Mainly used for testing.
