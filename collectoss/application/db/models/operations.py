@@ -1216,6 +1216,7 @@ class CollectionStatus(Base):
     facade_status = Column(String,nullable=False, server_default=text("'Pending'"))
     facade_data_last_collected = Column(TIMESTAMP)
     facade_task_id = Column(String)
+    facade_clone_path = Column(String, server_default=None)
 
     ml_status = Column(String,nullable=False, server_default=text("'Pending'"))
     ml_data_last_collected = Column(TIMESTAMP)
