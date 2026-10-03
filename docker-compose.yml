@@ -46,7 +46,7 @@ services:
       - RABBITMQ_DEFAULT_PASS=${COLLECTOSS_RABBITMQ_PASSWORD:-password123}
       - RABBITMQ_DEFAULT_VHOST=${COLLECTOSS_RABBITMQ_VHOST:-collectoss_vhost}
     volumes:
-      - ./docker/rabbitmq/advanced.config:/etc/rabbitmq/advanced.config:ro
+      - ./docker/rabbitmq/advanced.config:/etc/rabbitmq/advanced.config:ro,Z
 
   core:
     image: collectoss:latest
