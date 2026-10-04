@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 import typing
+from collectoss.util.enums import ForgePlatformType
 
 class ContributorUUID:
     struct = {
