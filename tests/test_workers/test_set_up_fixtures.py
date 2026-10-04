@@ -60,8 +60,8 @@ def database_connection():
     # Postgres docker image if it doesn't exist.
     ROOT_PROJECT_REPO_DIR = os.path.dirname(
         os.path.dirname(os.path.realpath(__file__)))
-    ROOT_PROJECT_REPO_DIR = str(ROOT_PROJECT_REPO_DIR).split("augur")
-    ROOT_PROJECT_REPO_DIR = ROOT_PROJECT_REPO_DIR[0] + "augur"
+    ROOT_PROJECT_REPO_DIR = str(ROOT_PROJECT_REPO_DIR).split("collectoss")
+    ROOT_PROJECT_REPO_DIR = ROOT_PROJECT_REPO_DIR[0] + "collectoss"
 
     buildString = ROOT_PROJECT_REPO_DIR
 

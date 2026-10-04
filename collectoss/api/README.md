@@ -19,7 +19,7 @@ So then Gunicorn uses this app to load the server. Note: Those three lines above
 
 ### Config
 
-The config located in `collectoss/api/gunicorn_conf.py` loads a default configuration and then if the config table in the augur_operation schema contains gunicorn config values they override the defaults. 
+The config located in `collectoss/api/gunicorn_conf.py` loads a default configuration and then if the config table in the operations schema contains gunicorn config values they override the defaults. 
 
 ### Routes
 

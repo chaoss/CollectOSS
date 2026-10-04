@@ -10,7 +10,7 @@ from typing import List, Any, Optional, Union
 from typing_extensions import deprecated
 
 from collectoss.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,UnresolvedCommitEmail, Contributor, CollectionStatus, UserGroup, RepoGroup
-# TODO: CollectionState should be moved to augur/application/db/ to eliminate
+# TODO: CollectionState should be moved to collectoss/application/db/ to eliminate
 # this cross-layer dependency — same issue as the correction.py import above.
 from collectoss.tasks.util.collection_state import CollectionState
 from collectoss.application.db.timestamp_utils import correct_timestamp
