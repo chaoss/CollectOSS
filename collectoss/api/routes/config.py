@@ -36,7 +36,7 @@ def get_config():
 
     return jsonify(config_dict), 200
 
-@app.route(f"/{AUGUR_API_VERSION}/config/set", methods=['GET', 'POST'])
+@app.route(f"/{API_VERSION}/config/set", methods=['GET', 'POST'])
 @ssl_required
 @admin_required
 def set_config_item():
