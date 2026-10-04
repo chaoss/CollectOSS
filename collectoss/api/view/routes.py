@@ -7,7 +7,7 @@ import os
 import signal
 from flask import render_template, request, redirect, url_for, session, flash
 from .utils import *
-from augur.api.util import admin_required, development_required
+from collectoss.api.util import admin_required, development_required
 from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy.exc import OperationalError
 
@@ -18,7 +18,7 @@ from collectoss.application.db.lib import get_value
 from collectoss.application.config import SystemConfig
 from ..server import app, db_session
 
-from augur.application.db.lib import get_session
+from collectoss.application.db.lib import get_session
 
 logger = logging.getLogger(__name__)
 

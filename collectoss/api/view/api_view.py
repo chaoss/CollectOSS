@@ -42,7 +42,7 @@ def unsupported_method(error):
 
 @app.errorhandler(403)
 def forbidden(error):
-    if AUGUR_API_VERSION in str(request.url_rule):
+    if API_VERSION in str(request.url_rule):
         return jsonify({"status": "Forbidden"}), 403
     
     return render_message("403 - Forbidden", "You do not have permission to view this page"), 403
