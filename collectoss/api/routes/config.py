@@ -95,7 +95,7 @@ def update_config():
     return jsonify({"status": "success"}), 200
 
 
-@app.route(f"/{AUGUR_API_VERSION}/workeroauth/get/keys", methods=['GET'])
+@app.route(f"/{API_VERSION}/workeroauth/get/keys", methods=['GET'])
 @ssl_required
 @admin_required
 def get_oauth_keys():
@@ -129,7 +129,7 @@ def get_oauth_keys():
     return jsonify(keys_dict), 200
 
 
-@app.route(f"/{AUGUR_API_VERSION}/workeroauth/get/invalidkeys", methods=["GET"])
+@app.route(f"/{API_VERSION}/workeroauth/get/invalidkeys", methods=["GET"])
 @ssl_required
 @admin_required
 def get_invalid_keys():
@@ -187,7 +187,7 @@ def get_invalid_keys():
 
 
 
-@app.route(f"/{AUGUR_API_VERSION}/workeroauth/delete/key", methods=["POST"])
+@app.route(f"/{API_VERSION}/workeroauth/delete/key", methods=["POST"])
 @ssl_required
 @admin_required
 def delete_oauth_key():
@@ -218,7 +218,7 @@ def delete_oauth_key():
 
 
 
-@app.route(f"/{AUGUR_API_VERSION}/workeroauth/new/keys", methods=["POST"])
+@app.route(f"/{API_VERSION}/workeroauth/new/keys", methods=["POST"])
 @ssl_required
 @admin_required
 def new_oauth_keys():
