@@ -112,7 +112,7 @@ Set ``ELASTIC_SEARCH_PATH`` and ``LOGSTASH_PATH`` variables to point to elastics
   # If not specified, defaults to /usr/local/bin/logstash
   $ export LOGSTASH_PATH=<path_to_logstash_binary>
 
-  $ export ROOT_PROJECT_REPO_DIRECTORY=<path_to_augur>
+  $ export ROOT_PROJECT_REPO_DIRECTORY=<path_to_collectoss>
 
 Start the http server with::
 
