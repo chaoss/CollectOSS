@@ -25,5 +25,6 @@ Happy hacking!
    :maxdepth: 1
 
    database
+   sample-database
    collecting-data
    command-line-interface/toc

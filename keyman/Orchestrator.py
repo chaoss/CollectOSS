@@ -156,7 +156,7 @@ class KeyOrchestrator:
         if not len(self.fresh_keys[platform]):
             if not len(self.expired_keys[platform]):
                 self.logger.warning(f"Key was requested for {platform}, but none are published")
-                return
+                raise WaitKeyTimeout(300)
 
             min_timeout = 0
             for _, timeout in self.expired_keys[platform].items():

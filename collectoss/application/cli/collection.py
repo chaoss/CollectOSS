@@ -76,7 +76,7 @@ def start(ctx, development):
         keypub.publish(key, "gitlab_rest")
     
     if development:
-        SystemEnv.set("AUGUR_DEV", "1")
+        SystemEnv.set("COLLECTOSS_DEV", "1")
         logger.info("Starting in development mode")
 
     core_worker_count = get_value("Celery", 'core_worker_count')

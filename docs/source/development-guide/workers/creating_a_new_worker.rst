@@ -8,6 +8,29 @@ Worker Setup
 1. If you are hitting an API on a platform like GitHub, or GitLab, follow the pattern in those workers.
 2. If you are analyzing CollectOSS data, the `value_worker` provides a good example.
 
+Accessing Cloned Repositories on Disk
+--------------------------------------
+
+If your task needs to access a repository's local clone (e.g. to run a tool against the source code or git repo), use the ``get_absolute_clone_path`` function from ``collectoss.tasks.git.util.helpers``:
+
+.. code-block:: python
+
+    from collectoss.tasks.git.util.helpers import get_absolute_clone_path
+    from collectoss.application.config import SystemConfig
+    from collectoss.application.db.session import DatabaseSession
+    from collectoss.application.db import get_engine
+
+    with DatabaseSession(logger, get_engine()) as session:
+        config = SystemConfig(logger, session)
+        repo_directory = config.get_value("Facade", "repo_directory")
+
+    repo_path = get_absolute_clone_path(repo_directory, repo_id)
+
+This function returns a ``pathlib.Path`` object pointing to the root of the cloned repository. It reads the path from ``collection_status.facade_clone_path``.
+
+.. warning::
+    Do **not** construct clone paths manually from ``repo.repo_path`` and ``repo.repo_name``. Those columns are deprecated for path resolution purposes and ``repo.repo_name`` will change when a repository is moved. Always use the ``get_absolute_clone_path`` function.
+
 What are the key sections?
 -----------------------------------
 

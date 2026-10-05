@@ -1,5 +1,5 @@
-Database setup
-===============
+PostgreSQL Database Setup for CollectOSS
+========================================
 
 One of the reasons that CollectOSS is so powerful is because of its `unified data model <../schema/overview.html>`_.
 To ensure this data model remains performant with large amounts of data, we use PostgreSQL as our database engine.

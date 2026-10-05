@@ -1,5 +1,5 @@
-Installing for Development
-=============================
+How to Install CollectOSS for Development
+=========================================
 
 Installing CollectOSS for local development is pretty similar to the normal installation process. This guide will primarily detail the differences between the two instead of regurgitating all the information in the `Getting Started <../getting-started/toc.html>`_ section. If you are completely new to CollectOSS, we recommend following the aforementioned `Getting Started <../getting-started/toc.html>`_ section first; once you feel more comfortable with CollectOSS and how to use it, come back to this document.
 

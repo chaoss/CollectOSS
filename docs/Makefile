@@ -5,7 +5,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = Augur
+SPHINXPROJ    = CollectOSS
 SOURCEDIR     = source
 BUILDDIR      = build
 

@@ -42,24 +42,6 @@ def execute_session_query(query, query_type="all"):
 
     return catch_operational_error(func)
 
-
-
-def convert_orm_list_to_dict_list(result):
-    new_list = []
-
-    for row in result:
-        row_dict = row.__dict__
-        try:
-            del row_dict['_sa_instance_state']
-        except:
-            pass
-        
-        new_list.append(row_dict)
-    
-    return new_list
-
-
-
 def convert_type_of_value(config_dict, logger=None):
         
     data_type = config_dict["type"]

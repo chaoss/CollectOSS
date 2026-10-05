@@ -32,7 +32,7 @@ CollectOSS Documentation
 
 What is CollectOSS?
 ~~~~~~~~~~~~~~~~~~~
-CollectOSS is a software tool that helps you collect and measure information about `open source <https://opensource.com/resources/what-open-source>`_ software projects. CollectOSS focuses on collecting data from public git-based code hosting platforms ("Forges") such as GitHub and GitLab to produce data about the health and sustainability of software projects based on the relevant CHAOSS metrics.
+`CollectOSS <https://collectoss.org>`__ is a software tool that helps you collect and measure information about `open source <https://opensource.com/resources/what-open-source>`_ software projects. CollectOSS focuses on collecting data from public git-based code hosting platforms ("Forges") such as GitHub and GitLab to produce data about the health and sustainability of software projects based on the relevant CHAOSS metrics.
 
 The main goal of CollectOSS is to understand how healthy and sustainable a project is. Healthy projects are easier to rely on, and they are important because many software organizations or companies depend on open-source software.
 

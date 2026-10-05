@@ -2,7 +2,7 @@
 
 
 
-FROM golang:1.23-bullseye AS golang-builder
+FROM golang:1.23-bookworm AS golang-builder
 
 # Write final binaries to / so it's easy to copy them out
 ENV GOBIN=/
@@ -17,7 +17,7 @@ RUN go install github.com/ossf/scorecard/v5@v5.1.1 \
 
 
 ########################################
-FROM python:3.11-slim-bullseye
+FROM python:3.11-slim-bookworm
 
 LABEL org.opencontainers.image.authors="CHAOSS https://chaoss.community"
 LABEL org.opencontainers.image.licenses="MIT"
@@ -64,6 +64,9 @@ ENV UV_LINK_MODE=copy
 # Assert that the lockfile (uv.lock) is up-to-date. Use `uv lock` to update it
 # manually if this fails the container build.
 ENV UV_LOCKED=1
+# PATH lists /usr/bin first, where bookworm ships a python3.11 without
+# development headers that uv would otherwise pick, failing to build psutil.
+ENV UV_PYTHON=/usr/local/bin/python3.11
 
 WORKDIR /collectoss
 

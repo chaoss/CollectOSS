@@ -2,6 +2,8 @@
 
 [![Build Docker images](https://github.com/chaoss/collectoss/actions/workflows/build_docker.yml/badge.svg)](https://github.com/chaoss/collectoss/actions/workflows/build_docker.yml) [![Hits-of-Code](https://hitsofcode.com/github/chaoss/collectoss?branch=release)](https://hitsofcode.com/github/chaoss/collectoss/view?branch=release)
 
+https://collectoss.org ([Docs](https://docs.collectoss.org))
+
 ## What is CollectOSS?
 CollectOSS is a software suite for collecting structured data
 about [free](https://www.fsf.org/about/) and [open-source](https://opensource.org/docs/osd) software (FOSS) communities via git forges.

@@ -138,9 +138,7 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
                     name
                     url
                     }
-                    stargazers {
-                    totalCount
-                    }
+                    stargazerCount
                     codeOfConduct {
                     name
                     url
@@ -204,7 +202,7 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
         'default_branch': data['defaultBranchRef']['name'] if data['defaultBranchRef'] else None,
         'watchers_count': data['watchers']['totalCount'] if data['watchers'] else None,
         'license': data['licenseInfo']['name'] if data['licenseInfo'] else None,
-        'stars_count': data['stargazers']['totalCount'] if data['stargazers'] else None,
+        'stars_count': data['stargazerCount'] if 'stargazerCount' in data else None,
         'committers_count': committers_count,
         'issue_contributors_count': None,
         'changelog_file': None,

@@ -2,6 +2,9 @@ import logging
 import time
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, RetryError
+from keyman.KeyClient import KeyClient
+from collectoss.tasks.github.util.github_data_access import RatelimitException, NotAuthorizedException, ResourceGoneException
+from collectoss.util.keys import mask_key
 
 URL = "https://api.github.com/graphql"
 
@@ -12,6 +15,7 @@ class RatelimitException(Exception):
         self.response = response
 
         super().__init__(message)
+GITHUB_RATELIMIT_REMAINING_CAP = 50
 
 class NotFoundException(Exception):
     pass
@@ -27,10 +31,14 @@ class GithubGraphQlDataAccess:
     def base_url():
         return URL
 
-    def __init__(self, key_manager, logger: logging.Logger, ingore_not_found_error=False):
+    def __init__(self, key_manager, logger: logging.Logger, ingore_not_found_error=False, feature="graphql"):
     
         self.logger = logger
-        self.key_manager = key_manager
+        self.feature = feature
+        # self.key_manager = key_manager
+        self.key_client = KeyClient(f"github_{feature}", logger)
+        self.key = None
+        self.expired_keys_for_request = []
         self.ingore_not_found_error = ingore_not_found_error
 
     def get_resource(self, query, variables, result_keys):
@@ -72,6 +80,12 @@ class GithubGraphQlDataAccess:
 
         with httpx.Client() as client:
 
+            if not self.key:
+                self.key = self.key_client.request()
+
+            headers = {"Authorization": f"token {self.key}"}
+
+
             json_dict = {
                 'query' : query
             }
@@ -79,9 +93,37 @@ class GithubGraphQlDataAccess:
             if variables:
                 json_dict['variables'] = variables
             
-            response = client.post(url=URL,auth=self.key_manager,json=json_dict, timeout=timeout)
+            response = client.post(url=URL,headers=headers,json=json_dict, timeout=timeout, follow_redirects=True)
 
+            if response.status_code in [403, 429]:
+                self.expired_keys_for_request.append(self.key)
+                self.logger.warning(f"Github rate limit exceeded. Key: {mask_key(self.key)}. Response: {response.text}")
+                raise RatelimitException(response, self.expired_keys_for_request)
+
+            # There are cases with PR files, PR commits, and messages where the parent object is removed after 
+            # It is collected, leading the the associated URL for those objects to return a 404. 
+            # This is not an issue that is really an Exception. It is more of a nominal signal. 
+            
+            if response.status_code == 401:
+                raise NotAuthorizedException(f"Could not authorize with the github api using key: {mask_key(self.key)}")
+            
+            if response.status_code == 410:
+                response_msg = response.json().get("message")
+                if response_msg is not None:
+                    raise ResourceGoneException(response_msg)
+                else:
+                    raise ResourceGoneException()
+        
+        
         response.raise_for_status()
+
+        try:
+            if self.feature == "graphql" and "X-RateLimit-Remaining" in response.headers and int(response.headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
+                self.expired_keys_for_request.append(self.key)
+                raise RatelimitException(response, self.expired_keys_for_request)
+        except ValueError:
+            self.logger.warning(f"X-RateLimit-Remaining was not an integer. Value: {response.headers['X-RateLimit-Remaining']}")
+
 
         if not self.ingore_not_found_error:
 
@@ -108,7 +150,14 @@ class GithubGraphQlDataAccess:
         try:
             return self.__make_request_with_retries(query, variables, timeout)
         except RetryError as e:
-            raise e.last_attempt.exception()
+            last_exception = e.last_attempt.exception()
+
+            # https://github.com/orgs/community/discussions/101661#discussioncomment-8342211
+            # this suggests we should retry 401 exceptions at least once
+            if isinstance(last_exception, NotAuthorizedException):
+                self.expired_keys_for_request = []
+                self.__handle_github_not_authorized_response()           
+            raise last_exception
         
     @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(lambda exc: not isinstance(exc, NotFoundException)))
     def __make_request_with_retries(self, query, variables, timeout=40):
@@ -124,19 +173,25 @@ class GithubGraphQlDataAccess:
         except RatelimitException as e:
             self.__handle_github_ratelimit_response(e.response)
             raise e
+
+    def __handle_github_not_authorized_response(self):
+
+        self.key = self.key_client.invalidate(self.key)
         
     def __handle_github_ratelimit_response(self, response):
 
         headers = response.headers
+        previous_key = self.key
 
         if "Retry-After" in headers:
 
             retry_after = int(headers["Retry-After"])
             self.logger.info(
                 f'\n\n\n\nSleeping for {retry_after} seconds due to secondary rate limit issue.\n\n\n\n')
-            time.sleep(retry_after)
+            self.key = self.key_client.expire(self.key, time.time() + retry_after)
 
-        elif "X-RateLimit-Remaining" in headers and int(headers["X-RateLimit-Remaining"]) == 0:
+
+        elif "X-RateLimit-Remaining" in headers and int(headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
             current_epoch = int(time.time())
             epoch_when_key_resets = int(headers["X-RateLimit-Reset"])
             key_reset_time =  epoch_when_key_resets - current_epoch
@@ -146,9 +201,13 @@ class GithubGraphQlDataAccess:
                 key_reset_time = 0
                 
             self.logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
-            time.sleep(key_reset_time)
+            self.key = self.key_client.expire(self.key, epoch_when_key_resets)
+
         else:
-            time.sleep(60)
+            self.key = self.key_client.expire(self.key, time.time() + 60)
+
+        if previous_key == self.key:
+            self.logger.error(f"The same key was returned after a request to expire it was sent (key: {mask_key(self.key)})")
         
     def __extract_data_section(self, keys, json_response):
 

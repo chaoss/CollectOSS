@@ -2,6 +2,7 @@ from __future__ import annotations
 import logging
 import random
 import datetime
+import math
 #from celery.result import AsyncResult
 from celery import chain
 import sqlalchemy as s
@@ -43,7 +44,11 @@ class CollectionRequest:
         if limit <= 0:
             return
 
-        new_collection_git_list = get_newly_added_repos(session, limit, hook=self.name)
+        # fill the remaining limit with half new repos and half recollected repos
+        # favoring recollection if there isnt an even number of repos
+        new_collection_limit = math.floor(limit / 2)        
+
+        new_collection_git_list = get_newly_added_repos(session, new_collection_limit, hook=self.name)
         collection_list = [(repo_git, True) for repo_git in new_collection_git_list]
         self.repo_list.extend(collection_list)
         limit -= len(collection_list)

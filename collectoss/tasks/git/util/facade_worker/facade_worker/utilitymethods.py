@@ -30,6 +30,7 @@ from subprocess import check_output, CalledProcessError
 import os
 import sqlalchemy as s
 from collectoss.application.db.models import *
+from collectoss.tasks.git.util.helpers import get_absolute_clone_path
 from .config import FacadeHelper as FacadeHelper
 from collectoss.tasks.util.worker_util import calculate_date_weight_from_timestamps
 from collectoss.application.db.lib import execute_sql, fetchall_data_from_sql_text, remove_working_commits_by_repo_id_and_hashes, remove_commits_by_repo_id_and_hashes, get_repo_by_repo_git, get_session
@@ -102,7 +103,8 @@ def trim_author(facade_helper, email):
 
 	facade_helper.log_activity('Debug',f"Trimmed working author: {email}")
 
-def get_absolute_repo_path(repo_base_dir, repo_id, repo_path,repo_name):
+@deprecated("This method of storing the repo path is legacy and is being replaced")
+def get_absolute_repo_path(repo_base_dir, repo_id, repo_path, repo_name):
 	
 	return f"{repo_base_dir}{repo_id}-{repo_path}/{repo_name}"
 
@@ -150,8 +152,8 @@ def get_repo_commit_count(logger, facade_helper, repo_git):
 
 	repo = get_repo_by_repo_git(repo_git)
     
-	absolute_path = get_absolute_repo_path(facade_helper.repo_base_directory, repo.repo_id, repo.repo_path,repo.repo_name)
-	repo_loc = (f"{absolute_path}/.git")
+	absolute_path = get_absolute_clone_path(facade_helper.repo_base_directory, repo.repo_id)
+	repo_loc = absolute_path.joinpath(".git")
 
 	logger.debug(f"loc: {repo_loc}")
 	logger.debug(f"path: {repo.repo_path}")

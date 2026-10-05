@@ -104,7 +104,7 @@ class KeyClient:
             self._send("NEW", key_platform = platform or self.platform)
             try:
                 msg = self._recv()
-                if "key" in msg:
+                if msg.get("key") is not None:
                     return msg["key"]
                 raise Exception(f"Invalid response type: {msg}")
             except WaitKeyTimeout as e:

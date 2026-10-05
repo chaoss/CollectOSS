@@ -170,8 +170,13 @@ class SystemConfig():
             ]
 
             config_dir = Path(SystemEnv.get("CONFIG_DATADIR") or "./")
-            config_path = config_dir.joinpath("augur.json")
+            config_path = config_dir.joinpath("collectoss.json")
+            fallback_config_path = config_dir.joinpath("augur.json")
+            if not config_path.exists() and fallback_config_path.exists():
+                config_path = fallback_config_path
+
             if config_path.exists():
+                logger.info(f"Loading JSON config from  {config_path}")
                 config_sources.append(JsonConfig(json.loads(config_path.read_text(encoding="UTF-8")), logger))
             
             config_sources.append( DatabaseConfig(session, logger) )

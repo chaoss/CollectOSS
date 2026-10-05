@@ -19,6 +19,7 @@ classifiers = [
 ]
 dependencies = [
     "alembic>=1.17.1",
+    "alembic-utils==0.8.8",
     "Beaker==1.11.0",
     "boto3==1.17.57",
     "bs4==0.0.1",
@@ -100,9 +101,11 @@ docs = [
     # See: https://github.com/sphinx-contrib/redoc/issues/47
     "setuptools",
     "sphinx==7.2.6",
+    "sphinx-sitemap>=2.9.0",
     "sphinx_rtd_theme==2.0.0",
     "sphinxcontrib-openapi==0.8.3",
     "sphinxcontrib-redoc==1.6.0",
+    "sphinxext-opengraph[social-cards]>=0.13.0",
 ]
 
 [project.scripts]
@@ -148,6 +151,7 @@ testpaths = [
     "tests/test_application/test_cli/test_csv_utils.py",
     "tests/test_tasks/test_task_utilities/test_util/",
     "tests/test_application/test_db/test_timestamp_utils.py",
+    "tests/test_util/test_keys.py",
     # "tests/test_routes", # runs, but needs a fixture for connecting to the web interface of Augur
     # "tests/test_metrics",
     # "tests/test_tasks",

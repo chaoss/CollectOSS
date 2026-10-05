@@ -20,6 +20,55 @@
 import os
 import sys
 import sphinx_rtd_theme
+import subprocess
+
+def is_head_reachable_from(branch_name: str) -> bool:
+    """
+    Checks if HEAD is an ancestor of (reachable from) the specified branch.
+    Returns True if returncode is 0, False otherwise.
+    """
+    try:
+        result = subprocess.run(
+            ['git', 'merge-base', '--is-ancestor', 'HEAD', branch_name],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        return result.returncode == 0
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return False
+
+rtd_version = os.environ.get('READTHEDOCS_VERSION')
+rtd_version_type = os.environ.get('READTHEDOCS_VERSION_TYPE')
+
+if rtd_version:
+    if rtd_version == 'latest':
+        # RTD 'latest' maps to your primary development branch
+        git_blob = 'main'
+    elif rtd_version == 'release' or rtd_version_type == 'tag':
+        # RTD 'release' or tagged releases
+        git_blob = os.environ.get('READTHEDOCS_GIT_IDENTIFIER', rtd_version)
+    else:
+        # Custom branch names or PR previews
+        git_blob = os.environ.get('READTHEDOCS_GIT_IDENTIFIER', rtd_version)
+else:
+    # Fallback for local builds via git CLI
+    try:
+
+        rtd_version = "release" if is_head_reachable_from("release") else "latest"
+    
+        git_blob = (
+            subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
+            .strip()
+            .decode('utf-8')
+        )
+        if git_blob == 'HEAD':
+            git_blob = (
+                subprocess.check_output(['git', 'rev-parse', 'HEAD'])
+                .strip()
+                .decode('utf-8')
+            )
+    except Exception:
+        git_blob = 'main'
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -35,22 +84,26 @@ from metadata import __copyright__, __release__, __version__, __author__
 #
 # needs_sphinx = '1.0'
 
+site_url = 'https://docs.collectoss.org/'
+ogp_site_url = 'https://docs.collectoss.org/'
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
+extensions = [
+    'sphinx_sitemap',
+    'sphinxext.opengraph',
+    'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
+    # 'sphinx.ext.githubpages',
     'sphinx_rtd_theme',
-    'sphinxcontrib.openapi',
-    'sphinxcontrib.redoc',
+    # 'sphinxcontrib.openapi', # sphinx themed api docs
+    'sphinxcontrib.redoc', # fully different styled api docs page
 ]
 
 redoc = [
@@ -66,6 +119,8 @@ redoc = [
         }
     }
 ]
+
+sitemap_url_scheme = "{lang}{version}{link}"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -88,7 +143,7 @@ author = __author__
 # built documents.
 #
 # The short X.Y version.
-version = __version__
+version = rtd_version
 # The full version, including alpha/beta/rc tags.
 release = __release__
 
@@ -108,7 +163,7 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = True
+todo_include_todos = False # enable this in dev if desired
 
 html_sidebars = { '**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html'] }
 

@@ -855,8 +855,8 @@ class Repo(Base):
     repo_git = Column(String, nullable=False)
 
     #TODO: repo_path and repo_name should be generated columns in postgresql
-    repo_path = Column(String)
-    repo_name = Column(String)
+    repo_path = Column(String, comment="deprecated by the addition of facade_clone_path in the collection_status table")
+    repo_name = Column(String, comment="the current repo name")
     repo_added = Column(
         TIMESTAMP(precision=0), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
@@ -1742,7 +1742,6 @@ class PullRequest(Base):
     __tablename__ = "pull_requests"
     __table_args__ = (
         UniqueConstraint("repo_id", "pr_src_id", name="unique-pr"),
-        UniqueConstraint("repo_id", "pr_src_id", name="unique-prx"),
         UniqueConstraint("pr_url", name="pull-request-insert-unique"),
         Index("id_node", text("pr_src_id DESC"), text("pr_src_node_id DESC NULLS LAST")),
         Index(

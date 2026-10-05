@@ -169,7 +169,15 @@ class GithubDataAccess:
                 raise UrlNotFoundException(f"Could not find {url}")
             
             if response.status_code == 401:
-                raise NotAuthorizedException(f"Could not authorize with the github api")
+                resp_content = response.json()
+                response_msg = resp_content.get("message")
+                response_status = int(resp_content.get("status"))
+
+                if response_status == 401 and response_msg == "Bad credentials":
+                    self.logger.warning(f"Received a 401 response from github due to bad credential: {mask_key(self.key)}")
+                    raise NotAuthorizedException(f"Could not authorize with the github api because key was invalid: {mask_key(self.key)}")
+                else:
+                    self.logger.warning(f"Received a 401 response from github unrelated to bad credentials with message {response_msg}")
             
             if response.status_code == 410:
                 response_msg = response.json().get("message")
@@ -198,7 +206,14 @@ class GithubDataAccess:
         try:
             return self.__make_request_with_retries(url, method, timeout)
         except RetryError as e:
-            raise e.last_attempt.exception()
+            last_exception = e.last_attempt.exception()
+
+            # https://github.com/orgs/community/discussions/101661#discussioncomment-8342211
+            # this suggests we should retry 401 exceptions at least once
+            if isinstance(last_exception, NotAuthorizedException):
+                self.expired_keys_for_request = []
+                self.__handle_github_not_authorized_response()           
+            raise last_exception
 
     def _decide_retry_policy(exception: Exception) -> bool:
         """Defines whether or not to retry a failed request based on the exception thrown
@@ -223,10 +238,6 @@ class GithubDataAccess:
             return result
         except RatelimitException as e:
             self.__handle_github_ratelimit_response(e.response)
-            raise e
-        except NotAuthorizedException as e:
-            self.expired_keys_for_request = []
-            self.__handle_github_not_authorized_response()
             raise e
 
     def __handle_github_not_authorized_response(self):
@@ -281,13 +292,3 @@ class GithubDataAccess:
         updated_query = urlencode(merged_params, doseq=True)
         # _replace() is how you can create a new NamedTuple with a changed field
         return url_components._replace(query=updated_query).geturl()
-
-        
-
-
-
-
-
-
-
-
