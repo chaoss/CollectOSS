@@ -1088,6 +1088,11 @@ class ForgeInstance(Base):
     date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
     domain_name = Column(String, nullable=False, comment="The base domain name (without the scheme) where this instance is hosted")
     enabled = Column(Boolean, default=True, nullable=False, comment="denotes whether collection should run for this instance")
+    privacy_policy_url = Column(String, nullable=True, comment="The URL of the privacy policy for this instance")
+    terms_of_service_url = Column(String, nullable=True, comment="The URL of the terms of service for this instance")
+    policy_reviewed_at = Column(TIMESTAMP(timezone=True), nullable=False, comment="The date and time when the policy was last reviewed by an admin")
+    policy_reviewed_by = Column(ForeignKey("operations.users.user_id", name="forge_instance_policy_reviewed_by_fkey"), nullable=False, comment="The user ID of the admin who last reviewed the policy")
+    policy_review_notes = Column(String, nullable=True, comment="Notes from the admin who last reviewed the policy")
     api_keys = relationship("WorkerOauth")
 
 class Subscription(Base):
