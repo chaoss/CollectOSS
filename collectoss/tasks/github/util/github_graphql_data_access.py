@@ -5,6 +5,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception, 
 from keyman.KeyClient import KeyClient
 from collectoss.tasks.github.util.github_data_access import RatelimitException, NotAuthorizedException, ResourceGoneException
 from collectoss.util.keys import mask_key
+from collectoss.util.version import get_user_agent
 
 URL = "https://api.github.com/graphql"
 
@@ -83,7 +84,7 @@ class GithubGraphQlDataAccess:
             if not self.key:
                 self.key = self.key_client.request()
 
-            headers = {"Authorization": f"token {self.key}"}
+            headers = {"Authorization": f"token {self.key}", "User-Agent": get_user_agent()}
 
 
             json_dict = {
