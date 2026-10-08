@@ -170,7 +170,7 @@ def route_transform(func: Any, args: Any=None, kwargs: dict=None, repo_url_base:
             # if group_by is defined it groups by the group_by value 
             # and uses the aggregate to determine the operation performed
             if group_by is not None:
-                data = data.group_by(group_by).aggregate(aggregate)
+                data = data.groupby(group_by).aggregate(aggregate)
 
             # This code block is resampling the pandas dataframe, here is the documentation for it
             # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.resample.html
