@@ -339,6 +339,7 @@ def stop_processes(signal, logger, engine):
         cleanup_collection_status_and_rabbit(logger, engine)
 
 
+
 def assign_orphan_repos_to_default_user(session):
     query = s.sql.text("""
         SELECT repo_id FROM repo WHERE repo_id NOT IN (SELECT repo_id FROM operations.user_repos)
