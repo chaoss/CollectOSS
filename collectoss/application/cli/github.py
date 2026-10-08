@@ -5,6 +5,7 @@ import sqlalchemy as s
 from datetime import datetime
 import httpx
 from collections import Counter
+from collectoss.util.keys import mask_key
 
 from collectoss.application.cli import test_connection, test_db_connection 
 
@@ -19,9 +20,16 @@ def cli():
     pass
 
 @cli.command("api-keys")
+@click.option(
+    "--show-keys",
+    is_flag=True,
+    default=False,
+    help="Show full API keys instead of masking them.",
+)
+
 @test_connection
 @test_db_connection
-def update_api_key():
+def update_api_key(show_keys):
     """
     Get the ratelimit of Github API keys
     """
@@ -63,8 +71,8 @@ def update_api_key():
 
                 graphql_requests = str(graphql_key_data['requests_remaining']).center(len(graphql_request_header))
                 graphql_reset_time = str(epoch_to_local_time_with_am_pm(graphql_key_data["reset_epoch"])).center(len(graphql_reset_header))
-
-                print(f"{key} | {core_requests} | {core_reset_time} | {graphql_requests} | {graphql_reset_time} |")
+                display_key = key if show_keys else mask_key(key)  
+                print(f"{display_key} | {core_requests} | {core_reset_time} | {graphql_requests} | {graphql_reset_time} |")
 
             valid_key_list = [x[0] for x in valid_key_data]
             duplicate_keys = find_duplicates(valid_key_list)
@@ -72,7 +80,7 @@ def update_api_key():
                 print("\n\nWARNING: There are duplicate keys this will slow down collection")
                 print("Duplicate keys".center(40))
                 for key in duplicate_keys:
-                    print(key)
+                    print(key if show_keys else mask_key(key))
 
 
             if len(invalid_keys) > 0:
@@ -80,7 +88,7 @@ def update_api_key():
                 print("\n")
                 print(invalid_key_header)
                 for key in invalid_keys:
-                    print(key)
+                    print(key if show_keys else mask_key(key))
                 print("")
 
 
