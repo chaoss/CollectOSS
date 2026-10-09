@@ -147,7 +147,6 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
                     name
                     url
                     }
-                    securityPolicyUrl
                     issue_count: issues {
                     totalCount
                     }
@@ -214,7 +213,7 @@ def repo_info_model(key_auth, repo_orm_obj, logger):
         'contributing_file': data['contributingGuidelines']['url'] if data['contributingGuidelines'] else None,
         'license_file': data['licenseInfo']['url'] if data['licenseInfo'] else None,
         'code_of_conduct_file': data['codeOfConduct']['url'] if data['codeOfConduct'] else None,
-        'security_issue_file': data['securityPolicyUrl'] if data['securityPolicyUrl'] else None,
+        'security_issue_file': None,
         'security_audit_file': None,
         'status': None,
         'keywords': None,
