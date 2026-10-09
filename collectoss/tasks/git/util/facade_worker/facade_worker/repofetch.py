@@ -272,8 +272,7 @@ def git_repo_initialize(facade_helper, session, repo_git):
             if not allowed:
                 docs_ref = (
                     "See max_clone_size_kb in the configuration reference: "
-                    "https://github.com/chaoss/CollectOSS/blob/main/docs/source"
-                    "/development-guide/configuration-file-reference.rst"
+                    "https://docs.collectoss.org/en/latest/development-guide/configuration-file-reference.html"
                 )
                 if estimated_kb is not None:
                     msg = (
