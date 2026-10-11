@@ -119,6 +119,8 @@ redoc = [
     }
 ]
 
+html_extra_path = ["_html"]
+
 sitemap_url_scheme = "{lang}{version}{link}"
 
 # Add any paths that contain templates here, relative to this directory.
