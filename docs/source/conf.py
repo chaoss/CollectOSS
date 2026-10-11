@@ -91,7 +91,6 @@ ogp_site_url = 'https://docs.collectoss.org/'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx_sitemap',
     'sphinxext.opengraph',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',

@@ -101,7 +101,6 @@ docs = [
     # See: https://github.com/sphinx-contrib/redoc/issues/47
     "setuptools",
     "sphinx==7.2.6",
-    "sphinx-sitemap>=2.9.0",
     "sphinx_rtd_theme==2.0.0",
     "sphinxcontrib-openapi==0.8.3",
     "sphinxcontrib-redoc==1.6.0",
