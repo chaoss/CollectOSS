@@ -1,0 +1,11 @@
+
+User-agent: *
+
+Disallow: /
+
+Allow: /en/release
+
+Allow: /en/latest
+
+
+Sitemap: https://docs.collectoss.org/en/latest/sitemap-clean.xml
