@@ -16,17 +16,33 @@ WARNING: ALL views must be registered here or autogenerate will propose
 dropping unregistered ones. Keep this list complete.
 """
 
-from dataclasses import dataclass
-
 from alembic_utils_extended.pg_materialized_view import PGMaterializedView
 
 
-@dataclass(frozen=True)
-class MaterializedView:
-    name: str
-    schema: str
-    sql: str
-    unique_index_columns: tuple[str, ...] = ()
+class MaterializedView(PGMaterializedView):
+    """Thin subclass of ``PGMaterializedView`` with CollectOSS-specific helpers.
+
+    The constructor uses CollectOSS-style kwargs (``name``, ``sql``,
+    ``unique_index_columns``) and delegates to ``PGMaterializedView.__init__``,
+    so every instance *is* a ``PGMaterializedView`` and can be passed directly
+    to ``alembic_utils_extended.register_entities`` without any conversion.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        schema: str,
+        sql: str,
+        unique_index_columns: tuple[str, ...] = (),
+        with_data: bool = False,
+    ) -> None:
+        super().__init__(
+            schema=schema,
+            signature=name,
+            definition=sql,
+            with_data=with_data,
+        )
+        self.unique_index_columns = unique_index_columns
 
     @property
     def fqn(self) -> str:
@@ -45,8 +61,7 @@ class MaterializedView:
         )
 
     def __repr__(self) -> str:
-        # Default dataclass repr would dump the full SQL string (some views
-        # are 100+ lines), making logs and debug output unreadable.
+        # Avoid dumping the full SQL string (some views are 100+ lines) in logs.
         return (
             f"MaterializedView(name={self.name!r}, schema={self.schema!r}, "
             f"unique_index_columns={self.unique_index_columns!r})"
