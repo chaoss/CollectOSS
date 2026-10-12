@@ -6,18 +6,14 @@ Alembic migrations for NEW views should inline their SQL (migrations are
 immutable snapshots), but this registry is the canonical reference for what
 views exist and how to refresh them.
 
-alembic_utils autogenerate is wired up (phase 2 complete). Running
+alembic_utils_extended autogenerate is wired up (phase 2 complete). Running
 `alembic revision --autogenerate` will detect changes to view SQL definitions.
-alembic_utils uses a round-trip comparison: it creates the Python-defined view
+alembic_utils_extended uses a round-trip comparison: it creates the Python-defined view
 in a savepoint, reads back what PostgreSQL stored, and diffs that against the
 live database. Manual SQL normalization is not required.
 
 WARNING: ALL views must be registered here or autogenerate will propose
 dropping unregistered ones. Keep this list complete.
-
-alembic_utils does NOT manage indexes on materialized views. See the developer
-note in collectoss/application/schema/alembic/env.py for the full post-replace
-procedure (index recreation + non-concurrent refresh).
 """
 
 from dataclasses import dataclass
