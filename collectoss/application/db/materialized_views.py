@@ -52,14 +52,6 @@ class MaterializedView(PGMaterializedView):
         mode = "CONCURRENTLY " if concurrently else ""
         return f"REFRESH MATERIALIZED VIEW {mode}{self.fqn} WITH DATA;"
 
-    def to_pg_view(self, with_data: bool = False) -> PGMaterializedView:
-        return PGMaterializedView(
-            schema=self.schema,
-            signature=self.name,
-            definition=self.sql,
-            with_data=with_data,
-        )
-
     def __repr__(self) -> str:
         # Avoid dumping the full SQL string (some views are 100+ lines) in logs.
         return (
