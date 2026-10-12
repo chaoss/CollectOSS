@@ -41,8 +41,8 @@ target_metadata = Base.metadata
 #
 # WARNING: If MATERIALIZED_VIEWS is ever emptied, autogenerate will propose
 # dropping all registered views. Keep the list complete.
-from alembic_utils.pg_materialized_view import PGMaterializedView
-from alembic_utils.replaceable_entity import register_entities
+from alembic_utils_extended.pg_materialized_view import PGMaterializedView
+from alembic_utils_extended.replaceable_entity import register_entities
 from collectoss.application.db.materialized_views import MATERIALIZED_VIEWS
 _materialized_view_entities = [view.to_pg_view() for view in MATERIALIZED_VIEWS]
 register_entities(_materialized_view_entities, entity_types=[PGMaterializedView])
