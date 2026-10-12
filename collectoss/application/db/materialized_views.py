@@ -48,9 +48,17 @@ class MaterializedView(PGMaterializedView):
     def fqn(self) -> str:
         return f"{self.schema}.{self.name}"
 
-    def refresh_sql(self, concurrently: bool = True) -> str:
+    def refresh_sql(self, concurrently: bool = True, with_data: bool | None = None) -> str:
+        """Return the SQL to refresh the view.
+
+        Args:
+            concurrently: Whether to refresh the view CONCURRENTLY.
+            with_data: Whether to refresh the view WITH DATA. If None, uses the
+                view's ``with_data`` attribute.
+        """
         mode = "CONCURRENTLY " if concurrently else ""
-        return f"REFRESH MATERIALIZED VIEW {mode}{self.fqn} WITH DATA;"
+        data_present = "DATA" if with_data or self.with_data else "NO DATA"
+        return f"REFRESH MATERIALIZED VIEW {mode}{self.fqn} WITH {data_present};"
 
     def __repr__(self) -> str:
         # Avoid dumping the full SQL string (some views are 100+ lines) in logs.
