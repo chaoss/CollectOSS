@@ -44,22 +44,6 @@ wheels = [
 ]
 
 [[package]]
-name = "alembic-utils"
-version = "0.8.8"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "alembic" },
-    { name = "flupy" },
-    { name = "parse" },
-    { name = "sqlalchemy" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ec/7a/eae622a97ba1721fd7e420c60060a74852b800ac1fecbaa2e67a35941d6d/alembic_utils-0.8.8.tar.gz", hash = "sha256:99de5d13194f26536bc0322f0c1660020a305015700d8447ccfc20e7d1494e5b", size = 21638, upload-time = "2025-04-10T18:58:13.212Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/dd/01/d55bd80997df2ec1ff2fd40cd3eeadec93c4b3c5492df3c6852b29f9e393/alembic_utils-0.8.8-py3-none-any.whl", hash = "sha256:2c2545dc545833c5deb63bce2c3cde01c1807bf99da5efab2497bc8d817cb86e", size = 31044, upload-time = "2025-04-10T18:58:12.247Z" },
-]
-
-[[package]]
 name = "alembic-utils-extended"
 version = "1.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -412,7 +396,6 @@ name = "collectoss"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },
-    { name = "alembic-utils" },
     { name = "alembic-utils-extended" },
     { name = "beaker" },
     { name = "boto3" },
@@ -518,7 +501,6 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.17.1" },
-    { name = "alembic-utils", specifier = "==0.8.8" },
     { name = "alembic-utils-extended", specifier = ">=1.5.0" },
     { name = "beaker", specifier = "==1.11.0" },
     { name = "boto3", specifier = "==1.17.57" },
