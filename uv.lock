@@ -60,6 +60,22 @@ wheels = [
 ]
 
 [[package]]
+name = "alembic-utils-extended"
+version = "1.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "alembic" },
+    { name = "flupy" },
+    { name = "parse" },
+    { name = "sqlalchemy" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/59/b0/5187a03dcea41dca1f684a815309689680a987db56e0d777d9a608d0cfc3/alembic_utils_extended-1.5.0.tar.gz", hash = "sha256:636963c932458d52c4f489830140c677755038ef4dc2ad49f86789b98a1224b8", size = 42298, upload-time = "2026-08-13T00:12:13.279Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a2/3f/70b7b79b4738b4c85c3a5af1fd9357009d169b331872d92b16b4d37d0392/alembic_utils_extended-1.5.0-py3-none-any.whl", hash = "sha256:9a53a9767291239fd29126d99d5c2c7ffe7c4a8120bc7be69dc89f5cdd978995", size = 53262, upload-time = "2026-08-13T00:12:11.806Z" },
+]
+
+[[package]]
 name = "amqp"
 version = "5.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -397,6 +413,7 @@ source = { editable = "." }
 dependencies = [
     { name = "alembic" },
     { name = "alembic-utils" },
+    { name = "alembic-utils-extended" },
     { name = "beaker" },
     { name = "boto3" },
     { name = "bs4" },
@@ -502,6 +519,7 @@ test = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.17.1" },
     { name = "alembic-utils", specifier = "==0.8.8" },
+    { name = "alembic-utils-extended", specifier = ">=1.5.0" },
     { name = "beaker", specifier = "==1.11.0" },
     { name = "boto3", specifier = "==1.17.57" },
     { name = "bs4", specifier = "==0.0.1" },
