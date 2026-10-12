@@ -44,7 +44,8 @@ target_metadata = Base.metadata
 from alembic_utils_extended.pg_materialized_view import PGMaterializedView
 from alembic_utils_extended.replaceable_entity import register_entities
 from collectoss.application.db.materialized_views import MATERIALIZED_VIEWS
-register_entities(MATERIALIZED_VIEWS, entity_types=[PGMaterializedView])
+_materialized_view_entities = [view.to_pg_view() for view in MATERIALIZED_VIEWS]
+register_entities(_materialized_view_entities, entity_types=[PGMaterializedView])
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
