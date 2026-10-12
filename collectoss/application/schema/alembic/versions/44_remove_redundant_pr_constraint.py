@@ -7,7 +7,6 @@ Create Date: 2026-06-27 15:41:43.276187
 """
 from alembic import op
 import sqlalchemy as sa
-from alembic_utils.pg_materialized_view import PGMaterializedView
 from sqlalchemy import text as sql_text
 
 # revision identifiers, used by Alembic.
