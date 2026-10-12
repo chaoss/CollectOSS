@@ -22,7 +22,7 @@ procedure (index recreation + non-concurrent refresh).
 
 from dataclasses import dataclass
 
-from alembic_utils.pg_materialized_view import PGMaterializedView
+from alembic_utils_extended.pg_materialized_view import PGMaterializedView
 
 
 @dataclass(frozen=True)
