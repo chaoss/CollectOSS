@@ -1,5 +1,5 @@
-CollectOSS Project Legal Compliance Information
-===============================================
+CollectOSS Project Compliance Information
+=========================================
 
 `CollectOSS <https://collectoss.org>`__ focuses on collecting data from public git-based code hosting platforms ("Forges") such as GitHub and GitLab. As such, it is almost impossible to entirely avoid collecting Personal Information (sometimes referred to as PII) from users of the platforms that we collect data from.
 
