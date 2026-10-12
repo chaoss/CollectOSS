@@ -60,6 +60,29 @@ class MaterializedView(PGMaterializedView):
         data_present = "DATA" if with_data or self.with_data else "NO DATA"
         return f"REFRESH MATERIALIZED VIEW {mode}{self.fqn} WITH {data_present};"
 
+    def to_pg_view(self, with_data: bool = None) -> PGMaterializedView:
+        """Return a plain ``PGMaterializedView`` for use with alembic_utils registration.
+
+        We cannot return *self* here even though ``MaterializedView`` is a
+        ``PGMaterializedView`` subclass.  ``alembic_utils_extended`` uses two
+        exact-class checks that both fail with a subclass and cause spurious
+        ``DropOp``s for all materialized views.
+
+        Returning a genuine ``PGMaterializedView`` sidesteps both issues while
+        all runtime helpers (``fqn``, ``refresh_sql``, ``unique_index_columns``)
+        remain accessible on *self*.
+
+        Parameters:
+            with_data: Optional override for ``with_data`` in the returned view. If None, uses the
+                view's ``with_data`` attribute.
+        """
+        return PGMaterializedView(
+            schema=self.schema,
+            signature=self.signature,
+            definition=self.definition,
+            with_data=with_data or self.with_data,
+        )
+
     def __repr__(self) -> str:
         # Avoid dumping the full SQL string (some views are 100+ lines) in logs.
         return (
