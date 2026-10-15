@@ -1,5 +1,5 @@
 import logging
-
+import httpx
 
 from collectoss.tasks.init.celery_app import celery_app as celery
 from collectoss.tasks.init.celery_app import FacadeRepoCollectionTask
@@ -62,8 +62,19 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
         
 
         # Try to get the login from the commit sha
-        if login == None or login == "":
-            login = get_login_with_commit_hash(logger, auth, contributor, repo_id)
+        if login is None or login == "":
+            try:
+                login = get_login_with_commit_hash(
+                    logger, auth, contributor, repo_id
+                )
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 422:
+                    logger.warning(
+                        f"Skipping commit {contributor.get('hash')} "
+                        f"because GitHub returned HTTP 422."
+                    )
+                    continue
+                raise
     
         if login == None or login == "":
             logger.warning("Failed to get login from commit hash")

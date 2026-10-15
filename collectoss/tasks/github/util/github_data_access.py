@@ -221,6 +221,8 @@ class GithubDataAccess:
         Returns:
             bool: Boolean describing whether or not the request should be retried
         """
+        if isinstance(exception, httpx.HTTPStatusError) and exception.response.status_code == 422:
+            return False
         return not isinstance(exception, (UrlNotFoundException, ResourceGoneException))
         
     @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(_decide_retry_policy))
