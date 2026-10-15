@@ -9,22 +9,22 @@ Using the image
 
 The easiest way to use the image is to create a `docker-compose.yml` file in a new directory with the following contents:
 
-```yaml
- services:
-  sample-collected-data:
-     image: ghcr.io/oss-aspen/sample-collected-data:latest
-     ports:
-       - "5433:5432"  # exposed on 5433 to avoid clashing with a local postgres
-     environment:
-       POSTGRES_DB: sample_collected_data
-       POSTGRES_USER: sample_user
-       POSTGRES_PASSWORD: sample_password
-     healthcheck:
-       test: ["CMD-SHELL", "pg_isready -U sample_user -d sample_collected_data"]
-       interval: 5s
-       timeout: 5s
-       retries: 10
-```
+.. code-block:: yaml
+
+    services:
+      sample-collected-data:
+        image: ghcr.io/oss-aspen/sample-collected-data:latest
+        ports:
+          - "5433:5432"  # exposed on 5433 to avoid clashing with a local postgres
+        environment:
+          POSTGRES_DB: sample_collected_data
+          POSTGRES_USER: sample_user
+          POSTGRES_PASSWORD: sample_password
+        healthcheck:
+          test: ["CMD-SHELL", "pg_isready -U sample_user -d sample_collected_data"]
+          interval: 5s
+          timeout: 5s
+          retries: 10
 
 Once this file exists, running `docker compose up` from this directory will bring the database up and allow you to connect as explained in the next section.
 
