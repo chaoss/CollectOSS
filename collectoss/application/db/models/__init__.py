@@ -110,8 +110,7 @@ from collectoss.application.db.models.operations import (
     Subscription,
     SubscriptionType,
     RefreshToken,
-    CollectionStatus,
-    BadgingDEI
+    CollectionStatus
 )
 
 DEFAULT_REPO_GROUP_IDS = [1, 10]
