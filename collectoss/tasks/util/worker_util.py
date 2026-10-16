@@ -128,14 +128,27 @@ def calculate_date_weight_from_timestamps(added,last_collection,domain_start_day
             #Else increase its weight
             return -1 * factor
 
-def parse_json_from_subprocess_call(logger, subprocess_arr, cwd=None):
+def parse_json_from_subprocess_call(logger, subprocess_arr, cwd=None, timeout=None):
     logger.info(f"running subprocess {subprocess_arr[0]}")
-    if cwd:
-        p = subprocess.run(subprocess_arr,cwd=cwd,capture_output=True, text=True, timeout=None)
-    else:
-        p = subprocess.run(subprocess_arr,capture_output=True, text=True, timeout=None)
-    
+    try:
+        p = subprocess.run(subprocess_arr,cwd=cwd,capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired as e:
+        logger.error(f"subprocess {subprocess_arr[0]} timed out after {timeout} seconds")
+        raise MetadataException(e, f"{subprocess_arr[0]} timed out after {timeout} seconds")
+
     logger.info('subprocess completed... ')
+
+    # the subprocess reports why it failed on stderr, so it always needs to reach the
+    # logs; without it a failed call is indistinguishable from one that found nothing
+    if p.stderr:
+        logger.warning(f"subprocess {subprocess_arr[0]} stderr: {p.stderr}")
+
+    if p.returncode != 0:
+        logger.error(f"subprocess {subprocess_arr[0]} exited with code {p.returncode}")
+        raise MetadataException(
+            subprocess.CalledProcessError(p.returncode, subprocess_arr, p.stdout, p.stderr),
+            f"{subprocess_arr[0]} exited with code {p.returncode}; stderr: {p.stderr}"
+        )
 
     output = p.stdout
 
