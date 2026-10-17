@@ -1,3 +1,4 @@
+import logging
 from collectoss.tasks.github.releases import core
 
 
