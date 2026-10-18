@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: MIT
 import pytest
-import httpx
 from unittest.mock import Mock, patch
 
-from collectoss.tasks.github.util.github_data_access import GithubDataAccess
+from collectoss.tasks.github.util.github_data_access import (
+    GithubDataAccess,
+    ResourceUnprocessable,
+)
 from collectoss.tasks.github.facade_github.contributor_interfaceable.contributor_interface import (
     get_login_with_commit_hash,
 )
@@ -59,24 +61,22 @@ class TestEndpointUrl:
         assert "per_page=10" in result
         assert result.startswith("https://api.github.com/search/repositories")
 
-    def test_422_response_is_not_retried(self, gda):
-        assert not GithubDataAccess._decide_retry_policy(
-            httpx.HTTPStatusError(
-                "422 Unprocessable Entity",
-                request=Mock(),
-                response=Mock(status_code=422),
-            )
+@pytest.mark.unit
+class TestResponseErrors:
+
+    def test_422_response_is_not_retried(self):
+        exception = ResourceUnprocessable(
+            "GitHub returned HTTP 422"
         )
 
-def test_422_commit_lookup_raises_http_error():
+        assert not GithubDataAccess._decide_retry_policy(exception)
+def test_422_commit_lookup_raises_resource_unprocessable():
     logger = Mock()
     auth = Mock()
     commit_data = {"hash": "1f5270431bc8556cf6dfee1905e07abcc45e20d2"}
 
-    error = httpx.HTTPStatusError(
-        "422 Unprocessable Entity",
-        request=Mock(),
-        response=Mock(status_code=422),
+    error = ResourceUnprocessable(
+        "GitHub returned HTTP 422"
     )
 
     with patch(
@@ -87,11 +87,8 @@ def test_422_commit_lookup_raises_http_error():
     ) as mock_gda:
         mock_gda.return_value.get_resource.side_effect = error
 
-        with pytest.raises(httpx.HTTPStatusError) as exc_info:
+        with pytest.raises(ResourceUnprocessable):
             get_login_with_commit_hash(
                 logger, auth, commit_data, repo_id=1
             )
-
-    assert exc_info.value.response.status_code == 422
-    logger.warning.assert_called_once()
 

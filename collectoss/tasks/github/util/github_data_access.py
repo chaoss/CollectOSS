@@ -34,10 +34,14 @@ class ResourceGoneException(Exception):
     def __init__(self, message="Resource returned HTTP 410 Gone. It is likely intentionally removed"):
         super().__init__(message)
 
+class ResourceUnprocessable(Exception):
+    """Exception raised when GitHub returns HTTP 422."""
+    pass
+
 class GithubDataAccess:
 
     def __init__(self, key_manager, logger: logging.Logger, feature="rest"):
-    
+
         self.logger = logger
         self.feature = feature
         self.key_client = KeyClient(f"github_{feature}", logger)
@@ -119,8 +123,8 @@ class GithubDataAccess:
 
             yield from data
 
-        return 
-    
+        return
+
     def get_resource_page_count(self, url):
 
         response = self.make_request_with_retries(url, method="HEAD")
@@ -128,12 +132,12 @@ class GithubDataAccess:
         if 'last' not in response.links.keys():
             self.logger.warning(f"Github response without links. Headers: {response.headers}.")
             return 1
-        
+
         try:
             last_page_url = response.links['last']['url']
 
             parsed_url = urlparse(last_page_url)
-        
+
             return int(parse_qs(parsed_url.query)['page'][0])
         except (KeyError, ValueError):
             raise Exception(f"Unable to parse 'last' url from response: {response.links['last']}")
@@ -142,8 +146,8 @@ class GithubDataAccess:
 
         response = self.make_request_with_retries(url)
 
-        return response.json()  
-    
+        return response.json()
+
     # TODO: Handle timeout exceptions better
     def make_request(self, url, method="GET", timeout=100):
 
@@ -161,13 +165,13 @@ class GithubDataAccess:
                 self.logger.warning(f"Github rate limit exceeded. Key: {mask_key(self.key)}. Response: {response.text}")
                 raise RatelimitException(response, self.expired_keys_for_request)
 
-            # There are cases with PR files, PR commits, and messages where the parent object is removed after 
-            # It is collected, leading the the associated URL for those objects to return a 404. 
-            # This is not an issue that is really an Exception. It is more of a nominal signal. 
-            
+            # There are cases with PR files, PR commits, and messages where the parent object is removed after
+            # It is collected, leading the the associated URL for those objects to return a 404.
+            # This is not an issue that is really an Exception. It is more of a nominal signal.
+
             if response.status_code == 404:
                 raise UrlNotFoundException(f"Could not find {url}")
-            
+
             if response.status_code == 401:
                 resp_content = response.json()
                 response_msg = resp_content.get("message")
@@ -178,14 +182,18 @@ class GithubDataAccess:
                     raise NotAuthorizedException(f"Could not authorize with the github api because key was invalid: {mask_key(self.key)}")
                 else:
                     self.logger.warning(f"Received a 401 response from github unrelated to bad credentials with message {response_msg}")
-            
+
             if response.status_code == 410:
                 response_msg = response.json().get("message")
                 if response_msg is not None:
                     raise ResourceGoneException(response_msg)
                 else:
                     raise ResourceGoneException()
-                
+            if response.status_code == 422:
+                raise ResourceUnprocessable(
+                    f"GitHub returned HTTP 422 for {url}"
+                )
+
             response.raise_for_status()
 
             try:
@@ -197,7 +205,7 @@ class GithubDataAccess:
 
 
             return response
-        
+
     def make_request_with_retries(self, url, method="GET", timeout=100):
         """ What method does?
             1. Catches RetryError and rethrows a nicely formatted OutOfRetriesException that includes that last exception thrown
@@ -212,7 +220,7 @@ class GithubDataAccess:
             # this suggests we should retry 401 exceptions at least once
             if isinstance(last_exception, NotAuthorizedException):
                 self.expired_keys_for_request = []
-                self.__handle_github_not_authorized_response()           
+                self.__handle_github_not_authorized_response()
             raise last_exception
 
     def _decide_retry_policy(exception: Exception) -> bool:
@@ -221,10 +229,15 @@ class GithubDataAccess:
         Returns:
             bool: Boolean describing whether or not the request should be retried
         """
-        if isinstance(exception, httpx.HTTPStatusError) and exception.response.status_code == 422:
-            return False
-        return not isinstance(exception, (UrlNotFoundException, ResourceGoneException))
-        
+        return not isinstance(
+            exception,
+            (
+                UrlNotFoundException,
+                ResourceGoneException,
+                ResourceUnprocessable,
+            ),
+     )
+
     @retry(stop=stop_after_attempt(10), wait=wait_fixed(5), retry=retry_if_exception(_decide_retry_policy))
     def __make_request_with_retries(self, url, method="GET", timeout=100):
         """ What method does?
@@ -246,7 +259,7 @@ class GithubDataAccess:
 
         self.key = self.key_client.invalidate(self.key)
 
-        
+
     def __handle_github_ratelimit_response(self, response):
 
         headers = response.headers
@@ -262,11 +275,11 @@ class GithubDataAccess:
             current_epoch = int(time.time())
             epoch_when_key_resets = int(headers["X-RateLimit-Reset"])
             key_reset_time =  epoch_when_key_resets - current_epoch
-            
+
             if key_reset_time < 0:
                 self.logger.error(f"Key reset time was less than 0 setting it to 0.\nThe current epoch is {current_epoch} and the epoch that the key resets at is {epoch_when_key_resets}")
                 key_reset_time = 0
-                
+
             self.logger.info(f"\n\n\nAPI rate limit exceeded. Key resets in {key_reset_time} seconds. Informing key manager that key is expired")
             self.key = self.key_client.expire(self.key, epoch_when_key_resets)
 
