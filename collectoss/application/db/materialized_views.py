@@ -58,8 +58,10 @@ class MaterializedView(PGMaterializedView):
             with_data: Whether to refresh the view WITH DATA. If None, uses the
                 view's ``with_data`` attribute.
         """
+        if with_data is None:
+          with_data = self.with_data
         mode = "CONCURRENTLY " if concurrently else ""
-        data_present = "DATA" if with_data or self.with_data else "NO DATA"
+        data_present = "DATA" if with_data else "NO DATA"
         return f"REFRESH MATERIALIZED VIEW {mode}{self.fqn} WITH {data_present};"
 
     def to_pg_view(self, with_data: bool = None) -> PGMaterializedView:
@@ -78,11 +80,13 @@ class MaterializedView(PGMaterializedView):
             with_data: Optional override for ``with_data`` in the returned view. If None, uses the
                 view's ``with_data`` attribute.
         """
+        if with_data is None:
+          with_data = self.with_data
         return PGMaterializedView(
             schema=self.schema,
             signature=self.signature,
             definition=self.definition,
-            with_data=with_data or self.with_data,
+            with_data=with_data,
         )
 
     def __repr__(self) -> str:
