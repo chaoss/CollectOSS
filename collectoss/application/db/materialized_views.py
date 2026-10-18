@@ -17,7 +17,7 @@ dropping unregistered ones. Keep this list complete.
 """
 
 from alembic_utils_extended.pg_materialized_view import PGMaterializedView
-from alembic_utils_extended.index import Index
+from sqlalchemy import Index
 
 
 class MaterializedView(PGMaterializedView):
@@ -36,13 +36,14 @@ class MaterializedView(PGMaterializedView):
         sql: str,
         unique_index_columns: tuple[str, ...] = (),
         with_data: bool = False,
-        indexes = list[Index]
+        indexes = list[Index] | None = None,
     ) -> None:
         super().__init__(
             schema=schema,
             signature=name,
             definition=sql,
             with_data=with_data,
+            indexes=indexes,
         )
         self.unique_index_columns = unique_index_columns
 
@@ -87,6 +88,7 @@ class MaterializedView(PGMaterializedView):
             signature=self.signature,
             definition=self.definition,
             with_data=with_data,
+            indexes=self.indexes,
         )
 
     def __repr__(self) -> str:
