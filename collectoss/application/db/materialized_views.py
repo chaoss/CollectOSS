@@ -23,10 +23,15 @@ from sqlalchemy import Index
 class MaterializedView(PGMaterializedView):
     """Thin subclass of ``PGMaterializedView`` with CollectOSS-specific helpers.
 
-    The constructor uses CollectOSS-style kwargs (``name``, ``sql``,
-    ``unique_index_columns``) and delegates to ``PGMaterializedView.__init__``,
-    so every instance *is* a ``PGMaterializedView`` and can be passed directly
-    to ``alembic_utils_extended.register_entities`` without any conversion.
+    Indexes are declared as full SQLAlchemy ``Index`` objects (strings for
+    plain column references), giving complete flexibility (uniqueness,
+    expressions, opclasses) instead of a bare column list. A unique index is
+    what makes ``REFRESH MATERIALIZED VIEW ... CONCURRENTLY`` possible; see
+    ``has_unique_index``.
+
+    Instances must be converted via ``to_pg_view()`` before registration with
+    ``register_entities``: ``alembic_utils_extended`` performs exact-class
+    checks that mis-handle subclasses (spurious ``DropOp``s).
     """
 
     def __init__(
@@ -34,9 +39,8 @@ class MaterializedView(PGMaterializedView):
         name: str,
         schema: str,
         sql: str,
-        unique_index_columns: tuple[str, ...] = (),
         with_data: bool = False,
-        indexes = list[Index] | None = None,
+        indexes: list[Index] | None = None,
     ) -> None:
         super().__init__(
             schema=schema,
@@ -45,11 +49,20 @@ class MaterializedView(PGMaterializedView):
             with_data=with_data,
             indexes=indexes,
         )
-        self.unique_index_columns = unique_index_columns
 
     @property
     def fqn(self) -> str:
         return f"{self.schema}.{self.name}"
+
+    @property
+    def unique_indexes(self) -> list[Index]:
+        """The view's unique indexes (the prerequisite for CONCURRENTLY refresh)."""
+        return [index for index in (self.indexes or []) if index.unique]
+
+    @property
+    def has_unique_index(self) -> bool:
+        """Whether the view can be refreshed CONCURRENTLY."""
+        return bool(self.unique_indexes)
 
     def refresh_sql(self, concurrently: bool = True, with_data: bool | None = None) -> str:
         """Return the SQL to refresh the view.
@@ -74,7 +87,7 @@ class MaterializedView(PGMaterializedView):
         ``DropOp``s for all materialized views.
 
         Returning a genuine ``PGMaterializedView`` sidesteps both issues while
-        all runtime helpers (``fqn``, ``refresh_sql``, ``unique_index_columns``)
+        all runtime helpers (``fqn``, ``refresh_sql``, ``has_unique_index``)
         remain accessible on *self*.
 
         Parameters:
@@ -95,7 +108,7 @@ class MaterializedView(PGMaterializedView):
         # Avoid dumping the full SQL string (some views are 100+ lines) in logs.
         return (
             f"MaterializedView(name={self.name!r}, schema={self.schema!r}, "
-            f"unique_index_columns={self.unique_index_columns!r})"
+            f"indexes={[index.name for index in self.indexes or []]!r})"
         )
 
 
