@@ -16,6 +16,7 @@ from collectoss.application.db.session import DatabaseSession
 from collectoss.application.logs import SystemLogger
 from collectoss.application.cli import test_connection, test_db_connection, with_database, DatabaseContext
 from collectoss.application.cli._cli_util import _broadcast_signal_to_processes, raise_open_file_limit, clear_redis_caches, clear_rabbitmq_messages
+from collectoss.application.cli._gunicorn import build_gunicorn_command
 from collectoss.application.db.lib import get_value
 from collectoss.application.environment import SystemEnv
 
@@ -61,8 +62,8 @@ def start(ctx, development, port):
     if not port:
         port = get_value("Server", "port")
         
-    gunicorn_command = f"gunicorn -c {gunicorn_location} -b {host}:{port} collectoss.api.server:app --log-file gunicorn.log"
-    server = subprocess.Popen(gunicorn_command.split(" "))
+    gunicorn_command = build_gunicorn_command(gunicorn_location, host, str(port), log_file="gunicorn.log")
+    server = subprocess.Popen(gunicorn_command)
 
     time.sleep(3)
     logger.info('Gunicorn webserver started...')
@@ -154,5 +155,3 @@ def is_api_process(process):
                 return True
             
     return False
-
-
