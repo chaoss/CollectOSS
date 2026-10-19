@@ -46,7 +46,8 @@ On each run, the collection monitor task will:
 1. Queries the database for repositories due for collection, based on the
    per-phase collection intervals configured in ``SystemConfig``
    (core, secondary, facade, and ML phases).
-2. Builds a `CollectionRequest` object per enabled phase and dispatches the individual collection tasks.
+2. Builds a :class:`~collectoss.tasks.util.collection_util.CollectionRequest`
+   per enabled phase and dispatches the individual collection tasks.
 
 These dispatched collection tasks are routed onto separate Celery queues:
 
