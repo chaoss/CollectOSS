@@ -1,7 +1,8 @@
 How to Install CollectOSS for Development
 =========================================
 
-Installing CollectOSS for local development is pretty similar to the normal installation process. This guide will primarily detail the differences between the two instead of regurgitating all the information in the `Getting Started <../getting-started/toc.html>`_ section. If you are completely new to CollectOSS, we recommend following the aforementioned `Getting Started <../getting-started/toc.html>`_ section first; once you feel more comfortable with CollectOSS and how to use it, come back to this document.
+Building CollectOSS for local development (i.e. from source) uses the same process as the normal installation fom docker.
+If you are completely new to CollectOSS, we recommend following the `Getting Started <../getting-started/toc.html>`_ section first; once you feel more comfortable with CollectOSS and how to use it, come back to this document.
 
 Setting up the Database
 ------------------------
@@ -14,27 +15,16 @@ However, during development, you might find that you need to reset your database
 
 More information about CollectOSS's Docker images can be found `here <../docker/docker.html>`_. If you're new to our Docker process, we recommend following the `introduction section <../docker/toc.html>`_ first.
 
-Installing from Source
-----------------------------
 
-The process for installing CollectOSS's source code for development is essentially the same as detailed in the `Installation <../getting-started/installation.html>`_ section of the Getting Started guide.
+Building CollectOSS from Source
+-------------------------------
 
-**However**, when running the installation script, use the following command instead:
+To build CollectOSS from source, you can use the following command:
 
 .. code-block:: bash
 
-   $ make install-dev
+   $ docker compose build
 
-This will install a few extra dependencies for testing and documentation, as well as install all the Python packages in `editable mode <https://pip-python3.readthedocs.io/en/latest/reference/pip_install.html#editable-installs>`_. This means you will not have to reinstall the package every time you make a change to the Python source code.
+This will build the CollectOSS image based on the current state of your local repository.
 
-This command will also create your ``augur.config.json`` file in the root of your cloned source code directory **instead of** the default location in ``$HOME/.collectoss/``. This is purely for convenience's sake, as it will allow you to open this file in your text editor with all the other source code files, and also allows you to have multiple developer installations of CollectOSS on the same machine if needed. If CollectOSS finds a config file in both the root of the cloned directory AND in the default location, it will always use the one in the root of the cloned directory.
-
-.. note::
-    You can still use ``make clean`` to get rid of the installed binaries if something went wrong and you want to try again.
-
-Conclusion
------------
-
-All in all, it's pretty similar. For further reading, the `Makefile <make/toc.html>`_ documentation and the `Creating a Metric guide <create-a-metric/toc.html>`_ are good places to start.
-
-Happy hacking!
+You can then use the same `docker compose up` command to run the CollectOSS container stack to test your changes.
