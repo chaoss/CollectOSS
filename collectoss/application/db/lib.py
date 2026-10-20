@@ -9,7 +9,6 @@ from psycopg2.errors import DeadlockDetected
 from typing import List, Any, Optional, Union
 from typing_extensions import deprecated
 
-from collectoss.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,UnresolvedCommitEmail, Contributor, CollectionStatus, UserGroup, RepoGroup
 # TODO: CollectionState should be moved to augur/application/db/ to eliminate
 # this cross-layer dependency — same issue as the correction.py import above.
 from collectoss.tasks.util.collection_state import CollectionState
@@ -17,6 +16,9 @@ from collectoss.application.db.timestamp_utils import correct_timestamp
 from collectoss.application.db import get_session, get_engine
 from collectoss.application.db.util import execute_session_query, convert_type_of_value
 from collectoss.application.db.session import remove_duplicates_by_uniques, remove_null_characters_from_list_of_dicts
+from collectoss.application.db.models import Config, Repo, Commit, WorkerOauth, Issue, PullRequest, PullRequestReview, ContributorsAlias,UnresolvedCommitEmail, Contributor, CollectionStatus, UserGroup, RepoGroup, Message, PullRequestCommit, Release
+from collectoss.application.db.models.base import Base
+from collectoss.util.validation import normalize_email
 
 logger = logging.getLogger("db_lib")
 
@@ -620,4 +622,188 @@ def get_repo_group_by_name(name):
     with get_session() as session:
         
         return  session.query(RepoGroup).filter(RepoGroup.rg_name == name).first()
-        
+
+# ---------------------------------------------------------------------------
+# Personal data lookup
+#
+# Find every row in the data schema that can be tied to one person, starting
+# from an email address. Read-only.
+#
+# The rule for "which rows belong to this person" lives in get_person_filters().
+# Querying runs a SELECT with those filters; a later removal feature can run a
+# DELETE with the same filters, so the two cannot disagree.
+# ---------------------------------------------------------------------------
+
+def _column(qualified_name: str):
+    """Look up a column by "schema.table.column", for tables defined without a model class.
+
+    Resolved when this module loads, so a wrong name fails immediately.
+    """
+    table_name, column_name = qualified_name.rsplit(".", 1)
+    return Base.metadata.tables[table_name].c[column_name]
+
+
+# Plain-text columns that identify a person but have no foreign key to
+# contributors, so the foreign-key walk below cannot find them.
+# tests/test_application/test_db/test_privacy_columns.py fails if a new email
+# column is added to the models without being listed here (or excluded there).
+PERSONAL_EMAIL_COLUMNS = (
+    Contributor.cntrb_email,
+    Contributor.cntrb_canonical,
+    ContributorsAlias.alias_email,
+    ContributorsAlias.canonical_email,
+    Commit.cmt_author_email,
+    Commit.cmt_author_raw_email,
+    Commit.cmt_committer_email,
+    Commit.cmt_committer_raw_email,
+    PullRequestCommit.pr_cmt_author_email,
+    Message.msg_sender_email,
+    UnresolvedCommitEmail.email,
+    # Facade's per-email statistics, rebuilt from commits.
+    _column("data.dm_repo_annual.email"),
+    _column("data.dm_repo_monthly.email"),
+    _column("data.dm_repo_weekly.email"),
+    _column("data.dm_repo_group_annual.email"),
+    _column("data.dm_repo_group_monthly.email"),
+    _column("data.dm_repo_group_weekly.email"),
+    _column("data.unknown_cache.email"),
+    # Emails on an instance's exclusion list, and SBOM document creators.
+    _column("data.exclude.email"),
+    _column("spdx.creators.email"),
+)
+
+PERSONAL_LOGIN_COLUMNS = (
+    Contributor.gh_login,
+    Contributor.gl_username,
+)
+
+# Columns that store "<name>_<email>" in one string, with the email last
+# (for tag-only releases the author is built as name + "_" + email). They hold
+# the email, but not as a whole value, so they are matched on the ending.
+# The "<name>_<company>" form used by regular releases is not matched:
+# names alone are out of scope.
+PERSONAL_EMBEDDED_EMAIL_COLUMNS = (
+    Release.release_author,
+)
+
+
+def _table_columns(columns):
+    """Table columns for a mix of model attributes and plain Column objects."""
+    return [c.property.columns[0] if hasattr(c, "property") else c for c in columns]
+
+
+def get_contributor_reference_columns():
+    """Return (id_columns, login_columns): every column in the data schema
+    that is a foreign key to contributors.cntrb_id or contributors.cntrb_login.
+
+    Read from the model metadata, so tables added later are picked up.
+    """
+    contributors = Contributor.__table__
+    id_columns = {contributors.c.cntrb_id: None}  # dicts keep order and de-duplicate
+    login_columns = {contributors.c.cntrb_login: None}
+
+    for table in Base.metadata.tables.values():
+        for column in table.columns:
+            for fk in column.foreign_keys:
+                if fk.column is contributors.c.cntrb_id:
+                    id_columns[column] = None
+                elif fk.column is contributors.c.cntrb_login:
+                    login_columns[column] = None
+
+    return list(id_columns), list(login_columns)
+
+
+def _lowered(values) -> set:
+    return {str(v).strip().lower() for v in values if v is not None and str(v).strip()}
+
+
+def resolve_person(session, email: str) -> dict:
+    """Expand one email into the contributor ids, emails and logins tied to it.
+
+    Expanded once, not repeatedly: longer alias chains are not followed.
+    """
+    contributors = Contributor.__table__
+    aliases = ContributorsAlias.__table__
+
+    ids = set()
+    ids.update(session.execute(
+        s.select(contributors.c.cntrb_id).where(
+            s.or_(func.lower(contributors.c.cntrb_email) == email,
+                  func.lower(contributors.c.cntrb_canonical) == email))
+    ).scalars())
+    ids.update(session.execute(
+        s.select(aliases.c.cntrb_id).where(
+            s.or_(func.lower(aliases.c.alias_email) == email,
+                  func.lower(aliases.c.canonical_email) == email))
+    ).scalars())
+
+    emails, logins = {email}, set()
+    if ids:
+        for row in session.execute(
+            s.select(contributors.c.cntrb_email, contributors.c.cntrb_canonical,
+                     contributors.c.cntrb_login, contributors.c.gh_login,
+                     contributors.c.gl_username)
+            .where(contributors.c.cntrb_id.in_(ids))
+        ):
+            emails |= _lowered(row[0:2])
+            logins |= _lowered(row[2:5])
+        for row in session.execute(
+            s.select(aliases.c.alias_email, aliases.c.canonical_email)
+            .where(aliases.c.cntrb_id.in_(ids))
+        ):
+            emails |= _lowered(row)
+
+    return {"contributor_ids": ids, "emails": emails, "logins": logins}
+
+
+def get_person_filters(person: dict) -> dict:
+    """Return {Table: WHERE clause} selecting the rows tied to this person.
+
+    `person` is the result of resolve_person(). Tables with no matching
+    column or no identifier to match are left out.
+    """
+    id_columns, login_columns = get_contributor_reference_columns()
+    login_columns = login_columns + _table_columns(PERSONAL_LOGIN_COLUMNS)
+    email_columns = _table_columns(PERSONAL_EMAIL_COLUMNS)
+
+    clauses = {}
+    for column in _table_columns(PERSONAL_EMBEDDED_EMAIL_COLUMNS):
+        for email in person["emails"]:
+            clauses.setdefault(column.table, []).append(
+                func.lower(column).endswith("_" + email, autoescape=True)
+            )
+
+    for columns, values, lowercase in (
+        (id_columns, person["contributor_ids"], False),
+        (login_columns, person["logins"], True),
+        (email_columns, person["emails"], True),
+    ):
+        if not values:
+            continue
+        for column in columns:
+            target = func.lower(column) if lowercase else column
+            clauses.setdefault(column.table, []).append(target.in_(values))
+
+    return {table: s.or_(*table_clauses) for table, table_clauses in clauses.items()}
+
+
+def get_personal_data_by_email(email: str) -> dict:
+    """Everything the database holds about the person with this email.
+
+    Returns {"identifiers": {...}, "tables": {"data.<table>": [row, ...]}}.
+    Raises ValueError if the email is not valid. Values in the rows are not
+    JSON-safe (UUIDs, datetimes, Decimals); callers that serialize them need a
+    converter such as json.dumps(..., default=str).
+    """
+    email = normalize_email(email)
+    with get_session() as session:
+        person = resolve_person(session, email)
+        tables = {}
+        for table, clause in get_person_filters(person).items():
+            rows = session.execute(s.select(table).where(clause)).mappings().all()
+            tables[table.fullname] = [dict(row) for row in rows]
+
+    return {
+        "identifiers": {key: sorted(str(v) for v in values) for key, values in person.items()},
+        "tables": tables,
+    }
