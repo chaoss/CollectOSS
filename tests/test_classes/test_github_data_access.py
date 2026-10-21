@@ -2,8 +2,13 @@
 import pytest
 from unittest.mock import Mock, patch
 
-from collectoss.tasks.github.util.github_data_access import GithubDataAccess
-
+from collectoss.tasks.github.util.github_data_access import (
+    GithubDataAccess,
+    ResourceUnprocessable,
+)
+from collectoss.tasks.github.facade_github.contributor_interfaceable.contributor_interface import (
+    get_login_with_commit_hash,
+)
 
 @pytest.fixture
 def mock_logger():
@@ -55,3 +60,35 @@ class TestEndpointUrl:
         assert "q=python" in result
         assert "per_page=10" in result
         assert result.startswith("https://api.github.com/search/repositories")
+
+@pytest.mark.unit
+class TestResponseErrors:
+
+    def test_422_response_is_not_retried(self):
+        exception = ResourceUnprocessable(
+            "GitHub returned HTTP 422"
+        )
+
+        assert not GithubDataAccess._decide_retry_policy(exception)
+def test_422_commit_lookup_raises_resource_unprocessable():
+    logger = Mock()
+    auth = Mock()
+    commit_data = {"hash": "1f5270431bc8556cf6dfee1905e07abcc45e20d2"}
+
+    error = ResourceUnprocessable(
+        "GitHub returned HTTP 422"
+    )
+
+    with patch(
+        "collectoss.tasks.github.facade_github.contributor_interfaceable.contributor_interface.create_endpoint_from_commit_sha",
+        return_value="https://api.github.com/repos/Azure/Avere/commits/test",
+    ), patch(
+        "collectoss.tasks.github.facade_github.contributor_interfaceable.contributor_interface.GithubDataAccess"
+    ) as mock_gda:
+        mock_gda.return_value.get_resource.side_effect = error
+
+        with pytest.raises(ResourceUnprocessable):
+            get_login_with_commit_hash(
+                logger, auth, commit_data, repo_id=1
+            )
+
