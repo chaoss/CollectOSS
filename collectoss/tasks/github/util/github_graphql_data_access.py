@@ -188,7 +188,8 @@ class GithubGraphQlDataAccess:
             retry_after = int(headers["Retry-After"])
             self.logger.info(
                 f'\n\n\n\nSleeping for {retry_after} seconds due to secondary rate limit issue.\n\n\n\n')
-            self.key = self.key_client.expire(self.key, time.time() + retry_after)
+            expire_at = time.time() + retry_after
+            self.key = self.key_client.expire(self.key, expire_at)
 
 
         elif "X-RateLimit-Remaining" in headers and int(headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
@@ -201,13 +202,18 @@ class GithubGraphQlDataAccess:
                 key_reset_time = 0
                 
             self.logger.info(f"\n\n\nAPI rate limit exceeded. Sleeping until the key resets ({key_reset_time} seconds)")
-            self.key = self.key_client.expire(self.key, epoch_when_key_resets)
+            expire_at = epoch_when_key_resets
+            self.key = self.key_client.expire(self.key, expire_at)
 
         else:
-            self.key = self.key_client.expire(self.key, time.time() + 60)
+            expire_at = time.time() + 60
+            self.key = self.key_client.expire(self.key, expire_at)
 
-        if previous_key == self.key:
-            self.logger.error(f"The same key was returned after a request to expire it was sent (key: {mask_key(self.key)})")
+        # Getting the same key back is only suspicious if it came back before it
+        # was due to reset. After that time (e.g. a single-key instance where the
+        # key manager waited out the reset) it is expected.
+        if previous_key == self.key and time.time() < expire_at:
+            self.logger.error(f"The same key was returned before its expiry time ({expire_at}) after a request to expire it was sent (key: {mask_key(self.key)})")
         
     def __extract_data_section(self, keys, json_response):
 
