@@ -57,6 +57,15 @@ def remove_duplicate_dicts(data: List[dict]) -> List[dict]:
     return [dict(y) for y in set(tuple(x.items()) for x in data)]
 
 def remove_duplicates_by_uniques(data, uniques):
+    """Remove duplicate records based on `uniques` fields.
+
+    Note:
+        Keys are built with `_` and `str()`, so different records can silently
+        collide if values contain underscores (e.g. '1_2' & '3' vs '1' & '2_3')
+        or look the same after string casting (1 vs '1', None vs 'None').
+
+        See: https://github.com/chaoss/CollectOSS/issues/191
+    """
 
     unique_values = {}
 
