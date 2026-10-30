@@ -41,7 +41,7 @@ from sqlalchemy.engine import Connection
 from alembic_utils_extended.pg_materialized_view import PGMaterializedView
 from alembic_utils_extended.reversible_op import CreateOp, ReplaceOp
 
-from collectoss.application.db.materialized_views import MATERIALIZED_VIEWS
+from collectoss.application.db.materialized_views import MATERIALIZED_VIEWS, MaterializedView
 
 
 @dataclass(frozen=True)
@@ -64,7 +64,7 @@ _PLAIN_IDENTIFIER = re.compile(r'^"?(\w+)"?$')
 _COL_LIST = re.compile(r"\bON\s+(?:[\w\"]+\.)?[\w\"]+\s+USING\s+\w+\s*\(", re.IGNORECASE)
 
 
-def _local_index_sigs(view: MaterializedView) -> dict[str, _IndexSig]:  # noqa: F821
+def _local_index_sigs(view: MaterializedView) -> dict[str, _IndexSig]:
     """Signatures for a registry view's ``Index`` declarations, by name."""
     sigs: dict[str, _IndexSig] = {}
     for index in view.indexes or []:
@@ -202,7 +202,7 @@ def compare_matview_indexes(
     }
     views = [view for view in MATERIALIZED_VIEWS if view.signature not in pending_entity_views]
 
-    by_schema: dict[str, list[MaterializedView]] = defaultdict(list)  # noqa: F821
+    by_schema: dict[str, list[MaterializedView]] = defaultdict(list)
     for view in views:
         by_schema[view.schema].append(view)
 
