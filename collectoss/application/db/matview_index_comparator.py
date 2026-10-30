@@ -17,7 +17,9 @@ names)`` — the same approach stock Alembic uses for table indexes. Indexes
 bearing expressions (anything other than plain column references) compare by
 name only: their DB-side rendering (``pg_get_indexdef``) is not reliably
 comparable, so a content change to one requires renaming it or a hand-written
-migration.
+migration. Newly-added expression indexes are still rendered faithfully (via
+Alembic's ``render_ddl_sql_expr``, the same mechanism the fork's table index
+comparator uses).
 
 Import this module from the alembic ``env.py`` *after* ``register_entities``
 has been called: the entity comparator must be registered first so that, when
@@ -38,6 +40,7 @@ from alembic.autogenerate.api import AutogenContext
 from alembic.operations import ops
 from sqlalchemy import Column, text
 from sqlalchemy.engine import Connection
+from sqlalchemy.sql.elements import TextClause
 
 from alembic_utils_extended.pg_materialized_view import PGMaterializedView
 from alembic_utils_extended.reversible_op import CreateOp, ReplaceOp
@@ -88,6 +91,27 @@ def _local_index_sigs(view: MaterializedView) -> dict[str, _IndexSig]:
                 break
         sigs[index.name] = _IndexSig(index.name, bool(index.unique), tuple(columns) if columns else None)
     return sigs
+
+
+def _index_columns_for_op(index, autogen_context: AutogenContext) -> list[str | TextClause]:
+    """Render an ``Index``'s elements as ``CreateIndexOp`` columns.
+
+    Plain strings and Columns pass through by name; expressions are rendered
+    via Alembic's ``render_ddl_sql_expr`` — the same mechanism the fork's
+    table index comparator uses — so newly-declared expression indexes come
+    out as ``text(...)`` in the generated migration.
+    """
+    columns: list[str | TextClause] = []
+    for expr in index.expressions:
+        if isinstance(expr, str):
+            columns.append(expr)
+        elif isinstance(expr, Column):
+            columns.append(expr.name)
+        else:
+            columns.append(
+                text(autogen_context.migration_context.impl.render_ddl_sql_expr(expr, is_index=True))
+            )
+    return columns
 
 
 def _parse_indexdef_columns(indexdef: str) -> tuple[str, ...] | None:
@@ -220,6 +244,7 @@ def compare_matview_indexes(
                 continue
 
             local_sigs = _local_index_sigs(view)
+            local_indexes_by_name = {index.name: index for index in (view.indexes or [])}
 
             for name, local in local_sigs.items():
                 db = db_sigs.get(name)
@@ -234,7 +259,7 @@ def compare_matview_indexes(
                         ops.CreateIndexOp(
                             index_name=name,
                             table_name=view.signature,
-                            columns=list(local.columns) if local.columns is not None else [],
+                            columns=_index_columns_for_op(local_indexes_by_name[name], autogen_context),
                             schema=schema,
                             unique=local.unique,
                         )
@@ -269,7 +294,7 @@ def compare_matview_indexes(
                         ops.CreateIndexOp(
                             index_name=name,
                             table_name=view.signature,
-                            columns=list(local.columns),
+                            columns=_index_columns_for_op(local_indexes_by_name[name], autogen_context),
                             schema=schema,
                             unique=local.unique,
                         )
@@ -293,7 +318,7 @@ def compare_matview_indexes(
                             _reverse=ops.CreateIndexOp(
                                 index_name=name,
                                 table_name=view.signature,
-                                columns=list(db.columns) if db.columns is not None else [],
+                                columns=list(db.columns),
                                 schema=schema,
                                 unique=db.unique,
                             )
