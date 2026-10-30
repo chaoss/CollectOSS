@@ -28,6 +28,7 @@ Importing the module registers the comparator; there is nothing to call.
 
 from __future__ import annotations
 
+import logging
 import re
 from collections import defaultdict
 from dataclasses import dataclass
@@ -42,6 +43,8 @@ from alembic_utils_extended.pg_materialized_view import PGMaterializedView
 from alembic_utils_extended.reversible_op import CreateOp, ReplaceOp
 
 from collectoss.application.db.materialized_views import MATERIALIZED_VIEWS, MaterializedView
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -222,6 +225,11 @@ def compare_matview_indexes(
                 db = db_sigs.get(name)
                 if db is None:
                     # Added (or renamed-to) index.
+                    logger.info(
+                        "Detected CreateIndexOp for %s.%s",
+                        schema,
+                        name,
+                    )
                     upgrade_ops.ops.append(
                         ops.CreateIndexOp(
                             index_name=name,
@@ -238,6 +246,11 @@ def compare_matview_indexes(
                     # list): CREATE INDEX cannot overwrite, so drop + create.
                     # (If either side is expression-bearing — columns is None
                     # — the comparison above is name-only; skip.)
+                    logger.info(
+                        "Detected changed index %s.%s (drop + create)",
+                        schema,
+                        name,
+                    )
                     upgrade_ops.ops.append(
                         ops.DropIndexOp(
                             index_name=name,
@@ -267,6 +280,11 @@ def compare_matview_indexes(
                     # Removed (or renamed-from) index. Columns are attached
                     # to the reverse op only when parseable, so the
                     # downgrade recreates it faithfully.
+                    logger.info(
+                        "Detected DropIndexOp for %s.%s",
+                        schema,
+                        name,
+                    )
                     upgrade_ops.ops.append(
                         ops.DropIndexOp(
                             index_name=name,
