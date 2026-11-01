@@ -1439,6 +1439,8 @@ class Issue(Base):
         Index("issues_ibfk_1", "repo_id"),
         Index("issues_ibfk_2", "reporter_id"),
         Index("issues_ibfk_4", "pull_request_id"),
+        Index("issues_idx_repo_id_updated_at", "repo_id", "updated_at"),
+        Index("issues_idx_repo_id_created_at", "repo_id", "created_at"),
 
         UniqueConstraint("repo_id", "gh_issue_id"),
         UniqueConstraint("issue_url", name="issue-insert-unique"),
@@ -1747,6 +1749,8 @@ class PullRequest(Base):
         Index(
             "pull_requests_idx_repo_id_data_datex", "repo_id", "data_collection_date"
         ),
+        Index("pull_requests_idx_repo_id_pr_updated_at", "repo_id", "pr_updated_at"),
+        Index("pull_requests_idx_repo_id_pr_created_at", "repo_id", "pr_created_at"),
         Index("pr_ID_prs_table", "pull_request_id"),
         {"schema": "data"},
     )
