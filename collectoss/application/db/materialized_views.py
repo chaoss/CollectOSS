@@ -786,20 +786,22 @@ MATERIALIZED_VIEWS: list[MaterializedView] = [
         name="issue_reporter_created_at",
         schema="data",
         sql=_ISSUE_REPORTER_CREATED_AT,
-        unique_index_columns=(),  # only a non-unique btree on repo_id
+        # Non-unique btree only: this view cannot be refreshed CONCURRENTLY
+        # (the refresh task falls back to non-concurrent).
+        indexes=[Index("issue_reporter_created_at_repo_id_idx", "repo_id")],
     ),
     # --- Views 2-6: from migration 4, indexes from migration 25 ---
     MaterializedView(
         name="api_get_all_repo_prs",
         schema="data",
         sql=_API_GET_ALL_REPO_PRS,
-        unique_index_columns=("repo_id",),
+        indexes=[Index("api_get_all_repo_prs_uniq", "repo_id", unique=True)],
     ),
     MaterializedView(
         name="explorer_entry_list",
         schema="data",
         sql=_EXPLORER_ENTRY_LIST,
-        unique_index_columns=("repo_id",),
+        indexes=[Index("explorer_entry_list_uniq", "repo_id", unique=True)],
     ),
     MaterializedView(
         name="explorer_commits_and_committers_daily_count",
@@ -811,13 +813,13 @@ MATERIALIZED_VIEWS: list[MaterializedView] = [
         name="api_get_all_repos_commits",
         schema="data",
         sql=_API_GET_ALL_REPOS_COMMITS,
-        unique_index_columns=("repo_id",),
+        indexes=[Index("api_get_all_repos_commits_uniq", "repo_id", unique=True)],
     ),
     MaterializedView(
         name="api_get_all_repos_issues",
         schema="data",
         sql=_API_GET_ALL_REPOS_ISSUES,
-        unique_index_columns=("repo_id",),
+        indexes=[Index("api_get_all_repos_issues_uniq", "repo_id", unique=True)],
     ),
     # --- Views 6-8: from migration 25, recreated ---
     MaterializedView(
