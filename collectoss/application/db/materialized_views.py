@@ -40,7 +40,7 @@ class MaterializedView(PGMaterializedView):
         schema: str,
         sql: str,
         with_data: bool = False,
-        indexes: list[Index] | None = None,
+        indexes: list[Index] = [],
     ) -> None:
         super().__init__(
             schema=schema,
