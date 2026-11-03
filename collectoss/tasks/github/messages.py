@@ -138,8 +138,7 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
     if len(all_data) > 0:
         process_messages(all_data, task_name, repo_id, logger, db_session)
 
-    logger.info(f"{task_name}: Finished. Skipped {skipped_urls} comment URLs due to 404.")
-        
+    logger.info(f"{task_name}: Finished. Skipped {skipped_urls} comment URLs due to 404 or 410.")        
 
 def process_messages(messages, task_name, repo_id, logger, db_session):
 
