@@ -27,4 +27,31 @@ jobs:
       - name: Run Tests
         run: |
           uv run --python ${{ matrix.env }} pytest \
-            --color=yes
+            --color=yes \
+            --cov \
+            --cov-report=term \
+            --cov-report=xml \
+            --cov-report=html
+
+      # Coverage is the same on every matrix entry, so it is only published
+      # from one of them.
+      - name: Add coverage to the job summary
+        if: ${{ !cancelled() && matrix.os == 'ubuntu-latest' && matrix.env == '3.11' }}
+        run: |
+          echo "## Test coverage" >> "$GITHUB_STEP_SUMMARY"
+          uv run --python ${{ matrix.env }} coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: ${{ !cancelled() && matrix.os == 'ubuntu-latest' && matrix.env == '3.11' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
+          if-no-files-found: warn
+
+      # Possible follow-up: upload coverage.xml to a hosted service such as
+      # Codecov here to get pull request comments and coverage history. This
+      # needs a maintainer to install the service's GitHub App on the
+      # repository first, so it is not part of this workflow yet.
