@@ -17,14 +17,16 @@ def collect_messages():
 @pytest.mark.unit
 @pytest.mark.parametrize("scenario", ["normal", "issues_disabled"])
 def test_comments_are_collected(fake_github, scenario):
-    # /issues/comments also holds PR comments, so it works with issues disabled.
+    """Failure means comments are being dropped. With issues disabled,
+    /issues/comments still returns the pull request comments."""
     fake_github(scenario)
     assert collect_messages() == [COMMENT]
 
 
-# Known crash (#503). Remove the xfail marker once it is fixed.
 @pytest.mark.unit
 @pytest.mark.xfail(strict=True, raises=UrlNotFoundException, reason="#503")
 def test_no_messages_when_issues_and_prs_disabled(fake_github):
+    """Known crash (#503): this should return no messages. If it is reported
+    as XPASS, the crash is fixed: remove the xfail marker."""
     fake_github("issues_and_prs_disabled")
     assert collect_messages() == []

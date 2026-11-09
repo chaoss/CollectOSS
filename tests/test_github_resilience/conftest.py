@@ -86,7 +86,7 @@ SCENARIOS = {
         (ISSUES, 200, []),
         (PULLS, 404, NOT_FOUND),
     ],
-    # Assumed: no public repository with only PRs disabled was found to check.
+    # Observed 2026-11-09 on github/roadmap.
     "prs_disabled": [
         (REPO, 200, {"has_issues": True, "has_pull_requests": False}),
         (ISSUE_COMMENTS, 200, [COMMENT]),

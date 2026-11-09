@@ -20,6 +20,7 @@ uv run pytest tests/test_github_resilience
 4. Check the neighboring scenarios still pass. A repo with only issues
    disabled still has pull request comments on `/issues/comments`, so a fix
    for one scenario must not skip data in another.
+5. Give the test a one-line docstring saying what a failure means.
 
 Example: `test_message_collection.py` has a test for a known crash, marked
 `xfail`. The fix makes it pass, and the marker is then removed:

@@ -15,10 +15,12 @@ from collectoss.tasks.github.pull_requests.tasks import retrieve_all_pr_data
     ("repo_not_found", []),
 ])
 def test_pr_collection(fake_github, scenario, expected_prs):
+    """Failure means PR collection crashes, returns the wrong PRs, or fetches
+    the PR list from a repo without pull requests."""
     gh = fake_github(scenario)
     prs = list(retrieve_all_pr_data("https://github.com/owner/repo", Mock(), None, None))
     assert prs == expected_prs
 
-    # The PR list is only fetched when the repo has pull requests enabled.
     fetched_list = ("GET", "/repos/owner/repo/pulls") in gh.requests
-    assert fetched_list == bool(expected_prs)
+    assert fetched_list == bool(expected_prs), (
+        "the PR list should only be fetched when pull requests are enabled")
