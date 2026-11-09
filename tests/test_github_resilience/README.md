@@ -17,7 +17,7 @@ uv run pytest tests/test_github_resilience
    returns. Celery tasks (`@celery.task`) need a database and raise if called;
    test the plain function the task calls, such as `retrieve_all_pr_data`.
 3. Confirm the test fails without your fix and passes with it.
-4. Check the neighbouring scenarios still pass. A repo with only issues
+4. Check the neighboring scenarios still pass. A repo with only issues
    disabled still has pull request comments on `/issues/comments`, so a fix
    for one scenario must not skip data in another.
 
@@ -50,5 +50,5 @@ def test_no_messages_when_issues_and_prs_disabled(fake_github):
 - A test fails if the code requests a path with no rule, even when the code
   catches the error.
 
-Not modelled yet: response headers (pagination, rate limits, redirects) and
+Not modeled yet: response headers (pagination, rate limits, redirects) and
 query strings.

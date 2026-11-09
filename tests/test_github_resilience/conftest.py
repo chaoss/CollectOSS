@@ -95,13 +95,15 @@ SCENARIOS = {
         (PULLS, 404, NOT_FOUND),
     ],
     # Observed 2026-11-09 on a repository name that does not exist.
-    "repo_gone": [
+    "repo_not_found": [
         (r"^/repos/", 404, NOT_FOUND),
     ],
 }
 
 
 class FakeGitHub:
+    """Answers GitHub API requests from a list of rules and records them."""
+
     def __init__(self, rules):
         self.rules = list(rules)
         self.requests = []   # (method, path) of every request
@@ -112,6 +114,7 @@ class FakeGitHub:
         self.rules.insert(0, (path_regex, status, body))
 
     def handle(self, request: httpx.Request) -> httpx.Response:
+        """Return the first matching rule's response, or 501 if none match."""
         path = request.url.path
         self.requests.append((request.method, path))
         for regex, status, body in self.rules:
