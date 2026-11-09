@@ -36,13 +36,13 @@ jobs:
       # Coverage is the same on every matrix entry, so it is only published
       # from one of them.
       - name: Add coverage to the job summary
-        if: ${{ !cancelled() && matrix.os == 'ubuntu-latest' && matrix.env == '3.11' }}
+        if: ${{ (success() || failure()) && matrix.os == 'ubuntu-latest' && matrix.env == '3.11' }}
         run: |
           echo "## Test coverage" >> "$GITHUB_STEP_SUMMARY"
           uv run --python ${{ matrix.env }} coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload coverage report
-        if: ${{ !cancelled() && matrix.os == 'ubuntu-latest' && matrix.env == '3.11' }}
+        if: ${{ (success() || failure()) && matrix.os == 'ubuntu-latest' && matrix.env == '3.11' }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
