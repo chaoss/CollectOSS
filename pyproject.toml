@@ -93,7 +93,7 @@ lint = [
     "types-python-dateutil>=2.9.0.20251008",
     "types-toml>=0.10.8.20240310",
 ]
-test = ["pytest"]
+test = ["pytest", "pytest-cov"]
 debug = ["ipdb==0.13.9"]
 docs = [
     "docutils==0.20.1",
@@ -165,6 +165,21 @@ markers = [
     "unit: pure logic tests with no external dependencies",
     "integration: tests requiring a database, Redis, or network access",
 ]
+
+
+[tool.coverage.run]
+source = ["collectoss", "keyman"]
+branch = true
+# Record paths relative to the repository root, so reports from different
+# machines can be compared or combined.
+relative_files = true
+omit = [
+    # Database migrations are not something we expect unit tests to exercise.
+    "collectoss/application/schema/alembic/*",
+]
+
+[tool.coverage.report]
+skip_covered = true
 
 
 [tool.mypy]

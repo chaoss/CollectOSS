@@ -3,6 +3,8 @@ name: "Functional tests"
 on:
   pull_request:
     branches: [main, release]
+  push:
+    branches: [main, release]
 
 permissions:
   contents: read
@@ -12,11 +14,25 @@ jobs:
     name: test with ${{ matrix.env }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
-        env: ["3.10", "3.11"] #, "3.12", "3.13", "3.14"
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - env: "3.10"
+            os: ubuntu-latest
+            publish_coverage: false
+          - env: "3.10"
+            os: macos-latest
+            publish_coverage: false
+          - env: "3.11"
+            os: ubuntu-latest
+            publish_coverage: true
+          - env: "3.11"
+            os: macos-latest
+            publish_coverage: false
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
@@ -27,4 +43,33 @@ jobs:
       - name: Run Tests
         run: |
           uv run --python ${{ matrix.env }} pytest \
-            --color=yes
+            --color=yes \
+            --cov \
+            --cov-report=term \
+            --cov-report=xml \
+            --cov-report=html
+
+      - name: Add coverage to the job summary
+        if: ${{ (success() || failure()) && matrix.publish_coverage }}
+        run: |
+          echo "## Test coverage" >> "$GITHUB_STEP_SUMMARY"
+          uv run --python ${{ matrix.env }} coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report to GitHub
+        if: ${{ (success() || failure()) && matrix.publish_coverage }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
+          if-no-files-found: warn
+
+      - name: Upload coverage to Codecov
+        if: ${{ (success() || failure()) && matrix.publish_coverage && hashFiles('coverage.xml') != '' }}
+        uses: codecov/codecov-action@v7
+        with:
+          files: coverage.xml
+          disable_search: true
+          use_oidc: true
+          fail_ci_if_error: false

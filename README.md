@@ -38,6 +38,8 @@ Check out the [CHAOSS Getting Started guide](https://chaoss.community/kb-getting
 
 Information about contribution guidelines, building from source, and testing can be found in our [CONTRIBUTING.md](CONTRIBUTING.md). 
 
+Run `uv run pytest` for the default test suite, or `uv run pytest --cov` to measure coverage. See the [testing guide](https://docs.collectoss.org/en/latest/development-guide/testing/toc.html#test-coverage) for report options and CI results.
+
 ## Who uses CollectOSS?
 
 CollectOSS metrics are used by many other visualization and metrics projects, such as:

@@ -44,6 +44,32 @@ A script monitors the output logs and looks for specific log statements that ind
 Future end to end tests may also run CollectOSS to the point of fully collecting on some smaller repositories and validating that the database is as expected.
 
 
+Test Coverage
+-----------------
+
+Coverage shows which lines and branches of the code are exercised by the tests, which helps identify the parts of CollectOSS that still need tests.
+It is measured with `coverage.py <https://coverage.readthedocs.io/>`_ through the ``pytest-cov`` plugin.
+
+Coverage is not measured by default because it slows the tests down a little. To measure it, add ``--cov`` to any pytest command:
+
+.. code-block:: bash
+
+    uv run pytest --cov
+
+This prints a table of the files that are not fully covered. The ``skip_covered = true`` setting hides fully covered files from the text and HTML reports to keep the focus on gaps; they still count toward the totals and remain in the XML report sent to Codecov.
+Use ``--cov-report=term-missing`` to also list the line numbers that were missed. To browse the results line by line instead, generate an HTML report and open ``htmlcov/index.html``:
+
+.. code-block:: bash
+
+    uv run pytest --cov --cov-report=html
+
+The "Functional tests" workflow measures coverage on pull requests and pushes to ``main`` and ``release``. The matrix entry with ``publish_coverage: true`` writes the job summary, uploads the ``coverage-report`` artifact (XML and HTML), and sends coverage to `Codecov <https://app.codecov.io/gh/chaoss/CollectOSS>`_ for pull request comparisons and coverage history. Branch pushes provide the baseline for those comparisons after this workflow is merged.
+
+Codecov uses GitHub's OpenID Connect (OIDC) authentication, with tokenless uploads for pull requests from public forks, so no ``CODECOV_TOKEN`` secret is needed. Coverage checks are informational, and upload errors do not fail the test job. No minimum coverage is enforced.
+
+The coverage settings, such as which packages are measured, are in the ``[tool.coverage.*]`` sections of ``pyproject.toml``.
+
+
 Testing Standards 
 -----------------
 
