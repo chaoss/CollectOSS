@@ -46,6 +46,9 @@ _celery_stub.celery_app = Mock(task=_task)
 for _name in ("CoreRepoCollectionTask", "SecondaryRepoCollectionTask",
               "FacadeRepoCollectionTask", "MLRepoCollectionTask"):
     setattr(_celery_stub, _name, type(_name, (), {}))
+# setdefault keeps any module already imported under this name, so if another
+# test imports the real celery_app first, the stub is ignored and these tests
+# depend on test order. Assigning sys.modules[...] directly would avoid that.
 sys.modules.setdefault("collectoss.tasks.init.celery_app", _celery_stub)
 
 
