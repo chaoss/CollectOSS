@@ -167,8 +167,6 @@ markers = [
 ]
 
 
-# Coverage is opt-in: run `uv run pytest --cov` to measure it. It is left out
-# of pytest's addopts so that a plain `pytest` run stays fast.
 [tool.coverage.run]
 source = ["collectoss", "keyman"]
 branch = true

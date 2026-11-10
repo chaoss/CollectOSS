@@ -3,6 +3,8 @@ name: "Functional tests"
 on:
   pull_request:
     branches: [main, release]
+  push:
+    branches: [main, release]
 
 permissions:
   contents: read
@@ -12,11 +14,25 @@ jobs:
     name: test with ${{ matrix.env }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
-        env: ["3.10", "3.11"] #, "3.12", "3.13", "3.14"
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - env: "3.10"
+            os: ubuntu-latest
+            publish_coverage: false
+          - env: "3.10"
+            os: macos-latest
+            publish_coverage: false
+          - env: "3.11"
+            os: ubuntu-latest
+            publish_coverage: true
+          - env: "3.11"
+            os: macos-latest
+            publish_coverage: false
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
@@ -33,16 +49,14 @@ jobs:
             --cov-report=xml \
             --cov-report=html
 
-      # Coverage is the same on every matrix entry, so it is only published
-      # from one of them.
       - name: Add coverage to the job summary
-        if: ${{ (success() || failure()) && matrix.os == 'ubuntu-latest' && matrix.env == '3.11' }}
+        if: ${{ (success() || failure()) && matrix.publish_coverage }}
         run: |
           echo "## Test coverage" >> "$GITHUB_STEP_SUMMARY"
           uv run --python ${{ matrix.env }} coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload coverage report
-        if: ${{ (success() || failure()) && matrix.os == 'ubuntu-latest' && matrix.env == '3.11' }}
+        if: ${{ (success() || failure()) && matrix.publish_coverage }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
@@ -51,7 +65,11 @@ jobs:
             htmlcov/
           if-no-files-found: warn
 
-      # Possible follow-up: upload coverage.xml to a hosted service such as
-      # Codecov here to get pull request comments and coverage history. This
-      # needs a maintainer to install the service's GitHub App on the
-      # repository first, so it is not part of this workflow yet.
+      - name: Upload coverage to Codecov
+        if: ${{ (success() || failure()) && matrix.publish_coverage && hashFiles('coverage.xml') != '' }}
+        uses: codecov/codecov-action@v7
+        with:
+          files: coverage.xml
+          disable_search: true
+          use_oidc: true
+          fail_ci_if_error: false
