@@ -65,7 +65,6 @@ services:
     #  - "host.docker.internal:host-gateway" #Be able to ping services on the local machine
     environment:
       - "COLLECTOSS_DB=postgresql+psycopg2://${COLLECTOSS_DB_USER:-augur}:${COLLECTOSS_DB_PASSWORD:-augur}@database:5432/augur"
-      - "COLLECTOSS_DB_SCHEMA_BUILD=1"
       - COLLECTOSS_FACADE_REPO_DIRECTORY=/facade
       - COLLECTOSS_LOGS_DIRECTORY=/logs
       - "COLLECTOSS_FLAGS=$COLLECTOSS_FLAGS"
