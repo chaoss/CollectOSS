@@ -94,6 +94,29 @@ class GithubDataAccess:
             self.logger.info(f"{owner}/{repo}: Pull requests are disabled. Skipping PR collection.")
             return False
 
+    def check_issues_enabled(self, owner: str, repo: str) -> bool:
+        """
+        Return whether GitHub Issues are enabled for a repository.
+
+        Uses the repo metadata ``has_issues`` field. A missing repo (HTTP 404)
+        is re-raised — it does not mean issues are disabled (private/moved/
+        deleted repos must not be treated as "skip comments").
+
+        On unexpected errors, returns True so callers fall back to attempting
+        collection rather than silently dropping data.
+        """
+        url = self.endpoint_url(f"repos/{owner}/{repo}")
+        try:
+            repo_data = self.get_resource(url)
+        except UrlNotFoundException:
+            # Propagate: caller should not interpret "repo not found" as
+            # "issues disabled" (see CodeRabbit review on #554).
+            raise
+        except Exception as e:
+            self.logger.warning(f"Could not check has_issues for {owner}/{repo}: {e}")
+            return True
+
+        return repo_data.get("has_issues", True)
 
     def paginate_resource(self, url):
 

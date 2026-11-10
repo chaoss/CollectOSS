@@ -4,7 +4,11 @@ from datetime import timedelta, timezone
 from collectoss.tasks.init.celery_app import celery_app as celery
 from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
 from collectoss.application.db.data_parse import *
-from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from collectoss.tasks.github.util.github_data_access import (
+    GithubDataAccess,
+    ResourceGoneException,
+    UrlNotFoundException,
+)
 from collectoss.tasks.github.util.github_task_session import GithubTaskManifest
 from collectoss.tasks.util.worker_util import remove_duplicate_dicts
 from collectoss.tasks.github.util.util import get_owner_repo
@@ -60,6 +64,21 @@ def is_repo_small(repo_id):
 
         return result != None
 
+def select_comment_urls(pr_comment_urls, issue_comment_urls, issues_enabled: bool):
+    """
+    Choose which per-item comment URLs to fetch.
+
+    GitHub shares one numberspace between issues and PRs: every PR is an issue,
+    but not every issue is a PR (CollectOSS wiki "Cursed Knowledge"). When Issues
+    are disabled, issue-only comment URLs reliably 404/410 and waste API quota,
+    while PR conversation comments remain available via the PR's issue-number
+    comments URL. So if issues are disabled, only keep PR comment URLs.
+    """
+    if issues_enabled:
+        return list(pr_comment_urls) + list(issue_comment_urls)
+    return list(pr_comment_urls)
+
+
 def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, task_name, since) -> None:
 
     owner, repo = get_owner_repo(repo_git)
@@ -75,7 +94,17 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
     
     github_data_access = GithubDataAccess(key_auth, logger)
 
-    message_count = github_data_access.get_resource_count(url)
+    # Small-repo path: one list call for the whole repo. That endpoint returns
+    # both issue and PR conversation comments when available. Do not gate on
+    # has_issues (drops PR comments). Only bail when the endpoint itself 404s.
+    try:
+        message_count = github_data_access.get_resource_count(url)
+    except UrlNotFoundException:
+        logger.info(
+            f"{task_name}: Issue/PR comments endpoint unavailable for "
+            f"{owner}/{repo}. Skipping message collection."
+        )
+        return []
 
     logger.info(f"{task_name}: Collecting {message_count} github messages")
 
@@ -91,29 +120,58 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
     # define logger for task
     logger.info(f"Collecting github comments for {owner}/{repo}")
 
+    github_data_access = GithubDataAccess(key_auth, logger)
+
+    # One metadata call: if Issues are off, only hit PR comment URLs (PR numbers
+    # are valid in the shared issue/PR numberspace) and skip issue-only URLs
+    # that would burn the key on predictable 404/410 responses.
+    try:
+        issues_enabled = github_data_access.check_issues_enabled(owner, repo)
+    except UrlNotFoundException:
+        raise
+
+    if not issues_enabled:
+        logger.info(
+            f"{task_name}: Issues disabled for {owner}/{repo}; "
+            "collecting PR conversation comments only (shared issue/PR numberspace)."
+        )
+
     engine = get_engine()
 
     with engine.connect() as connection:
 
         if since:
-             query = text(f"""
-                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_comments_url IS NOT NULL AND pr_updated_at > timestamptz(timestamp '{since}') order by pr_created_at desc)
-                UNION
-                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND comments_url IS NOT NULL AND updated_at > timestamptz(timestamp '{since}') order by created_at desc);
+            pr_query = text(f"""
+                select pr_comments_url from pull_requests
+                WHERE repo_id={repo_id} AND pr_comments_url IS NOT NULL
+                  AND pr_updated_at > timestamptz(timestamp '{since}')
+                order by pr_created_at desc
+            """)
+            issue_query = text(f"""
+                select comments_url from issues
+                WHERE repo_id={repo_id} AND comments_url IS NOT NULL
+                  AND updated_at > timestamptz(timestamp '{since}')
+                order by created_at desc
             """)
         else:
-
-            query = text(f"""
-                (select pr_comments_url from pull_requests WHERE repo_id={repo_id} AND pr_comments_url IS NOT NULL order by pr_created_at desc)
-                UNION
-                (select comments_url as comment_url from issues WHERE repo_id={repo_id} AND comments_url IS NOT NULL order by created_at desc);
+            pr_query = text(f"""
+                select pr_comments_url from pull_requests
+                WHERE repo_id={repo_id} AND pr_comments_url IS NOT NULL
+                order by pr_created_at desc
             """)
-        
+            issue_query = text(f"""
+                select comments_url from issues
+                WHERE repo_id={repo_id} AND comments_url IS NOT NULL
+                order by created_at desc
+            """)
 
-        result = connection.execute(query).fetchall()
-    comment_urls = [x[0] for x in result if x[0] is not None]
+        pr_comment_urls = [row[0] for row in connection.execute(pr_query).fetchall() if row[0]]
+        issue_comment_urls = (
+            [row[0] for row in connection.execute(issue_query).fetchall() if row[0]]
+            if issues_enabled else []
+        )
 
-    github_data_access = GithubDataAccess(key_auth, logger)
+    comment_urls = select_comment_urls(pr_comment_urls, issue_comment_urls, issues_enabled)
 
     logger.info(f"{task_name}: Collecting github messages for {len(comment_urls)} prs/issues")
 
@@ -124,8 +182,11 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
         try:
             messages = list(github_data_access.paginate_resource(comment_url))
             all_data += messages
-        except UrlNotFoundException:
-            logger.info(f"{task_name}: PR or issue comment url of {comment_url} returned 404. Skipping.")
+        except (UrlNotFoundException, ResourceGoneException):
+            logger.info(
+                f"{task_name}: PR or issue comment url of {comment_url} "
+                "returned 404/410. Skipping."
+            )
             skipped_urls += 1
 
         if len(all_data) >= message_batch_size:
@@ -135,7 +196,7 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
     if len(all_data) > 0:
         process_messages(all_data, task_name, repo_id, logger, db_session)
 
-    logger.info(f"{task_name}: Finished. Skipped {skipped_urls} comment URLs due to 404.")
+    logger.info(f"{task_name}: Finished. Skipped {skipped_urls} comment URLs due to 404/410.")
         
 
 def process_messages(messages, task_name, repo_id, logger, db_session):
