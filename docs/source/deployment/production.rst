@@ -143,4 +143,6 @@ Host-Level Configuration
 Related Resources
 -----------------
 
-- https://github.com/chaoss/collectoss-utilities/
+- `CollectOSS v1.0 Migration Guide <https://github.com/chaoss/CollectOSS/wiki/Migration-Guide>`_
+- `CollectOSS Utilities <https://github.com/chaoss/collectoss-utilities>`_ repo for one-off data migrations and fix scripts that may help older instances.
+- `CollectOSS Monitoring Grafana Stack <https://github.com/chaoss/collectoss-monitoring>`_
