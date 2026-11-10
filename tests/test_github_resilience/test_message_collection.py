@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: MIT
+"""Message collection on repos with issues and/or pull requests disabled."""
+import pytest
+from unittest.mock import Mock
+
+from collectoss.tasks.github.messages import fast_retrieve_all_pr_and_issue_messages
+from collectoss.tasks.github.util.github_data_access import UrlNotFoundException
+
+COMMENT = {"id": 1, "body": "hello"}
+
+
+def collect_messages():
+    return fast_retrieve_all_pr_and_issue_messages(
+        "https://github.com/owner/repo", Mock(), None, "test", None)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("scenario", ["normal", "issues_disabled"])
+def test_comments_are_collected(fake_github, scenario):
+    """Failure means comments are being dropped. With issues disabled,
+    /issues/comments still returns the pull request comments."""
+    fake_github(scenario)
+    assert collect_messages() == [COMMENT]
+
+
+@pytest.mark.unit
+@pytest.mark.xfail(strict=True, raises=UrlNotFoundException, reason="#503")
+def test_no_messages_when_issues_and_prs_disabled(fake_github):
+    """Known crash (#503): this should return no messages. If it is reported
+    as XPASS, the crash is fixed: remove the xfail marker."""
+    fake_github("issues_and_prs_disabled")
+    assert collect_messages() == []
