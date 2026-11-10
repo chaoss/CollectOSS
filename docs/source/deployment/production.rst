@@ -6,6 +6,11 @@ for deploying CollectOSS in a production environment. This is a reference to hel
 configure CollectOSS effectively.
 
 
+A reference production deployment is managed with Ansible and Docker Compose; see
+the `public-ansible repository <https://github.com/oss-aspen/public-ansible>`_ for a
+complete, working example of everything described below. This reference deployment uses
+Debian 12 as a base OS image.
+
 Architecture
 ------------
 
@@ -39,8 +44,8 @@ repeatable and rollbacks are possible. Images are published to
 Environment Variables
 ---------------------
 
-CollectOSS uses several environment variables in production. Make sure to configure the ones relevant
-to your deployment:
+CollectOSS uses several environment variables in production. Make sure to configure
+the ones relevant to your deployment:
 
 Database
 ^^^^^^^^
@@ -55,6 +60,10 @@ Database
 .. code-block:: bash
 
    export COLLECTOSS_DB=postgresql+psycopg2://user:password@database:5432/collectoss
+
+
+.. note:: CollectOSS versions 1.1 and earlier initialize the database by replaying historical migrations, some of which
+    expect that the database username be `augur`. 
 
 Message broker and cache
 ^^^^^^^^^^^^^^^^^^^^^^^^
