@@ -34,8 +34,7 @@ def toss_pull_request_acceptance_rate(repo_id, begin_date=None, end_date=None, g
                 JOIN pull_request_events ON pull_request_events.pull_request_id = pull_requests.pull_request_id
             WHERE
                 pull_requests.repo_id = :repo_id
-                AND ACTION = 'merged'
-                OR ACTION = 'ready_for_review'
+                AND (ACTION = 'merged' OR ACTION = 'ready_for_review')
                 AND pull_request_events.created_at BETWEEN :begin_date
                 AND :end_date
             GROUP BY
