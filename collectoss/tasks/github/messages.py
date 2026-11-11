@@ -4,7 +4,7 @@ from datetime import timedelta, timezone
 from collectoss.tasks.init.celery_app import celery_app as celery
 from collectoss.tasks.init.celery_app import CoreRepoCollectionTask
 from collectoss.application.db.data_parse import *
-from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException, ResourceGoneException
 from collectoss.tasks.github.util.github_task_session import GithubTaskManifest
 from collectoss.tasks.util.worker_util import remove_duplicate_dicts
 from collectoss.tasks.github.util.util import get_owner_repo
@@ -127,6 +127,9 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
         except UrlNotFoundException:
             logger.info(f"{task_name}: PR or issue comment url of {comment_url} returned 404. Skipping.")
             skipped_urls += 1
+        except ResourceGoneException:
+            logger.info(f"{task_name}: PR or issue comment url of {comment_url} returned 410. Skipping.")
+            skipped_urls += 1
 
         if len(all_data) >= message_batch_size:
             process_messages(all_data, task_name, repo_id, logger, db_session)
@@ -135,8 +138,7 @@ def process_large_issue_and_pr_message_collection(repo_id, repo_git: str, logger
     if len(all_data) > 0:
         process_messages(all_data, task_name, repo_id, logger, db_session)
 
-    logger.info(f"{task_name}: Finished. Skipped {skipped_urls} comment URLs due to 404.")
-        
+    logger.info(f"{task_name}: Finished. Skipped {skipped_urls} comment URLs due to 404 or 410.")        
 
 def process_messages(messages, task_name, repo_id, logger, db_session):
 
