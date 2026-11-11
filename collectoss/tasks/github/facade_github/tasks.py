@@ -1,9 +1,12 @@
 import logging
 
-
 from collectoss.tasks.init.celery_app import celery_app as celery
 from collectoss.tasks.init.celery_app import FacadeRepoCollectionTask
-from collectoss.tasks.github.util.github_data_access import GithubDataAccess, UrlNotFoundException
+from collectoss.tasks.github.util.github_data_access import (
+    GithubDataAccess,
+    UrlNotFoundException,
+    ResourceUnprocessable,
+)
 from collectoss.tasks.github.util.github_random_key_auth import GithubRandomKeyAuth
 from collectoss.tasks.github.facade_github.core import *
 from collectoss.application.db.lib import execute_sql, get_contributor_aliases_by_email, get_unresolved_commit_emails_by_email, get_repo_by_repo_git, batch_insert_contributors, get_batch_size
@@ -62,8 +65,19 @@ def process_commit_metadata(logger, auth, contributorQueue, repo_id, platform_id
         
 
         # Try to get the login from the commit sha
-        if login == None or login == "":
-            login = get_login_with_commit_hash(logger, auth, contributor, repo_id)
+        if login is None or login == "":
+            try:
+                login = get_login_with_commit_hash(
+                    logger, auth, contributor, repo_id
+                )
+            except ResourceUnprocessable:
+                # Ideally, find another commit from this contributor.
+                # That lookup is not implemented yet, so skip this commit for now.
+                logger.warning(
+                    f"Skipping commit {contributor.get('hash')} "
+                    f"because GitHub returned HTTP 422."
+            )
+            continue
     
         if login == None or login == "":
             logger.warning("Failed to get login from commit hash")
