@@ -1,14 +1,30 @@
 Testing
 ===============
 
+CollectOSS aims to have a comprehensive set of automated tests to add an additional layer of protection from new breakage and prevent previously resolved issues from coming back as regressions
 
-CollectOSS aims to have a comprehensive set of tests to enable more rapid iteration and greater confidence that changes have not caused new breakage.
+Automated testing helps the project in many ways, including:
+* enabling more rapid iteration to resolve bugs
+* allowing manual testing efforts to focus on areas where it is most needed
+* helping maintainers focus their review effort on understanding why a change was made
+
+
+Types of Problems
+------------------
+
+* **Data Corruption** - To maintain this commitment to data quality, we treat issues that are actively writing bad data to a database as among the most serious type of issue there is. When this happens, especially if it is known to affect other instances, we will work to make recovery and cleanup scripts available in the `collectoss-utilities <https://github.com/chaoss/collectoss-utilities/>`_ repository.
+* **Security Vulnerabilities** - We also take security issues very seriously. If you have identified a security issue, please follow the procedure in the ``SECURITY.md`` file to report it privately so it can be resolved.
+* **Schema Drift** - While this is a less visible failure mode, it can very much happen in production systems where changes are coming from multiple places. We take steps to attempt to mitigate these issues by using schema versioning and migration tools to help older databases easily upgrade and allow admins to easily check whether their schema aligns with what CollectOSS expects.
+* **Crashes and Collection Failures** - Crashes are also serious issues that can be incredibly annoying to anyone running a CollectOSS instance. While we prefer to not have these types of issues in the first place, a crash or collection failure that doesnt collect data at all is far and away a more preferable outcome compared to writing known-bad data. Please contribute to existing issue reports or file new ones if you are experiencing this type of issue.
+* **Startup Failures** - Errors that prevent the app from starting up can also be incredibly annoying. We aim to catch as many of these as possible with our automated smoke testing on every PR.
+* **API Reliability Issues** - We collect data from many different kinds of APIs. Despite our best efforts, we may not be able to handle every different kind of issue that could happen. While automated similation testing is in place to try and catch known types of API issues, we invite `issue reports <https://github.com/chaoss/collectoss/issues>`_  if you think this is happening on your instance.
+* **Logic Errors** - We have unit tests and code coverage measurement tools in place to help ensure that the smallest units of functionality that CollectOSS depends on are working as intended.
+* **Typos and other small mistakes** - Mistakes happen. If you spot a typo or other mistake in our docs, or any other part of the project, please let us know by `filing an issue <https://github.com/chaoss/collectoss/issues>`_  on GitHub.
 
 
 Types of Testing 
 -----------------
-
-The tests of the CollectOSS app fall into one of several general types.
+To help avoid the types of problems above, we implement testing that falls into one of several general types:
 * unit tests - standalone tests that are simple to run and test single units of functionality (often individual functions or classes)
 * integration tests - small subsystem tests that require bringing up additional pieces, such as redis or a database, to perform the test
 * end-to-end tests - complete system tests that require running everything
@@ -75,6 +91,8 @@ Testing Standards
 
 Different parts of the CollectOSS codebase are held to different standards when it comes to how thoroughly changes are expected to be tested/validated before being allowed to merge.
 
+These different standards are largely due to different levels of capability and confidence in automated testing.
+
 An approximate, non-exhaustive list of the various levels of testing include:
 
 * **Code Review** - only a code review is needed to make sure things look okay (spelling/grammar, formatting etc). Typically used for README changes or changes to other simple, non-functional text files in the repo
@@ -89,6 +107,6 @@ Both the final merge decisions as well as decisions about which level of testing
 
 
 
-If you have questions about testing in CollectOSS or would like to help please reach out via the `CHAOSS Slack <https://chaoss.community/kb-getting-started/>`_ (in the #wg-collectoss-8knot channel) or open an issue on GitHub_.
+If you have questions about testing in CollectOSS or if you think you can help improve the tests please reach out via the `CHAOSS Slack <https://chaoss.community/kb-getting-started/>`_ (in the #wg-collectoss-8knot channel) or open an issue on GitHub_.
 
 .. _GitHub: https://github.com/chaoss/collectoss/issues
