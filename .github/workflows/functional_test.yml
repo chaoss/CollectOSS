@@ -73,3 +73,46 @@ jobs:
           disable_search: true
           use_oidc: true
           fail_ci_if_error: false
+
+  # DB-backed tests: the "Live" test classes in tests/test_application/test_db
+  # are skipped in the matrix job above (no database there). They are
+  # self-contained — each creates and drops its own throwaway schema — so an
+  # empty scratch postgres is all they need. Service containers only work on
+  # Linux runners, hence this separate job.
+  db-tests:
+    name: DB-backed tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        # Keep the major version in sync with docker/database/Dockerfile; the
+        # live tests double as pg_get_indexdef format-drift canaries.
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: scratch
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      MATVIEW_COMPARATOR_TEST_DB: postgresql+psycopg2://test:test@localhost:5432/scratch
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      # Only the self-contained Live tests: the rest of test_db (e.g.
+      # test_session.py) depends on the conftest.py fixtures that expect the
+      # full app schema, which the scratch database does not have. The
+      # non-live tests run in the matrix job above.
+      - name: Run DB-backed tests
+        run: |
+          uv run pytest tests/test_application/test_db -k Live \
+            --color=yes
