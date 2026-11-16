@@ -34,7 +34,7 @@ def upgrade():
             # PostgreSQL / SQLite batching syntax:
             result = conn.execute(
                 sa.text("""
-                    UPDATE pull_requests
+                    UPDATE data.pull_requests
                     SET instance_id = CASE 
                         WHEN pr_url LIKE 'https://api.github.com%' THEN 1
                         WHEN pr_url LIKE 'https://gitlab.com%' THEN 2
