@@ -26,43 +26,49 @@ def upgrade():
     conn = op.get_bind()
     batch_size = 50_000
     complete_batches = 0
+    try:
+        with op.get_context().autocommit_block():
+            logger.info("Starting population of data into new instance_id column of pull_requests based on pr_url")
+            logger.info(f"Batch Size: {batch_size}")
+            while True:
+                # PostgreSQL / SQLite batching syntax:
+                result = conn.execute(
+                    sa.text("""
+                        UPDATE data.pull_requests
+                        SET instance_id = CASE 
+                            WHEN pr_url LIKE 'https://api.github.com%' THEN 1
+                            WHEN pr_url LIKE 'https://gitlab.com%' THEN 2
+                            ELSE 0 
+                        END
+                        WHERE id IN (
+                            SELECT id FROM your_table
+                            WHERE instance_id IS NULL
+                            LIMIT :batch_size
+                        )
+                    """),
+                    {"batch_size": batch_size},
+                )
 
-    with op.get_context().autocommit_block():
-        logger.info("Starting population of data into new instance_id column of pull_requests based on pr_url")
-        logger.info(f"Batch Size: {batch_size}")
-        while True:
-            # PostgreSQL / SQLite batching syntax:
-            result = conn.execute(
-                sa.text("""
-                    UPDATE data.pull_requests
-                    SET instance_id = CASE 
-                        WHEN pr_url LIKE 'https://api.github.com%' THEN 1
-                        WHEN pr_url LIKE 'https://gitlab.com%' THEN 2
-                        ELSE 0 
-                    END
-                    WHERE id IN (
-                        SELECT id FROM your_table
-                        WHERE instance_id IS NULL
-                        LIMIT :batch_size
-                    )
-                """),
-                {"batch_size": batch_size},
-            )
-
-            if result.rowcount == 0:
-                logger.info("Completed Successfully.")
-                break
-            else:
-                complete_batches += 1
-                logger.info(f"Completed batch {complete_batches} (total records so far: {complete_batches*batch_size})")
-    
-    op.create_foreign_key(None, 'pull_requests', 'forge_instance', ['instance_id'], ['id'], source_schema='data', referent_schema='operations')
-    
-    op.alter_column('pull_requests', 'instance_id',
-            existing_type=sa.Integer(),
-            existing_nullable=False,
-            nullable=True,
-            schema='data')
+                if result.rowcount == 0:
+                    logger.info("Completed Successfully.")
+                    break
+                else:
+                    complete_batches += 1
+                    logger.info(f"Completed batch {complete_batches} (total records so far: {complete_batches*batch_size})")
+        
+        op.create_foreign_key(None, 'pull_requests', 'forge_instance', ['instance_id'], ['id'], source_schema='data', referent_schema='operations')
+        
+        op.alter_column('pull_requests', 'instance_id',
+                existing_type=sa.Integer(),
+                existing_nullable=False,
+                nullable=True,
+                schema='data')
+    except Exception:
+        logger.exception("Backfill failed; rolling back and dropping instance_id column to prepare for a retry")
+        # Explicitly clean up the committed column
+        op.drop_column("pull_requests", "source_id")
+        # Re-raise so Alembic does NOT update alembic_version
+        raise
 
     # ### end Alembic commands ###
 
