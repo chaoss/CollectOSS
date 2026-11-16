@@ -40,8 +40,8 @@ def upgrade():
                             WHEN pr_url LIKE 'https://gitlab.com%' THEN 2
                             ELSE 0 
                         END
-                        WHERE id IN (
-                            SELECT id FROM your_table
+                        WHERE pull_request_id IN (
+                            SELECT pull_request_id FROM data.pull_requests
                             WHERE instance_id IS NULL
                             LIMIT :batch_size
                         )
@@ -66,7 +66,8 @@ def upgrade():
     except Exception:
         logger.exception("Backfill failed; rolling back and dropping instance_id column to prepare for a retry")
         # Explicitly clean up the committed column
-        op.drop_column("pull_requests", "source_id")
+        with op.get_context().autocommit_block():
+            op.drop_column("pull_requests", "instance_id", schema='data')
         # Re-raise so Alembic does NOT update alembic_version
         raise
 
