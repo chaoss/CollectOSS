@@ -225,7 +225,7 @@ def merge_config(
         config.load_config_from_dict(augmented_config)
 
 def initialize_tables(engine, logger):
-    """Initialize certain tables with data that is requred for first run
+    """Initialize certain tables with data that is required for first run
 
     This includes:
      - populating the forge_instances table with the core forges (github, gitlab)
@@ -245,7 +245,7 @@ def initialize_tables(engine, logger):
         if all_instance_count == 0:
             github_instance = ForgeInstance(
                 platform_type=ForgePlatformType.GITHUB.value,
-                name="GitHub (defualt)",
+                name="GitHub (default)",
                 domain_name="github.com",
                 privacy_url = "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
                 terms_url = "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
@@ -261,7 +261,7 @@ def initialize_tables(engine, logger):
 
             gitlab_instance = ForgeInstance(
                 platform_type=ForgePlatformType.GITLAB.value,
-                name="GitLab (defualt)",
+                name="GitLab (default)",
                 domain_name="gitlab.com",
                 privacy_url = "https://about.gitlab.com/privacy/",
                 terms_url = "https://about.gitlab.com/terms/",
