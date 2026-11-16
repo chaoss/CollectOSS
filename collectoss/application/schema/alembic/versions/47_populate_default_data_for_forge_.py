@@ -23,7 +23,7 @@ depends_on = None
 
 # Normally we dont allow migrations to create/modify data in a database except as part of structural schema changes
 # however, we anticipate a future migration to adjust foreign keys to rely on this table instead, and need to
-# effectively gaurantee the data exists prior to that migration existing in a way that is automatic for most instances.
+# effectively guarantee the data exists prior to that migration existing in a way that is automatic for most instances.
 
 
 # We include a copy of the forge_instance schema definition and other relevant types here because it may change in the future and we need to be accurate
@@ -64,7 +64,7 @@ class ForgeInstance(Base):
 DEFAULT_FORGES = [
     ForgeInstance(
         platform_type=ForgePlatformType.GITHUB.value,
-        name="GitHub (defualt)",
+        name="GitHub (default)",
         domain_name="github.com",
         privacy_url = "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
         terms_url = "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
@@ -77,7 +77,7 @@ DEFAULT_FORGES = [
     ),
     ForgeInstance(
         platform_type=ForgePlatformType.GITLAB.value,
-        name="GitLab (defualt)",
+        name="GitLab (default)",
         domain_name="gitlab.com",
         privacy_url = "https://about.gitlab.com/privacy/",
         terms_url = "https://about.gitlab.com/terms/",
