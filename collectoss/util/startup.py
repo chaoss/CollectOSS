@@ -9,6 +9,9 @@ from subprocess import check_call
 import platform
 import sys
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from collectoss.application.db.models.operations import ForgeInstance
 from collectoss.util.enums import ForgePlatformType
 from sqlalchemy.orm.attributes import get_history
@@ -244,6 +247,13 @@ def initialize_tables(engine, logger):
                 platform_type=ForgePlatformType.GITHUB.value,
                 name="GitHub (defualt)",
                 domain_name="github.com",
+                privacy_url = "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
+                terms_url = "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
+                policy_reviewed_date = datetime(2026, 10, 12, tzinfo=ZoneInfo("America/New_York")),
+                policy_reviewed_by = "CollectOSS Maintainers",
+                policy_review_comments = "CollectOSS primarily accesses public information from GitHub. Terms state: "
+                    "\"Depending on your account settings, we may share Personal Data with other users of the Services "
+                    " and the public. You control what information is made public.\"",
                 enabled=True
             )
             session.add(github_instance)
@@ -253,6 +263,13 @@ def initialize_tables(engine, logger):
                 platform_type=ForgePlatformType.GITLAB.value,
                 name="GitLab (defualt)",
                 domain_name="gitlab.com",
+                privacy_url = "https://about.gitlab.com/privacy/",
+                terms_url = "https://about.gitlab.com/terms/",
+                policy_reviewed_date = datetime(2026, 11, 16, tzinfo=ZoneInfo("America/New_York")),
+                policy_reviewed_by = "CollectOSS Maintainers",
+                policy_review_comments = "CollectOSS primarily accesses public information from GitLab. Terms state: "
+                    "\"We may share your Personal Data with other users of the Services and with the public if you "
+                    "choose to make your SaaS Profile public. You have control over what information is public;\"",               
                 enabled=True
             )
             session.add(gitlab_instance)
