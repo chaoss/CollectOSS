@@ -58,7 +58,6 @@ class ForgeInstance(Base):
     policy_reviewed_date = Column(DateTime(timezone=True), nullable=False, default=func.now())
     policy_reviewed_by = Column(String, nullable=False, comment="Who conducted the last review of these policies")
     policy_review_comments = Column(String, nullable=True, comment="Reviewer comments from the most recent policy review.")
-    api_keys = relationship("WorkerOauth")
 
 # these are the default definitions for forge instance objects in the DB provided by CollectOSS maintainers.
 # Future instances will likely be added by instance operators, not via migrations
