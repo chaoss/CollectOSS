@@ -1085,6 +1085,12 @@ class ForgeInstance(Base):
     date_added = Column(DateTime(timezone=True), nullable=False, default=func.now())
     domain_name = Column(String, nullable=False, comment="The base domain name (without the scheme) where this instance is hosted")
     enabled = Column(Boolean, default=True, nullable=False, comment="denotes whether collection should run for this instance")
+    privacy_url = Column(String, nullable=False, comment="The link to the privacy policy for this instance")
+    terms_url = Column(String, nullable=False, comment="The link to the terms of service for this instance")
+    policy_reviewed_date = Column(DateTime(timezone=True), nullable=False, default=func.now())
+    policy_reviewed_by = Column(String, nullable=False, comment="Who conducted the last review of these policies")
+    policy_review_comments = Column(String, nullable=True, comment="Reviewer comments from the most recent policy review.")
+
 
 
 class Subscription(Base):
