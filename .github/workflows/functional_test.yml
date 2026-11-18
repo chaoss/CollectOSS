@@ -100,7 +100,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      MATVIEW_COMPARATOR_TEST_DB: postgresql+psycopg2://test:test@localhost:5432/scratch
+      COLLECTOSS_TEST_DB: postgresql+psycopg2://test:test@localhost:5432/scratch
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
