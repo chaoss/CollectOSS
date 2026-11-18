@@ -9,7 +9,7 @@
 #
 # Usage:
 #   docker compose -f tests/docker-compose.yml up -d --wait
-#   MATVIEW_COMPARATOR_TEST_DB=postgresql+psycopg2://test:test@localhost:5435/scratch \
+#   COLLECTOSS_TEST_DB=postgresql+psycopg2://test:test@localhost:5435/scratch \
 #       uv run pytest tests/test_application/test_db -k Live
 #   docker compose -f tests/docker-compose.yml down
 #
