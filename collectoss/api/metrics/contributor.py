@@ -93,7 +93,7 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
                     FROM commit_comment_ref,
                         commits,
                         message
-                    WHERE commit_comment_ref.cmt_id = commit_comment_ref.cmt_id
+                    WHERE commits.cmt_id = commit_comment_ref.cmt_id
                         AND message.msg_id = commit_comment_ref.msg_id
                         AND commits.repo_id = :repo_id
                         AND created_at BETWEEN :begin_date AND :end_date
@@ -180,7 +180,7 @@ def contributors(repo_group_id, repo_id=None, period='day', begin_date=None, end
                     FROM commit_comment_ref,
                         commits,
                         message
-                    WHERE commit_comment_ref.cmt_id = commit_comment_ref.cmt_id
+                    WHERE commits.cmt_id = commit_comment_ref.cmt_id
                         AND message.msg_id = commit_comment_ref.msg_id
                         AND commits.repo_id in (SELECT repo_id FROM repo WHERE repo_group_id=:repo_group_id)
                         AND created_at BETWEEN :begin_date AND :end_date
