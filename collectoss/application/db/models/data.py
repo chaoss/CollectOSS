@@ -1767,7 +1767,7 @@ class PullRequest(Base):
     pr_src_id = Column(
         BigInteger, comment="The pr_src_id is unique across all of github."
     )
-    instance_id = Column(ForeignKey("operations.forge_instance.id"), nullable=False, comment="The id of the instance this record is from")
+    instance_id = Column(ForeignKey("operations.forge_instance.id", name="fk_pr_instance_id"), nullable=False, comment="The id of the instance this record is from")
     pr_src_node_id = Column(String)
     pr_html_url = Column(String)
     pr_diff_url = Column(String)
