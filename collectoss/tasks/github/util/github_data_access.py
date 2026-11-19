@@ -254,7 +254,8 @@ class GithubDataAccess:
 
             retry_after = int(headers["Retry-After"])
             self.logger.info('\n\n\n\nEncountered secondary rate limit issue.\n\n\n\n')
-            self.key = self.key_client.expire(self.key, time.time() + retry_after)
+            expire_at = time.time() + retry_after
+            self.key = self.key_client.expire(self.key, expire_at)
 
         elif "X-RateLimit-Remaining" in headers and int(headers["X-RateLimit-Remaining"]) < GITHUB_RATELIMIT_REMAINING_CAP:
             current_epoch = int(time.time())
@@ -266,14 +267,16 @@ class GithubDataAccess:
                 key_reset_time = 0
                 
             self.logger.info(f"\n\n\nAPI rate limit exceeded. Key resets in {key_reset_time} seconds. Informing key manager that key is expired")
-            self.key = self.key_client.expire(self.key, epoch_when_key_resets)
+            expire_at = epoch_when_key_resets
+            self.key = self.key_client.expire(self.key, expire_at)
 
         else:
-            self.key = self.key_client.expire(self.key, time.time() + 60)
+            expire_at = time.time() + 60
+            self.key = self.key_client.expire(self.key, expire_at)
 
-        if previous_key == self.key:
-            self.logger.error(f"The same key was returned after a request to expire it was sent (key: {mask_key(self.key)})")
-
+        if previous_key == self.key and time.time() < expire_at:
+            self.logger.error(f"The same key was returned before its expiry time ({expire_at}) after a request to expire it was sent (key: {mask_key(self.key)})")
+            
     def __add_query_params(self, url: str, additional_params: dict) -> str:
         """Add query params to a url.
 
