@@ -1,6 +1,7 @@
 from collectoss.tasks.github.util.github_task_session import *
 import json
 import time
+import httpx
 import sqlalchemy as s
 from collectoss.application.db.models import *
 from collectoss.tasks.github.util.github_paginator import hit_api, process_dict_response
@@ -30,7 +31,7 @@ def clean_dict(d):
 @deprecated("Please use GithubDataAcess.get_resource() instead")
 def request_dict_from_endpoint(logger, session, url, timeout_wait=10):
     """Hit the endpoint specified by the url and return the json that it returns if it returns a dict.
-    
+
     NOTE: This function is being deprecated in favor of GithubDataAcess.get_resource()
     No functional change in this function body; logic preserved fully.
     This function still attempts to hit a GitHub API endpoint and return a dictionary if successful.
@@ -113,7 +114,7 @@ def create_endpoint_from_email(email):
     # Also stopped splitting per note above.
     url = 'https://api.github.com/search/users?q={}+in:email+type:user'.format(
         email)
-    
+
 
     return url
 
@@ -264,9 +265,9 @@ def update_contributor(self, cntrb, max_attempts=3):
 def fetch_username_from_email(logger, auth, commit) -> dict | None:
     """Try every distinct email found within a commit for possible username resolution.
     Add email to garbage table if can't be resolved.
-    
+
     #   \param contributor is the raw database entry
- 
+
     Args:
         logger (_type_): logging instance to use
         auth (_type_): Keymanager instance to use for auth
@@ -368,7 +369,15 @@ def get_login_with_commit_hash(logger, auth, commit_data, repo_id):
     #TODO: here.
     # Send api request
     github_data_access = GithubDataAccess(auth, logger)
-    login_json = github_data_access.get_resource(url)
+    try:
+        login_json = github_data_access.get_resource(url)
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 422:
+            logger.warning(
+                f"GitHub rejected commit lookup for hash {commit_data['hash']} "
+                f"in repo_id={repo_id} with HTTP 422."
+            )
+        raise
 
     # TODO: Why are we returning None if 'sha' is not in response if we aren't even using it?
     if login_json is None or 'sha' not in login_json:
