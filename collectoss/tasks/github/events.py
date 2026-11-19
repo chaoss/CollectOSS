@@ -345,6 +345,11 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
     def _collect_and_process_pr_events(self, owner, repo, repo_id, key_auth, since):
 
+        github_data_access = GithubDataAccess(key_auth, self._logger)
+        if not github_data_access.check_prs_enabled(owner, repo):
+            self._logger.info(f"{self.repo_identifier}: Pull requests are disabled. Skipping PR event collection.")
+            return
+
         event_batch_size = get_batch_size("event")
 
         engine = get_engine()
@@ -371,7 +376,6 @@ class ThoroughGithubEventCollection(GithubEventCollection):
 
         events = []
         contributors = []
-        github_data_access = GithubDataAccess(key_auth, self._logger)
         for db_pr in pr_result:
             pr = db_pr._asdict()
 
