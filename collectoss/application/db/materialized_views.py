@@ -6,54 +6,109 @@ Alembic migrations for NEW views should inline their SQL (migrations are
 immutable snapshots), but this registry is the canonical reference for what
 views exist and how to refresh them.
 
-alembic_utils autogenerate is wired up (phase 2 complete). Running
+alembic_utils_extended autogenerate is wired up (phase 2 complete). Running
 `alembic revision --autogenerate` will detect changes to view SQL definitions.
-alembic_utils uses a round-trip comparison: it creates the Python-defined view
+alembic_utils_extended uses a round-trip comparison: it creates the Python-defined view
 in a savepoint, reads back what PostgreSQL stored, and diffs that against the
 live database. Manual SQL normalization is not required.
 
 WARNING: ALL views must be registered here or autogenerate will propose
 dropping unregistered ones. Keep this list complete.
-
-alembic_utils does NOT manage indexes on materialized views. See the developer
-note in collectoss/application/schema/alembic/env.py for the full post-replace
-procedure (index recreation + non-concurrent refresh).
 """
 
-from dataclasses import dataclass
+from alembic_utils_extended.pg_materialized_view import PGMaterializedView
+from sqlalchemy import Index
 
-from alembic_utils.pg_materialized_view import PGMaterializedView
 
+class MaterializedView(PGMaterializedView):
+    """Thin subclass of ``PGMaterializedView`` with CollectOSS-specific helpers.
 
-@dataclass(frozen=True)
-class MaterializedView:
-    name: str
-    schema: str
-    sql: str
-    unique_index_columns: tuple[str, ...] = ()
+    Indexes are declared as full SQLAlchemy ``Index`` objects (strings for
+    plain column references), giving complete flexibility (uniqueness,
+    expressions, opclasses) instead of a bare column list. A unique index is
+    what makes ``REFRESH MATERIALIZED VIEW ... CONCURRENTLY`` possible; see
+    ``has_unique_index``.
+
+    Instances must be converted via ``to_pg_view()`` before registration with
+    ``register_entities``: ``alembic_utils_extended`` performs exact-class
+    checks that mis-handle subclasses (spurious ``DropOp``s).
+    """
+
+    def __init__(
+        self,
+        name: str,
+        schema: str,
+        sql: str,
+        with_data: bool = False,
+        indexes: list[Index] = [],
+    ) -> None:
+        super().__init__(
+            schema=schema,
+            signature=name,
+            definition=sql,
+            with_data=with_data,
+            indexes=indexes,
+        )
 
     @property
     def fqn(self) -> str:
         return f"{self.schema}.{self.name}"
 
-    def refresh_sql(self, concurrently: bool = True) -> str:
-        mode = "CONCURRENTLY " if concurrently else ""
-        return f"REFRESH MATERIALIZED VIEW {mode}{self.fqn} WITH DATA;"
+    @property
+    def unique_indexes(self) -> list[Index]:
+        """The view's unique indexes (the prerequisite for CONCURRENTLY refresh)."""
+        return [index for index in (self.indexes or []) if index.unique]
 
-    def to_pg_view(self, with_data: bool = False) -> PGMaterializedView:
+    @property
+    def has_unique_index(self) -> bool:
+        """Whether the view can be refreshed CONCURRENTLY."""
+        return bool(self.unique_indexes)
+
+    def refresh_sql(self, concurrently: bool = True, with_data: bool | None = None) -> str:
+        """Return the SQL to refresh the view.
+
+        Args:
+            concurrently: Whether to refresh the view CONCURRENTLY.
+            with_data: Whether to refresh the view WITH DATA. If None, uses the
+                view's ``with_data`` attribute.
+        """
+        if with_data is None:
+          with_data = self.with_data
+        mode = "CONCURRENTLY " if concurrently else ""
+        data_present = "DATA" if with_data else "NO DATA"
+        return f"REFRESH MATERIALIZED VIEW {mode}{self.fqn} WITH {data_present};"
+
+    def to_pg_view(self, with_data: bool = None) -> PGMaterializedView:
+        """Return a plain ``PGMaterializedView`` for use with alembic_utils registration.
+
+        We cannot return *self* here even though ``MaterializedView`` is a
+        ``PGMaterializedView`` subclass.  ``alembic_utils_extended`` uses two
+        exact-class checks that both fail with a subclass and cause spurious
+        ``DropOp``s for all materialized views.
+
+        Returning a genuine ``PGMaterializedView`` sidesteps both issues while
+        all runtime helpers (``fqn``, ``refresh_sql``, ``has_unique_index``)
+        remain accessible on *self*.
+
+        Parameters:
+            with_data: Optional override for ``with_data`` in the returned view. If None, uses the
+                view's ``with_data`` attribute.
+        """
+        if with_data is None:
+          with_data = self.with_data
         return PGMaterializedView(
             schema=self.schema,
-            signature=self.name,
-            definition=self.sql,
+            signature=self.signature,
+            definition=self.definition,
             with_data=with_data,
+            indexes=self.indexes,
         )
 
     def __repr__(self) -> str:
-        # Default dataclass repr would dump the full SQL string (some views
-        # are 100+ lines), making logs and debug output unreadable.
+        # Avoid dumping the full SQL string (some views are 100+ lines) in logs.
         return (
             f"MaterializedView(name={self.name!r}, schema={self.schema!r}, "
-            f"unique_index_columns={self.unique_index_columns!r})"
+            f"indexes={[index.name for index in self.indexes or []]!r})"
         )
 
 
@@ -731,94 +786,96 @@ MATERIALIZED_VIEWS: list[MaterializedView] = [
         name="issue_reporter_created_at",
         schema="data",
         sql=_ISSUE_REPORTER_CREATED_AT,
-        unique_index_columns=(),  # only a non-unique btree on repo_id
+        # Non-unique btree only: this view cannot be refreshed CONCURRENTLY
+        # (the refresh task falls back to non-concurrent).
+        indexes=[Index("issue_reporter_created_at_repo_id_idx", "repo_id")],
     ),
     # --- Views 2-6: from migration 4, indexes from migration 25 ---
     MaterializedView(
         name="api_get_all_repo_prs",
         schema="data",
         sql=_API_GET_ALL_REPO_PRS,
-        unique_index_columns=("repo_id",),
+        indexes=[Index("api_get_all_repo_prs_repo_id_idx", "repo_id", unique=True)],
     ),
     MaterializedView(
         name="explorer_entry_list",
         schema="data",
         sql=_EXPLORER_ENTRY_LIST,
-        unique_index_columns=("repo_id",),
+        indexes=[Index("explorer_entry_list_repo_id_idx", "repo_id", unique=True)],
     ),
     MaterializedView(
         name="explorer_commits_and_committers_daily_count",
         schema="data",
         sql=_EXPLORER_COMMITS_AND_COMMITTERS_DAILY_COUNT,
-        unique_index_columns=("repo_id", "cmt_committer_date",),
+        indexes=[Index("explorer_commits_and_committers__repo_id_cmt_committer_date_idx", "repo_id", "cmt_committer_date", unique=True)],
     ),
     MaterializedView(
         name="api_get_all_repos_commits",
         schema="data",
         sql=_API_GET_ALL_REPOS_COMMITS,
-        unique_index_columns=("repo_id",),
+        indexes=[Index("api_get_all_repos_commits_repo_id_idx", "repo_id", unique=True)],
     ),
     MaterializedView(
         name="api_get_all_repos_issues",
         schema="data",
         sql=_API_GET_ALL_REPOS_ISSUES,
-        unique_index_columns=("repo_id",),
+        indexes=[Index("api_get_all_repos_issues_repo_id_idx", "repo_id", unique=True)],
     ),
     # --- Views 6-8: from migration 25, recreated ---
     MaterializedView(
         name="augur_new_contributors",
         schema="data",
         sql=_AUGUR_NEW_CONTRIBUTORS,
-        unique_index_columns=("cntrb_id", "created_at", "repo_id", "repo_name", "login", "rank",),
+        indexes=[Index("augur_new_contributors_cntrb_id_created_at_repo_id_repo_nam_idx", "cntrb_id", "created_at", "repo_id", "repo_name", "login", "rank", unique=True)],
     ),
     MaterializedView(
         name="explorer_contributor_actions",
         schema="data",
         sql=_EXPLORER_CONTRIBUTOR_ACTIONS,
-        unique_index_columns=("cntrb_id", "created_at", "repo_id", "action", "repo_name", "login", "rank",),
+        indexes=[Index("explorer_contributor_actions_cntrb_id_created_at_repo_id_ac_idx", "cntrb_id", "created_at", "repo_id", "action", "repo_name", "login", "rank", unique=True)],
     ),
     MaterializedView(
         name="explorer_new_contributors",
         schema="data",
         sql=_EXPLORER_NEW_CONTRIBUTORS,
-        unique_index_columns=("cntrb_id", "created_at", "month", "year", "repo_id", "full_name", "repo_name", "login", "rank",),
+        indexes=[Index("explorer_new_contributors_cntrb_id_created_at_month_year_re_idx", "cntrb_id", "created_at", "month", "year", "repo_id", "full_name", "repo_name", "login", "rank", unique=True)],
     ),
     # --- Views 9-13: from migration 26 ---
     MaterializedView(
         name="explorer_pr_assignments",
         schema="data",
         sql=_EXPLORER_PR_ASSIGNMENTS,
-        unique_index_columns=("pull_request_id", "id", "node_id",),
+        indexes=[Index("explorer_pr_assignments_pull_request_id_id_node_id_idx", "pull_request_id", "id", "node_id", unique=True)],
     ),
     MaterializedView(
         name="explorer_pr_response",
         schema="data",
         sql=_EXPLORER_PR_RESPONSE,
-        unique_index_columns=("pull_request_id", "id", "cntrb_id", "msg_cntrb_id", "msg_timestamp",),
+        indexes=[Index("explorer_pr_response_pull_request_id_id_cntrb_id_msg_cntrb__idx", "pull_request_id", "id", "cntrb_id", "msg_cntrb_id", "msg_timestamp", unique=True)],
     ),
     MaterializedView(
         name="explorer_user_repos",
         schema="data",
         sql=_EXPLORER_USER_REPOS,
-        unique_index_columns=("login_name", "user_id", "group_id", "repo_id",),
+        indexes=[Index("explorer_user_repos_login_name_user_id_group_id_repo_id_idx", "login_name", "user_id", "group_id", "repo_id", unique=True)],
     ),
     MaterializedView(
         name="explorer_pr_response_times",
         schema="data",
         sql=_EXPLORER_PR_RESPONSE_TIMES,
-        unique_index_columns=("repo_id", "pr_src_id", "pr_src_meta_label",),
+        indexes=[Index("explorer_pr_response_times_repo_id_pr_src_id_pr_src_meta_la_idx", "repo_id", "pr_src_id", "pr_src_meta_label", unique=True)],
     ),
     MaterializedView(
         name="explorer_issue_assignments",
         schema="data",
         sql=_EXPLORER_ISSUE_ASSIGNMENTS,
-        unique_index_columns=("issue_id", "id", "node_id",),
+        indexes=[Index("explorer_issue_assignments_issue_id_id_node_id_idx", "issue_id", "id", "node_id", unique=True)],
     ),
     # --- View 15: from migration 28 ---
     MaterializedView(
         name="explorer_repo_languages",
         schema="data",
         sql=_EXPLORER_REPO_LANGUAGES,
-        unique_index_columns=("repo_id", "programming_language",),
+        indexes=[Index("explorer_repo_languages_repo_id_programming_language_idx", "repo_id", "programming_language", unique=True)],
     ),
 ]

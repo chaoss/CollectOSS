@@ -20,7 +20,7 @@ def refresh_materialized_views(self):
         for view in MATERIALIZED_VIEWS:
             logger.info(f"Refreshing materialized view: {view.fqn}")
             
-            if len(view.unique_index_columns) > 0:
+            if view.has_unique_index:
                 try:
                     conn.execute(s.sql.text(view.refresh_sql(concurrently=True)))
                     continue

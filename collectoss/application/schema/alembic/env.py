@@ -41,11 +41,17 @@ target_metadata = Base.metadata
 #
 # WARNING: If MATERIALIZED_VIEWS is ever emptied, autogenerate will propose
 # dropping all registered views. Keep the list complete.
-from alembic_utils.pg_materialized_view import PGMaterializedView
-from alembic_utils.replaceable_entity import register_entities
+from alembic_utils_extended.pg_materialized_view import PGMaterializedView
+from alembic_utils_extended.replaceable_entity import register_entities
 from collectoss.application.db.materialized_views import MATERIALIZED_VIEWS
 _materialized_view_entities = [view.to_pg_view() for view in MATERIALIZED_VIEWS]
 register_entities(_materialized_view_entities, entity_types=[PGMaterializedView])
+
+# Index-only change detection for materialized views, as a separate autogen
+# comparator. MUST be imported after register_entities above: the entity
+# comparator registers first, so views with a pending create/replace op
+# (which already render index creation) are skipped by the index comparator.
+from collectoss.application.db import matview_index_comparator  # noqa: E402,F401
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
