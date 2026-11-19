@@ -1741,7 +1741,7 @@ class MessageSentimentSummary(Base):
 class PullRequest(Base):
     __tablename__ = "pull_requests"
     __table_args__ = (
-        UniqueConstraint("repo_id", "pr_src_id", name="unique-pr"),
+        UniqueConstraint("instance_id", "pr_src_id", name="unique-pr"),
         UniqueConstraint("pr_url", name="pull-request-insert-unique"),
         Index("id_node", text("pr_src_id DESC"), text("pr_src_node_id DESC NULLS LAST")),
         Index(
@@ -1767,6 +1767,7 @@ class PullRequest(Base):
     pr_src_id = Column(
         BigInteger, comment="The pr_src_id is unique across all of github."
     )
+    instance_id = Column(ForeignKey("operations.forge_instance.id", name="fk_pr_instance_id"), nullable=False, comment="The id of the instance this record is from")
     pr_src_node_id = Column(String)
     pr_html_url = Column(String)
     pr_diff_url = Column(String)

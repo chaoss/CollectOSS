@@ -128,7 +128,7 @@ def process_merge_requests(data, task_name, repo_id, logger):
     batch_insert_contributors(logger, contributors)
 
     logger.info(f"{task_name}: Inserting mrs of length: {len(merge_requests)}")
-    pr_natural_keys = ["repo_id", "pr_src_id"]
+    pr_natural_keys = ["instance_id", "pr_src_id"]
     pr_string_fields = ["pr_src_title", "pr_body"]
     pr_return_columns = ["pull_request_id", "pr_src_id"]
     pr_return_data = bulk_insert_dicts(logger, merge_requests, PullRequest, pr_natural_keys, return_columns=pr_return_columns, string_fields=pr_string_fields)
