@@ -341,60 +341,55 @@ def collection_update_weights(self):
 @celery.task(bind=True)
 def retry_errored_repos(self):
     """
-        Periodic task to reset repositories that have errored and try again.
+    Periodic task to reset repositories that have errored and try again.
+
+    Retries are decided per collection hook (core / secondary / facade / ml).
+    A backlog of new repos in one hook must not block error retries in others
+    (#502).
     """
     engine = self.app.engine
-    logger = logging.getLogger(create_collection_status_records.__name__)
-
+    logger = logging.getLogger(retry_errored_repos.__name__)
 
     with DatabaseSession(logger, engine) as session:
-
-        # if we have a lot of new repos to collect, we should skip retrying repos that have errored until collection is caught up.
-        total_new_repos = 0
-
-        #Get list of enabled phases 
         enabled_phase_names = get_enabled_phase_names_from_config_session(session, logger)
-
         query_limit = 1_000_000
 
-        if primary_repo_collect_phase.__name__ in enabled_phase_names:
-            total_new_repos += len(get_newly_added_repos(session, query_limit, "core"))
-    
-        if secondary_repo_collect_phase.__name__ in enabled_phase_names:
-            total_new_repos += len(get_newly_added_repos(session, query_limit, "secondary"))
+        # (hook name, phase function name)
+        # Avoid referencing machine_learning_phase when running in Docker — that
+        # module is not imported there (see top of this file).
+        hook_specs = [
+            ("core", primary_repo_collect_phase.__name__),
+            ("secondary", secondary_repo_collect_phase.__name__),
+            ("facade", facade_phase.__name__),
+        ]
+        if not RUNNING_DOCKER:
+            hook_specs.append(("ml", machine_learning_phase.__name__))
 
-        if facade_phase.__name__ in enabled_phase_names:
-            total_new_repos += len(get_newly_added_repos(session, query_limit, "facade"))
+        new_repo_counts = {}
+        for hook, phase_name in hook_specs:
+            if phase_name not in enabled_phase_names:
+                continue
+            new_repo_counts[hook] = len(get_newly_added_repos(session, query_limit, hook))
 
-        if not RUNNING_DOCKER and machine_learning_phase.__name__ in enabled_phase_names:
-            total_new_repos += len(get_newly_added_repos(session, query_limit, "ml"))
-
-    if total_new_repos == 0:
-
-        #TODO: Isaac needs to normalize the status's to be abstract in the 
-        #collection_status table once collectoss dev is less unstable dev is less unstable.
-        query = s.sql.text(f"""UPDATE collection_status SET secondary_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE secondary_status = '{CollectionState.ERROR.value}' and secondary_data_last_collected is NULL;"""
-        f"""UPDATE collection_status SET core_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE core_status = '{CollectionState.ERROR.value}' and core_data_last_collected is NULL;"""
-        f"""UPDATE collection_status SET facade_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE facade_status = '{CollectionState.ERROR.value}' and facade_data_last_collected is NULL;"""
-        f"""UPDATE collection_status SET ml_status = '{CollectionState.PENDING.value}'"""
-        f""" WHERE ml_status = '{CollectionState.ERROR.value}' and ml_data_last_collected is NULL;"""
-        
-        f"""UPDATE collection_status SET secondary_status = '{CollectionState.SUCCESS.value}'"""
-        f""" WHERE secondary_status = '{CollectionState.ERROR.value}' and secondary_data_last_collected is not NULL;"""
-        f"""UPDATE collection_status SET core_status = '{CollectionState.SUCCESS.value}'"""
-        f""" WHERE core_status = '{CollectionState.ERROR.value}' and core_data_last_collected is not NULL;"""
-        f"""UPDATE collection_status SET facade_status = '{CollectionState.SUCCESS.value}'"""
-        f""" WHERE facade_status = '{CollectionState.ERROR.value}' and facade_data_last_collected is not NULL;"""
-        f"""UPDATE collection_status SET ml_status = '{CollectionState.SUCCESS.value}'"""
-        f""" WHERE ml_status = '{CollectionState.ERROR.value}' and ml_data_last_collected is not NULL;"""
+    sql_parts = []
+    for hook in hooks_ready_for_error_retry(new_repo_counts):
+        logger.info(
+            f"Retrying errored {hook} repos "
+            f"(no new {hook} backlog; new_repo_counts={new_repo_counts})"
         )
+        sql_parts.append(build_error_retry_sql_for_hook(hook))
 
-        execute_sql(query)
-    else:
-        logger.warning(f"Skipping retry of errored repos so we dont overwhelm collection when there are {total_new_repos} new repos to collect")
+    for hook, count in new_repo_counts.items():
+        if count > 0:
+            logger.warning(
+                f"Skipping retry of errored {hook} repos so we dont overwhelm "
+                f"collection when there are {count} new {hook} repos to collect"
+            )
+
+    if sql_parts:
+        # TODO: normalize status handling in collection_status once collectoss
+        # is less unstable.
+        execute_sql(s.sql.text("".join(sql_parts)))
 
 
 
