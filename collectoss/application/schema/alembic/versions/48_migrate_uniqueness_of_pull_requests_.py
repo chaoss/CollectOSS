@@ -26,6 +26,19 @@ def upgrade():
     conn = op.get_bind()
     batch_size = 50_000
     complete_batches = 0
+    total_rows = -1
+
+    if conn.dialect.name == "postgresql":
+        est = conn.execute(sa.text("""
+            SELECT c.reltuples::bigint
+            FROM pg_class c
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relname = 'pull_requests' AND n.nspname = 'data'
+        """)).scalar()
+        # -1 means "never analyzed" in PG13+
+        if est is not None and est > 0:
+            total_rows = est
+    
     try:
         with op.get_context().autocommit_block():
             logger.info("Starting population of data into new instance_id column of pull_requests based on pr_url")
@@ -54,7 +67,15 @@ def upgrade():
                     break
                 else:
                     complete_batches += 1
-                    logger.info(f"Completed batch {complete_batches} (total records so far: {complete_batches*batch_size})")
+                    message = f"Completed batch {complete_batches}"
+                    so_far = (complete_batches*batch_size)
+                    if total_rows > 0:
+                        progress_pct = 100 * so_far / total_rows
+                        message += f" (progress: ~{progress_pct:.1f}%)"
+                    else:
+                        message += f" (total records so far: {so_far})"
+
+                    logger.info(message)
         
         op.create_foreign_key("fk_pr_instance_id", 'pull_requests', 'forge_instance', ['instance_id'], ['id'], source_schema='data', referent_schema='operations')
         
