@@ -232,6 +232,13 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
     logger = logging.getLogger(collect_pull_request_review_comments.__name__)
     logger.debug(f"Collecting pull request review comments for {owner}/{repo}")
 
+    key_auth = GithubRandomKeyAuth(logger)
+    github_data_access = GithubDataAccess(key_auth, logger)
+
+    if not github_data_access.check_prs_enabled(owner, repo):
+        logger.info(f"{owner}/{repo}: Pull requests appear to be disabled for this repo. Skipping review comment collection.")
+        return
+
     repo_id = get_repo_by_repo_git(repo_git).repo_id
 
     if not full_collection:
@@ -256,9 +263,6 @@ def collect_pull_request_review_comments(repo_git: str, full_collection: bool) -
     tool_source = "Pr review comment task"
     tool_version = "2.0"
     data_source = "Github API"
-
-    key_auth = GithubRandomKeyAuth(logger)
-    github_data_access = GithubDataAccess(key_auth, logger)
 
     pr_review_comment_batch_size = get_batch_size()
 
