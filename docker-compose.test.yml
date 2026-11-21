@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: MIT
+# Docker compose configuration for running CollectOSS database-backed tests locally.
+#
+# Usage:
+#   1. Start test database:
+#        docker compose -f docker-compose.test.yml up -d
+#   2. Run database tests:
+#        TEST_DB_URL=postgresql+psycopg2://collectoss:password@localhost:5432/collectoss_test pytest
+#      Or specify connection string explicitly:
+#        pytest --db-url postgresql+psycopg2://collectoss:password@localhost:5432/collectoss_test
+#   3. Stop and clean up:
+#        docker compose -f docker-compose.test.yml down -v
+
+services:
+  test-database:
+    image: postgres:16-alpine
+    container_name: collectoss-test-db
+    environment:
+      POSTGRES_USER: ${TEST_DB_USER:-collectoss}
+      POSTGRES_PASSWORD: ${TEST_DB_PASSWORD:-password}
+      POSTGRES_DB: ${TEST_DB_NAME:-collectoss_test}
+    ports:
+      - "${TEST_DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TEST_DB_USER:-collectoss} -d ${TEST_DB_NAME:-collectoss_test}"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
