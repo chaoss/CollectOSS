@@ -18,7 +18,7 @@ Unit Tests
 
 Unit tests are implemented via pytest and tagged as ``unit`` to make them easy to run. They are self contained and only require python to run.
 
-To run the unit tests, clone the CollectOSS repository and run ``uv run pytest -m unit``
+To run the unit tests, clone the CollectOSS repository and run ``uv run pytest``
 
 
 Database Tests
@@ -41,7 +41,13 @@ The full set of commands needed to run the database-backed tests locally are:
 .. code-block:: bash
 
     docker compose -f tests/docker-compose.yml up -d
-    COLLECTOSS_TEST_DB=postgresql+psycopg2://test:test@localhost:5435/scratch uv run pytest tests/test_application/test_db -m database -v
+    COLLECTOSS_TEST_DB=postgresql+psycopg2://test:test@localhost:5435/scratch uv run pytest
+
+You may notice the ``uv run pytest`` part of the command is the same as the regular unit tests.
+The Database tests rely on the `COLLECTOSS_TEST_DB` environment variable being present in order to run. If this variable is not present, tests requiring a database will be skipped automatically.
+
+If you want to run only the database-backed tests without running the regular tests as well, add ``-m database`` to the end of the pytest command (example: ``uv run pytest -m database``)
+
 
 End to End (E2E) Tests
 ~~~~~~~~~~~~~~~~~~~~~~~

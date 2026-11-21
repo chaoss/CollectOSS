@@ -74,11 +74,9 @@ jobs:
           use_oidc: true
           fail_ci_if_error: false
 
-  # DB-backed tests: the "Live" test classes in tests/test_application/test_db
-  # are skipped in the matrix job above (no database there). They are
-  # self-contained — each creates and drops its own throwaway schema — so an
-  # empty scratch postgres is all they need. Service containers only work on
-  # Linux runners, hence this separate job.
+  # DB-backed tests: the presence of the COLLECTOSS_TEST_DB environment variable identifies tests that need a database.
+  # They are skipped in the matrix job above (no database there).
+  # Service containers only work on Linux runners, hence this separate job.
   db-tests:
     name: DB-backed tests
     runs-on: ubuntu-latest
@@ -108,11 +106,7 @@ jobs:
         with:
           enable-cache: true
 
-      # Only the self-contained Live tests: the rest of test_db (e.g.
-      # test_session.py) depends on the conftest.py fixtures that expect the
-      # full app schema, which the scratch database does not have. The
-      # non-live tests run in the matrix job above.
       - name: Run DB-backed tests
         run: |
-          uv run pytest tests/test_application/test_db -k Live \
+          uv run pytest tests/test_application/test_db -m database \
             --color=yes

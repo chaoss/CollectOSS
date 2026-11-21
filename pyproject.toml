@@ -164,7 +164,8 @@ testpaths = [
 ]
 markers = [
     "unit: pure logic tests with no external dependencies",
-    "integration: tests requiring a database, Redis, or network access",
+    "database: tests requiring a database",
+    "system: tests requiring Redis, or live network access, potentially including a database",
 ]
 
 
