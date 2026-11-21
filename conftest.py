@@ -74,7 +74,7 @@ def create_full_routes(routes):
 
 
 @pytest.fixture(autouse=False)
-def clean_db(database_engine):
+def clean_schema_db(database_engine):
     """Per-test fixture that truncates all tables before and after the test.
     Use for integration tests that write data.
     """
