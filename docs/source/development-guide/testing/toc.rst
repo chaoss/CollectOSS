@@ -16,22 +16,32 @@ The tests of the CollectOSS app fall into one of several general types.
 Unit Tests
 ~~~~~~~~~~~
 
-Unit tests are implemented via pytest and tagged as ``unit`` to make them easy to run.
+Unit tests are implemented via pytest and tagged as ``unit`` to make them easy to run. They are self contained and only require python to run.
 
 To run the unit tests, clone the CollectOSS repository and run ``uv run pytest -m unit``
 
 
-Integration Tests
-~~~~~~~~~~~~~~~~~~
-Unit tests are also implemented via pytest and tagged as ``integration``.
-Because they require additional components, they are not quite as easy to run.
+Database Tests
+~~~~~~~~~~~~~~~
+Some functionality of the application requires a database to testo. These are also implemented via pytest and tagged as ``database``.
+Because they require a databaset there is an extra step to run them locally.
 
 
-To run the integration tests you will need to start up the associated services. This can be done as follows:
 
-1. Enter the tests directory with ``cd tests/``, this ensures you use the correct dockerfile.
-2. Bring up the associated services using the ``docker-compose.yml`` file by running ``docker compose up`` or the podman equivalent.
-3. The tests can now be run in a new terminal using ``uv run pytest -m integration``
+To run the database-backed tests you will need to provide a database. 
+It is strongly recommended to use a different database than your live application, since the tests create, drop, and truncate fairly often to maintain independence between tests.
+
+If you do not already have a database for testing, there is a ``docker-compose.yml`` in the ``tests`` directory to help make this process easier.
+
+To run this test database, run ``docker compose -f tests/docker-compose.yml up -d`` from the root of the repository. This command will start a new postgres docker container in the background.
+You will need to provide the URL to this test database when you run the tests so they can connect. If you are using the provided dockerfile, this URL should be ``postgresql+psycopg2://test:test@localhost:5435/scratch``
+
+
+The full set of commands needed to run the database-backed tests locally are: 
+.. code-block:: bash
+
+    docker compose -f tests/docker-compose.yml up -d
+    COLLECTOSS_TEST_DB=postgresql+psycopg2://test:test@localhost:5435/scratch uv run pytest tests/test_application/test_db -m database -v
 
 End to End (E2E) Tests
 ~~~~~~~~~~~~~~~~~~~~~~~
