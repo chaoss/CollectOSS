@@ -108,5 +108,5 @@ jobs:
 
       - name: Run DB-backed tests
         run: |
-          uv run pytest tests/test_application/test_db -m database \
+          uv run pytest -m database \
             --color=yes
