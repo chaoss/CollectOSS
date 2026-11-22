@@ -10,6 +10,7 @@ from typing import List
 import logging
 import secrets
 import traceback
+from datetime import datetime, timezone
 
 from collectoss.application.db.models import Repo, RepoGroup
 from collectoss.application.db.session import DatabaseSession
@@ -191,6 +192,32 @@ class WorkerOauth(Base):
     access_token_secret = Column(String(255), nullable=False)
     repo_directory = Column(String)
     platform = Column(String, server_default=text("'github'::character varying"))
+    last_rotated = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=func.now(),
+        server_default=text("CURRENT_TIMESTAMP"),
+        comment="Timestamp when the API key was last rotated or added",
+    )
+    expiry_date = Column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Timestamp when the API key expires, or NULL if no expiration",
+    )
+
+    @property
+    def is_expired(self) -> bool:
+        """Check whether the OAuth key has expired.
+
+        Returns:
+            bool: True if expiry_date is set and in the past, False otherwise.
+        """
+        if self.expiry_date is None:
+            return False
+        now = datetime.now(timezone.utc)
+        if self.expiry_date.tzinfo is None:
+            return self.expiry_date < now.replace(tzinfo=None)
+        return self.expiry_date < now
 
 
 class WorkerSettingsFacade(Base):
