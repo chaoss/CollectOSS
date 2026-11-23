@@ -13,19 +13,21 @@ from collectoss.application.db.engine import create_database_engine
 default_repo_id = "25430"
 default_repo_group_id = "10"
 
-def _build_test_db_url() -> str:
-    """Build the URL for the docker-compose test database."""
-    import os
-    url = os.getenv("COLLECTOSS_TEST_DB")
-    if url:
-        return url
-    host = os.getenv("COLLECTOSS_TEST_DB_HOST", "127.0.0.1")
-    port = os.getenv("COLLECTOSS_TEST_DB_PORT", "5435")
-    user = os.getenv("COLLECTOSS_TEST_DB_USER", "collectoss")
-    password = os.getenv("COLLECTOSS_TEST_DB_PASSWORD", "collectoss")
-    database = os.getenv("COLLECTOSS_TEST_DB_NAME", "collectoss_test")
-    return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"
+def get_test_db_url():
+    """Resolve the database connection URL for schema-isolated tests.
 
+    Precedence order:
+    1. COLLECTOSS_TEST_DB environment variable
+
+    Returns None if no database configuration is available.
+    """
+
+    for env_var in ("COLLECTOSS_TEST_DB"):
+        val = os.environ.get(env_var)
+        if val:
+            return val
+
+    return None
 
 SCHEMAS = ["data", "operations", "spdx"]
 
@@ -107,19 +109,4 @@ def _truncate_all(engine):
         conn.commit()
 
 
-def get_test_db_url():
-    """Resolve the database connection URL for schema-isolated tests.
-
-    Precedence order:
-    1. COLLECTOSS_TEST_DB environment variable
-
-    Returns None if no database configuration is available.
-    """
-
-    for env_var in ("COLLECTOSS_TEST_DB"):
-        val = os.environ.get(env_var)
-        if val:
-            return val
-
-    return None
 
