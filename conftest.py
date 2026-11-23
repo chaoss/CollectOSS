@@ -25,7 +25,7 @@ def get_test_db_url():
     Returns None if no database configuration is available.
     """
 
-    for env_var in ("COLLECTOSS_TEST_DB"):
+    for env_var in ("COLLECTOSS_TEST_DB",):
         val = os.environ.get(env_var)
         if val:
             return val
@@ -81,7 +81,7 @@ def pytest_collection_modifyitems(config, items):
     """Skip database-backed tests automatically when no database URL is provided."""
     db_url = get_test_db_url()
     skip_no_db = pytest.mark.skip(
-        reason="Skipping database test: no database connection configured (set COLLECTOSS_TEST_DB, TEST_DB_URL, or pass --db-url)"
+        reason="Skipping database test: no database connection configured (set COLLECTOSS_TEST_DB)"
     )
 
     for item in items:
@@ -90,13 +90,13 @@ def pytest_collection_modifyitems(config, items):
 
         if has_db_mark or uses_db_fixture:
             if not has_db_mark:
-                item.add_marker(pytest.mark.db)
+                item.add_marker(pytest.mark.database)
             if not db_url:
                 item.add_marker(skip_no_db)
 
 
 @pytest.fixture
-def schema_factory(db_engine):
+def schema_factory(database_engine):
     """Factory fixture allowing tests to dynamically create one or more isolated schemas.
 
     All schemas created during the test are automatically dropped (CASCADE) on teardown.
@@ -105,7 +105,7 @@ def schema_factory(db_engine):
 
     def _create_schema(prefix="test_schema", random_name=True) -> str:
         schema_name = f"{prefix}_{uuid.uuid4().hex[:12]}" if random_name else prefix
-        with db_engine.connect() as conn:
+        with database_engine.connect() as conn:
             conn.execute(s.text(f'CREATE SCHEMA "{schema_name}"'))
             conn.commit()
         schemas_created.append(schema_name)
@@ -113,7 +113,7 @@ def schema_factory(db_engine):
 
     yield _create_schema
 
-    with db_engine.connect() as conn:
+    with database_engine.connect() as conn:
         for schema in schemas_created:
             try:
                 conn.execute(s.text(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE'))
@@ -133,10 +133,10 @@ def blank_db_schema(schema_factory) -> str:
 
 
 @pytest.fixture
-def isolated_engine(db_engine, blank_db_schema):
+def isolated_engine(database_engine, blank_db_schema):
     """SQLAlchemy Engine whose connections automatically set search_path to the isolated schema."""
     engine = s.create_engine(
-        db_engine.url,
+        database_engine.url,
         poolclass=NullPool,
     )
 
@@ -152,7 +152,7 @@ def isolated_engine(db_engine, blank_db_schema):
 
 
 @pytest.fixture
-def db_session(db_engine, blank_db_schema):
+def db_session(database_engine, blank_db_schema):
     """Yields an SQLAlchemy ORM Session bound to the test's isolated blank schema.
 
     Sets search_path to the isolated schema, rolls back any pending transactions,
@@ -160,7 +160,7 @@ def db_session(db_engine, blank_db_schema):
     """
     from sqlalchemy.orm import sessionmaker
 
-    connection = db_engine.connect()
+    connection = database_engine.connect()
     connection.execute(s.text(f'SET search_path TO "{blank_db_schema}", public'))
     connection.commit()
 
