@@ -41,7 +41,9 @@ The full set of commands needed to run the database-backed tests locally are:
 .. code-block:: bash
 
     docker compose -f tests/docker-compose.yml up -d
-    COLLECTOSS_TEST_DB=postgresql+psycopg2://test:test@localhost:5435/scratch uv run pytest
+    echo "COLLECTOSS_TEST_DB=postgresql+psycopg2://test:test@localhost:5435/scratch" > test.env
+
+    uv run --env-file="test.env" pytest
 
 You may notice the ``uv run pytest`` part of the command is the same as the regular unit tests.
 The Database tests rely on the `COLLECTOSS_TEST_DB` environment variable being present in order to run. If this variable is not present, tests requiring a database will be skipped automatically.
