@@ -117,6 +117,7 @@ def _truncate_all(engine):
 
 
 DB_FIXTURE_NAMES = {
+    "database_engine",
 }
 
 
