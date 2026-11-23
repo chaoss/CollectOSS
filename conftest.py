@@ -8,7 +8,6 @@ import pytest
 import uuid
 
 import sqlalchemy as s
-from sqlalchemy import text
 from sqlalchemy.pool import NullPool
 
 from collectoss.application.db.session import DatabaseSession
