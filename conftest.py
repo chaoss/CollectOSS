@@ -2,13 +2,13 @@
 import os
 import pytest
 import re
+
+import sqlalchemy as s
 from sqlalchemy import text
 
-from collectoss.application.db.engine import create_database_engine
 
 from collectoss.application.db.models.base import Base
 from collectoss.application.db.models import *  # ensure all models are imported/registered
-from collectoss.application.db.engine import create_database_engine
 
 default_repo_id = "25430"
 default_repo_group_id = "10"
@@ -34,23 +34,25 @@ SCHEMAS = ["data", "operations", "spdx"]
 
 @pytest.fixture(scope="session")
 def database_engine():
-    """Session-scoped engine connected to the docker-compose test DB.
-    Creates all schemas and tables from ORM metadata on first use.
+    """Session-scoped SQLAlchemy engine connected to the test database.
+
+    Verifies server connectivity; skips gracefully if the database server
+    is unreachable or credentials fail.
     """
     url = get_test_db_url()
     if not url:
         pytest.skip("No database URL provided (set COLLECTOSS_TEST_DB, TEST_DB_URL, or pass --db-url)")
- 
-    engine = create_database_engine(url)
 
-    # Create schemas that don't exist
-    with engine.connect() as conn:
-        for schema in SCHEMAS:
-            conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema}"))
-        conn.commit()
-
-    # Create all tables from the ORM models
-    Base.metadata.create_all(engine)
+    try:
+        engine = s.create_engine(
+            url,
+            pool_pre_ping=True,
+            connect_args={"application_name": "collectoss_test_suite"},
+        )
+        with engine.connect() as conn:
+            conn.execute(s.text("SELECT 1"))
+    except Exception as err:
+        pytest.skip(f"Could not connect to test database: {err}")
 
     yield engine
 
