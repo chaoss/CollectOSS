@@ -1,4 +1,5 @@
 #SPDX-License-Identifier: MIT
+import os
 import pytest
 import re
 from sqlalchemy import text
@@ -104,3 +105,21 @@ def _truncate_all(engine):
     with engine.connect() as conn:
         conn.execute(text(truncate_script))
         conn.commit()
+
+
+def get_test_db_url():
+    """Resolve the database connection URL for schema-isolated tests.
+
+    Precedence order:
+    1. COLLECTOSS_TEST_DB environment variable
+
+    Returns None if no database configuration is available.
+    """
+
+    for env_var in ("COLLECTOSS_TEST_DB"):
+        val = os.environ.get(env_var)
+        if val:
+            return val
+
+    return None
+
