@@ -132,7 +132,7 @@ def schema_factory(db_engine):
                 conn.execute(s.text(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE'))
                 conn.commit()
             except Exception as err:
-                logger.warning("Failed to drop test schema %s: %s", schema, err)
+                logger.warning(f"Failed to drop test schema {schema}: {err}")
 
 
 @pytest.fixture
