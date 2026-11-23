@@ -188,6 +188,17 @@ def blank_db_schema(schema_factory) -> str:
 
 
 @pytest.fixture
+def blank_collectoss_db_schema(schema_factory):
+    """Provides a fresh, isolated PostgreSQL schema that structurally matches a CollectOSS db.
+
+    The schema is created before the test and automatically dropped on teardown.
+    Returns a list of the schemas in the collectOSS set. should always return the same strings as `SCHEMAS` list above.
+    """
+    yield [schema_factory(schema, random_name=False) for schema in SCHEMAS]
+
+
+
+@pytest.fixture
 def isolated_engine(db_engine, blank_db_schema):
     """SQLAlchemy Engine whose connections automatically set search_path to the isolated schema."""
     engine = s.create_engine(
