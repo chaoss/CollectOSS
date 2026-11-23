@@ -70,6 +70,7 @@ jobs:
         uses: codecov/codecov-action@v7
         with:
           files: coverage.xml
+          flags: unit
           disable_search: true
           use_oidc: true
           fail_ci_if_error: false
@@ -81,6 +82,9 @@ jobs:
     name: DB-backed tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
     services:
       postgres:
         # Keep the major version in sync with docker/database/Dockerfile; the
@@ -109,4 +113,17 @@ jobs:
       - name: Run DB-backed tests
         run: |
           uv run pytest -m database \
-            --color=yes
+            --color=yes \
+            --cov \
+            --cov-report=term \
+            --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        if: ${{ (success() || failure()) && hashFiles('coverage.xml') != '' }}
+        uses: codecov/codecov-action@v7
+        with:
+          files: coverage.xml
+          flags: database
+          disable_search: true
+          use_oidc: true
+          fail_ci_if_error: false
