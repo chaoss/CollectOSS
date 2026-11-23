@@ -159,8 +159,8 @@ def schema_factory(db_engine):
     """
     schemas_created = []
 
-    def _create_schema(prefix="test_schema") -> str:
-        schema_name = f"{prefix}_{uuid.uuid4().hex[:12]}"
+    def _create_schema(prefix="test_schema", random_name=True) -> str:
+        schema_name = f"{prefix}_{uuid.uuid4().hex[:12]}" if random_name else prefix
         with db_engine.connect() as conn:
             conn.execute(s.text(f'CREATE SCHEMA "{schema_name}"'))
             conn.commit()
