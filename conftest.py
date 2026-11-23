@@ -113,3 +113,26 @@ def _truncate_all(engine):
 
 
 
+
+DB_FIXTURE_NAMES = {
+}
+
+
+def pytest_collection_modifyitems(config, items):
+    """Skip database-backed tests automatically when no database URL is provided."""
+    db_url = get_test_db_url()
+    skip_no_db = pytest.mark.skip(
+        reason="Skipping database test: no database connection configured (set COLLECTOSS_TEST_DB, TEST_DB_URL, or pass --db-url)"
+    )
+
+    for item in items:
+        has_db_mark = item.get_closest_marker("database") is not None
+        uses_db_fixture = bool(DB_FIXTURE_NAMES.intersection(getattr(item, "fixturenames", [])))
+
+        if has_db_mark or uses_db_fixture:
+            if not has_db_mark:
+                item.add_marker(pytest.mark.db)
+            if not db_url:
+                item.add_marker(skip_no_db)
+
+
