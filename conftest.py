@@ -62,19 +62,6 @@ def database_engine():
 
     engine.dispose()
 
-
-@pytest.fixture(scope="session")
-def db_session(database_engine):
-    """Session-scoped ORM session for read-heavy tests."""
-    from collectoss.application.db.session import DatabaseSession
-    import logging
-    logger = logging.getLogger("tests.pg")
-    session = DatabaseSession(logger, database_engine)
-    try:
-        yield session
-    finally:
-        session.close()
-
 def create_full_routes(routes):
     full_routes = []
     for route in routes:
