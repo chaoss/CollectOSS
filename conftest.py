@@ -74,41 +74,6 @@ def create_full_routes(routes):
         full_routes.append(route)
     return full_routes
 
-
-@pytest.fixture(autouse=False)
-def clean_schema_db(database_engine):
-    """Per-test fixture that truncates all tables before and after the test.
-    Use for integration tests that write data.
-    """
-    _truncate_all(database_engine)
-    yield database_engine
-    _truncate_all(database_engine)
-
-
-def _truncate_all(engine):
-    """Truncate all tables in the known schemas."""
-    schema_list_sql = ", ".join([f"'{s}'" for s in SCHEMAS])
-    truncate_script = f"""
-    DO $$
-    DECLARE truncate_cmd TEXT;
-    BEGIN
-        SELECT INTO truncate_cmd
-            'TRUNCATE TABLE ' ||
-            string_agg(quote_ident(schemaname) || '.' || quote_ident(tablename), ', ') ||
-            ' RESTART IDENTITY CASCADE'
-        FROM pg_tables
-        WHERE schemaname IN ({schema_list_sql});
-        IF truncate_cmd IS NOT NULL THEN
-            EXECUTE truncate_cmd;
-        END IF;
-    END $$;
-    """
-    with engine.connect() as conn:
-        conn.execute(text(truncate_script))
-        conn.commit()
-
-
-
 logger = logging.getLogger(__name__)
 
 
