@@ -1,7 +1,9 @@
 #SPDX-License-Identifier: MIT
+import logging
 import os
 import pytest
 import re
+import uuid
 
 import sqlalchemy as s
 from sqlalchemy import text
@@ -115,9 +117,13 @@ def _truncate_all(engine):
 
 
 
+logger = logging.getLogger(__name__)
+
+
 
 DB_FIXTURE_AUTOMARK_NAMES = {
     "database_engine",
+    "schema_factory",
 }
 
 
@@ -138,4 +144,30 @@ def pytest_collection_modifyitems(config, items):
             if not db_url:
                 item.add_marker(skip_no_db)
 
+
+@pytest.fixture
+def schema_factory(db_engine):
+    """Factory fixture allowing tests to dynamically create one or more isolated schemas.
+
+    All schemas created during the test are automatically dropped (CASCADE) on teardown.
+    """
+    schemas_created = []
+
+    def _create_schema(prefix="test_schema") -> str:
+        schema_name = f"{prefix}_{uuid.uuid4().hex[:12]}"
+        with db_engine.connect() as conn:
+            conn.execute(s.text(f'CREATE SCHEMA "{schema_name}"'))
+            conn.commit()
+        schemas_created.append(schema_name)
+        return schema_name
+
+    yield _create_schema
+
+    with db_engine.connect() as conn:
+        for schema in schemas_created:
+            try:
+                conn.execute(s.text(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE'))
+                conn.commit()
+            except Exception as err:
+                logger.warning("Failed to drop test schema %s: %s", schema, err)
 
