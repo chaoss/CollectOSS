@@ -116,6 +116,7 @@ DB_FIXTURE_AUTOMARK_NAMES = {
     "blank_db_schema",
     "isolated_engine",
     "db_session",
+    "blank_collectoss_db_schema",
     "collectoss_db_session",
 }
 
@@ -174,16 +175,6 @@ def blank_db_schema(schema_factory) -> str:
     return schema_factory()
 
 
-@pytest.fixture
-def blank_collectoss_db_schema(schema_factory):
-    """Provides a fresh, isolated PostgreSQL schema that structurally matches a CollectOSS db.
-
-    The schema is created before the test and automatically dropped on teardown.
-    Returns a list of the schemas in the collectOSS set. should always return the same strings as `SCHEMAS` list above.
-    """
-    yield [schema_factory(schema, random_name=False) for schema in SCHEMAS]
-
-
 
 @pytest.fixture
 def isolated_engine(db_engine, blank_db_schema):
@@ -226,6 +217,20 @@ def db_session(db_engine, blank_db_schema):
         session.rollback()
         session.close()
         connection.close()
+
+# ---------------------------------------------------------------------------
+# CollectOSS-specific schema fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def blank_collectoss_db_schema(schema_factory):
+    """Provides a fresh, isolated PostgreSQL schema that structurally matches a CollectOSS db.
+
+    The schema is created before the test and automatically dropped on teardown.
+    Returns a list of the schemas in the collectOSS set. should always return the same strings as `SCHEMAS` list above.
+    """
+    yield [schema_factory(schema, random_name=False) for schema in SCHEMAS]
 
 
 @pytest.fixture
