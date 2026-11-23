@@ -37,7 +37,10 @@ def database_engine():
     """Session-scoped engine connected to the docker-compose test DB.
     Creates all schemas and tables from ORM metadata on first use.
     """
-    url = _build_test_db_url()
+    url = get_test_db_url()
+    if not url:
+        pytest.skip("No database URL provided (set COLLECTOSS_TEST_DB, TEST_DB_URL, or pass --db-url)")
+ 
     engine = create_database_engine(url)
 
     # Create schemas that don't exist
