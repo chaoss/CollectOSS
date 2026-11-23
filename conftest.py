@@ -116,7 +116,7 @@ def _truncate_all(engine):
 
 
 
-DB_FIXTURE_NAMES = {
+DB_FIXTURE_AUTOMARK_NAMES = {
     "database_engine",
 }
 
@@ -130,7 +130,7 @@ def pytest_collection_modifyitems(config, items):
 
     for item in items:
         has_db_mark = item.get_closest_marker("database") is not None
-        uses_db_fixture = bool(DB_FIXTURE_NAMES.intersection(getattr(item, "fixturenames", [])))
+        uses_db_fixture = bool(DB_FIXTURE_AUTOMARK_NAMES.intersection(getattr(item, "fixturenames", [])))
 
         if has_db_mark or uses_db_fixture:
             if not has_db_mark:
