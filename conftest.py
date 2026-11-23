@@ -117,6 +117,7 @@ DB_FIXTURE_AUTOMARK_NAMES = {
     "isolated_engine",
     "db_session",
     "blank_collectoss_db_schema",
+    "isolated_collectoss_engine",
     "collectoss_db_session",
 }
 
@@ -234,9 +235,32 @@ def blank_collectoss_db_schema(schema_factory):
 
 
 @pytest.fixture
-def collectoss_db_session(isolated_engine):
+def isolated_collectoss_engine(database_engine, blank_collectoss_db_schema):
+    """SQLAlchemy Engine whose connections automatically set search_path to the isolated schema."""
+    engine = s.create_engine(
+        database_engine.url,
+        poolclass=NullPool,
+    )
+
+    @s.event.listens_for(engine, "connect")
+    def _set_search_path(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute(f'SET search_path TO {",".join(blank_collectoss_db_schema)}, public')
+        cursor.close()
+
+    
+    Base.metadata.create_all(engine)
+    # TODO: create materialized view tables too if not covered by the above?
+
+    yield engine
+
+    engine.dispose()
+
+
+@pytest.fixture
+def collectoss_db_session(isolated_collectoss_engine):
     """Yields a CollectOSS DatabaseSession instance operating inside the isolated schema."""
-    session = DatabaseSession(logger, engine=isolated_engine)
+    session = DatabaseSession(logger, engine=isolated_collectoss_engine)
     try:
         yield session
     finally:
