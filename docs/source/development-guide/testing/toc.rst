@@ -48,6 +48,10 @@ The full set of commands needed to run the database-backed tests locally are:
 You may notice the ``uv run pytest`` part of the command is the same as the regular unit tests.
 The Database tests rely on the `COLLECTOSS_TEST_DB` environment variable being present in order to run. If this variable is not present, tests requiring a database will be skipped automatically.
 
+.. caution::
+
+    The Database tests expect to run in an empty database. Do not point it at any database you care about because it will very likely delete data. Use of the provided container and connection string is strongly encouraged to avoid these risks.
+
 If you want to run only the database-backed tests without running the regular tests as well, add ``-m database`` to the end of the pytest command (example: ``uv run pytest -m database``)
 
 
