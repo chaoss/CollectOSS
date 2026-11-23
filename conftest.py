@@ -1,4 +1,7 @@
 #SPDX-License-Identifier: MIT
+
+# pylint: disable=W0621
+
 import logging
 import os
 import pytest
