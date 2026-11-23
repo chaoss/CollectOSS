@@ -7,7 +7,9 @@ import uuid
 
 import sqlalchemy as s
 from sqlalchemy import text
+from sqlalchemy.pool import NullPool
 
+from collectoss.application.db.session import DatabaseSession
 
 from collectoss.application.db.models.base import Base
 from collectoss.application.db.models import *  # ensure all models are imported/registered
@@ -124,6 +126,10 @@ logger = logging.getLogger(__name__)
 DB_FIXTURE_AUTOMARK_NAMES = {
     "database_engine",
     "schema_factory",
+    "blank_db_schema",
+    "isolated_engine",
+    "db_session",
+    "collectoss_db_session",
 }
 
 
@@ -170,4 +176,66 @@ def schema_factory(db_engine):
                 conn.commit()
             except Exception as err:
                 logger.warning("Failed to drop test schema %s: %s", schema, err)
+
+
+@pytest.fixture
+def blank_db_schema(schema_factory) -> str:
+    """Provides a fresh, isolated PostgreSQL schema name for a single test.
+
+    The schema is created before the test and automatically dropped on teardown.
+    """
+    return schema_factory()
+
+
+@pytest.fixture
+def isolated_engine(db_engine, blank_db_schema):
+    """SQLAlchemy Engine whose connections automatically set search_path to the isolated schema."""
+    engine = s.create_engine(
+        db_engine.url,
+        poolclass=NullPool,
+    )
+
+    @s.event.listens_for(engine, "connect")
+    def _set_search_path(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute(f'SET search_path TO "{blank_db_schema}", public')
+        cursor.close()
+
+    yield engine
+
+    engine.dispose()
+
+
+@pytest.fixture
+def db_session(db_engine, blank_db_schema):
+    """Yields an SQLAlchemy ORM Session bound to the test's isolated blank schema.
+
+    Sets search_path to the isolated schema, rolls back any pending transactions,
+    and closes cleanly on teardown.
+    """
+    from sqlalchemy.orm import sessionmaker
+
+    connection = db_engine.connect()
+    connection.execute(s.text(f'SET search_path TO "{blank_db_schema}", public'))
+    connection.commit()
+
+    Session = sessionmaker(bind=connection)
+    session = Session()
+
+    try:
+        yield session
+    finally:
+        session.rollback()
+        session.close()
+        connection.close()
+
+
+@pytest.fixture
+def collectoss_db_session(isolated_engine):
+    """Yields a CollectOSS DatabaseSession instance operating inside the isolated schema."""
+    session = DatabaseSession(logger, engine=isolated_engine)
+    try:
+        yield session
+    finally:
+        session.close()
 
