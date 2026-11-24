@@ -44,7 +44,7 @@ def database_engine():
     """
     url = get_test_db_url()
     if not url:
-        pytest.skip("No database URL provided (set COLLECTOSS_TEST_DB, TEST_DB_URL, or pass --db-url)")
+        pytest.skip("No database URL provided (set COLLECTOSS_TEST_DB environment variable)")
 
     try:
         engine = s.create_engine(
