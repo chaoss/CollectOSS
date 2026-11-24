@@ -33,14 +33,14 @@ It is strongly recommended to use a different database than your live applicatio
 
 If you do not already have a database for testing, there is a ``docker-compose.yml`` in the ``tests`` directory to help make this process easier.
 
-To run this test database, run ``docker compose -f tests/docker-compose.yml up -d`` from the root of the repository. This command will start a new postgres docker container in the background.
+To run this test database, run ``docker compose -f tests/docker-compose.yml up --wait -d`` from the root of the repository. This command will start a new postgres docker container in the background.
 You will need to provide the URL to this test database when you run the tests so they can connect. If you are using the provided dockerfile, this URL should be ``postgresql+psycopg2://test:test@localhost:5435/scratch``
 
 
 The full set of commands needed to run the database-backed tests locally are: 
 .. code-block:: bash
 
-    docker compose -f tests/docker-compose.yml up -d
+    docker compose -f tests/docker-compose.yml up --wait -d
     echo "COLLECTOSS_TEST_DB=postgresql+psycopg2://test:test@localhost:5435/scratch" > test.env
 
     uv run --env-file="test.env" pytest
