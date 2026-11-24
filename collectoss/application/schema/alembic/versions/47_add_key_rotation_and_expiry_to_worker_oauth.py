@@ -23,8 +23,7 @@ def upgrade():
         sa.Column(
             'last_rotated',
             sa.DateTime(timezone=True),
-            server_default=sa.text('CURRENT_TIMESTAMP'),
-            nullable=False,
+            nullable=True,
             comment='Timestamp when the API key was last rotated or added',
         ),
         schema='operations',

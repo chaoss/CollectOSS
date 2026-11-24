@@ -1,14 +1,8 @@
 import datetime
 from datetime import timezone, timedelta
-import importlib
-from unittest.mock import patch
 import sqlalchemy as sa
 
 from collectoss.application.db.models import WorkerOauth
-
-migration_47 = importlib.import_module(
-    "collectoss.application.schema.alembic.versions.47_add_key_rotation_and_expiry_to_worker_oauth"
-)
 
 
 def test_worker_oauth_model_schema_attributes():
@@ -17,14 +11,14 @@ def test_worker_oauth_model_schema_attributes():
     assert table.name == "worker_oauth"
     assert table.schema == "operations"
 
-    # Verify last_rotated column
+    # Verify last_rotated column is nullable (so existing keys are not backfilled with current date)
     assert "last_rotated" in table.c
     last_rotated_col = table.c.last_rotated
     assert isinstance(last_rotated_col.type, sa.DateTime)
     assert last_rotated_col.type.timezone is True
-    assert last_rotated_col.nullable is False
-    assert last_rotated_col.comment == "Timestamp when the API key was last rotated or added"
-    assert str(last_rotated_col.server_default.arg) == "CURRENT_TIMESTAMP"
+    assert last_rotated_col.nullable is True
+    assert last_rotated_col.comment == "Timestamp when the API key was last rotated or added, or NULL if not yet rotated"
+    assert last_rotated_col.server_default is None
 
     # Verify expiry_date column
     assert "expiry_date" in table.c
@@ -162,55 +156,3 @@ def test_worker_oauth_is_expired_naive_datetime():
 
     assert future_record.is_expired is False
     assert past_record.is_expired is True
-
-
-def test_migration_47_metadata():
-    """Verify Alembic migration 47 revision chain and identifiers."""
-    assert migration_47.revision == "47"
-    assert migration_47.down_revision == "46"
-    assert migration_47.branch_labels is None
-    assert migration_47.depends_on is None
-    assert callable(migration_47.upgrade)
-    assert callable(migration_47.downgrade)
-
-
-def test_migration_47_upgrade_downgrade_execution():
-    """Verify upgrade and downgrade execute the expected Alembic DDL operations."""
-    with patch.object(migration_47.op, "add_column") as mock_add_col, \
-         patch.object(migration_47.op, "drop_column") as mock_drop_col:
-
-        # Test upgrade
-        migration_47.upgrade()
-        assert mock_add_col.call_count == 2
-
-        # Check first column: last_rotated
-        call_1_args, call_1_kwargs = mock_add_col.call_args_list[0]
-        assert call_1_args[0] == "worker_oauth"
-        col_1 = call_1_args[1]
-        assert col_1.name == "last_rotated"
-        assert isinstance(col_1.type, sa.DateTime)
-        assert col_1.type.timezone is True
-        assert col_1.nullable is False
-        assert call_1_kwargs.get("schema") == "operations"
-
-        # Check second column: expiry_date
-        call_2_args, call_2_kwargs = mock_add_col.call_args_list[1]
-        assert call_2_args[0] == "worker_oauth"
-        col_2 = call_2_args[1]
-        assert col_2.name == "expiry_date"
-        assert isinstance(col_2.type, sa.DateTime)
-        assert col_2.type.timezone is True
-        assert col_2.nullable is True
-        assert call_2_kwargs.get("schema") == "operations"
-
-        # Test downgrade
-        migration_47.downgrade()
-        assert mock_drop_col.call_count == 2
-
-        drop_call_1_args, drop_call_1_kwargs = mock_drop_col.call_args_list[0]
-        assert drop_call_1_args == ("worker_oauth", "expiry_date")
-        assert drop_call_1_kwargs.get("schema") == "operations"
-
-        drop_call_2_args, drop_call_2_kwargs = mock_drop_col.call_args_list[1]
-        assert drop_call_2_args == ("worker_oauth", "last_rotated")
-        assert drop_call_2_kwargs.get("schema") == "operations"

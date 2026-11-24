@@ -194,10 +194,9 @@ class WorkerOauth(Base):
     platform = Column(String, server_default=text("'github'::character varying"))
     last_rotated = Column(
         DateTime(timezone=True),
-        nullable=False,
+        nullable=True,
         default=func.now(),
-        server_default=text("CURRENT_TIMESTAMP"),
-        comment="Timestamp when the API key was last rotated or added",
+        comment="Timestamp when the API key was last rotated or added, or NULL if not yet rotated",
     )
     expiry_date = Column(
         DateTime(timezone=True),
