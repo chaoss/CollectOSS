@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 @pytest.mark.database
 def test_initialize_tables_populates_default_forges(isolated_collectoss_engine, collectoss_db_session):
 
+    instances = collectoss_db_session.query(ForgeInstance).all()
+    assert len(instances) == 0
+
     initialize_tables(isolated_collectoss_engine, logger)
 
     instances = collectoss_db_session.query(ForgeInstance).all()
@@ -44,9 +47,12 @@ def test_initialize_tables_populates_default_forges(isolated_collectoss_engine, 
 @pytest.mark.database
 def test_initialize_tables_is_idempotent(isolated_collectoss_engine, collectoss_db_session):
 
-    initialize_tables(isolated_collectoss_engine, logger)
-    initialize_tables(isolated_collectoss_engine, logger)
+    assert collectoss_db_session.query(ForgeInstance).count() == 0
 
+    initialize_tables(isolated_collectoss_engine, logger)
+    assert collectoss_db_session.query(ForgeInstance).count() == 2
+
+    initialize_tables(isolated_collectoss_engine, logger)
     assert collectoss_db_session.query(ForgeInstance).count() == 2
 
 
