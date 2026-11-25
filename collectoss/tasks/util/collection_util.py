@@ -62,6 +62,40 @@ class CollectionRequest:
         self.repo_list.extend(collection_list)
 
 
+def hooks_ready_for_error_retry(new_repo_counts: dict) -> list:
+    """
+    Return collection hooks that should reset Error repos now.
+
+    A hook is ready when it has no new-repo backlog. Evaluation is per-hook so a
+    busy core queue does not block secondary/facade/ml error retries (#502).
+    """
+    return [hook for hook, count in new_repo_counts.items() if count == 0]
+
+
+def build_error_retry_sql_for_hook(hook: str) -> str:
+    """
+    SQL that resets Error status for one collection hook.
+
+    Never-collected Errors become Pending. Previously successful Errors become
+    Success so the normal recollection schedule can pick them up again.
+    """
+    if hook not in ("core", "secondary", "facade", "ml"):
+        raise ValueError(f"Unknown collection hook: {hook}")
+
+    status_col = f"{hook}_status"
+    last_col = f"{hook}_data_last_collected"
+    pending = CollectionState.PENDING.value
+    error = CollectionState.ERROR.value
+    success = CollectionState.SUCCESS.value
+
+    return (
+        f"UPDATE collection_status SET {status_col} = '{pending}'"
+        f" WHERE {status_col} = '{error}' and {last_col} is NULL;"
+        f"UPDATE collection_status SET {status_col} = '{success}'"
+        f" WHERE {status_col} = '{error}' and {last_col} is not NULL;"
+    )
+
+
 def get_newly_added_repos(session, limit, hook):
 
     condition_string = ""
