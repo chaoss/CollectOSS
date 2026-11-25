@@ -164,6 +164,7 @@ testpaths = [
 ]
 markers = [
     "unit: pure logic tests with no external dependencies",
+    "meta: tests that verify functionality of other tests or infrastructure (such as testing pytest fixtures or scripts used for CI jobs)",
     "database: tests requiring a database",
     "system: tests requiring Redis, or live network access, potentially including a database",
 ]
