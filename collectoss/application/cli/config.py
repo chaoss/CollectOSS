@@ -20,7 +20,7 @@ ENVVAR_PREFIX = "COLLECTOSS_"
 def get_transitional_envs(name: str) -> list:
     return [ENVVAR_PREFIX + name, "AUGUR_" + name]
 
-@click.group('config', short_help='Generate an augur.config.json')
+@click.group('config', short_help='Generate a collectoss.config.json')
 @click.pass_context
 def cli(ctx):
     ctx.obj = DatabaseContext()
