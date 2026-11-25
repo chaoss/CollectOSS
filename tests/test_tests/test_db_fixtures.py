@@ -22,7 +22,7 @@ pytest_collection_modifyitems = _root_conftest.pytest_collection_modifyitems
 
 def test_get_test_db_url_resolution(monkeypatch):
     """Test resolution of the test database URL from the COLLECTOSS_TEST_DB variable."""
-    for var in ("TEST_DB_URL", "COLLECTOSS_TEST_DB", "COLLECTOSS_DB", "AUGUR_DB"):
+    for var in ("COLLECTOSS_TEST_DB",):
         monkeypatch.delenv(var, raising=False)
 
     # When none set, should return None
@@ -35,7 +35,7 @@ def test_get_test_db_url_resolution(monkeypatch):
 
 def test_pytest_collection_skips_when_no_db(monkeypatch):
     """Verify that tests requiring database fixtures are automatically skipped when no DB URL is set."""
-    for var in ("TEST_DB_URL", "COLLECTOSS_TEST_DB", "COLLECTOSS_DB", "AUGUR_DB"):
+    for var in ("COLLECTOSS_TEST_DB",):
         monkeypatch.delenv(var, raising=False)
 
     class DummyConfig:
