@@ -64,7 +64,7 @@ def update_api_key(show_keys):
             core_reset_header = "Core Reset Time"
             graphql_request_header = "Graphql Requests Left"
             graphql_reset_header = "Graphql Reset Time"
-            print(f"{'Key'.center(40)}   {core_request_header}   {core_reset_header.center(24)}   {graphql_request_header}   {graphql_reset_header.center(24)}")  
+            print(f"{'Key'.center(40 if show_keys else 15)}   {core_request_header}   {core_reset_header.center(24)}   {graphql_request_header}   {graphql_reset_header.center(24)}")  
             for key, core_key_data, graphql_key_data in valid_key_data:
                 core_requests = str(core_key_data['requests_remaining']).center(len(core_request_header))
                 core_reset_time = str(epoch_to_local_time_with_am_pm(core_key_data["reset_epoch"])).center(len(core_reset_header))
