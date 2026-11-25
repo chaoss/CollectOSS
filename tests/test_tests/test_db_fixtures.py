@@ -15,6 +15,8 @@ _spec.loader.exec_module(_root_conftest)
 get_test_db_url = _root_conftest.get_test_db_url
 pytest_collection_modifyitems = _root_conftest.pytest_collection_modifyitems
 
+# whole file defines meta-tests
+pytestmark = pytest.mark.meta
 
 # ---------------------------------------------------------------------------
 # Unit tests: Verification of config discovery, markers, and skipping logic
