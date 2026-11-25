@@ -16,22 +16,44 @@ The tests of the CollectOSS app fall into one of several general types.
 Unit Tests
 ~~~~~~~~~~~
 
-Unit tests are implemented via pytest and tagged as ``unit`` to make them easy to run.
+Unit tests are implemented via pytest and tagged as ``unit`` to make them easy to run. They are self contained and only require python to run.
 
-To run the unit tests, clone the CollectOSS repository and run ``uv run pytest -m unit``
-
-
-Integration Tests
-~~~~~~~~~~~~~~~~~~
-Unit tests are also implemented via pytest and tagged as ``integration``.
-Because they require additional components, they are not quite as easy to run.
+To run the unit tests, clone the CollectOSS repository and run ``uv run pytest``
 
 
-To run the integration tests you will need to start up the associated services. This can be done as follows:
+Database Tests
+~~~~~~~~~~~~~~~
+Some functionality of the application requires a database to testo. These are also implemented via pytest and tagged as ``database``.
+Because they require a databaset there is an extra step to run them locally.
 
-1. Enter the tests directory with ``cd tests/``, this ensures you use the correct dockerfile.
-2. Bring up the associated services using the ``docker-compose.yml`` file by running ``docker compose up`` or the podman equivalent.
-3. The tests can now be run in a new terminal using ``uv run pytest -m integration``
+
+
+To run the database-backed tests you will need to provide a database. 
+It is strongly recommended to use a different database than your live application, since the tests create, drop, and truncate fairly often to maintain independence between tests.
+
+If you do not already have a database for testing, there is a ``docker-compose.yml`` in the ``tests`` directory to help make this process easier.
+
+To run this test database, run ``docker compose -f tests/docker-compose.yml up --wait -d`` from the root of the repository. This command will start a new postgres docker container in the background.
+You will need to provide the URL to this test database when you run the tests so they can connect. If you are using the provided dockerfile, this URL should be ``postgresql+psycopg2://test:test@localhost:5435/scratch``
+
+
+The full set of commands needed to run the database-backed tests locally are: 
+.. code-block:: bash
+
+    docker compose -f tests/docker-compose.yml up --wait -d
+    echo "COLLECTOSS_TEST_DB=postgresql+psycopg2://test:test@localhost:5435/scratch" > test.env
+
+    uv run --env-file="test.env" pytest
+
+You may notice the ``uv run pytest`` part of the command is the same as the regular unit tests.
+The Database tests rely on the `COLLECTOSS_TEST_DB` environment variable being present in order to run. If this variable is not present, tests requiring a database will be skipped automatically.
+
+.. caution::
+
+    The Database tests expect to run in an empty database. Do not point it at any database you care about because it will very likely delete data. Use of the provided container and connection string is strongly encouraged to avoid these risks.
+
+If you want to run only the database-backed tests without running the regular tests as well, add ``-m database`` to the end of the pytest command (example: ``uv run pytest -m database``)
+
 
 End to End (E2E) Tests
 ~~~~~~~~~~~~~~~~~~~~~~~

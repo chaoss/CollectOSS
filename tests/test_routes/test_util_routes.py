@@ -1,8 +1,19 @@
 #SPDX-License-Identifier: MIT
 import requests
 import pytest
+import re
 
-from conftest import create_full_routes
+default_repo_id = "25430"
+default_repo_group_id = "10"
+
+def create_full_routes(routes):
+    full_routes = []
+    for route in routes:
+        route = re.sub("<default_repo_id>", default_repo_id, route)
+        route = re.sub("<default_repo_group_id>", default_repo_group_id, route)
+        route = "http://localhost:5000/api/unstable/" + route
+        full_routes.append(route)
+    return full_routes
 
 util_routes = [\
 "repos",\

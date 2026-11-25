@@ -70,6 +70,60 @@ jobs:
         uses: codecov/codecov-action@v7
         with:
           files: coverage.xml
+          flags: unit
+          disable_search: true
+          use_oidc: true
+          fail_ci_if_error: false
+
+  # DB-backed tests: the presence of the COLLECTOSS_TEST_DB environment variable identifies tests that need a database.
+  # They are skipped in the matrix job above (no database there).
+  # Service containers only work on Linux runners, hence this separate job.
+  db-tests:
+    name: DB-backed tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    services:
+      postgres:
+        # Keep the major version in sync with docker/database/Dockerfile; the
+        # live tests double as pg_get_indexdef format-drift canaries.
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: scratch
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      COLLECTOSS_TEST_DB: postgresql+psycopg2://test:test@localhost:5432/scratch
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Run DB-backed tests
+        run: |
+          uv run pytest -m database \
+            --color=yes \
+            --cov \
+            --cov-report=term \
+            --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        if: ${{ (success() || failure()) && hashFiles('coverage.xml') != '' }}
+        uses: codecov/codecov-action@v7
+        with:
+          files: coverage.xml
+          flags: database
           disable_search: true
           use_oidc: true
           fail_ci_if_error: false

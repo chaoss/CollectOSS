@@ -1,246 +1,223 @@
 #SPDX-License-Identifier: MIT
-import pytest
-import re
-import logging
-import sqlalchemy as s
-import psycopg2
-from psycopg2 import sql
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-import uuid
-from sqlalchemy.pool import StaticPool
 
+# pylint: disable=W0621
+
+import logging
+import os
+import pytest
+import uuid
+
+import sqlalchemy as s
+from sqlalchemy.pool import NullPool
 
 from collectoss.application.db.session import DatabaseSession
-from collectoss.application.config import SystemConfig
-from collectoss.application.db.engine import get_database_string, create_database_engine, parse_database_string, execute_sql_file
 
-logger = logging.getLogger(__name__)
-
-default_repo_id = "25430"
-default_repo_group_id = "10"
-
-def create_full_routes(routes):
-    full_routes = []
-    for route in routes:
-        route = re.sub("<default_repo_id>", default_repo_id, route)
-        route = re.sub("<default_repo_group_id>", default_repo_group_id, route)
-        route = "http://localhost:5000/api/unstable/" + route
-        full_routes.append(route)
-    return full_routes
+from collectoss.application.db.models.base import Base
+from collectoss.application.db.models import *  # ensure all models are imported/registered
 
 
-def create_connection(dbname='postgres'):
-    """
-    Creates a connection to the postgres server specified in the database string and connects to the dbname specified.
-    Returns the connection and cursor objects.
+def get_test_db_url():
+    """Resolve the database connection URL for schema-isolated tests.
+
+    Precedence order:
+    1. COLLECTOSS_TEST_DB environment variable
+
+    Returns None if no database configuration is available.
     """
 
-    db_string = get_database_string()
-    user, password, host, port, _ = parse_database_string(db_string)
-    conn = psycopg2.connect(
-        host=host,
-        port=port,
-        user=user,
-        password=password,
-        dbname=dbname
-    )
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    return conn, conn.cursor()
+    for env_var in ("COLLECTOSS_TEST_DB",):
+        val = os.environ.get(env_var)
+        if val:
+            return val
+
+    return None
+
+SCHEMAS = ["data", "operations", "spdx"]
 
 
-def create_database(conn, cursor, db_name, template=None):
+@pytest.fixture(scope="session")
+def database_engine():
+    """Session-scoped SQLAlchemy engine connected to the test database.
+
+    Verifies server connectivity; skips gracefully if the database server
+    is unreachable or credentials fail.
     """
-    Creates a database with the name db_name. 
-    If template is specified, the database will be created with the template specified.
-    """
+    url = get_test_db_url()
+    if not url:
+        pytest.skip("No database URL provided (set COLLECTOSS_TEST_DB environment variable)")
 
-    if template:
-        cursor.execute(sql.SQL("CREATE DATABASE {} WITH TEMPLATE {};").format(sql.Identifier(db_name), sql.Identifier(template)))
-    else:
-        cursor.execute(sql.SQL("CREATE DATABASE {};").format(sql.Identifier(db_name)))
-    conn.commit()
-
-def drop_database(cursor, db_name):
-    """
-    Drops the database with the name db_name.
-    """
-
-    # ensure connections are removed
-    cursor.execute(sql.SQL("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='{}';".format(db_name)))
-    # drop temporary database
-    cursor.execute(sql.SQL("DROP DATABASE {};").format(sql.Identifier(db_name)))
-
-
-def generate_db_from_template(template_name):
-    """
-    Generator function that creates a new database from the template specified.
-    Yields the engine object for the database created.
-    """
-
-    db_string = get_database_string()
-
-    user, password, host, port, _ = parse_database_string(db_string)
-
-    # Connect to the default 'postgres' database
-    conn = psycopg2.connect(
-        host=host,
-        port=port,
-        user=user,
-        password=password,
-        dbname='postgres'
-    )
-
-    # Set the isolation level to AUTOCOMMIT because CREATE DATABASE 
-    # cannot be executed in a transaction block
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cursor = conn.cursor()
-
-    test_db_name = "test_db_" + uuid.uuid4().hex
-
-    # remove database_name and add test_db_name
-    test_db_string = db_string[:db_string.rfind("/")+1] + test_db_name
-    
-    create_database(conn, cursor, test_db_name, template_name)
-
-    # create engine to connect to db
-    engine = create_database_engine(test_db_string, poolclass=StaticPool, connect_args={"application_name": f"collectoss tests"})
-
+    try:
+        engine = s.create_engine(
+            url,
+            pool_pre_ping=True,
+            connect_args={"application_name": "collectoss_test_suite"},
+        )
+        with engine.connect() as conn:
+            conn.execute(s.text("SELECT 1"))
+    except Exception as err:
+        pytest.fail(f"Could not connect to test database: {err}")
 
     yield engine
 
-    # dispose engine
     engine.dispose()
 
-    drop_database(cursor, test_db_name)
-
-    # Close the cursor and the connection
-    cursor.close()
-    conn.close()
+logger = logging.getLogger(__name__)
 
 
-def generate_template_db(sql_file_path):
-    """
-    Generator function that creates a new database and install the sql file specified
-    Yields the name of the database created.
-    """
 
-    db_string = get_database_string()
+DB_FIXTURE_AUTOMARK_NAMES = {
+    "database_engine",
+    "schema_factory",
+    "blank_db_schema",
+    "isolated_engine",
+    "db_session",
+    "blank_collectoss_db_schema",
+    "isolated_collectoss_engine",
+    "collectoss_db_session",
+}
 
-    user, password, host, port, _ = parse_database_string(db_string)
 
-    # Connect to the default 'postgres' database
-    conn = psycopg2.connect(
-        host=host,
-        port=port,
-        user=user,
-        password=password,
-        dbname='postgres'
+def pytest_collection_modifyitems(config, items):
+    """Skip database-backed tests automatically when no database URL is provided."""
+    db_url = get_test_db_url()
+    skip_no_db = pytest.mark.skip(
+        reason="Skipping database test: no database connection configured (set COLLECTOSS_TEST_DB)"
     )
 
-    # Set the isolation level to AUTOCOMMIT because CREATE DATABASE 
-    # cannot be executed in a transaction block
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cursor = conn.cursor()
+    for item in items:
+        has_db_mark = item.get_closest_marker("database") is not None
+        uses_db_fixture = bool(DB_FIXTURE_AUTOMARK_NAMES.intersection(getattr(item, "fixturenames", [])))
+
+        if has_db_mark or uses_db_fixture:
+            if not has_db_mark:
+                item.add_marker(pytest.mark.database)
+            if not db_url:
+                item.add_marker(skip_no_db)
 
 
-    test_db_name = "test_db_template_" + uuid.uuid4().hex
-    create_database(conn, cursor, test_db_name)
+@pytest.fixture
+def schema_factory(database_engine):
+    """Factory fixture allowing tests to dynamically create one or more isolated schemas.
 
-    # Install schema
-    execute_sql_file(sql_file_path, test_db_name, user, password, host, port)
-
-
-    # ensure connections are removed
-    cursor.execute(sql.SQL("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='{}';".format(test_db_name)))
-
-    # drop temporary database
-
-    yield test_db_name
-
-    drop_database(cursor, test_db_name)
-
-    # Close the cursor and the connection
-    cursor.close()
-    conn.close()
-
-
-
-@pytest.fixture(scope='session')
-def empty_db_template():
-    """ 
-    This fixture creates a template database with the entire schema installed.
-    Returns the name of the database created.
+    All schemas created during the test are automatically dropped (CASCADE) on teardown.
     """
+    schemas_created = []
 
-    yield from generate_template_db("tests/entire_db.sql")
+    def _create_schema(prefix="test_schema", random_name=True) -> str:
+        schema_name = f"{prefix}_{uuid.uuid4().hex[:12]}" if random_name else prefix
+        with database_engine.connect() as conn:
+            conn.execute(s.text(f'CREATE SCHEMA "{schema_name}"'))
+            conn.commit()
+        schemas_created.append(schema_name)
+        return schema_name
+
+    yield _create_schema
+
+    with database_engine.connect() as conn:
+        for schema in schemas_created:
+            try:
+                conn.execute(s.text(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE'))
+                conn.commit()
+            except Exception as err:
+                logger.warning(f"Failed to drop test schema {schema}: {err}")
 
 
-@pytest.fixture(scope='session')
-def empty_db(empty_db_template):
+@pytest.fixture
+def blank_db_schema(schema_factory) -> str:
+    """Provides a fresh, isolated PostgreSQL schema name for a single test.
+
+    The schema is created before the test and automatically dropped on teardown.
     """
-    This fixture creates a database from the empty_db_template
+    return schema_factory()
+
+
+
+@pytest.fixture
+def isolated_engine(database_engine, blank_db_schema):
+    """SQLAlchemy Engine whose connections automatically set search_path to the isolated schema."""
+    engine = s.create_engine(
+        database_engine.url,
+        poolclass=NullPool,
+    )
+
+    @s.event.listens_for(engine, "connect")
+    def _set_search_path(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute(f'SET search_path TO "{blank_db_schema}", public')
+        cursor.close()
+
+    yield engine
+
+    engine.dispose()
+
+
+@pytest.fixture
+def db_session(database_engine, blank_db_schema):
+    """Yields an SQLAlchemy ORM Session bound to the test's isolated blank schema.
+
+    Sets search_path to the isolated schema, rolls back any pending transactions,
+    and closes cleanly on teardown.
     """
+    from sqlalchemy.orm import sessionmaker
 
-    yield from generate_db_from_template(empty_db_template)
+    connection = database_engine.connect()
+    connection.execute(s.text(f'SET search_path TO "{blank_db_schema}", public'))
+    connection.commit()
+
+    Session = sessionmaker(bind=connection)
+    session = Session()
+
+    try:
+        yield session
+    finally:
+        session.rollback()
+        session.close()
+        connection.close()
+
+# ---------------------------------------------------------------------------
+# CollectOSS-specific schema fixtures
+# ---------------------------------------------------------------------------
 
 
-# TODO: Add populated db template and populated db fixtures so this fixture is more useful
-@pytest.fixture(scope='session')
-def read_only_db(empty_db):
+@pytest.fixture
+def blank_collectoss_db_schema(schema_factory):
+    """Provides a fresh, isolated PostgreSQL schema that structurally matches a CollectOSS db.
+
+    The schema is created before the test and automatically dropped on teardown.
+    Returns a list of the schemas in the collectOSS set. should always return the same strings as `SCHEMAS` list above.
     """
-    This fixtture creates a read-only database from the populated_db_template.
-    Yields a read-only engine object for the populated_db.
-    """
+    yield [schema_factory(schema, random_name=False) for schema in SCHEMAS]
 
-    database_name = empty_db.url.database
-    test_username = "testuser"
-    test_password = "testpass"
-    schemas = ["public", "data", "operations"]
 
-    # create read-only user
-    empty_db.execute(s.text(f"CREATE USER testuser WITH PASSWORD '{test_password}';"))
-    empty_db.execute(s.text(f"GRANT CONNECT ON DATABASE {database_name} TO {test_username};"))
-    for schema in schemas:
-        empty_db.execute(s.text(f"GRANT USAGE ON SCHEMA {schema} TO {test_username};"))
-        empty_db.execute(s.text(f"GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO {test_username};"))
+@pytest.fixture
+def isolated_collectoss_engine(database_engine, blank_collectoss_db_schema):
+    """SQLAlchemy Engine whose connections automatically set search_path to the isolated schema."""
+    engine = s.create_engine(
+        database_engine.url,
+        poolclass=NullPool,
+    )
 
-    # create engine for read-only user
-    db_string = get_database_string()
-    _, _, host, port, _ = parse_database_string(db_string)
-    read_only_engine = s.create_engine(f'postgresql+psycopg2://{test_username}:{test_password}@{host}:{port}/{database_name}')
-        
-    yield read_only_engine
+    @s.event.listens_for(engine, "connect")
+    def _set_search_path(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute(f'SET search_path TO {",".join(blank_collectoss_db_schema)}, public')
+        cursor.close()
 
-    read_only_engine.dispose()
-
-    # remove read-only user
-    empty_db.execute(s.text(f'REVOKE CONNECT ON DATABASE {database_name} FROM {test_username};'))
-    for schema in schemas:
-        empty_db.execute(s.text(f'REVOKE USAGE ON SCHEMA {schema} FROM {test_username};'))
-        empty_db.execute(s.text(f'REVOKE SELECT ON ALL TABLES IN SCHEMA {schema} FROM {test_username};'))
-    empty_db.execute(s.text(f'DROP USER {test_username};'))
     
+    Base.metadata.create_all(engine)
+    # TODO: create materialized view tables too if not covered by the above?
+
+    yield engine
+
+    engine.dispose()
+
 
 @pytest.fixture
-def test_db_engine():
+def collectoss_db_session(isolated_collectoss_engine):
+    """Yields a CollectOSS DatabaseSession instance operating inside the isolated schema."""
+    session = DatabaseSession(logger, engine=isolated_collectoss_engine)
+    try:
+        yield session
+    finally:
+        session.close()
 
-    # creates database engine the normal way and then gets the database string
-    db_string = get_database_string()
-
-    db_string_without_db_name = re.search(r"(.+:\/\/.+\/).+", db_string).groups()[0]
-
-    testing_db_string = db_string_without_db_name + "augur-test"
-
-    yield s.create_engine(testing_db_string)
-
-@pytest.fixture
-def test_db_session(test_db_engine):
-    session = DatabaseSession(logger, test_db_engine)
-
-    yield session
-
-    session.close()
-
-@pytest.fixture
-def test_db_config(test_db_session):
-    return SystemConfig(logger, test_db_session)
