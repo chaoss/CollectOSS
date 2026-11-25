@@ -224,7 +224,7 @@ def merge_config(
 
         config.load_config_from_dict(augmented_config)
 
-def initialize_tables(engine, logger):
+def initialize_table_data(engine, logger):
     """Initialize certain tables with data that is required for first run
 
     This includes:

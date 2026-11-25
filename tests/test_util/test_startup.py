@@ -4,18 +4,18 @@ import pytest
 from collectoss.application.db.models.operations import ForgeInstance
 from collectoss.application.db.session import DatabaseSession
 from collectoss.util.enums import ForgePlatformType
-from collectoss.util.startup import initialize_tables
+from collectoss.util.startup import initialize_table_data
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.mark.database
-def test_initialize_tables_populates_default_forges(isolated_collectoss_engine, collectoss_db_session):
+def test_initialize_table_data_populates_default_forges(isolated_collectoss_engine, collectoss_db_session):
 
     instances = collectoss_db_session.query(ForgeInstance).all()
     assert len(instances) == 0
 
-    initialize_tables(isolated_collectoss_engine, logger)
+    initialize_table_data(isolated_collectoss_engine, logger)
 
     instances = collectoss_db_session.query(ForgeInstance).all()
     assert len(instances) == 2
@@ -45,19 +45,19 @@ def test_initialize_tables_populates_default_forges(isolated_collectoss_engine, 
 
 
 @pytest.mark.database
-def test_initialize_tables_is_idempotent(isolated_collectoss_engine, collectoss_db_session):
+def test_initialize_table_data_is_idempotent(isolated_collectoss_engine, collectoss_db_session):
 
     assert collectoss_db_session.query(ForgeInstance).count() == 0
 
-    initialize_tables(isolated_collectoss_engine, logger)
+    initialize_table_data(isolated_collectoss_engine, logger)
     assert collectoss_db_session.query(ForgeInstance).count() == 2
 
-    initialize_tables(isolated_collectoss_engine, logger)
+    initialize_table_data(isolated_collectoss_engine, logger)
     assert collectoss_db_session.query(ForgeInstance).count() == 2
 
 
 @pytest.mark.database
-def test_initialize_tables_skips_defaults_when_forges_exist(isolated_collectoss_engine, collectoss_db_session):
+def test_initialize_table_data_skips_defaults_when_forges_exist(isolated_collectoss_engine, collectoss_db_session):
 
     collectoss_db_session.add(ForgeInstance(
         platform_type=ForgePlatformType.GITLAB.value,
@@ -70,7 +70,7 @@ def test_initialize_tables_skips_defaults_when_forges_exist(isolated_collectoss_
     ))
     collectoss_db_session.commit()
 
-    initialize_tables(isolated_collectoss_engine, logger)
+    initialize_table_data(isolated_collectoss_engine, logger)
 
     instances = collectoss_db_session.query(ForgeInstance).all()
     assert len(instances) == 1
