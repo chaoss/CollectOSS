@@ -7,3 +7,4 @@ This section contains more details about what the CollectOSS project is, includi
    :maxdepth: 1
 
    scope
+   compliance
