@@ -55,7 +55,7 @@ def database_engine():
         with engine.connect() as conn:
             conn.execute(s.text("SELECT 1"))
     except Exception as err:
-        pytest.skip(f"Could not connect to test database: {err}")
+        pytest.fail(f"Could not connect to test database: {err}")
 
     yield engine
 
