@@ -3,6 +3,7 @@ import pytest
 import sqlalchemy as s
 
 @pytest.mark.database
+@pytest.mark.meta
 def test_can_query_schema(isolated_collectoss_engine):
     """This test uses a fixture to get a clean (empty) database with a valid CollectOSS schema
 
