@@ -1,0 +1,41 @@
+name: Database migration checks
+
+on:
+  pull_request:
+    branches: [main, release]
+    paths:
+      - "collectoss/application/schema/alembic/versions/*.py"
+      - "scripts/check_migrations.py"
+      - "tests/test_scripts/test_migration_checks.py"
+      - "pyproject.toml"
+      - ".github/workflows/migration_checks.yml"
+
+jobs:
+  check-migrations:
+    name: Check database migrations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out pull request
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Validate changed migrations
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mapfile -t migration_files < <(
+            git diff --name-only --diff-filter=ACMRT "${BASE_SHA}...${HEAD_SHA}" -- collectoss/application/schema/alembic/versions
+          )
+          if [ "${#migration_files[@]}" -eq 0 ]; then
+            echo "No changed Alembic migration files found; skipping migration checks."
+            exit 0
+          fi
+          python scripts/check_migrations.py "${migration_files[@]}"
