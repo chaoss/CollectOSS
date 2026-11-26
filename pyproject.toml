@@ -171,7 +171,7 @@ markers = [
 
 
 [tool.coverage.run]
-source = ["collectoss", "keyman"]
+source = ["collectoss", "keyman", "docker", "scripts", "jumpstart"]
 branch = true
 # Record paths relative to the repository root, so reports from different
 # machines can be compared or combined.
