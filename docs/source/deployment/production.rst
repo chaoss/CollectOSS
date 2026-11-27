@@ -122,6 +122,12 @@ Use one of these approaches and apply it consistently to every service that
 runs the CLI. The ``TZ`` variable and the bind mounts solve the same problem, so
 setting both is unnecessary.
 
+On macOS and Windows Docker hosts, prefer ``TZ``, because the bind mount paths
+above are Linux specific. macOS has ``/etc/localtime`` but no ``/etc/timezone``,
+so mount only ``/etc/localtime`` if you need a bind mount. Windows hosts have
+neither path, so use ``TZ`` or mount a zoneinfo file from a Windows host path
+onto ``/etc/localtime`` in the container.
+
 COLLECTOSS_RESET_LOGS
 ---------------------
 
