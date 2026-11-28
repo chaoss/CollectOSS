@@ -75,6 +75,11 @@ def fast_retrieve_all_pr_and_issue_messages(repo_git: str, logger, key_auth, tas
     
     github_data_access = GithubDataAccess(key_auth, logger)
 
+    # Check whether issues are enabled before attempting to hit the endpoint
+    if not github_data_access.check_issues_enabled(owner, repo):
+        logger.info(f"{task_name}: Issues appear to be disabled for {owner}/{repo}. Skipping message collection.")
+        return []
+
     message_count = github_data_access.get_resource_count(url)
 
     logger.info(f"{task_name}: Collecting {message_count} github messages")

@@ -94,6 +94,21 @@ class GithubDataAccess:
             self.logger.info(f"{owner}/{repo}: Pull requests are disabled. Skipping PR collection.")
             return False
 
+    def check_issues_enabled(self, owner: str, repo: str) -> bool:
+        """
+        Checks whether issues are enabled for a repository.
+        Returns False if issues are disabled and True if issues are enabled.
+        """
+        try:
+            url = self.endpoint_url(f"repos/{owner}/{repo}")
+            repo_data = self.get_resource(url)
+            return repo_data.get("has_issues", True)
+        except UrlNotFoundException:
+            self.logger.info(f"{owner}/{repo}: Repository or issues not found.")
+            return False
+        except Exception as e:
+            self.logger.warning(f"Could not check has_issues for {owner}/{repo}: {e}")
+            return True
 
     def paginate_resource(self, url):
 
