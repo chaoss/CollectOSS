@@ -98,7 +98,8 @@ def start(ctx, disable_collection, development, pidfile, port):
 
 
     # create rabbit messages so if it failed on shutdown the queues are clean
-    cleanup_collection_status_and_rabbit(logger, ctx.obj.engine)
+    if not disable_collection:
+        cleanup_collection_status_and_rabbit(logger, ctx.obj.engine)
 
     # Retrieve the log directory from the configuration or default to current directory
     log_dir = get_value("Logging", "logs_directory") or "."
@@ -131,20 +132,21 @@ def start(ctx, disable_collection, development, pidfile, port):
     processes = start_celery_worker_processes((core_worker_count, secondary_worker_count, facade_worker_count), disable_collection)
     manager.processes = processes
 
-    celery_beat_schedule_db = SystemEnv.get("CELERYBEAT_SCHEDULE_DB", "celerybeat-schedule.db")
-    if os.path.exists(celery_beat_schedule_db):
+    celery_beat_process = None
+    if not disable_collection:
+        celery_beat_schedule_db = SystemEnv.get("CELERYBEAT_SCHEDULE_DB", "celerybeat-schedule.db")
+        if os.path.exists(celery_beat_schedule_db):
             logger.info("Deleting old task schedule")
             os.remove(celery_beat_schedule_db)
 
-    log_level = get_value("Logging", "log_level")
-    celery_beat_process = None
-    celery_command = f"celery -A collectoss.tasks.init.celery_app.celery_app beat -l {log_level.lower()} -s {celery_beat_schedule_db}"
-    celery_beat_process = subprocess.Popen(celery_command.split(" "))
-    manager.celery_beat_process = celery_beat_process    
-    keypub = KeyPublisher()
-    manager.keypub = keypub
-    
+        log_level = get_value("Logging", "log_level")
+        celery_command = f"celery -A collectoss.tasks.init.celery_app.celery_app beat -l {log_level.lower()} -s {celery_beat_schedule_db}"
+        celery_beat_process = subprocess.Popen(celery_command.split(" "))
+    manager.celery_beat_process = celery_beat_process
+
     if not disable_collection:
+        keypub = KeyPublisher()
+        manager.keypub = keypub
         if SystemEnv.get('COLLECTOSS_DOCKER_DEPLOY') != "1":
             orchestrator = subprocess.Popen("python keyman/Orchestrator.py".split())
 
@@ -323,6 +325,28 @@ def kill(ctx):
     stop_processes(signal.SIGKILL, logger, ctx.obj.engine)
 
 
+def _has_collection_processes(backend_processes):
+    """Return True if any running backend process is a collection worker or beat scheduler."""
+    if SystemEnv.get_bool("COLLECTOSS_DISABLE_COLLECTION", False):
+        return False
+
+    for process in backend_processes:
+        info = getattr(process, "info", None) or {}
+        env = info.get("environ") or {}
+        if env.get("COLLECTOSS_DISABLE_COLLECTION") == "1":
+            return False
+
+        cmdline_parts = [part.lower() for part in (info.get("cmdline") or [])]
+        if any(
+            part in ("beat", "scheduling", "secondary", "facade")
+            or part.startswith("core:")
+            for part in cmdline_parts
+        ):
+            return True
+
+    return False
+
+
 def stop_processes(signal, logger, engine):
     """
     Stops collectoss with the given signal, 
@@ -330,12 +354,10 @@ def stop_processes(signal, logger, engine):
     """
 
     backend_processes = get_backend_processes()
-    # if celery is running, run the cleanup function
-    process_names = [process.name() for process in backend_processes]
 
     _broadcast_signal_to_processes(backend_processes, broadcast_signal=signal, given_logger=logger)
 
-    if "celery" in process_names:
+    if _has_collection_processes(backend_processes):
         cleanup_collection_status_and_rabbit(logger, engine)
 
 
